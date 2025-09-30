@@ -1,0 +1,120 @@
+<!-- path: join.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Open in PXI Studio</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/assets/favicon.png" />
+
+  <!-- Look & feel -->
+  <style>
+    :root{
+      --violet:#a78bfa;
+      --violet-strong:#8b5cf6;
+      --ink:#0b0614;
+      --text:#fff;
+      --glass:rgba(0,0,0,.62);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;background:#000;color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      overflow-x:hidden;
+    }
+
+    /* Background: soft vignette + subtle purple glow */
+    .bg{
+      position:fixed; inset:0; z-index:-2;
+      background:linear-gradient(to bottom,#000,var(--ink) 50%,#000);
+    }
+    .bg::before{
+      content:""; position:absolute; inset:-20% 0; z-index:-1; pointer-events:none;
+      background:
+        radial-gradient(60% 40% at 50% -10%, rgba(139,92,246,.22), transparent 55%),
+        radial-gradient(60% 40% at 50% 110%, rgba(139,92,246,.16), transparent 60%),
+        radial-gradient(120% 100% at 50% 50%, rgba(0,0,0,.55), transparent 60%);
+      mix-blend-mode:screen;
+    }
+
+    .wrap{min-height:100svh;display:grid;place-items:center;padding:28px}
+    .shell{width:100%;max-width:720px}
+
+    /* Card */
+    .card{
+      background:var(--glass); border:1px solid rgba(167,139,250,.38);
+      backdrop-filter:blur(8px); border-radius:18px; padding:24px 22px;
+      box-shadow:0 12px 48px rgba(139,92,246,.18);
+      text-align:left;
+    }
+    h1{
+      margin:0 0 6px 0; font-weight:800; letter-spacing:-.01em;
+      font-size:40px; color:#d8c9ff;
+      text-shadow:0 0 10px rgba(167,139,250,.85),0 0 28px rgba(139,92,246,.35);
+    }
+    .sub{margin:10px 0 0 0; font-size:18px; color:#eae6ffcc; line-height:1.6}
+
+    /* Outline neon buttons (flowing, no solid fills) */
+    .btns{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+    a.btn{
+      appearance:none; display:inline-flex; align-items:center; justify-content:center;
+      min-height:44px; padding:10px 16px; gap:10px; text-decoration:none; white-space:nowrap;
+      color:#eae6ff; border-radius:12px; border:1px solid rgba(167,139,250,.85);
+      box-shadow:0 0 20px rgba(139,92,246,.25) inset, 0 0 12px rgba(139,92,246,.18);
+      transition:box-shadow .2s ease,color .2s ease;
+    }
+    a.btn:hover{ box-shadow:0 0 26px rgba(139,92,246,.38) inset, 0 0 16px rgba(139,92,246,.25); color:#fff }
+
+    /* Album chip */
+    .muted{color:#cbb3ffb3; font-size:13px; margin-top:12px}
+    .chip{
+      display:inline-block; background:rgba(167,139,250,.16);
+      border:1px solid rgba(167,139,250,.45); padding:.25rem .55rem; border-radius:10px;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; color:#eae6ff;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 600px){
+      h1{font-size:34px}
+      .sub{font-size:16px}
+      .wrap{padding:20px}
+    }
+  </style>
+
+  <!-- GA -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KXR80WB7QK"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-KXR80WB7QK', { anonymize_ip: true });
+  </script>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="shell">
+      <div class="card">
+        <h1>Open in PXI Studio</h1>
+        <p class="sub" id="join-sub">
+          We’re opening your album in the app. If nothing happens, tap <em>Open app</em>.
+          Don’t have it yet? Grab the TestFlight build below.
+        </p>
+
+        <div class="btns">
+          <a class="btn" id="open-app" href="#" data-evt="deep_open">Open app</a>
+          <a class="btn" href="https://testflight.apple.com/join/3QqyXJwa" target="_blank" rel="noopener" data-evt="deep_testflight">Get the app (TestFlight)</a>
+        </div>
+
+        <p class="muted">Album ID: <span class="chip" id="album-id">…</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load site JS (contains the deep link + fallback logic) -->
+  <script src="/js/main.js"></script>
+</body>
+</html>

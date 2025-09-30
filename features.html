@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PXI — Features</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="/assets/favicon.png" />
+  <link rel="apple-touch-icon" href="/assets/favicon.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="PXI — Pick • Print • Post" />
+  <meta property="og:description" content="PXIClip transforms your phone into an instant camera." />
+  <meta property="og:image" content="https://pxispace.com/assets/pxi-logo-og.png" />
+  <meta property="og:url" content="https://pxispace.com/features.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PXI — Pick • Print • Post" />
+  <meta name="twitter:description" content="PXIClip transforms your phone into an instant camera." />
+  <meta name="twitter:image" content="https://pxispace.com/assets/pxi-logo-og.png" />
+  <link rel="canonical" href="https://pxispace.com/features.html"/>
+
+  <!-- GA -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KXR80WB7QK"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-KXR80WB7QK', { anonymize_ip: true });
+  </script>
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav__row">
+      <a href="index.html" class="brand" aria-label="PXI Labs home">PXI</a>
+      <nav id="site-nav" class="nav__links" data-collapsible>
+        <a href="index.html">HOME</a>
+        <a href="features.html" class="active">FEATURES</a>
+        <a href="about.html">ABOUT US</a>
+        <a href="signup.html" class="cta cta--outline">SIGN UP</a>
+      </nav>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+        <span class="burger" aria-hidden="true"></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="screen screen--page">
+    <div class="bg"></div>
+
+    <section class="container center-col">
+      <h1 class="h1">PXI Studio Features</h1>
+
+      <div class="video-card reveal on">
+        <video class="video feature-video" muted playsinline autoplay loop poster="/assets/img.png">
+          <source src="/assets/pxiclips-hero.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+
+      <div class="features-grid">
+        <div class="card">
+          <img class="icon" src="/assets/illustration-magsnap.png" alt="Magnetic snap wake" />
+          <h3>Magnetic Snap Wake</h3>
+          <p>PXIClip wakes and connects the moment it snaps to your phone.</p>
+        </div>
+        <div class="card">
+          <img class="icon" src="/assets/illustration-sharedlib.png" alt="Shared Event Albums" />
+          <h3>Shared Event Albums</h3>
+          <p>Spin up a live album for any party. Friends join via link or QR and everyone’s shots roll in together.</p>
+        </div>
+        <div class="card">
+          <img class="icon" src="/assets/illustration-sharing.png" alt="Creator Filters" />
+          <h3>Creator Filters</h3>
+          <p>Film-inspired looks and AI styles tuned for print. Keep it natural or go bold.</p>
+        </div>
+      </div>
+
+      <!-- === App Screens Carousel (inserted between cards/video and CTA band) === -->
+      <section class="container center-col phone-carousel reveal on" id="appScreens">
+        <div class="overline">PXI Studio Preview</div>
+        <h2 class="h1">Pick • Print • Post</h2>
+        <p class="copy narrow">Swipe or let it play — a quick peek at the flow.</p>
+
+        <div class="embla" id="appCarousel">
+          <div class="device-frame">
+            <div class="embla__viewport device-screen">
+              <div class="embla__container">
+                <div class="embla__slide"><img src="/assets/pxi-app-01.jpg" alt="PXI Studio — Home" loading="lazy" decoding="async"></div>
+                <div class="embla__slide"><img src="/assets/pxi-app-02.jpg" alt="PXI Studio — Capture" loading="lazy" decoding="async"></div>
+                <div class="embla__slide"><img src="/assets/pxi-app-03.jpg" alt="PXI Studio — Filters" loading="lazy" decoding="async"></div>
+                <div class="embla__slide"><img src="/assets/pxi-app-04.jpg" alt="PXI Studio — Share/Print" loading="lazy" decoding="async"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- tiny dot nav -->
+          <div class="embla__dots" aria-hidden="true">
+            <button class="embla__dot" type="button"></button>
+            <button class="embla__dot" type="button"></button>
+            <button class="embla__dot" type="button"></button>
+            <button class="embla__dot" type="button"></button>
+          </div>
+        </div>
+
+        <p class="caption subtle">Screens from an internal build — visuals may change.</p>
+      </section>
+      <!-- === /App Screens Carousel === -->
+
+      <!-- CTA band: flowing outline neon buttons, no solid fills -->
+      <div class="early-band">
+        <a class="cta cta--outline" href="signup.html" data-evt="waitlist_from_features">
+          Join Waitlist — 20% Off
+        </a>
+        <a class="cta cta--outline" href="https://www.kickstarter.com/" target="_blank" rel="noopener" data-evt="kickstarter_from_features">
+          Support Us on Kickstarter
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <div class="glowbar" aria-hidden="true"></div>
+  <footer class="footer">
+    <div class="footer__links">
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms &amp; Conditions</a>
+    </div>
+    <div class="footer__copy">© <span id="year"></span> PXI Labs LLC — Texas</div>
+  </footer>
+
+  <div class="cookie" id="cookie">
+    <div class="cookie__inner container">
+      <p>This website uses cookies to ensure you get the best experience.</p>
+      <button id="cookieBtn" class="cta cta--outline small">Got it!</button>
+    </div>
+  </div>
+
+  <!-- Embla Carousel + Autoplay (CDN) -->
+  <script src="https://unpkg.com/embla-carousel/embla-carousel.umd.js"></script>
+  <script src="https://unpkg.com/embla-carousel-autoplay/embla-carousel-autoplay.umd.js"></script>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

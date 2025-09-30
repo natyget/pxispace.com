@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PXI — Terms & Conditions</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="/assets/favicon.png" />
+  <link rel="apple-touch-icon" href="/assets/favicon.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="PXI — Terms & Conditions" />
+  <meta property="og:description" content="Terms of use for PXI Labs LLC" />
+  <meta property="og:image" content="https://pxispace.com/assets/pxi-logo-og.png" />
+  <meta property="og:url" content="https://pxispace.com/terms.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PXI — Terms & Conditions" />
+  <meta name="twitter:description" content="Terms of use for PXI Labs LLC" />
+  <meta name="twitter:image" content="https://pxispace.com/assets/pxi-logo-og.png" />
+  <link rel="canonical" href="https://pxispace.com/terms.html"/>
+
+  <!-- Mobile hamburger => right side -->
+  <style>
+    @media (max-width: 768px){
+      .nav__row{ position:relative; }
+      .nav-toggle{
+        position:absolute; right:16px; top:50%; transform:translateY(-50%);
+        margin-left:0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav__row">
+      <nav id="site-nav" class="nav__links" data-collapsible>
+        <a href="index.html">HOME</a>
+        <a href="features.html">FEATURES</a>
+        <a href="about.html">ABOUT US</a>
+        <a href="signup.html" class="cta cta--outline">SIGN UP</a>
+      </nav>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+        <span class="burger" aria-hidden="true"></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="screen screen--scroll">
+    <div class="bg"></div>
+    <section class="container center-col narrow">
+      <h2 class="h1">Terms & Conditions</h2>
+
+      <p>This website is provided by <strong>PXI Labs LLC (Texas)</strong> as a preview of upcoming products. By using the site, you agree to these terms.</p>
+
+      <p><strong>Use of site.</strong> You agree not to misuse the site or interfere with its normal operation. Content may change at any time without notice.</p>
+
+      <p><strong>Intellectual property.</strong> All trademarks, logos, images, videos, and copy are the property of PXI Labs LLC or our licensors and may not be used without permission.</p>
+
+      <p><strong>Waitlist.</strong> Submitting your email authorizes us to contact you about PXI. The waitlist does not guarantee access to products or early programs.</p>
+
+      <p><strong>Cookies & Analytics.</strong> This site uses a functional cookie to remember cookie dismissal and Google Analytics 4 (GA4) to understand traffic. GA4 anonymizes IPs. You can disable cookies via your browser.</p>
+
+      <p><strong>Warranty & liability.</strong> This site is provided “as-is” without warranties. To the fullest extent permitted by law, PXI Labs LLC is not liable for indirect or consequential damages arising from use of the site.</p>
+
+      <p><strong>Governing law.</strong> These terms are governed by the laws of the State of Texas, USA.</p>
+
+      <p><strong>Contact.</strong> For questions, email <a href="mailto:contact@pxispace.com">contact@pxispace.com</a>.</p>
+    </section>
+
+    <footer class="footer container">
+      <div class="footer__links">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html" class="active">Terms &amp; Conditions</a>
+      </div>
+      <div class="footer__copy">© <span id="year2"></span> PXI Labs LLC — Texas</div>
+    </footer>
+  </main>
+
+  <div class="cookie" id="cookie">
+    <div class="cookie__inner container">
+      <p>This website uses cookies to ensure you get the best experience.</p>
+      <button id="cookieBtn" class="cta cta--outline small">Got it!</button>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script>document.getElementById("year2").textContent=new Date().getFullYear();</script>
+</body>
+</html>

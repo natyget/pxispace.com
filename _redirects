@@ -1,0 +1,13 @@
+# Force apex
+http://www.pxispace.com/*   https://pxispace.com/:splat   301!
+https://www.pxispace.com/*  https://pxispace.com/:splat   301!
+
+# Join bridge — keep URL, serve /join.html (your file lives at root)
+# Example: https://pxispace.com/album/:id/join  -> serves /join.html (200, no redirect)
+/album/*/join               /join.html                   200!
+
+# Optional: support code-based path in future (same bridge)
+/join/*                     /join.html                   200!
+
+# Convenience
+/app                        /signup.html                 302

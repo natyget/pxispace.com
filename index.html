@@ -1,0 +1,149 @@
+<!-- path: index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PXI — Pick • Print • Post</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="apple-touch-icon" href="/assets/favicon.png" />
+  <meta name="theme-color" content="#0b0614" />
+
+  <!-- OG/Twitter -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="PXI — Pick • Print — Post" />
+  <meta property="og:description" content="PXIClip transforms your device into an instant camera." />
+  <meta property="og:image" content="https://pxispace.com/assets/pxi-logo-og.png" />
+  <meta property="og:url" content="https://pxispace.com/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PXI — Pick • Print — Post" />
+  <meta name="twitter:description" content="PXIClip transforms your device into an instant camera." />
+  <meta name="twitter:image" content="https://pxispace.com/assets/pxi-logo-og.png" />
+  <link rel="canonical" href="https://pxispace.com/"/>
+
+  <!-- Minimal overrides -->
+  <style>
+    :root { --badge-h: 48px; }
+
+    /* Centered badge, slightly raised (no border radius: let SVG corners show) */
+    .store-overlay{
+      position:absolute; left:50%; transform:translateX(-50%);
+      bottom:28px; display:block; pointer-events:auto;
+    }
+    .store-overlay img{ height:var(--badge-h); width:auto; display:block; border-radius:0; }
+
+    /* Desktop tweaks: larger type + lower the hero image a bit */
+    @media (min-width: 1025px){
+      .title{ font-size:104px; }
+      .kicker{ font-size:32px; }
+      .copy{ font-size:18.5px; max-width:700px; }
+      .hero-visual{ margin-top:28px; } /* nudges image down so top/bottom feel even */
+    }
+
+    /* Keep image on the right on desktop (mobile stacks image first) */
+    @media (min-width: 769px){
+      .app-hero{display:grid; grid-template-columns:1.05fr .95fr; gap:28px; align-items:center}
+      .app-hero__copy{order:1}
+      .hero-visual{order:2}
+    }
+
+    /* Mobile: pin hamburger to the right edge */
+    @media (max-width: 768px){
+      .nav__row{ position:relative; }
+      .nav-toggle{
+        position:absolute; right:16px; top:50%; transform:translateY(-50%);
+        margin-left:0;
+      }
+    }
+  </style>
+
+  <!-- GA -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KXR80WB7QK"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-KXR80WB7QK', { anonymize_ip: true });
+  </script>
+</head>
+<body>
+  <!-- Intro overlay -->
+  <div id="intro" class="intro" aria-label="PXI intro">
+    <div class="intro__wrap">
+      <div id="introPoster" class="intro__poster" aria-hidden="true"></div>
+      <video id="introVideo" class="intro__video"
+             src="/assets/logo.mp4#t=0.001"
+             autoplay muted playsinline webkit-playsinline preload="auto"
+             poster="/assets/img.png"></video>
+      <img id="introWebp" class="intro__img" alt="" />
+    </div>
+  </div>
+
+  <header class="nav">
+    <div class="container nav__row">
+      <nav id="site-nav" class="nav__links" data-collapsible>
+        <a href="index.html" class="active">HOME</a>
+        <a href="features.html">FEATURES</a>
+        <a href="about.html">ABOUT US</a>
+        <a href="signup.html" class="cta cta--outline">SIGN UP</a>
+      </nav>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+        <span class="burger" aria-hidden="true"></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="screen screen--home">
+    <div class="bg"></div>
+
+    <!-- Hero -->
+    <section class="container app-hero" style="align-items:flex-end">
+      <div class="app-hero__mock hero-visual" style="position:relative;min-height:360px">
+        <img
+          src="/assets/pxi-hero-mock.png"
+          alt="PXI app and hardware preview"
+          loading="eager" decoding="async" fetchpriority="high"
+          onerror="this.onerror=null;this.src='/assets/img.png';"
+          style="width:100%;height:auto;display:block;border-radius:24px;filter:drop-shadow(0 16px 60px rgba(139,92,246,.35))" />
+
+        <a href="https://testflight.apple.com/join/3QqyXJwa" target="_blank" rel="noopener"
+           aria-label="Get the app on TestFlight" class="store-overlay">
+          <img
+            src="/assets/appstore-badge.svg"
+            alt="Download on the App Store"
+            onerror="this.onerror=null;this.src='/assets/appstore-badge.png';" />
+        </a>
+      </div>
+
+      <div class="app-hero__copy">
+        <h1 class="title title--neon title--animate" style="margin-bottom:6px">PXI</h1>
+        <div class="kicker kicker--neon" style="margin-bottom:18px">PICK – PRINT – POST</div>
+        <div class="copy">
+          <p>Cherishable moments get lost in your phone, never to be seen again. Instant cameras and clunky printing bricks only add hassle and won’t cut it.</p>
+          <p>Inspired by the vision of a printing phone with an easy wake via magnetic snap, PXIClip transforms your device into an instant camera.</p>
+          <p>“Instant” has never been this effortless.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="glowbar" aria-hidden="true"></div>
+  <footer class="footer">
+    <div class="footer__links">
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms &amp; Conditions</a>
+    </div>
+    <div class="footer__copy">© <span id="year"></span> PXI Labs LLC — Texas</div>
+  </footer>
+
+  <div class="cookie" id="cookie">
+    <div class="cookie__inner container">
+      <p>This website uses cookies to ensure you get the best experience.</p>
+      <button id="cookieBtn" class="cta cta--outline small">Got it!</button>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
