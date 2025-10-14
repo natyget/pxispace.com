@@ -246,3 +246,92 @@ main a:not(.cta):hover{color:#fff;text-shadow:0 0 10px rgba(167,139,250,.7)}
   box-shadow:0 0 16px rgba(139,92,246,.8);
 }
 .caption.subtle{ color:#eae6ffb3; font-size:13px; margin-top:6px; }
+
+/* ===== Help Page Styles ===== */
+.help-content{ margin:40px 0; max-width:900px; }
+.help-section-title{ 
+  font-size:32px; 
+  margin:0 0 24px; 
+  color:#d8c9ff; 
+  text-shadow:0 0 10px rgba(167,139,250,.85),0 0 28px rgba(139,92,246,.35);
+}
+.faq-item{ 
+  margin-bottom:24px; 
+  padding:20px; 
+  border:1px solid rgba(167,139,250,.2); 
+  border-radius:12px; 
+  background:rgba(0,0,0,.3); 
+  backdrop-filter:blur(4px);
+}
+.faq-question{ 
+  font-size:18px; 
+  margin:0 0 12px; 
+  color:#e6dbff; 
+  font-weight:600;
+}
+.faq-answer{ 
+  margin:0; 
+  color:#eae6ffcc; 
+  line-height:1.6;
+}
+.support-options{ 
+  display:grid; 
+  gap:24px; 
+  grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); 
+  margin-top:24px;
+}
+.support-option{ 
+  padding:24px; 
+  border:1px solid rgba(167,139,250,.2); 
+  border-radius:12px; 
+  background:rgba(0,0,0,.3); 
+  backdrop-filter:blur(4px); 
+  text-align:center;
+}
+.support-option h3{ 
+  margin:0 0 12px; 
+  color:#e6dbff; 
+  font-size:20px;
+}
+.support-option p{ 
+  margin:0 0 16px; 
+  color:#eae6ffcc; 
+  line-height:1.5;
+}
+.troubleshooting-item{ 
+  margin-bottom:24px; 
+  padding:20px; 
+  border:1px solid rgba(167,139,250,.2); 
+  border-radius:12px; 
+  background:rgba(0,0,0,.3); 
+  backdrop-filter:blur(4px);
+}
+.troubleshooting-item h3{ 
+  margin:0 0 12px; 
+  color:#e6dbff; 
+  font-size:18px; 
+  font-weight:600;
+}
+.troubleshooting-item ul{ 
+  margin:0; 
+  padding-left:20px; 
+  color:#eae6ffcc;
+}
+.troubleshooting-item li{ 
+  margin-bottom:8px; 
+  line-height:1.5;
+}
+.quick-links{ 
+  display:flex; 
+  gap:16px; 
+  justify-content:center; 
+  flex-wrap:wrap; 
+  margin-top:24px;
+}
+
+@media (max-width: 768px){
+  .help-section-title{ font-size:28px; }
+  .support-options{ grid-template-columns:1fr; }
+  .quick-links{ flex-direction:column; align-items:center; }
+  .quick-links .cta{ width:100%; max-width:300px; }
+}

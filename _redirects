@@ -11,3 +11,4 @@ https://www.pxispace.com/*  https://pxispace.com/:splat   301!
 
 # Convenience
 /app                        /signup.html                 302
+/help                       /help.html                   200!
