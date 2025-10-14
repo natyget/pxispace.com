@@ -1,9 +1,0 @@
-{
-  "applinks": {
-    "apps": [],
-    "details": [{
-      "appID": "ZRZM6BR3Y5.com.pxistudioapp.app",
-      "paths": [ "/album/*", "/", "NOT /assets/*" ]
-    }]
-  }
-}
