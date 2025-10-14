@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+:root {
+  --violet: #a78bfa;
+  --violet-strong: #8b5cf6;
+  --ink: #0b0614;
+  --bg: #000;
+  --text: #fff;
+}
+
+@theme inline {
+  /* PXI Color Palette */
+  --color-violet: #a78bfa;
+  --color-violet-strong: #8b5cf6;
+  --color-ink: #0b0614;
+  --color-neon-purple: #d8c9ff;
+  --color-neon-light: #cbb3ff;
+  --color-text-primary: #f2edff;
+  --color-text-secondary: #eae6ff;
+  --color-text-muted: #e6dbff;
+  --color-bg: #000;
+  
+  /* Font Families */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Inter, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Neon text effects */
+.title-neon {
+  color: #d8c9ff;
+  text-shadow: 
+    0 0 10px rgba(167, 139, 250, 0.9),
+    0 0 26px rgba(167, 139, 250, 0.7),
+    0 0 54px rgba(139, 92, 246, 0.55),
+    0 0 88px rgba(139, 92, 246, 0.35);
+}
+
+.kicker-neon {
+  color: #cbb3ff;
+  text-shadow:
+    0 0 6px rgba(167, 139, 250, 0.6),
+    0 0 22px rgba(167, 139, 250, 0.38),
+    0 0 36px rgba(139, 92, 246, 0.28);
+}
+
+.text-glow {
+  text-shadow:
+    0 0 6px rgba(167, 139, 250, 0.6),
+    0 0 22px rgba(167, 139, 250, 0.38),
+    0 0 36px rgba(139, 92, 246, 0.28);
+}
+
+/* Gradient backgrounds */
+.bg-gradient-radial {
+  background: radial-gradient(60% 40% at 50% -10%, rgba(139, 92, 246, 0.25), transparent 55%),
+              radial-gradient(60% 40% at 50% 110%, rgba(139, 92, 246, 0.18), transparent 60%),
+              radial-gradient(120% 100% at 50% 50%, rgba(0, 0, 0, 0.55), transparent 60%);
+  mix-blend-mode: screen;
+}
+
+.bg-ink-gradient {
+  background: linear-gradient(to bottom, #000, var(--ink) 50%, #000);
+}
+
+/* Glass morphism */
+.glass {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+/* Neon button outline glow */
+.btn-neon-outline {
+  border: 1px solid rgba(167, 139, 250, 0.85);
+  background: transparent;
+  box-shadow: 
+    0 0 20px rgba(139, 92, 246, 0.25) inset,
+    0 0 12px rgba(139, 92, 246, 0.15);
+  transition: all 0.25s ease;
+}
+
+.btn-neon-outline:hover {
+  box-shadow: 
+    0 0 26px rgba(139, 92, 246, 0.38) inset,
+    0 0 16px rgba(139, 92, 246, 0.25);
+  color: #fff;
+}
+
+/* Gradient button */
+.btn-gradient {
+  background: linear-gradient(180deg, var(--violet), var(--violet-strong));
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.55);
+  border: 0;
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 65px rgba(139, 92, 246, 0.28);
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+    filter: blur(1px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.7s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
