@@ -12,7 +12,7 @@ export default function AlbumDeepLinkPage() {
   useEffect(() => {
     // Construct the deep link URL
     const appUrl = `pxistudio://album/${albumId}${inviteToken ? `?invite=${inviteToken}` : ''}`;
-    const fallbackUrl = 'https://testflight.apple.com/join/3QqyXJwa';
+    const fallbackUrl = 'https://apps.apple.com/us/app/pxistudio/id6753878296';
 
     // Try to open the app
     window.location.href = appUrl;
@@ -39,10 +39,10 @@ export default function AlbumDeepLinkPage() {
           If the app doesn&apos;t open automatically, you&apos;ll be redirected to download it.
         </p>
         <a
-          href="https://testflight.apple.com/join/3QqyXJwa"
+          href="https://apps.apple.com/us/app/pxistudio/id6753878296"
           className="btn-neon-outline px-6 py-3 rounded-full font-bold text-[#eae6ff] inline-block"
         >
-          Download App
+          Download on the App Store
         </a>
       </div>
     </main>
