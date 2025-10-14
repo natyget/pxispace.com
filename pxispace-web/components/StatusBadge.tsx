@@ -13,7 +13,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 
   const labels = {
     live: 'Live',
-    upcoming: 'Pending',
+    upcoming: 'Upcoming',
     memory: 'Memory',
   };
 
