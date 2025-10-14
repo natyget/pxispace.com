@@ -50,7 +50,7 @@ export default function HomePage() {
                 }}
               />
               <a
-                href="https://testflight.apple.com/join/3QqyXJwa"
+                href="https://apps.apple.com/us/app/pxistudio/id6753878296"
             target="_blank"
             rel="noopener noreferrer"
                 className="absolute left-1/2 -translate-x-1/2 bottom-7 block pointer-events-auto"
@@ -253,12 +253,12 @@ export default function HomePage() {
         <div className="max-w-[1200px] mx-auto px-6 text-center">
           <div className="flex flex-wrap gap-4 justify-center items-center">
             <a
-              href="https://testflight.apple.com/join/3QqyXJwa"
+              href="https://apps.apple.com/us/app/pxistudio/id6753878296"
           target="_blank"
           rel="noopener noreferrer"
               className="btn-neon-outline px-6 py-3 rounded-full font-bold text-[#eae6ff] inline-block"
             >
-              Join TestFlight
+              Download on the App Store
         </a>
         <a
               href="https://www.kickstarter.com/"
