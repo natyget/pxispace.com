@@ -21,8 +21,8 @@ export function Navbar() {
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled 
-          ? 'bg-black/90 backdrop-blur-xl border-b border-violet/20 shadow-lg shadow-violet/5' 
-          : 'bg-gradient-to-b from-black/65 to-black/20 backdrop-blur-lg'
+          ? 'bg-black/10 backdrop-blur-xl border-b border-violet/20 shadow-lg shadow-violet/5' 
+          : 'bg-gradient-to-b from-black/10 to-transparent backdrop-blur-lg'
       }`}
     >
       <div className="max-w-[1400px] mx-auto px-6">
@@ -46,17 +46,24 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8">
             <Link 
-              href="/#features" 
+              href="/features" 
               className="text-sm font-semibold text-text-secondary/90 hover:text-white transition-colors relative group"
             >
               Features
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-violet to-violet-strong group-hover:w-full transition-all duration-300" />
             </Link>
             <Link 
-              href="/#events" 
+              href="/events" 
               className="text-sm font-semibold text-text-secondary/90 hover:text-white transition-colors relative group"
             >
               Events
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-violet to-violet-strong group-hover:w-full transition-all duration-300" />
+            </Link>
+            <Link 
+              href="/about" 
+              className="text-sm font-semibold text-text-secondary/90 hover:text-white transition-colors relative group"
+            >
+              About
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-violet to-violet-strong group-hover:w-full transition-all duration-300" />
             </Link>
             <Link 
@@ -108,18 +115,25 @@ export function Navbar() {
         >
           <nav className="flex flex-col gap-1 py-4 border-t border-violet/20">
             <Link
-              href="/#features"
+              href="/features"
               className="text-text-secondary hover:text-white hover:bg-violet/10 transition-colors py-3 px-4 rounded-lg font-medium"
               onClick={() => setIsOpen(false)}
             >
               Features
             </Link>
             <Link
-              href="/#events"
+              href="/events"
               className="text-text-secondary hover:text-white hover:bg-violet/10 transition-colors py-3 px-4 rounded-lg font-medium"
               onClick={() => setIsOpen(false)}
             >
               Events
+            </Link>
+            <Link
+              href="/about"
+              className="text-text-secondary hover:text-white hover:bg-violet/10 transition-colors py-3 px-4 rounded-lg font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              About
             </Link>
             <Link
               href="/help"

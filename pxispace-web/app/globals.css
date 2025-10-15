@@ -1,27 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 :root {
-  --violet: #a78bfa;
-  --violet-strong: #8b5cf6;
-  --ink: #0b0614;
+  --violet: #d040ff;
+  --violet-strong: #e066ff;
+  --ink: #100010;
   --bg: #000;
   --text: #fff;
 }
 
 @theme inline {
-  /* PXI Color Palette */
-  --color-violet: #a78bfa;
-  --color-violet-strong: #8b5cf6;
-  --color-ink: #0b0614;
-  --color-neon-purple: #d8c9ff;
-  --color-neon-light: #cbb3ff;
-  --color-text-primary: #f2edff;
-  --color-text-secondary: #eae6ff;
-  --color-text-muted: #e6dbff;
-  --color-bg: #000;
+  /* PXI Color Palette - Dark Theme */
+  --color-violet: #d040ff;
+  --color-violet-strong: #e066ff;
+  --color-ink: #100010;
+  --color-neon-purple: #d040ff;
+  --color-neon-light: #e066ff;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #e066ff;
+  --color-text-muted: #d040ff;
+  --color-bg: #000000;
   
   /* Font Families */
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Inter, Arial, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
 * {
@@ -34,44 +35,72 @@ html, body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  font-optical-sizing: auto;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #333 #000;
 }
 
 /* Neon text effects */
 .title-neon {
-  color: #d8c9ff;
+  color: #d040ff;
   text-shadow: 
-    0 0 10px rgba(167, 139, 250, 0.9),
-    0 0 26px rgba(167, 139, 250, 0.7),
-    0 0 54px rgba(139, 92, 246, 0.55),
-    0 0 88px rgba(139, 92, 246, 0.35);
+    0 0 10px rgba(208, 64, 255, 0.9),
+    0 0 26px rgba(224, 102, 255, 0.7),
+    0 0 54px rgba(208, 64, 255, 0.55),
+    0 0 88px rgba(224, 102, 255, 0.35);
 }
 
 .kicker-neon {
-  color: #cbb3ff;
+  color: #e066ff;
   text-shadow:
-    0 0 6px rgba(167, 139, 250, 0.6),
-    0 0 22px rgba(167, 139, 250, 0.38),
-    0 0 36px rgba(139, 92, 246, 0.28);
+    0 0 6px rgba(208, 64, 255, 0.6),
+    0 0 22px rgba(224, 102, 255, 0.38),
+    0 0 36px rgba(208, 64, 255, 0.28);
 }
 
 .text-glow {
   text-shadow:
-    0 0 6px rgba(167, 139, 250, 0.6),
-    0 0 22px rgba(167, 139, 250, 0.38),
-    0 0 36px rgba(139, 92, 246, 0.28);
+    0 0 6px rgba(208, 64, 255, 0.6),
+    0 0 22px rgba(224, 102, 255, 0.38),
+    0 0 36px rgba(208, 64, 255, 0.28);
 }
 
 /* Gradient backgrounds */
 .bg-gradient-radial {
-  background: radial-gradient(60% 40% at 50% -10%, rgba(139, 92, 246, 0.25), transparent 55%),
-              radial-gradient(60% 40% at 50% 110%, rgba(139, 92, 246, 0.18), transparent 60%),
+  background: radial-gradient(60% 40% at 50% -10%, rgba(208, 64, 255, 0.25), transparent 55%),
+              radial-gradient(60% 40% at 50% 110%, rgba(224, 102, 255, 0.18), transparent 60%),
               radial-gradient(120% 100% at 50% 50%, rgba(0, 0, 0, 0.55), transparent 60%);
   mix-blend-mode: screen;
 }
 
 .bg-ink-gradient {
-  background: linear-gradient(to bottom, #000, var(--ink) 50%, #000);
+  background: linear-gradient(to bottom, #000, #100010 50%, #000);
 }
 
 /* Glass morphism */
@@ -83,25 +112,25 @@ html, body {
 
 /* Neon button outline glow */
 .btn-neon-outline {
-  border: 1px solid rgba(167, 139, 250, 0.85);
+  border: 1px solid rgba(208, 64, 255, 0.85);
   background: transparent;
   box-shadow: 
-    0 0 20px rgba(139, 92, 246, 0.25) inset,
-    0 0 12px rgba(139, 92, 246, 0.15);
+    0 0 20px rgba(208, 64, 255, 0.25) inset,
+    0 0 12px rgba(224, 102, 255, 0.15);
   transition: all 0.25s ease;
 }
 
 .btn-neon-outline:hover {
   box-shadow: 
-    0 0 26px rgba(139, 92, 246, 0.38) inset,
-    0 0 16px rgba(139, 92, 246, 0.25);
+    0 0 26px rgba(208, 64, 255, 0.38) inset,
+    0 0 16px rgba(224, 102, 255, 0.25);
   color: #fff;
 }
 
 /* Gradient button */
 .btn-gradient {
-  background: linear-gradient(180deg, var(--violet), var(--violet-strong));
-  box-shadow: 0 0 18px rgba(139, 92, 246, 0.55);
+  background: linear-gradient(180deg, #d040ff, #e066ff);
+  box-shadow: 0 0 18px rgba(208, 64, 255, 0.55);
   border: 0;
 }
 
@@ -112,7 +141,7 @@ html, body {
 
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 18px 65px rgba(139, 92, 246, 0.28);
+  box-shadow: 0 18px 65px rgba(208, 64, 255, 0.28);
 }
 
 /* Animations */
@@ -131,4 +160,38 @@ html, body {
 
 .animate-fade-up {
   animation: fadeUp 0.7s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
+/* Enhanced Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+h1 {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+p {
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-extrabold {
+  font-weight: 800;
+}
+
+.font-black {
+  font-weight: 900;
 }
