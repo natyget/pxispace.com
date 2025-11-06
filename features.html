@@ -1,3 +1,4 @@
+<!-- path: features.html -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -15,17 +16,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="PXI — Pick • Print • Post" />
   <meta name="twitter:description" content="PXIClip transforms your phone into an instant camera." />
-  <meta name="twitter:image" content="https://pxispace.com/assets/pxi-logo-og.png" />
   <link rel="canonical" href="https://pxispace.com/features.html"/>
-
-  <!-- GA -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KXR80WB7QK"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-KXR80WB7QK', { anonymize_ip: true });
-  </script>
 </head>
 <body>
   <header class="nav">
@@ -46,51 +37,53 @@
   <main class="screen screen--page">
     <div class="bg"></div>
 
-    <!-- =======================
-         APP FIRST (phone L, copy R)
-         ======================= -->
+    <!-- App showcase: phone (L) | copy (R) -->
     <section class="container" id="appShowcase">
       <div class="feature-wrap">
-        <!-- Phone (fixed-width column) -->
+        <!-- Phone (locked width) -->
         <div class="device-col">
           <div class="embla" aria-label="PXIStudio screen preview carousel">
             <div class="device-frame">
               <div class="embla__viewport device-screen">
                 <div class="embla__container">
+                  <!-- 1) FEED -->
                   <div class="embla__slide">
                     <img
                       src="/assets/pxi-app-01.jpg"
-                      alt="PXIStudio — Feed"
+                      alt="Feed"
                       loading="lazy" decoding="async"
                       data-title="Feed"
-                      data-desc="Share moments in a live scrapbook — friends’ angles appear instantly and yours post as you shoot."
+                      data-desc="Share moments together in one live thread. See every angle roll in—no chasing photos later."
                     />
                   </div>
+                  <!-- 2) CAMERA -->
                   <div class="embla__slide">
                     <img
                       src="/assets/pxi-app-02.jpg"
-                      alt="PXIStudio — Camera"
+                      alt="Camera"
                       loading="lazy" decoding="async"
                       data-title="Camera"
-                      data-desc="Fast, print-ready filters with a live event camera. Shoot once, it lands in the album automatically."
+                      data-desc="Great filters and a live camera album. Shoot once—everyone in the event gets the shot."
                     />
                   </div>
+                  <!-- 3) LIBRARY -->
                   <div class="embla__slide">
                     <img
                       src="/assets/pxi-app-03.jpg"
-                      alt="PXIStudio — Library"
+                      alt="Library"
                       loading="lazy" decoding="async"
                       data-title="Library"
-                      data-desc="Organize events, star favorites, and keep your dearest memories safe in your Vault."
+                      data-desc="Organize events, star favorites, and keep the dear moments safe in your archive."
                     />
                   </div>
+                  <!-- 4) PASSPORT -->
                   <div class="embla__slide">
                     <img
                       src="/assets/pxi-app-04.jpg"
-                      alt="PXIStudio — Passport"
+                      alt="Passport"
                       loading="lazy" decoding="async"
                       data-title="Passport"
-                      data-desc="Your event passport — stamps, streaks, and a gamified timeline of everywhere you’ve been."
+                      data-desc="Your event stamps and progress. A gamified passport that shows where you’ve been."
                     />
                   </div>
                 </div>
@@ -112,20 +105,18 @@
           <div class="feature-head">
             <h1 class="h1">PXIStudio</h1>
             <div class="kicker kicker--neon">Plan, Capture, Relive.</div>
-            <p class="copy">Seamless planning and shared nostalgia.</p>
-            <p class="copy">Your event becomes a live, shared camera roll.</p>
+            <p class="copy">Seamless planning and shared nostalgia. Your event becomes a live, shared camera roll.</p>
           </div>
 
-          <!-- Neon bar under the main heading -->
           <div class="headline-bar"></div>
 
-          <!-- Fixed-height caption area (cross-fade layers, no layout shift) -->
+          <!-- Fixed-height caption area (cross-fade, no layout shift) -->
           <div class="app-caption">
             <div class="app-title layer layer--show" id="appTitleA">Feed</div>
-            <div class="app-title layer"             id="appTitleB">Feed</div>
+            <div class="app-title layer"             id="appTitleB"></div>
 
             <div class="app-desc layer layer--show"  id="appDescA">
-              Share moments in a live scrapbook — friends’ angles appear instantly and yours post as you shoot.
+              Share moments together in one live thread. See every angle roll in—no chasing photos later.
             </div>
             <div class="app-desc layer"              id="appDescB"></div>
 
@@ -135,15 +126,13 @@
       </div>
     </section>
 
-    <!-- =======================
-         PXICLIP (stacked)
-         ======================= -->
+    <!-- PXIClip block (unchanged) -->
     <section class="container center-col" id="pxiclip">
       <div class="overline">Hardware</div>
       <h2 class="h1">PXIClip</h2>
       <p class="subtle">Coming soon</p>
       <p class="copy narrow">
-        PXIClip turns your phone into an instant camera — magnetic snap, print-ready shots, and a shared album that keeps every angle together. Pair it with PXIStudio for the full party experience.
+        PXIClip turns your phone into an instant camera — magnetic snap, print-ready shots, and a shared album that keeps every angle together.
       </p>
 
       <div class="video-card reveal on">
@@ -154,12 +143,8 @@
       </div>
 
       <div class="early-band">
-        <a class="cta cta--outline" href="signup.html" data-evt="waitlist_from_features">
-          Join Waitlist — 20% Off
-        </a>
-        <a class="cta cta--outline" href="https://www.kickstarter.com/" target="_blank" rel="noopener" data-evt="kickstarter_from_features">
-          Support Us on Kickstarter
-        </a>
+        <a class="cta cta--outline" href="signup.html" data-evt="waitlist_from_features">Join Waitlist — 20% Off</a>
+        <a class="cta cta--outline" href="https://www.kickstarter.com/" target="_blank" rel="noopener" data-evt="kickstarter_from_features">Support Us on Kickstarter</a>
       </div>
     </section>
   </main>
@@ -180,7 +165,7 @@
     </div>
   </div>
 
-  <!-- Embla Carousel + Autoplay (CDN) -->
+  <!-- Embla (CDN) -->
   <script src="https://unpkg.com/embla-carousel/embla-carousel.umd.js"></script>
   <script src="https://unpkg.com/embla-carousel-autoplay/embla-carousel-autoplay.umd.js"></script>
 

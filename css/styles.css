@@ -1,3 +1,5 @@
+/* path: css/styles.css */
+
 /* ===== PXI Theme Vars ===== */
 :root{
   --violet:#a78bfa;
@@ -211,8 +213,77 @@ main a:not(.cta):hover{color:#fff;text-shadow:0 0 10px rgba(167,139,250,.7)}
 .embla__dot.is-selected{ background:var(--violet); opacity:1; box-shadow:0 0 16px rgba(139,92,246,.8); }
 .caption.subtle{ color:#eae6ffb3; font-size:13px; margin-top:6px; }
 
-/* ===== Help / Steps (unchanged) ===== */
-/* … (kept as-is from your file) … */
+/* ===== Steps — translucent glass cards on HOME ===== */
+.steps{ margin-top:18px; }
+@media (min-width:769px){
+  .steps__grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:14px;
+    max-width:720px;
+  }
+}
+@media (max-width:768px){
+  .steps__grid{
+    display:flex;
+    overflow-x:auto;
+    gap:12px;
+    padding:4px 2px 8px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+  }
+  .step-card{ min-width:85%; scroll-snap-align:center; }
+}
+.step-card{
+  position:relative;
+  border-radius:24px;
+  aspect-ratio:1/1;
+  display:flex; align-items:center; justify-content:center;
+  padding:16px; text-align:center;
+
+  background:transparent;
+  border:1px solid rgba(167,139,250,.78);
+  background-clip:padding-box;
+  box-shadow:0 0 20px rgba(139,92,246,.28), 0 0 36px rgba(139,92,246,.22);
+  overflow:hidden; isolation:isolate;
+
+  transform:translateY(8px); opacity:0;
+  transition:opacity .45s ease, transform .45s ease;
+}
+.step-card::before{
+  content:""; position:absolute; inset:0; background:transparent;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) contrast(var(--glass-contrast)) brightness(var(--glass-bright));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) contrast(var(--glass-contrast)) brightness(var(--glass-bright));
+  pointer-events:none; z-index:0;
+}
+.step-card > *{ position:relative; z-index:1; }
+.step-content{ width:min(92%, 520px); padding:0; }
+.step-title{ margin:0; font-weight:800; letter-spacing:.2px; color:#e6dbff; font-size:clamp(18px,2.4vw,22px); line-height:1.15;
+  text-shadow:0 0 8px rgba(167,139,250,.5), 0 0 16px rgba(139,92,246,.25); }
+.step-desc{ margin:10px auto 0; color:#eae6ffcc; font-size:clamp(14px,1.9vw,15px); line-height:1.55; max-width:28ch; }
+
+.step-card.is-visible{ transform:translateY(0); opacity:1; }
+
+.step-card--peek{
+  --glass-blur: 6px;
+  --glass-sat: 1.16;
+  --glass-contrast: 1.12;
+  --glass-bright: 1.08;
+}
+.step-card--peek::after{
+  content:""; position:absolute; inset:0;
+  background:radial-gradient(120% 90% at 50% 50%, rgba(255,255,255,.035), transparent 60%);
+  mix-blend-mode:screen; pointer-events:none; z-index:0;
+}
+
+/* Accessibility fallback */
+@media (prefers-reduced-transparency: reduce){
+  .step-card::before, .step-card--peek::before{
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+    background:rgba(0,0,0,.22);
+  }
+  .step-card--peek::after{ content:none; }
+}
 
 /* =======================================================================
    FEATURES PAGE (scoped)
