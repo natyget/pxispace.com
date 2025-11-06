@@ -46,8 +46,105 @@
   <main class="screen screen--page">
     <div class="bg"></div>
 
-    <section class="container center-col">
-      <h1 class="h1">PXI Studio Features</h1>
+    <!-- =======================
+         APP FIRST (phone L, copy R)
+         ======================= -->
+    <section class="container" id="appShowcase">
+      <div class="feature-wrap">
+        <!-- Phone (fixed-width column) -->
+        <div class="device-col">
+          <div class="embla" aria-label="PXIStudio screen preview carousel">
+            <div class="device-frame">
+              <div class="embla__viewport device-screen">
+                <div class="embla__container">
+                  <div class="embla__slide">
+                    <img
+                      src="/assets/pxi-app-01.jpg"
+                      alt="PXIStudio — Feed"
+                      loading="lazy" decoding="async"
+                      data-title="Feed"
+                      data-desc="Share moments in a live scrapbook — friends’ angles appear instantly and yours post as you shoot."
+                    />
+                  </div>
+                  <div class="embla__slide">
+                    <img
+                      src="/assets/pxi-app-02.jpg"
+                      alt="PXIStudio — Camera"
+                      loading="lazy" decoding="async"
+                      data-title="Camera"
+                      data-desc="Fast, print-ready filters with a live event camera. Shoot once, it lands in the album automatically."
+                    />
+                  </div>
+                  <div class="embla__slide">
+                    <img
+                      src="/assets/pxi-app-03.jpg"
+                      alt="PXIStudio — Library"
+                      loading="lazy" decoding="async"
+                      data-title="Library"
+                      data-desc="Organize events, star favorites, and keep your dearest memories safe in your Vault."
+                    />
+                  </div>
+                  <div class="embla__slide">
+                    <img
+                      src="/assets/pxi-app-04.jpg"
+                      alt="PXIStudio — Passport"
+                      loading="lazy" decoding="async"
+                      data-title="Passport"
+                      data-desc="Your event passport — stamps, streaks, and a gamified timeline of everywhere you’ve been."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- dots -->
+            <div class="embla__dots" aria-hidden="true">
+              <button class="embla__dot" type="button"></button>
+              <button class="embla__dot" type="button"></button>
+              <button class="embla__dot" type="button"></button>
+              <button class="embla__dot" type="button"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Copy (right) -->
+        <div class="feature-copy">
+          <div class="feature-head">
+            <h1 class="h1">PXIStudio</h1>
+            <div class="kicker kicker--neon">Plan, Capture, Relive.</div>
+            <p class="copy">Seamless planning and shared nostalgia.</p>
+            <p class="copy">Your event becomes a live, shared camera roll.</p>
+          </div>
+
+          <!-- Neon bar under the main heading -->
+          <div class="headline-bar"></div>
+
+          <!-- Fixed-height caption area (cross-fade layers, no layout shift) -->
+          <div class="app-caption">
+            <div class="app-title layer layer--show" id="appTitleA">Feed</div>
+            <div class="app-title layer"             id="appTitleB">Feed</div>
+
+            <div class="app-desc layer layer--show"  id="appDescA">
+              Share moments in a live scrapbook — friends’ angles appear instantly and yours post as you shoot.
+            </div>
+            <div class="app-desc layer"              id="appDescB"></div>
+
+            <div class="caption-stack subtle"><div id="appIndex" class="narrow">1 / 4</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================
+         PXICLIP (stacked)
+         ======================= -->
+    <section class="container center-col" id="pxiclip">
+      <div class="overline">Hardware</div>
+      <h2 class="h1">PXIClip</h2>
+      <p class="subtle">Coming soon</p>
+      <p class="copy narrow">
+        PXIClip turns your phone into an instant camera — magnetic snap, print-ready shots, and a shared album that keeps every angle together. Pair it with PXIStudio for the full party experience.
+      </p>
 
       <div class="video-card reveal on">
         <video class="video feature-video" muted playsinline autoplay loop poster="/assets/img.png">
@@ -56,56 +153,6 @@
         </video>
       </div>
 
-      <div class="features-grid">
-        <div class="card">
-          <img class="icon" src="/assets/illustration-magsnap.png" alt="Magnetic snap wake" />
-          <h3>Magnetic Snap Wake</h3>
-          <p>PXIClip wakes and connects the moment it snaps to your phone.</p>
-        </div>
-        <div class="card">
-          <img class="icon" src="/assets/illustration-sharedlib.png" alt="Shared Event Albums" />
-          <h3>Shared Event Albums</h3>
-          <p>Spin up a live album for any party. Friends join via link or QR and everyone’s shots roll in together.</p>
-        </div>
-        <div class="card">
-          <img class="icon" src="/assets/illustration-sharing.png" alt="Creator Filters" />
-          <h3>Creator Filters</h3>
-          <p>Film-inspired looks and AI styles tuned for print. Keep it natural or go bold.</p>
-        </div>
-      </div>
-
-      <!-- === App Screens Carousel (inserted between cards/video and CTA band) === -->
-      <section class="container center-col phone-carousel reveal on" id="appScreens">
-        <div class="overline">PXI Studio Preview</div>
-        <h2 class="h1">Pick • Print • Post</h2>
-        <p class="copy narrow">Swipe or let it play — a quick peek at the flow.</p>
-
-        <div class="embla" id="appCarousel">
-          <div class="device-frame">
-            <div class="embla__viewport device-screen">
-              <div class="embla__container">
-                <div class="embla__slide"><img src="/assets/pxi-app-01.jpg" alt="PXI Studio — Home" loading="lazy" decoding="async"></div>
-                <div class="embla__slide"><img src="/assets/pxi-app-02.jpg" alt="PXI Studio — Capture" loading="lazy" decoding="async"></div>
-                <div class="embla__slide"><img src="/assets/pxi-app-03.jpg" alt="PXI Studio — Filters" loading="lazy" decoding="async"></div>
-                <div class="embla__slide"><img src="/assets/pxi-app-04.jpg" alt="PXI Studio — Share/Print" loading="lazy" decoding="async"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- tiny dot nav -->
-          <div class="embla__dots" aria-hidden="true">
-            <button class="embla__dot" type="button"></button>
-            <button class="embla__dot" type="button"></button>
-            <button class="embla__dot" type="button"></button>
-            <button class="embla__dot" type="button"></button>
-          </div>
-        </div>
-
-        <p class="caption subtle">Screens from an internal build — visuals may change.</p>
-      </section>
-      <!-- === /App Screens Carousel === -->
-
-      <!-- CTA band: flowing outline neon buttons, no solid fills -->
       <div class="early-band">
         <a class="cta cta--outline" href="signup.html" data-evt="waitlist_from_features">
           Join Waitlist — 20% Off
@@ -138,5 +185,6 @@
   <script src="https://unpkg.com/embla-carousel-autoplay/embla-carousel-autoplay.umd.js"></script>
 
   <script src="js/main.js"></script>
+  <script>window.__PXI_APP_SHOWCASE__ = true;</script>
 </body>
 </html>

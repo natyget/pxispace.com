@@ -1,4 +1,3 @@
-<!-- path: index.html -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -22,40 +21,13 @@
   <meta name="twitter:image" content="https://pxispace.com/assets/pxi-logo-og.png" />
   <link rel="canonical" href="https://pxispace.com/"/>
 
-  <!-- Minimal overrides -->
   <style>
-    :root { --badge-h: 48px; }
-
-    /* Centered badge, slightly raised (no border radius: let SVG corners show) */
-    .store-overlay{
-      position:absolute; left:50%; transform:translateX(-50%);
-      bottom:28px; display:block; pointer-events:auto;
-    }
-    .store-overlay img{ height:var(--badge-h); width:auto; display:block; border-radius:0; }
-
-    /* Desktop tweaks: larger type + lower the hero image a bit */
-    @media (min-width: 1025px){
-      .title{ font-size:104px; }
-      .kicker{ font-size:32px; }
-      .copy{ font-size:18.5px; max-width:700px; }
-      .hero-visual{ margin-top:28px; } /* nudges image down so top/bottom feel even */
-    }
-
-    /* Keep image on the right on desktop (mobile stacks image first) */
-    @media (min-width: 769px){
-      .app-hero{display:grid; grid-template-columns:1.05fr .95fr; gap:28px; align-items:center}
-      .app-hero__copy{order:1}
-      .hero-visual{order:2}
-    }
-
-    /* Mobile: pin hamburger to the right edge */
-    @media (max-width: 768px){
-      .nav__row{ position:relative; }
-      .nav-toggle{
-        position:absolute; right:16px; top:50%; transform:translateY(-50%);
-        margin-left:0;
-      }
-    }
+    /* page nudges only */
+    @media (min-width:1025px){ .title{font-size:104px} .copy{font-size:18.5px;max-width:700px} .hero-visual{margin-top:28px} }
+    @media (min-width:769px){ .app-hero{display:grid;grid-template-columns:1.05fr .95fr;gap:28px;align-items:center} .app-hero__copy{order:1} .hero-visual{order:2} }
+    @media (max-width:768px){ .nav__row{position:relative} .nav-toggle{position:absolute;right:16px;top:50%;transform:translateY(-50%)} }
+    .store-overlay{position:absolute;left:50%;transform:translateX(-50%);bottom:28px;display:block}
+    .store-overlay img{height:48px;width:auto;display:block}
   </style>
 
   <!-- GA -->
@@ -117,13 +89,38 @@
       </div>
 
       <div class="app-hero__copy">
-        <h1 class="title title--neon title--animate" style="margin-bottom:6px">PXI</h1>
-        <div class="kicker kicker--neon" style="margin-bottom:18px">PICK – PRINT – POST</div>
+        <h1 class="title title--neon title--animate" style="margin-bottom:10px">Where’s My Photo?</h1>
         <div class="copy">
-          <p>Cherishable moments get lost in your phone, never to be seen again. Instant cameras and clunky printing bricks only add hassle and won’t cut it.</p>
-          <p>Inspired by the vision of a printing phone with an easy wake via magnetic snap, PXIClip transforms your device into an instant camera.</p>
-          <p>“Instant” has never been this effortless.</p>
+          <p>Someone took the perfect picture of you. Yet you never saw it again. Buried in chats, lost in someone’s camera roll, that moment’s gone. A fragment of time that should have been yours.</p>
+          <p>With PXI every photo finds its way home. Share the moment, join the memory, and get your best angle before it fades.</p>
         </div>
+
+        <!-- Steps (square cards with title + description) -->
+        <div class="steps" aria-label="How PXI works">
+          <div class="steps__grid">
+            <article class="step-card step-card--peek">
+              <div class="step-content">
+                <h3 class="step-title">Create &amp; Share</h3>
+                <p class="step-desc">Start a shared album. Invite your people.</p>
+              </div>
+            </article>
+
+            <article class="step-card step-card--peek">
+              <div class="step-content">
+                <h3 class="step-title">Hype &amp; Upload</h3>
+                <p class="step-desc">Use it as a pre-chat to hype and upload. React to images.</p>
+              </div>
+            </article>
+
+            <article class="step-card step-card--peek">
+              <div class="step-content">
+                <h3 class="step-title">Wake Up Collected</h3>
+                <p class="step-desc">See every angle in one place. Share anywhere.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <!-- /steps -->
       </div>
     </section>
   </main>
@@ -143,6 +140,19 @@
       <button id="cookieBtn" class="cta cta--outline small">Got it!</button>
     </div>
   </div>
+
+  <!-- Reveal cards on scroll -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      const cards = document.querySelectorAll('.step-card');
+      const io = new IntersectionObserver((entries)=>{
+        entries.forEach(e=>{
+          if(e.isIntersecting){ e.target.classList.add('is-visible'); }
+        });
+      }, {threshold:.25});
+      cards.forEach(c=>io.observe(c));
+    });
+  </script>
 
   <script src="js/main.js"></script>
 </body>
