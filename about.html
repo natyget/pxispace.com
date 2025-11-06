@@ -3,34 +3,62 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PXI — About Us</title>
+  <title>PXI — Our Story</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" href="assets/favicon.png" />
   <link rel="apple-touch-icon" href="assets/favicon.png" />
 
   <!-- SEO -->
-  <meta name="description" content="PXI was born from a simple truth: the best photos get lost. We built PXIStudio and PXIClip so every angle finds its way home — instantly, together." />
+  <meta name="description" content="PXI’s story: we built a shared camera roll so every angle from every event makes it home." />
 
-  <!-- Open Graph / Twitter (kept from your file) -->
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="PXI — Pick • Print • Post" />
-  <meta property="og:description" content="PXIClip transforms your phone into an instant camera." />
-  <meta property="og:image" content="https://pxispace.com/assets/pxi-logo-og.png" />
-  <meta property="og:url" content="https://pxispace.com/about.html" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="PXI — Pick • Print • Post" />
-  <meta name="twitter:description" content="PXIClip transforms your phone into an instant camera." />
-  <meta name="twitter:image" content="https://pxispace.com/assets/pxi-logo-og.png" />
-  <link rel="canonical" href="https://pxispace.com/about.html"/>
+  <!-- Page-scoped styles (about only) -->
+  <style>
+    /* Add gentle top/bottom padding to use empty space without causing scroll */
+    .about-wrap{
+      padding-top: calc(var(--nav-h) + 18px);
+      padding-bottom: 22px;
+    }
+    .about-inner{
+      max-width: 80ch;
+      margin: 0 auto;
+    }
 
-  <!-- GA -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KXR80WB7QK"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-KXR80WB7QK', { anonymize_ip: true });
-  </script>
+    /* Title: centered, a touch more separation from subhead */
+    .about-title{
+      margin: 0 0 14px 0;                /* was 10px */
+      font-size: clamp(30px, 4.6vw, 48px);
+      line-height: 1.06;
+      letter-spacing: -0.01em;
+      text-align: center;
+    }
+
+    /* Subhead: slightly larger and more gap before body */
+    .about-kicker{
+      margin: 0 auto 24px auto;          /* was 18px */
+      font-size: clamp(17px, 2.3vw, 21px);
+      max-width: 72ch;
+      text-align: center;
+      color: #e6dbff;
+    }
+
+    /* Body: a bit more line/paragraph spacing so transitions feel clear */
+    .about-body p{
+      margin: 12px 0;                    /* was 10px */
+      font-size: clamp(15px, 1.7vw, 17px);
+      line-height: 1.5;                  /* was 1.45 */
+      text-align: justify;
+      text-justify: inter-word;
+    }
+
+    /* Tighten slightly on smaller screens to avoid scroll */
+    @media (max-width: 960px){
+      .about-wrap{ padding-top: calc(var(--nav-h) + 14px); padding-bottom: 18px; }
+      .about-inner{ max-width: 74ch; }
+      .about-title{ margin-bottom: 12px; }
+      .about-kicker{ margin-bottom: 20px; font-size: clamp(16px, 2.2vw, 19px); }
+      .about-body p{ margin: 10px 0; line-height: 1.46; }
+    }
+  </style>
 </head>
 <body>
   <header class="nav">
@@ -51,44 +79,27 @@
   <main class="screen screen--page">
     <div class="bg"></div>
 
-    <!-- Hero -->
-    <section class="container page-center">
-      <h1 class="title title--neon">Built to Keep<br/>Every Angle</h1>
-      <p class="kicker kicker--neon">We were the friends who hosted the party—then watched the best shots vanish into someone else’s camera roll.</p>
-      <p class="copy narrow">
-        PXI started as a fix for that exact pain: the perfect photo you never receive. We created a shared album so nothing gets lost, then expanded it into an all-in-one flow that makes capturing, collecting, and reliving effortless. :contentReference[oaicite:0]{index=0}
-      </p>
-    </section>
-
-    <!-- 3-part story — short, scannable, punchy -->
-    <section class="container center-col">
-      <div class="overline">Why We Exist</div>
-      <h2 class="h1">Moments shouldn’t get buried.</h2>
-      <div class="copy narrow">
-        <p>
-          Our crew spent years bringing people together. The only thing harder than logistics? Chasing everyone’s media after. The real magic always surfaced months later—when a buried shot finally appeared and made the night feel alive again. PXI is our promise to bring that feeling forward to <em>right now</em>. :contentReference[oaicite:1]{index=1}
+    <section class="container about-wrap">
+      <div class="about-inner">
+        <h1 class="about-title title--neon">Our Story</h1>
+        <p class="about-kicker kicker--neon">
+          We threw parties, then watched the best shots vanish into someone else’s camera roll. PXI exists so that never happens again.
         </p>
-      </div>
 
-      <div class="overline" style="margin-top:28px">What We Built</div>
-      <h3 class="h1" style="font-size:36px">PXIStudio · Shared camera roll</h3>
-      <p class="copy narrow">
-        Create or join an event and every angle lands in the same album—live, organized, and ready to relive. No chasing, no missing pieces, just the full story. :contentReference[oaicite:2]{index=2}
-      </p>
-
-      <h3 class="h1" style="font-size:36px">PXIClip · Instant keepsakes</h3>
-      <p class="copy narrow">
-        We wanted digital to meet physical—so we turned the phone you already carry into an instant camera. From flash to pocket-ready print in seconds, without the bulk. :contentReference[oaicite:3]{index=3}
-      </p>
-
-      <div class="overline" style="margin-top:28px">Where We’re From</div>
-      <p class="copy narrow" style="margin-top:6px">
-        PXI Labs LLC began in Texas with a small, relentless team focused on one simple mission: make instant tangible again—and make sharing feel effortless. We’re just getting started. :contentReference[oaicite:4]{index=4}
-      </p>
-
-      <div style="margin-top:20px">
-        <a class="cta cta--outline" href="features.html">Explore Features</a>
-        <a class="cta cta--outline" href="signup.html" style="margin-left:10px">Join the Waitlist</a>
+        <div class="about-body">
+          <p>
+            It began with a group of international friends who loved bringing people together. We spent years hosting and learning what makes a night memorable, until the logistics crowded out the joy and we stepped back.
+          </p>
+          <p>
+            In our own events, another problem surfaced: moments scattered across dozens of camera rolls. Months later, someone would uncover a buried photo—the perfect angle of you—and that rediscovery felt electric.
+          </p>
+          <p>
+            That spark became <strong>PXI</strong>. We set out to build a shared album so no memory gets lost, which grew into <strong>PXIStudio</strong>—a live, organized camera roll for real life that removes friction and keeps every angle together.
+          </p>
+          <p>
+            We then bridged digital to physical with <strong>PXIClip</strong>, so favorite frames jump from phone to print in seconds—memories meant to be kept, not buried in chats.
+          </p>
+        </div>
       </div>
     </section>
   </main>
