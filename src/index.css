@@ -4,6 +4,10 @@
 /* ============================================
    SEMANTIC DESIGN SYSTEM VARIABLES
    ============================================ */
+@theme {
+    --color-mee-100: oklch(0.99 0 0);
+}
+
 @layer base {
     :root {
         /* Fonts */
@@ -63,12 +67,14 @@
         font-family: var(--font-heading);
         letter-spacing: 0.1em;
         color: var(--text-primary);
+        text-transform: capitalize;
     }
 }
 
 /* ============================================
    GRADIENT HEADING CLASSES
    ============================================ */
+
 @layer utilities {
     .heading-gradient {
         background: linear-gradient(
@@ -80,7 +86,7 @@
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
-        display: inline-block;
+        /* display: inline-block; */
     }
 
     .heading-gradient-pink-cyan {
@@ -92,7 +98,7 @@
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
-        display: inline-block;
+        /* display: inline-block; */
     }
 
     .heading-gradient-purple-cyan {
@@ -104,7 +110,7 @@
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
-        display: inline-block;
+        /* display: inline-block; */
     }
 
     .heading-gradient-cyan-blue {
@@ -116,7 +122,7 @@
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
-        display: inline-block;
+        /* display: inline-block; */
     }
 
     .heading-gradient-pink-purple {
@@ -128,7 +134,7 @@
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
-        display: inline-block;
+        /* display: inline-block; */
     }
 
     /* Text Effects */
