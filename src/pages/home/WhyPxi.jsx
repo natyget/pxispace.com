@@ -72,7 +72,7 @@ const WhyPxi = ({ featuresRef }) => {
                     </h2>
                     <p className="text-base sm:text-lg text-white/70 leading-relaxed">
                         PXI enhances how people capture, share, and revisit
-                        event moments — with zero friction for organizers and
+                        event moments, with zero friction for organizers and
                         pure enjoyment for attendees.
                     </p>
                 </div>
