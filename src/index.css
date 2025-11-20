@@ -21,7 +21,7 @@
         --text-muted: #4a4a4a;
 
         /* Colors - Background */
-        --bg-primary: #000000;
+        --bg-primary: #000000fe;
         --bg-secondary: #0a0a0a;
         --bg-tertiary: #1a1a1a;
 
@@ -223,11 +223,11 @@
     }
 
     .glass-nav {
-        background: rgba(10, 10, 10, 0.12);
-        border: 1px solid rgba(168, 85, 247, 0.12);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        box-shadow: 0 6px 30px rgba(0, 0, 0, 0.518);
+         background: rgba(10, 10, 10, 0.12) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(119, 21, 168, 0.411) !important;
+    isolation: isolate;
     }
 
     /* Text Color Utilities */

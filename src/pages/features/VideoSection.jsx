@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import pxiAd from "../../assets/PXIAd.mp4";
-import pxiHero from "../../assets/pxi-hero.png";
+import pxiHero from "../../assets/logo.png";
 
 const fadeInUp = {
     hidden: { opacity: 0, y: 30 },

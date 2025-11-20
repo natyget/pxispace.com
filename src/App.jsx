@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import RouteListener from "./components/RouteListener";
 import Footer from "./components/Footer";
 import Home from "./pages/home/Home";
 import About from "./pages/About";
@@ -13,6 +14,7 @@ const App = () => (
     <BrowserRouter>
         <div className="relative min-h-screen flex flex-col">
             <Navbar />
+            <RouteListener />
             <main className="flex-1">
                 <Routes>
                     <Route path="/" element={<Home />} />
