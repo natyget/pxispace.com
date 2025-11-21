@@ -127,7 +127,7 @@ const HowPxiWorks = () => {
                             Automatic Memory Collection
                         </h3>
                         <p className="text-white/70 mb-6">
-                            PXI gathers every photo, angle, and reaction — all
+                            PXI gathers every photo, angle, and reaction, all
                             in one place.
                         </p>
                         <a

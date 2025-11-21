@@ -1,10 +1,10 @@
-import ParticleBackground from "../components/ParticleBackground";
-import AboutHero from "./about/AboutHero";
-import OriginStory from "./about/OriginStory";
-import Vision from "./about/Vision";
-import Mission from "./about/Mission";
-import Problem from "./about/Problem";
-import Hardware from "./about/Hardware";
+import AboutHero from "./AboutHero";
+import OriginStory from "./OriginStory";
+import Vision from "./Vision";
+import Mission from "./Mission";
+import Problem from "./Problem";
+import Hardware from "./Hardware";
+import ParticleBackground from "../../components/ParticleBackground";
 
 const About = () => {
     return (

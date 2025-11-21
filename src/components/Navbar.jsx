@@ -45,12 +45,14 @@ const Navbar = () => {
                         {/* Right: Pre-order button + mobile menu toggle */}
                         <div className="flex items-center space-x-3">
                             <div className="hidden md:block">
-                                <NeonButton
-                                    size="sm"
-                                    className="animate-pulse-glow"
-                                >
-                                    Pre-Order
-                                </NeonButton>
+                                <Link to="/pre-order">
+                                    <NeonButton
+                                        size="sm"
+                                        className="animate-pulse-glow"
+                                    >
+                                        Pre-Order
+                                    </NeonButton>
+                                </Link>
                             </div>
 
                             <button
@@ -81,12 +83,17 @@ const Navbar = () => {
                                     {link.name}
                                 </NavLink>
                             ))}
-                            <NeonButton
-                                size="sm"
-                                className="w-full animate-pulse-glow"
+                            <Link
+                                to="/pre-order"
+                                onClick={() => setIsOpen(false)}
                             >
-                                Pre-Order
-                            </NeonButton>
+                                <NeonButton
+                                    size="sm"
+                                    className="w-full animate-pulse-glow"
+                                >
+                                    Pre-Order
+                                </NeonButton>
+                            </Link>
                         </div>
                     )}
                 </div>

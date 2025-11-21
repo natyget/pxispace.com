@@ -213,7 +213,7 @@ main a:not(.cta):hover{color:#fff;text-shadow:0 0 10px rgba(167,139,250,.7)}
 .embla__dot.is-selected{ background:var(--violet); opacity:1; box-shadow:0 0 16px rgba(139,92,246,.8); }
 .caption.subtle{ color:#eae6ffb3; font-size:13px; margin-top:6px; }
 
-/* ===== Steps — translucent glass cards on HOME ===== */
+/* ===== Steps  translucent glass cards on HOME ===== */
 .steps{ margin-top:18px; }
 @media (min-width:769px){
   .steps__grid{

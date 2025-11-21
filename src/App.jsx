@@ -3,12 +3,11 @@ import Navbar from "./components/Navbar";
 import RouteListener from "./components/RouteListener";
 import Footer from "./components/Footer";
 import Home from "./pages/home/Home";
-import About from "./pages/About";
-import Shop from "./pages/Shop";
-import TechShowcase from "./pages/TechShowcase";
-import Support from "./pages/Support";
+import About from "./pages/about/About";
 import NotFound from "./pages/NotFound";
 import FeaturesPage from "./pages/features/FeaturesPage";
+import SupportPage from "./pages/support/SupportPage";
+import PreOrderPage from "./pages/PreOrderPage";
 
 const App = () => (
     <BrowserRouter>
@@ -19,10 +18,9 @@ const App = () => (
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/features" element={<FeaturesPage />} />
+                    <Route path="/pre-order" element={<PreOrderPage />} />
                     <Route path="/about" element={<About />} />
-                    <Route path="/shop" element={<Shop />} />
-                    <Route path="/tech" element={<TechShowcase />} />
-                    <Route path="/support" element={<Support />} />
+                    <Route path="/support" element={<SupportPage />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </main>

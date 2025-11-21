@@ -74,7 +74,7 @@ const CTA = () => {
                         className="mx-auto block px-8 py-3 rounded-lg font-semibold text-purple-300 border border-purple-500/50 hover:border-purple-500 hover:text-purple-200 transition-all duration-300 bg-purple-500/5 hover:bg-purple-500/10"
                         variants={fadeInUp}
                     >
-                        Join Waitlist — 20% OFF
+                        Join Waitlist - 20% OFF
                     </motion.button>
                 </motion.div>
             </div>

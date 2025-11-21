@@ -64,7 +64,7 @@ const VideoSection = () => {
                     variants={containerVariants}
                 >
                     <motion.div
-                        className="w-full h-96 md:h-[500px] border border-purple-500/10 rounded-2xl overflow-hidden"
+                        className="w-full h-72 sm:h-96 md:h-[500px] border border-purple-500/10 rounded-2xl overflow-hidden"
                         variants={fadeInUp}
                     >
                         <video

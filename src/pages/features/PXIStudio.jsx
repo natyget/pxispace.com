@@ -55,7 +55,7 @@ const PXIStudio = () => {
                         </h2>
 
                         <p className="text-base md:text-lg text-color-secondary leading-relaxed">
-                            PXIStudio is the core of the PXI experience — a
+                            PXIStudio is the core of the PXI experience, a
                             unified platform where shared albums, reactions,
                             social feeds, and digital camera tools come together
                             to remove friction and elevate memories.

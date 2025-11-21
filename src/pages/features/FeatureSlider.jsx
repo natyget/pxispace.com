@@ -36,7 +36,7 @@ const FeatureSlider = () => {
         {
             title: "Live Shared Albums",
             description:
-                "See every angle in real time. PXI automatically builds a shared album as guests capture photos — no more chasing images or losing the best shots.",
+                "See every angle in real time. PXI automatically builds a shared album as guests capture photos, no more chasing images or losing the best shots.",
             image: libraryImg,
         },
         {
