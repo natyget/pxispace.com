@@ -13,12 +13,13 @@ const SupportPage = () => {
             <ParticleBackground />
 
             <main className="relative z-10">
-                <SupportHero />
+                <h1>UNDER CONSTRUCTION</h1>
+                {/* <SupportHero />
                 <TrustSection />
                 <Categories />
                 <FAQ />
                 <DeviceConfidence />
-                <ContactCTA />
+                <ContactCTA /> */}
             </main>
         </div>
     );
