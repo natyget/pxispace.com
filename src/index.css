@@ -223,11 +223,11 @@
     }
 
     .glass-nav {
-         background: rgba(10, 10, 10, 0.12) !important;
-    backdrop-filter: blur(14px) !important;
-    -webkit-backdrop-filter: blur(14px) !important;
-    border: 1px solid rgba(119, 21, 168, 0.411) !important;
-    isolation: isolate;
+        background: rgba(10, 10, 10, 0.12) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        border: 1px solid rgba(119, 21, 168, 0.411) !important;
+        isolation: isolate;
     }
 
     /* Text Color Utilities */
@@ -301,6 +301,11 @@
             rgba(168, 85, 247, 0.15) 0%,
             transparent 70%
         );
+    }
+
+    /* Ensure section anchors account for sticky sidebar/header */
+    section[id] {
+        scroll-margin-top: 6rem;
     }
 
     /* Glow Animations */

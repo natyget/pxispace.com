@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import FeaturesPage from "./pages/features/FeaturesPage";
 import SupportPage from "./pages/support/SupportPage";
 import PreOrderPage from "./pages/PreOrderPage";
+import TermsOfService from "./pages/TermsOfService";
 
 const App = () => (
     <BrowserRouter>
@@ -21,6 +22,10 @@ const App = () => (
                     <Route path="/pre-order" element={<PreOrderPage />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/support" element={<SupportPage />} />
+                    <Route
+                        path="/terms_of_service"
+                        element={<TermsOfService />}
+                    />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </main>
