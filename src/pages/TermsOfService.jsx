@@ -234,7 +234,7 @@ export default function TermsOfService() {
                     <footer className="mt-8 text-sm text-center text-neutral-400/80">
                         If you have questions about these Terms, please contact{" "}
                         <a
-                            href="mailto:contact@pxi.space.com"
+                            href="mailto:contact@pxispace.com"
                             className="text-purple-400 hover:text-purple-300 font-semibold"
                         >
                             PXI LABS LLC

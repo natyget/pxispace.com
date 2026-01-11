@@ -11,39 +11,47 @@ const Footer = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
                     {/* Brand + Description */}
                     <div className="space-y-4">
-                        <h3 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-cyan-400">
-                            PXI
-                        </h3>
-                        <p className="text-muted-foreground max-w-sm text-white/70">
-                            Bringing instant printing back to the digital
-                            generation, professional, private, and simple for
-                            every event.
+                        <div className="group inline-block">
+                            <h3 className="text-2xl md:text-3xl font-extrabold heading-gradient transition-shadow duration-300 group-hover:shadow-[0_6px_30px_rgba(139,92,246,0.18)]">
+                                <span className="inline-block transform transition-transform duration-300 group-hover:-translate-y-0.5">
+                                    PXI
+                                </span>
+                            </h3>
+                        </div>
+
+                        <p className="text-white/70 max-w-sm leading-6 text-sm md:text-sm">
+                            Professional instant printing experiences for
+                            events, private by design, simple by intent.
                         </p>
 
-                        <div className="flex items-center gap-4 mt-4">
+                        <div className="flex items-center gap-3 mt-4">
                             <a
                                 href="#"
-                                className="text-muted-foreground hover:text-white/90 transition-colors text-xl"
+                                aria-label="Instagram"
+                                className="text-white/70 hover:text-white transition-colors duration-300 rounded-full p-2 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(139,92,246,0.18)] transform-gpu"
                             >
-                                <FiInstagram />
+                                <FiInstagram className="w-5 h-5" />
                             </a>
                             <a
                                 href="#"
-                                className="text-muted-foreground hover:text-white/90 transition-colors text-xl"
+                                aria-label="Twitter"
+                                className="text-white/70 hover:text-white transition-colors duration-300 rounded-full p-2 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(139,92,246,0.18)] transform-gpu"
                             >
-                                <FiTwitter />
+                                <FiTwitter className="w-5 h-5" />
                             </a>
                             <a
                                 href="#"
-                                className="text-muted-foreground hover:text-white/90 transition-colors text-xl"
+                                aria-label="Facebook"
+                                className="text-white/70 hover:text-white transition-colors duration-300 rounded-full p-2 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(139,92,246,0.18)] transform-gpu"
                             >
-                                <FiFacebook />
+                                <FiFacebook className="w-5 h-5" />
                             </a>
                             <a
                                 href="#"
-                                className="text-muted-foreground hover:text-white/90 transition-colors text-xl"
+                                aria-label="YouTube"
+                                className="text-white/70 hover:text-white transition-colors duration-300 rounded-full p-2 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(139,92,246,0.18)] transform-gpu"
                             >
-                                <FiYoutube />
+                                <FiYoutube className="w-5 h-5" />
                             </a>
                         </div>
                     </div>
@@ -54,29 +62,29 @@ const Footer = () => {
                             <h4 className="font-semibold mb-4 text-white">
                                 Product
                             </h4>
-                            <ul className="space-y-2 text-white/70">
+                            <ul className="space-y-3 text-white/70">
+                                <li>
+                                    <Link
+                                        to="/"
+                                        className="text-white/70 hover:text-purple-300 transition-colors duration-200 hover:underline hover:underline-offset-4"
+                                    >
+                                        Home
+                                    </Link>
+                                </li>
                                 <li>
                                     <Link
                                         to="/features"
-                                        className="text-muted-foreground hover:text-white transition-colors"
+                                        className="text-white/70 hover:text-purple-300 transition-colors duration-200 hover:underline hover:underline-offset-4"
                                     >
                                         Features
                                     </Link>
                                 </li>
                                 <li>
                                     <Link
-                                        to="/tech"
-                                        className="text-muted-foreground hover:text-white transition-colors"
+                                        to="/pre-order"
+                                        className="text-white/70 hover:text-purple-300 transition-colors duration-200 hover:underline hover:underline-offset-4"
                                     >
-                                        Technology
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        to="/shop"
-                                        className="text-muted-foreground hover:text-white transition-colors"
-                                    >
-                                        Shop
+                                        Pre-Order
                                     </Link>
                                 </li>
                             </ul>
@@ -86,27 +94,27 @@ const Footer = () => {
                             <h4 className="font-semibold mb-4 text-white">
                                 Company
                             </h4>
-                            <ul className="space-y-2 text-white/70">
+                            <ul className="space-y-3 text-white/70">
                                 <li>
                                     <Link
                                         to="/about"
-                                        className="text-muted-foreground hover:text-white transition-colors"
+                                        className="text-white/70 hover:text-purple-300 transition-colors duration-200 hover:underline hover:underline-offset-4"
                                     >
-                                        About Us
+                                        About
                                     </Link>
                                 </li>
                                 <li>
                                     <Link
                                         to="/support"
-                                        className="text-muted-foreground hover:text-white transition-colors"
+                                        className="text-white/70 hover:text-purple-300 transition-colors duration-200 hover:underline hover:underline-offset-4"
                                     >
                                         Support
                                     </Link>
                                 </li>
                                 <li>
                                     <a
-                                        href="#"
-                                        className="text-muted-foreground hover:text-white transition-colors"
+                                        href="mailto:contact@pxi.space.com"
+                                        className="text-white/70 hover:text-purple-300 transition-colors duration-200 hover:underline hover:underline-offset-4"
                                     >
                                         Contact
                                     </a>
@@ -116,16 +124,17 @@ const Footer = () => {
                     </div>
 
                     {/* App downloads */}
-                    <div className="flex flex-col items-center md:items-end">
-                        <p className="text-muted-foreground mb-4 text-right md:text-left md:text-sm max-w-xs">
+                    <div className="flex flex-col  items-center ">
+                        <p className="text-white/70 mb-4 text-center md:text-left md:text-sm max-w-xs leading-relaxed">
                             Download PXI and join the event experience, capture,
                             share, and relive instantly.
                         </p>
 
-                        <div className="flex flex-col sm:flex-row items-stretch gap-3">
+                        <div className="   flex flex-col  gap-3 items-center ">
                             <a
                                 href="#"
-                                className="flex items-center gap-3 px-6 h-12 rounded-2xl border border-purple-500/20 bg-transparent text-white transition-shadow duration-200 hover:shadow-[0_0_30px_rgba(139,92,246,0.45)] border-glow w-44"
+                                className="flex items-center gap-3 px-5 h-12 rounded-2xl border border-purple-500/20 bg-transparent text-white transition-transform duration-200 hover:shadow-[0_0_30px_rgba(139,92,246,0.22)] hover:scale-105"
+                                aria-label="Download on the App Store"
                             >
                                 <FaApple className="text-xl" />
                                 <div className="text-left">
@@ -140,7 +149,8 @@ const Footer = () => {
 
                             <a
                                 href="#"
-                                className="flex items-center gap-3 px-6 h-12 rounded-2xl border border-purple-500/20 bg-transparent text-white transition-shadow duration-200 hover:shadow-[0_0_30px_rgba(139,92,246,0.45)] border-glow w-40"
+                                className="flex items-center gap-3 px-5 h-12 rounded-2xl border border-purple-500/20 bg-transparent text-white transition-transform duration-200 hover:shadow-[0_0_30px_rgba(139,92,246,0.22)] hover:scale-105"
+                                aria-label="Get it on Google Play"
                             >
                                 <FaGooglePlay className="text-xl" />
                                 <div className="text-left">
@@ -157,20 +167,22 @@ const Footer = () => {
                 </div>
 
                 <div className="mt-8 pt-6">
-                    <div className="w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent mb-4" />
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent mb-4 opacity-60" />
 
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-                        <p>&copy; 2025 PXI Labs LLC. All rights reserved.</p>
-                        <div className="flex items-center gap-4">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+                        <p className="text-white/60">
+                            &copy; {new Date().getFullYear()} PXI Labs LLC. All rights reserved.
+                        </p>
+                        <div className="flex items-center gap-6">
                             <Link
-                                to="/terms"
-                                className="hover:text-white transition-colors"
+                                to="/terms_of_service"
+                                className="text-white/70 hover:text-purple-300 transition-colors duration-150"
                             >
                                 Terms
                             </Link>
                             <Link
-                                to="/privacy"
-                                className="hover:text-white transition-colors"
+                                to="/privacy_policy"
+                                className="text-white/70 hover:text-purple-300 transition-colors duration-150"
                             >
                                 Privacy
                             </Link>

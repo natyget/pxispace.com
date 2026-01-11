@@ -121,10 +121,10 @@ export default function PrivacyPolicy() {
                             For privacy concerns: PXI LABS LLC 5850 Town and
                             Country Blvd, Suite 403 Frisco, TX 75034 Email:{" "}
                             <a
-                                href="mailto:contact@pxi.space.com"
+                                href="mailto:contact@pxispace.com"
                                 className="text-purple-400 font-semibold"
                             >
-                                contact@pxi.space.com
+                                 contact@pxispace.com
                             </a>
                         </p>
                     </Section>
