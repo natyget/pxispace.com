@@ -9,6 +9,7 @@ import FeaturesPage from "./pages/features/FeaturesPage";
 import SupportPage from "./pages/support/SupportPage";
 import PreOrderPage from "./pages/PreOrderPage";
 import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const App = () => (
     <BrowserRouter>
@@ -26,6 +27,8 @@ const App = () => (
                         path="/terms_of_service"
                         element={<TermsOfService />}
                     />
+                    <Route path="/terms" element={<TermsOfService />} />
+                    <Route path="/privacy_policy" element={<PrivacyPolicy />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </main>

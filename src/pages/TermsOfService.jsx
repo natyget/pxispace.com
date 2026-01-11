@@ -24,7 +24,7 @@ export default function TermsOfService() {
                     </h1>
 
                     <p className="mt-3 text-sm text-neutral-300/80  md:max-w-2xl md:mx-auto">
-                        Document Title: Terms of Service Last Updated: January
+                         Terms of Service Last Updated: January
                         9, 2026 Entity: PXI LABS LLC
                     </p>
                 </header>
@@ -231,7 +231,7 @@ export default function TermsOfService() {
                         </p>
                     </Section>
 
-                    <footer className="mt-8 text-sm text-neutral-400/80">
+                    <footer className="mt-8 text-sm text-center text-neutral-400/80">
                         If you have questions about these Terms, please contact{" "}
                         <a
                             href="mailto:contact@pxi.space.com"
@@ -265,7 +265,7 @@ function Section({ number, title, children, Icon }) {
                 </div>
             </header>
 
-            <div className="mt-3 transition-shadow duration-150 group-hover:shadow-[0_12px_40px_rgba(132,94,255,0.06)] rounded-md p-3">
+            <div className="mt-3 transition-shadow duration-150  rounded-md p-3">
                 {children}
             </div>
         </section>
