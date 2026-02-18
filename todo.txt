@@ -1,0 +1,129 @@
+🌐 GLOBAL TASKS
+☐ Replace favicon with favicon-96x96.png
+☐ Match website font to provided reference
+☐ Remove “Stop the friction. Amplify the feeling.” from all pages
+☐ Footer should be simplified and minimal
+☐ Remove extra routes (Features, PreOrder, Support)
+☐ Keep only: Home, Event, About
+☐ Support becomes footer hyperlink
+☐ Create /event/:id
+☐ Add .well-known/apple-app-site-association
+🧭 NAVBAR TASKS
+☐ Replace logo with real logo (apple-touch-icon.png or logo.svg)
+☐ Refine and center toggle button
+☐ Fix toggle alignment (currently off)
+☐ Replace “Notification” with “Sign up”
+☐ Ensure responsive alignment
+🏠 HOME PAGE TASKS
+HERO SECTION
+☐ Fix typo: “Perfect Party Platform”
+☐ Change text to “one effortless experience”
+☐ Keep 3-line gradient style
+☐ Replace “Get Started” → “Download Apple/Android”
+☐ Replace “Vibe” → “Watch”
+PHONE MOCKUPS
+☐ Refine album_thread.PNG frame
+☐ Refine notification.PNG frame
+
+(Spacing, radius, scaling, shadow)
+
+TICKET SECTION
+☐ Redesign ticket shape
+☐ Prevent vertical stretch on mobile
+☐ Lock QR code into fixed position
+☐ Change text:
+
+“Unlock the vibe with” → “Cut the bulk”
+
+FOR THE PARTY PEOPLE
+☐ Replace images
+☐ Add carousel
+☐ Update Social Passport text:
+
+"Build a profile showcasing your stamps. It’s your story."
+
+☐ Change tag “mebemr” → “public”
+LIVE THE NOSTALGIA NOW
+☐ Use event.PNG
+☐ Use album_thread.PNG
+☐ Possibly add carousel
+EFFORTLESS CAPTURE
+☐ Change tag from “mebemr” → “public”
+☐ Use camera.PNG
+☐ Use vault.PNG
+ORGANIZERS & PROMOTERS
+☐ Refine iPhone frame
+☐ Add carousel
+☐ Include discover.PNG
+☐ Include create.PNG
+DIGITAL SCRAPBOOK
+☐ Replace placeholders with Unsplash images
+☐ Improve visual quality
+JOIN 10K+ PARTY PEOPLE
+☐ Leave placeholder
+☐ Add mock dynamic feel
+☐ Clean UI
+HASH CAROUSEL
+☐ Rename section → “Event Types”
+☐ Replace hashtags with:
+
+weddings
+
+camping trips
+
+rooftop
+
+birthday party
+
+concerts
+
+hikes
+
+🎉 EVENT PAGE TASKS
+☐ Create /event/:id
+☐ Add album modal on click
+☐ Display album images in modal
+☐ Ensure proper scroll lock
+☐ Mobile safe
+📄 ABOUT PAGE TASKS
+☐ Replace first placeholder with parties.jpeg
+☐ Replace second placeholder with group.jpeg
+☐ Add video section about event struggles
+☐ Ensure responsive embed
+☐ Maintain neon aesthetic
+🍏 iOS UNIVERSAL LINK FILE
+☐ Create public/.well-known/apple-app-site-association
+☐ No file extension
+☐ Paste JSON exactly
+☐ Verify it loads directly
+☐ Ensure no redirect
+🧠 EXECUTION PRIORITY ORDER
+
+If you want this done in 2 days:
+
+DAY 1
+
+Route cleanup
+
+Navbar fixes
+
+Footer simplification
+
+Hero edits
+
+Remove unwanted sections
+
+Font alignment
+
+DAY 2
+
+Ticket redesign
+
+All carousels
+
+Phone mockups
+
+Event modal
+
+About page video
+

@@ -1,97 +1,135 @@
-import { useRef, useEffect } from "react";
-import { gsap } from "gsap";
-import { LuMapPinHouse } from "react-icons/lu";
-import NeonButton from "../../components/NeonButton";
-import pxiHero from "../../assets/pxi-hero.png";
+import React, { useEffect, useRef } from "react";
+import { Play, Apple, X } from "lucide-react";
+import Button from "./../../components/ui/Button";
+import PhoneMockup from "./../../components/ui/PhoneMockup";
 
-const Hero = ({ heroRef }) => {
+const Hero = () => {
+    const bgRef = useRef(null);
+
     useEffect(() => {
-        const ctx = gsap.context(() => {
-            const tl = gsap.timeline();
+        const handleScroll = () => {
+            if (bgRef.current) {
+                const scrolled = window.scrollY;
+                bgRef.current.style.transform = `translate(-50%, ${scrolled * 0.4}px)`;
+            }
+        };
 
-            tl.from(".hero-title", {
-                autoAlpha: 0,
-                y: 30,
-                duration: 0.9,
-                ease: "power3.out",
-            })
-                .from(
-                    ".hero-subtitle",
-                    { autoAlpha: 0, y: 20, duration: 0.8, ease: "power3.out" },
-                    "-=0.6"
-                )
-                .from(
-                    ".hero-buttons",
-                    { autoAlpha: 0, y: 16, duration: 0.7, ease: "power3.out" },
-                    "-=0.55"
-                )
-                .from(
-                    ".hero-image",
-                    {
-                        autoAlpha: 0,
-                        scale: 0.95,
-                        duration: 1,
-                        ease: "power3.out",
-                    },
-                    "-=0.8"
-                );
-        }, heroRef);
-
-        return () => ctx.revert();
-    }, [heroRef]);
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
 
     return (
-        <section className="relative flex items-center justify-center min-h-screen px-4 pt-32 lg:pt-12 ">
-            <div className="max-w-280 relative z-10 mx-auto flex flex-col lg:flex-row items-center justify-center gap-12">
-                <div className="space-y-8 text-center lg:text-left w-full lg:w-1/2">
-                    <div className="hero-badge inline-block mx-auto ">
-                        <div className="px-4 py-2 rounded-full border border-purple-500/50 bg-purple-500/10 backdrop-blur-sm">
-                            <span className="text-sm font-semibold text-purple-400 flex items-center gap-2">
-                                <LuMapPinHouse size={20} />
-                                <span>Every photo finds its home</span>
-                            </span>
-                        </div>
-                    </div>
+        <section className="relative pt-40 pb-20 md:pt-56 md:pb-32 overflow-hidden">
+            {/* Background Ambience */}
+            <div
+                ref={bgRef}
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-[140%] h-[1000px] bg-pxi-purple/10 blur-[150px] rounded-full pointer-events-none -z-10 opacity-60 will-change-transform"
+            ></div>
 
-                    <h1 className="hero-title -mt-6 text-5xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-[80px] font-extrabold leading-15 md:leading-20">
-                        Where's <br />
-                        <span className="text-transparent  bg-clip-text bg-linear-to-r from-purple-500 to-cyan-500 md:blockd">
-                            {" "}
-                            My Photo?
+            <div className="container mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+                {/* Text Content */}
+                <div className="text-center lg:text-left z-10">
+                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8 uppercase">
+                        Run the <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-pxi-purple via-pink-400 to-white">
+                            Perfect{" "}
                         </span>
+                        <br />
+                        <span className="text-white">Party.</span>
                     </h1>
-
-                    <p className="text-md sm:text-lg  hero-subtitle text-white/70  max-w-3xl mx-auto">
-                        Someone captured your perfect moment, but it got lost in
-                        chats or a camera roll. With PXI, every photo finds its
-                        way home. Share, join the memory, and get your best
-                        angle before it fades.
+                    <p className="text-xl md:text-2xl text-zinc-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
+                        Stop juggling 5+ apps. PXI unifies ticketing, group
+                        chats, and shared memories into one effortless vibe.
                     </p>
 
-                    <div className="flex flex-wrap gap-4 hero-buttons justify-center lg:justify-start">
-                        <NeonButton
-                            size="md"
-                            className="rounded-lg bg-card border-glow "
-                            variant="outline"
+                    <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">
+                        <Button
+                            variant="neon"
+                            className="px-10 py-4 text-lg"
+                            icon={<Apple size={22} fill="white" />}
                         >
-                            Learn More
-                        </NeonButton>
-                        <NeonButton
-                            size="md"
-                            className="rounded-lg bg-card border-glow "
-                            variant="outline"
+                            Get Started
+                        </Button>
+                        <Button
+                            variant="glass"
+                            className="px-10 py-4 text-lg"
+                            icon={<Play size={22} fill="currentColor" />}
                         >
-                            Explore Features
-                        </NeonButton>
+                            The Vibe
+                        </Button>
                     </div>
                 </div>
 
-                <div className="relative flex justify-center hero-image mt-8 lg:mt-0 overflow-hidden rounded-3xl w-full lg:w-1/2 px-4  ">
-                    <img
-                        src={pxiHero}
-                        alt="PXI Printer"
-                        className="w-full h-auto object-cover rounded-3xl drop-shadow-2xl transform transition duration-300  hover:scale-105"
-                    />
+                {/* Phone Visuals */}
+                <div className="relative h-[650px] w-full flex items-center justify-center lg:justify-end mt-12 lg:mt-0">
+                    {/* Main Display Phone */}
+                    <div className="relative z-10 w-80 md:w-96 transform hover:scale-105 transition-transform duration-700">
+                        <div className="absolute -inset-4 bg-pxi-purple/20 blur-[60px] rounded-full animate-glow-pulse"></div>
+
+                        <PhoneMockup
+                            src="https://picsum.photos/400/850?random=102"
+                            alt="App Interface"
+                            className="h-[650px] border-white/10 shadow-[0_0_80px_rgba(216,74,255,0.15)]"
+                        />
+
+                        {/* Notification Card */}
+                        <div className="absolute top-1/4 -right-16 md:-right-24 z-20 w-72 p-4 rounded-[2rem] glass-dark border border-white/10 shadow-2xl animate-float">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex -space-x-3">
+                                    {[1, 2, 3].map((i) => (
+                                        <img
+                                            key={i}
+                                            src={`https://picsum.photos/40/40?random=${i + 50}`}
+                                            className="w-10 h-10 rounded-full border-2 border-zinc-900"
+                                            alt="Avatar"
+                                        />
+                                    ))}
+                                    <div className="w-10 h-10 rounded-full border-2 border-zinc-900 bg-pxi-purple flex items-center justify-center text-[10px] font-black">
+                                        +12
+                                    </div>
+                                </div>
+                                <div className="flex gap-1">
+                                    <span>🔥</span>
+                                    <span>🚀</span>
+                                    <span>😂</span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-4">
+                                <div className="flex-1">
+                                    <p className="text-white font-black text-lg leading-tight">
+                                        Neon Nights
+                                    </p>
+                                    <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">
+                                        SENT AN INVITE
+                                    </p>
+                                </div>
+                                <img
+                                    src="https://picsum.photos/80/80?random=120"
+                                    className="w-16 h-16 rounded-2xl object-cover border border-white/10"
+                                    alt="Event"
+                                />
+                            </div>
+
+                            <div className="mt-4 flex gap-2">
+                                <button className="flex-1 bg-white text-black py-2 rounded-xl text-xs font-black uppercase">
+                                    Accept
+                                </button>
+                                <button className="p-2 glass rounded-xl text-zinc-400">
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Background Phone */}
+                    <div className="absolute left-10 bottom-0 w-64 opacity-40 blur-[2px] -rotate-12 transform -translate-x-12 hidden lg:block">
+                        <PhoneMockup
+                            src="https://picsum.photos/400/850?random=111"
+                            alt="Chat"
+                            className="h-[500px]"
+                        />
+                    </div>
                 </div>
             </div>
         </section>

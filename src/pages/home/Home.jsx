@@ -1,21 +1,25 @@
 import { useRef } from "react";
-import ParticleBackground from "../../components/ParticleBackground";
 import Hero from "./Hero";
-import HowPxiWorks from "./HowPxiWorks";
-import WhyPxi from "./WhyPxi";
-import DownloadApp from "./DownloadApp";
+import ProblemSection from "./ProblemSection";
+import AttendeeFeatures from "./AttendeeFeatures";
+import HostFeatures from "./HostFeatures";
+import VaultSection from "./VaultSection";
+import SocialProof from "./SocialProof";
+
 
 const Home = () => {
     const heroRef = useRef(null);
-    const featuresRef = useRef(null);
 
     return (
         <div ref={heroRef} className="relative min-h-screen">
-            <ParticleBackground />
-            <Hero heroRef={heroRef} />
-            <HowPxiWorks />
-            <WhyPxi featuresRef={featuresRef} />
-            <DownloadApp />
+            
+            <Hero  />
+            <ProblemSection />
+            <AttendeeFeatures/>
+             <HostFeatures />
+            <VaultSection />
+            <SocialProof />
+            
         </div>
     );
 };
