@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import { Play, Apple, X } from "lucide-react";
+import { Play, X, Download } from "lucide-react";
 import Button from "./../../components/ui/Button";
-import PhoneMockup from "./../../components/ui/PhoneMockup";
+import PhoneMockup from "../../components/PhoneMockup";
+import AlbumThread from "../../assets/album_thread.PNG";
 
 const Hero = () => {
     const bgRef = useRef(null);
@@ -30,32 +31,32 @@ const Hero = () => {
                 {/* Text Content */}
                 <div className="text-center lg:text-left z-10">
                     <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8 uppercase">
-                        Run the <br />
+                       Perfect  <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-pxi-purple via-pink-400 to-white">
-                            Perfect{" "}
+                           Party {" "}
                         </span>
                         <br />
-                        <span className="text-white">Party.</span>
+                        <span className="text-white">Platfrom.</span>
                     </h1>
                     <p className="text-xl md:text-2xl text-zinc-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
                         Stop juggling 5+ apps. PXI unifies ticketing, group
-                        chats, and shared memories into one effortless vibe.
+                        chats, and shared memories into one effortless experience.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">
                         <Button
                             variant="neon"
                             className="px-10 py-4 text-lg"
-                            icon={<Apple size={22} fill="white" />}
+                            icon={<Download size={22}  />}
                         >
-                            Get Started
+                            Download App
                         </Button>
                         <Button
                             variant="glass"
                             className="px-10 py-4 text-lg"
                             icon={<Play size={22} fill="currentColor" />}
                         >
-                            The Vibe
+                           watch
                         </Button>
                     </div>
                 </div>
@@ -67,9 +68,7 @@ const Hero = () => {
                         <div className="absolute -inset-4 bg-pxi-purple/20 blur-[60px] rounded-full animate-glow-pulse"></div>
 
                         <PhoneMockup
-                            src="https://picsum.photos/400/850?random=102"
-                            alt="App Interface"
-                            className="h-[650px] border-white/10 shadow-[0_0_80px_rgba(216,74,255,0.15)]"
+                            layers={[{ src: AlbumThread, alt: "App Interface" }]}
                         />
 
                         {/* Notification Card */}
@@ -125,9 +124,7 @@ const Hero = () => {
                     {/* Background Phone */}
                     <div className="absolute left-10 bottom-0 w-64 opacity-40 blur-[2px] -rotate-12 transform -translate-x-12 hidden lg:block">
                         <PhoneMockup
-                            src="https://picsum.photos/400/850?random=111"
-                            alt="Chat"
-                            className="h-[500px]"
+                            layers={[{ src: "https://picsum.photos/400/850?random=111", alt: "Chat" }]}
                         />
                     </div>
                 </div>
