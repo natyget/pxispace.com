@@ -49,10 +49,17 @@
         --glow-purple: rgba(168, 85, 247, 0.4);
         --glow-cyan: rgba(6, 182, 212, 0.4);
 
-        /* =========================
-           SPACING + RADIUS
+
+                /* =========================
+           PXI BRAND COLORS (ZIP MATCH)
         ========================= */
-        --radius: 1rem;
+        --pxi-purple: #D84AFF;
+        --pxi-dark: #050505;
+        --pxi-charcoal: #121212;
+        --pxi-violet: #2D1B4E;
+
+        /* Update glow to match zip intensity */
+        --glow-purple: rgba(216, 74, 255, 0.45);
     }
 
     html {
@@ -134,11 +141,11 @@
     ========================= */
 
     .text-neon {
-        color: var(--accent-purple);
+        color: var(--pxi-purple);
         text-shadow:
-            0 0 10px var(--glow-purple),
-            0 0 20px var(--glow-purple),
-            0 0 30px rgba(168, 85, 247, 0.1);
+            0 0 10px rgba(216, 74, 255, 0.6),
+            0 0 25px rgba(216, 74, 255, 0.4),
+            0 0 40px rgba(216, 74, 255, 0.2);
     }
 
     /* =========================
@@ -147,8 +154,8 @@
 
     .glass-card {
         background: var(--card-bg);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
         border: 1px solid var(--card-border);
         box-shadow: 0 8px 32px rgba(31, 38, 135, 0.25);
         border-radius: 1rem;
@@ -157,8 +164,8 @@
 
     .glass-nav {
         background: rgba(10, 10, 10, 0.6);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
         border: 1px solid rgba(168, 85, 247, 0.3);
     }
 
@@ -216,7 +223,7 @@
        SCROLL CAROUSEL ANIMATION
     ========================= */
 
-    @keyframes scroll-horizontal {
+   @keyframes scroll-horizontal {
         0% { transform: translateX(0); }
         100% { transform: translateX(-50%); }
     }
@@ -269,6 +276,37 @@
         );
     }
 
+
+
+ .text-pxi-purple {
+        color: var(--pxi-purple);
+    }
+
+    .bg-pxi-purple {
+        background-color: var(--pxi-purple);
+    }
+
+    .bg-pxi-dark {
+        background-color: var(--pxi-dark);
+    }
+
+    .bg-pxi-charcoal {
+        background-color: var(--pxi-charcoal);
+    }
+
+    .text-pxi-violet {
+        color: var(--pxi-violet);
+    }
+
+
+
+
+
+
+
+
+
+
     /* =========================
        SCROLLBAR STYLING
     ========================= */
@@ -290,3 +328,113 @@
         background: var(--accent-purple);
     }
 }
+
+@import "tailwindcss";
+
+/* ============================= */
+/* THEME TOKENS */
+/* ============================= */
+
+@theme {
+  --color-pxi-purple: #D84AFF;
+  --color-pxi-dark: #050505;
+  --color-pxi-charcoal: #121212;
+  --color-pxi-violet: #2D1B4E;
+
+  --font-sans: "Inter", sans-serif;
+}
+
+/* ============================= */
+/* ANIMATIONS */
+/* ============================= */
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.8;
+    filter: blur(20px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(30px);
+  }
+}
+
+/* ============================= */
+/* UTILITIES */
+/* ============================= */
+
+@utility animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@utility animate-scroll {
+  animation: scroll 20s linear infinite;
+}
+
+@utility animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+  body {
+        font-family: 'Inter', sans-serif;
+        background-color: #050505;
+        color: white;
+        overflow-x: hidden;
+      }
+      
+      /* Glassmorphism Utility */
+      .glass {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .glass-dark {
+        background: rgba(10, 10, 10, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      
+      /* Neon Glow Button (like the SCRAPBOOK tab) */
+      .neon-pill {
+        background: #D84AFF;
+        box-shadow: 0 0 30px rgba(216, 74, 255, 0.5);
+      }
+
+      /* Ticket Notch Shape */
+      .ticket-shape {
+        mask-image: radial-gradient(circle at 0 50%, transparent 15px, black 16px),
+                    radial-gradient(circle at 100% 50%, transparent 15px, black 16px);
+        mask-composite: intersect;
+        -webkit-mask-image: radial-gradient(circle at 0 50%, transparent 15px, black 16px),
+                            radial-gradient(circle at 100% 50%, transparent 15px, black 16px);
+        -webkit-mask-composite: source-in;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #050505; }
+      ::-webkit-scrollbar-thumb { background: #2D1B4E; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #D84AFF; }
+      
+      [id] { scroll-margin-top: 100px; }
