@@ -2,7 +2,8 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import Button from "./../../components/ui/Button";
 import LogoSVG from "../../assets/logo.svg";
-import { Instagram, Twitter } from "lucide-react";
+import { Instagram } from "lucide-react";
+import { FaTiktok } from "react-icons/fa";
 
 const Footer = () => {
     return (
@@ -115,16 +116,20 @@ const Footer = () => {
 
                     <div className="flex gap-4 mt-4 md:mt-0">
                         <a
-                            href="#"
+                            href="https://www.instagram.com/pxilabs/"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="hover:text-white transition-colors"
                         >
                             <Instagram size={20} />
                         </a>
                         <a
-                            href="#"
+                            href="https://www.tiktok.com/@pxi.labs"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="hover:text-white transition-colors"
                         >
-                            <Twitter size={20} />
+                            <FaTiktok size={20} />
                         </a>
                     </div>
                 </div>

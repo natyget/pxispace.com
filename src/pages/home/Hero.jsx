@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { Play, X, Download } from "lucide-react";
+import { FaApple, FaGooglePlay } from "react-icons/fa";
 import Button from "./../../components/ui/Button";
 import PhoneMockup from "../../components/PhoneMockup";
 import AlbumThread from "../../assets/album_thread.PNG";
+import hero1 from "../../assets/hero1.png";
 
 const Hero = () => {
     const bgRef = useRef(null);
@@ -31,33 +33,39 @@ const Hero = () => {
                 {/* Text Content */}
                 <div className="text-center lg:text-left z-10">
                     <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8 uppercase">
-                       Perfect  <br />
+                        Perfect <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-pxi-purple via-pink-400 to-white">
-                           Party {" "}
+                            Party{" "}
                         </span>
                         <br />
                         <span className="text-white">Platfrom.</span>
                     </h1>
                     <p className="text-xl md:text-2xl text-zinc-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
                         Stop juggling 5+ apps. PXI unifies ticketing, group
-                        chats, and shared memories into one effortless experience.
+                        chats, and shared memories into one effortless
+                        experience.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">
-                        <Button
-                            variant="neon"
-                            className="px-10 py-4 text-lg"
-                            icon={<Download size={22}  />}
+                    <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                        <a
+                            href="#"
+                            className="flex items-center gap-2 px-6 h-12 rounded-full text-white transition-all duration-300 neon-pill-outlet"
                         >
-                            Download App
-                        </Button>
-                        <Button
-                            variant="glass"
-                            className="px-10 py-4 text-lg"
-                            icon={<Play size={22} fill="currentColor" />}
+                            <FaApple size={18} />
+                            <span className="text-sm font-black uppercase tracking-wider">
+                                App Store
+                            </span>
+                        </a>
+
+                        <a
+                            href="#"
+                            className="flex items-center gap-2 px-6 h-12 rounded-full text-white transition-all duration-300 neon-pill-outlet"
                         >
-                           watch
-                        </Button>
+                            <FaGooglePlay size={18} />
+                            <span className="text-sm font-black uppercase tracking-wider">
+                                Google Play
+                            </span>
+                        </a>
                     </div>
                 </div>
 
@@ -68,7 +76,7 @@ const Hero = () => {
                         <div className="absolute -inset-4 bg-pxi-purple/20 blur-[60px] rounded-full animate-glow-pulse"></div>
 
                         <PhoneMockup
-                            layers={[{ src: AlbumThread, alt: "App Interface" }]}
+                            layers={[{ src: hero1, alt: "App Interface" }]}
                         />
 
                         {/* Notification Card */}
@@ -124,7 +132,7 @@ const Hero = () => {
                     {/* Background Phone */}
                     <div className="absolute left-10 bottom-0 w-64 opacity-40 blur-[2px] -rotate-12 transform -translate-x-12 hidden lg:block">
                         <PhoneMockup
-                            layers={[{ src: "https://picsum.photos/400/850?random=111", alt: "Chat" }]}
+                            layers={[{ src: AlbumThread, alt: "Album Thread" }]}
                         />
                     </div>
                 </div>

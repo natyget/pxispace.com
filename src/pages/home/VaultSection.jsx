@@ -30,6 +30,13 @@ const albums = [
         members: 40,
         img: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=869&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     },
+    {
+        title: "Garden Gala",
+        date: "MAY 08",
+        photos: 156,
+        members: 95,
+        img: "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    },
 ];
 
 const VaultSection = () => {

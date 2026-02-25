@@ -17,6 +17,19 @@ const Navbar = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+    // Prevent body scrolling when mobile menu is open
+    useEffect(() => {
+        if (mobileMenuOpen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [mobileMenuOpen]);
+
     const navLinks = [
         { name: "Home", path: "/" },
         { name: "Events", path: "/events" },
@@ -25,13 +38,13 @@ const Navbar = () => {
 
     return (
         <header
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b will-change-transform ${
                 isScrolled || mobileMenuOpen
-                    ? "py-4 bg-black/60 backdrop-blur-2xl border-b border-white/5"
-                    : "py-8 bg-transparent"
+                    ? "py-4 bg-black/60 backdrop-blur-2xl border-white/5"
+                    : "py-8 bg-transparent border-transparent"
             }`}
         >
-            <div className="container mx-auto px-6 flex items-center justify-between">
+            <div className="container mx-auto px-6 relative flex items-center justify-between">
                 {/* Logo */}
                 <NavLink
                     to="/"
@@ -39,11 +52,10 @@ const Navbar = () => {
                     onClick={() => setMobileMenuOpen(false)}
                 >
                     <img src={LogoSVG} alt="PXI Logo" className="h-8 w-8" />
-                    
                 </NavLink>
 
-                {/* Desktop Navigation */}
-                <div className="hidden md:flex items-center bg-zinc-900/50 p-1 rounded-full border border-white/5 backdrop-blur-md gap-1">
+                {/* Desktop Navigation (centered) */}
+                <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 items-center bg-zinc-900/50 p-1 rounded-full border border-white/5 backdrop-blur-md gap-1">
                     {navLinks.map((link) => (
                         <NavLink
                             key={link.path}
@@ -87,29 +99,37 @@ const Navbar = () => {
 
             {/* Mobile Menu */}
             {mobileMenuOpen && (
-                <div className="md:hidden absolute top-full left-0 w-full glass-card p-8 flex flex-col gap-6 animate-fade-up h-screen">
-                    {navLinks.map((link) => (
-                        <NavLink
-                            key={link.path}
-                            to={link.path}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={({ isActive }) =>
-                                `text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 ${
-                                    isActive ? "text-white" : "text-zinc-400"
-                                }`
-                            }
-                        >
-                            {link.name}
-                        </NavLink>
-                    ))}
+                <>
+                    <div
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="fixed inset-0 z-40 "
+                    />
+                    <div className="md:hidden absolute top-full left-0 w-full glass-car p-8 flex flex-col gap-6 animate-fade-up h-screen z-50  bg-black/95 backdrop-blur-3xl">
+                        {navLinks.map((link) => (
+                            <NavLink
+                                key={link.path}
+                                to={link.path}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={({ isActive }) =>
+                                    `text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 ${
+                                        isActive
+                                            ? "text-white"
+                                            : "text-zinc-400"
+                                    }`
+                                }
+                            >
+                                {link.name}
+                            </NavLink>
+                        ))}
 
-                    <Button
-                        variant="neon"
-                        className="w-full uppercase tracking-widest mt-4"
-                    >
-                        Get App
-                    </Button>
-                </div>
+                        <Button
+                            variant="neon"
+                            className="w-full uppercase tracking-widest mt-4"
+                        >
+                            Get App
+                        </Button>
+                    </div>
+                </>
             )}
         </header>
     );

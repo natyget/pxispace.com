@@ -111,7 +111,7 @@ const HostFeatures = () => {
                         ></div>
 
                         <div className="relative">
-                            <div className="relative z-10 flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-700 will-change-transform">
+                            <div className="relative z-10 flex items-center justify-center transform lg:rotate-3 lg:hover:rotate-0 transition-transform duration-700 will-change-transform">
                                 <div className="bg-black p-3 shadow-2xl border-5  border-neutral-900 w-[280px] md:w-[360px] overflow-hidden rounded-4xl ">
                                     {/* Notch */}
                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-28 bg-neutral-900 rounded-b-xl z-20"></div>

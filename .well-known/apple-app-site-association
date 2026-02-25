@@ -1,18 +1,13 @@
+
+
 {
-    "applinks": {
-        "apps": [],
-        "details": [
-            {
-                "appID": "ZRZM6BR3Y5.com.pxistudio.PXIStudio",
-                "paths": [
-                    "/ticket/*",
-                    "/event/*",
-                    "/album/*",
-                    "/ticket",
-                    "/event",
-                    "/album"
-                ]
-            }
-        ]
-    }
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "ZRZM6BR3Y5.com.pxistudio.PXIStudio",
+        "paths": [ "/ticket/", "/event/", "/album/", "" ]
+      }
+    ]
+  }
 }

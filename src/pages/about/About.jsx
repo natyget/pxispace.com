@@ -118,10 +118,8 @@ const AboutPage = () => {
                         <img
                             src={GroupJPEG}
                             alt="Team Group"
-                            className="relative z-10 w-full aspect-[21/9] object-cover rounded-[3rem] border border-white/10"
+                            className="relative z-10 w-full aspect-8/5 object-cover sm:rounded-[3rem] rounded-4xl border border-white/10 sm:min-h-[420px] min-h-[350px]   "
                         />
-
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20"></div>
                     </div>
                 </div>
             </section>

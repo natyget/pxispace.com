@@ -49,14 +49,13 @@
         --glow-purple: rgba(168, 85, 247, 0.4);
         --glow-cyan: rgba(6, 182, 212, 0.4);
 
-
-                /* =========================
+        /* =========================
            PXI BRAND COLORS (ZIP MATCH)
         ========================= */
-        --pxi-purple: #D84AFF;
+        --pxi-purple: #d84aff;
         --pxi-dark: #050505;
         --pxi-charcoal: #121212;
-        --pxi-violet: #2D1B4E;
+        --pxi-violet: #2d1b4e;
 
         /* Update glow to match zip intensity */
         --glow-purple: rgba(216, 74, 255, 0.45);
@@ -85,6 +84,7 @@
         letter-spacing: 0.08em;
         color: var(--text-primary);
         text-transform: capitalize;
+        font-weight: 900;
     }
 
     /* Anchor offset for sticky header */
@@ -191,6 +191,70 @@
     }
 
     /* =========================
+       NEON OUTLET (outlined neon pill)
+    ========================= */
+    .neon-pill-outlet {
+        background: transparent;
+        border: 1px solid rgba(216, 74, 255, 0.481);
+        color: #fff;
+        position: relative;
+        overflow: visible;
+        transition: all 200ms ease;
+    }
+
+    .neon-pill-outlet:before {
+        content: "";
+        position: absolute;
+        inset: -6px;
+        border-radius: 9999px;
+        background: radial-gradient(
+            circle at 50% 50%,
+            rgba(216, 74, 255, 0.12),
+            transparent 40%
+        );
+        filter: blur(12px);
+        opacity: 0.9;
+        z-index: -1;
+        transition:
+            opacity 200ms ease,
+            transform 200ms ease;
+    }
+
+    .neon-pill-outlet:hover {
+        border-color: rgba(216, 74, 255, 0.32);
+        transform: translateY(-1px);
+    }
+
+    .neon-pill-outlet:hover:before {
+        transform: scale(1.06);
+        opacity: 1;
+    }
+
+    /* Secondary button for hero download links (purple aesthetic) */
+    .btn-secondary {
+        background: linear-gradient(
+            90deg,
+            rgba(216, 74, 255, 0.08),
+            rgba(168, 85, 247, 0.06)
+        );
+        border: 1px solid rgba(216, 74, 255, 0.18);
+        color: #fff;
+        transition: all 200ms ease;
+    }
+
+    .btn-secondary:hover {
+        background: linear-gradient(
+            90deg,
+            rgba(216, 74, 255, 0.16),
+            rgba(168, 85, 247, 0.12)
+        );
+        box-shadow:
+            0 10px 40px rgba(216, 74, 255, 0.12),
+            0 0 30px rgba(168, 85, 247, 0.08);
+        border-color: rgba(216, 74, 255, 0.36);
+    }
+
+    /* =========================
        TICKET NOTCH SHAPE
     ========================= */
 
@@ -211,8 +275,13 @@
     ========================= */
 
     @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-20px); }
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-20px);
+        }
     }
 
     .animate-float {
@@ -223,9 +292,13 @@
        SCROLL CAROUSEL ANIMATION
     ========================= */
 
-   @keyframes scroll-horizontal {
-        0% { transform: translateX(0); }
-        100% { transform: translateX(-50%); }
+    @keyframes scroll-horizontal {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-50%);
+        }
     }
 
     .animate-scroll-horizontal {
@@ -237,8 +310,15 @@
     ========================= */
 
     @keyframes glow-pulse {
-        0%, 100% { opacity: 0.8; filter: blur(20px); }
-        50% { opacity: 1; filter: blur(30px); }
+        0%,
+        100% {
+            opacity: 0.8;
+            filter: blur(20px);
+        }
+        50% {
+            opacity: 1;
+            filter: blur(30px);
+        }
     }
 
     .animate-glow-pulse {
@@ -276,9 +356,7 @@
         );
     }
 
-
-
- .text-pxi-purple {
+    .text-pxi-purple {
         color: var(--pxi-purple);
     }
 
@@ -297,15 +375,6 @@
     .text-pxi-violet {
         color: var(--pxi-violet);
     }
-
-
-
-
-
-
-
-
-
 
     /* =========================
        SCROLLBAR STYLING
@@ -336,12 +405,12 @@
 /* ============================= */
 
 @theme {
-  --color-pxi-purple: #D84AFF;
-  --color-pxi-dark: #050505;
-  --color-pxi-charcoal: #121212;
-  --color-pxi-violet: #2D1B4E;
+    /* --color-pxi-purple: #D84AFF; */
+    --color-pxi-dark: #050505;
+    --color-pxi-charcoal: #121212;
+    --color-pxi-violet: #2d1b4e;
 
-  --font-sans: "Inter", sans-serif;
+    --font-sans: "Inter", sans-serif;
 }
 
 /* ============================= */
@@ -349,32 +418,34 @@
 /* ============================= */
 
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
 }
 
 @keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
 }
 
 @keyframes glow-pulse {
-  0%, 100% {
-    opacity: 0.8;
-    filter: blur(20px);
-  }
-  50% {
-    opacity: 1;
-    filter: blur(30px);
-  }
+    0%,
+    100% {
+        opacity: 0.8;
+        filter: blur(20px);
+    }
+    50% {
+        opacity: 1;
+        filter: blur(30px);
+    }
 }
 
 /* ============================= */
@@ -382,59 +453,72 @@
 /* ============================= */
 
 @utility animate-float {
-  animation: float 6s ease-in-out infinite;
+    animation: float 6s ease-in-out infinite;
 }
 
 @utility animate-scroll {
-  animation: scroll 20s linear infinite;
+    animation: scroll 20s linear infinite;
 }
 
 @utility animate-glow-pulse {
-  animation: glow-pulse 3s ease-in-out infinite;
+    animation: glow-pulse 3s ease-in-out infinite;
 }
 
-  body {
-        font-family: 'Inter', sans-serif;
-        background-color: #050505;
-        color: white;
-        overflow-x: hidden;
-      }
-      
-      /* Glassmorphism Utility */
-      .glass {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-      }
+body {
+    font-family: "Inter", sans-serif;
+    background-color: #050505;
+    color: white;
+    overflow-x: hidden;
+}
 
-      .glass-dark {
-        background: rgba(10, 10, 10, 0.7);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-      }
-      
-      /* Neon Glow Button (like the SCRAPBOOK tab) */
-      .neon-pill {
-        background: #D84AFF;
-        box-shadow: 0 0 30px rgba(216, 74, 255, 0.5);
-      }
+/* Glassmorphism Utility */
+.glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
 
-      /* Ticket Notch Shape */
-      .ticket-shape {
-        mask-image: radial-gradient(circle at 0 50%, transparent 15px, black 16px),
-                    radial-gradient(circle at 100% 50%, transparent 15px, black 16px);
-        mask-composite: intersect;
-        -webkit-mask-image: radial-gradient(circle at 0 50%, transparent 15px, black 16px),
-                            radial-gradient(circle at 100% 50%, transparent 15px, black 16px);
-        -webkit-mask-composite: source-in;
-      }
+.glass-dark {
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
 
-      /* Scrollbar */
-      ::-webkit-scrollbar { width: 8px; }
-      ::-webkit-scrollbar-track { background: #050505; }
-      ::-webkit-scrollbar-thumb { background: #2D1B4E; border-radius: 4px; }
-      ::-webkit-scrollbar-thumb:hover { background: #D84AFF; }
-      
-      [id] { scroll-margin-top: 100px; }
+/* Neon Glow Button (like the SCRAPBOOK tab) */
+.neon-pill {
+    background: #d84aff;
+    box-shadow: 0 0 30px rgba(216, 74, 255, 0.5);
+}
+
+/* Ticket Notch Shape */
+.ticket-shape {
+    mask-image:
+        radial-gradient(circle at 0 50%, transparent 15px, black 16px),
+        radial-gradient(circle at 100% 50%, transparent 15px, black 16px);
+    mask-composite: intersect;
+    -webkit-mask-image:
+        radial-gradient(circle at 0 50%, transparent 15px, black 16px),
+        radial-gradient(circle at 100% 50%, transparent 15px, black 16px);
+    -webkit-mask-composite: source-in;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #050505;
+}
+::-webkit-scrollbar-thumb {
+    background: #2d1b4e;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #d84aff;
+}
+
+[id] {
+    scroll-margin-top: 100px;
+}
