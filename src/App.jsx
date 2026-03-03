@@ -10,6 +10,9 @@ import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Events from "./pages/events/Events";
 import EventDetails from "./pages/eventDetails/EventDetails";
+import Dashboard from "./pages/Dashboard.jsx";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login.jsx";
 
 const App = () => (
     <BrowserRouter>
@@ -29,6 +32,15 @@ const App = () => (
                         element={<TermsOfService />}
                     />
                     <Route path="/privacy_policy" element={<PrivacyPolicy />} />
+                    <Route
+                        path="/dashboard/:id"
+                        element={
+                            <ProtectedRoute>
+                                <Dashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route path="/login" element={<Login />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </main>
