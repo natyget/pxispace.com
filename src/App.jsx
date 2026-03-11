@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "./contexts/AuthContext";
 import PublicLayout from "./layouts/PublicLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -22,6 +23,7 @@ import PassportPage from "./pages/dashboard/PassportPage";
 import VendorUpgradePage from "./pages/dashboard/VendorUpgradePage";
 
 const App = () => (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
     <BrowserRouter>
         <AuthProvider>
             <Routes>
@@ -54,6 +56,7 @@ const App = () => (
             </Routes>
         </AuthProvider>
     </BrowserRouter>
+    </GoogleOAuthProvider>
 );
 
 export default App;
