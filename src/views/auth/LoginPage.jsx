@@ -11,7 +11,7 @@ import { authService } from '../../services/auth';
 import AuthParticles from '../../components/auth/AuthParticles';
 const LogoSVG = "/images/logo.svg";
 
-const APPLE_SERVICE_ID = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_APPLE_SERVICE_ID) || (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_APPLE_SERVICE_ID) || '';
+const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
 
 export default function LoginPage() {
     const router = useRouter();

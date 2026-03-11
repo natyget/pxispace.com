@@ -9,8 +9,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 const LogoSVG = "/images/logo.svg";
 
-const GOOGLE_CLIENT_ID = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_CLIENT_ID) || (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_GOOGLE_CLIENT_ID) || '';
-const APPLE_SERVICE_ID = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_APPLE_SERVICE_ID) || (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_APPLE_SERVICE_ID) || '';
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
 
 const PASSWORD_RULES = [
     { id: 'length', label: 'At least 8 characters', test: (p) => p.length >= 8 },
