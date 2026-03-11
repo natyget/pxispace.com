@@ -47,7 +47,10 @@ export const authService = {
         api.get(`/api/auth/user/${userId}`),
 
     vendorOnboard: () =>
-        api.post('/api/vendor/onboard', {}),
+        api.post('/api/vendor/onboard', {
+            returnUrl: `${window.location.origin}/dashboard/vendor-upgrade?stripe=success`,
+            refreshUrl: `${window.location.origin}/dashboard/vendor-upgrade?stripe=refresh`,
+        }),
 
     getVendorDashboard: () =>
         api.get('/api/vendor/dashboard'),
