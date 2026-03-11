@@ -81,6 +81,8 @@
 // };
 
 // export default ParticleBackground;
+'use client';
+
 import React, { useEffect, useRef } from 'react';
 
 const ParticleBackground = () => {

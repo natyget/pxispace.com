@@ -1,16 +1,92 @@
-# React + Vite
+# PXI Studio – Next.js frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Next.js frontend for PXI Studio. Backend runs separately (e.g. EC2). This repo is **frontend only**, deployable to Netlify.
 
-Currently, two official plugins are available:
+## Project structure (Next.js standard)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+All application code lives under **`src/`**. The **`app`** directory is inside **`src`** so routes and config stay together.
 
-## React Compiler
+```
+pxi-web-app/
+├── src/
+│   ├── app/                    # Next.js App Router (routes live here)
+│   │   ├── layout.jsx         # Root layout
+│   │   ├── globals.css
+│   │   ├── (public)/           # Route group: Navbar + Footer
+│   │   │   ├── layout.jsx
+│   │   │   ├── page.jsx        # /
+│   │   │   ├── about/page.jsx
+│   │   │   ├── events/page.jsx
+│   │   │   ├── events/[id]/page.jsx
+│   │   │   ├── support/page.jsx
+│   │   │   ├── terms_of_service/page.jsx
+│   │   │   └── privacy_policy/page.jsx
+│   │   ├── login/page.jsx
+│   │   ├── login/email/page.jsx
+│   │   ├── signup/page.jsx
+│   │   ├── passport-required/page.jsx
+│   │   ├── dashboard/          # Protected by middleware
+│   │   │   ├── layout.jsx
+│   │   │   ├── page.jsx
+│   │   │   ├── passport/page.jsx
+│   │   │   ├── vendor-upgrade/page.jsx
+│   │   │   └── account/page.jsx
+│   │   ├── 403/page.jsx
+│   │   ├── 503/page.jsx
+│   │   ├── not-found.jsx
+│   │   └── api/auth/           # set-cookie, clear-cookie
+│   ├── components/
+│   ├── config/
+│   ├── contexts/
+│   ├── services/
+│   ├── views/                   # Page content (used by app routes)
+│   └── assets/
+├── public/                     # Static assets (Next.js convention)
+├── middleware.ts                # Edge RBAC for /dashboard/*
+├── next.config.js
+├── netlify.toml
+└── .env.example
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Why `app` is inside `src`:** Next.js allows either root `app/` or `src/app/`. Putting **`app` under `src`** keeps all app code in one place and matches the usual “use src” setup.
+- **`middleware.ts`** stays at the **project root**; Next.js requires it there.
+- **`public/`** stays at the **project root** for static files.
 
-## Expanding the ESLint configuration
+## Removed: `css/` and `js/` (legacy)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The **`css/`** and **`js/`** folders at the project root were from an older, non-Next.js setup (vanilla HTML/CSS/JS: e.g. `css/styles.css`, `js/main.js` for nav, cookie banner, etc.). They are **not used** by this Next.js app, which uses:
+
+- **`src/app/globals.css`** for global styles
+- React components and Next.js for behavior
+
+They have been removed to avoid confusion. If you need that legacy code, restore it from git history.
+
+## Removed (Vite/React legacy)
+
+These files were from the old Vite + React setup and are not used by Next.js:
+
+- `src/main.jsx` – Vite entry (Next uses `src/app/layout.jsx`)
+- `src/index.css`, `src/index2.css`, `src/App.css` – global CSS (Next uses `src/app/globals.css`)
+- `index.html` – Vite HTML (Next generates its own)
+- `vite.config.js` – Vite config (project uses Next.js)
+- `src/components/ProtectedRoute.jsx` – dashboard is protected by Edge middleware
+- `src/layouts/PublicLayout.jsx` – replaced by `src/app/(public)/layout.jsx`
+- `src/components/RouteListener.jsx` – React Router helper, unused with Next
+- `COMPONENT_REFACTORING.md` – outdated refactor notes
+
+## Local development
+
+```bash
+cp .env.example .env.local
+# Set NEXT_PUBLIC_API_BASE_URL to your backend (e.g. EC2)
+npm install
+npm run dev
+```
+
+## Deployment (Netlify)
+
+Set in **Build & deploy → Environment**:
+
+- `NEXT_PUBLIC_API_BASE_URL` – backend API URL (no trailing slash)
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
+- `PASETO_PUBLIC_KEY` – same as backend (for Edge middleware)

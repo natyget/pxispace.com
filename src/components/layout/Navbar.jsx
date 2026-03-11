@@ -1,18 +1,23 @@
+'use client';
+
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
-import { NavLink, Link, useNavigate } from "react-router-dom";
-import Button from "../ui/Button";
-import LogoSVG from "../../assets/logo.svg";
+const LogoSVG = "/images/logo.svg";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Navbar = () => {
+    const [mounted, setMounted] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const userMenuRef = useRef(null);
     const { isAuthenticated, user, logout } = useAuth();
-    const navigate = useNavigate();
+    const pathname = usePathname();
+    const router = useRouter();
 
+    useEffect(() => setMounted(true), []);
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
@@ -24,7 +29,6 @@ const Navbar = () => {
         return () => { document.body.style.overflow = ""; };
     }, [mobileMenuOpen]);
 
-    // Close user menu on outside click
     useEffect(() => {
         const handler = (e) => {
             if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
@@ -39,7 +43,7 @@ const Navbar = () => {
         logout();
         setUserMenuOpen(false);
         setMobileMenuOpen(false);
-        navigate("/");
+        router.push("/");
     };
 
     const navLinks = [
@@ -50,6 +54,11 @@ const Navbar = () => {
 
     const avatarFallback = user?.name?.charAt(0)?.toUpperCase() || "?";
 
+    const linkClass = (path) =>
+        pathname === path
+            ? "bg-pxi-purple text-white shadow-[0_0_20px_rgba(216,74,255,0.4)]"
+            : "text-zinc-400 hover:text-white";
+
     return (
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b will-change-transform ${
@@ -59,36 +68,27 @@ const Navbar = () => {
             }`}
         >
             <div className="container mx-auto px-6 relative flex items-center justify-between">
-                {/* Logo */}
-                <NavLink
-                    to="/"
+                <Link
+                    href="/"
                     className="flex items-center gap-3 cursor-pointer"
                     onClick={() => setMobileMenuOpen(false)}
                 >
                     <img src={LogoSVG} alt="PXI Logo" className="h-8 w-8" />
-                </NavLink>
+                </Link>
 
-                {/* Desktop Navigation (centered) */}
                 <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 items-center bg-zinc-900/50 p-1 rounded-full border border-white/5 backdrop-blur-md gap-1">
                     {navLinks.map((link) => (
-                        <NavLink
+                        <Link
                             key={link.path}
-                            to={link.path}
+                            href={link.path}
                             onClick={() => setMobileMenuOpen(false)}
-                            className={({ isActive }) =>
-                                `px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${
-                                    isActive
-                                        ? "bg-pxi-purple text-white shadow-[0_0_20px_rgba(216,74,255,0.4)]"
-                                        : "text-zinc-400 hover:text-white"
-                                }`
-                            }
+                            className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${linkClass(link.path)}`}
                         >
                             {link.name}
-                        </NavLink>
+                        </Link>
                     ))}
                 </div>
 
-                {/* Desktop Action Buttons */}
                 <div className="hidden md:flex items-center gap-3">
                     {isAuthenticated ? (
                         <div className="relative" ref={userMenuRef}>
@@ -96,10 +96,10 @@ const Navbar = () => {
                                 onClick={() => setUserMenuOpen((v) => !v)}
                                 className="flex items-center gap-2 px-3 py-2 rounded-full bg-zinc-900/60 border border-white/8 hover:border-white/15 transition-all"
                             >
-                                {user?.avatarUrl ? (
+                                {mounted && user?.avatarUrl ? (
                                     <img
                                         src={user.avatarUrl}
-                                        alt={user.name}
+                                        alt={user?.name ?? ''}
                                         className="w-6 h-6 rounded-full object-cover"
                                     />
                                 ) : (
@@ -127,7 +127,7 @@ const Navbar = () => {
                                         </p>
                                     </div>
                                     <Link
-                                        to="/dashboard"
+                                        href="/dashboard"
                                         onClick={() => setUserMenuOpen(false)}
                                         className="flex items-center gap-2.5 px-4 py-2.5 text-zinc-300 hover:text-white hover:bg-white/5 text-xs font-medium transition-all"
                                     >
@@ -146,7 +146,7 @@ const Navbar = () => {
                         </div>
                     ) : (
                         <Link
-                            to="/login"
+                            href="/login"
                             className="px-5 py-2.5 rounded-full bg-pxi-purple text-white text-xs font-bold uppercase tracking-widest shadow-[0_0_16px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
                         >
                             Launch
@@ -154,7 +154,6 @@ const Navbar = () => {
                     )}
                 </div>
 
-                {/* Mobile Toggle */}
                 <button
                     className="md:hidden text-white p-2"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -163,7 +162,6 @@ const Navbar = () => {
                 </button>
             </div>
 
-            {/* Mobile Menu */}
             {mobileMenuOpen && (
                 <>
                     <div
@@ -172,24 +170,22 @@ const Navbar = () => {
                     />
                     <div className="md:hidden absolute top-full left-0 w-full glass-car p-8 flex flex-col gap-6 animate-fade-up h-screen z-50 bg-black/95 backdrop-blur-3xl">
                         {navLinks.map((link) => (
-                            <NavLink
+                            <Link
                                 key={link.path}
-                                to={link.path}
+                                href={link.path}
                                 onClick={() => setMobileMenuOpen(false)}
-                                className={({ isActive }) =>
-                                    `text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 ${
-                                        isActive ? "text-white" : "text-zinc-400"
-                                    }`
-                                }
+                                className={`text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 ${
+                                    pathname === link.path ? "text-white" : "text-zinc-400"
+                                }`}
                             >
                                 {link.name}
-                            </NavLink>
+                            </Link>
                         ))}
 
                         {isAuthenticated ? (
                             <>
                                 <Link
-                                    to="/dashboard"
+                                    href="/dashboard"
                                     onClick={() => setMobileMenuOpen(false)}
                                     className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-zinc-400"
                                 >
@@ -203,15 +199,13 @@ const Navbar = () => {
                                 </button>
                             </>
                         ) : (
-                            <>
-                                <Link
-                                    to="/login"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-white"
-                                >
-                                    Launch
-                                </Link>
-                            </>
+                            <Link
+                                href="/login"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-white"
+                            >
+                                Launch
+                            </Link>
                         )}
                     </div>
                 </>
