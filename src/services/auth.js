@@ -54,4 +54,7 @@ export const authService = {
 
     getVendorDashboard: () =>
         api.get('/api/vendor/dashboard'),
+
+    deleteAccount: () =>
+        api.delete('/api/auth/account'),
 };

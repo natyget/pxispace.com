@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { publicEvents } from "./eventsData";
-import { Calendar, MapPin, Users, Tag } from "lucide-react";
+import { Calendar, MapPin, Users, Tag, AlertCircle } from "lucide-react";
 import Button from "../../components/ui/Button";
 
 const EventDetails = () => {
@@ -103,6 +103,17 @@ const EventDetails = () => {
           >
             Get Ticket
           </Button>
+
+          {/* Refund Policy Disclosure */}
+          <div className="mt-4 flex items-start gap-2 px-1">
+            <AlertCircle size={13} className="text-zinc-600 flex-shrink-0 mt-0.5" />
+            <p className="text-zinc-600 text-xs leading-relaxed">
+              The $0.90 vendor flat fee and 4.59% consumer fee are{' '}
+              <span className="text-zinc-500 font-semibold">non-refundable</span>{' '}
+              even if the event is cancelled or rescheduled. Ticket face value
+              refund eligibility is determined by the event organizer.
+            </p>
+          </div>
 
         </div>
 

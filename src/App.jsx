@@ -21,6 +21,7 @@ import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import PassportPage from "./pages/dashboard/PassportPage";
 import VendorUpgradePage from "./pages/dashboard/VendorUpgradePage";
+import AccountPage from "./pages/dashboard/AccountPage";
 
 const App = () => (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
@@ -51,6 +52,7 @@ const App = () => (
                         <Route index element={<DashboardHome />} />
                         <Route path="passport" element={<PassportPage />} />
                         <Route path="vendor-upgrade" element={<VendorUpgradePage />} />
+                        <Route path="account" element={<AccountPage />} />
                     </Route>
                 </Route>
             </Routes>

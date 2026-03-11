@@ -10,6 +10,7 @@ import {
     X,
     ChevronRight,
     AlertCircle,
+    UserCog,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import LogoSVG from '../../assets/logo.svg';
@@ -19,6 +20,7 @@ const navItems = [
     { label: 'PXI Passport', path: '/dashboard/passport', icon: Shield },
     { label: 'Earnings', path: '/dashboard/earnings', icon: TrendingUp },
     { label: 'Vendor Setup', path: '/dashboard/vendor-upgrade', icon: Star },
+    { label: 'Account', path: '/dashboard/account', icon: UserCog },
 ];
 
 export default function DashboardLayout() {
