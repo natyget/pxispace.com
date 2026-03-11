@@ -11,3 +11,6 @@ https://www.pxispace.com/*  https://pxispace.com/:splat   301!
 
 # Convenience
 /app                        /signup.html                 302
+
+# SPA catch-all — must be last; lets React Router handle all client-side routes
+/*                          /index.html                  200
