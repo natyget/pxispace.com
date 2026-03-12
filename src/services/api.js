@@ -20,7 +20,7 @@ async function request(endpoint, options = {}) {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-        const error = new Error(data.message || `HTTP ${res.status}`);
+        const error = new Error(data.error || data.message || `HTTP ${res.status}`);
         error.status = res.status;
         error.code = data.code;
         error.data = data;

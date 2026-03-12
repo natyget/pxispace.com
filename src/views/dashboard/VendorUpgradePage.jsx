@@ -66,15 +66,18 @@ export default function VendorUpgradePage() {
         try {
             const { url } = await authService.vendorOnboard();
             setStep('redirecting');
-            // Small delay so user sees the transition message
             setTimeout(() => {
                 window.location.href = url;
             }, 800);
         } catch (err) {
-            setErrorMsg(
-                err.message || 'Unable to start onboarding. Please try again.'
-            );
-            setStep('error');
+            if (err.code === 'STRIPE_ACCOUNT_EXISTS') {
+                // User already went through Stripe — skip to Check Status
+                setStep('idle');
+                setErrorMsg('You have already submitted your Stripe verification. Click Check Status below to confirm your account.');
+            } else {
+                setErrorMsg(err.message || 'Unable to start onboarding. Please try again.');
+                setStep('error');
+            }
         }
     };
 
