@@ -1,6 +1,6 @@
 # PXI Studio – Next.js frontend
 
-Next.js frontend for PXI Studio. Backend runs separately (e.g. EC2). This repo is **frontend only**, deployable to Netlify.
+Next.js frontend for PXI Studio. Backend runs separately (EC2). This repo is **frontend only**, deployable to Netlify.
 
 ## Project structure (Next.js standard)
 
