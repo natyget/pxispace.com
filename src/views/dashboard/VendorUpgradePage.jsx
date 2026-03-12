@@ -87,14 +87,19 @@ export default function VendorUpgradePage() {
     const handleCheckStatus = async () => {
         if (!user?.id) return;
         setCheckingStatus(true);
+        setErrorMsg('');
         try {
             const fresh = await authService.getMe(user.id);
-            if (fresh?.isVendor) {
+            if (fresh?.user?.isVendor) {
                 updateUser({ isVendor: true });
                 setStep('done');
+            } else {
+                setErrorMsg('Your Stripe verification is still being processed. Please wait a moment and try again.');
+                setStep('error');
             }
-        } catch {
-            // silently fail
+        } catch (err) {
+            setErrorMsg(err.message || 'Failed to check status. Please try again.');
+            setStep('error');
         } finally {
             setCheckingStatus(false);
         }
