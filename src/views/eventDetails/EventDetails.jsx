@@ -1,14 +1,15 @@
 'use client';
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import { publicEvents } from "./eventsData";
-import { Calendar, MapPin, Users, Tag, AlertCircle } from "lucide-react";
+import { Calendar, MapPin, Users, Tag, AlertCircle, X } from "lucide-react";
 import Button from "../../components/ui/Button";
 
 const EventDetails = () => {
   const { id } = useParams();
   const event = publicEvents.find(e => e.id === Number(id));
+  const [showConsent, setShowConsent] = useState(false);
 
   if (!event) {
     return (
@@ -19,6 +20,7 @@ const EventDetails = () => {
   }
 
   return (
+    <>
     <div className="bg-black text-white min-h-screen">
 
       {/* HERO */}
@@ -102,6 +104,7 @@ const EventDetails = () => {
           <Button
             variant="neon"
             className="w-full uppercase tracking-widest py-4"
+            onClick={() => setShowConsent(true)}
           >
             Get Ticket
           </Button>
@@ -121,6 +124,45 @@ const EventDetails = () => {
 
       </div>
     </div>
+
+    {/* Public Event Consent Gate */}
+
+    {showConsent && (
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowConsent(false)} />
+        <div className="relative w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-6 space-y-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-pxi-purple text-xs font-bold uppercase tracking-widest mb-1">Heads Up</p>
+              <h3 className="text-white text-xl font-black">Public Event Notice</h3>
+            </div>
+            <button onClick={() => setShowConsent(false)} className="text-zinc-500 hover:text-white transition-colors mt-1">
+              <X size={20} />
+            </button>
+          </div>
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            Photos posted in this public event may be visible to everyone and used in PXI marketing materials
+            by the event host. If you prefer privacy, look for private events instead.
+          </p>
+          <div className="flex flex-row gap-3 pt-1">
+            <Button
+              variant="neon"
+              className="w-full uppercase tracking-widest py-3"
+              onClick={() => setShowConsent(false)}
+            >
+              Agree &amp; Get Ticket
+            </Button>
+            <button
+              onClick={() => setShowConsent(false)}
+              className="w-full py-3 rounded-xl border border-white/10 text-zinc-400 text-sm font-medium hover:bg-white/5 transition-all"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 

@@ -29,7 +29,7 @@ export default function AccountPage() {
         setError('');
         try {
             await authService.deleteAccount();
-            logout();
+            await logout();
             router.replace('/');
         } catch (err) {
             setError(err.message || 'Failed to delete account. Please try again.');

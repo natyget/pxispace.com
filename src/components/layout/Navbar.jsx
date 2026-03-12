@@ -90,13 +90,13 @@ const Navbar = () => {
                 </div>
 
                 <div className="hidden md:flex items-center gap-3">
-                    {isAuthenticated ? (
+                    {mounted && isAuthenticated ? (
                         <div className="relative" ref={userMenuRef}>
                             <button
                                 onClick={() => setUserMenuOpen((v) => !v)}
                                 className="flex items-center gap-2 px-3 py-2 rounded-full bg-zinc-900/60 border border-white/8 hover:border-white/15 transition-all"
                             >
-                                {mounted && user?.avatarUrl ? (
+                                {user?.avatarUrl ? (
                                     <img
                                         src={user.avatarUrl}
                                         alt={user?.name ?? ''}
@@ -182,7 +182,7 @@ const Navbar = () => {
                             </Link>
                         ))}
 
-                        {isAuthenticated ? (
+                        {mounted && isAuthenticated ? (
                             <>
                                 <Link
                                     href="/dashboard"
