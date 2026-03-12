@@ -10,7 +10,9 @@ import {
     ArrowRight,
     Loader2,
     CheckCircle2,
+    XCircle,
     RefreshCw,
+    AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService, authStorage } from '../../services/auth';
@@ -33,6 +35,49 @@ const BENEFITS = [
     },
 ];
 
+// Human-readable labels for Stripe currently_due field keys
+const REQUIREMENT_LABELS = {
+    'individual.first_name': 'First name',
+    'individual.last_name': 'Last name',
+    'individual.dob.day': 'Date of birth (day)',
+    'individual.dob.month': 'Date of birth (month)',
+    'individual.dob.year': 'Date of birth (year)',
+    'individual.address.line1': 'Street address',
+    'individual.address.city': 'City',
+    'individual.address.state': 'State',
+    'individual.address.postal_code': 'Postal code',
+    'individual.ssn_last_4': 'Last 4 digits of SSN',
+    'individual.id_number': 'Government ID number',
+    'individual.verification.document': 'Identity document (photo ID)',
+    'individual.verification.additional_document': 'Additional identity document',
+    'business_profile.url': 'Business website URL',
+    'business_profile.mcc': 'Business category',
+    'external_account': 'Bank account',
+    'tos_acceptance.date': 'Terms of service acceptance',
+    'tos_acceptance.ip': 'Terms of service acceptance',
+};
+
+function formatRequirement(key) {
+    return REQUIREMENT_LABELS[key] || key.replace(/_/g, ' ').replace(/\./g, ' → ');
+}
+
+function StatusRow({ label, enabled, description }) {
+    return (
+        <div className="flex items-start gap-3 py-3 border-b border-white/5 last:border-0">
+            <div className="mt-0.5 flex-shrink-0">
+                {enabled
+                    ? <CheckCircle2 size={16} className="text-emerald-400" />
+                    : <XCircle size={16} className="text-red-400" />
+                }
+            </div>
+            <div>
+                <p className={`text-sm font-semibold ${enabled ? 'text-emerald-400' : 'text-red-400'}`}>{label}</p>
+                <p className="text-xs text-zinc-500 mt-0.5">{description}</p>
+            </div>
+        </div>
+    );
+}
+
 export default function VendorUpgradePage() {
     const { user, updateUser } = useAuth();
     const router = useRouter();
@@ -42,20 +87,19 @@ export default function VendorUpgradePage() {
 
     const [step, setStep] = useState(
         user?.isVendor ? 'done'
-        : stripeParam === 'refresh' ? 'error'   // Stripe link expired — show retry
+        : stripeParam === 'refresh' ? 'error'
         : 'idle'
     );
     const [errorMsg, setErrorMsg] = useState(
         stripeParam === 'refresh' ? 'The Stripe verification link expired. Please start again.' : ''
     );
     const [checkingStatus, setCheckingStatus] = useState(false);
+    const [stripeStatus, setStripeStatus] = useState(null); // { chargesEnabled, payoutsEnabled, currentlyDue }
 
-    // Clear query params from URL once consumed
     useEffect(() => {
         if (stripeParam) router.replace('/dashboard/vendor-upgrade', { scroll: false });
     }, []);
 
-    // If already a vendor (e.g. webhook fired in background)
     useEffect(() => {
         if (user?.isVendor) setStep('done');
     }, [user?.isVendor]);
@@ -63,15 +107,13 @@ export default function VendorUpgradePage() {
     const handleStartOnboarding = async () => {
         setStep('loading');
         setErrorMsg('');
+        setStripeStatus(null);
         try {
             const { url } = await authService.vendorOnboard();
             setStep('redirecting');
-            setTimeout(() => {
-                window.location.href = url;
-            }, 800);
+            setTimeout(() => { window.location.href = url; }, 800);
         } catch (err) {
             if (err.code === 'STRIPE_ACCOUNT_EXISTS') {
-                // User already went through Stripe — skip to Check Status
                 setStep('idle');
                 setErrorMsg('You have already submitted your Stripe verification. Click Check Status below to confirm your account.');
             } else {
@@ -84,17 +126,22 @@ export default function VendorUpgradePage() {
     const handleCheckStatus = async () => {
         setCheckingStatus(true);
         setErrorMsg('');
+        setStripeStatus(null);
         try {
             const result = await authService.checkVendorStatus();
             if (result?.isVendor) {
-                // Persist the fresh PASETO token so the session reflects isVendor: true
                 if (result.token) {
                     await authStorage.save({ token: result.token, user: { ...user, isVendor: true } });
                 }
                 updateUser({ isVendor: true });
                 setStep('done');
+            } else if (result?.code === 'NO_STRIPE_ACCOUNT') {
+                setErrorMsg("You haven't submitted vendor setup yet. Please start now.");
+                setStep('error');
             } else {
-                setErrorMsg('Your Stripe verification is still being processed. Please wait a moment and try again.');
+                // PENDING_VERIFICATION — show Stripe status breakdown
+                setStripeStatus(result?.stripeStatus || null);
+                setErrorMsg('Your Stripe verification is still being processed.');
                 setStep('error');
             }
         } catch (err) {
@@ -151,10 +198,7 @@ export default function VendorUpgradePage() {
             {/* Benefits */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {BENEFITS.map(({ icon: Icon, title, desc }) => (
-                    <div
-                        key={title}
-                        className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5"
-                    >
+                    <div key={title} className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5">
                         <div className="w-10 h-10 rounded-xl bg-pxi-purple/10 border border-pxi-purple/20 flex items-center justify-center mb-4">
                             <Icon size={18} className="text-pxi-purple" />
                         </div>
@@ -164,18 +208,54 @@ export default function VendorUpgradePage() {
                 ))}
             </div>
 
-            {/* Error */}
-            {step === 'error' && (
-                <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {/* Error banner */}
+            {step === 'error' && errorMsg && (
+                <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                    <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
                     {errorMsg}
+                </div>
+            )}
+
+            {/* Stripe status breakdown — shown after a Check Status call returns PENDING */}
+            {stripeStatus && (
+                <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5 space-y-1">
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Stripe Account Status</p>
+
+                    <StatusRow
+                        label="Charges Enabled"
+                        enabled={stripeStatus.chargesEnabled}
+                        description="Your account can accept ticket payments from buyers."
+                    />
+                    <StatusRow
+                        label="Payouts Enabled"
+                        enabled={stripeStatus.payoutsEnabled}
+                        description="Stripe can transfer your earnings to your bank account."
+                    />
+
+                    {stripeStatus.currentlyDue?.length > 0 && (
+                        <div className="pt-3">
+                            <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-2">
+                                Outstanding Requirements
+                            </p>
+                            <p className="text-xs text-zinc-500 mb-3">
+                                Complete these items in your Stripe dashboard to finish verification:
+                            </p>
+                            <ul className="space-y-1.5">
+                                {stripeStatus.currentlyDue.map((key) => (
+                                    <li key={key} className="flex items-center gap-2 text-xs text-zinc-300">
+                                        <XCircle size={13} className="text-amber-400 flex-shrink-0" />
+                                        {formatRequirement(key)}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </div>
             )}
 
             {/* CTA Card */}
             <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6">
-                <h2 className="text-white font-bold text-base mb-1">
-                    Connect with Stripe
-                </h2>
+                <h2 className="text-white font-bold text-base mb-1">Connect with Stripe</h2>
                 <p className="text-zinc-500 text-sm mb-5 leading-relaxed">
                     You'll be redirected to Stripe to complete identity and banking
                     verification. This typically takes 2–5 minutes. After finishing,
@@ -188,25 +268,17 @@ export default function VendorUpgradePage() {
                         Redirecting to Stripe…
                     </div>
                 ) : (
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                        <button
-                            onClick={handleStartOnboarding}
-                            disabled={step === 'loading'}
-                            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:shadow-[0_0_36px_rgba(216,74,255,0.5)] hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {step === 'loading' ? (
-                                <>
-                                    <Loader2 size={14} className="animate-spin" />
-                                    Connecting…
-                                </>
-                            ) : (
-                                <>
-                                    Start Stripe Verification
-                                    <ArrowRight size={14} />
-                                </>
-                            )}
-                        </button>
-                    </div>
+                    <button
+                        onClick={handleStartOnboarding}
+                        disabled={step === 'loading'}
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {step === 'loading' ? (
+                            <><Loader2 size={14} className="animate-spin" />Connecting…</>
+                        ) : (
+                            <>Start Stripe Verification<ArrowRight size={14} /></>
+                        )}
+                    </button>
                 )}
             </div>
 
@@ -220,11 +292,7 @@ export default function VendorUpgradePage() {
                     disabled={checkingStatus}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-zinc-300 text-sm font-medium hover:bg-white/5 transition-all disabled:opacity-50"
                 >
-                    {checkingStatus ? (
-                        <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                        <RefreshCw size={14} />
-                    )}
+                    {checkingStatus ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                     Check Status
                 </button>
             </div>
@@ -232,16 +300,10 @@ export default function VendorUpgradePage() {
             {/* Fine print */}
             <p className="text-zinc-600 text-xs leading-relaxed">
                 By connecting with Stripe, you agree to Stripe's{' '}
-                <a
-                    href="https://stripe.com/connect-account/legal"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-zinc-400 transition-colors"
-                >
+                <a href="https://stripe.com/connect-account/legal" target="_blank" rel="noopener noreferrer" className="underline hover:text-zinc-400 transition-colors">
                     Connected Account Agreement
                 </a>
-                . PXI charges a 4.59% consumer fee and a $0.90 vendor flat fee per
-                transaction.
+                . PXI charges a 4.59% consumer fee and a $0.90 vendor flat fee per transaction.
             </p>
         </div>
     );
