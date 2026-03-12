@@ -38,12 +38,11 @@ export default function VendorUpgradePage() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const stripeParam = searchParams.get('stripe'); // 'success' | 'refresh' | null
+    const stripeParam = searchParams.get('stripe'); // 'refresh' | null
 
     const [step, setStep] = useState(
         user?.isVendor ? 'done'
-        : stripeParam === 'success' ? 'pending'  // returned from Stripe — auto-check
-        : stripeParam === 'refresh' ? 'error'     // Stripe link expired — show retry
+        : stripeParam === 'refresh' ? 'error'   // Stripe link expired — show retry
         : 'idle'
     );
     const [errorMsg, setErrorMsg] = useState(
@@ -56,12 +55,7 @@ export default function VendorUpgradePage() {
         if (stripeParam) router.replace('/dashboard/vendor-upgrade', { scroll: false });
     }, []);
 
-    // Auto-check status when returning from Stripe with ?stripe=success
-    useEffect(() => {
-        if (step === 'pending') handleCheckStatus();
-    }, []);
-
-    // If already a vendor
+    // If already a vendor (e.g. webhook fired in background)
     useEffect(() => {
         if (user?.isVendor) setStep('done');
     }, [user?.isVendor]);
@@ -215,30 +209,21 @@ export default function VendorUpgradePage() {
 
             {/* Check Status */}
             <div className="bg-zinc-900/30 border border-white/5 rounded-2xl p-5">
-                {step === 'pending' ? (
-                    <div className="flex items-center gap-3 text-zinc-400 text-sm">
-                        <Loader2 size={15} className="animate-spin text-pxi-purple" />
-                        Verifying your Stripe account…
-                    </div>
-                ) : (
-                    <>
-                        <p className="text-zinc-500 text-sm mb-3">
-                            Already completed Stripe verification? Check if your account has been approved.
-                        </p>
-                        <button
-                            onClick={handleCheckStatus}
-                            disabled={checkingStatus}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-zinc-300 text-sm font-medium hover:bg-white/5 transition-all disabled:opacity-50"
-                        >
-                            {checkingStatus ? (
-                                <Loader2 size={14} className="animate-spin" />
-                            ) : (
-                                <RefreshCw size={14} />
-                            )}
-                            Check Status
-                        </button>
-                    </>
-                )}
+                <p className="text-zinc-500 text-sm mb-3">
+                    Already completed Stripe verification? Check if your account has been approved.
+                </p>
+                <button
+                    onClick={handleCheckStatus}
+                    disabled={checkingStatus}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-zinc-300 text-sm font-medium hover:bg-white/5 transition-all disabled:opacity-50"
+                >
+                    {checkingStatus ? (
+                        <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                        <RefreshCw size={14} />
+                    )}
+                    Check Status
+                </button>
             </div>
 
             {/* Fine print */}
