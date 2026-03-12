@@ -36,7 +36,7 @@ const BENEFITS = [
 export default function VendorUpgradePage() {
     const { user, updateUser } = useAuth();
     const router = useRouter();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const searchParams = useSearchParams();
 
     const stripeParam = searchParams.get('stripe'); // 'success' | 'refresh' | null
 
@@ -53,7 +53,7 @@ export default function VendorUpgradePage() {
 
     // Clear query params from URL once consumed
     useEffect(() => {
-        if (stripeParam) setSearchParams({}, { replace: true });
+        if (stripeParam) router.replace('/dashboard/vendor-upgrade', { scroll: false });
     }, []);
 
     // Auto-check status when returning from Stripe with ?stripe=success
