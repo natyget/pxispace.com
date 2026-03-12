@@ -84,6 +84,9 @@ export const authService = {
             refreshUrl: `${window.location.origin}/dashboard/vendor-upgrade?stripe=refresh`,
         }),
 
+    checkVendorStatus: () =>
+        api.post('/api/vendor/status', {}),
+
     getVendorDashboard: () =>
         api.get('/api/vendor/dashboard'),
 

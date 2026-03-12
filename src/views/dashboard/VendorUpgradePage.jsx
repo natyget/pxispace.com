@@ -13,7 +13,7 @@ import {
     RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { authService } from '../../services/auth';
+import { authService, authStorage } from '../../services/auth';
 
 const BENEFITS = [
     {
@@ -85,12 +85,15 @@ export default function VendorUpgradePage() {
     };
 
     const handleCheckStatus = async () => {
-        if (!user?.id) return;
         setCheckingStatus(true);
         setErrorMsg('');
         try {
-            const fresh = await authService.getMe(user.id);
-            if (fresh?.user?.isVendor) {
+            const result = await authService.checkVendorStatus();
+            if (result?.isVendor) {
+                // Persist the fresh PASETO token so the session reflects isVendor: true
+                if (result.token) {
+                    await authStorage.save({ token: result.token, user: { ...user, isVendor: true } });
+                }
                 updateUser({ isVendor: true });
                 setStep('done');
             } else {
