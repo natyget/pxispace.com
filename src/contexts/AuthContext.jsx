@@ -1,12 +1,26 @@
 'use client';
-import { createContext, useContext, useState, useCallback } from 'react';
-import { authStorage } from '../services/auth';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { authStorage, authService } from '../services/auth';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(() => authStorage.getUser());
     const [token, setToken] = useState(() => authStorage.getToken());
+
+    // Refresh user data on mount so isVendor / accountTier are always fresh
+    useEffect(() => {
+        const storedToken = authStorage.getToken();
+        const storedUser = authStorage.getUser();
+        if (!storedToken || !storedUser?.id) return;
+        authService.getMe(storedUser.id)
+            .then(({ user: fresh }) => {
+                const merged = { ...storedUser, ...fresh };
+                localStorage.setItem('pxi_user', JSON.stringify(merged));
+                setUser(merged);
+            })
+            .catch(() => { /* network error — keep cached data */ });
+    }, []);
 
     const saveAuth = useCallback(async ({ token: newToken, user: newUser }) => {
         await authStorage.save({ token: newToken, user: newUser });

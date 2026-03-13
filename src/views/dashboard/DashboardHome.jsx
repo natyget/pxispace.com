@@ -8,8 +8,11 @@ import { authService } from '../../services/auth';
 
 export default function DashboardHome() {
     const { user } = useAuth();
+    const [mounted, setMounted] = useState(false);
     const [vendorData, setVendorData] = useState(null);
     const [vendorLoading, setVendorLoading] = useState(false);
+
+    useEffect(() => { setMounted(true); }, []);
 
     useEffect(() => {
         if (!user?.isVendor) return;
@@ -21,8 +24,7 @@ export default function DashboardHome() {
             .finally(() => setVendorLoading(false));
     }, [user?.isVendor]);
 
-    const totalEarnings = vendorData?.totalNetPayout ?? 0;
-    const totalPayments = vendorData?.paymentCount ?? 0;
+    const totalEarnings = vendorData?.aggregates?.netPayout ?? 0;
     const recentPayments = vendorData?.payments ?? [];
 
     return (
@@ -30,7 +32,7 @@ export default function DashboardHome() {
             {/* Header */}
             <div>
                 <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-                    {greeting()}, {user?.name?.split(' ')[0] || 'there'} 👋
+                    {mounted ? greeting() : 'Welcome'}, {mounted ? (user?.name?.split(' ')[0] || 'there') : 'there'} 👋
                 </h1>
                 <p className="text-zinc-500 text-sm mt-1">
                     Here's what's happening with your account.
@@ -41,22 +43,21 @@ export default function DashboardHome() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Link href="/dashboard/passport" className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5 block hover:border-white/10 transition-colors">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${user?.isPassportIssued ? 'bg-pxi-purple/15 border border-pxi-purple/25' : 'bg-amber-500/15 border border-amber-500/25'}`}>
-                            {user?.isPassportIssued ? (
-                                <CheckCircle2 size={16} className="text-pxi-purple" />
-                            ) : (
-                                <Clock size={16} className="text-amber-400" />
-                            )}
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-zinc-800 border border-white/8">
+                            {mounted && user?.isPassportIssued
+                                ? <CheckCircle2 size={16} className="text-pxi-purple" />
+                                : <Clock size={16} className="text-amber-400" />
+                            }
                         </div>
                         <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
                             Passport
                         </span>
                     </div>
-                    <p className={`font-bold text-lg ${user?.isPassportIssued ? 'text-white' : 'text-amber-400'}`}>
-                        {user?.isPassportIssued ? 'Issued' : 'Not issued'}
+                    <p className={`font-bold text-lg ${mounted && user?.isPassportIssued ? 'text-white' : 'text-amber-400'}`}>
+                        {mounted ? (user?.isPassportIssued ? 'Issued' : 'Not issued') : 'Not issued'}
                     </p>
                     <p className="text-zinc-500 text-xs mt-0.5">
-                        {user?.isPassportIssued ? `@${user?.handle ?? '—'}` : 'Issue via PXI mobile app'}
+                        {mounted && user?.isPassportIssued ? `@${user?.handle ?? '—'}` : 'Issue via PXI mobile app'}
                     </p>
                 </Link>
 
@@ -69,26 +70,22 @@ export default function DashboardHome() {
                             Vendor Status
                         </span>
                     </div>
-                    {user?.isVendor ? (
+                    {mounted && user?.isVendor ? (
                         <>
                             <p className="text-amber-400 font-bold text-lg">Active</p>
-                            <p className="text-zinc-500 text-xs mt-0.5">
-                                Stripe Connect verified
-                            </p>
+                            <p className="text-zinc-500 text-xs mt-0.5">Stripe Connect verified</p>
                         </>
                     ) : (
                         <>
                             <p className="text-zinc-400 font-bold text-lg">Not Set Up</p>
-                            <p className="text-zinc-600 text-xs mt-0.5">
-                                Upgrade to sell tickets
-                            </p>
+                            <p className="text-zinc-600 text-xs mt-0.5">Upgrade to sell tickets</p>
                         </>
                     )}
                 </div>
             </div>
 
             {/* Vendor Upgrade CTA (only if not vendor) */}
-            {!user?.isVendor && (
+            {mounted && !user?.isVendor && (
                 <div className="relative overflow-hidden bg-gradient-to-br from-pxi-purple/10 to-zinc-900/60 border border-pxi-purple/20 rounded-2xl p-6">
                     <div className="absolute top-0 right-0 w-48 h-48 bg-pxi-purple/10 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                     <div className="relative">
@@ -117,7 +114,7 @@ export default function DashboardHome() {
             )}
 
             {/* Vendor Stats (only if vendor) */}
-            {user?.isVendor && (
+            {mounted && user?.isVendor && (
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <StatCard
@@ -128,8 +125,8 @@ export default function DashboardHome() {
                         />
                         <StatCard
                             icon={TrendingUp}
-                            label="Total Payments"
-                            value={totalPayments.toString()}
+                            label="Total Sales"
+                            value={recentPayments.length.toString()}
                             loading={vendorLoading}
                         />
                     </div>
@@ -160,7 +157,7 @@ export default function DashboardHome() {
                                             </p>
                                             <p className="text-zinc-500 text-xs mt-0.5">
                                                 {p.createdAt
-                                                    ? new Date(p.createdAt).toLocaleDateString()
+                                                    ? new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                                                     : '—'}
                                             </p>
                                         </div>
