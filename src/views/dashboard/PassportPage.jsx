@@ -170,7 +170,7 @@ export default function PassportPage() {
 
 function PassportIssued({ user }) {
     const fullName = user?.name ?? 'PXI CITIZEN';
-    const username = user?.handle ?? 'citizen';
+    const username = user?.username ?? 'citizen';
     const avatarFallback = fullName.charAt(0).toUpperCase();
     const city = user?.city ?? '—';
     const bio = user?.bio ?? '—';
@@ -203,10 +203,10 @@ function PassportIssued({ user }) {
                     <span className="text-pxi-purple text-xs font-bold uppercase tracking-widest">PXI Passport</span>
                 </div>
                 <h1 className="text-2xl font-black text-white tracking-tight">Your Digital Identity</h1>
-                <p className="text-zinc-500 text-sm mt-1">Your passport is active.</p>
+                <p className="text-zinc-500 text-sm mt-1">Your PXI Passport is active.</p>
             </div>
 
-            {/* Passport card — exact blueprint proportions */}
+            {/* PXI Passport card — exact blueprint proportions */}
             <div className="flex justify-center">
                 <div
                     style={{
@@ -301,7 +301,7 @@ function PassportIssued({ user }) {
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
-                                    <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>Passport No.</span>
+                                    <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>PXI Passport No.</span>
                                     <span style={{ fontSize: 11, color: 'white', textTransform: 'uppercase' }}>P0512018XI</span>
                                 </div>
                             </div>
@@ -373,7 +373,7 @@ function PassportIssued({ user }) {
             </div>
 
             <p className="text-zinc-600 text-xs text-center">
-                To update your passport details, use the PXI mobile app.
+                To update your PXI Passport details, use the PXI mobile app.
             </p>
         </div>
     );
@@ -399,7 +399,7 @@ function InfoRowInline({ label, value, truncate }) {
     );
 }
 
-// ─── Passport not issued ──────────────────────────────────────────────────────
+// ─── PXI Passport not issued ──────────────────────────────────────────────────────
 
 function PassportNotIssued() {
     return (
@@ -409,8 +409,8 @@ function PassportNotIssued() {
                     <Shield size={14} className="text-zinc-500" />
                     <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest">PXI Passport</span>
                 </div>
-                <h1 className="text-2xl font-black text-white tracking-tight">Get Your Passport</h1>
-                <p className="text-zinc-500 text-sm mt-1">Your passport hasn't been issued yet.</p>
+                <h1 className="text-2xl font-black text-white tracking-tight">Get Your PXI Passport</h1>
+                <p className="text-zinc-500 text-sm mt-1">Your PXI Passport hasn't been issued yet.</p>
             </div>
             <div className="rounded-2xl p-8 text-center bg-zinc-900/50 border border-white/5">
                 <div className="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center bg-pxi-purple/10 border border-pxi-purple/20">
@@ -418,7 +418,7 @@ function PassportNotIssued() {
                 </div>
                 <h2 className="text-white font-black text-lg mb-2 tracking-tight">Use the PXI Mobile App</h2>
                 <p className="text-zinc-400 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
-                    Your PXI Passport is your digital identity for events. To issue your passport, please use the PXI mobile app — it only takes a minute.
+                    Your PXI Passport is your digital identity for events. To issue your PXI Passport, please use the PXI mobile app — it only takes a minute.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                     <a href="https://apps.apple.com/app/pxi" target="_blank" rel="noopener noreferrer"

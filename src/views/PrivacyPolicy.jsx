@@ -46,7 +46,7 @@ export default function PrivacyPolicy() {
                         title="How We Use Your Data"
                     >
                         <p className="mt-2 text-neutral-300/80 leading-7">
-                            Service Delivery: To create your "Passport" profile
+                            Service Delivery: To create your "PXI Passport" profile
                             and event feeds.
                         </p>
                         <p className="mt-2 text-neutral-300/80 leading-7">

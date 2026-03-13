@@ -127,7 +127,7 @@ const Navbar = () => {
                                 <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-950 border border-white/8 rounded-xl shadow-2xl overflow-hidden z-50">
                                     <div className="px-4 py-3 border-b border-white/5">
                                         <p className="text-white text-xs font-semibold truncate">{user?.name}</p>
-                                        <p className="text-zinc-500 text-xs truncate">@{user?.handle}</p>
+                                        <p className="text-zinc-500 text-xs truncate">@{user?.username}</p>
                                     </div>
                                     <Link
                                         href="/dashboard"

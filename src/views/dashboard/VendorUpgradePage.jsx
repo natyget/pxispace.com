@@ -162,7 +162,7 @@ export default function VendorUpgradePage() {
                     You're a Vendor!
                 </h1>
                 <p className="text-zinc-400 mb-8">
-                    Your Diplomatic Passport has been issued. You can now create paid
+                    Your PXI Passport has been issued. You can now create paid
                     events and collect revenue on PXI.
                 </p>
                 <button
@@ -187,7 +187,7 @@ export default function VendorUpgradePage() {
                     </span>
                 </div>
                 <h1 className="text-3xl font-black text-white tracking-tight">
-                    Get Your Diplomatic Passport
+                    Get Your PXI Passport
                 </h1>
                 <p className="text-zinc-400 mt-2 leading-relaxed">
                     Unlock the ability to host paid events, sell tickets, and receive
