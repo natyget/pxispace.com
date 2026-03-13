@@ -35,15 +35,15 @@ export default function SignupPage() {
     const { saveAuth } = useAuth();
 
     const [email, setEmail] = useState('');
-    const [handle, setHandle] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [handleStatus, setHandleStatus] = useState('idle'); // idle | checking | available | taken | invalid
+    const [usernameStatus, setUsernameStatus] = useState('idle'); // idle | checking | available | taken | invalid
     const googleBtnRef = useRef(null);
-    const debouncedHandle = useDebounce(handle, 500);
+    const debouncedUsername = useDebounce(username, 500);
 
     const handleAuthSuccess = useCallback(
         ({ token, user }) => {
@@ -54,16 +54,16 @@ export default function SignupPage() {
         [saveAuth, router]
     );
 
-    // Handle availability check
+    // Username availability check
     useEffect(() => {
-        if (!debouncedHandle) { setHandleStatus('idle'); return; }
-        if (!HANDLE_REGEX.test(debouncedHandle)) { setHandleStatus('invalid'); return; }
-        setHandleStatus('checking');
+        if (!debouncedUsername) { setUsernameStatus('idle'); return; }
+        if (!HANDLE_REGEX.test(debouncedUsername)) { setUsernameStatus('invalid'); return; }
+        setUsernameStatus('checking');
         authService
-            .checkHandle(debouncedHandle)
-            .then(({ available }) => setHandleStatus(available ? 'available' : 'taken'))
-            .catch(() => setHandleStatus('idle'));
-    }, [debouncedHandle]);
+            .checkUsername(debouncedUsername)
+            .then(({ available }) => setUsernameStatus(available ? 'available' : 'taken'))
+            .catch(() => setUsernameStatus('idle'));
+    }, [debouncedUsername]);
 
     // Load Google GSI
     useEffect(() => {
@@ -144,8 +144,8 @@ export default function SignupPage() {
 
     const canSubmit =
         email &&
-        HANDLE_REGEX.test(handle) &&
-        handleStatus === 'available' &&
+        HANDLE_REGEX.test(username) &&
+        usernameStatus === 'available' &&
         passwordValid &&
         passwordsMatch &&
         !loading;
@@ -156,15 +156,15 @@ export default function SignupPage() {
         setError('');
         setLoading(true);
         try {
-            const result = await authService.register(email, password, handle);
+            const result = await authService.register(email, password, username);
             saveAuth(result);
             router.replace('/passport-required');
         } catch (err) {
             if (err.code === 'EMAIL_EXISTS') {
                 setError('An account with this email already exists. Try signing in.');
-            } else if (err.code === 'HANDLE_EXISTS') {
-                setError('That handle is already taken. Please choose another.');
-                setHandleStatus('taken');
+            } else if (err.code === 'USERNAME_EXISTS') {
+                setError('That username is already taken. Please choose another.');
+                setUsernameStatus('taken');
             } else {
                 setError(err.message || 'Something went wrong. Please try again.');
             }
@@ -245,7 +245,7 @@ export default function SignupPage() {
 
                         <div>
                             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">
-                                Handle
+                                Username
                             </label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm select-none">
@@ -253,19 +253,19 @@ export default function SignupPage() {
                                 </span>
                                 <input
                                     type="text"
-                                    value={handle}
+                                    value={username}
                                     onChange={(e) =>
-                                        setHandle(e.target.value.toLowerCase().replace(/\s/g, ''))
+                                        setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))
                                     }
-                                    placeholder="yourhandle"
+                                    placeholder="yourusername"
                                     maxLength={20}
                                     className="w-full bg-zinc-800/60 border border-white/8 rounded-xl pl-8 pr-10 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-pxi-purple/50 focus:ring-1 focus:ring-pxi-purple/20 transition-all"
                                 />
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                    <HandleStatusIcon status={handleStatus} />
+                                    <UsernameStatusIcon status={usernameStatus} />
                                 </div>
                             </div>
-                            <HandleStatusMessage status={handleStatus} handle={handle} />
+                            <UsernameStatusMessage status={usernameStatus} username={username} />
                         </div>
 
                         <div>
@@ -366,7 +366,7 @@ export default function SignupPage() {
     );
 }
 
-function HandleStatusIcon({ status }) {
+function UsernameStatusIcon({ status }) {
     if (status === 'checking')
         return <Loader2 size={14} className="animate-spin text-zinc-500" />;
     if (status === 'available')
@@ -376,8 +376,8 @@ function HandleStatusIcon({ status }) {
     return null;
 }
 
-function HandleStatusMessage({ status, handle }) {
-    if (!handle) return null;
+function UsernameStatusMessage({ status, username }) {
+    if (!username) return null;
     if (status === 'invalid')
         return (
             <p className="text-zinc-600 text-xs mt-1.5">
@@ -385,8 +385,8 @@ function HandleStatusMessage({ status, handle }) {
             </p>
         );
     if (status === 'taken')
-        return <p className="text-red-400 text-xs mt-1.5">@{handle} is already taken</p>;
+        return <p className="text-red-400 text-xs mt-1.5">@{username} is already taken</p>;
     if (status === 'available')
-        return <p className="text-green-400 text-xs mt-1.5">@{handle} is available</p>;
+        return <p className="text-green-400 text-xs mt-1.5">@{username} is available</p>;
     return null;
 }

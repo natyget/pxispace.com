@@ -39,7 +39,7 @@ export default function DashboardHome() {
                 </p>
             </div>
 
-            {/* Passport Status Card */}
+            {/* PXI Passport Status Card */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Link href="/dashboard/passport" className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5 block hover:border-white/10 transition-colors">
                     <div className="flex items-center gap-3 mb-3">
@@ -50,14 +50,14 @@ export default function DashboardHome() {
                             }
                         </div>
                         <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
-                            Passport
+                            PXI Passport
                         </span>
                     </div>
                     <p className={`font-bold text-lg ${mounted && user?.isPassportIssued ? 'text-white' : 'text-amber-400'}`}>
                         {mounted ? (user?.isPassportIssued ? 'Issued' : 'Not issued') : 'Not issued'}
                     </p>
                     <p className="text-zinc-500 text-xs mt-0.5">
-                        {mounted && user?.isPassportIssued ? `@${user?.handle ?? '—'}` : 'Issue via PXI mobile app'}
+                        {mounted && user?.isPassportIssued ? `@${user?.username ?? '—'}` : 'Issue via PXI mobile app'}
                     </p>
                 </Link>
 
@@ -96,7 +96,7 @@ export default function DashboardHome() {
                             </span>
                         </div>
                         <h2 className="text-white font-black text-xl mt-2 mb-2">
-                            Unlock your Diplomatic Passport
+                            Unlock your PXI Passport
                         </h2>
                         <p className="text-zinc-400 text-sm mb-5 leading-relaxed max-w-lg">
                             Connect your Stripe account to sell tickets, collect revenue,

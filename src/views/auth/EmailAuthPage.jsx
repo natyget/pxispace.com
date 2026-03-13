@@ -34,15 +34,15 @@ export default function EmailAuthPage() {
     const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login');
 
     const [email, setEmail] = useState('');
-    const [handle, setHandle] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(searchParams.get('error') || '');
-    const [handleStatus, setHandleStatus] = useState('idle');
+    const [usernameStatus, setUsernameStatus] = useState('idle');
 
-    const debouncedHandle = useDebounce(handle, 500);
+    const debouncedUsername = useDebounce(username, 500);
 
     const handleAuthSuccess = useCallback(
         ({ token, user }) => {
@@ -52,25 +52,25 @@ export default function EmailAuthPage() {
         [saveAuth, router]
     );
 
-    // Handle availability check (signup mode only)
+    // Username availability check (signup mode only)
     useEffect(() => {
-        if (mode !== 'signup' || !debouncedHandle) { setHandleStatus('idle'); return; }
-        if (!HANDLE_REGEX.test(debouncedHandle)) { setHandleStatus('invalid'); return; }
-        setHandleStatus('checking');
+        if (mode !== 'signup' || !debouncedUsername) { setUsernameStatus('idle'); return; }
+        if (!HANDLE_REGEX.test(debouncedUsername)) { setUsernameStatus('invalid'); return; }
+        setUsernameStatus('checking');
         authService
-            .checkHandle(debouncedHandle)
-            .then(({ available }) => setHandleStatus(available ? 'available' : 'taken'))
-            .catch(() => setHandleStatus('idle'));
-    }, [debouncedHandle, mode]);
+            .checkUsername(debouncedUsername)
+            .then(({ available }) => setUsernameStatus(available ? 'available' : 'taken'))
+            .catch(() => setUsernameStatus('idle'));
+    }, [debouncedUsername, mode]);
 
     // Reset fields when mode changes
     const switchMode = (next) => {
         setMode(next);
         setError('');
-        setHandle('');
+        setUsername('');
         setPassword('');
         setConfirmPassword('');
-        setHandleStatus('idle');
+        setUsernameStatus('idle');
     };
 
     const passwordRules = PASSWORD_RULES.map((r) => ({ ...r, passed: r.test(password) }));
@@ -79,7 +79,7 @@ export default function EmailAuthPage() {
 
     const canSubmit = mode === 'login'
         ? email && password && !loading
-        : email && HANDLE_REGEX.test(handle) && handleStatus === 'available' && passwordValid && passwordsMatch && !loading;
+        : email && HANDLE_REGEX.test(username) && usernameStatus === 'available' && passwordValid && passwordsMatch && !loading;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -91,7 +91,7 @@ export default function EmailAuthPage() {
                 const result = await authService.login(email, password);
                 handleAuthSuccess(result);
             } else {
-                const result = await authService.register(email, password, handle);
+                const result = await authService.register(email, password, username);
                 saveAuth(result);
                 router.replace('/dashboard');
             }
@@ -100,9 +100,9 @@ export default function EmailAuthPage() {
                 setError('This account uses social login. Go back and use Google or Apple.');
             } else if (err.code === 'EMAIL_EXISTS') {
                 setError('An account with this email already exists.');
-            } else if (err.code === 'HANDLE_EXISTS') {
-                setError('That handle is already taken.');
-                setHandleStatus('taken');
+            } else if (err.code === 'USERNAME_EXISTS') {
+                setError('That username is already taken.');
+                setUsernameStatus('taken');
             } else {
                 setError(err.message || 'Something went wrong. Please try again.');
             }
@@ -220,9 +220,9 @@ export default function EmailAuthPage() {
                             />
                         </AuthField>
 
-                        {/* Handle (signup only) */}
+                        {/* Username (signup only) */}
                         {!isLogin && (
-                            <AuthField label="HANDLE">
+                            <AuthField label="USERNAME">
                                 <div className="relative">
                                     <span
                                         className="absolute left-6 top-1/2 -translate-y-1/2 font-semibold select-none"
@@ -232,23 +232,23 @@ export default function EmailAuthPage() {
                                     </span>
                                     <AuthInput
                                         type="text"
-                                        value={handle}
+                                        value={username}
                                         onChange={(e) =>
-                                            setHandle(e.target.value.toLowerCase().replace(/\s/g, ''))
+                                            setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))
                                         }
-                                        placeholder="yourhandle"
+                                        placeholder="yourusername"
                                         maxLength={20}
                                         style={{ paddingLeft: 32 }}
                                     />
                                     <div className="absolute right-5 top-1/2 -translate-y-1/2">
-                                        {handleStatus === 'checking' && <Loader2 size={14} className="animate-spin" style={{ color: 'rgba(255,255,255,0.4)' }} />}
-                                        {handleStatus === 'available' && <CheckCircle2 size={14} style={{ color: '#4ade80' }} />}
-                                        {(handleStatus === 'taken' || handleStatus === 'invalid') && <XCircle size={14} style={{ color: '#f87171' }} />}
+                                        {usernameStatus === 'checking' && <Loader2 size={14} className="animate-spin" style={{ color: 'rgba(255,255,255,0.4)' }} />}
+                                        {usernameStatus === 'available' && <CheckCircle2 size={14} style={{ color: '#4ade80' }} />}
+                                        {(usernameStatus === 'taken' || usernameStatus === 'invalid') && <XCircle size={14} style={{ color: '#f87171' }} />}
                                     </div>
                                 </div>
-                                {handle && handleStatus === 'taken' && <FieldHint color="#f87171">@{handle} is already taken</FieldHint>}
-                                {handle && handleStatus === 'available' && <FieldHint color="#4ade80">@{handle} is available</FieldHint>}
-                                {handle && handleStatus === 'invalid' && <FieldHint color="rgba(255,255,255,0.3)">3–20 characters, letters, numbers, and _ only</FieldHint>}
+                                {username && usernameStatus === 'taken' && <FieldHint color="#f87171">@{username} is already taken</FieldHint>}
+                                {username && usernameStatus === 'available' && <FieldHint color="#4ade80">@{username} is available</FieldHint>}
+                                {username && usernameStatus === 'invalid' && <FieldHint color="rgba(255,255,255,0.3)">3–20 characters, letters, numbers, and _ only</FieldHint>}
                             </AuthField>
                         )}
 

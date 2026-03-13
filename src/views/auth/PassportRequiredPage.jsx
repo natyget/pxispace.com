@@ -30,7 +30,7 @@ export default function PassportRequiredPage() {
                 </h1>
                 <p className="text-zinc-400 text-base leading-relaxed mb-10">
                     Your PXI Passport is your digital identity for events.
-                    To issue your passport, please use the PXI mobile app.
+                    To issue your PXI Passport, please use the PXI mobile app.
                 </p>
 
                 {/* App Store Buttons */}

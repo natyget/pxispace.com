@@ -21,7 +21,7 @@ const features = [
     },
     {
         icon: <UserPlus className="w-6 h-6 text-blue-400" />,
-        title: "Your Social Passport",
+        title: "Your PXI Passport",
         tag: "PRIVATE • 2/12/2026",
         description: "Build a profile showcasing your stamps. It's your story.",
         images: [PassportPNG],

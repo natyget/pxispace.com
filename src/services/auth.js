@@ -53,11 +53,11 @@ export const authStorage = {
 };
 
 export const authService = {
-    register: (email, password, handle) =>
-        api.post('/api/auth/register', { email, password, handle }),
+    register: (email, password, username) =>
+        api.post('/api/auth/register', { email, password, username }),
 
-    checkHandle: (handle) =>
-        api.get(`/api/auth/check-handle?handle=${encodeURIComponent(handle)}`),
+    checkUsername: (username) =>
+        api.get(`/api/auth/check-username?username=${encodeURIComponent(username)}`),
 
     login: (identifier, password) =>
         api.post('/api/auth/login', { identifier, password }),

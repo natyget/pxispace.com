@@ -7,7 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 
 const DELETION_ITEMS = [
-    'Your profile, name, handle, and avatar',
+    'Your profile, name, username, and avatar',
     'All uploaded photos and videos',
     'Your PXI Passport and digital identity',
     'All biometric face data (FaceVector)',
@@ -60,12 +60,12 @@ export default function AccountPage() {
                 <h2 className="text-white font-bold text-sm">Account Details</h2>
                 <div className="space-y-1.5">
                     <Row label="Name" value={user?.name || '—'} />
-                    <Row label="Handle" value={user?.handle ? `@${user.handle}` : '—'} />
+                    <Row label="Username" value={user?.username ? `@${user.username}` : '—'} />
                     <Row label="Email" value={user?.email || '—'} />
                     <Row label="Tier" value={user?.accountTier || 'CITIZEN'} />
                 </div>
                 <p className="text-zinc-600 text-xs pt-1">
-                    To update your name, handle, or avatar use the PXI mobile app.
+                    To update your name, username, or avatar use the PXI mobile app.
                 </p>
             </div>
 

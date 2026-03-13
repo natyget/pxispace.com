@@ -13,6 +13,7 @@ import {
     X,
     ChevronRight,
     UserCog,
+    Calendar,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 const LogoSVG = "/images/logo.svg";
@@ -22,6 +23,7 @@ const navItems = [
     { label: 'PXI Passport', path: '/dashboard/passport', icon: Shield },
     { label: 'Earnings', path: '/dashboard/earnings', icon: TrendingUp },
     { label: 'Vendor Setup', path: '/dashboard/vendor-upgrade', icon: Star },
+    { label: 'Events', path: '/dashboard/events', icon: Calendar, vendorOnly: true },
     { label: 'Account', path: '/dashboard/account', icon: UserCog },
 ];
 
@@ -91,7 +93,7 @@ export default function DashboardLayout({ children }) {
                                 {mounted ? (user?.name || 'PXI User') : 'PXI User'}
                             </p>
                             <p className="text-zinc-500 text-xs truncate">
-                                @{mounted ? (user?.handle || '—') : '—'}
+                                @{mounted ? (user?.username || '—') : '—'}
                             </p>
                         </div>
                     </div>
@@ -111,7 +113,8 @@ export default function DashboardLayout({ children }) {
                 </div>
 
                 <nav className="flex-1 px-3 py-4 space-y-1">
-                    {navItems.map(({ label, path, icon: Icon, end }) => {
+                    {navItems.map(({ label, path, icon: Icon, end, vendorOnly }) => {
+                        if (vendorOnly && mounted && !user?.isVendor) return null;
                         const isActive = end ? pathname === path : pathname.startsWith(path + '/') || pathname === path;
                         const showPassportAlert = mounted && path === '/dashboard/passport' && !user?.isPassportIssued;
                         return (
@@ -132,7 +135,7 @@ export default function DashboardLayout({ children }) {
                                 {label}
                                 <span className="ml-auto flex items-center gap-1">
                                     {showPassportAlert && (
-                                        <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" title="Passport not issued" />
+                                        <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" title="PXI Passport not issued" />
                                     )}
                                     {isActive && !showPassportAlert && (
                                         <ChevronRight size={14} className="text-pxi-purple/60" />
