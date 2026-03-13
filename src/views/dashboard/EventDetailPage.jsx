@@ -15,13 +15,14 @@ export default function EventDetailPage() {
   const [participants, setParticipants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [inviteUsername, setInviteUsername] = useState('');
+  const [selectedToInvite, setSelectedToInvite] = useState([]); // { id, username, name?, avatarUrl? }[]
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState(null);
   const [removing, setRemoving] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const searchTimeoutRef = useRef(null);
   const searchContainerRef = useRef(null);
 
@@ -61,6 +62,8 @@ export default function EventDetailPage() {
 
   const staffList = participants.filter((p) => STAFF_ROLES.includes(p.role));
   const staffUserIds = new Set(staffList.map((p) => p.userId));
+  // Show all participants (staff + members who joined the album)
+  const allParticipants = participants;
 
   // Debounced user search (by username or email on backend)
   useEffect(() => {
@@ -82,28 +85,59 @@ export default function EventDetailPage() {
     };
   }, [searchQuery]);
 
-  const handleInvite = async (e, usernameOverride) => {
-    e?.preventDefault?.();
-    const username = (usernameOverride ?? inviteUsername).trim().replace(/^@/, '');
-    if (!username) return;
+  const addToSelection = (user) => {
+    if (!user?.id || !user?.username) return;
+    if (staffUserIds.has(user.id)) return;
+    setSelectedToInvite((prev) => {
+      if (prev.some((u) => u.id === user.id)) return prev;
+      return [...prev, { id: user.id, username: user.username, name: user.name, avatarUrl: user.avatarUrl }];
+    });
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
+  const removeFromSelection = (userId) => {
+    setSelectedToInvite((prev) => prev.filter((u) => u.id !== userId));
+  };
+
+  const openConfirmModal = () => {
+    if (selectedToInvite.length === 0) return;
     setInviteError(null);
+    setShowConfirmModal(true);
+  };
+
+  const sendInvites = async () => {
     setInviting(true);
-    try {
-      await eventsService.inviteStaff(eventId, username);
-      setInviteUsername('');
-      setSearchQuery('');
-      setSearchResults([]);
-      loadParticipants();
-    } catch (err) {
-      setInviteError(err.message || err.error || 'Invite failed');
-    } finally {
-      setInviting(false);
+    const failed = [];
+    for (const user of selectedToInvite) {
+      try {
+        await eventsService.inviteStaff(eventId, user.username);
+      } catch (err) {
+        failed.push({ username: user.username, error: err.message || err.error || 'Invite failed' });
+      }
+    }
+    setInviting(false);
+    setShowConfirmModal(false);
+    setSelectedToInvite([]);
+    setSearchQuery('');
+    setSearchResults([]);
+    loadParticipants();
+    if (failed.length > 0) {
+      setInviteError(`Some invites failed: ${failed.map((f) => `@${f.username}`).join(', ')}`);
     }
   };
 
-  const inviteFromSearch = (user) => {
-    if (!user?.username) return;
-    handleInvite(null, user.username);
+  const onSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const q = searchQuery.trim().replace(/^@/, '');
+      if (searchResults.length > 0 && q.length >= 2) {
+        const first = searchResults.find((u) => !staffUserIds.has(u.id) && !selectedToInvite.some((s) => s.id === u.id));
+        if (first) addToSelection(first);
+      } else if (q.length >= 2) {
+        addToSelection({ id: q, username: q, name: null, avatarUrl: null });
+      }
+    }
   };
 
   const handleRemove = async (userId) => {
@@ -168,40 +202,83 @@ export default function EventDetailPage() {
           </h2>
         </div>
         <div className="p-5 space-y-6">
-          {/* Search users (by username or email) */}
+          {/* Multi-select: search, add users as tags, then Send invites with confirmation */}
           <div ref={searchContainerRef} className="relative">
             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
-              Search users to invite
+              Invite staff
             </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by username or email…"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 focus:border-pxi-purple/50 focus:outline-none"
-                disabled={inviting}
-              />
-              {searching && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <Loader2 size={18} className="animate-spin text-zinc-500" />
-                </div>
-              )}
+            {/* Selected users as removable tags */}
+            {selectedToInvite.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {selectedToInvite.map((u) => (
+                  <span
+                    key={u.id}
+                    className="inline-flex items-center gap-2 pl-2.5 pr-1.5 py-1.5 rounded-lg bg-pxi-purple/20 border border-pxi-purple/30 text-white text-sm"
+                  >
+                    {u.avatarUrl ? (
+                      <img src={u.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
+                    ) : (
+                      <span className="w-5 h-5 rounded-full bg-zinc-600 flex items-center justify-center text-xs font-bold">
+                        @{u.username?.charAt(0) || '?'}
+                      </span>
+                    )}
+                    <span className="font-medium">@{u.username}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeFromSelection(u.id)}
+                      className="p-0.5 rounded text-zinc-400 hover:text-white hover:bg-white/10"
+                      aria-label={`Remove ${u.username}`}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex flex-wrap items-stretch gap-2">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={18} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={onSearchKeyDown}
+                  placeholder="Search by username or email, then add to list…"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 focus:border-pxi-purple/50 focus:outline-none"
+                  disabled={inviting}
+                  autoComplete="off"
+                />
+                {searching && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Loader2 size={18} className="animate-spin text-zinc-500" />
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={openConfirmModal}
+                disabled={inviting || selectedToInvite.length === 0}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+              >
+                <UserPlus size={16} />
+                Send invites ({selectedToInvite.length})
+              </button>
             </div>
             {searchQuery.trim().length >= 2 && (
               <div className="absolute left-0 right-0 top-full mt-1 py-1 rounded-xl bg-zinc-900 border border-white/10 shadow-xl z-10 max-h-60 overflow-auto">
                 {searchResults.length === 0 && !searching && (
-                  <p className="px-4 py-3 text-zinc-500 text-sm">No users found</p>
+                  <p className="px-4 py-3 text-zinc-500 text-sm">No users found. Type a username and press Enter to add by @username.</p>
                 )}
                 {searchResults.map((user) => {
                   const isStaff = staffUserIds.has(user.id);
+                  const alreadySelected = selectedToInvite.some((s) => s.id === user.id);
+                  const canAdd = !isStaff && !alreadySelected;
                   return (
                     <button
                       key={user.id}
                       type="button"
-                      onClick={() => !isStaff && inviteFromSearch(user)}
-                      disabled={isStaff || inviting}
+                      onClick={() => canAdd && addToSelection(user)}
+                      disabled={!canAdd}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-white/5 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       <div className="w-9 h-9 rounded-full bg-zinc-700 overflow-hidden flex-shrink-0">
@@ -221,6 +298,8 @@ export default function EventDetailPage() {
                       </div>
                       {isStaff ? (
                         <span className="text-xs text-zinc-500 font-medium">Already staff</span>
+                      ) : alreadySelected ? (
+                        <span className="text-xs text-pxi-purple font-medium">Added</span>
                       ) : (
                         <UserPlus size={16} className="text-pxi-purple flex-shrink-0" />
                       )}
@@ -231,48 +310,76 @@ export default function EventDetailPage() {
             )}
           </div>
 
-          {/* Or invite by username manually */}
-          <form onSubmit={(e) => handleInvite(e)} className="flex flex-wrap items-end gap-3">
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
-                Or invite by PXI username
-              </label>
-              <input
-                type="text"
-                value={inviteUsername}
-                onChange={(e) => setInviteUsername(e.target.value)}
-                placeholder="@username"
-                className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 focus:border-pxi-purple/50 focus:outline-none"
-                disabled={inviting}
-              />
+          {/* Confirmation modal */}
+          {showConfirmModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70" onClick={() => !inviting && setShowConfirmModal(false)}>
+              <div
+                className="w-full max-w-md rounded-2xl bg-zinc-900 border border-white/10 shadow-xl p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-lg font-bold text-white mb-2">Send staff invites?</h3>
+                <p className="text-zinc-400 text-sm mb-4">
+                  Are you sure you want to send invites to the following users? They will receive a notification and can accept to get BOUNCER access.
+                </p>
+                <ul className="mb-6 max-h-40 overflow-auto space-y-1.5 rounded-lg bg-zinc-800/50 p-3">
+                  {selectedToInvite.map((u) => (
+                    <li key={u.id} className="flex items-center gap-2 text-sm text-white">
+                      {u.avatarUrl ? (
+                        <img src={u.avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                      ) : (
+                        <span className="w-6 h-6 rounded-full bg-zinc-600 flex items-center justify-center text-xs font-bold flex-shrink-0">@{u.username?.charAt(0)}</span>
+                      )}
+                      <span className="font-medium">@{u.username}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => !inviting && setShowConfirmModal(false)}
+                    disabled={inviting}
+                    className="px-4 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={sendInvites}
+                    disabled={inviting}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm disabled:opacity-50 hover:brightness-110"
+                  >
+                    {inviting ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Sending…
+                      </>
+                    ) : (
+                      'Yes, send invites'
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
-            <button
-              type="submit"
-              disabled={inviting || !inviteUsername.trim()}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all"
-            >
-              {inviting ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
-              Invite
-            </button>
-          </form>
+          )}
+
           {inviteError && (
             <p className="text-sm text-red-400">{inviteError}</p>
           )}
           <p className="text-xs text-zinc-500">
-            Search by username or email, or enter a username above. Invited users get a real-time
+            Search and add users to the list, then click &quot;Send invites&quot; to confirm. Invited users get a real-time
             notification in the PXI app and can accept to get BOUNCER access (QR scanning and moderation).
           </p>
 
-          {/* Staff list */}
+          {/* All participants (staff + members who joined) */}
           <div>
             <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">
-              Current staff ({staffList.length})
+              Staff & members ({allParticipants.length})
             </h3>
-            {staffList.length === 0 ? (
-              <p className="text-zinc-500 text-sm">No staff yet. Invite someone by username above.</p>
+            {allParticipants.length === 0 ? (
+              <p className="text-zinc-500 text-sm">No one has joined yet. Search or type a username above to invite staff.</p>
             ) : (
               <ul className="space-y-2">
-                {staffList.map((p) => (
+                {allParticipants.map((p) => (
                   <li
                     key={p.userId}
                     className="flex items-center gap-4 p-3 rounded-xl bg-zinc-800/50 border border-white/5"
@@ -291,13 +398,15 @@ export default function EventDetailPage() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-white">@{p.username}</p>
+                      <p className="font-medium text-white">@{p.username ?? '—'}</p>
                       <p className="text-xs text-zinc-500">
                         {p.role === 'OWNER'
                           ? 'Owner'
                           : p.role === 'ADMIN'
                             ? 'Admin'
-                            : 'Bouncer (staff)'}
+                            : p.role === 'BOUNCER'
+                              ? 'Bouncer (staff)'
+                              : 'Member'}
                         {p.joinedAt && ` · Joined ${formatDate(p.joinedAt)}`}
                       </p>
                     </div>
