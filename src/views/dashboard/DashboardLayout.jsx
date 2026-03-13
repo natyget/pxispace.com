@@ -34,8 +34,11 @@ export default function DashboardLayout({ children }) {
 
     useEffect(() => setMounted(true), []);
 
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
     const handleLogout = () => {
         logout();
+        setShowLogoutModal(false);
         router.replace('/');
     };
 
@@ -93,15 +96,16 @@ export default function DashboardLayout({ children }) {
                         </div>
                     </div>
                     <div className="mt-3 flex items-center gap-2">
-                        {user?.isPassportIssued && (
-                            <span className="px-2 py-0.5 rounded-md bg-pxi-purple/15 border border-pxi-purple/25 text-pxi-purple text-xs font-bold uppercase tracking-widest">
-                                {user?.accountTier || 'CITIZEN'}
-                            </span>
-                        )}
-                        {user?.isVendor && (
-                            <span className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/25 text-amber-400 text-xs font-bold uppercase tracking-widest">
-                                Vendor
-                            </span>
+                        {mounted && (
+                            user?.isVendor ? (
+                                <span className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/25 text-amber-400 text-xs font-bold uppercase tracking-widest">
+                                    Vendor
+                                </span>
+                            ) : user?.isPassportIssued ? (
+                                <span className="px-2 py-0.5 rounded-md bg-pxi-purple/15 border border-pxi-purple/25 text-pxi-purple text-xs font-bold uppercase tracking-widest">
+                                    {user?.accountTier || 'CITIZEN'}
+                                </span>
+                            ) : null
                         )}
                     </div>
                 </div>
@@ -109,7 +113,7 @@ export default function DashboardLayout({ children }) {
                 <nav className="flex-1 px-3 py-4 space-y-1">
                     {navItems.map(({ label, path, icon: Icon, end }) => {
                         const isActive = end ? pathname === path : pathname.startsWith(path + '/') || pathname === path;
-                        const showPassportAlert = path === '/dashboard/passport' && !user?.isPassportIssued;
+                        const showPassportAlert = mounted && path === '/dashboard/passport' && !user?.isPassportIssued;
                         return (
                             <Link
                                 key={path}
@@ -141,7 +145,7 @@ export default function DashboardLayout({ children }) {
 
                 <div className="px-3 py-4 border-t border-white/5">
                     <button
-                        onClick={handleLogout}
+                        onClick={() => setShowLogoutModal(true)}
                         className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-zinc-500 hover:text-red-400 hover:bg-red-500/8 transition-all"
                     >
                         <LogOut size={16} />
@@ -149,6 +153,36 @@ export default function DashboardLayout({ children }) {
                     </button>
                 </div>
             </aside>
+
+            {/* Sign-out confirmation modal */}
+            {showLogoutModal && (
+                <div
+                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                    onClick={() => setShowLogoutModal(false)}
+                >
+                    <div
+                        className="bg-zinc-950 border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h2 className="text-white font-black text-lg mb-2 tracking-tight">Sign out?</h2>
+                        <p className="text-zinc-400 text-sm mb-6">You'll need to sign in again to access your account.</p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleLogout}
+                                className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-all"
+                            >
+                                Sign Out
+                            </button>
+                            <button
+                                onClick={() => setShowLogoutModal(false)}
+                                className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-zinc-400 font-medium text-sm hover:bg-white/5 transition-all"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="flex-1 flex flex-col min-w-0">
                 <header className="md:hidden flex items-center gap-4 px-5 py-4 border-b border-white/5 bg-zinc-950">

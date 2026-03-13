@@ -39,8 +39,11 @@ const Navbar = () => {
         return () => document.removeEventListener("mousedown", handler);
     }, []);
 
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
     const handleLogout = () => {
         logout();
+        setShowLogoutModal(false);
         setUserMenuOpen(false);
         setMobileMenuOpen(false);
         router.push("/");
@@ -60,6 +63,7 @@ const Navbar = () => {
             : "text-zinc-400 hover:text-white";
 
     return (
+        <>
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b will-change-transform ${
                 isScrolled || mobileMenuOpen
@@ -90,7 +94,10 @@ const Navbar = () => {
                 </div>
 
                 <div className="hidden md:flex items-center gap-3">
-                    {mounted && isAuthenticated ? (
+                    {!mounted ? (
+                        /* Skeleton while auth state loads */
+                        <div className="w-28 h-9 rounded-full bg-zinc-800/60 animate-pulse" />
+                    ) : isAuthenticated ? (
                         <div className="relative" ref={userMenuRef}>
                             <button
                                 onClick={() => setUserMenuOpen((v) => !v)}
@@ -119,12 +126,8 @@ const Navbar = () => {
                             {userMenuOpen && (
                                 <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-950 border border-white/8 rounded-xl shadow-2xl overflow-hidden z-50">
                                     <div className="px-4 py-3 border-b border-white/5">
-                                        <p className="text-white text-xs font-semibold truncate">
-                                            {user?.name}
-                                        </p>
-                                        <p className="text-zinc-500 text-xs truncate">
-                                            @{user?.handle}
-                                        </p>
+                                        <p className="text-white text-xs font-semibold truncate">{user?.name}</p>
+                                        <p className="text-zinc-500 text-xs truncate">@{user?.handle}</p>
                                     </div>
                                     <Link
                                         href="/dashboard"
@@ -135,7 +138,7 @@ const Navbar = () => {
                                         Dashboard
                                     </Link>
                                     <button
-                                        onClick={handleLogout}
+                                        onClick={() => { setUserMenuOpen(false); setShowLogoutModal(true); }}
                                         className="flex items-center gap-2.5 w-full px-4 py-2.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/8 text-xs font-medium transition-all"
                                     >
                                         <LogOut size={13} />
@@ -192,7 +195,7 @@ const Navbar = () => {
                                     Dashboard
                                 </Link>
                                 <button
-                                    onClick={handleLogout}
+                                    onClick={() => { setMobileMenuOpen(false); setShowLogoutModal(true); }}
                                     className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-red-500"
                                 >
                                     Sign Out
@@ -211,6 +214,37 @@ const Navbar = () => {
                 </>
             )}
         </header>
+
+        {/* Sign-out confirmation modal */}
+        {showLogoutModal && (
+            <div
+                className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                onClick={() => setShowLogoutModal(false)}
+            >
+                <div
+                    className="bg-zinc-950 border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <h2 className="text-white font-black text-lg mb-2 tracking-tight">Sign out?</h2>
+                    <p className="text-zinc-400 text-sm mb-6">You'll need to sign in again to access your account.</p>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={handleLogout}
+                            className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-all"
+                        >
+                            Sign Out
+                        </button>
+                        <button
+                            onClick={() => setShowLogoutModal(false)}
+                            className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-zinc-400 font-medium text-sm hover:bg-white/5 transition-all"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+    </>
     );
 };
 
