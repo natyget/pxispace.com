@@ -9,7 +9,7 @@ Your push is ~364 MB because **earlier commits** added `.next/` and `node_module
 
 ## Option A: One clean commit (recommended)
 
-Rewrite your local commits into a single commit that only contains the current tree (no `.next` or `node_modules` in history). Then force-push.
+Rewrite your local commits into a single commit that only contains the current tree (no `.next` or `node_modules` in history). Then force-push. 
 
 ```bash
 # Save current branch name
