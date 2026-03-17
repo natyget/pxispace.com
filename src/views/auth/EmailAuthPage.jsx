@@ -47,8 +47,8 @@ export default function EmailAuthPage() {
     const debouncedUsername = useDebounce(username, 500);
 
     const handleAuthSuccess = useCallback(
-        ({ token, user }) => {
-            saveAuth({ token, user });
+        async ({ token, user }) => {
+            await saveAuth({ token, user });
             if (safeRedirect) {
                 router.replace(safeRedirect);
             } else if (!user.phoneNumber) {

@@ -25,8 +25,8 @@ export default function LoginPage() {
         if (isAuthenticated) router.replace(safeRedirect || '/dashboard');
     }, [isAuthenticated, router, safeRedirect]);
 
-    const handleAuthSuccess = ({ token, user }) => {
-        saveAuth({ token, user });
+    const handleAuthSuccess = async ({ token, user }) => {
+        await saveAuth({ token, user });
         router.replace(safeRedirect || '/dashboard');
     };
 
