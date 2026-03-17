@@ -13,6 +13,7 @@ import {
     XCircle,
     RefreshCw,
     AlertTriangle,
+    Smartphone,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService, authStorage } from '../../services/auth';
@@ -84,6 +85,7 @@ export default function VendorUpgradePage() {
     const searchParams = useSearchParams();
 
     const stripeParam = searchParams.get('stripe'); // 'refresh' | null
+    const fromMobile = searchParams.get('from') === 'mobile';
 
     const [step, setStep] = useState(
         user?.isVendor ? 'done'
@@ -109,7 +111,7 @@ export default function VendorUpgradePage() {
         setErrorMsg('');
         setStripeStatus(null);
         try {
-            const { url } = await authService.vendorOnboard();
+            const { url } = await authService.vendorOnboard({ fromMobile });
             setStep('redirecting');
             setTimeout(() => { window.location.href = url; }, 800);
         } catch (err) {
@@ -165,13 +167,23 @@ export default function VendorUpgradePage() {
                     Your PXI Passport has been issued. You can now create paid
                     events and collect revenue on PXI.
                 </p>
-                <button
-                    onClick={() => router.push('/dashboard')}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
-                >
-                    Go to Dashboard
-                    <ArrowRight size={14} />
-                </button>
+                {fromMobile ? (
+                    <a
+                        href="pxi://vendor-onboarding-complete"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
+                    >
+                        <Smartphone size={14} />
+                        Return to PXI App
+                    </a>
+                ) : (
+                    <button
+                        onClick={() => router.push('/dashboard')}
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
+                    >
+                        Go to Dashboard
+                        <ArrowRight size={14} />
+                    </button>
+                )}
             </div>
         );
     }

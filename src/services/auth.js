@@ -90,11 +90,14 @@ export const authService = {
     getMe: (userId) =>
         api.get(`/api/auth/user/${userId}`),
 
-    vendorOnboard: () =>
-        api.post('/api/vendor/onboard', {
-            returnUrl: `${window.location.origin}/dashboard/vendor-upgrade?stripe=success`,
-            refreshUrl: `${window.location.origin}/dashboard/vendor-upgrade?stripe=refresh`,
-        }),
+    vendorOnboard: (opts = {}) => {
+        const base = `${window.location.origin}/dashboard/vendor-upgrade`;
+        const fromMobile = opts.fromMobile ? '&from=mobile' : '';
+        return api.post('/api/vendor/onboard', {
+            returnUrl: `${base}?stripe=success${fromMobile}`,
+            refreshUrl: `${base}?stripe=refresh${fromMobile}`,
+        });
+    },
 
     checkVendorStatus: () =>
         api.post('/api/vendor/status', {}),

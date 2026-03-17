@@ -18,14 +18,16 @@ export default function LoginPage() {
     const searchParams = useSearchParams();
     const { saveAuth, isAuthenticated } = useAuth();
     const showVerifiedMessage = searchParams.get('verified') === '1';
+    const redirectPath = searchParams.get('redirect');
+    const safeRedirect = redirectPath && redirectPath.startsWith('/') && !redirectPath.startsWith('//') ? redirectPath : null;
 
     useEffect(() => {
-        if (isAuthenticated) router.replace('/dashboard');
-    }, [isAuthenticated, router]);
+        if (isAuthenticated) router.replace(safeRedirect || '/dashboard');
+    }, [isAuthenticated, router, safeRedirect]);
 
     const handleAuthSuccess = ({ token, user }) => {
         saveAuth({ token, user });
-        router.replace('/dashboard');
+        router.replace(safeRedirect || '/dashboard');
     };
 
     // OAuth2 token flow with prompt so user sees: (1) account selection, (2) Cancel/Continue consent
@@ -147,7 +149,7 @@ export default function LoginPage() {
                 <GlassActionButton icon={<FaApple size={20} />} label="Continue with Apple" onClick={handleApple} />
 
                 {/* Email */}
-                <GlassActionButton icon={<Mail size={18} />} label="Continue with Email" onClick={() => router.push('/login/email')} last />
+                <GlassActionButton icon={<Mail size={18} />} label="Continue with Email" onClick={() => router.push(safeRedirect ? `/login/email?redirect=${encodeURIComponent(safeRedirect)}` : '/login/email')} last />
 
                 <p className="text-center mt-7" style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, letterSpacing: '0.08em', lineHeight: 1.7 }}>
                     By continuing you agree to our{' '}
