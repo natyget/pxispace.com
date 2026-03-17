@@ -98,3 +98,45 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-purple);
 }
+
+/* Phone verification page: dark theme for react-phone-number-input */
+.verify-phone-input-wrapper .PhoneInput {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 3.5rem;
+  padding: 0 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  --PhoneInput-color--focus: #B026FF;
+  --PhoneInputCountryFlag-borderColor: rgba(255, 255, 255, 0.2);
+}
+.verify-phone-input-wrapper .PhoneInput:focus-within {
+  border-color: #B026FF;
+  outline: none;
+}
+.verify-phone-input-wrapper .PhoneInputInput {
+  flex: 1;
+  min-width: 0;
+  margin-left: 0.5rem;
+  padding: 0.5rem 0;
+  background: transparent !important;
+  border: none !important;
+  color: #fff !important;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.verify-phone-input-wrapper .PhoneInputInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+.verify-phone-input-wrapper .PhoneInputInput:focus {
+  outline: none;
+}
+.verify-phone-input-wrapper .PhoneInputCountrySelect {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+}
+.verify-phone-input-wrapper .PhoneInputCountrySelectArrow {
+  border-color: rgba(255, 255, 255, 0.5);
+}

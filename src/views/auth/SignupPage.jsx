@@ -48,8 +48,13 @@ export default function SignupPage() {
     const handleAuthSuccess = useCallback(
         ({ token, user }) => {
             saveAuth({ token, user });
-            // New social signups are PARTIAL — send to passport-required
-            router.replace('/passport-required');
+            if (!user.phoneNumber) {
+                router.replace('/verify-phone');
+            } else if (!user.isPassportIssued) {
+                router.replace('/passport-required');
+            } else {
+                router.replace('/dashboard');
+            }
         },
         [saveAuth, router]
     );
@@ -156,18 +161,10 @@ export default function SignupPage() {
         setError('');
         setLoading(true);
         try {
-            const result = await authService.register(email, password, username);
-            saveAuth(result);
-            router.replace('/passport-required');
+            sessionStorage.setItem('pxi_pending_signup', JSON.stringify({ email, username, password }));
+            router.replace('/verify-phone');
         } catch (err) {
-            if (err.code === 'EMAIL_EXISTS') {
-                setError('An account with this email already exists. Try signing in.');
-            } else if (err.code === 'USERNAME_EXISTS') {
-                setError('That username is already taken. Please choose another.');
-                setUsernameStatus('taken');
-            } else {
-                setError(err.message || 'Something went wrong. Please try again.');
-            }
+            setError(err.message || 'Something went wrong. Please try again.');
         } finally {
             setLoading(false);
         }

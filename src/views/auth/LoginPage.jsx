@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail } from 'lucide-react';
 import { FaApple, FaGoogle } from 'react-icons/fa';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -15,7 +15,9 @@ const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { saveAuth, isAuthenticated } = useAuth();
+    const showVerifiedMessage = searchParams.get('verified') === '1';
 
     useEffect(() => {
         if (isAuthenticated) router.replace('/dashboard');
@@ -80,6 +82,21 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen bg-black flex flex-col relative overflow-hidden">
             <AuthParticles />
+
+            {/* Post-signup message: please log in again to complete profile */}
+            {showVerifiedMessage && (
+                <div
+                    className="relative z-20 mx-4 mt-6 rounded-xl px-4 py-3 text-center text-sm font-semibold"
+                    style={{
+                        background: 'rgba(176, 38, 255, 0.12)',
+                        border: '1px solid rgba(176, 38, 255, 0.35)',
+                        color: 'rgba(255, 255, 255, 0.95)',
+                        letterSpacing: '0.02em',
+                    }}
+                >
+                    Please log in again to complete your profile.
+                </div>
+            )}
 
             {/* Logo / hero */}
             <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-7">

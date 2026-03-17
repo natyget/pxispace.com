@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Smartphone, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Smartphone } from 'lucide-react';
 const LogoSVG = "/images/logo.svg";
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function PassportRequiredPage() {
-    const { logout } = useAuth();
+    const router = useRouter();
 
     return (
         <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center px-4 py-16">
@@ -68,11 +69,11 @@ export default function PassportRequiredPage() {
                 </div>
 
                 <button
-                    onClick={logout}
+                    type="button"
+                    onClick={() => router.push('/dashboard')}
                     className="inline-flex items-center gap-2 text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
                 >
-                    <ArrowLeft size={14} />
-                    Sign out
+                    Continue without PXI Passport
                 </button>
             </div>
         </div>

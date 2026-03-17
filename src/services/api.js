@@ -1,5 +1,7 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
 
+// Backend Stripe webhook path (used by Stripe, not by this app): POST /api/webhooks/stripe
+
 function getToken() {
     return localStorage.getItem('pxi_token');
 }

@@ -30,9 +30,18 @@ export default function AccountPage() {
         try {
             await authService.deleteAccount();
             await logout();
-            router.replace('/');
+            // Force full reload so session is terminated immediately (no ghost account)
+            window.location.href = '/';
         } catch (err) {
-            setError(err.message || 'Failed to delete account. Please try again.');
+            const status = err.response?.status;
+            const data = err.response?.data?.data || err.response?.data;
+            const msg = data?.error || err.message;
+            if (status === 400 && msg === 'Account already deleted') {
+                await logout();
+                window.location.href = '/';
+                return;
+            }
+            setError(err.response?.data?.error || err.message || 'Failed to delete account. Please try again.');
             setDeleting(false);
         }
     };

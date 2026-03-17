@@ -47,7 +47,13 @@ export default function EmailAuthPage() {
     const handleAuthSuccess = useCallback(
         ({ token, user }) => {
             saveAuth({ token, user });
-            router.replace('/dashboard');
+            if (!user.phoneNumber) {
+                router.replace('/verify-phone');
+            } else if (!user.isPassportIssued) {
+                router.replace('/passport-required');
+            } else {
+                router.replace('/dashboard');
+            }
         },
         [saveAuth, router]
     );
@@ -91,9 +97,10 @@ export default function EmailAuthPage() {
                 const result = await authService.login(email, password);
                 handleAuthSuccess(result);
             } else {
-                const result = await authService.register(email, password, username);
-                saveAuth(result);
-                router.replace('/dashboard');
+                if (typeof window !== 'undefined') {
+                    sessionStorage.setItem('pxi_pending_signup', JSON.stringify({ email, username, password }));
+                }
+                router.replace('/verify-phone');
             }
         } catch (err) {
             if (err.code === 'NO_PASSWORD') {
@@ -104,7 +111,7 @@ export default function EmailAuthPage() {
                 setError('That username is already taken.');
                 setUsernameStatus('taken');
             } else {
-                setError(err.message || 'Something went wrong. Please try again.');
+                setError(err.data?.error || err.message || 'Something went wrong. Please try again.');
             }
         } finally {
             setLoading(false);
@@ -342,12 +349,12 @@ export default function EmailAuthPage() {
                                 {loading ? (
                                     <span className="flex items-center justify-center gap-2">
                                         <Loader2 size={14} className="animate-spin" />
-                                        {isLogin ? 'INITIATING…' : 'CREATING…'}
+                                        {isLogin ? 'INITIATING…' : 'REDIRECTING…'}
                                     </span>
                                 ) : isLogin ? (
                                     'INITIATE SESSION'
                                 ) : (
-                                    'CREATE ACCOUNT'
+                                    'SIGN UP'
                                 )}
                             </button>
 

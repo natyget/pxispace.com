@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import EventsHero from "./EventsHero";
 import EventsFilters from "./EventsFilters";
 import EventsGrid from "./EventsGrid";
 import EventsEmpty from "./EventsEmpty";
 import EventsCTA from "./EventsCTA";
+import { eventsService } from "../../services/events";
 
 const publicEvents = [
     {
@@ -120,15 +121,39 @@ const publicEvents = [
     },
 ];
 
+const normalizeApiEvent = (e) => ({
+  id: e.id,
+  title: e.name,
+  image: e.coverImage || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070",
+  location: e.location || "TBA",
+  date: e.startDate ? new Date(e.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "TBA",
+  members: e._count?.tickets ?? 0,
+  type: e.ticketType === "PAID" ? "Paid" : "Free",
+  status: e.effectiveStatus || e.visibility || "Public",
+  price: e.ticketType === "PAID" && e.ticketPrice != null ? `$${Number(e.ticketPrice).toFixed(2)}` : "Free",
+});
+
 const Events = () => {
   const [filter, setFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [apiEvents, setApiEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
 
-  const filteredEvents = publicEvents.filter((event) => {
+  useEffect(() => {
+    eventsService
+      .getPublicEvents(20, 0)
+      .then((res) => setApiEvents((res.events || []).map(normalizeApiEvent)))
+      .catch(() => setApiEvents([]))
+      .finally(() => setEventsLoading(false));
+  }, []);
+
+  const allEvents = apiEvents.length > 0 ? apiEvents : publicEvents;
+
+  const filteredEvents = allEvents.filter((event) => {
     const matchesFilter = filter === "All" || event.type === filter;
     const matchesSearch =
-      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.location.toLowerCase().includes(searchQuery.toLowerCase());
+      (event.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (event.location || "").toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesFilter && matchesSearch;
   });

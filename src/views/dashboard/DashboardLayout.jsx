@@ -14,14 +14,17 @@ import {
     ChevronRight,
     UserCog,
     Calendar,
+    Bell,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { getNotifications } from '../../services/notifications';
 const LogoSVG = "/images/logo.svg";
 
 const navItems = [
     { label: 'Overview', path: '/dashboard', icon: LayoutDashboard, end: true },
+    { label: 'Notifications', path: '/dashboard/notifications', icon: Bell },
     { label: 'PXI Passport', path: '/dashboard/passport', icon: Shield },
-    { label: 'Earnings', path: '/dashboard/earnings', icon: TrendingUp },
+    { label: 'Earnings', path: '/dashboard/earnings', icon: TrendingUp, vendorOnly: true },
     { label: 'Vendor Setup', path: '/dashboard/vendor-upgrade', icon: Star },
     { label: 'Events', path: '/dashboard/events', icon: Calendar, vendorOnly: true },
     { label: 'Account', path: '/dashboard/account', icon: UserCog },
@@ -33,8 +36,20 @@ export default function DashboardLayout({ children }) {
     const pathname = usePathname();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [notificationCount, setNotificationCount] = useState(0);
 
     useEffect(() => setMounted(true), []);
+
+    useEffect(() => {
+        if (!mounted || !user?.id) return;
+        if (!user.phoneNumber) {
+            router.replace('/verify-phone');
+            return;
+        }
+        getNotifications(user.id, 50)
+            .then((res) => setNotificationCount(res.unreadCount ?? res.notifications?.length ?? 0))
+            .catch(() => setNotificationCount(0));
+    }, [mounted, user?.id, user?.phoneNumber, router]);
 
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -117,6 +132,7 @@ export default function DashboardLayout({ children }) {
                         if (vendorOnly && mounted && !user?.isVendor) return null;
                         const isActive = end ? pathname === path : pathname.startsWith(path + '/') || pathname === path;
                         const showPassportAlert = mounted && path === '/dashboard/passport' && !user?.isPassportIssued;
+                        const showNotificationBadge = path === '/dashboard/notifications' && notificationCount > 0;
                         return (
                             <Link
                                 key={path}
@@ -128,10 +144,17 @@ export default function DashboardLayout({ children }) {
                                         : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/5'
                                 }`}
                             >
-                                <Icon
-                                    size={16}
-                                    className={isActive ? 'text-pxi-purple' : 'text-zinc-600'}
-                                />
+                                <span className="relative flex-shrink-0">
+                                    <Icon
+                                        size={16}
+                                        className={isActive ? 'text-pxi-purple' : 'text-zinc-600'}
+                                    />
+                                    {showNotificationBadge && (
+                                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-pxi-purple text-white text-xs font-bold">
+                                            {notificationCount > 99 ? '99+' : notificationCount}
+                                        </span>
+                                    )}
+                                </span>
                                 {label}
                                 <span className="ml-auto flex items-center gap-1">
                                     {showPassportAlert && (
@@ -149,7 +172,7 @@ export default function DashboardLayout({ children }) {
                 <div className="px-3 py-4 border-t border-white/5">
                     <button
                         onClick={() => setShowLogoutModal(true)}
-                        className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-zinc-500 hover:text-red-400 hover:bg-red-500/8 transition-all"
+                        className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-zinc-500 hover:text-pxi-purple hover:bg-pxi-purple/10 transition-all"
                     >
                         <LogOut size={16} />
                         Sign Out
@@ -172,7 +195,7 @@ export default function DashboardLayout({ children }) {
                         <div className="flex gap-3">
                             <button
                                 onClick={handleLogout}
-                                className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-all"
+                                className="flex-1 px-4 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm hover:bg-pxi-purple/90 transition-all"
                             >
                                 Sign Out
                             </button>
