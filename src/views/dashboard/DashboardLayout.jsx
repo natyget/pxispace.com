@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
     LayoutDashboard,
     TrendingUp,
@@ -35,6 +35,8 @@ export default function DashboardLayout({ children }) {
     const { user, logout, updateUser } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const fromMobile = searchParams.get('from') === 'mobile';
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [notificationCount, setNotificationCount] = useState(0);
@@ -44,7 +46,8 @@ export default function DashboardLayout({ children }) {
 
     useEffect(() => {
         if (!mounted || !user?.id) return;
-        if (user.phoneNumber) {
+        // Skip phone verification when user came from mobile app (e.g. "Go to Web" for vendor setup)
+        if (user.phoneNumber || fromMobile) {
             setPhoneCheckDone(true);
             getNotifications(user.id, 50)
                 .then((res) => setNotificationCount(res.unreadCount ?? res.notifications?.length ?? 0))
@@ -64,7 +67,7 @@ export default function DashboardLayout({ children }) {
                 })
                 .catch(() => { /* Don't redirect on network/API failure; user may have phone */ });
         }
-    }, [mounted, user?.id, user?.phoneNumber, phoneCheckDone, router, updateUser]);
+    }, [mounted, user?.id, user?.phoneNumber, fromMobile, phoneCheckDone, router, updateUser]);
 
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
