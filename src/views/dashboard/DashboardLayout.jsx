@@ -17,6 +17,7 @@ import {
     Bell,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { authService } from '../../services/auth';
 import { getNotifications } from '../../services/notifications';
 const LogoSVG = "/images/logo.svg";
 
@@ -31,25 +32,39 @@ const navItems = [
 ];
 
 export default function DashboardLayout({ children }) {
-    const { user, logout } = useAuth();
+    const { user, logout, updateUser } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [notificationCount, setNotificationCount] = useState(0);
+    const [phoneCheckDone, setPhoneCheckDone] = useState(false);
 
     useEffect(() => setMounted(true), []);
 
     useEffect(() => {
         if (!mounted || !user?.id) return;
-        if (!user.phoneNumber) {
-            router.replace('/verify-phone');
+        if (user.phoneNumber) {
+            setPhoneCheckDone(true);
+            getNotifications(user.id, 50)
+                .then((res) => setNotificationCount(res.unreadCount ?? res.notifications?.length ?? 0))
+                .catch(() => setNotificationCount(0));
             return;
         }
-        getNotifications(user.id, 50)
-            .then((res) => setNotificationCount(res.unreadCount ?? res.notifications?.length ?? 0))
-            .catch(() => setNotificationCount(0));
-    }, [mounted, user?.id, user?.phoneNumber, router]);
+        // Refetch user once to avoid stale cache (e.g. user added phone on mobile)
+        if (!phoneCheckDone) {
+            setPhoneCheckDone(true);
+            authService.getMe(user.id)
+                .then(({ user: fresh }) => {
+                    if (fresh.phoneNumber) {
+                        updateUser(fresh);
+                    } else {
+                        router.replace('/verify-phone');
+                    }
+                })
+                .catch(() => router.replace('/verify-phone'));
+        }
+    }, [mounted, user?.id, user?.phoneNumber, phoneCheckDone, router, updateUser]);
 
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
