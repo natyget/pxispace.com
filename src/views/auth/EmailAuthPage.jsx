@@ -32,6 +32,8 @@ export default function EmailAuthPage() {
     const { saveAuth } = useAuth();
 
     const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login');
+    const redirectPath = searchParams.get('redirect');
+    const safeRedirect = redirectPath && redirectPath.startsWith('/') && !redirectPath.startsWith('//') ? redirectPath : null;
 
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
@@ -47,7 +49,9 @@ export default function EmailAuthPage() {
     const handleAuthSuccess = useCallback(
         ({ token, user }) => {
             saveAuth({ token, user });
-            if (!user.phoneNumber) {
+            if (safeRedirect) {
+                router.replace(safeRedirect);
+            } else if (!user.phoneNumber) {
                 router.replace('/verify-phone');
             } else if (!user.isPassportIssued) {
                 router.replace('/passport-required');
@@ -55,7 +59,7 @@ export default function EmailAuthPage() {
                 router.replace('/dashboard');
             }
         },
-        [saveAuth, router]
+        [saveAuth, router, safeRedirect]
     );
 
     // Username availability check (signup mode only)
