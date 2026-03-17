@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Camera, Users } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 const albums = [
     {
@@ -40,11 +41,36 @@ const albums = [
 ];
 
 const VaultSection = () => {
+    const sectionRef = useRef(null);
+    const { scrollYProgress } = useScroll({
+        target: sectionRef,
+        offset: ["start end", "end start"],
+    });
+    // Section-level reveal
+    const sectionOpacity = useTransform(scrollYProgress, [0, 0.3, 0.8, 1], [0, 1, 1, 0.9]);
+    const sectionY = useTransform(scrollYProgress, [0, 0.5, 1], [60, 0, -10]);
+    const sectionScale = useTransform(scrollYProgress, [0, 0.5], [0.98, 1]);
+
+    // Layered parallax: heading slightly slower, grid a bit faster
+    const contentY = useTransform(scrollYProgress, [0, 1], [20, -10]);
+    const gridY = useTransform(scrollYProgress, [0, 1], [10, -40]);
+
     return (
-        <section className="py-24 md:py-32 bg-black relative">
+        <motion.section
+            ref={sectionRef}
+            className="py-24 md:py-32 bg-black relative"
+            style={{
+                opacity: sectionOpacity,
+                y: sectionY,
+                scale: sectionScale,
+            }}
+        >
             <div className="container mx-auto px-6">
                 {/* Heading + Toggle */}
-                <div className="text-center mb-16 md:mb-20">
+                <motion.div
+                    className="text-center mb-16 md:mb-20"
+                    style={{ y: contentY }}
+                >
                     <h2 className="text-4xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-6">
                         The Digital <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-pxi-purple to-pink-500">
@@ -73,10 +99,13 @@ const VaultSection = () => {
                             </button>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Album Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <motion.div
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
+                    style={{ y: gridY }}
+                >
                     {albums.map((album, idx) => (
                         <div
                             key={idx}
@@ -119,9 +148,9 @@ const VaultSection = () => {
                             </div>
                         </div>
                     ))}
-                </div>
+                </motion.div>
             </div>
-        </section>
+        </motion.section>
     );
 };
 

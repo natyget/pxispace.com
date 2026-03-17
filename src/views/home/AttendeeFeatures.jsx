@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Camera, Ticket, UserPlus, Heart } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import { motion, useScroll, useTransform } from "framer-motion";
 const EventPNG = "/images/event.PNG";
 const AlbumThreadPNG = "/images/album_thread.PNG";
 const PassportPNG = "/images/passport.png";
@@ -46,10 +47,37 @@ const AttendeeFeatures = () => {
         }, 4500);
         return () => clearInterval(id);
     }, []);
+
+    const sectionRef = useRef(null);
+    const { scrollYProgress } = useScroll({
+        target: sectionRef,
+        offset: ["start bottom", "end top"],
+    });
+    const bgY = useTransform(scrollYProgress, [0, 1], [0, 70]); // slower background
+
     return (
-        <section id="features" className="py-24 md:py-32 bg-black relative">
+        <motion.section
+            id="features"
+            ref={sectionRef}
+            className="py-24 md:py-32 bg-black relative"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+        >
+            {/* subtle parallax background */}
+            <motion.div
+                style={{ y: bgY }}
+                className="pointer-events-none absolute inset-x-0 -top-40 h-80 bg-gradient-to-b from-pxi-purple/10 via-transparent to-transparent blur-[80px]"
+            />
             <div id="attendees" className="container mx-auto px-6">
-                <div className="mb-12 md:mb-20 text-center lg:text-left">
+                <motion.div
+                    className="mb-12 md:mb-20 text-center lg:text-left"
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.6 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                >
                     <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-6">
                         For the{" "}
                         <span className="text-pxi-purple">Party People</span>
@@ -59,13 +87,31 @@ const AttendeeFeatures = () => {
                         Your ticket is the key. Unlock a world where every photo
                         is shared, and every memory is kept.
                     </p>
-                </div>
+                </motion.div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                <motion.div
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.3 }}
+                    variants={{
+                        hidden: {},
+                        visible: {
+                            transition: {
+                                staggerChildren: 0.08,
+                            },
+                        },
+                    }}
+                >
                     {features.map((feature, idx) => (
-                        <div
+                        <motion.div
                             key={idx}
                             className="group relative glass-dark p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 hover:border-pxi-purple/30 transition-all duration-500 flex flex-col gap-6"
+                            variants={{
+                                hidden: { opacity: 0, y: 40 },
+                                visible: { opacity: 1, y: 0 },
+                            }}
+                            transition={{ duration: 0.6, ease: "easeOut" }}
                         >
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-4">
@@ -94,7 +140,16 @@ const AttendeeFeatures = () => {
                             </div>
 
                             <div className="w-full flex items-center justify-center mt-4 md:mt-0">
-                                <div className="relative w-full max-w-2xs">
+                                <motion.div
+                                    className="relative w-full max-w-2xs"
+                                    style={{
+                                        y: useTransform(
+                                            scrollYProgress,
+                                            [0, 1],
+                                            [10, -40]
+                                        ),
+                                    }}
+                                >
                                     <div className="absolute -inset-4 bg-pxi-purple/20 blur-[60px] rounded-full group-hover:bg-pxi-purple/30 transition-all duration-500"></div>
 
                                     <div className="relative z-10 ">
@@ -144,13 +199,13 @@ const AttendeeFeatures = () => {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </motion.div>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             </div>
-        </section>
+        </motion.section>
     );
 };
 

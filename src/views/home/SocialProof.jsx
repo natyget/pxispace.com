@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 const tagData = [
     {
@@ -50,9 +51,29 @@ const SocialProof = () => {
         avatar: `https://i.pravatar.cc/100?img=${i + 30}`,
     }));
 
+    const sectionRef = useRef(null);
+    const { scrollYProgress } = useScroll({
+        target: sectionRef,
+        offset: ["start end", "end start"],
+    });
+    const sectionOpacity = useTransform(scrollYProgress, [0, 0.3, 0.8, 1], [0, 1, 1, 0.9]);
+    const sectionY = useTransform(scrollYProgress, [0, 0.5, 1], [30, 0, -10]);
+    const headingY = useTransform(scrollYProgress, [0, 1], [20, -10]);
+    const tickerY = useTransform(scrollYProgress, [0, 1], [10, -20]); // subtle parallax
+
     return (
-        <section className="py-12 bg-[#050505] border-t border-gray-900">
-            <div className="container mx-auto px-6 mb-8 text-center">
+        <motion.section
+            ref={sectionRef}
+            className="py-12 bg-[#050505] border-t border-gray-900"
+            style={{
+                opacity: sectionOpacity,
+                y: sectionY,
+            }}
+        >
+            <motion.div
+                className="container mx-auto px-6 mb-8 text-center"
+                style={{ y: headingY }}
+            >
                 <h3 className="text-2xl font-bold mb-4">
                     Join <span className="text-pxi-purple"> Party People</span>
                 </h3>
@@ -76,10 +97,13 @@ const SocialProof = () => {
                         +9k
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Infinite Scroll Ticker */}
-            <div className="relative flex overflow-visible group/ticker pt-8">
+            <motion.div
+                className="relative flex overflow-visible group/ticker pt-8"
+                style={{ y: tickerY }}
+            >
                 <div className="py-12 animate-scroll whitespace-nowrap flex gap-12 group-hover/ticker:[animation-play-state:paused]">
                     {displayTags.map((tag, idx) => (
                         <TagItem key={`set1-${idx}`} tag={tag} idx={idx} />
@@ -94,8 +118,8 @@ const SocialProof = () => {
                         <TagItem key={`set2-${idx}`} tag={tag} idx={idx} />
                     ))}
                 </div>
-            </div>
-        </section>
+            </motion.div>
+        </motion.section>
     );
 };
 
