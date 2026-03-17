@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail } from 'lucide-react';
@@ -16,14 +16,25 @@ const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
 export default function LoginPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { saveAuth, isAuthenticated } = useAuth();
+    const { user, saveAuth, isAuthenticated, updateUser } = useAuth();
     const showVerifiedMessage = searchParams.get('verified') === '1';
     const redirectPath = searchParams.get('redirect');
     const safeRedirect = redirectPath && redirectPath.startsWith('/') && !redirectPath.startsWith('//') ? redirectPath : null;
 
+    // When already logged in (e.g. opened from mobile "Go to Web"), refresh user from API then redirect so dashboard sees up-to-date profile (e.g. phoneNumber).
+    const hasRedirected = useRef(false);
     useEffect(() => {
-        if (isAuthenticated) router.replace(safeRedirect || '/dashboard');
-    }, [isAuthenticated, router, safeRedirect]);
+        if (!isAuthenticated || !user?.id || hasRedirected.current) return;
+        hasRedirected.current = true;
+        const destination = safeRedirect || '/dashboard';
+        authService.getMe(user.id)
+            .then(({ user: fresh }) => {
+                updateUser(fresh);
+                // Let the auth context update before navigating so dashboard sees phoneNumber
+                setTimeout(() => router.replace(destination), 0);
+            })
+            .catch(() => router.replace(destination));
+    }, [isAuthenticated, user?.id, safeRedirect, router, updateUser]);
 
     const handleAuthSuccess = async ({ token, user }) => {
         await saveAuth({ token, user });
