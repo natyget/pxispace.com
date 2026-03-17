@@ -6,7 +6,12 @@ import Link from 'next/link';
 import { ChevronLeft, UserPlus, Users, Trash2, Loader2, Search } from 'lucide-react';
 import { eventsService, searchUsers } from '../../services/events';
 
-const STAFF_ROLES = ['OWNER', 'ADMIN', 'BOUNCER'];
+const STAFF_ROLES = ['OWNER', 'ADMIN', 'BOUNCER', 'MEMBER'];
+const INVITE_ROLES = [
+  { value: 'bouncer', label: 'Bouncer', description: 'Scan tickets, moderate content' },
+  { value: 'co-host', label: 'Co-Host', description: 'Same as host except delete event; can invite staff' },
+  { value: 'featured_talent', label: 'Featured Talent', description: 'Shown on event page; no gatekeeping' },
+];
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -23,6 +28,7 @@ export default function EventDetailPage() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [inviteRole, setInviteRole] = useState('bouncer');
   const searchTimeoutRef = useRef(null);
   const searchContainerRef = useRef(null);
 
@@ -111,7 +117,7 @@ export default function EventDetailPage() {
     const failed = [];
     for (const user of selectedToInvite) {
       try {
-        await eventsService.inviteStaff(eventId, user.username);
+        await eventsService.inviteStaff(eventId, user.username, inviteRole);
       } catch (err) {
         failed.push({ username: user.username, error: err.message || err.error || 'Invite failed' });
       }
@@ -207,6 +213,21 @@ export default function EventDetailPage() {
             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
               Invite staff
             </label>
+            <div className="mb-3">
+              <label className="text-xs text-zinc-500 mr-2">Role:</label>
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value)}
+                className="rounded-lg bg-zinc-800 border border-white/10 text-white text-sm px-3 py-1.5 focus:border-pxi-purple/50 focus:outline-none"
+              >
+                {INVITE_ROLES.map((r) => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
+              <span className="text-xs text-zinc-500 ml-2">
+                {INVITE_ROLES.find((r) => r.value === inviteRole)?.description}
+              </span>
+            </div>
             {/* Selected users as removable tags */}
             {selectedToInvite.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
@@ -319,7 +340,7 @@ export default function EventDetailPage() {
               >
                 <h3 className="text-lg font-bold text-white mb-2">Send staff invites?</h3>
                 <p className="text-zinc-400 text-sm mb-4">
-                  Are you sure you want to send invites to the following users? They will receive a notification and can accept to get BOUNCER access.
+                  Invite the following users as <span className="text-white font-semibold">{INVITE_ROLES.find((r) => r.value === inviteRole)?.label ?? inviteRole}</span>. They will get a notification and can accept in the PXI app.
                 </p>
                 <ul className="mb-6 max-h-40 overflow-auto space-y-1.5 rounded-lg bg-zinc-800/50 p-3">
                   {selectedToInvite.map((u) => (
@@ -366,8 +387,7 @@ export default function EventDetailPage() {
             <p className="text-sm text-red-400">{inviteError}</p>
           )}
           <p className="text-xs text-zinc-500">
-            Search and add users to the list, then click &quot;Send invites&quot; to confirm. Invited users get a real-time
-            notification in the PXI app and can accept to get BOUNCER access (QR scanning and moderation).
+            Search and add users, choose a role (Bouncer, Co-Host, or Featured Talent), then click &quot;Send invites&quot;. Invited users get a real-time notification in the PXI app and can accept the role.
           </p>
 
           {/* All participants (staff + members who joined) */}
@@ -403,14 +423,16 @@ export default function EventDetailPage() {
                         {p.role === 'OWNER'
                           ? 'Owner'
                           : p.role === 'ADMIN'
-                            ? 'Admin'
+                            ? 'Co-Host'
                             : p.role === 'BOUNCER'
                               ? 'Bouncer (staff)'
-                              : 'Member'}
+                              : p.role === 'MEMBER'
+                                ? 'Featured Talent / Member'
+                                : 'Member'}
                         {p.joinedAt && ` · Joined ${formatDate(p.joinedAt)}`}
                       </p>
                     </div>
-                    {p.role === 'BOUNCER' && (
+                    {(p.role === 'BOUNCER' || p.role === 'ADMIN' || p.role === 'MEMBER') && p.role !== 'OWNER' && (
                       <button
                         type="button"
                         onClick={() => handleRemove(p.userId)}

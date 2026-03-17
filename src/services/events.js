@@ -30,8 +30,9 @@ export const eventsService = {
   /** Get album participants (staff + members) — used for staff list (GET /api/albums/:id/participants) */
   getAlbumParticipants: (albumId) => api.get(`/api/albums/${albumId}/participants`),
 
-  /** Invite user as staff (BOUNCER) by username (POST /api/events/:id/staff) */
-  inviteStaff: (eventId, username) => api.post(`/api/events/${eventId}/staff`, { username }),
+  /** Invite user as staff by username (POST /api/events/:id/staff). role: 'co-host' | 'bouncer' | 'featured_talent' (default 'bouncer') */
+  inviteStaff: (eventId, username, role = 'bouncer') =>
+    api.post(`/api/events/${eventId}/staff`, { username, role }),
 
   /** Remove a member from the album (owner only) (DELETE /api/albums/:id/members/:userId) */
   removeMember: (albumId, userId) => api.delete(`/api/albums/${albumId}/members/${userId}`),
