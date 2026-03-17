@@ -53,8 +53,20 @@ export const authStorage = {
 };
 
 export const authService = {
-    register: (email, password, username) =>
-        api.post('/api/auth/register', { email, password, username }),
+    register: (email, password, username, phone) =>
+        api.post('/api/auth/register', { email, password, username, ...(phone && { phone }) }),
+
+    /** Send OTP to phone via SMS (signup). Returns { message }. */
+    sendVerification: (phone) =>
+        api.post('/api/auth/send-verification', { phone }),
+
+    /** Verify OTP. On success, register can be called. */
+    verifyOtp: (phone, code) =>
+        api.post('/api/auth/verify-otp', { phone, code }),
+
+    /** For social-login users: verify phone and save to profile. Returns { token, user }. */
+    verifyPhone: (phone, code) =>
+        api.post('/api/auth/verify-phone', { phone, code }),
 
     checkUsername: (username) =>
         api.get(`/api/auth/check-username?username=${encodeURIComponent(username)}`),

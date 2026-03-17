@@ -30,10 +30,10 @@ function StripeReturnContent() {
                     Your Stripe information has been submitted successfully.
                 </p>
                 <p className="text-zinc-500 text-sm leading-relaxed mb-8">
-                    Return to the PXI app and tap <span className="text-white font-semibold">Check Status</span> on the paid ticket toggle to confirm your account is approved.
+                    Tap the button below to return to the PXI app. Your verification will be confirmed automatically.
                 </p>
                 <a
-                    href="pxi://studio"
+                    href="pxi://vendor-onboarding-complete"
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
                 >
                     <Smartphone size={14} />

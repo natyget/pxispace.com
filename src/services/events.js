@@ -17,6 +17,13 @@ export const eventsService = {
     return api.get(`/api/events?${q}`);
   },
 
+  /** List public events for discover (GET /api/events, then filter by visibility) */
+  getPublicEvents: (limit = 20, offset = 0) =>
+    api.get(`/api/events?limit=${limit}&offset=${offset}`).then((res) => ({
+      ...res,
+      events: (res.events || []).filter((e) => e.visibility === 'PUBLIC'),
+    })),
+
   /** Get single event (GET /api/events/:id) */
   getEvent: (eventId) => api.get(`/api/events/${eventId}`),
 

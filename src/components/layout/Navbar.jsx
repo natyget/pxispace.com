@@ -139,7 +139,7 @@ const Navbar = () => {
                                     </Link>
                                     <button
                                         onClick={() => { setUserMenuOpen(false); setShowLogoutModal(true); }}
-                                        className="flex items-center gap-2.5 w-full px-4 py-2.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/8 text-xs font-medium transition-all"
+                                        className="flex items-center gap-2.5 w-full px-4 py-2.5 text-zinc-500 hover:text-pxi-purple hover:bg-pxi-purple/10 text-xs font-medium transition-all"
                                     >
                                         <LogOut size={13} />
                                         Sign Out
@@ -196,7 +196,7 @@ const Navbar = () => {
                                 </Link>
                                 <button
                                     onClick={() => { setMobileMenuOpen(false); setShowLogoutModal(true); }}
-                                    className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-red-500"
+                                    className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-pxi-purple"
                                 >
                                     Sign Out
                                 </button>
@@ -230,7 +230,7 @@ const Navbar = () => {
                     <div className="flex gap-3">
                         <button
                             onClick={handleLogout}
-                            className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-all"
+                            className="flex-1 px-4 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm hover:bg-pxi-purple/90 transition-all"
                         >
                             Sign Out
                         </button>

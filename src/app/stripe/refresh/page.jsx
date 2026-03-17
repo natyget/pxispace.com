@@ -33,7 +33,7 @@ function StripeRefreshContent() {
                     Return to the PXI app and tap <span className="text-white font-semibold">Start Verification</span> again to get a fresh link.
                 </p>
                 <a
-                    href="pxi://studio"
+                    href="pxi://vendor-onboarding-refresh"
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
                 >
                     <Smartphone size={14} />
