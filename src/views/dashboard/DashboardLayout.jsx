@@ -62,7 +62,7 @@ export default function DashboardLayout({ children }) {
                         router.replace('/verify-phone');
                     }
                 })
-                .catch(() => router.replace('/verify-phone'));
+                .catch(() => { /* Don't redirect on network/API failure; user may have phone */ });
         }
     }, [mounted, user?.id, user?.phoneNumber, phoneCheckDone, router, updateUser]);
 
