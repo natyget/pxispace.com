@@ -9,6 +9,7 @@ import VaultSection from "./VaultSection";
 import SocialProof from "./SocialProof";
 
 
+
 const Home = () => {
     const heroRef = useRef(null);
 

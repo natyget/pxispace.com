@@ -93,54 +93,6 @@ const Hero = () => {
                             layers={[{ src: "/images/hero1.png", alt: "App Interface" }]}
                         />
 
-                        {/* Notification Card */}
-                        <div className="absolute top-1/4 -right-16 md:-right-24 z-20 w-72 p-4 rounded-[2rem] glass-dark border border-white/10 shadow-2xl animate-float">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex -space-x-3">
-                                    {[1, 2, 3].map((i) => (
-                                        <img
-                                            key={i}
-                                            src={`https://picsum.photos/40/40?random=${i + 50}`}
-                                            className="w-10 h-10 rounded-full border-2 border-zinc-900"
-                                            alt="Avatar"
-                                        />
-                                    ))}
-                                    <div className="w-10 h-10 rounded-full border-2 border-zinc-900 bg-pxi-purple flex items-center justify-center text-[10px] font-black">
-                                        +12
-                                    </div>
-                                </div>
-                                <div className="flex gap-1">
-                                    <span>🔥</span>
-                                    <span>🚀</span>
-                                    <span>😂</span>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-4">
-                                <div className="flex-1">
-                                    <p className="text-white font-black text-lg leading-tight">
-                                        Neon Nights
-                                    </p>
-                                    <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">
-                                        SENT AN INVITE
-                                    </p>
-                                </div>
-                                <img
-                                    src="https://picsum.photos/80/80?random=120"
-                                    className="w-16 h-16 rounded-2xl object-cover border border-white/10"
-                                    alt="Event"
-                                />
-                            </div>
-
-                            <div className="mt-4 flex gap-2">
-                                <button className="flex-1 bg-white text-black py-2 rounded-xl text-xs font-black uppercase">
-                                    Accept
-                                </button>
-                                <button className="p-2 glass rounded-xl text-zinc-400">
-                                    <X size={16} />
-                                </button>
-                            </div>
-                        </div>
                     </motion.div>
 
                     {/* Background Phone */}

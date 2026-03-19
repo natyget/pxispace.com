@@ -1,6 +1,16 @@
 import React, { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 
+/**
+ * ProblemSection achieves pinning (sticky+parallax) by having:
+ * - The outside div very tall (h-[250vh]), so there's room to scroll
+ * - The sticky container sticks to the top as the user scrolls ("top-0")
+ * - The animation triggers for the entire parent section scroll
+ * 
+ * In the original code, the sticky container starts at top-[50rem] which likely pushes it far down,
+ * making the pinning not behave as expected. By setting "top-0", it anchors as soon as it hits viewport top.
+ */
+
 const ProblemSection = () => {
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -8,16 +18,22 @@ const ProblemSection = () => {
     offset: ["start start", "end end"],
   });
 
-  // Scroll pause (pin) timeline: enter -> animate -> exit
-  const ticketScale = useTransform(scrollYProgress, [0.0, 0.2, 0.8, 1.0], [1, 1.2, 1.2, 1]);
+  // Animation timelines
+  const ticketScale = useTransform(scrollYProgress, [0.0, 0.2, 0.8, 1.0], [0.94, 1, 1, 0.94]);
   const ticketOpacity = useTransform(scrollYProgress, [0.0, 0.2, 0.8, 1.0], [0.7, 1, 1, 0.7]);
-  const ticketBlur = useTransform(scrollYProgress, [0.0, 0.2, 0.8, 1.0], [10, 0, 0, 10]);
+  const ticketFilter = useTransform(
+    scrollYProgress,
+    [0.0, 0.2, 0.8, 1.0],
+    ["blur(10px)", "blur(0px)", "blur(0px)", "blur(10px)"]
+  );
 
-  // Background moves more slowly to create parallax depth
+  // Background moves more slowly for parallax
   const bgY = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const qrY = useTransform(scrollYProgress, [0, 1], [15, -40]);
 
   return (
-    <div ref={sectionRef} className="relative h-[250vh]">
+    <div ref={sectionRef} className="relative h-[200vh]">
+      {/* Set sticky top-0 for true pinning-on-scroll */}
       <div className="sticky top-0 h-screen flex items-center">
         <section className="w-full py-20 md:py-24 bg-[#080808] relative overflow-hidden">
           <div className="container mx-auto px-4 md:px-6 relative z-10">
@@ -33,7 +49,7 @@ const ProblemSection = () => {
                 style={{
                   opacity: ticketOpacity,
                   scale: ticketScale,
-                  filter: ticketBlur ? ticketBlur.to((v) => `blur(${v}px)`) : undefined,
+                  filter: ticketFilter,
                 }}
               >
                 {/* Background Texture Overlay */}
@@ -61,7 +77,7 @@ const ProblemSection = () => {
                   <motion.div
                     className="w-48 h-48 md:w-64 md:h-64 glass rounded-[2rem] md:rounded-[2.5rem] flex flex-col items-center justify-center border-white/20 p-6 md:p-8 flex-shrink-0 self-center md:self-auto"
                     style={{
-                      y: useTransform(scrollYProgress, [0, 1], [15, -40]),
+                      y: qrY,
                     }}
                   >
                     <div className="w-full aspect-square bg-white p-3 rounded-xl mb-4">

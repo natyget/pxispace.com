@@ -1,5 +1,33 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+
+/**
+ * Inline keyframes for infinite horizontal scroll.
+ * This will inject the animation CSS on mount.
+ */
+const injectScrollAnimation = () => {
+    if (document.getElementById('scroll-ticker-animate')) return;
+    const style = document.createElement('style');
+    style.id = 'scroll-ticker-animate';
+    style.innerHTML = `
+    @keyframes ticker-scroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+    .infinite-ticker-track {
+        display: flex;
+        gap: 3rem;
+        white-space: nowrap;
+        will-change: transform;
+        animation: ticker-scroll 35s linear infinite;
+        /* Pauses on ticker hover - group-hover via selector */
+    }
+    .group\\/ticker:hover .infinite-ticker-track {
+        animation-play-state: paused;
+    }
+    `;
+    document.head.appendChild(style);
+};
 
 const tagData = [
     {
@@ -45,7 +73,8 @@ const TagItem = ({ tag, idx }) => (
 );
 
 const SocialProof = () => {
-    const displayTags = [...tagData, ...tagData, ...tagData];
+    // Only 1 copy is needed per row, since we duplicate in the DOM for seamless loop
+    const displayTags = [...tagData, ...tagData];
     const mockUsers = Array.from({ length: 8 }).map((_, i) => ({
         name: `User ${i + 1}`,
         avatar: `https://i.pravatar.cc/100?img=${i + 30}`,
@@ -60,6 +89,10 @@ const SocialProof = () => {
     const sectionY = useTransform(scrollYProgress, [0, 0.5, 1], [30, 0, -10]);
     const headingY = useTransform(scrollYProgress, [0, 1], [20, -10]);
     const tickerY = useTransform(scrollYProgress, [0, 1], [10, -20]); // subtle parallax
+
+    useEffect(() => {
+        injectScrollAnimation();
+    }, []);
 
     return (
         <motion.section
@@ -101,21 +134,16 @@ const SocialProof = () => {
 
             {/* Infinite Scroll Ticker */}
             <motion.div
-                className="relative flex overflow-visible group/ticker pt-8"
+                className="relative flex overflow-x-hidden group/ticker pt-8"
                 style={{ y: tickerY }}
             >
-                <div className="py-12 animate-scroll whitespace-nowrap flex gap-12 group-hover/ticker:[animation-play-state:paused]">
-                    {displayTags.map((tag, idx) => (
-                        <TagItem key={`set1-${idx}`} tag={tag} idx={idx} />
-                    ))}
-                </div>
-
+                {/* The ticker-track is 2x sequence of tags, for infinite illusion */}
                 <div
-                    className="absolute py-12 animate-scroll whitespace-nowrap flex gap-12 group-hover/ticker:[animation-play-state:paused] "
-                    aria-hidden="true"
+                    className="infinite-ticker-track py-12"
+                    style={{ minWidth: "200%" }} // Makes sure both sets of tags fit
                 >
-                    {displayTags.map((tag, idx) => (
-                        <TagItem key={`set2-${idx}`} tag={tag} idx={idx} />
+                    {[...displayTags, ...displayTags].map((tag, idx) => (
+                        <TagItem key={`ticker-${idx}`} tag={tag} idx={idx} />
                     ))}
                 </div>
             </motion.div>
