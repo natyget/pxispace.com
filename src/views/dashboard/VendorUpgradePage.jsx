@@ -97,6 +97,8 @@ export default function VendorUpgradePage() {
     );
     const [checkingStatus, setCheckingStatus] = useState(false);
     const [stripeStatus, setStripeStatus] = useState(null); // { chargesEnabled, payoutsEnabled, currentlyDue }
+    const [hasSubmittedVerification, setHasSubmittedVerification] = useState(false);
+    const hasOutstandingRequirements = (stripeStatus?.currentlyDue?.length ?? 0) > 0;
 
     useEffect(() => {
         if (stripeParam) router.replace('/dashboard/vendor-upgrade', { scroll: false });
@@ -105,6 +107,25 @@ export default function VendorUpgradePage() {
     useEffect(() => {
         if (user?.isVendor) setStep('done');
     }, [user?.isVendor]);
+
+    useEffect(() => {
+        if (!user?.id || user?.isVendor) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const result = await authService.checkVendorStatus();
+                if (cancelled) return;
+                const hasAccount = result?.code !== 'NO_STRIPE_ACCOUNT';
+                setHasSubmittedVerification(!!hasAccount);
+                if (result?.code === 'PENDING_VERIFICATION') {
+                    setStripeStatus(result?.stripeStatus || null);
+                }
+            } catch {
+                // Keep page usable even if status preflight fails.
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [user?.id, user?.isVendor]);
 
     const handleStartOnboarding = async () => {
         setStep('loading');
@@ -122,6 +143,19 @@ export default function VendorUpgradePage() {
                 setErrorMsg(err.message || 'Unable to start onboarding. Please try again.');
                 setStep('error');
             }
+        }
+    };
+
+    const handleResubmitOnboarding = async () => {
+        setStep('loading');
+        setErrorMsg('');
+        try {
+            const { url } = await authService.vendorOnboard({ fromMobile });
+            setStep('redirecting');
+            setTimeout(() => { window.location.href = url; }, 800);
+        } catch (err) {
+            setErrorMsg(err.message || 'Unable to reopen Stripe verification. Please try again.');
+            setStep('error');
         }
     };
 
@@ -280,17 +314,54 @@ export default function VendorUpgradePage() {
                         Redirecting to Stripe…
                     </div>
                 ) : (
-                    <button
-                        onClick={handleStartOnboarding}
-                        disabled={step === 'loading'}
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {step === 'loading' ? (
-                            <><Loader2 size={14} className="animate-spin" />Connecting…</>
-                        ) : (
-                            <>Start Stripe Verification<ArrowRight size={14} /></>
+                    <div className="flex flex-wrap items-center gap-3">
+                        {hasSubmittedVerification && hasOutstandingRequirements && (
+                            <button
+                                onClick={handleResubmitOnboarding}
+                                disabled={step === 'loading'}
+                                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {step === 'loading' ? (
+                                    <><Loader2 size={14} className="animate-spin" />Reopening…</>
+                                ) : (
+                                    <>Resubmit Verification<ArrowRight size={14} /></>
+                                )}
+                            </button>
                         )}
-                    </button>
+
+                        <button
+                            onClick={handleStartOnboarding}
+                            disabled={step === 'loading' || hasSubmittedVerification}
+                            title={hasSubmittedVerification ? 'Submitted the vendor verification already' : undefined}
+                            className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                                hasSubmittedVerification && hasOutstandingRequirements
+                                    ? 'bg-zinc-800 border border-white/10 text-zinc-500 shadow-none'
+                                    : 'bg-pxi-purple text-white shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110'
+                            }`}
+                        >
+                            {step === 'loading' ? (
+                                <><Loader2 size={14} className="animate-spin" />Connecting…</>
+                            ) : (
+                                <>Start Stripe Verification<ArrowRight size={14} /></>
+                            )}
+                        </button>
+
+                        {hasSubmittedVerification && !hasOutstandingRequirements && (
+                            <button
+                                onClick={handleResubmitOnboarding}
+                                disabled={step === 'loading'}
+                                className="inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-pxi-purple/35 text-pxi-purple font-bold text-xs uppercase tracking-widest hover:bg-pxi-purple/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Resubmit Verification
+                                <ArrowRight size={13} />
+                            </button>
+                        )}
+                    </div>
+                )}
+                {hasSubmittedVerification && hasOutstandingRequirements && (
+                    <p className="text-amber-400 text-xs mt-3">
+                        Outstanding requirements found. Use <span className="font-semibold">Resubmit Verification</span> to update your Stripe information.
+                    </p>
                 )}
             </div>
 

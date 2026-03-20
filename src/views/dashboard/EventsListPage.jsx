@@ -24,6 +24,15 @@ export default function EventsListPage() {
     return date.toLocaleDateString(undefined, { dateStyle: 'medium' });
   };
 
+  const getRenderableCover = (value) => {
+    if (!value || typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:image/')
+      ? trimmed
+      : null;
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -73,10 +82,10 @@ export default function EventsListPage() {
                 href={`/dashboard/events/${event.id}`}
                 className="flex items-center gap-4 p-4 rounded-2xl border border-white/10 bg-zinc-900/50 hover:border-pxi-purple/30 hover:bg-zinc-900/80 transition-all"
               >
-                <div className="w-14 h-14 rounded-xl bg-zinc-800 overflow-hidden flex-shrink-0">
-                  {event.coverImage ? (
+                <div className="w-[48px] h-[72px] rounded-xl bg-zinc-800 overflow-hidden flex-shrink-0">
+                  {getRenderableCover(event.coverImage) ? (
                     <img
-                      src={event.coverImage}
+                      src={getRenderableCover(event.coverImage)}
                       alt=""
                       className="w-full h-full object-cover"
                     />

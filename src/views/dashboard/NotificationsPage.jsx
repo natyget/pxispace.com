@@ -61,7 +61,7 @@ export default function NotificationsPage() {
         loadNotifications();
         if (res?.albumId) router.push('/dashboard/events');
       })
-      .catch(() => setJoinError('Joined but failed to refresh. Check Events.'))
+      .catch(() => setJoinError('Accepted, but failed to refresh. Check Events.'))
       .finally(() => router.replace('/dashboard/notifications', { scroll: false }));
   }, [searchParams]);
 
@@ -284,7 +284,7 @@ export default function NotificationsPage() {
                   className="!py-2 !px-4 !text-xs uppercase tracking-widest"
                   onClick={() => handleJoinClick(n)}
                 >
-                  Join
+                  Accept
                 </Button>
                 <button
                   type="button"
@@ -435,7 +435,7 @@ export default function NotificationsPage() {
               <div>
                 <p className="text-pxi-purple text-xs font-bold uppercase tracking-widest mb-1">Heads Up</p>
                 <h3 className="text-white text-xl font-black">
-                  {isPaidInvite ? 'Get Ticket' : 'Join Event'}
+                  {isPaidInvite ? 'Get Ticket' : 'Accept Invite'}
                 </h3>
               </div>
               <button
@@ -448,7 +448,7 @@ export default function NotificationsPage() {
             <p className="text-zinc-400 text-sm leading-relaxed">
               {isPaidInvite
                 ? `You're about to purchase a ticket for "${eulaEvent.name}". Photos posted in public events may be used for marketing by the host.${priceDisplay ? ` Total: ${priceDisplay}` : ''}`
-                : 'You\'re about to join this event. Photos posted may be visible to other members and the host.'}
+                : 'You\'re about to accept this event invite. Photos posted may be visible to other members and the host.'}
             </p>
             {joinError && <p className="text-red-400 text-sm">{joinError}</p>}
             <div className="flex gap-3 pt-1">
@@ -465,7 +465,7 @@ export default function NotificationsPage() {
                 onClick={handleEulaConfirm}
                 disabled={joining || !isAuthenticated}
               >
-                {joining ? <Loader2 size={18} className="animate-spin mx-auto" /> : isPaidInvite ? 'Agree & Get Ticket' : 'Agree & Join'}
+                {joining ? <Loader2 size={18} className="animate-spin mx-auto" /> : isPaidInvite ? 'Agree & Get Ticket' : 'Agree & Accept'}
               </Button>
             </div>
           </div>

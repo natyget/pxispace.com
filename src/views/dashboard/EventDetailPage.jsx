@@ -3,34 +3,45 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, UserPlus, Users, Trash2, Loader2, Search } from 'lucide-react';
+import { ChevronLeft, UserPlus, Users, Loader2, Search } from 'lucide-react';
 import { eventsService, searchUsers } from '../../services/events';
+import { useAuth } from '@/contexts/AuthContext';
 
-const STAFF_ROLES = ['OWNER', 'ADMIN', 'BOUNCER', 'MEMBER'];
-const INVITE_ROLES = [
-  { value: 'bouncer', label: 'Bouncer', description: 'Scan tickets, moderate content' },
-  { value: 'co-host', label: 'Co-Host', description: 'Same as host except delete event; can invite staff' },
-  { value: 'featured_talent', label: 'Featured Talent', description: 'Shown on event page; no gatekeeping' },
-];
+const FEATURED_ROLE_OPTIONS = ['SINGER', 'DANCER', 'DESIGNER', 'BAND'];
+const INVITE_ROLE_OPTIONS = ['MEMBER', 'CO_HOST', 'BOUNCER', ...FEATURED_ROLE_OPTIONS];
+const FEATURED_ROLE_STYLES = {
+  SINGER: { border: 'border-pink-400/70', bg: 'bg-pink-500/20', text: 'text-pink-300' },
+  DANCER: { border: 'border-blue-400/70', bg: 'bg-blue-500/20', text: 'text-blue-300' },
+  DESIGNER: { border: 'border-emerald-400/70', bg: 'bg-emerald-500/20', text: 'text-emerald-300' },
+  BAND: { border: 'border-amber-400/70', bg: 'bg-amber-500/20', text: 'text-amber-300' },
+};
 
 export default function EventDetailPage() {
+  const { user } = useAuth();
   const params = useParams();
   const eventId = params?.id;
   const [event, setEvent] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedToInvite, setSelectedToInvite] = useState([]); // { id, username, name?, avatarUrl? }[]
-  const [inviting, setInviting] = useState(false);
-  const [inviteError, setInviteError] = useState(null);
-  const [removing, setRemoving] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [searching, setSearching] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [inviteRole, setInviteRole] = useState('bouncer');
+  const [inviteQuery, setInviteQuery] = useState('');
+  const [inviteResults, setInviteResults] = useState([]);
+  const [inviteSearching, setInviteSearching] = useState(false);
+  const [inviteRole, setInviteRole] = useState('MEMBER');
+  const [audienceCandidates, setAudienceCandidates] = useState([]);
+  const [selectedAudienceIds, setSelectedAudienceIds] = useState(new Set());
+  const [draftInvites, setDraftInvites] = useState([]);
+  const [audienceInviting, setAudienceInviting] = useState(false);
+  const [audienceInviteError, setAudienceInviteError] = useState(null);
+  const [loadingAudience, setLoadingAudience] = useState(false);
+  const [featuredPeople, setFeaturedPeople] = useState([]);
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    mode: null, // 'add' | 'send'
+    users: [],
+    role: null,
+  });
   const searchTimeoutRef = useRef(null);
-  const searchContainerRef = useRef(null);
 
   const loadEvent = useCallback(() => {
     if (!eventId) return;
@@ -51,6 +62,14 @@ export default function EventDetailPage() {
       .catch(() => setParticipants([]));
   }, [albumId]);
 
+  const loadFeaturedPeople = useCallback(() => {
+    if (!albumId) return;
+    eventsService
+      .getFeaturedPeople(albumId)
+      .then((res) => setFeaturedPeople(res.featuredPeople || []))
+      .catch(() => setFeaturedPeople([]));
+  }, [albumId]);
+
   useEffect(() => {
     loadEvent();
   }, [loadEvent]);
@@ -59,104 +78,191 @@ export default function EventDetailPage() {
     if (albumId) loadParticipants();
   }, [albumId, loadParticipants]);
 
-  // Poll staff list so acceptance status updates without reload
   useEffect(() => {
-    if (!albumId) return;
-    const interval = setInterval(loadParticipants, 15000);
-    return () => clearInterval(interval);
-  }, [albumId, loadParticipants]);
+    if (albumId) loadFeaturedPeople();
+  }, [albumId, loadFeaturedPeople]);
 
-  const staffList = participants.filter((p) => STAFF_ROLES.includes(p.role));
-  const staffUserIds = new Set(staffList.map((p) => p.userId));
-  // Show all participants (staff + members who joined the album)
-  const allParticipants = participants;
-
-  // Debounced user search (by username or email on backend)
+  // Debounced user search for invite flow (by username/email)
   useEffect(() => {
-    const q = searchQuery.trim();
+    const q = inviteQuery.trim();
     if (q.length < 2) {
-      setSearchResults([]);
+      setInviteResults([]);
       return;
     }
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => {
-      setSearching(true);
+      setInviteSearching(true);
       searchUsers(q)
-        .then((res) => setSearchResults(res.results || []))
-        .catch(() => setSearchResults([]))
-        .finally(() => setSearching(false));
+        .then((res) => setInviteResults(res.results || []))
+        .catch(() => setInviteResults([]))
+        .finally(() => setInviteSearching(false));
     }, 300);
     return () => {
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     };
-  }, [searchQuery]);
+  }, [inviteQuery]);
 
-  const addToSelection = (user) => {
-    if (!user?.id || !user?.username) return;
-    if (staffUserIds.has(user.id)) return;
-    setSelectedToInvite((prev) => {
-      if (prev.some((u) => u.id === user.id)) return prev;
-      return [...prev, { id: user.id, username: user.username, name: user.name, avatarUrl: user.avatarUrl }];
-    });
-    setSearchQuery('');
-    setSearchResults([]);
-  };
+  useEffect(() => {
+    if (!event || !albumId || !user?.id) return;
+    let active = true;
 
-  const removeFromSelection = (userId) => {
-    setSelectedToInvite((prev) => prev.filter((u) => u.id !== userId));
-  };
-
-  const openConfirmModal = () => {
-    if (selectedToInvite.length === 0) return;
-    setInviteError(null);
-    setShowConfirmModal(true);
-  };
-
-  const sendInvites = async () => {
-    setInviting(true);
-    const failed = [];
-    for (const user of selectedToInvite) {
+    const run = async () => {
+      setLoadingAudience(true);
       try {
-        await eventsService.inviteStaff(eventId, user.username, inviteRole);
-      } catch (err) {
-        failed.push({ username: user.username, error: err.message || err.error || 'Invite failed' });
+        const currentAudienceSet = new Set(participants.map((p) => p.userId));
+        const map = new Map();
+        const addCandidate = (candidate) => {
+          if (!candidate?.id || !candidate?.username) return;
+          if (candidate.id === user.id) return;
+          if (currentAudienceSet.has(candidate.id)) return;
+          if (map.has(candidate.id)) return;
+          map.set(candidate.id, candidate);
+        };
+
+        // Friends are always invite candidates.
+        const friendsRes = await eventsService.getFriends(user.id);
+        (friendsRes.friends || []).forEach((f) => {
+          addCandidate({
+            id: f.id,
+            username: f.username,
+            name: f.name,
+            avatarUrl: f.avatarUrl,
+            source: 'friend',
+          });
+        });
+
+        // For public events also include previous attendees.
+        if (event.visibility === 'PUBLIC') {
+          const mine = await eventsService.getMyEvents({ limit: 100, offset: 0 });
+          const myEvents = (mine.events || []).filter((e) => e.id !== event.id);
+          await Promise.all(
+            myEvents.map(async (e) => {
+              const prevAlbumId = e.albumId || e.albums?.[0]?.id;
+              if (!prevAlbumId) return;
+              try {
+                const res = await eventsService.getAlbumParticipants(prevAlbumId);
+                (res.participants || []).forEach((p) => {
+                  const username = String(p.username || '').replace(/^@/, '');
+                  if (!username) return;
+                  addCandidate({
+                    id: p.userId,
+                    username,
+                    name: p.username,
+                    avatarUrl: p.avatarUrl,
+                    source: 'attendee',
+                  });
+                });
+              } catch {
+                // Ignore inaccessible historical albums and continue.
+              }
+            })
+          );
+        }
+
+        // Include search results from invite input too.
+        (inviteResults || []).forEach((u) => {
+          addCandidate({
+            id: u.id,
+            username: u.username,
+            name: u.name,
+            avatarUrl: u.avatarUrl,
+            source: 'search',
+          });
+        });
+
+        if (active) setAudienceCandidates(Array.from(map.values()));
+      } catch {
+        if (active) setAudienceCandidates([]);
+      } finally {
+        if (active) setLoadingAudience(false);
       }
-    }
-    setInviting(false);
-    setShowConfirmModal(false);
-    setSelectedToInvite([]);
-    setSearchQuery('');
-    setSearchResults([]);
-    loadParticipants();
-    if (failed.length > 0) {
-      setInviteError(`Some invites failed: ${failed.map((f) => `@${f.username}`).join(', ')}`);
-    }
+    };
+
+    run();
+    return () => {
+      active = false;
+    };
+  }, [event, albumId, user?.id, participants, inviteResults]);
+
+  const addAudienceToSelection = (candidate) => {
+    if (!candidate?.id) return;
+    setSelectedAudienceIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(candidate.id)) next.delete(candidate.id);
+      else next.add(candidate.id);
+      return next;
+    });
   };
 
-  const onSearchKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const q = searchQuery.trim().replace(/^@/, '');
-      if (searchResults.length > 0 && q.length >= 2) {
-        const first = searchResults.find((u) => !staffUserIds.has(u.id) && !selectedToInvite.some((s) => s.id === u.id));
-        if (first) addToSelection(first);
-      } else if (q.length >= 2) {
-        addToSelection({ id: q, username: q, name: null, avatarUrl: null });
-      }
-    }
+  const addSelectedToDraft = () => {
+    const selected = audienceCandidates.filter((c) => selectedAudienceIds.has(c.id));
+    if (selected.length === 0) return;
+    setConfirmModal({ open: true, mode: 'add', users: selected, role: inviteRole });
   };
 
-  const handleRemove = async (userId) => {
+  const confirmAddToDraft = () => {
+    const selected = confirmModal.users || [];
+    if (selected.length === 0) return;
+    setDraftInvites((prev) => {
+      const map = new Map(prev.map((d) => [d.id, d]));
+      selected.forEach((c) => {
+        map.set(c.id, {
+          id: c.id,
+          username: c.username,
+          name: c.name,
+          role: confirmModal.role || inviteRole,
+        });
+      });
+      return Array.from(map.values());
+    });
+    setSelectedAudienceIds(new Set());
+    setConfirmModal({ open: false, mode: null, users: [], role: null });
+  };
+
+  const removeDraftInvite = (userId) => {
+    setDraftInvites((prev) => prev.filter((d) => d.id !== userId));
+  };
+
+  const sendAudienceInvites = async () => {
     if (!albumId) return;
-    if (!confirm('Remove this person from staff?')) return;
-    setRemoving(userId);
-    try {
-      await eventsService.removeMember(albumId, userId);
-      loadParticipants();
-    } catch (err) {
-      alert(err.message || err.error || 'Remove failed');
-    } finally {
-      setRemoving(null);
+    const toInvite = draftInvites;
+    if (toInvite.length === 0) return;
+    setConfirmModal({ open: true, mode: 'send', users: [...toInvite], role: null });
+  };
+
+  const confirmSendInvites = async () => {
+    const toInvite = confirmModal.users || [];
+    if (!albumId || toInvite.length === 0) return;
+
+    setAudienceInviting(true);
+    setAudienceInviteError(null);
+    setConfirmModal({ open: false, mode: null, users: [], role: null });
+    const failed = [];
+    for (const candidate of toInvite) {
+      try {
+        if (candidate.role === 'CO_HOST') {
+          await eventsService.inviteStaff(eventId, candidate.username, 'co-host');
+        } else if (candidate.role === 'BOUNCER') {
+          await eventsService.inviteStaff(eventId, candidate.username, 'bouncer');
+        } else if (FEATURED_ROLE_OPTIONS.includes(candidate.role)) {
+          await eventsService.upsertFeaturedPerson(albumId, candidate.username, candidate.role);
+          await eventsService.inviteAlbumUser(albumId, candidate.username);
+        } else {
+          // MEMBER default invite path
+          await eventsService.inviteAlbumUser(albumId, candidate.username);
+        }
+      } catch {
+        failed.push(candidate.username);
+      }
+    }
+    setAudienceInviting(false);
+    setSelectedAudienceIds(new Set());
+    setDraftInvites([]);
+    loadParticipants();
+    loadFeaturedPeople();
+
+    if (failed.length > 0) {
+      setAudienceInviteError(`Some invites failed: ${failed.map((u) => `@${u}`).join(', ')}`);
     }
   };
 
@@ -199,261 +305,212 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      {/* Staff section */}
       <section className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
         <div className="p-5 border-b border-white/5 flex items-center gap-2">
           <Users size={18} className="text-pxi-purple" />
-          <h2 className="font-bold text-white uppercase tracking-widest text-sm">
-            Staff & gatekeeping
-          </h2>
+          <h2 className="font-bold text-white uppercase tracking-widest text-sm">Invite people</h2>
         </div>
-        <div className="p-5 space-y-6">
-          {/* Multi-select: search, add users as tags, then Send invites with confirmation */}
-          <div ref={searchContainerRef} className="relative">
-            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
-              Invite staff
-            </label>
-            <div className="mb-3">
-              <label className="text-xs text-zinc-500 mr-2">Role:</label>
-              <select
-                value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value)}
-                className="rounded-lg bg-zinc-800 border border-white/10 text-white text-sm px-3 py-1.5 focus:border-pxi-purple/50 focus:outline-none"
-              >
-                {INVITE_ROLES.map((r) => (
-                  <option key={r.value} value={r.value}>{r.label}</option>
-                ))}
-              </select>
-              <span className="text-xs text-zinc-500 ml-2">
-                {INVITE_ROLES.find((r) => r.value === inviteRole)?.description}
-              </span>
-            </div>
-            {/* Selected users as removable tags */}
-            {selectedToInvite.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {selectedToInvite.map((u) => (
-                  <span
-                    key={u.id}
-                    className="inline-flex items-center gap-2 pl-2.5 pr-1.5 py-1.5 rounded-lg bg-pxi-purple/20 border border-pxi-purple/30 text-white text-sm"
-                  >
-                    {u.avatarUrl ? (
-                      <img src={u.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
-                    ) : (
-                      <span className="w-5 h-5 rounded-full bg-zinc-600 flex items-center justify-center text-xs font-bold">
-                        @{u.username?.charAt(0) || '?'}
-                      </span>
-                    )}
-                    <span className="font-medium">@{u.username}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeFromSelection(u.id)}
-                      className="p-0.5 rounded text-zinc-400 hover:text-white hover:bg-white/10"
-                      aria-label={`Remove ${u.username}`}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="flex flex-wrap items-stretch gap-2">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={18} />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={onSearchKeyDown}
-                  placeholder="Search by username or email, then add to list…"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 focus:border-pxi-purple/50 focus:outline-none"
-                  disabled={inviting}
-                  autoComplete="off"
-                />
-                {searching && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Loader2 size={18} className="animate-spin text-zinc-500" />
-                  </div>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={openConfirmModal}
-                disabled={inviting || selectedToInvite.length === 0}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all"
-              >
-                <UserPlus size={16} />
-                Send invites ({selectedToInvite.length})
-              </button>
-            </div>
-            {searchQuery.trim().length >= 2 && (
-              <div className="absolute left-0 right-0 top-full mt-1 py-1 rounded-xl bg-zinc-900 border border-white/10 shadow-xl z-10 max-h-60 overflow-auto">
-                {searchResults.length === 0 && !searching && (
-                  <p className="px-4 py-3 text-zinc-500 text-sm">No users found. Type a username and press Enter to add by @username.</p>
-                )}
-                {searchResults.map((user) => {
-                  const isStaff = staffUserIds.has(user.id);
-                  const alreadySelected = selectedToInvite.some((s) => s.id === user.id);
-                  const canAdd = !isStaff && !alreadySelected;
-                  return (
-                    <button
-                      key={user.id}
-                      type="button"
-                      onClick={() => canAdd && addToSelection(user)}
-                      disabled={!canAdd}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-white/5 disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      <div className="w-9 h-9 rounded-full bg-zinc-700 overflow-hidden flex-shrink-0">
-                        {user.avatarUrl ? (
-                          <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-500 font-bold text-sm">
-                            @{user.username?.charAt(0) || '?'}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-white truncate">@{user.username}</p>
-                        {user.name && (
-                          <p className="text-xs text-zinc-500 truncate">{user.name}</p>
-                        )}
-                      </div>
-                      {isStaff ? (
-                        <span className="text-xs text-zinc-500 font-medium">Already staff</span>
-                      ) : alreadySelected ? (
-                        <span className="text-xs text-pxi-purple font-medium">Added</span>
-                      ) : (
-                        <UserPlus size={16} className="text-pxi-purple flex-shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Confirmation modal */}
-          {showConfirmModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70" onClick={() => !inviting && setShowConfirmModal(false)}>
-              <div
-                className="w-full max-w-md rounded-2xl bg-zinc-900 border border-white/10 shadow-xl p-6"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 className="text-lg font-bold text-white mb-2">Send staff invites?</h3>
-                <p className="text-zinc-400 text-sm mb-4">
-                  Invite the following users as <span className="text-white font-semibold">{INVITE_ROLES.find((r) => r.value === inviteRole)?.label ?? inviteRole}</span>. They will get a notification and can accept in the PXI app.
-                </p>
-                <ul className="mb-6 max-h-40 overflow-auto space-y-1.5 rounded-lg bg-zinc-800/50 p-3">
-                  {selectedToInvite.map((u) => (
-                    <li key={u.id} className="flex items-center gap-2 text-sm text-white">
-                      {u.avatarUrl ? (
-                        <img src={u.avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
-                      ) : (
-                        <span className="w-6 h-6 rounded-full bg-zinc-600 flex items-center justify-center text-xs font-bold flex-shrink-0">@{u.username?.charAt(0)}</span>
-                      )}
-                      <span className="font-medium">@{u.username}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex gap-3 justify-end">
-                  <button
-                    type="button"
-                    onClick={() => !inviting && setShowConfirmModal(false)}
-                    disabled={inviting}
-                    className="px-4 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={sendInvites}
-                    disabled={inviting}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm disabled:opacity-50 hover:brightness-110"
-                  >
-                    {inviting ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin" />
-                        Sending…
-                      </>
-                    ) : (
-                      'Yes, send invites'
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {inviteError && (
-            <p className="text-sm text-red-400">{inviteError}</p>
-          )}
+        <div className="p-5 space-y-4">
           <p className="text-xs text-zinc-500">
-            Search and add users, choose a role (Bouncer, Co-Host, or Featured Talent), then click &quot;Send invites&quot;. Invited users get a real-time notification in the PXI app and can accept the role.
+            {event.visibility === 'PUBLIC'
+              ? 'Public event: friends + previous attendees + search'
+              : 'Private event: friends + search'}
           </p>
 
-          {/* All participants (staff + members who joined) */}
-          <div>
-            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">
-              Staff & members ({allParticipants.length})
-            </h3>
-            {allParticipants.length === 0 ? (
-              <p className="text-zinc-500 text-sm">No one has joined yet. Search or type a username above to invite staff.</p>
-            ) : (
-              <ul className="space-y-2">
-                {allParticipants.map((p) => (
-                  <li
-                    key={p.userId}
-                    className="flex items-center gap-4 p-3 rounded-xl bg-zinc-800/50 border border-white/5"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-zinc-700 overflow-hidden flex-shrink-0">
-                      {p.avatarUrl ? (
-                        <img
-                          src={p.avatarUrl}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-500 font-bold">
-                          @{p.username?.charAt(0) || '?'}
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-white">@{p.username ?? '—'}</p>
-                      <p className="text-xs text-zinc-500">
-                        {p.role === 'OWNER'
-                          ? 'Owner'
-                          : p.role === 'ADMIN'
-                            ? 'Co-Host'
-                            : p.role === 'BOUNCER'
-                              ? 'Bouncer (staff)'
-                              : p.role === 'MEMBER'
-                                ? 'Featured Talent / Member'
-                                : 'Member'}
-                        {p.joinedAt && ` · Joined ${formatDate(p.joinedAt)}`}
-                      </p>
-                    </div>
-                    {(p.role === 'BOUNCER' || p.role === 'ADMIN' || p.role === 'MEMBER') && p.role !== 'OWNER' && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemove(p.userId)}
-                        disabled={removing === p.userId}
-                        className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-50"
-                        title="Remove from staff"
-                      >
-                        {removing === p.userId ? (
-                          <Loader2 size={18} className="animate-spin" />
-                        ) : (
-                          <Trash2 size={18} />
-                        )}
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={18} />
+            <input
+              type="text"
+              value={inviteQuery}
+              onChange={(e) => setInviteQuery(e.target.value)}
+              placeholder="Search username or email..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 focus:border-pxi-purple/50 focus:outline-none"
+              autoComplete="off"
+            />
+            {inviteSearching && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Loader2 size={18} className="animate-spin text-zinc-500" />
+              </div>
             )}
           </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value)}
+              className="rounded-xl bg-zinc-800 border border-white/10 text-white text-xs font-bold tracking-wider px-3 py-2.5 focus:border-pxi-purple/50 focus:outline-none"
+            >
+              {INVITE_ROLE_OPTIONS.map((role) => (
+                <option key={role} value={role}>
+                  {role.replace(/_/g, ' ')}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={addSelectedToDraft}
+              disabled={selectedAudienceIds.size === 0}
+              className="px-4 py-2.5 rounded-xl bg-violet-600 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={sendAudienceInvites}
+              disabled={audienceInviting || draftInvites.length === 0}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-xs uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+            >
+              {audienceInviting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+              Send
+            </button>
+          </div>
+
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                Search results
+              </h3>
+              <span className="text-xs text-zinc-500 shrink-0">
+                {selectedAudienceIds.size === 1 ? '1 user' : `${selectedAudienceIds.size} users`}
+              </span>
+            </div>
+            {loadingAudience ? (
+              <div className="py-8 flex justify-center">
+                <Loader2 size={18} className="animate-spin text-zinc-400" />
+              </div>
+            ) : (
+              <div className="max-h-72 overflow-auto rounded-xl border border-white/5 bg-zinc-900/30">
+                {audienceCandidates.length === 0 ? (
+                  <p className="px-4 py-6 text-sm text-zinc-500">
+                    {inviteQuery.trim().length >= 2 ? 'No users found for this search.' : 'No candidates available.'}
+                  </p>
+                ) : (
+                  audienceCandidates.map((candidate) => {
+                    const checked = selectedAudienceIds.has(candidate.id);
+                    return (
+                      <button
+                        key={candidate.id}
+                        type="button"
+                        onClick={() => addAudienceToSelection(candidate)}
+                        className="w-full px-4 py-3 border-b border-white/5 last:border-b-0 flex items-center justify-between text-left hover:bg-white/5"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm text-white font-medium truncate">
+                            {candidate.name || `@${candidate.username}`}
+                          </p>
+                          <p className="text-xs text-zinc-500 truncate">
+                            @{candidate.username} •{' '}
+                            {candidate.source === 'friend'
+                              ? 'friend'
+                              : candidate.source === 'attendee'
+                                ? 'previous attendee'
+                                : 'search'}
+                          </p>
+                        </div>
+                        <div
+                          className={`w-5 h-5 rounded border ${checked ? 'bg-pxi-purple border-pxi-purple' : 'border-zinc-600'}`}
+                        />
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2 mt-6 pt-5 border-t border-white/5">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                Draft list
+              </h3>
+              <span className="text-xs text-zinc-500 shrink-0">
+                {draftInvites.length === 1 ? '1 user' : `${draftInvites.length} users`}
+              </span>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-zinc-900/30 p-3 space-y-2">
+            {draftInvites.length === 0 ? (
+              <p className="text-sm text-zinc-500">Add selected users to draft list.</p>
+            ) : (
+              draftInvites.map((d) => (
+                <div key={d.id} className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-zinc-800/50 px-3 py-2">
+                  <p className="text-sm text-white truncate">
+                    @{d.username}{' '}
+                    <span className={`${FEATURED_ROLE_STYLES[d.role]?.text || 'text-zinc-400'}`}>
+                      • {d.role.replace(/_/g, ' ')}
+                    </span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => removeDraftInvite(d.id)}
+                    className="text-xs text-red-300 hover:text-red-200"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))
+            )}
+            </div>
+          </div>
+
+          {featuredPeople.length > 0 && (
+            <div className="rounded-xl border border-white/10 bg-zinc-900/30 p-3 space-y-2">
+              <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Featured people</p>
+              {featuredPeople.map((person) => (
+                <div key={person.id} className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-zinc-800/50 px-3 py-2">
+                  <p className="text-sm text-white truncate">@{person.username || 'unknown'}</p>
+                  <span className={`text-xs font-bold tracking-wider ${FEATURED_ROLE_STYLES[person.role]?.text || 'text-pxi-purple'}`}>
+                    {person.role}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {audienceInviteError && <p className="text-sm text-red-400">{audienceInviteError}</p>}
         </div>
       </section>
+
+      {confirmModal.open && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900 p-4 space-y-3">
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest">
+              {confirmModal.mode === 'add' ? 'Add to draft list' : 'Send invitations'}
+            </h3>
+            <p className="text-sm text-zinc-300">
+              {confirmModal.mode === 'add'
+                ? 'Do you want to add these members to draft list?'
+                : 'Do you want ot send the inviations these memerbs?'}
+            </p>
+            <div className="max-h-56 overflow-auto rounded-xl border border-white/10 bg-zinc-800/40 p-2 space-y-1">
+              {confirmModal.users.map((u) => (
+                <p key={u.id} className="text-xs text-zinc-200">
+                  • @{u.username}{' '}
+                  {confirmModal.mode === 'add'
+                    ? `(${String(confirmModal.role || inviteRole).replace(/_/g, ' ')})`
+                    : `— ${String(u.role || 'MEMBER').replace(/_/g, ' ')}`}
+                </p>
+              ))}
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setConfirmModal({ open: false, mode: null, users: [], role: null })}
+                className="px-3 py-2 rounded-lg border border-white/10 text-xs text-zinc-300 hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={audienceInviting}
+                onClick={confirmModal.mode === 'add' ? confirmAddToDraft : confirmSendInvites}
+                className="px-3 py-2 rounded-lg bg-pxi-purple text-xs font-bold text-white disabled:opacity-60"
+              >
+                {confirmModal.mode === 'add' ? 'Add' : audienceInviting ? 'Sending...' : 'Send'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
