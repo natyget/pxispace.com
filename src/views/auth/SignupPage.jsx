@@ -362,7 +362,6 @@ export default function SignupPage() {
         </div>
     );
 }
-
 function UsernameStatusIcon({ status }) {
     if (status === 'checking')
         return <Loader2 size={14} className="animate-spin text-zinc-500" />;
@@ -387,3 +386,4 @@ function UsernameStatusMessage({ status, username }) {
         return <p className="text-green-400 text-xs mt-1.5">@{username} is available</p>;
     return null;
 }
+

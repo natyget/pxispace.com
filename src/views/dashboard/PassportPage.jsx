@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { Smartphone, Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { getPassportLevelDisplay } from '../../utils/odysseyTier';
 
 // ─── MRZ helper ───────────────────────────────────────────────────────────────
 function formatMRZ(text, len = 37) {
@@ -193,7 +193,7 @@ function PassportIssued({ user }) {
     const mrzLine1 = formatMRZ(`PXI<${username.toUpperCase()}<<${nameParts}`);
     const mrzLine2 = formatMRZ(`Issued01Jan26<P0512026XI<<<<<pxispace`);
 
-    const isVendor = user?.isVendor;
+    const { levelText, badgeLetter } = getPassportLevelDisplay(user);
 
     return (
         <div className="max-w-2xl mx-auto space-y-6">
@@ -341,13 +341,13 @@ function PassportIssued({ user }) {
                             <div style={{ position: 'absolute', right: 24, top: 45, display: 'flex', flexDirection: 'column', alignItems: 'center', width: 80, zIndex: 20 }}>
                                 <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.7)' }}>LEVEL</span>
                                 <span style={{ fontSize: 11, color: 'white', textShadow: '0px 0px 12px #fff' }}>
-                                    {isVendor ? 'VENDOR' : 'VOYAGER'}
+                                    {levelText}
                                 </span>
                                 <div style={{ position: 'absolute', top: 30, left: '50%', transform: 'translateX(-50%)', width: 110, height: 110, filter: 'drop-shadow(0px 0px 14px rgba(143,1,182,0.8))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <PolygonIcon style={{ width: '100%', height: '100%' }} />
                                     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 28 }}>
                                         <span style={{ fontWeight: 'bold', color: 'white', fontSize: 40 }}>
-                                            {isVendor ? 'v' : 'c'}
+                                            {badgeLetter}
                                         </span>
                                     </div>
                                 </div>
@@ -421,7 +421,7 @@ function PassportNotIssued() {
                 <p className="text-zinc-400 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
                     Your PXI Passport is your digital identity for events. To issue your PXI Passport, please use the PXI mobile app — it only takes a minute.
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                     <a href="https://apps.apple.com/app/pxi" target="_blank" rel="noopener noreferrer"
                         className="flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-sm bg-white text-black hover:bg-zinc-200 transition-all w-full sm:w-auto justify-center">
                         <svg viewBox="0 0 24 24" className="w-5 h-5 fill-black"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
@@ -433,12 +433,6 @@ function PassportNotIssued() {
                         Google Play
                     </a>
                 </div>
-                <Link
-                    href="/dashboard"
-                    className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
-                >
-                    Continue without PXI Passport
-                </Link>
             </div>
         </div>
     );

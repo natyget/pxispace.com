@@ -103,7 +103,7 @@ export default function VerifyPhonePage() {
             setCode('');
             setError('');
         } else if (pendingSignup) {
-            router.replace('/login/email?mode=signup');
+            router.replace('/login');
         } else {
             router.replace('/login');
         }

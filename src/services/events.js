@@ -30,6 +30,19 @@ export const eventsService = {
   /** Get album participants (staff + members) — used for staff list (GET /api/albums/:id/participants) */
   getAlbumParticipants: (albumId) => api.get(`/api/albums/${albumId}/participants`),
 
+  /** Get friends for current user context (GET /api/users/:id/friends) */
+  getFriends: (userId) => api.get(`/api/users/${userId}/friends`),
+
+  /** Invite a user to album by username (POST /api/albums/:id/invite-user) */
+  inviteAlbumUser: (albumId, username) => api.post(`/api/albums/${albumId}/invite-user`, { username }),
+
+  /** Get featured people for an album (GET /api/albums/:id/featured-people) */
+  getFeaturedPeople: (albumId) => api.get(`/api/albums/${albumId}/featured-people`),
+
+  /** Upsert a featured person by username and role (POST /api/albums/:id/featured-people) */
+  upsertFeaturedPerson: (albumId, username, role) =>
+    api.post(`/api/albums/${albumId}/featured-people`, { username, role }),
+
   /** Invite user as staff by username (POST /api/events/:id/staff). role: 'co-host' | 'bouncer' | 'featured_talent' (default 'bouncer') */
   inviteStaff: (eventId, username, role = 'bouncer') =>
     api.post(`/api/events/${eventId}/staff`, { username, role }),

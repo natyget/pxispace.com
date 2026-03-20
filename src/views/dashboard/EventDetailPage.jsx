@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, UserPlus, Users, Trash2, Loader2, Search } from 'lucide-react';
 import { eventsService, searchUsers } from '../../services/events';
+import { useAuth } from '@/contexts/AuthContext';
 
 const STAFF_ROLES = ['OWNER', 'ADMIN', 'BOUNCER', 'MEMBER'];
 const INVITE_ROLES = [
@@ -12,8 +13,10 @@ const INVITE_ROLES = [
   { value: 'co-host', label: 'Co-Host', description: 'Same as host except delete event; can invite staff' },
   { value: 'featured_talent', label: 'Featured Talent', description: 'Shown on event page; no gatekeeping' },
 ];
+const FEATURED_ROLE_OPTIONS = ['SINGER', 'DANCER', 'DESIGNER', 'BAND'];
 
 export default function EventDetailPage() {
+  const { user } = useAuth();
   const params = useParams();
   const eventId = params?.id;
   const [event, setEvent] = useState(null);
@@ -29,6 +32,16 @@ export default function EventDetailPage() {
   const [searching, setSearching] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [inviteRole, setInviteRole] = useState('bouncer');
+  const [audienceCandidates, setAudienceCandidates] = useState([]);
+  const [selectedAudienceIds, setSelectedAudienceIds] = useState(new Set());
+  const [audienceInviting, setAudienceInviting] = useState(false);
+  const [audienceInviteError, setAudienceInviteError] = useState(null);
+  const [loadingAudience, setLoadingAudience] = useState(false);
+  const [featuredPeople, setFeaturedPeople] = useState([]);
+  const [featuredRole, setFeaturedRole] = useState('SINGER');
+  const [featuredUsername, setFeaturedUsername] = useState('');
+  const [savingFeatured, setSavingFeatured] = useState(false);
+  const [featuredError, setFeaturedError] = useState(null);
   const searchTimeoutRef = useRef(null);
   const searchContainerRef = useRef(null);
 
@@ -51,6 +64,14 @@ export default function EventDetailPage() {
       .catch(() => setParticipants([]));
   }, [albumId]);
 
+  const loadFeaturedPeople = useCallback(() => {
+    if (!albumId) return;
+    eventsService
+      .getFeaturedPeople(albumId)
+      .then((res) => setFeaturedPeople(res.featuredPeople || []))
+      .catch(() => setFeaturedPeople([]));
+  }, [albumId]);
+
   useEffect(() => {
     loadEvent();
   }, [loadEvent]);
@@ -58,6 +79,10 @@ export default function EventDetailPage() {
   useEffect(() => {
     if (albumId) loadParticipants();
   }, [albumId, loadParticipants]);
+
+  useEffect(() => {
+    if (albumId) loadFeaturedPeople();
+  }, [albumId, loadFeaturedPeople]);
 
   // Poll staff list so acceptance status updates without reload
   useEffect(() => {
@@ -91,6 +116,88 @@ export default function EventDetailPage() {
     };
   }, [searchQuery]);
 
+  useEffect(() => {
+    if (!event || !albumId || !user?.id) return;
+    let active = true;
+
+    const run = async () => {
+      setLoadingAudience(true);
+      try {
+        const currentAudienceSet = new Set(participants.map((p) => p.userId));
+        const map = new Map();
+        const addCandidate = (candidate) => {
+          if (!candidate?.id || !candidate?.username) return;
+          if (candidate.id === user.id) return;
+          if (currentAudienceSet.has(candidate.id)) return;
+          if (map.has(candidate.id)) return;
+          map.set(candidate.id, candidate);
+        };
+
+        // Friends are always invite candidates.
+        const friendsRes = await eventsService.getFriends(user.id);
+        (friendsRes.friends || []).forEach((f) => {
+          addCandidate({
+            id: f.id,
+            username: f.username,
+            name: f.name,
+            avatarUrl: f.avatarUrl,
+            source: 'friend',
+          });
+        });
+
+        // For public events also include previous attendees.
+        if (event.visibility === 'PUBLIC') {
+          const mine = await eventsService.getMyEvents({ limit: 100, offset: 0 });
+          const myEvents = (mine.events || []).filter((e) => e.id !== event.id);
+          await Promise.all(
+            myEvents.map(async (e) => {
+              const prevAlbumId = e.albumId || e.albums?.[0]?.id;
+              if (!prevAlbumId) return;
+              try {
+                const res = await eventsService.getAlbumParticipants(prevAlbumId);
+                (res.participants || []).forEach((p) => {
+                  const username = String(p.username || '').replace(/^@/, '');
+                  if (!username) return;
+                  addCandidate({
+                    id: p.userId,
+                    username,
+                    name: p.username,
+                    avatarUrl: p.avatarUrl,
+                    source: 'attendee',
+                  });
+                });
+              } catch {
+                // Ignore inaccessible historical albums and continue.
+              }
+            })
+          );
+        }
+
+        // Include current search results as selectable candidates too.
+        (searchResults || []).forEach((u) => {
+          addCandidate({
+            id: u.id,
+            username: u.username,
+            name: u.name,
+            avatarUrl: u.avatarUrl,
+            source: 'search',
+          });
+        });
+
+        if (active) setAudienceCandidates(Array.from(map.values()));
+      } catch {
+        if (active) setAudienceCandidates([]);
+      } finally {
+        if (active) setLoadingAudience(false);
+      }
+    };
+
+    run();
+    return () => {
+      active = false;
+    };
+  }, [event, albumId, user?.id, participants, searchResults]);
+
   const addToSelection = (user) => {
     if (!user?.id || !user?.username) return;
     if (staffUserIds.has(user.id)) return;
@@ -105,6 +212,19 @@ export default function EventDetailPage() {
   const removeFromSelection = (userId) => {
     setSelectedToInvite((prev) => prev.filter((u) => u.id !== userId));
   };
+
+  const addAudienceToSelection = (candidate) => {
+    if (!candidate?.id) return;
+    setSelectedAudienceIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(candidate.id)) next.delete(candidate.id);
+      else next.add(candidate.id);
+      return next;
+    });
+  };
+
+  const selectAllAudience = () => setSelectedAudienceIds(new Set(audienceCandidates.map((c) => c.id)));
+  const clearAllAudience = () => setSelectedAudienceIds(new Set());
 
   const openConfirmModal = () => {
     if (selectedToInvite.length === 0) return;
@@ -133,6 +253,30 @@ export default function EventDetailPage() {
     }
   };
 
+  const sendAudienceInvites = async () => {
+    if (!albumId) return;
+    const toInvite = audienceCandidates.filter((c) => selectedAudienceIds.has(c.id));
+    if (toInvite.length === 0) return;
+
+    setAudienceInviting(true);
+    setAudienceInviteError(null);
+    const failed = [];
+    for (const candidate of toInvite) {
+      try {
+        await eventsService.inviteAlbumUser(albumId, candidate.username);
+      } catch {
+        failed.push(candidate.username);
+      }
+    }
+    setAudienceInviting(false);
+    setSelectedAudienceIds(new Set());
+    loadParticipants();
+
+    if (failed.length > 0) {
+      setAudienceInviteError(`Some invites failed: ${failed.map((u) => `@${u}`).join(', ')}`);
+    }
+  };
+
   const onSearchKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -157,6 +301,23 @@ export default function EventDetailPage() {
       alert(err.message || err.error || 'Remove failed');
     } finally {
       setRemoving(null);
+    }
+  };
+
+  const saveFeaturedPerson = async () => {
+    if (!albumId) return;
+    const username = featuredUsername.replace(/^@/, '').trim();
+    if (!username) return;
+    setSavingFeatured(true);
+    setFeaturedError(null);
+    try {
+      await eventsService.upsertFeaturedPerson(albumId, username, featuredRole);
+      setFeaturedUsername('');
+      loadFeaturedPeople();
+    } catch (err) {
+      setFeaturedError(err.message || err.error || 'Failed to save featured person');
+    } finally {
+      setSavingFeatured(false);
     }
   };
 
@@ -452,6 +613,168 @@ export default function EventDetailPage() {
               </ul>
             )}
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
+        <div className="p-5 border-b border-white/5 flex items-center gap-2">
+          <Users size={18} className="text-pxi-purple" />
+          <h2 className="font-bold text-white uppercase tracking-widest text-sm">Featured people</h2>
+        </div>
+        <div className="p-5 space-y-4">
+          <p className="text-xs text-zinc-500">Tag citizens by username with a talent role (Singer, Dancer, Designer, Band).</p>
+
+          <div className="flex flex-wrap gap-2">
+            {FEATURED_ROLE_OPTIONS.map((role) => (
+              <button
+                key={role}
+                type="button"
+                onClick={() => setFeaturedRole(role)}
+                className={`px-3 py-1.5 rounded-lg border text-xs font-bold tracking-wider ${
+                  featuredRole === role
+                    ? 'border-pxi-purple/70 bg-pxi-purple/20 text-pxi-purple'
+                    : 'border-white/10 text-zinc-400 hover:bg-white/5'
+                }`}
+              >
+                {role}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-stretch gap-2">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={18} />
+              <input
+                type="text"
+                value={featuredUsername}
+                onChange={(e) => setFeaturedUsername(e.target.value)}
+                placeholder="@username"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 focus:border-pxi-purple/50 focus:outline-none"
+                disabled={savingFeatured}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={saveFeaturedPerson}
+              disabled={savingFeatured || featuredUsername.replace(/^@/, '').trim().length < 2}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+            >
+              {savingFeatured ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
+              Save tag
+            </button>
+          </div>
+
+          {featuredError && <p className="text-sm text-red-400">{featuredError}</p>}
+
+          {featuredPeople.length === 0 ? (
+            <p className="text-sm text-zinc-500">No featured people tagged yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {featuredPeople.map((person) => (
+                <li key={person.id} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/50 border border-white/5">
+                  <div className="w-9 h-9 rounded-full bg-zinc-700 overflow-hidden flex-shrink-0">
+                    {person.avatarUrl ? (
+                      <img src={person.avatarUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-zinc-500 font-bold text-xs">
+                        @{person.username?.charAt(0) || '?'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white font-medium truncate">@{person.username || 'unknown'}</p>
+                    <p className="text-xs text-zinc-500 truncate">{person.name || 'PXI user'}</p>
+                  </div>
+                  <span className="text-xs font-bold tracking-wider text-pxi-purple">{person.role}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
+        <div className="p-5 border-b border-white/5 flex items-center gap-2">
+          <Users size={18} className="text-pxi-purple" />
+          <h2 className="font-bold text-white uppercase tracking-widest text-sm">Invite attendees</h2>
+        </div>
+        <div className="p-5 space-y-4">
+          <p className="text-xs text-zinc-500">
+            {event.visibility === 'PUBLIC'
+              ? 'Public event: friends + previous attendees + search'
+              : 'Private event: friends + search'}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={selectAllAudience}
+              className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-zinc-300 hover:bg-white/5"
+            >
+              Select all
+            </button>
+            <button
+              type="button"
+              onClick={clearAllAudience}
+              className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-zinc-300 hover:bg-white/5"
+            >
+              Clear all
+            </button>
+            <span className="text-xs text-zinc-500 ml-auto">{selectedAudienceIds.size} selected</span>
+          </div>
+
+          {loadingAudience ? (
+            <div className="py-8 flex justify-center">
+              <Loader2 size={18} className="animate-spin text-zinc-400" />
+            </div>
+          ) : (
+            <div className="max-h-72 overflow-auto rounded-xl border border-white/5 bg-zinc-900/30">
+              {audienceCandidates.length === 0 ? (
+                <p className="px-4 py-6 text-sm text-zinc-500">No candidates available.</p>
+              ) : (
+                audienceCandidates.map((candidate) => {
+                  const checked = selectedAudienceIds.has(candidate.id);
+                  return (
+                    <button
+                      key={candidate.id}
+                      type="button"
+                      onClick={() => addAudienceToSelection(candidate)}
+                      className="w-full px-4 py-3 border-b border-white/5 last:border-b-0 flex items-center justify-between text-left hover:bg-white/5"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm text-white font-medium truncate">
+                          {candidate.name || `@${candidate.username}`}
+                        </p>
+                        <p className="text-xs text-zinc-500 truncate">
+                          @{candidate.username} •{' '}
+                          {candidate.source === 'friend'
+                            ? 'friend'
+                            : candidate.source === 'attendee'
+                              ? 'previous attendee'
+                              : 'search'}
+                        </p>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded border ${checked ? 'bg-pxi-purple border-pxi-purple' : 'border-zinc-600'}`}
+                      />
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={sendAudienceInvites}
+            disabled={audienceInviting || selectedAudienceIds.size === 0}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+          >
+            {audienceInviting ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
+            Send attendee invites ({selectedAudienceIds.size})
+          </button>
+
+          {audienceInviteError && <p className="text-sm text-red-400">{audienceInviteError}</p>}
         </div>
       </section>
     </div>

@@ -19,6 +19,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { getNotifications } from '../../services/notifications';
+import { getPassportLevelDisplay } from '../../utils/odysseyTier';
 const LogoSVG = "/images/logo.svg";
 
 const navItems = [
@@ -27,7 +28,7 @@ const navItems = [
     { label: 'PXI Passport', path: '/dashboard/passport', icon: Shield },
     { label: 'Earnings', path: '/dashboard/earnings', icon: TrendingUp, vendorOnly: true },
     { label: 'Vendor Setup', path: '/dashboard/vendor-upgrade', icon: Star },
-    { label: 'Events', path: '/dashboard/events', icon: Calendar, vendorOnly: true },
+    { label: 'Events', path: '/dashboard/events', icon: Calendar },
     { label: 'Account', path: '/dashboard/account', icon: UserCog },
 ];
 
@@ -130,18 +131,31 @@ export default function DashboardLayout({ children }) {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-3 flex items-center gap-2">
-                        {mounted && (
-                            user?.isVendor ? (
-                                <span className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/25 text-amber-400 text-xs font-bold uppercase tracking-widest">
-                                    Vendor
-                                </span>
-                            ) : user?.isPassportIssued ? (
-                                <span className="px-2 py-0.5 rounded-md bg-pxi-purple/15 border border-pxi-purple/25 text-pxi-purple text-xs font-bold uppercase tracking-widest">
-                                    {user?.accountTier || 'CITIZEN'}
-                                </span>
-                            ) : null
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                        {mounted && user?.isVendor && (
+                            <span className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/25 text-amber-400 text-xs font-bold uppercase tracking-widest">
+                                Vendor
+                            </span>
                         )}
+                        {mounted && user?.isPassportIssued && (() => {
+                            const { levelText, badgeLetter } = getPassportLevelDisplay(user);
+                            return (
+                                <Link
+                                    href="/dashboard/passport"
+                                    onClick={() => setSidebarOpen(false)}
+                                    className="inline-flex items-center gap-1.5 pl-1 pr-2 py-0.5 rounded-md bg-pxi-purple/15 border border-pxi-purple/30 text-pxi-purple text-xs font-bold tracking-wide hover:bg-pxi-purple/25 hover:border-pxi-purple/45 transition-colors"
+                                    title="PXI Passport tier"
+                                >
+                                    <span
+                                        className="flex h-5 min-w-5 items-center justify-center rounded bg-pxi-purple/35 text-white text-[10px] font-black leading-none px-0.5 shadow-[0_0_8px_rgba(179,38,255,0.35)]"
+                                        aria-hidden
+                                    >
+                                        {badgeLetter}
+                                    </span>
+                                    <span className="truncate max-w-[7.5rem]">{levelText}</span>
+                                </Link>
+                            );
+                        })()}
                     </div>
                 </div>
 

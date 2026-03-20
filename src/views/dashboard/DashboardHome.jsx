@@ -106,7 +106,7 @@ export default function DashboardHome() {
                             href="/dashboard/vendor-upgrade"
                             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:shadow-[0_0_36px_rgba(216,74,255,0.5)] hover:brightness-110 transition-all"
                         >
-                            Set Up Vendor Account
+                            Go to Vendor Setup Page
                             <ArrowRight size={14} />
                         </Link>
                     </div>
