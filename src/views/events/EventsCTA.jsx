@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import Button from "../../components/ui/Button";
 
 const EventsCTA = () => {
@@ -17,19 +18,23 @@ const EventsCTA = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Button
-              variant="glass"
-              className="bg-white text-black hover:bg-white/90 border-transparent px-16 py-5 text-lg"
-            >
-              Get Started
-            </Button>
+            <Link href="/dashboard/events">
+              <Button
+                variant="glass"
+                className="bg-white text-black hover:bg-white/90 border-transparent px-16 py-5 text-lg"
+              >
+                Create an event
+              </Button>
+            </Link>
 
-            <Button
-              variant="glass"
-              className="bg-black/20 hover:bg-black/40 border-white/20 text-white px-16 py-5 text-lg"
-            >
-              Learn More
-            </Button>
+            <a href={process.env.NEXT_PUBLIC_IOS_APP_URL || "https://apps.apple.com/"} target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="glass"
+                className="bg-black/20 hover:bg-black/40 border-white/20 text-white px-16 py-5 text-lg"
+              >
+                Download the app
+              </Button>
+            </a>
           </div>
         </div>
 

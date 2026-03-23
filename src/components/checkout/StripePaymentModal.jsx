@@ -35,7 +35,12 @@ const PaymentForm = ({ onSuccess, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <PaymentElement />
+      <PaymentElement
+        options={{
+          layout: 'tabs',
+          wallets: { applePay: 'auto', googlePay: 'auto' },
+        }}
+      />
       {error && <p className="text-sm text-red-400">{error}</p>}
       <div className="flex gap-3 pt-2">
         <button
@@ -71,24 +76,39 @@ export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open }) 
   if (!open || !clientSecret) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-6 space-y-5">
-        <div className="flex items-center justify-between">
-          <h3 className="text-white text-xl font-black">Complete payment</h3>
-          <button onClick={onCancel} className="text-zinc-500 hover:text-white transition-colors">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center sm:py-6">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onCancel} aria-hidden />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pxi-stripe-modal-title"
+        className="relative z-[1] w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl"
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-5 py-4">
+          <h3 id="pxi-stripe-modal-title" className="text-white text-xl font-black">
+            Complete payment
+          </h3>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg p-1 text-zinc-500 hover:bg-white/5 hover:text-white transition-colors"
+            aria-label="Close"
+          >
             <X size={20} />
           </button>
         </div>
-        {stripePromise ? (
-          <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night' } }}>
-            <PaymentForm onSuccess={onSuccess} onCancel={onCancel} />
-          </Elements>
-        ) : (
-          <div className="flex items-center justify-center py-8 text-zinc-500">
-            <Loader2 size={24} className="animate-spin" />
-          </div>
-        )}
+        {/* Explicit max-height so Link/card/phone fields can scroll on short viewports */}
+        <div className="max-h-[min(78dvh,calc(100vh-7rem))] overflow-y-auto overscroll-y-contain px-5 py-5 touch-pan-y [scrollbar-gutter:stable]">
+          {stripePromise ? (
+            <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night' } }}>
+              <PaymentForm onSuccess={onSuccess} onCancel={onCancel} />
+            </Elements>
+          ) : (
+            <div className="flex items-center justify-center py-12 text-zinc-500">
+              <Loader2 size={24} className="animate-spin" />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
