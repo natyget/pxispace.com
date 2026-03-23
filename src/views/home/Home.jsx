@@ -2,6 +2,7 @@
 
 import LandingHome from './landing/LandingHome';
 
+
 const Home = () => {
   return <LandingHome />;
 };
