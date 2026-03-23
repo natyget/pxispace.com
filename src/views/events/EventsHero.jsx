@@ -1,10 +1,17 @@
-import React from "react";
-import { Search, Filter } from "lucide-react";
+'use client';
 
-const EventsHero = ({ searchQuery, setSearchQuery }) => {
+import React from 'react';
+import { Search } from 'lucide-react';
+
+const SORT_OPTIONS = [
+  { value: 'vendor', label: 'Vendor rank' },
+  { value: 'date', label: 'Soonest' },
+  { value: 'tickets', label: 'Most tickets' },
+];
+
+const EventsHero = ({ searchQuery, setSearchQuery, sortMode, setSortMode }) => {
   return (
-    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-12 mb-16">
-
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-12 mb-8">
       <div className="flex-1 lg:max-w-[60%]">
         <h1 className="text-6xl md:text-9xl font-black uppercase tracking-tighter leading-[0.85] mb-6">
           Public <br />
@@ -14,31 +21,44 @@ const EventsHero = ({ searchQuery, setSearchQuery }) => {
         </h1>
 
         <p className="text-zinc-500 text-xl md:text-2xl font-medium max-w-xl leading-relaxed">
-          Find your next obsession. Join exclusive gatherings, music festivals,
-          and community hangouts powered by PXI.
+          Live data from PXI — ranked by host activity, ticket sales, and album energy. Sort and filter like Discovery on
+          mobile.
         </p>
       </div>
 
       <div className="flex-1 w-full flex flex-col items-stretch lg:items-end gap-6">
         <div className="relative group w-full lg:max-w-md">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-pxi-purple transition-colors" size={22} />
+          <Search
+            className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-pxi-purple transition-colors"
+            size={22}
+          />
           <input
-            type="text"
-            placeholder="Search events, cities, genres..."
+            type="search"
+            placeholder="Search events, cities…"
             className="w-full bg-zinc-900/40 border border-white/10 rounded-[2rem] py-5 pl-16 pr-8 text-lg text-white focus:outline-none focus:border-pxi-purple/50 focus:bg-zinc-900 transition-all backdrop-blur-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <div className="flex gap-4 self-stretch lg:self-auto">
-          <button className="flex-1 lg:flex-none flex items-center justify-center gap-3 px-8 py-4 glass rounded-2xl text-sm font-black uppercase tracking-widest border-white/10 hover:bg-white/5 transition-colors">
-            <Filter size={20} />
-            <span>Sort By Vibe</span>
-          </button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:max-w-md lg:justify-end">
+          <label className="sr-only" htmlFor="pxi-discover-sort">
+            Sort events
+          </label>
+          <select
+            id="pxi-discover-sort"
+            value={sortMode}
+            onChange={(e) => setSortMode(e.target.value)}
+            className="w-full sm:w-auto min-w-[200px] bg-zinc-900/80 border border-white/10 rounded-2xl py-4 px-5 text-sm font-black uppercase tracking-widest text-white focus:outline-none focus:border-pxi-purple/50"
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
-
     </div>
   );
 };

@@ -5,10 +5,11 @@ import { api } from './api';
  * GET /api/tickets/quote?eventId= or ?albumId=
  * @returns {Promise<{ ticketPriceUsd, serviceFeeUsd, processingFeeUsd, totalForBuyerUsd }>}
  */
-export async function getTicketQuote(eventId, albumId) {
+export async function getTicketQuote(eventId, albumId, tierId) {
   const q = new URLSearchParams();
   if (eventId) q.set('eventId', eventId);
   else if (albumId) q.set('albumId', albumId);
+  if (tierId) q.set('tierId', tierId);
   return api.get(`/api/tickets/quote?${q}`);
 }
 
@@ -16,9 +17,11 @@ export async function getTicketQuote(eventId, albumId) {
  * Create a PaymentIntent for a paid ticket. Returns clientSecret for Stripe.
  * POST /api/tickets/purchase (auth required)
  */
-export async function purchaseTicket(eventId) {
-  const data = await api.post('/api/tickets/purchase', { eventId });
-  return data;
+export async function purchaseTicket(eventId, tierId) {
+  return api.post('/api/tickets/purchase', {
+    eventId,
+    ...(tierId ? { tierId } : {}),
+  });
 }
 
 /**
@@ -28,11 +31,12 @@ export async function purchaseTicket(eventId) {
  * @param {string} successUrl - e.g. `${origin}/events?payment=success`
  * @param {string} cancelUrl - e.g. `${origin}/events?payment=cancelled`
  */
-export async function createCheckoutSession(eventId, successUrl, cancelUrl) {
+export async function createCheckoutSession(eventId, successUrl, cancelUrl, tierId) {
   return api.post('/api/tickets/checkout-session', {
     eventId,
     successUrl,
     cancelUrl,
+    ...(tierId ? { tierId } : {}),
   });
 }
 
