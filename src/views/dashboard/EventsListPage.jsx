@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Calendar, ChevronRight, Users, Image } from 'lucide-react';
+import { Calendar, ChevronRight, Users, Image, Plus } from 'lucide-react';
 import { eventsService } from '../../services/events';
 
 export default function EventsListPage() {
@@ -57,22 +57,38 @@ export default function EventsListPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-          My Events
-        </h1>
-        <p className="text-zinc-500 text-sm mt-1">
-          Manage events and staff (BOUNCER) for gatekeeping and moderation.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+            My Events
+          </h1>
+          <p className="text-zinc-500 text-sm mt-1">
+            Manage events and staff (BOUNCER) for gatekeeping and moderation.
+          </p>
+        </div>
+        <Link
+          href="/dashboard/events/new"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-pxi-purple text-white text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all shrink-0 ml-auto"
+        >
+          <Plus size={16} strokeWidth={2.5} />
+          Create event
+        </Link>
       </div>
 
       {events.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-12 text-center">
           <Calendar className="mx-auto text-zinc-600 mb-4" size={48} />
           <p className="text-zinc-400 font-medium">No events yet</p>
-          <p className="text-zinc-500 text-sm mt-1">
-            Create events from the PXI mobile app to see them here.
+          <p className="text-zinc-500 text-sm mt-1 max-w-md mx-auto">
+            Create an event on the web or in the PXI mobile app.
           </p>
+          <Link
+            href="/dashboard/events/new"
+            className="inline-flex items-center justify-center gap-2 mt-6 px-5 py-2.5 rounded-xl bg-pxi-purple text-white text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all"
+          >
+            <Plus size={16} strokeWidth={2.5} />
+            Create event
+          </Link>
         </div>
       ) : (
         <ul className="space-y-3">

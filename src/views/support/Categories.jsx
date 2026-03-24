@@ -1,3 +1,6 @@
+'use client';
+
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
     FiCamera,
@@ -13,32 +16,38 @@ const cats = [
     {
         icon: FiCamera,
         title: "PXIStudio App Guide",
-        desc: "How to use PXIStudio features and workflows.",
+        desc: "Discover events, albums, tickets, and sharing — all in one place.",
+        href: "/events",
     },
     {
         icon: FiPrinter,
         title: "PXIClip Device Guide",
-        desc: "Setup, troubleshooting and best printing practices.",
+        desc: "Setup, pairing, and tips for crisp prints at every event.",
+        href: "/support#device",
     },
     {
         icon: FiUsers,
         title: "Organizer Tools",
-        desc: "Manage events, guests, and albums.",
+        desc: "Create public events, manage guests, and run your album like a pro.",
+        href: "/events",
     },
     {
         icon: FiCreditCard,
         title: "Payments & Billing",
-        desc: "Invoices, refunds and subscription info.",
+        desc: "Ticketing, payouts, and billing questions for hosts and vendors.",
+        href: "mailto:support@pxispace.com?subject=Payments%20%26%20billing",
     },
     {
         icon: FiPackage,
         title: "Shipping & Warranty",
-        desc: "Shipping timelines and warranty coverage.",
+        desc: "Orders, delivery, and hardware coverage — we will walk you through it.",
+        href: "mailto:support@pxispace.com?subject=Shipping%20%26%20warranty",
     },
     {
         icon: FiShield,
         title: "Privacy & Security",
-        desc: "How we protect your photos and data.",
+        desc: "How we handle your data, biometrics, and account safety.",
+        href: "/legal#privacy",
     },
 ];
 
@@ -58,12 +67,8 @@ const Categories = () => {
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {cats.map((c, i) => {
                         const Icon = c.icon;
-                        return (
-                            <motion.button
-                                key={i}
-                                whileHover={{ scale: 1.02 }}
-                                className="group text-left glass-card p-5 border border-transparent hover:border-purple-400/30 transition-all duration-200"
-                            >
+                        const inner = (
+                            <>
                                 <div className="flex items-center justify-between w-full">
                                     <div className="flex items-start gap-4">
                                         <div className="w-12 h-12 rounded-full bg-white/5 border border-purple-500/20 flex items-center justify-center">
@@ -82,11 +87,29 @@ const Categories = () => {
                                         </div>
                                     </div>
 
-                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-purple-300">
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-purple-300 shrink-0">
                                         <FiArrowRight />
                                     </div>
                                 </div>
-                            </motion.button>
+                            </>
+                        );
+                        const className =
+                            "group text-left glass-card p-5 border border-transparent hover:border-purple-400/30 transition-all duration-200 block w-full cursor-pointer";
+                        return (
+                            <motion.div
+                                key={i}
+                                whileHover={{ scale: 1.02 }}
+                            >
+                                {c.href.startsWith("mailto:") ? (
+                                    <a href={c.href} className={className}>
+                                        {inner}
+                                    </a>
+                                ) : (
+                                    <Link href={c.href} className={className}>
+                                        {inner}
+                                    </Link>
+                                )}
+                            </motion.div>
                         );
                     })}
                 </div>

@@ -1,3 +1,5 @@
+'use client';
+
 import { motion } from "framer-motion";
 import { FiHelpCircle } from "react-icons/fi";
 import Badge from "../../components/Badge";

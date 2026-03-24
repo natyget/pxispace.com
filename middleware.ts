@@ -175,9 +175,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/403', request.url));
   }
 
-  // Event [id] ownership: if path is /dashboard/events/:id, user must own or be staff for that event.
+  // Event [id] ownership: /dashboard/events/:id (exclude static segments like "new").
   const eventId = getEventIdFromPath(pathname);
-  if (eventId && !canAccessEvent(claims, eventId)) {
+  if (eventId && eventId !== 'new' && !canAccessEvent(claims, eventId)) {
     return NextResponse.redirect(new URL('/403', request.url));
   }
 

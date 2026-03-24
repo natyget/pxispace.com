@@ -3,6 +3,8 @@
 import React from 'react';
 import { motion, useTransform } from 'framer-motion';
 import { Send } from 'lucide-react';
+import { THREAD_POST_SECOND, AVATAR_BABA, AVATAR_KEVIN } from '@/lib/landingAssets';
+import { glassImageCard, glassOther } from './glassStyles';
 
 const FLOAT_OFFSETS = [
   { x: 12, y: -40, r: 8 },
@@ -14,8 +16,8 @@ const FLOAT_OFFSETS = [
 ];
 
 export default function FocusScene({ progress }) {
-  const opacity = useTransform(progress, [0.45, 0.5, 0.7, 0.75], [0, 1, 1, 0]);
-  const scale = useTransform(progress, [0.45, 0.5], [0.9, 1]);
+  const opacity = useTransform(progress, [0.45, 0.51, 0.71, 0.76], [0, 1, 1, 0]);
+  const scale = useTransform(progress, [0.45, 0.51], [0.9, 1]);
   const plusButtonScale = useTransform(progress, [0.55, 0.56, 0.58], [1, 0.8, 1]);
   const anchoredEmojiOpacity = useTransform(progress, [0.58, 0.6], [0, 1]);
   const anchoredEmojiScale = useTransform(progress, [0.58, 0.6], [0.5, 1]);
@@ -28,39 +30,31 @@ export default function FocusScene({ progress }) {
 
   return (
     <motion.div
-      className="absolute inset-0 bg-black/90 z-40 flex flex-col items-center justify-center pt-36 pb-24 px-4"
+      className="absolute inset-0 bg-black/92 z-40 flex flex-col items-center justify-center pt-28 pb-24 px-3"
       style={{ opacity }}
     >
       <motion.div className="relative w-full max-w-[280px] mb-6" style={{ scale }}>
-        <div className="relative rounded-[20px] overflow-hidden aspect-[4/3] border border-white/10 shadow-lg">
-          <img
-            src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400&q=80"
-            alt=""
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute top-3 right-3 bg-black/70 rounded-full px-2 py-1 flex items-center gap-2 backdrop-blur-md">
-            <span className="text-[12px] font-medium text-white/90">@jess</span>
-            <img
-              src="https://i.pravatar.cc/150?u=jess"
-              alt="jess"
-              className="w-5 h-5 rounded-full"
-            />
+        <div className={`relative ${glassImageCard} aspect-[4/3]`}>
+          <img src={THREAD_POST_SECOND} alt="" className="w-full h-full object-cover" />
+          <div className="absolute top-3 right-3 flex items-center gap-2 rounded-full bg-white/[0.09] px-2.5 py-1 backdrop-blur-xl border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+            <span className="text-[12px] font-semibold text-white/95">Jess</span>
+            <img src={AVATAR_BABA} alt="Jess" className="w-5 h-5 rounded-full ring-1 ring-white/20" />
           </div>
         </div>
         <div className="absolute -right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 z-10">
-          <div className="bg-black/80 border border-white/10 rounded-full px-2 py-1 flex items-center gap-1.5 backdrop-blur-md">
+          <div className="bg-white/[0.08] border border-white/[0.14] rounded-full px-2 py-1 flex items-center gap-1.5 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
             <span className="text-[14px]">❤️</span>
             <span className="text-[11px] font-bold text-white">8</span>
           </div>
           <motion.div
-            className="bg-black/80 border border-white/10 rounded-full px-2 py-1 flex items-center gap-1.5 backdrop-blur-md origin-left"
+            className="bg-white/[0.08] border border-white/[0.14] rounded-full px-2 py-1 flex items-center gap-1.5 backdrop-blur-xl origin-left shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
             style={{ opacity: anchoredEmojiOpacity, scale: anchoredEmojiScale }}
           >
             <span className="text-[14px]">😂</span>
             <span className="text-[11px] font-bold text-white">1</span>
           </motion.div>
           <motion.div
-            className="w-7 h-7 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white/70 backdrop-blur-md text-lg font-light origin-center"
+            className="w-7 h-7 rounded-full bg-white/[0.08] border border-white/[0.18] flex items-center justify-center text-white/75 backdrop-blur-xl text-lg font-light origin-center shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
             style={{ scale: plusButtonScale }}
           >
             +
@@ -94,37 +88,37 @@ export default function FocusScene({ progress }) {
       </motion.div>
       <div className="flex flex-col gap-3 w-full items-center">
         <motion.div
-          className="bg-white/20 border border-white/35 rounded-[10px] p-2 pr-3 flex items-center gap-2 shadow-[0_0_12px_rgba(255,255,255,0.15)] backdrop-blur-md w-full max-w-[224px] rotate-[-1.5deg]"
+          className={`rounded-[12px] p-2 pr-3 flex items-center gap-2 w-full max-w-[224px] rotate-[-1.5deg] ${glassOther}`}
           style={{ opacity: newCommentOpacity, y: newCommentY }}
         >
           <img
-            src="https://i.pravatar.cc/150?u=me"
+            src={AVATAR_KEVIN}
             alt=""
-            className="w-7 h-7 rounded-full border border-white/25"
+            className="w-7 h-7 rounded-full border border-white/20 ring-1 ring-white/10"
           />
-          <div className="flex flex-col w-full">
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] font-bold text-white/60">me</span>
-              <span className="text-[9px] text-white/35">Just now</span>
+          <div className="flex flex-col w-full min-w-0">
+            <div className="flex justify-between items-center gap-2">
+              <span className="text-[10px] font-semibold text-white/65 truncate">Jamie</span>
+              <span className="text-[9px] text-white/35 shrink-0">Just now</span>
             </div>
-            <span className="text-[13px] font-semibold text-white leading-[17px]">
+            <span className="text-[13px] font-semibold text-white/95 leading-[17px]">
               That&apos;s me on the left! 😂
             </span>
           </div>
         </motion.div>
       </div>
-      <div className="absolute bottom-0 left-0 w-full bg-black/70 border-t border-white/10 p-3 flex items-center gap-3 pb-8 backdrop-blur-md">
-        <div className="flex-1 bg-white/10 border border-white/10 rounded-[22px] px-4 py-3 relative overflow-hidden h-[42px] flex items-center">
-          <motion.span className="absolute text-[15px] text-white/50" style={{ opacity: typingOpacity }}>
+      <div className="absolute bottom-0 left-0 w-full bg-black/75 border-t border-white/10 p-3 flex items-center gap-3 pb-8 backdrop-blur-xl z-50">
+        <div className={`flex-1 rounded-[22px] px-4 py-3 relative overflow-hidden h-[42px] flex items-center ${glassOther}`}>
+          <motion.span className="absolute text-[15px] text-white/45" style={{ opacity: typingOpacity }}>
             Typing...
           </motion.span>
-          <motion.span className="absolute text-[15px] text-white" style={{ opacity: textOpacity }}>
+          <motion.span className="absolute text-[15px] text-white/95" style={{ opacity: textOpacity }}>
             That&apos;s me on the left! 😂
           </motion.span>
         </div>
         <motion.div
-          className="w-[42px] h-[42px] rounded-full bg-[#d946ef] flex items-center justify-center flex-shrink-0 shadow-[0_0_8px_rgba(217,70,239,0.6)]"
-          animate={{ scale: [1, 1.1, 1] }}
+          className="w-[42px] h-[42px] rounded-full bg-[#d946ef] flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(217,70,239,0.55)] ring-1 ring-white/15"
+          animate={{ scale: [1, 1.08, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
           <Send className="w-5 h-5 text-white" />

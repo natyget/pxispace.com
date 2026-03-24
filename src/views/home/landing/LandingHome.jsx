@@ -7,9 +7,9 @@ import ScrollProgressBar from './ScrollProgressBar';
 import Hero from './Hero';
 import ScrapbookPreview from './ScrapbookPreview';
 import FeatureStory from './FeatureStory';
-import Scrapbooks from './Scrapbooks';
-import Milestones from './Milestones';
-import FinalCTA from './FinalCTA';
+import AuthenticContentSection from './AuthenticContentSection';
+import BestMomentsVault from './BestMomentsVault';
+import HashtagTicker from './HashtagTicker';
 
 export default function LandingHome() {
   const [isTouch, setIsTouch] = useState(true);
@@ -30,9 +30,9 @@ export default function LandingHome() {
           <Hero />
           <ScrapbookPreview />
           <FeatureStory />
-          <Scrapbooks />
-          <Milestones />
-          <FinalCTA />
+          <AuthenticContentSection />
+          <BestMomentsVault />
+          <HashtagTicker />
         </main>
       </div>
     </CursorProvider>
