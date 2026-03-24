@@ -4,13 +4,14 @@ import React from 'react';
 import { motion, useTransform } from 'framer-motion';
 
 export default function HeadlineOverlay({ progress }) {
-  const opacity = useTransform(progress, [0, 0.05, 0.08, 0.12], [0, 1, 1, 0]);
-  const y = useTransform(progress, [0, 0.05], [30, 0]);
-  const scale = useTransform(progress, [0.08, 0.12], [1, 0.95]);
+  // Appear soon after scroll starts; long smooth crossfade with phone (no dead air)
+  const opacity = useTransform(progress, [0, 0.015, 0.04, 0.12, 0.14, 0.26], [0, 0.4, 1, 1, 1, 0]);
+  const y = useTransform(progress, [0, 0.05], [20, 0]);
+  const scale = useTransform(progress, [0.12, 0.26], [1, 0.97]);
 
   return (
     <motion.div
-      className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-0 text-center pointer-events-none w-full px-4"
+      className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-[5] text-center pointer-events-none w-full max-w-lg px-4"
       style={{ opacity, y, scale }}
     >
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-pxi-purple/10 blur-[150px] -z-10" />

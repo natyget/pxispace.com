@@ -76,7 +76,18 @@ export default function VerifyPhonePage() {
                 );
                 sessionStorage.removeItem(PENDING_SIGNUP_KEY);
                 await logout();
-                router.replace('/login?verified=1');
+                const postCheckout =
+                    typeof window !== 'undefined'
+                        ? sessionStorage.getItem('pxi_after_register_login_redirect')
+                        : null;
+                if (postCheckout && typeof window !== 'undefined') {
+                    sessionStorage.removeItem('pxi_after_register_login_redirect');
+                }
+                router.replace(
+                    postCheckout
+                        ? `/login?verified=1&redirect=${encodeURIComponent(postCheckout)}`
+                        : '/login?verified=1'
+                );
             } else if (user) {
                 // Backend saves phoneNumber to profile only when OTP verification succeeds
                 const result = await authService.verifyPhone(fullPhone, trimmedCode);

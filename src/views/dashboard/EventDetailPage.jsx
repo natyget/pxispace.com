@@ -7,8 +7,35 @@ import { ChevronLeft, UserPlus, Users, Loader2, Search } from 'lucide-react';
 import { eventsService, searchUsers } from '../../services/events';
 import { useAuth } from '@/contexts/AuthContext';
 
-const FEATURED_ROLE_OPTIONS = ['SINGER', 'DANCER', 'DESIGNER', 'BAND'];
-const INVITE_ROLE_OPTIONS = ['MEMBER', 'CO_HOST', 'BOUNCER', ...FEATURED_ROLE_OPTIONS];
+const LINEUP_ROLE_MAX_LEN = 80;
+
+/** Map free-text role to send path: staff, line-up featured person + album invite, or album invite only. */
+function parseInviteRoleLabel(raw) {
+  const t = String(raw ?? '').trim();
+  const lower = t.toLowerCase().replace(/\s+/g, ' ');
+  if (
+    !lower ||
+    lower === 'member' ||
+    lower === 'guest' ||
+    lower === 'attendee' ||
+    lower === 'audience'
+  ) {
+    return { kind: 'MEMBER' };
+  }
+  if (lower === 'co-host' || lower === 'co host' || lower === 'cohost') {
+    return { kind: 'CO_HOST' };
+  }
+  if (lower === 'bouncer' || lower === 'security') {
+    return { kind: 'BOUNCER' };
+  }
+  return { kind: 'LINEUP', role: t.slice(0, LINEUP_ROLE_MAX_LEN) };
+}
+
+function formatRoleForDisplay(label) {
+  const t = String(label ?? '').trim();
+  return t || 'Guest';
+}
+
 const FEATURED_ROLE_STYLES = {
   SINGER: { border: 'border-pink-400/70', bg: 'bg-pink-500/20', text: 'text-pink-300' },
   DANCER: { border: 'border-blue-400/70', bg: 'bg-blue-500/20', text: 'text-blue-300' },
@@ -27,7 +54,7 @@ export default function EventDetailPage() {
   const [inviteQuery, setInviteQuery] = useState('');
   const [inviteResults, setInviteResults] = useState([]);
   const [inviteSearching, setInviteSearching] = useState(false);
-  const [inviteRole, setInviteRole] = useState('MEMBER');
+  const [inviteRoleLabel, setInviteRoleLabel] = useState('');
   const [audienceCandidates, setAudienceCandidates] = useState([]);
   const [selectedAudienceIds, setSelectedAudienceIds] = useState(new Set());
   const [draftInvites, setDraftInvites] = useState([]);
@@ -210,7 +237,7 @@ export default function EventDetailPage() {
           id: c.id,
           username: c.username,
           name: c.name,
-          role: confirmModal.role || inviteRole,
+          role: confirmModal.role ?? inviteRoleLabel,
         });
       });
       return Array.from(map.values());
@@ -334,18 +361,19 @@ export default function EventDetailPage() {
             )}
           </div>
 
+          <p className="text-xs text-zinc-500">
+            Role for people you add: Guest (or empty), Co-host, Bouncer, or any custom line-up label — up to{' '}
+            {LINEUP_ROLE_MAX_LEN} characters.
+          </p>
           <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value)}
-              className="rounded-xl bg-zinc-800 border border-white/10 text-white text-xs font-bold tracking-wider px-3 py-2.5 focus:border-pxi-purple/50 focus:outline-none"
-            >
-              {INVITE_ROLE_OPTIONS.map((role) => (
-                <option key={role} value={role}>
-                  {role.replace(/_/g, ' ')}
-                </option>
-              ))}
-            </select>
+            <input
+              type="text"
+              value={inviteRoleLabel}
+              onChange={(e) => setInviteRoleLabel(e.target.value.slice(0, LINEUP_ROLE_MAX_LEN))}
+              placeholder="e.g. Guest, DJ, Co-host…"
+              className="flex-1 min-w-[10rem] rounded-xl bg-zinc-800 border border-white/10 text-white text-sm px-3 py-2.5 placeholder-zinc-500 focus:border-pxi-purple/50 focus:outline-none"
+              autoComplete="off"
+            />
             <button
               type="button"
               onClick={addSelectedToDraft}
@@ -478,16 +506,16 @@ export default function EventDetailPage() {
             </h3>
             <p className="text-sm text-zinc-300">
               {confirmModal.mode === 'add'
-                ? 'Do you want to add these members to draft list?'
-                : 'Do you want ot send the inviations these memerbs?'}
+                ? 'Do you want to add these members to the draft list?'
+                : 'Do you want to send these invitations now?'}
             </p>
             <div className="max-h-56 overflow-auto rounded-xl border border-white/10 bg-zinc-800/40 p-2 space-y-1">
               {confirmModal.users.map((u) => (
                 <p key={u.id} className="text-xs text-zinc-200">
                   • @{u.username}{' '}
                   {confirmModal.mode === 'add'
-                    ? `(${String(confirmModal.role || inviteRole).replace(/_/g, ' ')})`
-                    : `— ${String(u.role || 'MEMBER').replace(/_/g, ' ')}`}
+                    ? `(${formatRoleForDisplay(confirmModal.role ?? inviteRoleLabel)})`
+                    : `— ${formatRoleForDisplay(u.role)}`}
                 </p>
               ))}
             </div>

@@ -17,6 +17,9 @@ export const eventsService = {
     return api.get(`/api/events?${q}`);
   },
 
+  /** Create event (same body as mobile CreateEventSheet → POST /api/events). */
+  createEvent: (payload) => api.post('/api/events', payload),
+
   /**
    * Public discover for web — backend filters PUBLIC + not ended, ranks by vendor when sort=vendor
    * @param {string} sort 'vendor' | 'date' | 'tickets'

@@ -103,6 +103,9 @@ export default function EmailAuthPage() {
             } else {
                 if (typeof window !== 'undefined') {
                     sessionStorage.setItem('pxi_pending_signup', JSON.stringify({ email, username, password }));
+                    if (safeRedirect) {
+                        sessionStorage.setItem('pxi_after_register_login_redirect', safeRedirect);
+                    }
                 }
                 router.replace('/verify-phone');
             }

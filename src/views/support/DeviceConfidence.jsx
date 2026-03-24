@@ -1,3 +1,5 @@
+'use client';
+
 import { motion } from "framer-motion";
 import { FiCheckCircle, FiBluetooth, FiSun } from "react-icons/fi";
 
@@ -53,12 +55,13 @@ const DeviceConfidence = () => {
 
                 <div className="flex justify-center md:justify-end">
                     <div
-                        className="w-full max-w-sm h-64 glass-card glow-border card-glow-neon"
-                        style={{ borderRadius: 16 }}
+                        className="w-full max-w-sm min-h-64 glass-card glow-border card-glow-neon rounded-2xl overflow-hidden border border-purple-500/20"
                     >
-                        {/* Placeholder for hardware mockup */}
-                        <div className="w-full h-full flex items-center justify-center text-color-secondary">
-                            Hardware Mockup
+                        <div className="w-full h-full min-h-64 flex flex-col items-center justify-center gap-4 p-8 text-center bg-gradient-to-br from-purple-950/40 to-black">
+                            <FiBluetooth className="text-purple-300 w-14 h-14" />
+                            <p className="text-sm text-color-secondary max-w-xs">
+                                PXIClip pairs over Bluetooth and is tuned for busy venues — low light, quick shots, and back-to-back prints.
+                            </p>
                         </div>
                     </div>
                 </div>

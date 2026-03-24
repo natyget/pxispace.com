@@ -7,23 +7,31 @@ import { FiChevronDown } from "react-icons/fi";
 const faqs = [
     {
         q: "Does PXIClip work on my phone?",
-        a: "PXIClip is compatible with most modern devices, including iPhone, Samsung, Pixel, and more.",
+        a: "PXIClip is compatible with most modern phones, including recent iPhone, Samsung Galaxy, and Google Pixel models. If something will not pair, update the app and Bluetooth OS permissions, then try again.",
     },
     {
         q: "How long does printing take?",
-        a: "PXIClip produces a clear, full-quality print in seconds using optimized thermal technology.",
+        a: "Thermal prints are ready in seconds under normal conditions. For best results, keep the printer charged and use recommended paper.",
     },
     {
-        q: "Why aren\u0002t photos appearing in the shared album?",
-        a: "Ensure you have internet access and camera permissions enabled. PXIStudio syncs instantly when online.",
+        q: "Why are my photos not showing in the shared album?",
+        a: "Check that you are online, have granted camera and photo permissions, and have joined the correct event. Event albums unlock when you are checked in at the venue according to the host settings.",
     },
     {
         q: "Is my data secure?",
-        a: "PXI encrypts data and restricts event photo visibility to verified attendees only.",
+        a: "We use modern encryption, session tokens instead of stored passwords where applicable, and strict access controls so event content stays with verified attendees. Read the details in our Privacy Policy on the Legal hub.",
     },
     {
-        q: "How do I get support for an order or device?",
-        a: "You can contact our team anytime through chat, email, or a support ticket.",
+        q: "How does face matching (Find My Shots) work?",
+        a: "Optional face matching runs on your device only; raw biometric data is not sent to our servers. You can turn it off anytime in app settings.",
+    },
+    {
+        q: "I am a host or vendor — how do payouts work?",
+        a: "Payouts and ticketing run through our payment partners (e.g. Stripe). For account-specific questions, email support@pxispace.com with your event or order details.",
+    },
+    {
+        q: "How do I get help with an order or device?",
+        a: "Email support@pxispace.com. For trust and safety issues, you can also reach trust@pxispace.com. We typically respond within one to two business days.",
     },
 ];
 
@@ -31,7 +39,7 @@ const FAQ = () => {
     const [open, setOpen] = useState(null);
 
     return (
-        <section className="px-4 py-20 lg:py-28">
+        <section id="faq" className="px-4 py-20 lg:py-28 scroll-mt-28">
             <div className="container mx-auto max-w-4xl">
                 <h2 className="text-3xl md:text-4xl font-extrabold heading-gradient text-center">
                     Frequently Asked Questions

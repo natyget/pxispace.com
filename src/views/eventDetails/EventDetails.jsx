@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Calendar,
   MapPin,
@@ -20,12 +21,10 @@ import {
 import Button from '../../components/ui/Button';
 import { eventsService } from '../../services/events';
 import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket } from '../../services/tickets';
-import { useAuth } from '@/contexts/AuthContext';
 import { spotifyEmbedSrc } from '@/lib/spotify';
 import { readFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
 import { displayImageSrc } from '@/lib/mediaUrl';
-import { StripePaymentModal } from '@/components/checkout/StripePaymentModal';
 
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
@@ -92,18 +91,14 @@ const PUBLIC_EULA_COPY = (
 
 const EventDetails = () => {
   const { id } = useParams();
-  const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
   const [apiEvent, setApiEvent] = useState(null);
   const [eventLoading, setEventLoading] = useState(!!id);
   const [quoteTotal, setQuoteTotal] = useState(null);
-  const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState(null);
-  const [joinSuccess, setJoinSuccess] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState(() => new Set());
   const [eulaAccepted, setEulaAccepted] = useState(false);
   const [selectedTierId, setSelectedTierId] = useState(null);
-  const [walletSecret, setWalletSecret] = useState(null);
-  const [walletOpen, setWalletOpen] = useState(false);
 
   useEffect(() => {
     setFavoriteIds(readFavoriteEventIds());
@@ -197,74 +192,14 @@ const EventDetails = () => {
     setFavoriteIds(readFavoriteEventIds());
   };
 
-  const startWalletCheckout = async () => {
-    if (!apiEvent || !isPaidEvent || !isAuthenticated || !user?.id) {
-      setJoinError('Please sign in to continue.');
+  const goToCheckout = () => {
+    if (!apiEvent?.id || !canPurchase) {
+      if (!canPurchase) setJoinError('Please accept the EULA to continue.');
       return;
     }
-    if (!canPurchase) {
-      setJoinError('Please accept the EULA to continue.');
-      return;
-    }
-    setJoining(true);
     setJoinError(null);
-    try {
-      const { clientSecret } = await purchaseTicket(apiEvent.id, apiTierId);
-      setWalletSecret(clientSecret);
-      setWalletOpen(true);
-    } catch (err) {
-      setJoinError(err.message || err.data?.error || 'Could not start wallet checkout.');
-    } finally {
-      setJoining(false);
-    }
-  };
-
-  const startHostedCheckout = async () => {
-    if (!apiEvent || !isPaidEvent || !isAuthenticated || !user?.id) {
-      setJoinError('Please sign in to continue.');
-      return;
-    }
-    if (!canPurchase) {
-      setJoinError('Please accept the EULA to continue.');
-      return;
-    }
-    setJoining(true);
-    setJoinError(null);
-    try {
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      const { url } = await createCheckoutSession(
-        apiEvent.id,
-        `${origin}/events?payment=success`,
-        `${origin}/events?payment=cancelled`,
-        apiTierId
-      );
-      if (url) window.location.href = url;
-    } catch (err) {
-      setJoinError(err.message || err.data?.error || 'Checkout failed.');
-    } finally {
-      setJoining(false);
-    }
-  };
-
-  const handleFreeTicket = async () => {
-    if (!apiEvent || !isFreeEvent || !isAuthenticated || !user?.id) {
-      setJoinError('Please sign in to get a ticket.');
-      return;
-    }
-    if (!canPurchase) {
-      setJoinError('Please accept the EULA to continue.');
-      return;
-    }
-    setJoining(true);
-    setJoinError(null);
-    try {
-      await generateTicket(user.id, apiEvent.id);
-      setJoinSuccess(true);
-    } catch (err) {
-      setJoinError(err.message || err.data?.error || 'Something went wrong.');
-    } finally {
-      setJoining(false);
-    }
+    const qs = apiTierId ? `?tier=${encodeURIComponent(apiTierId)}` : '';
+    router.push(`/events/${apiEvent.id}/checkout${qs}`);
   };
 
   if (eventLoading && !apiEvent) {
@@ -645,51 +580,21 @@ const EventDetails = () => {
               </div>
             ) : null}
 
-            {joinSuccess && (
-              <p className="text-green-400 text-sm font-medium">You’re in! Open the PXI app to view your ticket.</p>
-            )}
             {joinError && <p className="text-red-400 text-sm">{joinError}</p>}
 
-            {isPaidEvent ? (
-              <div className="space-y-3">
-                <Button
-                  variant="neon"
-                  className="w-full uppercase tracking-widest py-4"
-                  onClick={startWalletCheckout}
-                  disabled={joining || joinSuccess || !canPurchase || !isAuthenticated}
-                >
-                  {joining && !walletOpen ? (
-                    <Loader2 size={20} className="animate-spin mx-auto" />
-                  ) : (
-                    'Apple Pay / Google Pay / Link'
-                  )}
-                </Button>
-                <p className="text-[10px] text-zinc-600 text-center leading-relaxed">
-                  Opens secure Stripe payment (wallets when your browser supports them). Or use hosted checkout below.
-                </p>
-                <Button
-                  variant="glass"
-                  className="w-full uppercase tracking-widest py-4 border-white/10"
-                  onClick={startHostedCheckout}
-                  disabled={joining || joinSuccess || !canPurchase || !isAuthenticated}
-                >
-                  Continue with card (hosted checkout)
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="neon"
-                className="w-full uppercase tracking-widest py-4"
-                onClick={handleFreeTicket}
-                disabled={joining || joinSuccess || !canPurchase || !isAuthenticated}
-              >
-                {joining ? <Loader2 size={20} className="animate-spin mx-auto" /> : 'Get free ticket'}
-              </Button>
-            )}
-
-            {!isAuthenticated ? (
-              <p className="text-zinc-500 text-xs">Sign in to get tickets.</p>
-            ) : null}
+            <Button
+              variant="neon"
+              className="w-full uppercase tracking-widest py-4"
+              onClick={goToCheckout}
+              disabled={!canPurchase}
+            >
+              Continue to checkout
+            </Button>
+            <p className="text-zinc-500 text-xs text-center leading-relaxed">
+              {isPaidEvent
+                ? 'Sign in or create an account on the next screen, then pay with Apple Pay, Google Pay, or card.'
+                : 'Sign in or create an account on the next screen to claim your free ticket.'}
+            </p>
 
             <div className="flex items-start gap-2 px-1">
               <AlertCircle size={13} className="text-zinc-600 flex-shrink-0 mt-0.5" />
@@ -702,19 +607,6 @@ const EventDetails = () => {
         </div>
       </div>
 
-      <StripePaymentModal
-        open={walletOpen}
-        clientSecret={walletSecret}
-        onCancel={() => {
-          setWalletOpen(false);
-          setWalletSecret(null);
-        }}
-        onSuccess={() => {
-          setWalletOpen(false);
-          setWalletSecret(null);
-          setJoinSuccess(true);
-        }}
-      />
     </>
   );
 };

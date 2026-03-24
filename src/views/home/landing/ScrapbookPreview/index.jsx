@@ -16,10 +16,11 @@ export default function ScrapbookPreview() {
     offset: ['start start', 'end end'],
   });
 
+  // Phone fades in on a longer ramp so it crossfades smoothly with the headline
   const combinedOpacity = useTransform(scrollYProgress, (p) => {
     if (p < 0.5) {
-      if (p < 0.12) return 0;
-      if (p <= 0.15) return (p - 0.12) / (0.15 - 0.12);
+      if (p < 0.03) return 0;
+      if (p <= 0.24) return (p - 0.03) / (0.24 - 0.03);
       return 1;
     }
     if (p < 0.95) return 1;
@@ -28,15 +29,15 @@ export default function ScrapbookPreview() {
 
   const combinedScale = useTransform(scrollYProgress, (p) => {
     if (p < 0.5) {
-      if (p < 0.12) return 0.9;
-      if (p <= 0.15) return 0.9 + ((p - 0.12) / (0.15 - 0.12)) * 0.1;
+      if (p < 0.03) return 0.92;
+      if (p <= 0.24) return 0.92 + ((p - 0.03) / (0.24 - 0.03)) * 0.08;
       return 1;
     }
     if (p < 0.95) return 1;
     return 1 - ((p - 0.95) / (1 - 0.95)) * 0.1;
   });
 
-  const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.05], [1, 0]);
+  const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.06], [1, 0]);
 
   return (
     <section
@@ -54,19 +55,28 @@ export default function ScrapbookPreview() {
           }}
         >
           <PhoneFrame>
-            <div className="absolute top-0 left-0 w-full h-24 z-50 flex flex-col justify-end px-4 pb-3 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-white/70 text-lg">‹</span>
-                  <span className="font-black text-[13px] tracking-widest uppercase">
+            {/* App chrome: status + thread header */}
+            <div className="absolute top-0 left-0 w-full z-50 flex flex-col pointer-events-none">
+              <div className="flex items-center justify-between px-4 pt-1.5 pb-1 text-[11px] font-semibold text-white/50 tracking-tight">
+                <span>9:41</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px]">●●●</span>
+                  <span className="h-2.5 w-6 rounded-[2px] border border-white/35 bg-white/10" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between px-4 pb-2 pt-1 bg-gradient-to-b from-black/95 via-black/70 to-transparent">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-white/70 text-lg leading-none shrink-0">‹</span>
+                  <span className="font-black text-[12px] tracking-widest uppercase truncate text-white">
                     Lito&apos;s Party
                   </span>
                 </div>
-                <div className="w-5 h-5 rounded-full border border-white/50 flex items-center justify-center text-[10px] font-serif italic text-white/70">
+                <div className="w-7 h-7 rounded-full border border-white/15 bg-white/[0.06] backdrop-blur-md flex items-center justify-center text-[10px] font-serif italic text-white/70 shrink-0">
                   i
                 </div>
               </div>
             </div>
+
             <ThreadScene progress={scrollYProgress} />
             <FocusScene progress={scrollYProgress} />
             <GalleryScene progress={scrollYProgress} />
