@@ -31,6 +31,12 @@ function defaultStartEnd() {
   return { start: toDatetimeLocalValue(start), end: toDatetimeLocalValue(end) };
 }
 
+function fromDatetimeLocalValue(v) {
+  // `datetime-local` emits local-time without timezone; this parses as local in JS engines.
+  // We later store UTC via `toISOString()`.
+  return new Date(v);
+}
+
 export default function CreateEventPage() {
   const router = useRouter();
   const { user, updateUser } = useAuth();
@@ -221,8 +227,8 @@ export default function CreateEventPage() {
       return;
     }
 
-    const startDate = new Date(startLocal);
-    const endDate = new Date(endLocal);
+    const startDate = fromDatetimeLocalValue(startLocal);
+    const endDate = fromDatetimeLocalValue(endLocal);
     if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
       setFormError('Invalid start or end date.');
       return;
@@ -333,11 +339,11 @@ export default function CreateEventPage() {
             )}
           </div>
           {(coverPreview || coverImage) && (
-            <div className="w-full max-w-xs aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-zinc-800">
+            <div className="w-full rounded-xl overflow-hidden border border-white/10 bg-zinc-800">
               <img
                 src={coverImage || coverPreview}
                 alt=""
-                className="w-full h-full object-cover"
+                className="w-full max-h-[520px] object-contain bg-black"
               />
             </div>
           )}
