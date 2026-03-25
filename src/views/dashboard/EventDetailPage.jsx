@@ -333,9 +333,17 @@ export default function EventDetailPage() {
       </div>
 
       <section className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
-        <div className="p-5 border-b border-white/5 flex items-center gap-2">
-          <Users size={18} className="text-pxi-purple" />
-          <h2 className="font-bold text-white uppercase tracking-widest text-sm">Invite people</h2>
+        <div className="p-5 border-b border-white/5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Users size={18} className="text-pxi-purple" />
+            <h2 className="font-bold text-white uppercase tracking-widest text-sm">Invite people</h2>
+          </div>
+          <Link
+            href="/dashboard/events"
+            className="px-4 py-2 rounded-xl border border-white/10 text-xs font-bold uppercase tracking-widest text-zinc-300 hover:bg-white/5"
+          >
+            Skip
+          </Link>
         </div>
         <div className="p-5 space-y-4">
           <p className="text-xs text-zinc-500">

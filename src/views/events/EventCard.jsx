@@ -5,8 +5,9 @@ import { Calendar, MapPin, Ticket, Heart, Maximize2 } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { useRouter } from 'next/navigation';
 
-const EventCard = ({ event, favorited, onToggleFavorite, onQuickView }) => {
+const EventCard = ({ event, favorited, onToggleFavorite, onQuickView, detailBasePath = '/events' }) => {
   const router = useRouter();
+  const detailHref = `${String(detailBasePath).replace(/\/$/, '')}/${event.id}`;
 
   return (
     <div className="group relative flex flex-col glass-dark rounded-[3rem] border border-white/5 hover:border-pxi-purple/30 transition-all duration-500 overflow-hidden">
@@ -75,7 +76,7 @@ const EventCard = ({ event, favorited, onToggleFavorite, onQuickView }) => {
               variant="neon"
               className="!px-6 !py-3 !text-[11px] uppercase tracking-widest"
               icon={<Ticket size={16} />}
-              onClick={() => router.push(`/events/${event.id}`)}
+              onClick={() => router.push(detailHref)}
             >
               Open
             </Button>
