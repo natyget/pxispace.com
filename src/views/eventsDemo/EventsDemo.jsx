@@ -462,7 +462,7 @@ export default function EventsDemo() {
               </p>
             </div>
             <Link
-              href={featured ? `/events/${featured.id}` : '/events'}
+              href={featured ? `/events-new/${featured.id}` : '/events-new'}
               className="inline-flex items-center justify-center bg-white text-black font-bold px-10 py-4 rounded-full text-lg hover:scale-105 transition-transform"
             >
               Open event
@@ -495,7 +495,7 @@ export default function EventsDemo() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4">
             {rest.map((ev) => (
-              <EventCard key={ev.id} event={ev} />
+              <EventCard key={ev.id} event={ev} detailBasePath="/events-new" />
             ))}
           </div>
         )}
