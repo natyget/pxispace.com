@@ -1,12 +1,32 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { motion, useTransform } from 'framer-motion';
 import { GALLERY_IMAGE_URLS } from '@/lib/landingAssets';
 
 const EMOJIS = ['🔥', '❤️', '😂', '📸', '✨', '🙌'];
 const NAMES = ['Alex', 'Sarah', 'Mike', 'Jess', 'Jamie', 'Riley', 'Sam', 'Casey'];
+const FALLBACK_GALLERY_IMAGE =
+  'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1200&auto=format&fit=crop';
+
+function GalleryTileImage({ src, alt }) {
+  const [imgSrc, setImgSrc] = useState(src);
+
+  return (
+    <Image
+      src={imgSrc}
+      alt={alt}
+      fill
+      unoptimized
+      className="object-cover"
+      sizes="(max-width: 768px) 33vw, 240px"
+      onError={() => {
+        if (imgSrc !== FALLBACK_GALLERY_IMAGE) setImgSrc(FALLBACK_GALLERY_IMAGE);
+      }}
+    />
+  );
+}
 
 export default function GalleryScene({ progress }) {
   const opacity = useTransform(progress, [0.82, 0.88], [0, 1]);
@@ -38,7 +58,7 @@ export default function GalleryScene({ progress }) {
             key={img.id}
             className="relative aspect-square bg-[#111] overflow-hidden rounded-[3px] ring-1 ring-white/[0.06]"
           >
-            <Image src={img.url} alt="" fill unoptimized className="object-cover" sizes="(max-width: 768px) 33vw, 240px" />
+            <GalleryTileImage src={img.url} alt="" />
             <div className="absolute bottom-1.5 left-1.5">
               <Image
                 src={`https://i.pravatar.cc/150?u=gallery${img.id}`}
