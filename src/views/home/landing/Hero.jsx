@@ -39,6 +39,7 @@ function easeOutCubic(t) {
 }
 
 const HeroChaosItem = React.memo(function HeroChaosItem({ el, heroProgress, isMobile }) {
+  const isBerealIcon = el.type === 'icon' && typeof el.iconUrl === 'string' && el.iconUrl.includes('bereal');
   const holeStart = 0.045 + el.id * (isMobile ? 0.019 : 0.0155);
   const holeEnd = 0.49;
 
@@ -116,11 +117,11 @@ const HeroChaosItem = React.memo(function HeroChaosItem({ el, heroProgress, isMo
               </div>
             )
           ) : (
-            <div className="w-[70px] h-[70px] md:w-[90px] md:h-[90px] rounded-[1.5rem] bg-white/95 backdrop-blur-md flex items-center justify-center border border-white/40 shadow-[0_15px_35px_rgba(0,0,0,0.2)]">
+            <div className="w-[70px] h-[70px] md:w-[90px] md:h-[90px] rounded-[1.5rem] overflow-hidden bg-white flex items-center justify-center shadow-[0_15px_35px_rgba(0,0,0,0.2)]">
               <img
                 src={el.iconUrl}
                 alt=""
-                className="w-10 h-10 md:w-12 md:h-12 object-contain"
+                className={`block w-full h-full ${isBerealIcon ? 'object-cover scale-[1.28]' : 'object-contain scale-110'}`}
                 draggable={false}
               />
             </div>
