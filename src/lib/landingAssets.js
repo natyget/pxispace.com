@@ -7,7 +7,7 @@ export const L = '/landing';
 export const APP_STORE_BADGE = `${L}/icons/app-store-badge.svg`;
 
 /** Apple logo mark for App Store buttons (funnel asset) */
-export const APPLE_MARK = '/apple-logo.svg';
+export const APPLE_MARK = '/apple-logo-white.svg';
 
 /**
  * Brand icons — order: Partiful, Posh.Vip, SWSH→BeReal, Lapse, Eventbrite, Drive, iMessage, WhatsApp→Instagram (funnel set).

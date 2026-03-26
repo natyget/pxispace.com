@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
-const LogoSrc = "/favicon.svg";
+const LogoSrc = "/Union.svg";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Navbar = () => {
