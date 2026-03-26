@@ -98,7 +98,7 @@ export default function FeatureStory() {
             );
           })}
         </div>
-        <div className="relative w-full md:w-[42%] flex justify-center items-center md:items-center mt-6 md:mt-0 z-10 shrink-0">
+        <div className="relative w-full md:w-[42%] flex justify-center items-center md:items-center z-10 shrink-0">
           <DeviceFrame>
             <div className="absolute inset-0 bg-[#050505]">
               {CHAPTERS.map((chapter, index) => (
