@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { CheckCircle2, XCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { FaApple } from 'react-icons/fa';
@@ -181,7 +182,7 @@ export default function SignupPage() {
                 {/* Logo */}
                 <div className="flex flex-col items-center mb-10">
                     <Link href="/">
-                        <img src={LogoSVG} alt="PXI" className="h-10 w-10 mb-5" />
+                        <Image src={LogoSVG} alt="PXI" width={40} height={40} className="h-10 w-10 mb-5" priority />
                     </Link>
                     <h1 className="text-2xl font-black text-white tracking-tight">
                         Create an account

@@ -28,6 +28,9 @@ export default function CustomCursor() {
   const cursorY = useSpring(mouseY, springConfig);
 
   useEffect(() => {
+    let hoverRaf = null;
+    let nextHoverType = 'default';
+
     const updateMousePosition = (e) => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
@@ -42,23 +45,30 @@ export default function CustomCursor() {
         target.closest('[data-cursor-photo]') ||
         target.closest('[data-cursor-video]')
       ) {
-        setCursorType('video');
+        nextHoverType = 'video';
       } else if (
         target.closest('button') ||
         target.closest('a') ||
         target.closest('[data-cursor-hover]')
       ) {
-        setCursorType('hover');
+        nextHoverType = 'hover';
       } else {
-        setCursorType('default');
+        nextHoverType = 'default';
       }
+
+      if (hoverRaf) return;
+      hoverRaf = window.requestAnimationFrame(() => {
+        setCursorType(nextHoverType);
+        hoverRaf = null;
+      });
     };
 
-    window.addEventListener('mousemove', updateMousePosition);
+    window.addEventListener('pointermove', updateMousePosition, { passive: true });
     window.addEventListener('mouseover', handleMouseOver);
 
     return () => {
-      window.removeEventListener('mousemove', updateMousePosition);
+      if (hoverRaf) window.cancelAnimationFrame(hoverRaf);
+      window.removeEventListener('pointermove', updateMousePosition);
       window.removeEventListener('mouseover', handleMouseOver);
     };
   }, [mouseX, mouseY, setCursorType]);

@@ -12,7 +12,7 @@ function CheckoutFallback() {
 export default function Page() {
   return (
     <Suspense fallback={<CheckoutFallback />}>
-      <EventCheckout />
+      <EventCheckout basePath="/events-old" />
     </Suspense>
   );
 }

@@ -1,17 +1,18 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { X, Calendar, MapPin, ExternalLink } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
 
-const EventPreviewModal = ({ open, onClose, event }) => {
+const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' }) => {
   const router = useRouter();
   if (!open || !event) return null;
 
   const goFull = () => {
     onClose();
-    router.push(`/events/${event.id}`);
+    router.push(`${String(detailBasePath).replace(/\/$/, '')}/${event.id}`);
   };
 
   return (
@@ -23,7 +24,14 @@ const EventPreviewModal = ({ open, onClose, event }) => {
         className="relative w-full max-w-lg bg-zinc-950 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl"
       >
         <div className="relative h-52">
-          <img src={event.image} alt="" className="w-full h-full object-cover" />
+          <Image
+            src={event.image}
+            alt=""
+            fill
+            unoptimized
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, 32rem"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent" />
           <button
             type="button"

@@ -2,18 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
     DollarSign,
-    Clock,
-    CheckCircle2,
-    XCircle,
+    Percent,
     TrendingUp,
+    Calendar,
     ArrowRight,
     Loader2,
     RefreshCw,
     Star,
     AlertTriangle,
-    WifiOff,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService, authStorage } from '../../services/auth';
@@ -26,6 +25,12 @@ function fmt(cents) {
     return '$' + ((cents ?? 0) / 100).toFixed(2);
 }
 
+function splitMoney(cents) {
+    const n = ((cents ?? 0) / 100).toFixed(2);
+    const [whole, dec] = n.split('.');
+    return { whole, dec };
+}
+
 function fmtDate(raw) {
     if (!raw) return '—';
     return new Date(raw).toLocaleDateString('en-US', {
@@ -33,89 +38,11 @@ function fmtDate(raw) {
     });
 }
 
-// ─── sub-components ─────────────────────────────────────────────────────────
-
-function StatCard({ icon: Icon, label, value, sub, loading, accent }) {
-    const ring = {
-        purple: 'bg-pxi-purple/10 border-pxi-purple/20 text-pxi-purple',
-        green:  'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
-        amber:  'bg-amber-500/10 border-amber-500/20 text-amber-400',
-    }[accent] ?? 'bg-zinc-800 border-white/8 text-zinc-400';
-
-    return (
-        <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5">
-            <div className="flex items-center gap-3 mb-4">
-                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${ring}`}>
-                    <Icon size={16} />
-                </div>
-                <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{label}</span>
-            </div>
-            {loading
-                ? <div className="h-8 w-28 bg-zinc-800 rounded-lg animate-pulse" />
-                : (
-                    <>
-                        <p className="text-white font-black text-2xl">{value}</p>
-                        {sub && <p className="text-zinc-600 text-xs mt-1">{sub}</p>}
-                    </>
-                )
-            }
-        </div>
-    );
-}
-
-function PayoutBadge({ status }) {
-    if (status === 'paid') return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
-            <CheckCircle2 size={11} /> Paid
-        </span>
-    );
-    return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold">
-            <XCircle size={11} /> Failed
-        </span>
-    );
-}
-
-function LiveIndicator({ status }) {
-    if (status === 'connected') return (
-        <span className="inline-flex items-center gap-1.5 text-emerald-400 text-xs font-medium">
-            <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-            </span>
-            Live
-        </span>
-    );
-    if (status === 'connecting') return (
-        <span className="inline-flex items-center gap-1.5 text-zinc-500 text-xs font-medium">
-            <Loader2 size={10} className="animate-spin" /> Connecting…
-        </span>
-    );
-    return (
-        <span className="inline-flex items-center gap-1.5 text-zinc-600 text-xs font-medium">
-            <WifiOff size={11} /> Offline
-        </span>
-    );
-}
-
-function BreakdownRow({ label, value, description, negative }) {
-    return (
-        <div className="flex items-start justify-between gap-4">
-            <div>
-                <p className="text-zinc-300 text-sm font-medium">{label}</p>
-                <p className="text-zinc-600 text-xs mt-0.5">{description}</p>
-            </div>
-            <span className={`text-sm font-bold flex-shrink-0 ${negative ? 'text-red-400/80' : 'text-zinc-300'}`}>
-                {value}
-            </span>
-        </div>
-    );
-}
-
 // ─── main page ───────────────────────────────────────────────────────────────
 
 export default function EarningsPage() {
     const { user } = useAuth();
+    const [mounted, setMounted] = useState(false);
     const [data, setData] = useState(null);       // { aggregates, payments, payouts }
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -123,6 +50,10 @@ export default function EarningsPage() {
 
     const esRef = useRef(null);
     const reconnectRef = useRef(null);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // ── initial REST load ──────────────────────────────────────────────────
     const load = () => {
@@ -222,6 +153,10 @@ export default function EarningsPage() {
     }, [user?.isVendor]);
 
     // ─── non-vendor gate ──────────────────────────────────────────────────
+    if (!mounted) {
+        return <div className="max-w-6xl mx-auto space-y-12" />;
+    }
+
     if (!user?.isVendor) {
         return (
             <div className="max-w-xl mx-auto py-16 text-center">
@@ -249,27 +184,52 @@ export default function EarningsPage() {
     const payments = data?.payments   ?? [];
     const payouts  = data?.payouts    ?? [];
 
-    const totalEarned = agg.netPayout ?? 0;
-    const paidOut     = payouts.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
-    const pending     = Math.max(0, totalEarned - paidOut);
+    const gross = agg.grossRevenue ?? 0;
+    const consumerFees = agg.consumerFeeDeducted ?? 0;
+    const vendorFees = agg.vendorFlatFeeTotal ?? 0;
+    const totalFees = consumerFees + vendorFees;
+    const net = agg.netPayout ?? 0;
+    const grossMoney = splitMoney(gross);
+    const feeMoney = splitMoney(totalFees);
+    const netMoney = splitMoney(net);
+    const netPct = gross > 0 ? ((net / gross) * 100) : 0;
+    const feePct = gross > 0 ? ((totalFees / gross) * 100) : 0;
+    const eventRowsMap = new Map();
+    for (const p of payments) {
+        const key = p.eventId || p.eventName || p.id;
+        if (!eventRowsMap.has(key)) {
+            eventRowsMap.set(key, {
+                id: key,
+                name: p.eventName || p.event?.name || 'Ticket Sale',
+                date: p.createdAt,
+                gross: 0,
+                fee: 0,
+                net: 0,
+            });
+        }
+        const row = eventRowsMap.get(key);
+        row.gross += p.grossAmount ?? 0;
+        row.fee += (p.consumerFee ?? 0) + (p.vendorFlatFee ?? 0);
+        row.net += p.netPayout ?? 0;
+    }
+    const eventRows = Array.from(eventRowsMap.values());
 
     // ─── render ───────────────────────────────────────────────────────────
     return (
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-6xl mx-auto space-y-12">
 
-            {/* Header */}
             <div className="flex items-start justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-2 mb-1">
-                        <TrendingUp size={14} className="text-pxi-purple" />
-                        <span className="text-pxi-purple text-xs font-bold uppercase tracking-widest">
-                            Vendor Dashboard
+                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Financials</h1>
+                    <p className="text-zinc-500 text-sm mt-1">Revenue, fees, and payout history.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center space-x-2 bg-[#4ade80]/10 px-4 py-2 rounded-full border border-[#4ade80]/20">
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#4ade80] animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
+                        <span className="text-[12px] font-bold uppercase tracking-widest text-[#4ade80]">
+                            {sseStatus === 'connected' ? 'Live Updates' : sseStatus === 'connecting' ? 'Connecting' : 'Offline'}
                         </span>
                     </div>
-                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Earnings</h1>
-                </div>
-                <div className="flex items-center gap-3 mt-1">
-                    <LiveIndicator status={sseStatus} />
                     <button
                         onClick={load}
                         disabled={loading}
@@ -281,7 +241,6 @@ export default function EarningsPage() {
                 </div>
             </div>
 
-            {/* Error */}
             {error && (
                 <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                     <AlertTriangle size={16} className="flex-shrink-0" />
@@ -289,141 +248,165 @@ export default function EarningsPage() {
                 </div>
             )}
 
-            {/* 3 stat cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatCard
-                    icon={DollarSign}
-                    label="Total Earned"
-                    value={fmt(totalEarned)}
-                    sub="Net after all platform fees"
-                    loading={loading}
-                    accent="purple"
-                />
-                <StatCard
-                    icon={CheckCircle2}
-                    label="Paid Out"
-                    value={fmt(paidOut)}
-                    sub="Transferred to your bank"
-                    loading={loading}
-                    accent="green"
-                />
-                <StatCard
-                    icon={Clock}
-                    label="Pending"
-                    value={fmt(pending)}
-                    sub="Earned but not yet paid out"
-                    loading={loading}
-                    accent="amber"
-                />
-            </div>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border border-white/10 bg-zinc-900/40 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/5 overflow-hidden"
+            >
+                <div className="p-6 md:p-8 flex flex-col justify-between min-h-[160px] md:min-h-[200px]">
+                    <div className="flex items-center justify-between mb-4 md:mb-6">
+                        <span className="text-[11px] md:text-[12px] font-bold tracking-widest text-white/40 uppercase">Total Gross Revenue</span>
+                        <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-white/40" />
+                    </div>
+                    {loading ? <div className="h-10 w-40 bg-white/5 rounded animate-pulse" /> : (
+                        <div className="mt-auto flex flex-col items-start gap-3 md:gap-4">
+                            <div className="text-3xl lg:text-[40px] font-[900] text-white tracking-tighter leading-none">
+                                ${grossMoney.whole}<span className="text-[14px] md:text-[20px] text-white/40 font-medium ml-1">.{grossMoney.dec}</span>
+                            </div>
+                            <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-[11px] font-bold tracking-wider uppercase bg-[#4ade80]/10 text-[#4ade80] border border-[#4ade80]/20">
+                                <TrendingUp className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                                <span>Live sales updates</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <div className="p-6 md:p-8 flex flex-col justify-between min-h-[160px] md:min-h-[200px]">
+                    <div className="flex items-center justify-between mb-4 md:mb-6">
+                        <span className="text-[11px] md:text-[12px] font-bold tracking-widest text-white/40 uppercase">Total Platform Fees</span>
+                        <Percent className="h-4 w-4 md:h-5 md:w-5 text-[#ef4444]/60" />
+                    </div>
+                    {loading ? <div className="h-10 w-40 bg-white/5 rounded animate-pulse" /> : (
+                        <div className="mt-auto flex flex-col items-start gap-3 md:gap-4">
+                            <div className="text-3xl lg:text-[40px] font-[900] text-[#ef4444] tracking-tighter leading-none">
+                                -${feeMoney.whole}<span className="text-[14px] md:text-[20px] text-[#ef4444]/50 font-medium ml-1">.{feeMoney.dec}</span>
+                            </div>
+                            <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-[11px] font-bold tracking-wider uppercase bg-white/5 text-white/50 border border-white/10">
+                                <DollarSign className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                                <span>Consumer + vendor fees</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <div className="p-6 md:p-8 flex flex-col justify-between bg-white/[0.02] min-h-[160px] md:min-h-[200px]">
+                    <div className="flex items-center justify-between mb-4 md:mb-6">
+                        <span className="text-[11px] md:text-[12px] font-bold tracking-widest text-white uppercase">Total Net Payout</span>
+                        <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-white/60" />
+                    </div>
+                    {loading ? <div className="h-10 w-40 bg-white/5 rounded animate-pulse" /> : (
+                        <div className="mt-auto flex flex-col items-start gap-3 md:gap-4">
+                            <div className="text-3xl lg:text-[40px] font-[900] text-white tracking-tighter leading-none">
+                                ${netMoney.whole}<span className="text-[14px] md:text-[20px] text-white/40 font-medium ml-1">.{netMoney.dec}</span>
+                            </div>
+                            <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-[11px] font-bold tracking-wider uppercase bg-white/10 text-white border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)]">
+                                <DollarSign className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                                <span>Available for withdrawal</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </motion.div>
 
-            {/* Revenue breakdown */}
-            {!loading && data && (
-                <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5">
-                    <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">
-                        Revenue Breakdown
-                    </p>
-                    <div className="space-y-3">
-                        <BreakdownRow label="Gross Revenue"                 value={fmt(agg.grossRevenue ?? 0)}          description="Total charged to ticket buyers" />
-                        <BreakdownRow label="Consumer Fees (4.59%)"         value={`−${fmt(agg.consumerFeeDeducted ?? 0)}`} description="Variable fee collected from buyers" negative />
-                        <BreakdownRow label="Vendor Flat Fee ($0.90/ticket)" value={`−${fmt(agg.vendorFlatFeeTotal ?? 0)}`} description="PXI platform flat fee per ticket sold"  negative />
-                        <div className="pt-3 border-t border-white/5 flex items-center justify-between">
-                            <span className="text-sm font-bold text-white">Net Payout</span>
-                            <span className="text-emerald-400 font-black text-sm">{fmt(agg.netPayout ?? 0)}</span>
+            <div className="space-y-6">
+                <h2 className="text-[24px] font-[800] tracking-tight text-white">Revenue Split Visualization</h2>
+                <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-8">
+                    <div className="space-y-5">
+                        <div className="flex justify-between text-[13px] font-mono font-bold">
+                            <span className="text-white">Net Payout ({netPct.toFixed(1)}%)</span>
+                            <span className="text-[#ef4444]">Platform Fee ({feePct.toFixed(1)}%)</span>
+                        </div>
+                        <div className="w-full h-6 rounded-full overflow-hidden flex bg-white/5 border border-white/10">
+                            <div className="bg-white h-full transition-all duration-1000" style={{ width: `${netPct}%` }} />
+                            <div className="bg-[#ef4444] h-full transition-all duration-1000" style={{ width: `${feePct}%` }} />
                         </div>
                     </div>
                 </div>
-            )}
+            </div>
 
-            {/* Ticket sales table */}
-            <div className="bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-                    <div>
-                        <h3 className="text-white font-bold text-sm">Ticket Sales</h3>
-                        <p className="text-zinc-500 text-xs mt-0.5">{payments.length} total sale{payments.length !== 1 ? 's' : ''}</p>
-                    </div>
-                    {sseStatus === 'connected' && (
-                        <span className="text-xs text-zinc-600">Updates automatically</span>
-                    )}
-                </div>
-                {loading ? (
-                    <div className="px-5 py-10 flex items-center justify-center">
-                        <Loader2 size={20} className="animate-spin text-zinc-600" />
-                    </div>
-                ) : payments.length === 0 ? (
-                    <div className="px-5 py-10 text-center text-zinc-600 text-sm">No ticket sales yet.</div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+            <div className="space-y-6">
+                <h2 className="text-[24px] font-[800] tracking-tight text-white">Per-Event Breakdown</h2>
+                <div className="rounded-2xl border border-white/10 bg-zinc-900/40 overflow-x-auto">
+                    {loading ? (
+                        <div className="px-5 py-10 flex items-center justify-center"><Loader2 size={20} className="animate-spin text-zinc-600" /></div>
+                    ) : eventRows.length === 0 ? (
+                        <div className="px-5 py-10 text-center text-zinc-600 text-sm">No ticket sales yet.</div>
+                    ) : (
+                        <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-white/5">
-                                    <th className="text-left px-5 py-3 text-xs font-bold text-zinc-600 uppercase tracking-wider">Date</th>
-                                    <th className="text-right px-5 py-3 text-xs font-bold text-zinc-600 uppercase tracking-wider">Gross</th>
-                                    <th className="text-right px-5 py-3 text-xs font-bold text-zinc-600 uppercase tracking-wider hidden sm:table-cell">Fees</th>
-                                    <th className="text-right px-5 py-3 text-xs font-bold text-zinc-600 uppercase tracking-wider">Net</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Event</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Date</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Gross Revenue</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Platform Fee</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Net Payout</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase text-right">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {payments.map((p) => (
-                                    <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
-                                        <td className="px-5 py-3.5">
-                                            <p className="text-white text-sm font-medium">Ticket Sale</p>
-                                            <p className="text-zinc-500 text-xs mt-0.5">{fmtDate(p.createdAt)}</p>
-                                        </td>
-                                        <td className="px-5 py-3.5 text-right text-zinc-400 text-sm">{fmt(p.grossAmount)}</td>
-                                        <td className="px-5 py-3.5 text-right text-red-400/70 text-sm hidden sm:table-cell">
-                                            −{fmt((p.consumerFee ?? 0) + (p.vendorFlatFee ?? 0))}
-                                        </td>
-                                        <td className="px-5 py-3.5 text-right text-emerald-400 font-bold text-sm">
-                                            +{fmt(p.netPayout)}
+                                {eventRows.map((e) => (
+                                    <tr key={e.id} className="hover:bg-white/[0.02] transition-colors">
+                                        <td className="px-6 py-5 text-[15px] font-bold text-white">{e.name}</td>
+                                        <td className="px-6 py-5 text-[14px] font-mono font-medium text-white/50">{fmtDate(e.date)}</td>
+                                        <td className="px-6 py-5 text-[14px] font-mono font-bold text-white">{fmt(e.gross)}</td>
+                                        <td className="px-6 py-5 text-[14px] font-mono font-bold text-[#ef4444]">-{fmt(e.fee)}</td>
+                                        <td className="px-6 py-5 text-[14px] font-mono font-bold text-[#4ade80]">{fmt(e.net)}</td>
+                                        <td className="px-6 py-5 text-right">
+                                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-white/10 text-white border-white/20">
+                                                Recorded
+                                            </span>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-                    </div>
-                )}
-            </div>
-
-            {/* Payout history */}
-            <div className="bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-white/5">
-                    <h3 className="text-white font-bold text-sm">Payout History</h3>
-                    <p className="text-zinc-500 text-xs mt-0.5">Transfers from Stripe to your bank account</p>
+                    )}
                 </div>
-                {loading ? (
-                    <div className="px-5 py-10 flex items-center justify-center">
-                        <Loader2 size={20} className="animate-spin text-zinc-600" />
-                    </div>
-                ) : payouts.length === 0 ? (
-                    <div className="px-5 py-10 text-center text-zinc-600 text-sm">
-                        No payouts yet. Stripe typically initiates transfers within 2–7 business days.
-                    </div>
-                ) : (
-                    <ul className="divide-y divide-white/5">
-                        {payouts.map((p) => (
-                            <li key={p.id} className="flex items-center justify-between px-5 py-3.5">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-0.5">
-                                        <PayoutBadge status={p.status} />
-                                    </div>
-                                    <p className="text-zinc-500 text-xs mt-1">
-                                        {fmtDate(p.arrivalDate ?? p.createdAt)}
-                                    </p>
-                                    {p.failureMessage && (
-                                        <p className="text-red-400 text-xs mt-0.5">{p.failureMessage}</p>
-                                    )}
-                                </div>
-                                <span className={`font-bold text-sm ${p.status === 'paid' ? 'text-emerald-400' : 'text-red-400'}`}>
-                                    {p.status === 'paid' ? '+' : ''}{fmt(p.amount)}
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
-                )}
             </div>
 
-
+            <div className="space-y-6">
+                <h2 className="text-[24px] font-[800] tracking-tight text-white">Payout History</h2>
+                <div className="rounded-2xl border border-white/10 bg-zinc-900/40 overflow-x-auto">
+                    {loading ? (
+                        <div className="px-5 py-10 flex items-center justify-center"><Loader2 size={20} className="animate-spin text-zinc-600" /></div>
+                    ) : payouts.length === 0 ? (
+                        <div className="px-5 py-10 text-center text-zinc-600 text-sm">
+                            No payouts yet. Stripe typically initiates transfers within 2–7 business days.
+                        </div>
+                    ) : (
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-white/5">
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Date</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Amount</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Destination</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {payouts.map((p) => (
+                                    <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
+                                        <td className="px-6 py-5 text-[14px] font-mono font-medium text-white/50 flex items-center">
+                                            <Calendar className="w-4 h-4 mr-3 opacity-50" /> {fmtDate(p.arrivalDate ?? p.createdAt)}
+                                        </td>
+                                        <td className="px-6 py-5 text-[15px] font-mono font-bold text-white">{fmt(p.amount)}</td>
+                                        <td className="px-6 py-5 text-[14px] font-mono font-medium text-white/50">
+                                            {p.stripePayoutId ? `Stripe • ${String(p.stripePayoutId).slice(-6)}` : 'Stripe'}
+                                        </td>
+                                        <td className="px-6 py-5 text-right">
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                                                p.status === 'paid'
+                                                    ? 'bg-white/10 text-white border-white/20'
+                                                    : 'bg-red-500/10 text-red-400 border-red-500/20'
+                                            }`}>
+                                                {p.status === 'paid' ? 'Cleared' : 'Failed'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }

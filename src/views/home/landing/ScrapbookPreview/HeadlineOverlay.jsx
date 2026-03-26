@@ -3,11 +3,17 @@
 import React from 'react';
 import { motion, useTransform } from 'framer-motion';
 
+/** Longer hold on “Introducing PXI” so it’s readable before phone + thread take over */
 export default function HeadlineOverlay({ progress }) {
-  // Appear soon after scroll starts; long smooth crossfade with phone (no dead air)
-  const opacity = useTransform(progress, [0, 0.015, 0.04, 0.12, 0.14, 0.26], [0, 0.4, 1, 1, 1, 0]);
-  const y = useTransform(progress, [0, 0.05], [20, 0]);
-  const scale = useTransform(progress, [0.12, 0.26], [1, 0.97]);
+  const opacity = useTransform(progress, (p) => {
+    if (p < 0.02) return p / 0.02;
+    if (p < 0.2) return 1;
+    if (p < 0.27) return 1 - (p - 0.2) / 0.07;
+    return 0;
+  });
+
+  const y = useTransform(progress, [0, 0.07], [24, 0]);
+  const scale = useTransform(progress, [0.18, 0.27], [1, 0.96]);
 
   return (
     <motion.div

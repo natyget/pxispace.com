@@ -59,7 +59,7 @@ function onImageErrorToDefault(e) {
 /**
  * Unified checkout: guests sign in/up first (with redirect back here), then Apple Pay / Google Pay / hosted Stripe or free ticket.
  */
-export default function EventCheckout() {
+export default function EventCheckout({ basePath = '/events' }) {
   const { id } = useParams();
   const searchParams = useSearchParams();
   const tierFromUrl = searchParams.get('tier');
@@ -77,10 +77,10 @@ export default function EventCheckout() {
   const [walletOpen, setWalletOpen] = useState(false);
 
   const checkoutReturnPath = useMemo(() => {
-    if (!id) return '/events';
+    if (!id) return basePath;
     const qs = selectedTierId ? `?tier=${encodeURIComponent(selectedTierId)}` : '';
-    return `/events/${id}/checkout${qs}`;
-  }, [id, selectedTierId]);
+    return `${basePath}/${id}/checkout${qs}`;
+  }, [id, selectedTierId, basePath]);
 
   const loginHref = `/login?redirect=${encodeURIComponent(checkoutReturnPath)}`;
   const signupHref = `/signup?mode=signup&redirect=${encodeURIComponent(checkoutReturnPath)}`;
@@ -175,8 +175,8 @@ export default function EventCheckout() {
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
       const { url } = await createCheckoutSession(
         apiEvent.id,
-        `${origin}/events?payment=success`,
-        `${origin}/events?payment=cancelled`,
+        `${origin}${basePath}?payment=success`,
+        `${origin}${basePath}?payment=cancelled`,
         apiTierId
       );
       if (url) window.location.href = url;
@@ -227,7 +227,7 @@ export default function EventCheckout() {
         <div className="border-b border-white/10 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-30">
           <div className="container mx-auto px-6 py-4">
             <Link
-              href={`/events/${apiEvent.id}`}
+              href={`${basePath}/${apiEvent.id}`}
               className="inline-flex items-center gap-2 text-sm font-bold text-zinc-400 hover:text-white transition-colors"
             >
               <ChevronLeft size={18} />

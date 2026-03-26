@@ -52,6 +52,15 @@
   html {
     scroll-behavior: smooth;
   }
+  /* Landing: framer scroll timelines need native scroll steps; smooth + wheel feels like a speed-run */
+  html.landing-page-root {
+    scroll-behavior: auto;
+  }
+  /* Custom cursor is the only pointer affordance on marketing landing (desktop) */
+  .landing-hide-native-cursor,
+  .landing-hide-native-cursor * {
+    cursor: none !important;
+  }
   body {
     background: var(--bg-primary);
     color: var(--text-primary);
@@ -98,6 +107,12 @@
   .neon-pill {
     background: var(--accent-purple);
     box-shadow: 0 0 30px var(--glow-purple);
+  }
+  /* Match navbar active "Home" purple/glow exactly */
+  .pxi-home-purple {
+    background-color: var(--color-pxi-purple);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(216, 74, 255, 0.4);
   }
 
   /* Legal hub page — neon TL;DR / CTA cards (from pxi-legal-hub) */

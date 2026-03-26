@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail } from 'lucide-react';
 import { FaApple, FaGoogle } from 'react-icons/fa';
@@ -119,7 +120,7 @@ export default function LoginPage() {
                         borderRadius: '50%', background: '#B026FF',
                         opacity: 0.22, filter: 'blur(50px)',
                     }} />
-                    <img src={LogoSVG} alt="PXI" style={{ width: 110, height: 110, position: 'relative', zIndex: 1 }} />
+                    <Image src={LogoSVG} alt="PXI" width={110} height={110} style={{ position: 'relative', zIndex: 1 }} priority />
                 </div>
                 <h1
                     className="font-black uppercase text-white"

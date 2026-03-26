@@ -54,10 +54,11 @@ export default function FeatureStory() {
 
   const [activeChapter, setActiveChapter] = useState(0);
 
+  /* Wider scroll bands so chapters don’t flip like a speed-run */
   useMotionValueEvent(scrollYProgress, 'change', (latest) => {
-    if (latest < 0.25) setActiveChapter(0);
-    else if (latest < 0.5) setActiveChapter(1);
-    else if (latest < 0.75) setActiveChapter(2);
+    if (latest < 0.2) setActiveChapter(0);
+    else if (latest < 0.45) setActiveChapter(1);
+    else if (latest < 0.7) setActiveChapter(2);
     else setActiveChapter(3);
   });
 
@@ -65,10 +66,10 @@ export default function FeatureStory() {
     <section
       id="features"
       ref={containerRef}
-      className="relative h-[400vh] w-full bg-[var(--color-bg-primary)]"
+      className="relative h-[520vh] w-full bg-[var(--color-bg-primary)]"
     >
-      <div className="sticky top-0 h-[100svh] w-full overflow-hidden flex flex-col md:flex-row items-center justify-center md:justify-between px-6 md:px-10 max-w-[1200px] mx-auto pt-24 pb-0 md:py-0 gap-8">
-        <div className="relative w-full md:w-[45%] h-[38vh] md:h-full flex items-center justify-start md:justify-center z-20">
+      <div className="sticky top-0 h-[100svh] w-full overflow-visible md:overflow-hidden flex flex-col md:flex-row items-center justify-center md:justify-between px-6 md:px-10 max-w-[1200px] mx-auto pt-20 pb-4 md:py-0 gap-6 md:gap-8">
+        <div className="relative w-full md:w-[45%] h-[44vh] md:h-full flex items-center justify-start md:justify-center z-20">
           {CHAPTERS.map((chapter, index) => {
             const isActive = index === activeChapter;
             return (
@@ -97,7 +98,7 @@ export default function FeatureStory() {
             );
           })}
         </div>
-        <div className="relative w-full md:w-[42%] flex justify-center items-center md:items-center mt-2 md:mt-0 z-10 shrink-0">
+        <div className="relative w-full md:w-[42%] flex justify-center items-center md:items-center mt-6 md:mt-0 z-10 shrink-0">
           <DeviceFrame>
             <div className="absolute inset-0 bg-[#050505]">
               {CHAPTERS.map((chapter, index) => (

@@ -2,17 +2,44 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { TrendingUp, Star, DollarSign, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
+import {
+    Ticket,
+    Calendar,
+    DollarSign,
+    Activity,
+    Edit,
+    CheckSquare,
+    Radio,
+    Eye,
+    ArrowUpRight,
+    ArrowDownRight,
+    ArrowRight,
+    Star,
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
+import { eventsService } from '../../services/events';
 
 export default function DashboardHome() {
     const { user } = useAuth();
     const [mounted, setMounted] = useState(false);
     const [vendorData, setVendorData] = useState(null);
     const [vendorLoading, setVendorLoading] = useState(false);
+    const [events, setEvents] = useState([]);
+    const [eventsLoading, setEventsLoading] = useState(false);
 
     useEffect(() => { setMounted(true); }, []);
+
+    useEffect(() => {
+        if (!mounted) return;
+        setEventsLoading(true);
+        eventsService
+            .getMyEvents({ limit: 100, offset: 0 })
+            .then((res) => setEvents(res.events || []))
+            .catch(() => setEvents([]))
+            .finally(() => setEventsLoading(false));
+    }, [mounted]);
 
     useEffect(() => {
         if (!user?.isVendor) return;
@@ -25,66 +52,66 @@ export default function DashboardHome() {
     }, [user?.isVendor]);
 
     const totalEarnings = vendorData?.aggregates?.netPayout ?? 0;
+    const totalGross = vendorData?.aggregates?.grossRevenue ?? 0;
     const recentPayments = vendorData?.payments ?? [];
+    const paymentByEventId = new Map();
+    for (const p of recentPayments) {
+        const key = p.eventId || p.eventName || 'Ticket Sale';
+        paymentByEventId.set(key, (paymentByEventId.get(key) ?? 0) + (p.netPayout ?? 0));
+    }
+    const now = Date.now();
+    const soldTicketsExcludingOrganizer = (count) => Math.max(0, (count ?? 0) - 1);
+    const eventRows = events.slice(0, 8).map((e) => {
+        const startMs = e.startDate ? new Date(e.startDate).getTime() : 0;
+        const endMs = e.endDate ? new Date(e.endDate).getTime() : 0;
+        const statusRaw = String(e.status || '').toUpperCase();
+        let status = 'Draft';
+        if (statusRaw === 'ARCHIVED' || (endMs && endMs < now)) status = 'Ended';
+        else if (statusRaw === 'LIVE' || (startMs && startMs <= now && (!endMs || endMs >= now))) status = 'Active';
+        else if (startMs > now) status = 'Scheduled';
+        const ticketsSold = soldTicketsExcludingOrganizer(e?._count?.tickets ?? 0);
+        const revenue = paymentByEventId.get(e.id) ?? 0;
+        const hype = Math.max(0, Math.min(100, Math.round(Math.min(100, ticketsSold * 8))));
+        return {
+            id: e.id,
+            name: e.name || 'Untitled event',
+            date: e.startDate,
+            status,
+            ticketsSold,
+            capacity: 0,
+            revenue,
+            hype,
+        };
+    });
+    const activeEvents = events.filter((e) => {
+        const startMs = e.startDate ? new Date(e.startDate).getTime() : 0;
+        const endMs = e.endDate ? new Date(e.endDate).getTime() : 0;
+        const statusRaw = String(e.status || '').toUpperCase();
+        return statusRaw === 'LIVE' || (startMs && startMs <= now && (!endMs || endMs >= now));
+    }).length;
+    const salesCount = events.reduce((sum, e) => sum + soldTicketsExcludingOrganizer(e?._count?.tickets ?? 0), 0);
+    const avgHype = eventRows.length
+        ? Math.round(eventRows.reduce((sum, e) => sum + (e.hype ?? 0), 0) / eventRows.length)
+        : 0;
+
+    const kpis = [
+        { title: 'Total Ticket Sales', value: salesCount.toLocaleString(), delta: `${events.length} events`, icon: Ticket, trend: salesCount > 0 ? 'up' : 'neutral' },
+        { title: 'Active Events', value: String(activeEvents), delta: `${events.length} total`, icon: Calendar, trend: 'neutral' },
+        { title: 'Total Net Payout', value: `$${(totalEarnings / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, delta: `Gross $${(totalGross / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: DollarSign, trend: totalEarnings > 0 ? 'up' : 'neutral' },
+        { title: 'Avg Hype Score', value: `${avgHype}/100`, delta: 'From live event metrics', icon: Activity, trend: avgHype > 0 ? 'down' : 'neutral' },
+    ];
+
+    if (!mounted) {
+        return <div className="max-w-6xl mx-auto space-y-12" />;
+    }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8">
-            {/* Header */}
-            <div>
-                <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-                    {mounted ? greeting() : 'Welcome'}, {mounted ? (user?.name?.split(' ')[0] || 'there') : 'there'} 👋
-                </h1>
-                <p className="text-zinc-500 text-sm mt-1">
-                    Here's what's happening with your account.
-                </p>
+        <div className="max-w-6xl mx-auto space-y-12">
+            <div className="flex flex-col space-y-2">
+                <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Command Center</h1>
+                <p className="text-zinc-500 text-sm">Real-time overview of your events and performance.</p>
             </div>
 
-            {/* PXI Passport Status Card */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Link href="/dashboard/passport" className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5 block hover:border-white/10 transition-colors">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-zinc-800 border border-white/8">
-                            {mounted && user?.isPassportIssued
-                                ? <CheckCircle2 size={16} className="text-pxi-purple" />
-                                : <Clock size={16} className="text-amber-400" />
-                            }
-                        </div>
-                        <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
-                            PXI Passport
-                        </span>
-                    </div>
-                    <p className={`font-bold text-lg ${mounted && user?.isPassportIssued ? 'text-white' : 'text-amber-400'}`}>
-                        {mounted ? (user?.isPassportIssued ? 'Issued' : 'Not issued') : 'Not issued'}
-                    </p>
-                    <p className="text-zinc-500 text-xs mt-0.5">
-                        {mounted && user?.isPassportIssued ? `@${user?.username ?? '—'}` : 'Issue via PXI mobile app'}
-                    </p>
-                </Link>
-
-                <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="w-9 h-9 rounded-xl bg-zinc-800 border border-white/8 flex items-center justify-center">
-                            <Star size={16} className="text-zinc-400" />
-                        </div>
-                        <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
-                            Vendor Status
-                        </span>
-                    </div>
-                    {mounted && user?.isVendor ? (
-                        <>
-                            <p className="text-amber-400 font-bold text-lg">Active</p>
-                            <p className="text-zinc-500 text-xs mt-0.5">Stripe Connect verified</p>
-                        </>
-                    ) : (
-                        <>
-                            <p className="text-zinc-400 font-bold text-lg">Not Set Up</p>
-                            <p className="text-zinc-600 text-xs mt-0.5">Upgrade to sell tickets</p>
-                        </>
-                    )}
-                </div>
-            </div>
-
-            {/* Vendor Upgrade CTA (only if not vendor) */}
             {mounted && !user?.isVendor && (
                 <div className="relative overflow-hidden bg-gradient-to-br from-pxi-purple/10 to-zinc-900/60 border border-pxi-purple/20 rounded-2xl p-6">
                     <div className="absolute top-0 right-0 w-48 h-48 bg-pxi-purple/10 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
@@ -113,91 +140,113 @@ export default function DashboardHome() {
                 </div>
             )}
 
-            {/* Vendor Stats (only if vendor) */}
-            {mounted && user?.isVendor && (
-                <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <StatCard
-                            icon={DollarSign}
-                            label="Total Earnings"
-                            value={`$${(totalEarnings / 100).toFixed(2)}`}
-                            loading={vendorLoading}
-                        />
-                        <StatCard
-                            icon={TrendingUp}
-                            label="Total Sales"
-                            value={recentPayments.length.toString()}
-                            loading={vendorLoading}
-                        />
-                    </div>
-
-                    {/* Recent Payments */}
-                    <div className="bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden">
-                        <div className="px-5 py-4 border-b border-white/5">
-                            <h3 className="text-white font-bold text-sm">Recent Payments</h3>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
+            >
+                {kpis.map((kpi) => (
+                    <div key={kpi.title} className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6 md:p-8 flex flex-col justify-between relative group hover:border-white/20 transition-colors">
+                        <div className="flex items-center justify-between mb-6 md:mb-8">
+                            <span className="text-[11px] md:text-[12px] font-bold tracking-widest text-white/40 uppercase">{kpi.title}</span>
+                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors shrink-0">
+                                <kpi.icon className="h-4 w-4 text-white" />
+                            </div>
                         </div>
-                        {vendorLoading ? (
-                            <div className="px-5 py-8 text-center text-zinc-600 text-sm">
-                                Loading…
-                            </div>
-                        ) : recentPayments.length === 0 ? (
-                            <div className="px-5 py-8 text-center text-zinc-600 text-sm">
-                                No payments yet.
-                            </div>
+                        {(vendorLoading || eventsLoading) ? (
+                            <div className="h-10 w-24 bg-white/5 rounded animate-pulse" />
                         ) : (
-                            <ul className="divide-y divide-white/5">
-                                {recentPayments.slice(0, 10).map((p) => (
-                                    <li
-                                        key={p.id}
-                                        className="flex items-center justify-between px-5 py-3.5"
-                                    >
-                                        <div>
-                                            <p className="text-white text-sm font-medium">
-                                                {p.eventName || 'Ticket Sale'}
-                                            </p>
-                                            <p className="text-zinc-500 text-xs mt-0.5">
-                                                {p.createdAt
-                                                    ? new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                                                    : '—'}
-                                            </p>
-                                        </div>
-                                        <span className="text-green-400 font-bold text-sm">
-                                            +${((p.netPayout ?? 0) / 100).toFixed(2)}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
+                            <div className="mt-auto flex flex-col items-start gap-3 md:gap-4">
+                                <div className="text-3xl lg:text-[40px] font-[900] text-white tracking-tighter leading-none">{kpi.value}</div>
+                                <div className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] md:text-[11px] font-bold tracking-wider uppercase ${
+                                    kpi.trend === 'up' ? 'bg-[#4ade80]/10 text-[#4ade80] border border-[#4ade80]/20' :
+                                    kpi.trend === 'down' ? 'bg-[#f87171]/10 text-[#f87171] border border-[#f87171]/20' :
+                                    'bg-white/5 text-white/50 border border-white/10'
+                                }`}>
+                                    {kpi.trend === 'up' && <ArrowUpRight className="w-3 h-3" />}
+                                    {kpi.trend === 'down' && <ArrowDownRight className="w-3 h-3" />}
+                                    <span>{kpi.delta}</span>
+                                </div>
+                            </div>
                         )}
                     </div>
-                </>
-            )}
-        </div>
-    );
-}
+                ))}
+            </motion.div>
 
-function StatCard({ icon: Icon, label, value, loading }) {
-    return (
-        <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5">
-            <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 rounded-xl bg-zinc-800 border border-white/8 flex items-center justify-center">
-                    <Icon size={16} className="text-zinc-400" />
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-[20px] font-[800] tracking-tight text-white">Active Events</h2>
+                    <Link href="/dashboard/events" className="text-[13px] font-bold tracking-wide text-white/50 hover:text-white transition-colors uppercase">
+                        View All
+                    </Link>
                 </div>
-                <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
-                    {label}
-                </span>
+                <div className="rounded-2xl border border-white/10 bg-zinc-900/40 overflow-x-auto">
+                    {(vendorLoading || eventsLoading) ? (
+                        <div className="px-6 py-10 text-center text-zinc-600 text-sm">Loading…</div>
+                    ) : eventRows.length === 0 ? (
+                        <div className="px-6 py-10 text-center text-zinc-600 text-sm">No events yet.</div>
+                    ) : (
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-white/5">
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Event Name</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Date</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Status</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Tickets Sold</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Net Revenue</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Hype Score</th>
+                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {eventRows.map((event) => (
+                                    <tr key={event.id} className="group hover:bg-white/[0.02] transition-colors">
+                                        <td className="px-6 py-5 text-[15px] font-bold text-white tracking-tight">{event.name}</td>
+                                        <td className="px-6 py-5 text-[14px] font-medium text-white/50">
+                                            {event.date ? new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                                {event.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-5 text-[15px] font-mono font-medium text-white/70">
+                                            {event.ticketsSold} {event.capacity ? `/ ${event.capacity}` : ''}
+                                        </td>
+                                        <td className="px-6 py-5 text-[15px] font-mono font-medium text-white/70">
+                                            ${(event.revenue / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-20 bg-white/10 rounded-full h-1.5 overflow-hidden">
+                                                    <div className="bg-white h-1.5 rounded-full" style={{ width: `${event.hype}%` }} />
+                                                </div>
+                                                <span className="text-[13px] text-white/70 font-mono font-bold">{event.hype}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5 text-right">
+                                            <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                                <button className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                                                    <CheckSquare className="w-4 h-4" />
+                                                </button>
+                                                <button className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                                                    <Radio className="w-4 h-4" />
+                                                </button>
+                                                <Link href="/dashboard/events" className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                                                    <Eye className="w-4 h-4" />
+                                                </Link>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
             </div>
-            {loading ? (
-                <div className="h-7 w-24 bg-zinc-800 rounded-lg animate-pulse" />
-            ) : (
-                <p className="text-white font-black text-2xl">{value}</p>
-            )}
         </div>
     );
-}
-
-function greeting() {
-    const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 18) return 'Good afternoon';
-    return 'Good evening';
 }

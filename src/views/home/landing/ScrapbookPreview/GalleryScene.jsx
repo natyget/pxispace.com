@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import Image from 'next/image';
 import { motion, useTransform } from 'framer-motion';
 import { GALLERY_IMAGE_URLS } from '@/lib/landingAssets';
 
@@ -8,8 +9,8 @@ const EMOJIS = ['🔥', '❤️', '😂', '📸', '✨', '🙌'];
 const NAMES = ['Alex', 'Sarah', 'Mike', 'Jess', 'Jamie', 'Riley', 'Sam', 'Casey'];
 
 export default function GalleryScene({ progress }) {
-  const opacity = useTransform(progress, [0.68, 0.74], [0, 1]);
-  const y = useTransform(progress, [0.68, 0.995], [0, -980]);
+  const opacity = useTransform(progress, [0.82, 0.88], [0, 1]);
+  const y = useTransform(progress, [0.82, 0.995], [0, -980]);
 
   const tiles = useMemo(
     () =>
@@ -37,15 +38,18 @@ export default function GalleryScene({ progress }) {
             key={img.id}
             className="relative aspect-square bg-[#111] overflow-hidden rounded-[3px] ring-1 ring-white/[0.06]"
           >
-            <img src={img.url} alt="" className="w-full h-full object-cover" />
+            <Image src={img.url} alt="" fill unoptimized className="object-cover" sizes="(max-width: 768px) 33vw, 240px" />
             <div className="absolute bottom-1.5 left-1.5">
-              <img
+              <Image
                 src={`https://i.pravatar.cc/150?u=gallery${img.id}`}
                 alt=""
+                width={20}
+                height={20}
+                unoptimized
                 className="w-5 h-5 rounded-full border border-white/25 ring-1 ring-black/40"
               />
             </div>
-            <div className="absolute bottom-1.5 right-1.5 bg-black/45 rounded-[4px] px-1.5 py-0.5 flex items-center gap-1 backdrop-blur-md border border-white/10">
+            <div className="absolute bottom-1.5 right-1.5 bg-black/55 rounded-[4px] px-1.5 py-0.5 flex items-center gap-1 border border-white/10">
               <span className="text-[8px]">{img.emoji}</span>
               <span className="text-[9px] font-bold text-white">{img.count}</span>
             </div>

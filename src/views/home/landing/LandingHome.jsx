@@ -12,7 +12,8 @@ import BestMomentsVault from './BestMomentsVault';
 import HashtagTicker from './HashtagTicker';
 
 export default function LandingHome() {
-  const [isTouch, setIsTouch] = useState(true);
+  const [isTouch, setIsTouch] = useState(null);
+  const [canUseCustomCursor, setCanUseCustomCursor] = useState(false);
 
   useEffect(() => {
     setIsTouch(
@@ -21,11 +22,41 @@ export default function LandingHome() {
     );
   }, []);
 
+  useEffect(() => {
+    if (isTouch !== false) return;
+    document.documentElement.classList.add('landing-page-root');
+    return () => document.documentElement.classList.remove('landing-page-root');
+  }, [isTouch]);
+
+  useEffect(() => {
+    if (!canUseCustomCursor) {
+      document.documentElement.classList.remove('landing-hide-native-cursor');
+      return;
+    }
+    document.documentElement.classList.add('landing-hide-native-cursor');
+    return () => document.documentElement.classList.remove('landing-hide-native-cursor');
+  }, [canUseCustomCursor]);
+
+  useEffect(() => {
+    if (isTouch !== false) {
+      setCanUseCustomCursor(false);
+      return;
+    }
+    const lowPowerCpu = typeof navigator !== 'undefined' && navigator.hardwareConcurrency <= 4;
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const narrowViewport = typeof window !== 'undefined' && window.innerWidth < 1024;
+    setCanUseCustomCursor(!lowPowerCpu && !reducedMotion && !narrowViewport);
+  }, [isTouch]);
+
   return (
     <CursorProvider>
-      <div className="landing-v2 relative w-full min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-body)]">
-        {!isTouch && <CustomCursor />}
-        {!isTouch && <ScrollProgressBar />}
+      <div
+        className="landing-v2 relative w-full min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-body)]"
+      >
+        {canUseCustomCursor && <CustomCursor />}
+        {isTouch === false && <ScrollProgressBar />}
         <main>
           <Hero />
           <ScrapbookPreview />

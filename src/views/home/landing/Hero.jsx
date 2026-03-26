@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { FaGooglePlay } from 'react-icons/fa';
 import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
 import {
-  APP_STORE_BADGE,
+  APPLE_MARK,
   HERO_SCATTER_ICONS,
   HERO_SCATTER_PHOTOS,
-  LANDING_LOGO,
 } from '@/lib/landingAssets';
 
 function buildChaosElements(isMobile) {
@@ -35,9 +34,110 @@ function buildChaosElements(isMobile) {
   });
 }
 
+function easeOutCubic(t) {
+  return 1 - (1 - t) ** 3;
+}
+
+const HeroChaosItem = React.memo(function HeroChaosItem({ el, heroProgress, isMobile }) {
+  const holeStart = 0.045 + el.id * (isMobile ? 0.019 : 0.0155);
+  const holeEnd = 0.49;
+
+  const tFor = (p) => {
+    const t = (p - holeStart) / (holeEnd - holeStart);
+    return Math.min(Math.max(t, 0), 1);
+  };
+
+  const x = useTransform(heroProgress, (p) => {
+    const t = easeOutCubic(tFor(p));
+    return `${el.startX * (1 - t)}vw`;
+  });
+  const y = useTransform(heroProgress, (p) => {
+    const t = easeOutCubic(tFor(p));
+    return `${el.startY * (1 - t)}vh`;
+  });
+  const scale = useTransform(heroProgress, (p) => {
+    const t = easeOutCubic(tFor(p));
+    return 1 - t * 0.98;
+  });
+  const opacity = useTransform(heroProgress, (p) => {
+    const t = easeOutCubic(tFor(p));
+    return Math.max(0, 1 - t * 1.08);
+  });
+
+  return (
+    <motion.div
+      className="absolute top-1/2 left-1/2 z-10 will-change-transform"
+      style={{ x, y, scale, opacity }}
+    >
+      <motion.div
+        className="will-change-transform"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{
+          type: 'spring',
+          stiffness: 150,
+          damping: 15,
+          mass: 1,
+          delay: el.popDelay,
+        }}
+      >
+        <motion.div
+          animate={{
+            x: [0, el.driftX, 0],
+            y: [0, el.driftY, 0],
+            rotate: [el.rotation, el.rotation + 15, el.rotation],
+          }}
+          transition={{
+            duration: el.durationX,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        >
+          {el.type === 'photo' ? (
+            el.photoStyle === 'polaroid' ? (
+              <div className="w-[180px] h-[220px] md:w-[240px] md:h-[290px] bg-[#fdfdfd] p-3 pb-12 md:p-4 md:pb-16 shadow-[0_15px_35px_rgba(0,0,0,0.4)] border border-neutral-200">
+                <div className="w-full h-full bg-neutral-800 overflow-hidden shadow-inner">
+                  <img
+                    src={el.photoUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    draggable={false}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="w-[180px] h-[220px] md:w-[240px] md:h-[290px] rounded-2xl overflow-hidden bg-black border-2 border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                <img
+                  src={el.photoUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  draggable={false}
+                />
+              </div>
+            )
+          ) : (
+            <div className="w-[70px] h-[70px] md:w-[90px] md:h-[90px] rounded-[1.5rem] bg-white/95 backdrop-blur-md flex items-center justify-center border border-white/40 shadow-[0_15px_35px_rgba(0,0,0,0.2)]">
+              <img
+                src={el.iconUrl}
+                alt=""
+                className="w-10 h-10 md:w-12 md:h-12 object-contain"
+                draggable={false}
+              />
+            </div>
+          )}
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+});
+
 export default function Hero() {
-  const { scrollY } = useScroll();
-  const [isScrolled, setIsScrolled] = useState(false);
+  const sectionRef = useRef(null);
+  const { scrollYProgress: heroProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end start'],
+  });
+
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -51,25 +151,15 @@ export default function Hero() {
   }, []);
 
   useEffect(() => {
-    const unsub = scrollY.on('change', (v) => {
-      setIsScrolled(v > 10);
-    });
-
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-    return () => {
-      unsub();
-      window.removeEventListener('resize', checkMobile);
-    };
-  }, [scrollY]);
-
-  const textOpacity = useTransform(scrollY, [0, 100], [1, 0]);
-  const elementsScale = useTransform(scrollY, [0, 100], [1, 0]);
-  const elementsOpacity = useTransform(scrollY, [0, 100], [1, 0]);
+  const textOpacity = useTransform(heroProgress, [0, 0.36], [1, 0]);
 
   const visibleElements = isMobile ? chaosElements.slice(0, 8) : chaosElements;
 
@@ -77,114 +167,38 @@ export default function Hero() {
 
   return (
     <section
+      ref={sectionRef}
       id="home"
       className="relative h-screen w-full overflow-hidden bg-[var(--color-bg-primary)] flex items-center justify-center pt-20"
     >
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[1000px] bg-[var(--color-pxi-purple)]/10 blur-[150px] pointer-events-none -z-10 opacity-60" />
 
       {visibleElements.map((el) => (
-        <motion.div
+        <HeroChaosItem
           key={el.id}
-          className="absolute top-1/2 left-1/2 z-10"
-          initial={{
-            x: 0,
-            y: 0,
-            scale: 0,
-            opacity: 0,
-          }}
-          animate={
-            isScrolled
-              ? { x: 0, y: 0, scale: 0, opacity: 0 }
-              : {
-                  x: `${el.startX}vw`,
-                  y: `${el.startY}vh`,
-                  scale: 1,
-                  opacity: 1,
-                }
-          }
-          transition={
-            isScrolled
-              ? { duration: 0.8, ease: [0.4, 0, 0.2, 1] }
-              : {
-                  type: 'spring',
-                  stiffness: 150,
-                  damping: 15,
-                  mass: 1,
-                  delay: el.popDelay,
-                }
-          }
-          style={
-            isScrolled
-              ? undefined
-              : { scale: elementsScale, opacity: elementsOpacity }
-          }
-        >
-          <motion.div
-            animate={{
-              x: [0, el.driftX, 0],
-              y: [0, el.driftY, 0],
-              rotate: [el.rotation, el.rotation + 15, el.rotation],
-            }}
-            transition={{
-              duration: el.durationX,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          >
-            {el.type === 'photo' ? (
-              el.photoStyle === 'polaroid' ? (
-                <div className="w-[180px] h-[220px] md:w-[240px] md:h-[290px] bg-[#fdfdfd] p-3 pb-12 md:p-4 md:pb-16 shadow-[0_15px_35px_rgba(0,0,0,0.4)] border border-neutral-200">
-                  <div className="w-full h-full bg-neutral-800 overflow-hidden shadow-inner">
-                    <img
-                      src={el.photoUrl}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="w-[180px] h-[220px] md:w-[240px] md:h-[290px] rounded-2xl overflow-hidden bg-black border-2 border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                  <img
-                    src={el.photoUrl}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )
-            ) : (
-              <div className="w-[70px] h-[70px] md:w-[90px] md:h-[90px] rounded-[1.5rem] bg-white/95 backdrop-blur-md flex items-center justify-center border border-white/40 shadow-[0_15px_35px_rgba(0,0,0,0.2)]">
-                <img
-                  src={el.iconUrl}
-                  alt=""
-                  className="w-10 h-10 md:w-12 md:h-12 object-contain"
-                />
-              </div>
-            )}
-          </motion.div>
-        </motion.div>
+          el={el}
+          heroProgress={heroProgress}
+          isMobile={isMobile}
+        />
       ))}
+
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-[15] bg-[radial-gradient(ellipse_96%_78%_at_50%_46%,rgba(5,5,5,0.76)_0%,rgba(5,5,5,0.38)_50%,rgba(5,5,5,0.1)_66%,transparent_84%)]"
+        style={{ opacity: textOpacity }}
+        aria-hidden
+      />
 
       <motion.div
         className="absolute top-1/2 left-0 right-0 z-20 mx-auto max-w-[800px] text-center px-6"
         style={{ y: '-50%', opacity: textOpacity }}
       >
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,var(--color-bg-primary)_20%,transparent_80%)] md:bg-[radial-gradient(circle_at_center,var(--color-bg-primary)_0%,transparent_70%)] opacity-90 blur-xl scale-150" />
-
-        <motion.div
-          className="flex justify-center mb-8 relative z-10"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-        >
-          <img
-            src={LANDING_LOGO}
-            alt="PXI"
-            className="h-12 w-12 md:h-14 md:w-14 object-contain drop-shadow-[0_0_24px_rgba(216,74,255,0.35)]"
-          />
-        </motion.div>
+        <div
+          className="pointer-events-none absolute left-1/2 top-[-2.5rem] bottom-[-3.5rem] w-[min(100vw,920px)] max-w-[calc(100%+2.5rem)] -translate-x-1/2 -z-10 bg-[radial-gradient(ellipse_90%_74%_at_50%_42%,rgba(5,5,5,0.55)_0%,rgba(5,5,5,0.16)_56%,transparent_74%)]"
+          aria-hidden
+        />
 
         <motion.h1
-          className="font-display font-bold text-[clamp(40px,7vw,88px)] leading-[0.95] tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-neutral-600 to-white pb-2 relative z-10"
+          className="font-display font-bold text-[clamp(40px,7vw,88px)] leading-[0.95] tracking-tighter text-white pb-2 relative z-10"
           initial="hidden"
           animate="visible"
           variants={{
@@ -223,7 +237,7 @@ export default function Hero() {
         </motion.p>
 
         <motion.div
-          className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10"
+          className="mt-16 flex w-full flex-col sm:flex-row items-center justify-center gap-4 relative z-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.7 }}
@@ -232,20 +246,28 @@ export default function Hero() {
             href={PXI_APP_STORE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/20 backdrop-blur-md hover:bg-white/20 transition-colors cursor-pointer px-4 py-2"
+            aria-label="Download on the App Store"
+            className="flex w-full max-w-[320px] sm:w-auto sm:max-w-none items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-colors cursor-pointer"
             data-cursor-hover
           >
             <img
-              src={APP_STORE_BADGE}
-              alt="Download on the App Store"
-              className="h-10 md:h-11 w-auto"
+              src={APPLE_MARK}
+              alt=""
+              className="h-[26px] w-[21px] object-contain shrink-0"
+              aria-hidden
             />
+            <div className="flex flex-col items-start">
+              <span className="text-[10px] uppercase tracking-widest text-white/70 font-bold leading-none mb-1">
+                Download on the
+              </span>
+              <span className="text-sm font-bold text-white leading-none">App Store</span>
+            </div>
           </a>
           <a
             href={PXI_PLAY_STORE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md hover:bg-white/20 transition-colors cursor-pointer"
+            className="flex w-full max-w-[320px] sm:w-auto sm:max-w-none items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-colors cursor-pointer"
             data-cursor-hover
           >
             <FaGooglePlay size={26} className="text-white" />

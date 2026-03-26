@@ -7,13 +7,15 @@ const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 export const metadata = {
   title: 'PXI - Pick • Print • Post',
   description: 'PXI is a compact phone-attached printer that instantly prints your photos.',
+  icons: {
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/svg+xml" href="/favicon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

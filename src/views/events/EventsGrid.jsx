@@ -3,7 +3,7 @@
 import React from 'react';
 import EventCard from './EventCard';
 
-const EventsGrid = ({ events, favoriteIds, onToggleFavorite, onQuickView }) => {
+const EventsGrid = ({ events, favoriteIds, onToggleFavorite, onQuickView, detailBasePath = '/events' }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
       {events.map((event) => (
@@ -13,6 +13,7 @@ const EventsGrid = ({ events, favoriteIds, onToggleFavorite, onQuickView }) => {
           favorited={favoriteIds.has(String(event.id))}
           onToggleFavorite={onToggleFavorite}
           onQuickView={onQuickView}
+          detailBasePath={detailBasePath}
         />
       ))}
     </div>
