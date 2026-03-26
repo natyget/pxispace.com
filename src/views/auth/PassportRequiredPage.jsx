@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Smartphone } from 'lucide-react';
 const LogoSVG = "/images/logo.svg";
@@ -18,7 +19,7 @@ export default function PassportRequiredPage() {
 
             <div className="relative w-full max-w-md text-center">
                 <Link href="/">
-                    <img src={LogoSVG} alt="PXI" className="h-10 w-10 mx-auto mb-8" />
+                    <Image src={LogoSVG} alt="PXI" width={40} height={40} className="h-10 w-10 mx-auto mb-8" priority />
                 </Link>
 
                 {/* Icon */}

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { FiCpu, FiSmartphone, FiPrinter, FiBluetooth } from "react-icons/fi";
 import Badge from "../../components/Badge";
 const img = "/images/about.png";
@@ -95,7 +96,7 @@ const PXIClip = () => {
                                 ease: "easeInOut",
                             }}
                         >
-                            <img src={img} className="" alt="pxi hardware" />
+                            <Image src={img} alt="pxi hardware" width={640} height={640} className="" />
                         </motion.div>
                     </motion.div>
                 </motion.div>

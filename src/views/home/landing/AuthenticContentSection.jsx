@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Calendar, Image as ImageIcon, Users } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
@@ -90,7 +91,7 @@ export default function AuthenticContentSection() {
             <div className="mt-12 md:mt-16">
               <Link
                 href="/events"
-                className="inline-flex items-center justify-center px-10 py-4 rounded-full font-bold text-xs uppercase tracking-widest neon-pill text-white hover:scale-105 active:scale-95 transition-transform"
+                className="inline-flex items-center justify-center px-10 py-4 rounded-full font-bold text-xs uppercase tracking-widest pxi-home-purple hover:scale-105 active:scale-95 transition-transform"
                 data-cursor-hover
               >
                 Start Creating Events
@@ -120,12 +121,26 @@ export default function AuthenticContentSection() {
                   >
                     <SwiperSlide>
                       <div className="aspect-[9/19] w-full overflow-hidden">
-                        <img src={DiscoverPNG} alt="Discover" className="w-full h-full object-cover" />
+                        <Image
+                          src={DiscoverPNG}
+                          alt="Discover"
+                          width={720}
+                          height={1520}
+                          className="w-full h-full object-cover"
+                          sizes="(max-width: 768px) 280px, 360px"
+                        />
                       </div>
                     </SwiperSlide>
                     <SwiperSlide>
                       <div className="aspect-[9/19] w-full overflow-hidden">
-                        <img src={CreatePNG} alt="Create" className="w-full h-full object-cover" />
+                        <Image
+                          src={CreatePNG}
+                          alt="Create"
+                          width={720}
+                          height={1520}
+                          className="w-full h-full object-cover"
+                          sizes="(max-width: 768px) 280px, 360px"
+                        />
                       </div>
                     </SwiperSlide>
                   </Swiper>

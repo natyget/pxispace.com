@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
-const LogoSVG = "/images/logo.svg";
+const LogoSrc = "/favicon.svg";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Navbar = () => {
@@ -16,6 +17,7 @@ const Navbar = () => {
     const { isAuthenticated, user, logout } = useAuth();
     const pathname = usePathname();
     const router = useRouter();
+    const isLanding = pathname === "/";
 
     useEffect(() => setMounted(true), []);
     useEffect(() => {
@@ -66,42 +68,52 @@ const Navbar = () => {
         <>
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b will-change-transform ${
-                isScrolled || mobileMenuOpen
-                    ? "py-4 bg-black/60 backdrop-blur-2xl border-white/5"
-                    : "py-8 bg-transparent border-transparent"
+                isLanding
+                    ? "py-2 bg-transparent border-transparent backdrop-blur-0"
+                    : isScrolled || mobileMenuOpen
+                      ? "py-2.5 bg-transparent border-transparent"
+                      : "py-8 bg-transparent border-transparent"
             }`}
         >
-            <div className="container mx-auto px-6 relative flex items-center justify-between">
+            <div className="container mx-auto grid grid-cols-[1fr_auto] items-center gap-x-4 px-6 md:grid-cols-[1fr_auto_1fr]">
                 <Link
                     href="/"
-                    className="flex items-center gap-3 cursor-pointer"
+                    className="flex h-10 min-w-0 items-center justify-self-start gap-3"
                     onClick={() => setMobileMenuOpen(false)}
                 >
-                    <img src={LogoSVG} alt="PXI Logo" className="h-8 w-8" />
+                    <Image
+                        src={LogoSrc}
+                        alt="PXI Logo"
+                        width={36}
+                        height={36}
+                        className="h-9 w-9 shrink-0 object-contain"
+                        priority
+                    />
                 </Link>
 
-                <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 items-center bg-zinc-900/50 p-1 rounded-full border border-white/5 backdrop-blur-md gap-1">
+                <div className={`col-start-2 row-start-1 hidden items-center justify-self-center md:col-start-2 z-10 bg-zinc-900/50 p-1 rounded-full border border-white/5 backdrop-blur-md gap-1 ${isLanding ? "lg:flex" : "md:flex"}`}>
                     {navLinks.map((link) => (
                         <Link
                             key={link.path}
                             href={link.path}
                             onClick={() => setMobileMenuOpen(false)}
-                            className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${linkClass(link.path)}`}
+                            className={`flex h-9 items-center px-5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${linkClass(link.path)}`}
                         >
                             {link.name}
                         </Link>
                     ))}
                 </div>
 
-                <div className="hidden md:flex items-center gap-3">
+                <div className="col-start-2 row-start-1 flex h-10 items-center justify-end justify-self-end gap-3 md:col-start-3">
                     {!mounted ? (
                         /* Skeleton while auth state loads */
-                        <div className="w-28 h-9 rounded-full bg-zinc-800/60 animate-pulse" />
+                        <div className="hidden h-9 w-28 shrink-0 rounded-full bg-zinc-800/60 animate-pulse md:block" />
                     ) : isAuthenticated ? (
-                        <div className="relative" ref={userMenuRef}>
+                        <div className="relative hidden md:block" ref={userMenuRef}>
                             <button
+                                type="button"
                                 onClick={() => setUserMenuOpen((v) => !v)}
-                                className="flex items-center gap-2 px-3 py-2 rounded-full bg-zinc-900/60 border border-white/8 hover:border-white/15 transition-all"
+                                className="flex h-10 items-center gap-2 rounded-full border border-white/8 bg-zinc-900/60 px-3 hover:border-white/15 transition-all"
                             >
                                 {user?.avatarUrl ? (
                                     <img
@@ -150,19 +162,20 @@ const Navbar = () => {
                     ) : (
                         <Link
                             href="/login"
-                            className="px-5 py-2.5 rounded-full bg-pxi-purple text-white text-xs font-bold uppercase tracking-widest shadow-[0_0_16px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
+                            className="hidden h-10 items-center rounded-full bg-pxi-purple px-5 text-xs font-bold uppercase tracking-widest text-white shadow-[0_0_16px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all md:inline-flex"
                         >
                             Launch
                         </Link>
                     )}
+                    <button
+                        type="button"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center text-white md:hidden"
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                    >
+                        {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                    </button>
                 </div>
-
-                <button
-                    className="md:hidden text-white p-2"
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                >
-                    {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
-                </button>
             </div>
 
             {mobileMenuOpen && (

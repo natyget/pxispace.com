@@ -113,7 +113,7 @@ export default function BestMomentsVault() {
                   onClick={() => setTab(key)}
                   className={`px-4 md:px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors ${
                     tab === key
-                      ? 'bg-pxi-purple text-white neon-pill'
+                      ? 'pxi-home-purple'
                       : 'text-zinc-500 hover:text-white'
                   }`}
                 >

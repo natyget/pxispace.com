@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { THREAD_REACTION_GIF } from '@/lib/landingAssets';
 import { glassMe, glassOther } from './glassStyles';
 
@@ -12,9 +13,11 @@ export default function GifCard({ isMe, name, avatar, time, gifSrc = THREAD_REAC
       className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} items-end gap-2`}
     >
       {!isMe && avatar && (
-        <img
+        <Image
           src={avatar}
           alt={name || ''}
+          width={32}
+          height={32}
           className="w-8 h-8 rounded-full border border-white/15 flex-shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.4)]"
         />
       )}
@@ -30,7 +33,14 @@ export default function GifCard({ isMe, name, avatar, time, gifSrc = THREAD_REAC
             </span>
           )}
           <div className="relative rounded-[16px] overflow-hidden">
-            <img src={gifSrc} alt="GIF" className="w-full h-auto object-cover max-h-[200px] object-center" />
+            <Image
+              src={gifSrc}
+              alt="GIF"
+              width={360}
+              height={200}
+              unoptimized
+              className="w-full h-auto object-cover max-h-[200px] object-center"
+            />
             <div className="absolute bottom-2 left-2 bg-black/55 text-[9px] font-bold text-white px-1.5 py-0.5 rounded-[4px] backdrop-blur-md border border-white/10">
               GIF
             </div>

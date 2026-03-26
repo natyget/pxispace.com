@@ -86,27 +86,34 @@ export default function VendorUpgradePage() {
 
     const stripeParam = searchParams.get('stripe'); // 'refresh' | null
     const fromMobile = searchParams.get('from') === 'mobile';
+    const [mounted, setMounted] = useState(false);
 
-    const [step, setStep] = useState(
-        user?.isVendor ? 'done'
-        : stripeParam === 'refresh' ? 'error'
-        : 'idle'
-    );
-    const [errorMsg, setErrorMsg] = useState(
-        stripeParam === 'refresh' ? 'The Stripe verification link expired. Please start again.' : ''
-    );
+    const [step, setStep] = useState('idle');
+    const [errorMsg, setErrorMsg] = useState('');
     const [checkingStatus, setCheckingStatus] = useState(false);
     const [stripeStatus, setStripeStatus] = useState(null); // { chargesEnabled, payoutsEnabled, currentlyDue }
     const [hasSubmittedVerification, setHasSubmittedVerification] = useState(false);
     const hasOutstandingRequirements = (stripeStatus?.currentlyDue?.length ?? 0) > 0;
 
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
         if (stripeParam) router.replace('/dashboard/vendor-upgrade', { scroll: false });
     }, []);
 
     useEffect(() => {
-        if (user?.isVendor) setStep('done');
-    }, [user?.isVendor]);
+        if (!mounted) return;
+        if (user?.isVendor) {
+            setStep('done');
+            return;
+        }
+        if (stripeParam === 'refresh') {
+            setStep('error');
+            setErrorMsg('The Stripe verification link expired. Please start again.');
+        }
+    }, [mounted, user?.isVendor, stripeParam]);
 
     useEffect(() => {
         if (!user?.id || user?.isVendor) return;
@@ -187,6 +194,10 @@ export default function VendorUpgradePage() {
             setCheckingStatus(false);
         }
     };
+
+    if (!mounted) {
+        return <div className="max-w-2xl mx-auto space-y-8" />;
+    }
 
     if (step === 'done' || user?.isVendor) {
         return (

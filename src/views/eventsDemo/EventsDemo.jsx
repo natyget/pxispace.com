@@ -5,9 +5,6 @@ import Link from 'next/link';
 import { eventsService } from '@/services/events';
 import EventCard from '@/views/events/EventCard';
 import { ChevronDown } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-const LogoSVG = '/images/logo.svg';
-
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
 
@@ -81,8 +78,6 @@ const CITY_PRESETS = [
 ];
 
 export default function EventsDemo() {
-  const { isAuthenticated, user, logout } = useAuth();
-  const [mounted, setMounted] = useState(false);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [heroIndex, setHeroIndex] = useState(0);
@@ -96,11 +91,9 @@ export default function EventsDemo() {
   const [cityQuery, setCityQuery] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [openMenu, setOpenMenu] = useState(null); // 'trending' | 'time' | 'city' | null
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const headerBarRef = useRef(null);
-  const avatarFallback = user?.name?.charAt(0)?.toUpperCase() || '?';
-
-  useEffect(() => setMounted(true), []);
+  const bgCoverRef = useRef(null);
+  const bgTransitionIdRef = useRef(0);
 
   useEffect(() => {
     setLoading(true);
@@ -190,35 +183,54 @@ export default function EventsDemo() {
     return () => clearInterval(t);
   }, [heroEvents.length]);
 
-  // Keep hero background synced with slide (crossfade)
+  useEffect(() => {
+    bgCoverRef.current = bgCover;
+  }, [bgCover]);
+
+  // One crossfade per slide: blurred cover photos only.
   useEffect(() => {
     const next = featured?.coverImage ?? null;
     if (!next) return;
-    if (bgCover === null) {
+
+    const prev = bgCoverRef.current;
+    if (prev === null) {
       setBgCover(next);
       setBgPrevCover(null);
       setBgFadeIn(true);
       return;
     }
-    if (next === bgCover) return;
-    setBgPrevCover(bgCover);
+    if (prev === next) return;
+
+    const id = (bgTransitionIdRef.current += 1);
+    setBgPrevCover(prev);
     setBgCover(next);
     setBgFadeIn(false);
-    const t = setTimeout(() => setBgFadeIn(true), 20);
-    const t2 = setTimeout(() => setBgPrevCover(null), 800);
+
+    let raf2;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        if (bgTransitionIdRef.current !== id) return;
+        setBgFadeIn(true);
+      });
+    });
+
+    const t = window.setTimeout(() => {
+      if (bgTransitionIdRef.current !== id) return;
+      setBgPrevCover(null);
+    }, 720);
+
     return () => {
-      clearTimeout(t);
-      clearTimeout(t2);
+      cancelAnimationFrame(raf1);
+      if (raf2 != null) cancelAnimationFrame(raf2);
+      window.clearTimeout(t);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [featured?.id]);
+  }, [featured?.coverImage]);
 
   useEffect(() => {
     const onDocPointerDown = (event) => {
       if (!headerBarRef.current) return;
       if (headerBarRef.current.contains(event.target)) return;
       setOpenMenu(null);
-      setUserMenuOpen(false);
     };
     document.addEventListener('pointerdown', onDocPointerDown);
     return () => document.removeEventListener('pointerdown', onDocPointerDown);
@@ -229,28 +241,23 @@ export default function EventsDemo() {
   const cityLabel = cityFilter || 'All';
 
   return (
-    <div className="min-h-screen bg-black font-sans text-white">
-      {/* Events-new header (custom search bar) */}
+    <div className="min-h-screen bg-black pt-20 font-sans text-white md:pt-24">
       <div
         ref={headerBarRef}
-        className="sticky top-0 z-40 border-b border-white/10 bg-black/70 backdrop-blur-2xl"
+        className="mt-1 border-b border-white/10 bg-black/80 py-3 backdrop-blur-2xl md:mt-2"
       >
-        <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-4 grid grid-cols-1 lg:grid-cols-[auto_1fr_auto] items-center gap-3">
-          <Link href="/" className="text-white font-black tracking-widest text-sm uppercase w-fit justify-self-start">
-            <img src={LogoSVG} alt="PXI Logo" className="h-8 w-8" />
-          </Link>
-
-          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 justify-center">
-            <div className="w-full md:w-[220px] lg:w-[260px]">
+        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-center gap-x-4 gap-y-3 px-4 md:px-6">
+          <div className="flex w-full max-w-full flex-wrap items-center justify-center gap-2 sm:w-auto md:gap-3">
+            <div className="w-full sm:w-[220px] lg:w-[260px]">
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search..."
-                className="w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-pxi-purple/50"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-white/30 focus:border-pxi-purple/50 focus:outline-none"
               />
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               {/* Newest */}
               <div className="relative" onClick={(e) => e.stopPropagation()}>
                 <button
@@ -355,91 +362,37 @@ export default function EventsDemo() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 justify-start lg:justify-end">
-            <Link
-              href="/dashboard/events/new"
-              className="rounded-full bg-white text-black px-4 py-2.5 text-sm font-bold hover:opacity-90 transition"
-            >
-              Create Event
-            </Link>
-            {!mounted ? (
-              <div className="w-24 h-10 rounded-full bg-zinc-800/60 animate-pulse" />
-            ) : isAuthenticated ? (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setUserMenuOpen((v) => !v)}
-                  className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-2 hover:bg-white/10 transition"
-                >
-                  {user?.avatarUrl ? (
-                    <img src={user.avatarUrl} alt={user?.name ?? ''} className="w-6 h-6 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-pxi-purple/30 border border-pxi-purple/40 flex items-center justify-center text-pxi-purple text-xs font-bold">
-                      {avatarFallback}
-                    </div>
-                  )}
-                  <span className="text-sm font-semibold text-white max-w-[120px] truncate">
-                    {user?.name?.split(' ')[0] || 'Account'}
-                  </span>
-                  <ChevronDown size={12} className={`text-zinc-500 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {userMenuOpen ? (
-                  <div className="absolute right-0 top-full mt-2 w-44 bg-zinc-950 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="block px-4 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition"
-                    >
-                      Dashboard
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUserMenuOpen(false);
-                        logout();
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-zinc-400 hover:text-pxi-purple hover:bg-pxi-purple/10 transition"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-            ) : (
-              <Link
-                href="/login"
-                className="rounded-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/10 transition"
-              >
-                Login
-              </Link>
-            )}
-          </div>
+          <Link
+            href="/dashboard/events/new"
+            className="inline-flex shrink-0 items-center justify-center self-center rounded-full bg-white px-4 py-2.5 text-sm font-bold text-black transition hover:opacity-90"
+          >
+            Create Event
+          </Link>
         </div>
       </div>
 
       {/* Hero */}
-      <section className="relative w-full overflow-hidden bg-black pt-12 pb-24 px-6">
-        {/* Blurred featured cover background */}
+      <section className="relative isolate w-full overflow-hidden bg-black px-6 pb-24 pt-8">
+        {/* Blurred cover image backdrop (full-bleed, crossfades with slide) */}
         {bgCover ? (
-          <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 z-0">
             {bgPrevCover ? (
               <img
                 src={bgPrevCover}
                 alt=""
-                className="absolute inset-0 w-full h-full object-cover scale-110 blur-[52px] opacity-35"
+                className="absolute inset-0 h-full w-full scale-110 object-cover blur-[48px] opacity-[0.52]"
               />
             ) : null}
             <img
               src={bgCover}
               alt=""
-              className="absolute inset-0 w-full h-full object-cover scale-110 blur-[52px] opacity-35 transition-opacity duration-700"
-              style={{ opacity: bgFadeIn ? 0.35 : 0 }}
+              className="absolute inset-0 h-full w-full scale-110 object-cover blur-[48px] transition-opacity duration-700 ease-out"
+              style={{ opacity: bgFadeIn ? 0.52 : 0 }}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-black" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/45 to-black" />
           </div>
         ) : null}
-        <div className="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="relative z-10 mx-auto grid max-w-[1440px] grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center">
           <div className="relative order-2 lg:order-1 flex justify-center [perspective:1000px]">
             {featured ? (
               <img
@@ -462,7 +415,7 @@ export default function EventsDemo() {
               </p>
             </div>
             <Link
-              href={featured ? `/events-new/${featured.id}` : '/events-new'}
+              href={featured ? `/events/${featured.id}` : '/events'}
               className="inline-flex items-center justify-center bg-white text-black font-bold px-10 py-4 rounded-full text-lg hover:scale-105 transition-transform"
             >
               Open event
@@ -495,7 +448,7 @@ export default function EventsDemo() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4">
             {rest.map((ev) => (
-              <EventCard key={ev.id} event={ev} detailBasePath="/events-new" />
+              <EventCard key={ev.id} event={ev} detailBasePath="/events" />
             ))}
           </div>
         )}

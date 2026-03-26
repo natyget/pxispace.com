@@ -9,6 +9,9 @@ import FocusScene from './FocusScene';
 import GalleryScene from './GalleryScene';
 import TabBar from './TabBar';
 
+/** Keep narrative dwell, but reduce animation-active duration for better performance */
+const PREVIEW_SCROLL_VH = 700;
+
 export default function ScrapbookPreview() {
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -16,35 +19,29 @@ export default function ScrapbookPreview() {
     offset: ['start start', 'end end'],
   });
 
-  // Phone fades in on a longer ramp so it crossfades smoothly with the headline
   const combinedOpacity = useTransform(scrollYProgress, (p) => {
-    if (p < 0.5) {
-      if (p < 0.03) return 0;
-      if (p <= 0.24) return (p - 0.03) / (0.24 - 0.03);
-      return 1;
-    }
-    if (p < 0.95) return 1;
-    return (1 - p) / (1 - 0.95);
+    if (p < 0.17) return 0;
+    if (p < 0.33) return (p - 0.17) / 0.16;
+    if (p < 0.93) return 1;
+    return (1 - p) / (1 - 0.93);
   });
 
   const combinedScale = useTransform(scrollYProgress, (p) => {
-    if (p < 0.5) {
-      if (p < 0.03) return 0.92;
-      if (p <= 0.24) return 0.92 + ((p - 0.03) / (0.24 - 0.03)) * 0.08;
-      return 1;
-    }
-    if (p < 0.95) return 1;
-    return 1 - ((p - 0.95) / (1 - 0.95)) * 0.1;
+    if (p < 0.17) return 0.92;
+    if (p < 0.33) return 0.92 + ((p - 0.17) / 0.16) * 0.08;
+    if (p < 0.93) return 1;
+    return 1 - ((p - 0.93) / 0.07) * 0.1;
   });
 
-  const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.06], [1, 0]);
+  const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.035], [1, 0]);
 
   return (
     <section
       ref={containerRef}
-      className="relative w-full h-[500vh] bg-black text-white font-sans"
+      className="relative w-full bg-black text-white font-sans"
+      style={{ height: `${PREVIEW_SCROLL_VH}vh` }}
     >
-      <div className="sticky top-0 left-0 w-full h-screen flex items-center justify-center overflow-hidden">
+      <div className="sticky top-0 left-0 w-full h-screen flex items-center justify-center overflow-hidden pt-24 pb-6">
         <HeadlineOverlay progress={scrollYProgress} />
 
         <motion.div
@@ -55,25 +52,21 @@ export default function ScrapbookPreview() {
           }}
         >
           <PhoneFrame>
-            {/* App chrome: status + thread header */}
-            <div className="absolute top-0 left-0 w-full z-50 flex flex-col pointer-events-none">
-              <div className="flex items-center justify-between px-4 pt-1.5 pb-1 text-[11px] font-semibold text-white/50 tracking-tight">
-                <span>9:41</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px]">●●●</span>
-                  <span className="h-2.5 w-6 rounded-[2px] border border-white/35 bg-white/10" />
-                </div>
-              </div>
-              <div className="flex items-center justify-between px-4 pb-2 pt-1 bg-gradient-to-b from-black/95 via-black/70 to-transparent">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-white/70 text-lg leading-none shrink-0">‹</span>
-                  <span className="font-black text-[12px] tracking-widest uppercase truncate text-white">
-                    Lito&apos;s Party
-                  </span>
-                </div>
-                <div className="w-7 h-7 rounded-full border border-white/15 bg-white/[0.06] backdrop-blur-md flex items-center justify-center text-[10px] font-serif italic text-white/70 shrink-0">
+            {/* Solid nav like in-app album header (opaque bar, centered title, aligned actions) */}
+            <div className="absolute top-0 left-0 right-0 z-50 pointer-events-none border-b border-white/[0.08] bg-[#0a0a0a]">
+              <div className="relative flex h-12 items-center justify-center px-1">
+                <span className="absolute left-2 flex h-9 w-9 items-center justify-center text-[22px] font-normal leading-none text-white/90">
+                  ‹
+                </span>
+                <h2 className="max-w-[58%] truncate text-center text-[15px] font-semibold tracking-tight text-white">
+                  New Year&apos;s Eve
+                </h2>
+                <span
+                  className="absolute right-3 flex h-[calc(1rem*1.2)] w-[calc(1rem*1.2)] items-center justify-center rounded-full bg-zinc-800 text-[12px] font-semibold leading-none text-white shadow-sm ring-1 ring-white/10"
+                  aria-hidden
+                >
                   i
-                </div>
+                </span>
               </div>
             </div>
 

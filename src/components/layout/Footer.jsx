@@ -2,11 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Instagram } from 'lucide-react';
 import { FaTiktok } from 'react-icons/fa';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 
-const LogoSVG = '/images/logo.svg';
+const LogoSVG = '/favicon.svg';
 
 const linkClass = 'text-gray-500 hover:text-pxi-purple transition-colors';
 
@@ -18,7 +19,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-4">
             <Link href="/" className="inline-flex items-center gap-2 mb-4 cursor-pointer">
-              <img src={LogoSVG} alt="PXI" className="h-8 w-8" />
+              <Image src={LogoSVG} alt="PXI" width={32} height={32} className="h-8 w-8" />
             </Link>
             <p className="text-gray-500 max-w-sm text-sm leading-relaxed">
               Your social life, unfiltered. Plan the party, share the camera roll, and relive the nostalgia.

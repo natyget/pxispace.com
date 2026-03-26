@@ -89,7 +89,7 @@ const PUBLIC_EULA_COPY = (
   </>
 );
 
-const EventDetails = () => {
+const EventDetails = ({ basePath = '/events' }) => {
   const { id } = useParams();
   const router = useRouter();
   const [apiEvent, setApiEvent] = useState(null);
@@ -199,7 +199,7 @@ const EventDetails = () => {
     }
     setJoinError(null);
     const qs = apiTierId ? `?tier=${encodeURIComponent(apiTierId)}` : '';
-    router.push(`/events/${apiEvent.id}/checkout${qs}`);
+    router.push(`${basePath}/${apiEvent.id}/checkout${qs}`);
   };
 
   if (eventLoading && !apiEvent) {

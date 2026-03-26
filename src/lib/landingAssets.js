@@ -3,11 +3,11 @@
  */
 export const L = '/landing';
 
-/** PXI mark (funnel favicon svg) */
-export const LANDING_LOGO = `${L}/logo/pxi-mark.svg`;
-
-/** App Store marketing badge */
+/** App Store marketing badge (full-width asset; use APPLE_MARK + copy for hero CTAs) */
 export const APP_STORE_BADGE = `${L}/icons/app-store-badge.svg`;
+
+/** Apple logo mark for App Store buttons (funnel asset) */
+export const APPLE_MARK = '/apple-logo.svg';
 
 /**
  * Brand icons — order: Partiful, Posh.Vip, SWSH→BeReal, Lapse, Eventbrite, Drive, iMessage, WhatsApp→Instagram (funnel set).

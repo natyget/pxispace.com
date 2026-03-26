@@ -1,14 +1,100 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Smartphone, Shield } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Smartphone, Shield, CheckCircle2, Loader2, RefreshCw, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { authService } from '../../services/auth';
 import { getPassportLevelDisplay } from '../../utils/odysseyTier';
 
 // ─── MRZ helper ───────────────────────────────────────────────────────────────
 function formatMRZ(text, len = 37) {
     if (text.length >= len) return text.substring(0, len);
     return text + '<'.repeat(len - text.length);
+}
+
+const ODYSSEY_TIER_BANDS = [
+    { min: 0, max: 500 },
+    { min: 501, max: 2500 },
+    { min: 2501, max: 7000 },
+    { min: 7001, max: 15000 },
+    { min: 15001, max: 30000 },
+    { min: 30001, max: null },
+];
+
+function getLevelProgress(odysseyXp) {
+    const xp = Math.max(0, Math.floor(Number(odysseyXp) || 0));
+    const band = ODYSSEY_TIER_BANDS.find((b) => b.max === null || xp <= b.max) ?? ODYSSEY_TIER_BANDS[0];
+    if (band.max === null) return 1;
+    const range = Math.max(1, band.max - band.min);
+    const withinTier = Math.max(0, Math.min(1, (xp - band.min) / range));
+    return Math.max(0.08, withinTier);
+}
+
+function HeaderPolygonBadge({ letter, progress }) {
+    const size = 64;
+    const stroke = 6;
+    const center = size / 2;
+    const radius = center - stroke - 1;
+    const circumference = 2 * Math.PI * radius;
+    const dashOffset = circumference * (1 - Math.max(0.08, Math.min(1, progress)));
+
+    return (
+        <div className="relative w-[34px] h-[36px] flex items-center justify-center overflow-visible">
+            <svg
+                width={size}
+                height={size}
+                viewBox={`0 0 ${size} ${size}`}
+                className="absolute"
+                aria-hidden
+            >
+                <circle
+                    cx={center}
+                    cy={center}
+                    r={radius}
+                    stroke="rgba(176,38,255,0.5)"
+                    strokeWidth={stroke}
+                    fill="none"
+                />
+                <circle
+                    cx={center}
+                    cy={center}
+                    r={radius}
+                    stroke="#C85AFF"
+                    strokeWidth={stroke}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={`${circumference} ${circumference}`}
+                    strokeDashoffset={dashOffset}
+                    transform={`rotate(-90 ${center} ${center})`}
+                />
+            </svg>
+            <svg
+                width="34"
+                height="36"
+                viewBox="22 17 42 45"
+                preserveAspectRatio="xMidYMid meet"
+                fill="none"
+                aria-hidden
+            >
+                <path
+                    d="M39.8184 19.6525C40.9842 18.9794 41.5671 18.6429 42.1868 18.5111C42.7351 18.3946 43.3018 18.3946 43.8501 18.5111C44.4698 18.6429 45.0527 18.9794 46.2184 19.6525L58.005 26.4574C59.1707 27.1305 59.7536 27.467 60.1775 27.9378C60.5526 28.3544 60.836 28.8451 61.0092 29.3783C61.205 29.9808 61.205 30.6539 61.205 32V45.6099C61.205 46.956 61.205 47.6291 61.0092 48.2316C60.836 48.7647 60.5526 49.2555 60.1775 49.6721C59.7536 50.1429 59.1707 50.4794 58.005 51.1525L46.2184 57.9574C45.0527 58.6305 44.4698 58.967 43.8501 59.0987C43.3018 59.2153 42.7351 59.2153 42.1868 59.0987C41.5671 58.967 40.9842 58.6305 39.8184 57.9574L28.0319 51.1525C26.8661 50.4794 26.2832 50.1429 25.8593 49.6721C25.4842 49.2555 25.2009 48.7647 25.0277 48.2316C24.8319 47.6291 24.8319 46.956 24.8319 45.6099V32C24.8319 30.6539 24.8319 29.9808 25.0277 29.3783C25.2009 28.8451 25.4842 28.3544 25.8593 27.9378C26.2832 27.467 26.8661 27.1305 28.0319 26.4574L39.8184 19.6525Z"
+                    fill="#7F1B99"
+                />
+                <path
+                    d="M39.8184 19.6525C40.9842 18.9794 41.5671 18.6429 42.1868 18.5111C42.7351 18.3946 43.3018 18.3946 43.8501 18.5111C44.4698 18.6429 45.0527 18.9794 46.2184 19.6525L58.005 26.4574C59.1707 27.1305 59.7536 27.467 60.1775 27.9378C60.5526 28.3544 60.836 28.8451 61.0092 29.3783C61.205 29.9808 61.205 30.6539 61.205 32V45.6099C61.205 46.956 61.205 47.6291 61.0092 48.2316C60.836 48.7647 60.5526 49.2555 60.1775 49.6721C59.7536 50.1429 59.1707 50.4794 58.005 51.1525L46.2184 57.9574C45.0527 58.6305 44.4698 58.967 43.8501 59.0987C43.3018 59.2153 42.7351 59.2153 42.1868 59.0987C41.5671 58.967 40.9842 58.6305 39.8184 57.9574L28.0319 51.1525C26.8661 50.4794 26.2832 50.1429 25.8593 49.6721C25.4842 49.2555 25.2009 48.7647 25.0277 48.2316C24.8319 47.6291 24.8319 46.956 24.8319 45.6099V32C24.8319 30.6539 24.8319 29.9808 25.0277 29.3783C25.2009 28.8451 25.4842 28.3544 25.8593 27.9378C26.2832 27.467 26.8661 27.1305 28.0319 26.4574L39.8184 19.6525Z"
+                    stroke="rgba(176,38,255,0.9)"
+                    strokeWidth="5"
+                />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="text-[13px] leading-[15px] font-extrabold text-white text-shadow-[0_0_3px_rgba(255,255,255,0.35)]">
+                    {letter}
+                </span>
+            </div>
+        </div>
+    );
 }
 
 // ─── SVG assets ───────────────────────────────────────────────────────────────
@@ -165,7 +251,7 @@ export default function PassportPage() {
     useEffect(() => setMounted(true), []);
 
     if (!mounted) return null;
-    if (!user?.isPassportIssued) return <PassportNotIssued />;
+    if (!user?.isPassportIssued) return <PassportNotIssued user={user} />;
     return <PassportIssued user={user} />;
 }
 
@@ -189,186 +275,159 @@ function PassportIssued({ user }) {
         return a;
     })();
 
+    const passportNumber = `P${String(user?.id || '0512026').slice(0, 7).toUpperCase()}XI`;
+    const formatIssuedDate = (dateString) => {
+        if (!dateString) return '01JAN26';
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+        const year = String(date.getFullYear()).slice(-2);
+        return `${day}${month}${year}`;
+    };
     const nameParts = fullName.toUpperCase().replace(' ', '<');
-    const mrzLine1 = formatMRZ(`PXI<${username.toUpperCase()}<<${nameParts}`);
-    const mrzLine2 = formatMRZ(`Issued01Jan26<P0512026XI<<<<<pxispace`);
+    const mrzLine1 = formatMRZ(`PXI<${username.toUpperCase()}<<${nameParts}`, 36);
+    const mrzLine2 = formatMRZ(`ISSUED${formatIssuedDate(user?.passportIssuedAt)}<${passportNumber}<<<PXISPACE`, 36);
 
     const { levelText, badgeLetter } = getPassportLevelDisplay(user);
+    const levelProgress = getLevelProgress(user?.odysseyXp);
+    const passportType = user?.isPassportIssued ? 'Citizen' : 'Partial';
 
     return (
         <div className="max-w-2xl mx-auto space-y-6">
-            {/* Page header */}
-            <div>
-                <div className="flex items-center gap-2 mb-2">
-                    <Shield size={14} className="text-pxi-purple" />
-                    <span className="text-pxi-purple text-xs font-bold uppercase tracking-widest">PXI Passport</span>
+            <div className="relative px-2">
+                <div className="flex items-center justify-between">
+                    <HeaderPolygonBadge letter={badgeLetter} progress={levelProgress} />
+                    <h1 className="absolute left-0 right-0 text-center text-[22px] font-bold text-white tracking-wide pointer-events-none">
+                        PXI Passport
+                    </h1>
+                    {user?.isVendor ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                            <CheckCircle2 size={12} />
+                            <span className="sm:hidden">Vendor</span>
+                            <span className="hidden sm:inline">You are vendor!</span>
+                        </span>
+                    ) : (
+                        <Link href="/dashboard/vendor-upgrade" className="inline-flex items-center rounded-full bg-pxi-purple/20 border border-pxi-purple/30 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-pxi-purple hover:bg-pxi-purple/30">
+                            Vendor Setup
+                        </Link>
+                    )}
                 </div>
-                <h1 className="text-2xl font-black text-white tracking-tight">Your Digital Identity</h1>
-                <p className="text-zinc-500 text-sm mt-1">Your PXI Passport is active.</p>
+                <div className="mt-4 flex items-center justify-center">
+                    <button className="text-center">
+                        <p className="text-white text-base font-bold">{user?.friendsCount ?? 0}</p>
+                        <p className="text-[10px] uppercase tracking-widest text-white/45">Friends</p>
+                    </button>
+                </div>
             </div>
 
-            {/* PXI Passport card — exact blueprint proportions */}
             <div className="flex justify-center">
-                <div
-                    style={{
-                        position: 'relative',
-                        width: 361,
-                        height: 558,
-                        borderRadius: 8,
-                        overflow: 'hidden',
-                        backgroundColor: '#000000',
-                        border: '1px solid rgba(255,255,255,0.9)',
-                        boxShadow: '0px 1px 12px rgba(255,255,255,0.25)',
-                    }}
-                >
-                    {/* Shared SVG filters */}
-                    <svg width="0" height="0" style={{ position: 'absolute' }}>
-                        <defs>
-                            <filter id="rough_edges">
-                                <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="1" result="noise"/>
-                                <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5"/>
-                            </filter>
-                        </defs>
-                    </svg>
-
-                    {/* ── TOP HALF ── */}
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden', zIndex: 0 }}>
-                        {/* Map dot overlay */}
-                        <div style={{
-                            position: 'absolute', inset: 0,
-                            backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+                <div className="relative w-[min(95vw,361px)] h-[558px] overflow-hidden rounded-[8px] border border-white bg-black shadow-[0_1px_12px_rgba(255,255,255,0.25)]">
+                    <div
+                        className="absolute left-0 right-0 top-0 h-1/2 z-[1] opacity-35 pointer-events-none"
+                        style={{
+                            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1px)',
                             backgroundSize: '4px 4px',
-                            opacity: 0.25,
-                            maskImage: "url('/passport-map.svg')",
-                            WebkitMaskImage: "url('/passport-map.svg')",
-                            maskSize: 'contain',
-                            WebkitMaskSize: 'contain',
-                            maskRepeat: 'no-repeat',
-                            WebkitMaskRepeat: 'no-repeat',
-                            maskPosition: 'center',
-                            WebkitMaskPosition: 'center',
-                        }} />
-
-                        {/* Stamps */}
-                        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-                            <StampRed />
-                            <StampYellow />
-                            <StampCyan />
-                            <StampWhite />
-                            <GreenStampPositioned />
-                        </div>
-
-                        {/* Vertical season text */}
-                        <div style={{ position: 'absolute', top: 140, left: -45, zIndex: 10, transformOrigin: 'center', transform: 'rotate(-90deg)' }}>
-                            <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>
-                                Season 01 • 2026
-                            </span>
-                        </div>
-
-                        {/* ID top-right */}
-                        <div style={{ position: 'absolute', top: 13, right: 24, zIndex: 10 }}>
-                            <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.1em' }}>
-                                P0512026XI
-                            </span>
-                        </div>
+                        }}
+                    />
+                    <div className="absolute inset-0 opacity-25 pointer-events-none">
+                        <NeonCurvesSVG className="w-full h-full" />
+                    </div>
+                    <div className="absolute inset-0 pointer-events-none opacity-90">
+                        <StampRed />
+                        <StampYellow />
+                        <StampCyan />
+                        <StampWhite />
+                        <GreenStampPositioned />
                     </div>
 
-                    {/* ── CREASE ── */}
-                    <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 80, transform: 'translateY(-50%)', zIndex: 20, pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ width: '100%', height: '50%', background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.4), rgba(0,0,0,0.95))' }} />
-                        <div style={{ position: 'relative', width: '100%', zIndex: 30, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <div style={{ width: '100%', height: 3, background: '#050505', boxShadow: '0 0 6px 3px rgba(0,0,0,0.9)' }} />
-                            <div style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', width: '100%', borderTop: '2px dashed rgba(255,255,255,0.4)' }} />
-                        </div>
-                        <div style={{ width: '100%', height: '50%', background: 'linear-gradient(to top, transparent, rgba(0,0,0,0.4), rgba(0,0,0,0.95))' }} />
+                    <div className="absolute top-[8px] right-[8px] z-20 text-[12px] text-white/60 tracking-[0.08em] uppercase">
+                        {passportNumber}
+                    </div>
+                    <div className="absolute left-[-182px] top-[128px] z-20 -rotate-90 text-[16px] tracking-[0.24em] text-white/55 uppercase">
+                        SEASON 01 2026
                     </div>
 
-                    {/* ── BOTTOM HALF ── */}
-                    <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: '#000' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '16px 24px 0', position: 'relative' }}>
-
-                            {/* Header row */}
-                            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: 200, flexShrink: 0 }}>
-                                    <h1 style={{ fontWeight: 'bold', fontSize: 14, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em', textShadow: '0px 0px 12px #fff', margin: 0 }}>
-                                        PXI PASSPORT
-                                    </h1>
-                                    <div style={{ height: 6, width: '100%', borderTop: '6px solid white' }} />
-                                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, marginLeft: -13 }}>
-                                        <VectorIcon style={{ width: 45, height: 27, marginRight: -13 }} />
-                                        <span style={{ fontSize: 9, color: 'white', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', fontWeight: 600 }}>
-                                            PASSPORT • PASS • PASAPORTE
-                                        </span>
-                                    </div>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
-                                    <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>PXI Passport No.</span>
-                                    <span style={{ fontSize: 11, color: 'white', textTransform: 'uppercase' }}>P0512018XI</span>
-                                </div>
-                            </div>
-
-                            {/* Details grid */}
-                            <div style={{ display: 'flex', flexDirection: 'row', gap: 16, width: '100%' }}>
-                                {/* Photo */}
-                                <div style={{ width: 113, flexShrink: 0 }}>
-                                    <div style={{ width: 113, height: 130, borderRadius: 6, overflow: 'hidden', boxShadow: '0px 1px 24px 2px rgba(255,255,255,0.3)' }}>
-                                        {user?.avatarUrl ? (
-                                            <img src={user.avatarUrl} alt={fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        ) : (
-                                            <div style={{ width: '100%', height: '100%', background: 'rgba(176,38,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 900, color: '#B026FF' }}>
-                                                {avatarFallback}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Info */}
-                                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, position: 'relative', zIndex: 30 }}>
-                                    <InfoRow label="Full name" value={fullName.toUpperCase()} />
-                                    <InfoRow label="Username" value={username} />
-                                    <div style={{ display: 'flex', flexDirection: 'row', gap: 24, marginBottom: 8 }}>
-                                        <InfoRowInline label="Age" value={String(age)} />
-                                        <InfoRowInline label="Insta" value={instagram} />
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'row', gap: 24 }}>
-                                        <InfoRowInline label="City" value={city} />
-                                        <InfoRowInline label="Bio" value={bio} truncate />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Level / polygon badge */}
-                            <div style={{ position: 'absolute', right: 24, top: 45, display: 'flex', flexDirection: 'column', alignItems: 'center', width: 80, zIndex: 20 }}>
-                                <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.7)' }}>LEVEL</span>
-                                <span style={{ fontSize: 11, color: 'white', textShadow: '0px 0px 12px #fff' }}>
-                                    {levelText}
-                                </span>
-                                <div style={{ position: 'absolute', top: 30, left: '50%', transform: 'translateX(-50%)', width: 110, height: 110, filter: 'drop-shadow(0px 0px 14px rgba(143,1,182,0.8))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <PolygonIcon style={{ width: '100%', height: '100%' }} />
-                                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 28 }}>
-                                        <span style={{ fontWeight: 'bold', color: 'white', fontSize: 40 }}>
-                                            {badgeLetter}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Separator */}
-                            <div style={{ position: 'absolute', bottom: 38, left: 24, right: 24, height: 2, background: 'rgba(255,255,255,0.4)', zIndex: 20 }} />
-
-                            {/* MRZ */}
-                            <div style={{ position: 'absolute', bottom: 4, left: 24, right: 24, zIndex: 20 }}>
-                                <div style={{ fontFamily: '"Courier New", Courier, monospace', fontSize: 12, color: 'rgba(255,255,255,0.7)', letterSpacing: 1, lineHeight: '16px', textTransform: 'uppercase', overflow: 'hidden' }}>
-                                    <p style={{ whiteSpace: 'nowrap', margin: 0 }}>{mrzLine1}</p>
-                                    <p style={{ whiteSpace: 'nowrap', margin: 0 }}>{mrzLine2}</p>
-                                </div>
-                            </div>
+                    <div className="absolute inset-x-0 top-1/2 z-20 h-[80px] -translate-y-1/2 pointer-events-none">
+                        <div className="h-1/2 bg-gradient-to-b from-transparent via-black/55 to-black/90" />
+                        <div className="relative h-0">
+                            <div className="h-[3px] bg-[#050505] shadow-[0_0_6px_3px_rgba(0,0,0,0.9)]" />
+                            <div className="absolute left-0 right-0 top-[-1px] border-t-2 border-dashed border-white/40" />
                         </div>
+                        <div className="h-1/2 bg-gradient-to-t from-transparent via-black/55 to-black/90" />
                     </div>
 
-                    {/* Neon curves overlay */}
-                    <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', mixBlendMode: 'screen' }}>
-                        <NeonCurvesSVG style={{ width: '100%', height: '100%' }} />
+                    <div className="absolute left-0 right-0 bottom-0 top-1/2 z-10 bg-[#0f0f0f]">
+                        <div className="relative h-full px-6 pt-6">
+                            <div className="flex items-start justify-between">
+                                <div className="w-[200px]">
+                                    <h2 className="text-[14px] font-bold text-white tracking-[0.16em] uppercase drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">PXI PASSPORT</h2>
+                                    <div className="mt-1 h-[6px] border-t-[6px] border-white" />
+                                    <div className="mt-2 ml-[-10px] flex items-center gap-1">
+                                        <VectorIcon className="w-[45px] h-[27px]" />
+                                        <span className="text-[9px] font-semibold text-white uppercase tracking-[0.05em]">PASSPORT • PASS • PASAPORTE</span>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[9px] uppercase text-white/70">PXI Passport No.</p>
+                                    <p className="text-[11px] uppercase text-white/90">{passportNumber}</p>
+                                </div>
+                            </div>
+
+                            <div className="mt-3 flex gap-6">
+                                <div className="relative h-[130px] w-[113px] flex-shrink-0 overflow-hidden rounded-[6px] shadow-[0_1px_24px_2px_rgba(255,255,255,0.3)]">
+                                {user?.avatarUrl ? (
+                                    <Image src={user.avatarUrl} alt={fullName} fill unoptimized style={{ objectFit: 'cover' }} />
+                                ) : (
+                                        <div className="flex h-full w-full items-center justify-center bg-pxi-purple/20 text-3xl font-black text-pxi-purple">
+                                        {avatarFallback}
+                                    </div>
+                                )}
+                            </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[9px] font-medium uppercase text-white/70">Full name</p>
+                                    <p className="text-[12px] uppercase text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">{fullName.toUpperCase()}</p>
+                                    <p className="mt-2 text-[9px] font-medium uppercase text-white/70">username</p>
+                                    <p className="text-[12px] text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">{username}</p>
+                                    <div className="mt-2 flex gap-10">
+                                        <div>
+                                            <p className="text-[9px] font-medium uppercase text-white/70">Age</p>
+                                            <p className="text-[12px] text-white/90">{String(age)}</p>
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-[9px] font-medium uppercase text-white/70">Insta</p>
+                                            <p className="text-[12px] text-white/90 truncate">{instagram}</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 flex gap-10">
+                                        <div>
+                                            <p className="text-[9px] font-medium uppercase text-white/70">City</p>
+                                            <p className="text-[12px] text-white/90">{city}</p>
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-[9px] font-medium uppercase text-white/70">Bio</p>
+                                            <p className="text-[12px] text-white/90 line-clamp-2">{bio}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="absolute left-[258px] top-[60px] z-20">
+                                <p className="text-[10px] font-semibold uppercase text-white/80">LEVEL {levelText}</p>
+                                <div className="mt-1 h-1 w-[88px] rounded-full bg-[rgba(176,38,255,0.22)] overflow-hidden">
+                                    <div className="h-full rounded-full bg-pxi-purple" style={{ width: `${Math.round(levelProgress * 100)}%` }} />
+                                </div>
+                                <div className="mt-1 flex items-end">
+                                    <span className="text-[52px] leading-[54px] font-extrabold text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.35)]">{passportType.charAt(0).toUpperCase()}</span>
+                                    <span className="mb-1 ml-1 text-[13px] font-semibold text-white">{passportType.slice(1)}</span>
+                                </div>
+                            </div>
+
+                            <div className="absolute bottom-[38px] left-6 right-6 h-[2px] bg-white/40" />
+                            <div className="absolute bottom-[4px] left-6 right-6 font-mono text-[12px] leading-4 tracking-[0.12em] text-white/70 uppercase overflow-hidden">
+                                <p className="truncate">{mrzLine1}</p>
+                                <p className="truncate">{mrzLine2}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -402,13 +461,56 @@ function InfoRowInline({ label, value, truncate }) {
 
 // ─── PXI Passport not issued ──────────────────────────────────────────────────────
 
-function PassportNotIssued() {
+function PassportNotIssued({ user }) {
+    const { updateUser } = useAuth();
+    const [checkingVendor, setCheckingVendor] = useState(false);
+    const [vendorStatusMsg, setVendorStatusMsg] = useState('');
+    const [vendorChecks, setVendorChecks] = useState(null); // {chargesEnabled,payoutsEnabled,currentlyDue}
+
+    const handleCheckVendorVerification = async () => {
+        if (!user?.id) return;
+        setCheckingVendor(true);
+        setVendorStatusMsg('');
+        setVendorChecks(null);
+        try {
+            const result = await authService.checkVendorStatus();
+            if (result?.isVendor) {
+                updateUser({ isVendor: true });
+                setVendorStatusMsg('Vendor verification completed. You can now create paid events.');
+                return;
+            }
+            if (result?.code === 'NO_STRIPE_ACCOUNT') {
+                setVendorStatusMsg("No Stripe verification found yet. Start vendor setup below.");
+                return;
+            }
+            setVendorChecks(result?.stripeStatus || null);
+            setVendorStatusMsg('Verification is still in progress. Complete any outstanding Stripe requirements.');
+        } catch (err) {
+            setVendorStatusMsg(err?.message || 'Could not check vendor verification right now.');
+        } finally {
+            setCheckingVendor(false);
+        }
+    };
+
     return (
         <div className="max-w-xl mx-auto">
             <div className="mb-6">
-                <div className="flex items-center gap-2 mb-2">
-                    <Shield size={14} className="text-zinc-500" />
-                    <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest">PXI Passport</span>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                        <Shield size={14} className="text-zinc-500" />
+                        <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest">PXI Passport</span>
+                    </div>
+                    {user?.isVendor ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                            <CheckCircle2 size={12} />
+                            <span className="sm:hidden">Vendor</span>
+                            <span className="hidden sm:inline">You are vendor!</span>
+                        </span>
+                    ) : (
+                        <Link href="/dashboard/vendor-upgrade" className="inline-flex items-center rounded-full bg-pxi-purple/20 border border-pxi-purple/30 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-pxi-purple hover:bg-pxi-purple/30">
+                            Vendor Setup
+                        </Link>
+                    )}
                 </div>
                 <h1 className="text-2xl font-black text-white tracking-tight">Get Your PXI Passport</h1>
                 <p className="text-zinc-500 text-sm mt-1">Your PXI Passport hasn't been issued yet.</p>
@@ -432,6 +534,63 @@ function PassportNotIssued() {
                         <svg viewBox="0 0 24 24" className="w-5 h-5 fill-black"><path d="M3.18 23.76c.3.17.64.22.98.14l13.12-7.57L14 13l-10.82 10.76zM.54 1.27C.2 1.6 0 2.14 0 2.87v18.27c0 .73.2 1.27.54 1.6L1.63 21.6 12.35 12 1.63 2.41.54 1.27zM20.46 10.37l-2.98-1.72-3.85 3.35 3.85 3.34 3-1.73c.85-.49.85-1.26-.02-1.74zM4.16.1L17.28 7.67l-3.28 2.87L3.18.24A1.2 1.2 0 0 1 4.16.1z"/></svg>
                         Google Play
                     </a>
+                </div>
+
+                {/* Vendor verification integration */}
+                <div className="mt-8 rounded-xl border border-white/10 bg-black/30 p-4 text-left">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <p className="text-[10px] font-bold tracking-widest uppercase text-pxi-purple">Vendor verification</p>
+                            <p className="text-xs text-zinc-400 mt-1">Check Stripe status or continue setup to unlock paid events.</p>
+                        </div>
+                        {user?.isVendor ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+                                <CheckCircle2 size={12} />
+                                Verified
+                            </span>
+                        ) : null}
+                    </div>
+
+                    {!!vendorStatusMsg && (
+                        <p className="mt-3 text-xs text-zinc-300">{vendorStatusMsg}</p>
+                    )}
+
+                    {vendorChecks && (
+                        <div className="mt-3 space-y-1 text-xs text-zinc-400">
+                            <p>
+                                Charges: <span className={vendorChecks.chargesEnabled ? 'text-emerald-400' : 'text-amber-400'}>
+                                    {vendorChecks.chargesEnabled ? 'Enabled' : 'Pending'}
+                                </span>
+                            </p>
+                            <p>
+                                Payouts: <span className={vendorChecks.payoutsEnabled ? 'text-emerald-400' : 'text-amber-400'}>
+                                    {vendorChecks.payoutsEnabled ? 'Enabled' : 'Pending'}
+                                </span>
+                            </p>
+                            {(vendorChecks.currentlyDue?.length ?? 0) > 0 && (
+                                <p className="text-amber-400">Outstanding requirements: {vendorChecks.currentlyDue.length}</p>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                        <button
+                            type="button"
+                            onClick={handleCheckVendorVerification}
+                            disabled={checkingVendor}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-200 hover:bg-white/10 disabled:opacity-50"
+                        >
+                            {checkingVendor ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+                            Check verification
+                        </button>
+                        <Link
+                            href="/dashboard/vendor-upgrade"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-pxi-purple px-3 py-2 text-xs font-semibold text-white hover:brightness-110"
+                        >
+                            Continue vendor setup
+                            <ArrowRight size={13} />
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

@@ -52,7 +52,7 @@ const normalizeApiEvent = (e) => {
   };
 };
 
-const Events = () => {
+const Events = ({ detailBasePath = '/events' }) => {
   const [filter, setFilter] = useState('All');
   const [sortMode, setSortMode] = useState('vendor');
   const [searchQuery, setSearchQuery] = useState('');
@@ -150,6 +150,7 @@ const Events = () => {
             favoriteIds={favoriteIds}
             onToggleFavorite={handleToggleFavorite}
             onQuickView={setPreviewEvent}
+            detailBasePath={detailBasePath}
           />
         ) : (
           <EventsEmpty
@@ -163,7 +164,7 @@ const Events = () => {
 
         <EventsCTA />
 
-        <EventPreviewModal open={!!previewEvent} onClose={() => setPreviewEvent(null)} event={previewEvent} />
+        <EventPreviewModal open={!!previewEvent} onClose={() => setPreviewEvent(null)} event={previewEvent} detailBasePath={detailBasePath} />
       </div>
     </div>
   );
