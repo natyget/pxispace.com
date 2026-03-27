@@ -31,13 +31,13 @@ export const HERO_SCATTER_ICON_EXTRA_PADDING = 'google-drive';
 
 /** Polaroid / event photos (scattered hero) */
 export const HERO_SCATTER_PHOTOS = [
-  `${L}/scattered/birthday.jpg`,
-  `${L}/scattered/crowd.jpg`,
-  `${L}/scattered/group.jpg`,
-  `${L}/scattered/img.jpg`,
-  `${L}/scattered/interaction.jpg`,
-  `${L}/scattered/outdoor.jpg`,
-  `${L}/scattered/solo.jpg`,
+  `${L}/posters_lineups/Poster/poster1.jpg`,
+  `${L}/posters_lineups/Poster/poster2.jpg`,
+  `${L}/posters_lineups/Poster/poster3.jpg`,
+  `${L}/posters_lineups/Poster/poster4.jpg`,
+  `${L}/posters_lineups/Lineups/lineups1.jpg`,
+  `${L}/posters_lineups/Lineups/lineups2.jpg`,
+  `${L}/posters_lineups/Lineups/lineups3.jpg`,
 ];
 
 /** Thread — scrapbook posts */

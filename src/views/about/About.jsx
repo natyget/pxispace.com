@@ -177,7 +177,7 @@ const AboutPage = () => {
                     HELP US SHAPE THE FUTURE OF EVENTS
                 </p>
 
-                <Button variant="neon" className="px-16 py-6 text-xl">
+                <Button className="px-16 py-6 text-xl bg-pxi-purple hover:bg-pxi-purple text-white">
                     Download the App
                 </Button>
             </section>
