@@ -85,6 +85,9 @@ export default function EventCheckout({ basePath = '/events' }) {
   const loginHref = `/login?redirect=${encodeURIComponent(checkoutReturnPath)}`;
   const signupHref = `/signup?mode=signup&redirect=${encodeURIComponent(checkoutReturnPath)}`;
 
+  const stripeReturnUrl =
+    typeof window !== 'undefined' ? `${window.location.origin}${checkoutReturnPath}` : '';
+
   useEffect(() => {
     if (!id) {
       setEventLoading(false);
@@ -340,8 +343,8 @@ export default function EventCheckout({ basePath = '/events' }) {
             {isAuthenticated && isPaidEvent ? (
               <div className="space-y-3">
                 <Button
-                  variant="neon"
-                  className="w-full uppercase tracking-widest py-4"
+                  variant="primary"
+                  className="w-full uppercase tracking-widest py-4 !bg-pxi-purple hover:!bg-pxi-purple shadow-[0_0_20px_rgba(216,74,255,0.4)]"
                   onClick={startWalletCheckout}
                   disabled={joining || joinSuccess || !canPurchase}
                 >
@@ -367,8 +370,8 @@ export default function EventCheckout({ basePath = '/events' }) {
 
             {isAuthenticated && isFreeEvent ? (
               <Button
-                variant="neon"
-                className="w-full uppercase tracking-widest py-4"
+                variant="primary"
+                className="w-full uppercase tracking-widest py-4 !bg-pxi-purple hover:!bg-pxi-purple shadow-[0_0_20px_rgba(216,74,255,0.4)]"
                 onClick={handleFreeTicket}
                 disabled={joining || joinSuccess || !canPurchase}
               >
@@ -390,6 +393,7 @@ export default function EventCheckout({ basePath = '/events' }) {
       <StripePaymentModal
         open={walletOpen}
         clientSecret={walletSecret}
+        returnUrl={stripeReturnUrl}
         onCancel={() => {
           setWalletOpen(false);
           setWalletSecret(null);
