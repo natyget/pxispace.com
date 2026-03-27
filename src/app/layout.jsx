@@ -1,5 +1,6 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from '@/contexts/AuthContext';
+import GlobalCursorLayer from '@/components/layout/GlobalCursorLayer';
 import './globals.css';
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
@@ -26,7 +27,7 @@ export default function RootLayout({ children }) {
       <body>
         <GoogleOAuthProvider clientId={googleClientId} locale="en">
           <AuthProvider>
-            {children}
+            <GlobalCursorLayer>{children}</GlobalCursorLayer>
           </AuthProvider>
         </GoogleOAuthProvider>
       </body>
