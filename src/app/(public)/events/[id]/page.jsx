@@ -100,6 +100,7 @@ export default function EventsNewEventPage() {
       return;
     }
     setLoading(true);
+    setApiEvent(null);
     eventsService
       .getEvent(id)
       .then((data) => setApiEvent(data?.event || data || null))
@@ -132,20 +133,34 @@ export default function EventsNewEventPage() {
 
   const albumId = apiEvent?.albumId || apiEvent?.albums?.[0]?.id || null;
 
-  // Load attendee list for both the preview (people going) and the guestlist modal.
   useEffect(() => {
-    if (!albumId) return;
-    if (participantsLoaded || participantsLoading) return;
+    setParticipants([]);
+    setParticipantsLoaded(false);
+    setParticipantsLoading(false);
+  }, [id]);
+
+  // Guest list = primary album members (backend adds AlbumMember when a ticket is issued).
+  useEffect(() => {
+    if (!id || loading) return;
+    if (!apiEvent || String(apiEvent.id) !== String(id)) return;
+
+    const aid = apiEvent.albumId || apiEvent.albums?.[0]?.id || null;
+    if (!aid) {
+      setParticipants([]);
+      setParticipantsLoaded(true);
+      return;
+    }
+
     setParticipantsLoading(true);
     eventsService
-      .getAlbumParticipants(albumId)
+      .getAlbumParticipants(aid)
       .then((res) => setParticipants(res.participants || []))
       .catch(() => setParticipants([]))
       .finally(() => {
         setParticipantsLoading(false);
         setParticipantsLoaded(true);
       });
-  }, [albumId, participantsLoaded, participantsLoading]);
+  }, [id, loading, apiEvent?.id, apiEvent?.albumId]);
 
   // Close modal on Escape.
   useEffect(() => {
@@ -157,21 +172,28 @@ export default function EventsNewEventPage() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [guestlistOpen]);
 
-  const previewMembers = participantsLoaded
-    ? participants
-    : [];
-
-  const previewAvatarSources = useMemo(() => {
-    if (participantsLoaded && previewMembers.length) {
-      return previewMembers
-        .map((p) => displayImageSrc(p?.avatarUrl, null))
-        .filter(Boolean)
-        .slice(0, 5);
+  const previewGuestTiles = useMemo(() => {
+    if (participantsLoaded && participants.length) {
+      return participants.slice(0, 5).map((p, i) => {
+        const label = (p?.name || p?.username || p?.userId || `Guest ${i + 1}`).replace(/^@/, '');
+        const src = displayImageSrc(p?.avatarUrl, null);
+        return { key: p?.userId || `${label}-${i}`, label, src };
+      });
     }
-    return guestlistAvatars.slice(0, 5);
-  }, [participantsLoaded, previewMembers, guestlistAvatars]);
+    return guestlistAvatars.slice(0, 5).map((src, i) => ({
+      key: `fallback-${src}-${i}`,
+      label: '',
+      src,
+    }));
+  }, [participantsLoaded, participants, guestlistAvatars]);
 
-  const guestlistEmpty = goingCount === 0 && previewAvatarSources.length === 0;
+  const guestListCount = participantsLoaded ? participants.length : goingCount;
+
+  const guestlistEmpty =
+    participantsLoaded &&
+    participants.length === 0 &&
+    guestlistAvatars.length === 0 &&
+    goingCount === 0;
 
   const previewExtraCount = participantsLoaded ? Math.max(0, participants.length - 5) : 0;
 
@@ -329,13 +351,18 @@ export default function EventsNewEventPage() {
                   <div className="flex flex-row items-center justify-between gap-3">
                     <div className="flex min-w-0 flex-row items-center gap-3">
                       <div className="flex shrink-0 -space-x-2">
-                        {previewAvatarSources.map((src, i) => (
+                        {previewGuestTiles.map((tile, i) => (
                           <span
-                            key={`${src}-${i}`}
-                            className="relative inline-flex size-8 overflow-hidden rounded-full border-2 border-[#0a0a0a] ring-1 ring-white/10"
-                            style={{ zIndex: previewAvatarSources.length - i }}
+                            key={tile.key}
+                            className="relative inline-flex size-8 items-center justify-center overflow-hidden rounded-full border-2 border-[#0a0a0a] bg-zinc-800 text-[11px] font-bold uppercase text-zinc-300 ring-1 ring-white/10"
+                            style={{ zIndex: previewGuestTiles.length - i }}
+                            title={tile.label || undefined}
                           >
-                            <Image src={src} alt="" className="size-full object-cover" width={32} height={32} unoptimized />
+                            {tile.src ? (
+                              <Image src={tile.src} alt="" className="size-full object-cover" width={32} height={32} unoptimized />
+                            ) : (
+                              (tile.label || '?').replace(/^@/, '').charAt(0) || '?'
+                            )}
                           </span>
                         ))}
                         {previewExtraCount > 0 ? (
@@ -345,7 +372,7 @@ export default function EventsNewEventPage() {
                         ) : null}
                       </div>
                       <p className="text-sm font-medium leading-5 text-zinc-200">
-                        <span className="text-white">{goingCount}</span> people going
+                        <span className="text-white">{guestListCount}</span> on the guest list
                       </p>
                     </div>
                     <button
@@ -562,18 +589,28 @@ export default function EventsNewEventPage() {
               ) : (
                 <div className="grid grid-cols-4 gap-4 sm:grid-cols-6 md:grid-cols-8">
                   {(participantsLoaded ? participants : []).map((p, idx) => {
+                    const label = String(
+                      p?.name || p?.username || p?.userId || `Member ${idx + 1}`
+                    ).replace(/^@/, '');
                     const src = displayImageSrc(p?.avatarUrl, null);
-                    if (!src) return null;
-                    const label =
-                      p?.username || p?.name || p?.userId || `Member ${idx + 1}`;
+                    const initial = (label || '?').charAt(0).toUpperCase();
                     return (
-                      <div key={p?.userId || p?.id || label} className="flex flex-col items-center gap-2">
+                      <div key={p?.userId || p?.id || `${label}-${idx}`} className="flex flex-col items-center gap-1.5 min-w-0">
                         <span
-                          className="relative inline-flex size-12 overflow-hidden rounded-full border-2 border-[#0a0a0a] ring-1 ring-white/10"
+                          className="relative inline-flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#0a0a0a] bg-zinc-800 text-sm font-bold text-zinc-200 ring-1 ring-white/10"
                           title={label}
                         >
-                          <Image src={src} alt={label} className="size-full object-cover" width={48} height={48} unoptimized />
+                          {src ? (
+                            <Image src={src} alt={label} className="size-full object-cover" width={48} height={48} unoptimized />
+                          ) : (
+                            initial
+                          )}
                         </span>
+                        {label ? (
+                          <span className="max-w-full truncate text-center text-[10px] font-medium text-zinc-500" title={label}>
+                            {p?.username ? `@${String(p.username).replace(/^@/, '')}` : label}
+                          </span>
+                        ) : null}
                       </div>
                     );
                   })}

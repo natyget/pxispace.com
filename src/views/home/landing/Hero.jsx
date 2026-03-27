@@ -169,7 +169,7 @@ export default function Hero() {
 
   const visibleElements = isMobile ? chaosElements.slice(0, 8) : chaosElements;
 
-  const headline = 'Every event builds your story';
+  const headline = "Don't let the night die. Immortalize it.";
 
   return (
     <section
@@ -239,7 +239,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.1, ease: 'easeOut' }}
         >
-          Your best nights are scattered across 6 apps, 3 group chats, and forgotten camera rolls.
+          Rescue your best nights from scattered chats and dead camera rolls. Bring every moment into one living, unified scrapbook
         </motion.p>
 
         <motion.div
