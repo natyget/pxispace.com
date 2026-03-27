@@ -7,18 +7,29 @@ export default function GlobalCursorLayer({ children }) {
   const [canUseCustomCursor, setCanUseCustomCursor] = useState(false);
 
   useEffect(() => {
-    const isTouch =
-      typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-    if (isTouch) {
+    const forceDisable = process.env.NEXT_PUBLIC_DISABLE_CUSTOM_CURSOR === 'true';
+    if (forceDisable) {
       setCanUseCustomCursor(false);
       return;
     }
 
-    const lowPowerCpu = typeof navigator !== 'undefined' && navigator.hardwareConcurrency <= 4;
-    const reducedMotion =
-      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const narrowViewport = typeof window !== 'undefined' && window.innerWidth < 1024;
-    setCanUseCustomCursor(!lowPowerCpu && !reducedMotion && !narrowViewport);
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const evaluate = () => {
+      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const lowPowerCpu = navigator.hardwareConcurrency <= 4;
+      const isMobileViewport = window.innerWidth < 768;
+      const reducedMotion = media.matches;
+      setCanUseCustomCursor(!isTouch && !lowPowerCpu && !reducedMotion && !isMobileViewport);
+    };
+
+    evaluate();
+    window.addEventListener('resize', evaluate);
+    media.addEventListener?.('change', evaluate);
+    return () => {
+      window.removeEventListener('resize', evaluate);
+      media.removeEventListener?.('change', evaluate);
+    };
   }, []);
 
   useEffect(() => {

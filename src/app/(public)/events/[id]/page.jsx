@@ -522,7 +522,7 @@ export default function EventsNewEventPage() {
           className="pointer-events-auto inline-flex h-[3.375rem] min-w-[25.5rem] shrink-0 items-center justify-center rounded-full px-8 text-sm font-semibold uppercase tracking-wide text-white shadow-md shadow-black/40 transition hover:opacity-90"
           style={{ backgroundColor: ACCENT }}
         >
-          Get tickets
+          Continue to checkout
         </button>
       </div>
 

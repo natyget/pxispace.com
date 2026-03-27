@@ -7,7 +7,7 @@ import { X, Loader2 } from 'lucide-react';
 import { api } from '@/services/api';
 import Button from '@/components/ui/Button';
 
-const PaymentForm = ({ onSuccess, onCancel }) => {
+const PaymentForm = ({ onSuccess, onCancel, returnUrl }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -18,16 +18,31 @@ const PaymentForm = ({ onSuccess, onCancel }) => {
     if (!stripe || !elements) return;
     setLoading(true);
     setError(null);
-    const { error: confirmError } = await stripe.confirmPayment({
+    // Payment Element: validate + collect wallet / Link state before confirm (required for Apple Pay, Google Pay, Link).
+    const { error: submitError } = await elements.submit();
+    if (submitError) {
+      setLoading(false);
+      setError(submitError.message || 'Please complete the payment form.');
+      return;
+    }
+    const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
       elements,
+      redirect: 'if_required',
       confirmParams: {
-        return_url: typeof window !== 'undefined' ? `${window.location.origin}/events?payment=success` : '',
-        payment_method_data: { billing_details: {} },
+        return_url:
+          returnUrl ||
+          (typeof window !== 'undefined' ? `${window.location.origin}/events?payment=success` : ''),
       },
     });
     setLoading(false);
     if (confirmError) {
       setError(confirmError.message || 'Payment failed');
+      return;
+    }
+    // Succeeded immediately, or processing (webhook will fulfill). Redirect flows leave the page.
+    const status = paymentIntent?.status;
+    if (status && status !== 'succeeded' && status !== 'processing') {
+      setError('Payment could not be completed. Please try again.');
       return;
     }
     onSuccess();
@@ -52,8 +67,8 @@ const PaymentForm = ({ onSuccess, onCancel }) => {
         </button>
         <Button
           type="submit"
-          variant="neon"
-          className="flex-1 uppercase tracking-widest py-3"
+          variant="primary"
+          className="flex-1 uppercase tracking-widest py-3 !bg-pxi-purple hover:!bg-pxi-purple shadow-[0_0_20px_rgba(216,74,255,0.4)]"
           disabled={!stripe || loading}
         >
           {loading ? <Loader2 size={18} className="animate-spin mx-auto" /> : 'Pay now'}
@@ -63,7 +78,7 @@ const PaymentForm = ({ onSuccess, onCancel }) => {
   );
 };
 
-export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open }) {
+export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open, returnUrl }) {
   const [stripePromise, setStripePromise] = useState(null);
 
   useEffect(() => {
@@ -100,8 +115,20 @@ export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open }) 
         {/* Explicit max-height so Link/card/phone fields can scroll on short viewports */}
         <div className="max-h-[min(78dvh,calc(100vh-7rem))] overflow-y-auto overscroll-y-contain px-5 py-5 touch-pan-y [scrollbar-gutter:stable]">
           {stripePromise ? (
-            <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night' } }}>
-              <PaymentForm onSuccess={onSuccess} onCancel={onCancel} />
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret,
+                appearance: {
+                  theme: 'night',
+                  variables: {
+                    colorPrimary: '#d84aff',
+                    borderRadius: '12px',
+                  },
+                },
+              }}
+            >
+              <PaymentForm onSuccess={onSuccess} onCancel={onCancel} returnUrl={returnUrl} />
             </Elements>
           ) : (
             <div className="flex items-center justify-center py-12 text-zinc-500">
