@@ -13,12 +13,14 @@ export default function GifCard({ isMe, name, avatar, time, gifSrc = THREAD_REAC
       className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} items-end gap-2`}
     >
       {!isMe && avatar && (
-        <Image
+        <img
           src={avatar}
           alt={name || ''}
           width={32}
           height={32}
           className="w-8 h-8 rounded-full border border-white/15 flex-shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.4)]"
+          loading="lazy"
+          decoding="async"
         />
       )}
       <div className={`flex flex-col max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>

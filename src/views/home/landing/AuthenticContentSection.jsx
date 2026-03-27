@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Calendar, Image as ImageIcon, Users } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
@@ -121,25 +120,27 @@ export default function AuthenticContentSection() {
                   >
                     <SwiperSlide>
                       <div className="aspect-[9/19] w-full overflow-hidden">
-                        <Image
+                        <img
                           src={DiscoverPNG}
                           alt="Discover"
                           width={720}
                           height={1520}
                           className="w-full h-full object-cover"
-                          sizes="(max-width: 768px) 280px, 360px"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </div>
                     </SwiperSlide>
                     <SwiperSlide>
                       <div className="aspect-[9/19] w-full overflow-hidden">
-                        <Image
+                        <img
                           src={CreatePNG}
                           alt="Create"
                           width={720}
                           height={1520}
                           className="w-full h-full object-cover"
-                          sizes="(max-width: 768px) 280px, 360px"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </div>
                     </SwiperSlide>
