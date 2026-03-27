@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { motion, useTransform } from 'framer-motion';
 import { Send } from 'lucide-react';
 import { THREAD_POST_SECOND, AVATAR_BABA, AVATAR_KEVIN } from '@/lib/landingAssets';
@@ -105,12 +104,16 @@ export default function FocusScene({ progress }) {
           className={`rounded-[12px] p-2 pr-3 flex items-center gap-2 w-full max-w-[224px] rotate-[-1.5deg] ${glassOther}`}
           style={{ opacity: newCommentOpacity, y: newCommentY }}
         >
-          <Image
+          <img
             src={AVATAR_KEVIN}
             alt=""
             width={28}
             height={28}
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
             className="w-7 h-7 rounded-full border border-white/20 ring-1 ring-white/10"
+            draggable={false}
           />
           <div className="flex flex-col w-full min-w-0">
             <div className="flex justify-between items-center gap-2">

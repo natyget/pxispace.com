@@ -15,8 +15,10 @@ const tagData = [
 ];
 
 const COPY_COUNT = 3;
+/** Horizontal auto-flow speed (px per frame @ ~60fps). */
+const AUTO_SCROLL_PER_FRAME = 0.975;
 
-function TagItem({ tag, onNavigate }) {
+function TagItem({ tag, onCarouselPauseChange }) {
   const anchorRef = useRef(null);
   const [tipPos, setTipPos] = useState(null);
   const hideTimerRef = useRef(null);
@@ -37,30 +39,33 @@ function TagItem({ tag, onNavigate }) {
 
   const showTip = useCallback(() => {
     clearHide();
+    onCarouselPauseChange?.(true);
     updateTipPosition();
-  }, [clearHide, updateTipPosition]);
+  }, [clearHide, updateTipPosition, onCarouselPauseChange]);
 
   const scheduleHide = useCallback(() => {
     clearHide();
     hideTimerRef.current = window.setTimeout(() => {
       setTipPos(null);
       hideTimerRef.current = null;
+      onCarouselPauseChange?.(false);
     }, 120);
-  }, [clearHide]);
+  }, [clearHide, onCarouselPauseChange]);
 
   useEffect(() => {
     if (!tipPos) return;
-    const onWinScroll = () => setTipPos(null);
-    const onStripScroll = () => setTipPos(null);
+    const onWinScroll = () => {
+      setTipPos(null);
+      onCarouselPauseChange?.(false);
+    };
+    const onResize = () => updateTipPosition();
     window.addEventListener('scroll', onWinScroll, true);
-    window.addEventListener('pxi-hashtag-strip-scroll', onStripScroll);
-    window.addEventListener('resize', updateTipPosition);
+    window.addEventListener('resize', onResize);
     return () => {
       window.removeEventListener('scroll', onWinScroll, true);
-      window.removeEventListener('pxi-hashtag-strip-scroll', onStripScroll);
-      window.removeEventListener('resize', updateTipPosition);
+      window.removeEventListener('resize', onResize);
     };
-  }, [tipPos, updateTipPosition]);
+  }, [tipPos, updateTipPosition, onCarouselPauseChange]);
 
   const tooltip =
     tipPos &&
@@ -91,9 +96,8 @@ function TagItem({ tag, onNavigate }) {
       <a
         ref={anchorRef}
         href={`#${tag.name.replace(/\s+/g, '')}`}
-        className="relative inline-flex shrink-0 cursor-grab touch-pan-x select-none active:cursor-grabbing"
+        className="relative inline-flex shrink-0 select-none"
         draggable={false}
-        onClick={onNavigate}
         onMouseEnter={showTip}
         onMouseLeave={scheduleHide}
         onFocus={showTip}
@@ -113,8 +117,12 @@ export default function HashtagTicker() {
   const set0Ref = useRef(null);
   const set1Ref = useRef(null);
   const loopWidthRef = useRef(0);
-  const drag = useRef({ active: false, startX: 0, scrollLeft: 0, moved: false });
-  const suppressClickRef = useRef(false);
+  const pausedRef = useRef(false);
+  const reduceMotionRef = useRef(false);
+
+  const onCarouselPauseChange = useCallback((paused) => {
+    pausedRef.current = paused;
+  }, []);
 
   const measureAndCenter = useCallback(() => {
     const strip = stripRef.current;
@@ -144,12 +152,19 @@ export default function HashtagTicker() {
     };
   }, [measureAndCenter]);
 
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const set = () => {
+      reduceMotionRef.current = !!mq?.matches;
+    };
+    set();
+    mq?.addEventListener?.('change', set);
+    return () => mq?.removeEventListener?.('change', set);
+  }, []);
+
   const onScroll = useCallback(() => {
     const el = stripRef.current;
     const w = loopWidthRef.current;
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('pxi-hashtag-strip-scroll'));
-    }
     if (!el || w <= 0) return;
     if (el.scrollWidth <= el.clientWidth + 2) return;
     const { scrollLeft } = el;
@@ -160,52 +175,27 @@ export default function HashtagTicker() {
     }
   }, []);
 
-  const onPointerDownCapture = useCallback((e) => {
-    const el = stripRef.current;
-    if (!el) return;
-    drag.current = {
-      active: true,
-      startX: e.clientX,
-      scrollLeft: el.scrollLeft,
-      moved: false,
+  useEffect(() => {
+    let cancelled = false;
+    const tick = () => {
+      if (cancelled) return;
+      const el = stripRef.current;
+      const w = loopWidthRef.current;
+      if (
+        el &&
+        w > 0 &&
+        el.scrollWidth > el.clientWidth + 2 &&
+        !pausedRef.current &&
+        !reduceMotionRef.current
+      ) {
+        el.scrollLeft += AUTO_SCROLL_PER_FRAME;
+      }
+      requestAnimationFrame(tick);
     };
-    try {
-      el.setPointerCapture(e.pointerId);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const onPointerMove = useCallback((e) => {
-    const el = stripRef.current;
-    if (!drag.current.active || !el) return;
-    const dx = e.clientX - drag.current.startX;
-    if (Math.abs(dx) > 6) drag.current.moved = true;
-    el.scrollLeft = drag.current.scrollLeft - dx;
-  }, []);
-
-  const endDrag = useCallback((e) => {
-    const el = stripRef.current;
-    const didMove = drag.current.moved;
-    if (didMove) {
-      suppressClickRef.current = true;
-      window.setTimeout(() => {
-        suppressClickRef.current = false;
-      }, 80);
-    }
-    drag.current.active = false;
-    drag.current.moved = false;
-    try {
-      if (e?.pointerId != null) el?.releasePointerCapture(e.pointerId);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const onLinkClick = useCallback((e) => {
-    if (suppressClickRef.current) {
-      e.preventDefault();
-    }
+    requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -214,24 +204,25 @@ export default function HashtagTicker() {
         <div
           ref={stripRef}
           role="region"
-          aria-label="Event hashtags, scroll horizontally"
-          className="mx-auto max-w-[1400px] cursor-grab touch-pan-x select-none overflow-x-auto overflow-y-hidden px-6 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] active:cursor-grabbing [&::-webkit-scrollbar]:hidden"
+          aria-label="Event hashtags, auto-scrolling; hover a tag to pause and see details"
+          className="mx-auto w-full max-w-[1400px] select-none overflow-x-auto overflow-y-hidden px-6 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           onScroll={onScroll}
-          onPointerDownCapture={onPointerDownCapture}
-          onPointerMove={onPointerMove}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
-          <div className="flex w-max flex-row gap-x-10">
+          {/* One continuous horizontal line — overflow scrolls; never wrap to a second line */}
+          <div className="flex w-max min-w-max flex-nowrap flex-row items-center gap-x-10">
             {Array.from({ length: COPY_COUNT }, (_, copyIndex) => (
               <div
                 key={copyIndex}
                 ref={copyIndex === 0 ? set0Ref : copyIndex === 1 ? set1Ref : undefined}
-                className="flex shrink-0 gap-x-10"
+                className="flex shrink-0 flex-nowrap items-center gap-x-10"
               >
                 {tagData.map((tag) => (
-                  <TagItem key={`${tag.name}-${copyIndex}`} tag={tag} onNavigate={onLinkClick} />
+                  <TagItem
+                    key={`${tag.name}-${copyIndex}`}
+                    tag={tag}
+                    onCarouselPauseChange={onCarouselPauseChange}
+                  />
                 ))}
               </div>
             ))}
