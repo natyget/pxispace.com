@@ -3,12 +3,17 @@
 import React, { useEffect, useState } from 'react';
 import CustomCursor, { CursorProvider } from '@/views/home/landing/CustomCursor';
 
+/**
+ * Custom cursor (desktop): flip here only — applies in every environment (local + prod).
+ * `false` = native cursor everywhere; `true` = enable on capable desktop (still respects touch / reduced-motion / mobile viewport below).
+ */
+const CUSTOM_CURSOR_ENABLED = false;
+
 export default function GlobalCursorLayer({ children }) {
   const [canUseCustomCursor, setCanUseCustomCursor] = useState(false);
 
   useEffect(() => {
-    const forceDisable = process.env.NEXT_PUBLIC_DISABLE_CUSTOM_CURSOR === 'true';
-    if (forceDisable) {
+    if (!CUSTOM_CURSOR_ENABLED) {
       setCanUseCustomCursor(false);
       return;
     }
