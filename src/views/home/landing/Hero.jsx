@@ -7,6 +7,7 @@ import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
 import {
   APPLE_MARK,
   HERO_SCATTER_ICONS,
+  HERO_SCATTER_ICON_EXTRA_PADDING,
   HERO_SCATTER_PHOTOS,
 } from '@/lib/landingAssets';
 
@@ -40,6 +41,10 @@ function easeOutCubic(t) {
 
 const HeroChaosItem = React.memo(function HeroChaosItem({ el, heroProgress, isMobile }) {
   const isBerealIcon = el.type === 'icon' && typeof el.iconUrl === 'string' && el.iconUrl.includes('bereal');
+  const isGoogleDriveIcon =
+    el.type === 'icon' &&
+    typeof el.iconUrl === 'string' &&
+    el.iconUrl.includes(HERO_SCATTER_ICON_EXTRA_PADDING);
   const holeStart = 0.045 + el.id * (isMobile ? 0.019 : 0.0155);
   const holeEnd = 0.49;
 
@@ -121,7 +126,7 @@ const HeroChaosItem = React.memo(function HeroChaosItem({ el, heroProgress, isMo
               <img
                 src={el.iconUrl}
                 alt=""
-                className={`block w-full h-full ${isBerealIcon ? 'object-cover scale-[1.28]' : 'object-contain scale-110'}`}
+                className={`block w-full h-full ${isBerealIcon ? 'object-cover scale-[1.28]' : 'object-contain scale-110'} ${isGoogleDriveIcon ? 'p-2 md:p-2.5' : ''}`}
                 draggable={false}
               />
             </div>
