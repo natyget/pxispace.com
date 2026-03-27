@@ -66,10 +66,11 @@ export default function FeatureStory() {
     <section
       id="features"
       ref={containerRef}
-      className="relative h-[520vh] w-full bg-[var(--color-bg-primary)]"
+      className="relative w-full bg-[var(--color-bg-primary)] md:h-[520vh]"
     >
-      <div className="sticky top-0 h-[100svh] w-full overflow-visible md:overflow-hidden flex flex-col md:flex-row items-center justify-center md:justify-between px-6 md:px-10 max-w-[1200px] mx-auto pt-20 pb-4 md:py-0 gap-6 md:gap-8">
-        <div className="relative w-full md:w-[45%] h-[44vh] md:h-full flex items-center justify-start md:justify-center z-20">
+      {/* Desktop / large screens: scroll-driven sticky story */}
+      <div className="hidden md:flex md:sticky md:top-0 md:h-[100svh] w-full overflow-hidden flex-col md:flex-row items-center justify-center md:justify-between px-6 md:px-10 max-w-[1200px] mx-auto pt-20 pb-4 md:py-0 gap-6 md:gap-8">
+        <div className="relative w-full md:w-[45%] md:h-full flex items-center justify-start md:justify-center z-20">
           {CHAPTERS.map((chapter, index) => {
             const isActive = index === activeChapter;
             return (
@@ -98,7 +99,7 @@ export default function FeatureStory() {
             );
           })}
         </div>
-        <div className="relative w-full md:w-[42%] flex justify-center items-center md:items-center mt-6 md:mt-0 z-10 shrink-0">
+        <div className="relative w-full md:w-[42%] flex justify-center items-center z-10 shrink-0">
           <DeviceFrame>
             <div className="absolute inset-0 bg-[#050505]">
               {CHAPTERS.map((chapter, index) => (
@@ -139,6 +140,37 @@ export default function FeatureStory() {
             })}
           </div>
         </div>
+      </div>
+
+      {/* Mobile: stacked, scrollable chapters */}
+      <div className="flex flex-col gap-16 px-6 pt-20 pb-16 md:hidden max-w-[800px] mx-auto">
+        {CHAPTERS.map((chapter) => (
+          <div key={chapter.id} className="flex flex-col gap-8">
+            <div>
+              <h3 className="font-display font-bold text-3xl leading-[1.05] tracking-tight mb-3 text-transparent bg-clip-text bg-gradient-to-r from-neutral-500 to-white">
+                {chapter.headline}
+              </h3>
+              <p className="text-sm text-white/80 leading-relaxed font-medium">
+                {chapter.body}
+              </p>
+            </div>
+            <div className="w-full flex justify-center">
+              <div className="w-full max-w-[360px]">
+                <DeviceFrame>
+                  <div className="absolute inset-0 bg-[#050505]">
+                    <img
+                      src={chapter.image}
+                      alt={chapter.imageAlt}
+                      referrerPolicy="no-referrer"
+                      className="absolute inset-0 w-full h-full object-cover grayscale-[15%]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25 pointer-events-none" />
+                  </div>
+                </DeviceFrame>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );

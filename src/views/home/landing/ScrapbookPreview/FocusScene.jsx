@@ -36,16 +36,28 @@ export default function FocusScene({ progress }) {
     >
       <motion.div className="relative w-full max-w-[280px] mb-6" style={{ scale }}>
         <div className={`relative ${glassImageCard} aspect-[4/3]`}>
-          <Image
+          <img
             src={THREAD_POST_SECOND}
             alt=""
-            fill
-            className="object-cover"
-            sizes="280px"
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            className="absolute inset-0 h-full w-full object-cover"
+            draggable={false}
           />
           <div className="absolute top-3 right-3 flex items-center gap-2 rounded-full bg-white/[0.09] px-2.5 py-1 border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
             <span className="text-[12px] font-semibold text-white/95">Jess</span>
-            <Image src={AVATAR_BABA} alt="Jess" width={20} height={20} className="w-5 h-5 rounded-full ring-1 ring-white/20" />
+            <img
+              src={AVATAR_BABA}
+              alt="Jess"
+              width={20}
+              height={20}
+              loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+              className="w-5 h-5 rounded-full ring-1 ring-white/20"
+              draggable={false}
+            />
           </div>
         </div>
         <div className="absolute -right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 z-10">

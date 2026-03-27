@@ -247,7 +247,7 @@ export default function Hero() {
             href={PXI_APP_STORE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Download on the App Store"
+            aria-label="Download on App Store"
             className="flex w-full max-w-[320px] sm:w-auto sm:max-w-none items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-colors cursor-pointer"
             data-cursor-hover
           >
@@ -259,7 +259,7 @@ export default function Hero() {
             />
             <div className="flex flex-col items-start">
               <span className="text-[10px] uppercase tracking-widest text-white/70 font-bold leading-none mb-1">
-                Download on the
+                Download on
               </span>
               <span className="text-sm font-bold text-white leading-none">App Store</span>
             </div>
