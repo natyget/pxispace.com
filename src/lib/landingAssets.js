@@ -23,6 +23,12 @@ export const HERO_SCATTER_ICONS = [
   `${L}/icons/instagram.png`,
 ];
 
+/**
+ * Hero scatter icons that need a bit of inner padding (asset reads too “edge-to-edge” in the tile).
+ * Match on path substring so Hero can apply padding only for these.
+ */
+export const HERO_SCATTER_ICON_EXTRA_PADDING = 'google-drive';
+
 /** Polaroid / event photos (scattered hero) */
 export const HERO_SCATTER_PHOTOS = [
   `${L}/scattered/birthday.jpg`,
