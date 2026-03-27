@@ -73,7 +73,7 @@ const EventCard = ({ event, favorited, onToggleFavorite, onQuickView, detailBase
               Preview
             </Button>
             <Button
-              variant="neon"
+              variant="primary"
               className="!px-6 !py-3 !text-[11px] uppercase tracking-widest"
               icon={<Ticket size={16} />}
               onClick={() => router.push(detailHref)}
