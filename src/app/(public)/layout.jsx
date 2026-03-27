@@ -9,6 +9,7 @@ export default function PublicLayout({ children }) {
   const showNavbar =
     pathname === '/' ||
     pathname === '/home' ||
+    pathname === '/about' ||
     pathname?.startsWith('/events');
   return (
     <div className="relative min-h-screen flex flex-col">

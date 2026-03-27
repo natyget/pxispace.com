@@ -68,6 +68,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    scrollbar-color: var(--color-pxi-purple) var(--bg-primary);
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
@@ -153,11 +154,11 @@
   background: var(--bg-primary);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(168, 85, 247, 0.4);
+  background: var(--color-pxi-purple);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-purple);
+  background: var(--color-pxi-purple);
 }
 
 /* Phone verification page: dark theme for react-phone-number-input */
