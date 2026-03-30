@@ -20,7 +20,7 @@ const formatDate = (d) => (d ? new Date(d).toLocaleDateString(undefined, { dateS
 
 export default function NotificationsPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, saveAuth } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -64,6 +64,20 @@ export default function NotificationsPage() {
       .catch(() => setJoinError('Accepted, but failed to refresh. Check Events.'))
       .finally(() => router.replace('/dashboard/notifications', { scroll: false }));
   }, [searchParams]);
+
+  const handleStaffInviteAccept = async (notification) => {
+    if (notification.type !== 'STAFF_INVITE') return;
+    setJoinError(null);
+    try {
+      const res = await acceptInvite(notification.id);
+      if (res?.token && user) {
+        await saveAuth({ token: res.token, user });
+      }
+      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+    } catch (err) {
+      setJoinError(err?.response?.data?.error || err.message || 'Failed to accept staff invite');
+    }
+  };
 
   const handleJoinClick = async (notification) => {
     if (notification.type !== 'ALBUM_INVITE') return;
@@ -194,9 +208,11 @@ export default function NotificationsPage() {
     }
   }, [settingsOpen]);
 
-  const inviteNotifications = notifications.filter((n) => n.type === 'ALBUM_INVITE');
+  const inviteNotifications = notifications.filter((n) => n.type === 'ALBUM_INVITE' || n.type === 'STAFF_INVITE');
   const friendRequestNotifications = notifications.filter((n) => n.type === 'FRIEND_REQ');
-  const otherNotifications = notifications.filter((n) => n.type !== 'ALBUM_INVITE' && n.type !== 'FRIEND_REQ');
+  const otherNotifications = notifications.filter(
+    (n) => n.type !== 'ALBUM_INVITE' && n.type !== 'STAFF_INVITE' && n.type !== 'FRIEND_REQ',
+  );
   const isPaidInvite = eulaEvent?.ticketType === 'PAID' && (eulaEvent?.ticketPrice ?? 0) > 0;
   const priceDisplay = isPaidInvite
     ? formatPrice(quoteTotal != null ? quoteTotal : eulaEvent?.ticketPrice, eulaEvent?.currency)
@@ -268,7 +284,9 @@ export default function NotificationsPage() {
               <div className="flex-1 min-w-0 pr-8">
                 <div className="flex items-center gap-2 mb-1">
                   <UserPlus size={16} className="text-pxi-purple flex-shrink-0" />
-                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Event invite</span>
+                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                    {n.type === 'STAFF_INVITE' ? 'Co-host / staff invite' : 'Event invite'}
+                  </span>
                 </div>
                 <p className="text-white font-semibold truncate">{n.data?.albumName || n.data?.eventName || 'Event'}</p>
                 {n.user && (
@@ -282,7 +300,7 @@ export default function NotificationsPage() {
                 <Button
                   variant="neon"
                   className="!py-2 !px-4 !text-xs uppercase tracking-widest"
-                  onClick={() => handleJoinClick(n)}
+                  onClick={() => (n.type === 'STAFF_INVITE' ? handleStaffInviteAccept(n) : handleJoinClick(n))}
                 >
                   Accept
                 </Button>
