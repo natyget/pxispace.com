@@ -40,7 +40,12 @@ export const eventsService = {
 
   getFriends: (userId) => api.get(`/api/users/${userId}/friends`),
 
-  inviteAlbumUser: (albumId, username) => api.post(`/api/albums/${albumId}/invite-user`, { username }),
+  inviteAlbumUser: (albumId, username, { role, lineupSubrole } = {}) =>
+    api.post(`/api/albums/${albumId}/invite-user`, {
+      username,
+      ...(role ? { role } : {}),
+      ...(lineupSubrole != null && lineupSubrole !== '' ? { lineupSubrole } : {}),
+    }),
 
   getFeaturedPeople: (albumId) => api.get(`/api/albums/${albumId}/featured-people`),
 

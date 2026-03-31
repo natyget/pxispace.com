@@ -64,11 +64,13 @@ export default function CreateEventPage() {
   const [graceTimeMinutes, setGraceTimeMinutes] = useState('15');
   const [maxImages, setMaxImages] = useState('100');
 
-  const [lineupRoleDraft, setLineupRoleDraft] = useState('');
+  const [inviteRoleKind, setInviteRoleKind] = useState('lineup');
+  const [lineupSubDraft, setLineupSubDraft] = useState('');
   const [featuredQuery, setFeaturedQuery] = useState('');
   const [featuredResults, setFeaturedResults] = useState([]);
   const [featuredLoading, setFeaturedLoading] = useState(false);
-  const [featuredPeople, setFeaturedPeople] = useState([]);
+  /** @type {Array<{ id: string; username: string; name?: string; avatarUrl?: string; kind: 'lineup' | 'member' | 'cohost' | 'bouncer'; lineupSubrole?: string }>} */
+  const [pendingInvites, setPendingInvites] = useState([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
@@ -102,41 +104,48 @@ export default function CreateEventPage() {
     };
   }, [featuredQuery, user?.id]);
 
-  const addFeaturedPerson = useCallback(
+  const addPendingInvite = useCallback(
     (candidate) => {
       const normalizedUsername = String(candidate.username || '').replace(/^@/, '').trim();
       if (!normalizedUsername) return;
-      const roleForEntry = (lineupRoleDraft.trim() || 'Line up').slice(0, LINEUP_ROLE_MAX);
-      setFeaturedPeople((prev) => {
+      const lineupSubrole =
+        inviteRoleKind === 'lineup'
+          ? (lineupSubDraft.trim() || 'Line up').slice(0, LINEUP_ROLE_MAX)
+          : undefined;
+      setPendingInvites((prev) => {
         const exists = prev.find(
           (p) => p.id === candidate.id || p.username.toLowerCase() === normalizedUsername.toLowerCase()
         );
+        const entry = {
+          id: candidate.id,
+          username: normalizedUsername,
+          name: candidate.name,
+          avatarUrl: candidate.avatarUrl,
+          kind: inviteRoleKind,
+          lineupSubrole,
+        };
         if (exists) {
           return prev.map((p) =>
-            p.id === candidate.id || p.username.toLowerCase() === normalizedUsername.toLowerCase()
-              ? { ...p, role: roleForEntry }
-              : p
+            p.id === candidate.id || p.username.toLowerCase() === normalizedUsername.toLowerCase() ? entry : p
           );
         }
-        return [
-          ...prev,
-          {
-            id: candidate.id,
-            username: normalizedUsername,
-            name: candidate.name,
-            avatarUrl: candidate.avatarUrl,
-            role: roleForEntry,
-          },
-        ];
+        return [...prev, entry];
       });
       setFeaturedQuery('');
       setFeaturedResults([]);
     },
-    [lineupRoleDraft]
+    [inviteRoleKind, lineupSubDraft]
   );
 
-  const removeFeaturedPerson = (id) => {
-    setFeaturedPeople((prev) => prev.filter((p) => p.id !== id));
+  const removePendingInvite = (id) => {
+    setPendingInvites((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const formatPendingLabel = (p) => {
+    if (p.kind === 'lineup') return `Line-up • ${p.lineupSubrole || 'Line up'}`;
+    if (p.kind === 'cohost') return 'Co-host';
+    if (p.kind === 'bouncer') return 'Bouncer';
+    return 'Member';
   };
 
   const onCoverFile = async (e) => {
@@ -256,6 +265,10 @@ export default function CreateEventPage() {
         (parseInt(graceTimeHours, 10) || 0) * 60 + (parseInt(graceTimeMinutes, 10) || 0);
       const ticketPrice = isPaid ? parseInt(price, 10) : 0;
 
+      const lineupOnly = pendingInvites
+        .filter((p) => p.kind === 'lineup')
+        .map((p) => ({ username: p.username, role: p.lineupSubrole || 'Line up' }));
+
       const created = await eventsService.createEvent({
         name: name.trim(),
         description: description.trim() || undefined,
@@ -272,7 +285,7 @@ export default function CreateEventPage() {
         graceTime,
         maxImages: parseInt(maxImages, 10) || 100,
         createdBy: user.id,
-        featuredPeople: featuredPeople.map((p) => ({ username: p.username, role: p.role })),
+        featuredPeople: lineupOnly,
       });
 
       if (created.token && user) {
@@ -280,10 +293,29 @@ export default function CreateEventPage() {
       }
 
       const eventId = created.event?.id || created.id;
+      const albumId = created.album?.id;
       if (!eventId) {
         setFormError('Event created but no id returned.');
         return;
       }
+
+      const postInvites = pendingInvites.filter((p) => p.kind !== 'lineup');
+      if (albumId && postInvites.length > 0) {
+        for (const p of postInvites) {
+          try {
+            if (p.kind === 'cohost') {
+              await eventsService.inviteStaff(eventId, p.username, 'co-host');
+            } else if (p.kind === 'bouncer') {
+              await eventsService.inviteStaff(eventId, p.username, 'bouncer');
+            } else {
+              await eventsService.inviteAlbumUser(albumId, p.username, { role: 'member' });
+            }
+          } catch {
+            /* non-fatal; user can re-invite from event page */
+          }
+        }
+      }
+
       router.push(`/dashboard/events/${eventId}`);
     } catch (err) {
       setFormError(err.message || 'Failed to create event.');
@@ -394,22 +426,38 @@ export default function CreateEventPage() {
         <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
           <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
             <Search size={16} className="text-pxi-purple" />
-            Line up (optional)
+            Invites (optional)
           </h2>
           <p className="text-xs text-zinc-500">
-            Search people by username. Set a role label (max {LINEUP_ROLE_MAX} chars) before adding; they receive line-up
-            invites when the event is created.
+            Choose a role, then search by username. Line-up adds a label (max {LINEUP_ROLE_MAX} chars). Co-host, bouncer, and
+            member invites are sent after the event is created. Paid events: only member invites require payment when the guest
+            accepts; co-host, bouncer, and line-up do not.
           </p>
           <div>
             <label className={labelClass}>Role for next add</label>
-            <input
+            <select
               className={inputClass}
-              value={lineupRoleDraft}
-              onChange={(e) => setLineupRoleDraft(e.target.value.slice(0, LINEUP_ROLE_MAX))}
-              placeholder="Line up, DJ, Host…"
-              maxLength={LINEUP_ROLE_MAX}
-            />
+              value={inviteRoleKind}
+              onChange={(e) => setInviteRoleKind(e.target.value)}
+            >
+              <option value="member">Member (audience)</option>
+              <option value="cohost">Co-host</option>
+              <option value="bouncer">Bouncer</option>
+              <option value="lineup">Line-up</option>
+            </select>
           </div>
+          {inviteRoleKind === 'lineup' && (
+            <div>
+              <label className={labelClass}>Line-up label</label>
+              <input
+                className={inputClass}
+                value={lineupSubDraft}
+                onChange={(e) => setLineupSubDraft(e.target.value.slice(0, LINEUP_ROLE_MAX))}
+                placeholder="DJ, Host, Artist…"
+                maxLength={LINEUP_ROLE_MAX}
+              />
+            </div>
+          )}
           <div>
             <label className={labelClass}>Search username</label>
             <input
@@ -427,7 +475,7 @@ export default function CreateEventPage() {
                     <button
                       type="button"
                       className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/5 flex justify-between items-center gap-2"
-                      onClick={() => addFeaturedPerson(u)}
+                      onClick={() => addPendingInvite(u)}
                     >
                       <span>
                         @{u.username}
@@ -440,15 +488,15 @@ export default function CreateEventPage() {
               </ul>
             )}
           </div>
-          {featuredPeople.length > 0 && (
+          {pendingInvites.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {featuredPeople.map((p) => (
+              {pendingInvites.map((p) => (
                 <span
                   key={p.id}
                   className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-fuchsia-500/40 bg-fuchsia-500/10 text-xs text-fuchsia-200"
                 >
-                  @{p.username} • {p.role}
-                  <button type="button" onClick={() => removeFeaturedPerson(p.id)} className="text-zinc-400 hover:text-white">
+                  @{p.username} • {formatPendingLabel(p)}
+                  <button type="button" onClick={() => removePendingInvite(p.id)} className="text-zinc-400 hover:text-white">
                     <X size={14} />
                   </button>
                 </span>
