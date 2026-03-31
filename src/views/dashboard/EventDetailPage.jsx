@@ -9,39 +9,12 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const LINEUP_ROLE_MAX_LEN = 80;
 
-/** Map free-text role to send path: staff, line-up featured person + album invite, or album invite only. */
-function parseInviteRoleLabel(raw) {
-  const t = String(raw ?? '').trim();
-  const lower = t.toLowerCase().replace(/\s+/g, ' ');
-  if (
-    !lower ||
-    lower === 'member' ||
-    lower === 'guest' ||
-    lower === 'attendee' ||
-    lower === 'audience'
-  ) {
-    return { kind: 'MEMBER' };
-  }
-  if (lower === 'co-host' || lower === 'co host' || lower === 'cohost') {
-    return { kind: 'CO_HOST' };
-  }
-  if (lower === 'bouncer' || lower === 'security') {
-    return { kind: 'BOUNCER' };
-  }
-  return { kind: 'LINEUP', role: t.slice(0, LINEUP_ROLE_MAX_LEN) };
+function formatDraftInviteLabel(d) {
+  if (d.roleKind === 'lineup') return `Line-up • ${d.lineupSubrole || 'Line up'}`;
+  if (d.roleKind === 'cohost') return 'Co-host';
+  if (d.roleKind === 'bouncer') return 'Bouncer';
+  return 'Member';
 }
-
-function formatRoleForDisplay(label) {
-  const t = String(label ?? '').trim();
-  return t || 'Guest';
-}
-
-const FEATURED_ROLE_STYLES = {
-  SINGER: { border: 'border-pink-400/70', bg: 'bg-pink-500/20', text: 'text-pink-300' },
-  DANCER: { border: 'border-blue-400/70', bg: 'bg-blue-500/20', text: 'text-blue-300' },
-  DESIGNER: { border: 'border-emerald-400/70', bg: 'bg-emerald-500/20', text: 'text-emerald-300' },
-  BAND: { border: 'border-amber-400/70', bg: 'bg-amber-500/20', text: 'text-amber-300' },
-};
 
 export default function EventDetailPage() {
   const { user } = useAuth();
@@ -54,7 +27,8 @@ export default function EventDetailPage() {
   const [inviteQuery, setInviteQuery] = useState('');
   const [inviteResults, setInviteResults] = useState([]);
   const [inviteSearching, setInviteSearching] = useState(false);
-  const [inviteRoleLabel, setInviteRoleLabel] = useState('');
+  const [inviteRoleKind, setInviteRoleKind] = useState('member');
+  const [lineupSubDraft, setLineupSubDraft] = useState('');
   const [audienceCandidates, setAudienceCandidates] = useState([]);
   const [selectedAudienceIds, setSelectedAudienceIds] = useState(new Set());
   const [draftInvites, setDraftInvites] = useState([]);
@@ -66,7 +40,7 @@ export default function EventDetailPage() {
     open: false,
     mode: null, // 'add' | 'send'
     users: [],
-    role: null,
+    meta: null, // { roleKind, lineupSubrole? } for add flow
   });
   const searchTimeoutRef = useRef(null);
 
@@ -93,7 +67,7 @@ export default function EventDetailPage() {
     if (!albumId) return;
     eventsService
       .getFeaturedPeople(albumId)
-      .then((res) => setFeaturedPeople(res.featuredPeople || []))
+      .then((res) => setFeaturedPeople(res.lineup || res.featuredPeople || []))
       .catch(() => setFeaturedPeople([]));
   }, [albumId]);
 
@@ -224,11 +198,21 @@ export default function EventDetailPage() {
   const addSelectedToDraft = () => {
     const selected = audienceCandidates.filter((c) => selectedAudienceIds.has(c.id));
     if (selected.length === 0) return;
-    setConfirmModal({ open: true, mode: 'add', users: selected, role: inviteRole });
+    const lineupSubrole =
+      inviteRoleKind === 'lineup'
+        ? (lineupSubDraft.trim() || 'Line up').slice(0, LINEUP_ROLE_MAX_LEN)
+        : undefined;
+    setConfirmModal({
+      open: true,
+      mode: 'add',
+      users: selected,
+      meta: { roleKind: inviteRoleKind, lineupSubrole },
+    });
   };
 
   const confirmAddToDraft = () => {
     const selected = confirmModal.users || [];
+    const meta = confirmModal.meta || { roleKind: 'member' };
     if (selected.length === 0) return;
     setDraftInvites((prev) => {
       const map = new Map(prev.map((d) => [d.id, d]));
@@ -237,13 +221,14 @@ export default function EventDetailPage() {
           id: c.id,
           username: c.username,
           name: c.name,
-          role: confirmModal.role ?? inviteRoleLabel,
+          roleKind: meta.roleKind,
+          lineupSubrole: meta.roleKind === 'lineup' ? meta.lineupSubrole || 'Line up' : undefined,
         });
       });
       return Array.from(map.values());
     });
     setSelectedAudienceIds(new Set());
-    setConfirmModal({ open: false, mode: null, users: [], role: null });
+    setConfirmModal({ open: false, mode: null, users: [], meta: null });
   };
 
   const removeDraftInvite = (userId) => {
@@ -254,7 +239,7 @@ export default function EventDetailPage() {
     if (!albumId) return;
     const toInvite = draftInvites;
     if (toInvite.length === 0) return;
-    setConfirmModal({ open: true, mode: 'send', users: [...toInvite], role: null });
+    setConfirmModal({ open: true, mode: 'send', users: [...toInvite], meta: null });
   };
 
   const confirmSendInvites = async () => {
@@ -263,20 +248,21 @@ export default function EventDetailPage() {
 
     setAudienceInviting(true);
     setAudienceInviteError(null);
-    setConfirmModal({ open: false, mode: null, users: [], role: null });
+    setConfirmModal({ open: false, mode: null, users: [], meta: null });
     const failed = [];
     for (const candidate of toInvite) {
       try {
-        if (candidate.role === 'CO_HOST') {
+        if (candidate.roleKind === 'cohost') {
           await eventsService.inviteStaff(eventId, candidate.username, 'co-host');
-        } else if (candidate.role === 'BOUNCER') {
+        } else if (candidate.roleKind === 'bouncer') {
           await eventsService.inviteStaff(eventId, candidate.username, 'bouncer');
-        } else if (FEATURED_ROLE_OPTIONS.includes(candidate.role)) {
-          await eventsService.upsertFeaturedPerson(albumId, candidate.username, candidate.role);
-          await eventsService.inviteAlbumUser(albumId, candidate.username);
+        } else if (candidate.roleKind === 'lineup') {
+          await eventsService.inviteAlbumUser(albumId, candidate.username, {
+            role: 'lineup',
+            lineupSubrole: candidate.lineupSubrole || 'Line up',
+          });
         } else {
-          // MEMBER default invite path
-          await eventsService.inviteAlbumUser(albumId, candidate.username);
+          await eventsService.inviteAlbumUser(albumId, candidate.username, { role: 'member' });
         }
       } catch {
         failed.push(candidate.username);
@@ -370,18 +356,30 @@ export default function EventDetailPage() {
           </div>
 
           <p className="text-xs text-zinc-500">
-            Role for people you add: Guest (or empty), Co-host, Bouncer, or any custom line-up label — up to{' '}
-            {LINEUP_ROLE_MAX_LEN} characters.
+            Pick a role, then select people and add to the draft. Line-up requires a short label (max {LINEUP_ROLE_MAX_LEN}{' '}
+            characters). Paid events: only member invites require payment on accept.
           </p>
           <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="text"
-              value={inviteRoleLabel}
-              onChange={(e) => setInviteRoleLabel(e.target.value.slice(0, LINEUP_ROLE_MAX_LEN))}
-              placeholder="e.g. Guest, DJ, Co-host…"
-              className="flex-1 min-w-[10rem] rounded-xl bg-zinc-800 border border-white/10 text-white text-sm px-3 py-2.5 placeholder-zinc-500 focus:border-pxi-purple/50 focus:outline-none"
-              autoComplete="off"
-            />
+            <select
+              value={inviteRoleKind}
+              onChange={(e) => setInviteRoleKind(e.target.value)}
+              className="flex-1 min-w-[10rem] rounded-xl bg-zinc-800 border border-white/10 text-white text-sm px-3 py-2.5 focus:border-pxi-purple/50 focus:outline-none"
+            >
+              <option value="member">Member</option>
+              <option value="cohost">Co-host</option>
+              <option value="bouncer">Bouncer</option>
+              <option value="lineup">Line-up</option>
+            </select>
+            {inviteRoleKind === 'lineup' && (
+              <input
+                type="text"
+                value={lineupSubDraft}
+                onChange={(e) => setLineupSubDraft(e.target.value.slice(0, LINEUP_ROLE_MAX_LEN))}
+                placeholder="Line-up label…"
+                className="flex-1 min-w-[10rem] rounded-xl bg-zinc-800 border border-white/10 text-white text-sm px-3 py-2.5 placeholder-zinc-500 focus:border-pxi-purple/50 focus:outline-none"
+                autoComplete="off"
+              />
+            )}
             <button
               type="button"
               onClick={addSelectedToDraft}
@@ -471,9 +469,7 @@ export default function EventDetailPage() {
                 <div key={d.id} className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-zinc-800/50 px-3 py-2">
                   <p className="text-sm text-white truncate">
                     @{d.username}{' '}
-                    <span className={`${FEATURED_ROLE_STYLES[d.role]?.text || 'text-zinc-400'}`}>
-                      • {d.role.replace(/_/g, ' ')}
-                    </span>
+                    <span className="text-zinc-400">• {formatDraftInviteLabel(d)}</span>
                   </p>
                   <button
                     type="button"
@@ -490,13 +486,11 @@ export default function EventDetailPage() {
 
           {featuredPeople.length > 0 && (
             <div className="rounded-xl border border-white/10 bg-zinc-900/30 p-3 space-y-2">
-              <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Featured people</p>
+              <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Line-up</p>
               {featuredPeople.map((person) => (
                 <div key={person.id} className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-zinc-800/50 px-3 py-2">
                   <p className="text-sm text-white truncate">@{person.username || 'unknown'}</p>
-                  <span className={`text-xs font-bold tracking-wider ${FEATURED_ROLE_STYLES[person.role]?.text || 'text-pxi-purple'}`}>
-                    {person.role}
-                  </span>
+                  <span className="text-xs font-bold tracking-wider text-pxi-purple">{person.role}</span>
                 </div>
               ))}
             </div>
@@ -522,15 +516,18 @@ export default function EventDetailPage() {
                 <p key={u.id} className="text-xs text-zinc-200">
                   • @{u.username}{' '}
                   {confirmModal.mode === 'add'
-                    ? `(${formatRoleForDisplay(confirmModal.role ?? inviteRoleLabel)})`
-                    : `— ${formatRoleForDisplay(u.role)}`}
+                    ? `(${formatDraftInviteLabel({
+                        roleKind: confirmModal.meta?.roleKind || 'member',
+                        lineupSubrole: confirmModal.meta?.lineupSubrole,
+                      })})`
+                    : `— ${formatDraftInviteLabel(u)}`}
                 </p>
               ))}
             </div>
             <div className="flex items-center justify-end gap-2 pt-1">
               <button
                 type="button"
-                onClick={() => setConfirmModal({ open: false, mode: null, users: [], role: null })}
+                onClick={() => setConfirmModal({ open: false, mode: null, users: [], meta: null })}
                 className="px-3 py-2 rounded-lg border border-white/10 text-xs text-zinc-300 hover:bg-white/5"
               >
                 Cancel

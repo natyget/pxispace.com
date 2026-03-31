@@ -18,9 +18,104 @@ const formatPrice = (usd, currency = 'USD') => {
 
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString(undefined, { dateStyle: 'short' }) : '—');
 
+const formatInviteRespondedAt = (iso) => {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  } catch {
+    return '';
+  }
+};
+
+function senderLabelForInvite(u) {
+  if (!u) return 'Someone';
+  const n = String(u.name || '').trim();
+  if (n) return n;
+  const un = String(u.username || '').trim().replace(/^@/, '');
+  if (un) return `@${un}`;
+  return 'Someone';
+}
+
+function lineUpPhraseFromData(data) {
+  const sub = String(data?.lineupSubrole || data?.role || '').trim();
+  return sub ? `line-up (${sub})` : 'line-up';
+}
+
+const mutedInvite = 'text-zinc-300/90';
+const boldInvite = 'font-extrabold text-white';
+
+function InviteCardDescription({ notification }) {
+  const user = notification.user;
+  const data = notification.data || {};
+  const sender = senderLabelForInvite(user);
+
+  if (notification.type === 'LINEUP_INVITE') {
+    const role = lineUpPhraseFromData(data);
+    return (
+      <p className={`text-sm leading-relaxed mt-2 ${mutedInvite}`}>
+        <span className={boldInvite}>{sender}</span>
+        <span> sent you a </span>
+        <span className={boldInvite}>{role}</span>
+        <span> role invite to you.</span>
+      </p>
+    );
+  }
+  if (notification.type === 'STAFF_INVITE') {
+    const map = { ADMIN: 'co-host', BOUNCER: 'bouncer', MEMBER: 'featured talent' };
+    const role = map[data.role] || 'staff';
+    return (
+      <p className={`text-sm leading-relaxed mt-2 ${mutedInvite}`}>
+        <span className={boldInvite}>{sender}</span>
+        <span> sent you a </span>
+        <span className={boldInvite}>{role}</span>
+        <span> role invite to you.</span>
+      </p>
+    );
+  }
+  const ir = data.inviteRole;
+  if (!ir) {
+    return (
+      <p className={`text-sm leading-relaxed mt-2 ${mutedInvite}`}>
+        <span className={boldInvite}>{sender}</span>
+        <span> sent you an invite to join this event.</span>
+      </p>
+    );
+  }
+  if (ir === 'LINEUP') {
+    const role = lineUpPhraseFromData(data);
+    return (
+      <p className={`text-sm leading-relaxed mt-2 ${mutedInvite}`}>
+        <span className={boldInvite}>{sender}</span>
+        <span> sent you a </span>
+        <span className={boldInvite}>{role}</span>
+        <span> role invite to you.</span>
+      </p>
+    );
+  }
+  const map = { MEMBER: 'member', COHOST: 'co-host', BOUNCER: 'bouncer' };
+  const role = map[ir] || String(ir).toLowerCase().replace(/_/g, '-');
+  return (
+    <p className={`text-sm leading-relaxed mt-2 ${mutedInvite}`}>
+      <span className={boldInvite}>{sender}</span>
+      <span> sent you a </span>
+      <span className={boldInvite}>{role}</span>
+      <span> role invite to you.</span>
+    </p>
+  );
+}
+
+function inviteCoverSrc(notification) {
+  const raw = notification.data?.coverImage;
+  if (raw && String(raw).trim()) return String(raw).trim();
+  return 'https://images.unsplash.com/photo-1514525253440-b393452e3383?w=600&q=80';
+}
+
+const hideNotifIconBtnClass =
+  'absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-black/45 backdrop-blur-sm border border-white/10 text-zinc-300 hover:text-white hover:bg-black/60 transition-colors z-10';
+
 export default function NotificationsPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, saveAuth } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,6 +129,8 @@ export default function NotificationsPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null); // 'mark-all-read' | 'delete-all'
   const settingsRef = useRef(null);
+  const [inboxTab, setInboxTab] = useState('unread'); // 'unread' | 'read'
+  const [hideConfirmId, setHideConfirmId] = useState(null);
 
   const loadNotifications = () => {
     if (!user?.id) return;
@@ -65,6 +162,34 @@ export default function NotificationsPage() {
       .finally(() => router.replace('/dashboard/notifications', { scroll: false }));
   }, [searchParams]);
 
+  const handleStaffInviteAccept = async (notification) => {
+    if (notification.type !== 'STAFF_INVITE') return;
+    setJoinError(null);
+    try {
+      const res = await acceptInvite(notification.id);
+      if (res?.token && user) {
+        await saveAuth({ token: res.token, user });
+      }
+      loadNotifications();
+    } catch (err) {
+      setJoinError(err?.response?.data?.error || err.message || 'Failed to accept staff invite');
+    }
+  };
+
+  const handleLineupInviteAccept = async (notification) => {
+    if (notification.type !== 'LINEUP_INVITE') return;
+    setJoinError(null);
+    try {
+      const res = await acceptInvite(notification.id);
+      if (res?.token && user) {
+        await saveAuth({ token: res.token, user });
+      }
+      loadNotifications();
+    } catch (err) {
+      setJoinError(err?.response?.data?.error || err.message || 'Failed to accept line-up invite');
+    }
+  };
+
   const handleJoinClick = async (notification) => {
     if (notification.type !== 'ALBUM_INVITE') return;
     setJoinError(null);
@@ -79,7 +204,9 @@ export default function NotificationsPage() {
       setEulaEvent(event);
       setEulaNotification(notification);
       setQuoteTotal(null);
-      if (event?.ticketType === 'PAID' && (event?.ticketPrice ?? 0) > 0) {
+      const inviteRole = notification.data?.inviteRole;
+      const isMemberInvite = inviteRole == null || inviteRole === 'MEMBER';
+      if (isMemberInvite && event?.ticketType === 'PAID' && (event?.ticketPrice ?? 0) > 0) {
         getTicketQuote(event.id)
           .then((q) => setQuoteTotal(q.totalForBuyerUsd))
           .catch(() => setQuoteTotal(null));
@@ -95,9 +222,11 @@ export default function NotificationsPage() {
     setJoinError(null);
     const eventId = eulaEvent?.id || eulaNotification.data?.eventId;
     const isPaid = eulaEvent?.ticketType === 'PAID' && (eulaEvent?.ticketPrice ?? 0) > 0;
+    const inviteRole = eulaNotification?.data?.inviteRole;
+    const isMemberInvite = inviteRole == null || inviteRole === 'MEMBER';
 
     try {
-      if (isPaid) {
+      if (isPaid && isMemberInvite) {
         const origin = typeof window !== 'undefined' ? window.location.origin : '';
         const successUrl = `${origin}/dashboard/notifications?payment=success&notificationId=${eulaNotification.id}`;
         const cancelUrl = `${origin}/dashboard/notifications?payment=cancelled`;
@@ -120,10 +249,16 @@ export default function NotificationsPage() {
   };
 
   const handleDecline = async (notification) => {
-    if (notification.type !== 'ALBUM_INVITE') return;
+    if (
+      notification.type !== 'ALBUM_INVITE' &&
+      notification.type !== 'STAFF_INVITE' &&
+      notification.type !== 'LINEUP_INVITE'
+    ) {
+      return;
+    }
     try {
       await declineInvite(notification.id);
-      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+      loadNotifications();
     } catch (err) {
       setError(err.message || 'Failed to decline');
     }
@@ -154,9 +289,10 @@ export default function NotificationsPage() {
   const handleHide = async (notificationId) => {
     try {
       await hideNotification(notificationId);
-      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+      setHideConfirmId(null);
+      loadNotifications();
     } catch (err) {
-      setError(err.message || 'Failed to hide');
+      setError(err.message || 'Failed to delete notification');
     }
   };
 
@@ -176,9 +312,9 @@ export default function NotificationsPage() {
     if (!user?.id) return;
     try {
       await hideAllNotifications(user.id);
-      setNotifications([]);
       setConfirmAction(null);
       setSettingsOpen(false);
+      loadNotifications();
     } catch (err) {
       setError(err.message || 'Failed to delete all');
     }
@@ -194,10 +330,19 @@ export default function NotificationsPage() {
     }
   }, [settingsOpen]);
 
-  const inviteNotifications = notifications.filter((n) => n.type === 'ALBUM_INVITE');
-  const friendRequestNotifications = notifications.filter((n) => n.type === 'FRIEND_REQ');
-  const otherNotifications = notifications.filter((n) => n.type !== 'ALBUM_INVITE' && n.type !== 'FRIEND_REQ');
-  const isPaidInvite = eulaEvent?.ticketType === 'PAID' && (eulaEvent?.ticketPrice ?? 0) > 0;
+  const tabNotifications = notifications.filter((n) => (inboxTab === 'unread' ? !n.isRead : n.isRead));
+  const inviteNotifications = tabNotifications.filter(
+    (n) => n.type === 'ALBUM_INVITE' || n.type === 'STAFF_INVITE' || n.type === 'LINEUP_INVITE',
+  );
+  const friendRequestNotifications = tabNotifications.filter((n) => n.type === 'FRIEND_REQ');
+  const otherNotifications = tabNotifications.filter(
+    (n) =>
+      n.type !== 'ALBUM_INVITE' && n.type !== 'STAFF_INVITE' && n.type !== 'LINEUP_INVITE' && n.type !== 'FRIEND_REQ',
+  );
+  const eulaInviteRole = eulaNotification?.data?.inviteRole;
+  const eulaIsMemberInvite = eulaInviteRole == null || eulaInviteRole === 'MEMBER';
+  const isPaidInvite =
+    eulaIsMemberInvite && eulaEvent?.ticketType === 'PAID' && (eulaEvent?.ticketPrice ?? 0) > 0;
   const priceDisplay = isPaidInvite
     ? formatPrice(quoteTotal != null ? quoteTotal : eulaEvent?.ticketPrice, eulaEvent?.currency)
     : null;
@@ -239,6 +384,25 @@ export default function NotificationsPage() {
         </div>
       </div>
 
+      <div className="flex rounded-full bg-zinc-800/90 border border-white/10 p-1 mb-6">
+        {['unread', 'read'].map((t) => {
+          const active = inboxTab === t;
+          const label = t === 'unread' ? 'Unread' : 'Read';
+          return (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setInboxTab(t)}
+              className={`flex-1 py-2.5 rounded-full text-sm font-bold transition-colors ${
+                active ? 'bg-pxi-purple text-white shadow-lg shadow-purple-900/30' : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 size={32} className="animate-spin text-pxi-purple" />
@@ -247,97 +411,153 @@ export default function NotificationsPage() {
         <p className="text-red-400 text-sm">{error}</p>
       ) : notifications.length === 0 ? (
         <p className="text-zinc-500 text-sm">No notifications yet.</p>
+      ) : tabNotifications.length === 0 ? (
+        <p className="text-zinc-500 text-sm">
+          {inboxTab === 'unread' ? 'No unread notifications.' : 'No read notifications yet.'}
+        </p>
       ) : (
         <div className="space-y-4">
-          {inviteNotifications.map((n) => (
+          {inviteNotifications.map((n) => {
+            const respondedAt = formatInviteRespondedAt(n.data?.inviteRespondedAt);
+            return (
             <div
               key={n.id}
-              className={`relative rounded-2xl border border-white/10 bg-zinc-900/80 p-5 flex flex-col sm:flex-row sm:items-center gap-4 ${!n.isRead ? 'ring-1 ring-pxi-purple/30' : ''}`}
+              className={`relative rounded-2xl border border-white/10 bg-zinc-900/80 overflow-hidden flex flex-row items-stretch min-h-[120px] ${
+                !n.isRead ? 'border-l-4 border-l-pxi-purple' : ''
+              }`}
             >
-              {!n.isRead && (
-                <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full bg-pxi-purple" aria-hidden />
-              )}
               <button
                 type="button"
-                onClick={() => handleHide(n.id)}
-                className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-zinc-400 hover:text-white hover:bg-white/20 transition-colors z-10"
-                aria-label="Hide notification"
+                onClick={() => setHideConfirmId(n.id)}
+                className={hideNotifIconBtnClass}
+                aria-label="Delete notification"
               >
-                <X size={16} />
+                <X size={12} />
               </button>
-              <div className="flex-1 min-w-0 pr-8">
-                <div className="flex items-center gap-2 mb-1">
-                  <UserPlus size={16} className="text-pxi-purple flex-shrink-0" />
-                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Event invite</span>
-                </div>
-                <p className="text-white font-semibold truncate">{n.data?.albumName || n.data?.eventName || 'Event'}</p>
-                {n.user && (
-                  <p className="text-zinc-500 text-sm mt-0.5">
-                    from {n.user.name || n.user.username || 'Someone'}
+              <div className="flex-1 min-w-0 p-5 pr-11 flex flex-col justify-between gap-4">
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {n.type === 'ALBUM_INVITE' ? (
+                      <>
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0 shadow-[0_0_6px_rgba(210,72,249,0.45)] ${
+                            n.data?.albumType === 'public' ? 'bg-fuchsia-400' : 'bg-white'
+                          }`}
+                          aria-hidden
+                        />
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest truncate">
+                          {n.data?.albumType === 'public' ? 'PUBLIC' : 'PRIVATE'} · {formatDate(n.createdAt)}
+                        </span>
+                      </>
+                    ) : n.type === 'LINEUP_INVITE' ? (
+                      <>
+                        <UserPlus size={14} className="text-pxi-purple flex-shrink-0" aria-hidden />
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest truncate">
+                          Line-up invite · {formatDate(n.createdAt)}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={14} className="text-pxi-purple flex-shrink-0" aria-hidden />
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest truncate">
+                          Co-host / staff invite · {formatDate(n.createdAt)}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-white font-bold text-xl tracking-tight truncate leading-snug">
+                    {n.data?.albumName || n.data?.eventName || 'Event'}
                   </p>
+                  <InviteCardDescription notification={n} />
+                </div>
+                {n.data?.inviteResponse ? (
+                  <p
+                    className={`text-sm font-semibold mt-1 ${
+                      n.data.inviteResponse === 'declined' ? 'text-red-300/90' : 'text-emerald-300/90'
+                    }`}
+                  >
+                    {n.data.inviteResponse === 'declined'
+                      ? `You declined this invite${respondedAt ? ` on ${respondedAt}` : ''}.`
+                      : `You accepted this invite${respondedAt ? ` on ${respondedAt}` : ''}.`}
+                  </p>
+                ) : (
+                  <div className="flex flex-row items-center gap-2.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (n.type === 'STAFF_INVITE') return handleStaffInviteAccept(n);
+                        if (n.type === 'LINEUP_INVITE') return handleLineupInviteAccept(n);
+                        return handleJoinClick(n);
+                      }}
+                      className="rounded-md bg-pxi-purple text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider hover:brightness-110 transition-all"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDecline(n)}
+                      className="rounded-md border border-white/30 bg-transparent px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white/85 hover:bg-white/5"
+                    >
+                      Reject
+                    </button>
+                  </div>
                 )}
-                <p className="text-zinc-600 text-xs mt-1">{formatDate(n.createdAt)}</p>
               </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <Button
-                  variant="neon"
-                  className="!py-2 !px-4 !text-xs uppercase tracking-widest"
-                  onClick={() => handleJoinClick(n)}
-                >
-                  Accept
-                </Button>
-                <button
-                  type="button"
-                  onClick={() => handleDecline(n)}
-                  className="py-2 px-4 rounded-xl border border-white/20 text-zinc-400 text-xs font-medium hover:bg-white/5 hover:text-white"
-                >
-                  Reject
-                </button>
+              <div className="relative w-24 sm:w-28 flex-shrink-0 self-stretch bg-zinc-800">
+                {/* eslint-disable-next-line @next/next/no-img-element -- remote notification cover URL */}
+                <img
+                  src={inviteCoverSrc(n)}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
               </div>
             </div>
-          ))}
+          );
+          })}
 
           {friendRequestNotifications.length > 0 && (
             <div className="space-y-4">
               {friendRequestNotifications.map((n) => (
                 <div
                   key={n.id}
-                  className={`relative rounded-2xl border border-white/10 bg-zinc-900/80 p-5 flex flex-col sm:flex-row sm:items-center gap-4 ${!n.isRead ? 'ring-1 ring-pxi-purple/30' : ''}`}
+                  className={`relative rounded-2xl border border-white/10 bg-zinc-900/80 overflow-hidden flex flex-col min-h-[100px] ${
+                    !n.isRead ? 'border-l-4 border-l-pxi-purple' : ''
+                  }`}
                 >
-                  {!n.isRead && (
-                    <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full bg-pxi-purple" aria-hidden />
-                  )}
                   <button
                     type="button"
-                    onClick={() => handleHide(n.id)}
-                    className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-zinc-400 hover:text-white hover:bg-white/20 transition-colors z-10"
-                    aria-label="Hide notification"
+                    onClick={() => setHideConfirmId(n.id)}
+                    className={hideNotifIconBtnClass}
+                    aria-label="Delete notification"
                   >
-                    <X size={16} />
+                    <X size={12} />
                   </button>
-                  <div className="flex-1 min-w-0 pr-8">
-                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Friend request</span>
-                    <p className="text-white font-semibold mt-1">{n.user?.name || n.user?.username || 'Someone'}</p>
-                    {n.user?.username && (
-                      <p className="text-zinc-500 text-sm">@{n.user.username}</p>
-                    )}
-                    <p className="text-zinc-600 text-xs mt-1">{formatDate(n.createdAt)}</p>
-                  </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    <Button
-                      variant="neon"
-                      className="!py-2 !px-4 !text-xs uppercase tracking-widest"
-                      onClick={() => handleAcceptFriendRequest(n)}
-                    >
-                      Accept
-                    </Button>
-                    <button
-                      type="button"
-                      onClick={() => handleRejectFriendRequest(n)}
-                      className="py-2 px-4 rounded-xl border border-white/20 text-zinc-400 text-xs font-medium hover:bg-white/5 hover:text-white"
-                    >
-                      Reject
-                    </button>
+                  <div className="flex-1 min-w-0 p-5 pr-11 flex flex-col justify-between gap-4">
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                        Friend request · {formatDate(n.createdAt)}
+                      </span>
+                      <p className="text-white font-bold text-xl tracking-tight leading-snug">
+                        {n.user?.name || n.user?.username || 'Someone'}
+                      </p>
+                      {n.user?.username && <p className="text-zinc-400 text-sm">@{n.user.username}</p>}
+                    </div>
+                    <div className="flex flex-row items-center gap-2.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => handleAcceptFriendRequest(n)}
+                        className="rounded-md bg-pxi-purple text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider hover:brightness-110 transition-all"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRejectFriendRequest(n)}
+                        className="rounded-md border border-white/30 bg-transparent px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white/85 hover:bg-white/5"
+                      >
+                        Reject
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -350,24 +570,49 @@ export default function NotificationsPage() {
               {otherNotifications.slice(0, 20).map((n) => (
                 <div
                   key={n.id}
-                  className={`relative rounded-xl border border-white/5 bg-zinc-900/50 p-4 mb-2 text-sm text-zinc-400 ${!n.isRead ? 'ring-1 ring-pxi-purple/30' : ''}`}
+                  className={`relative overflow-hidden rounded-xl border border-white/5 bg-zinc-900/50 p-4 mb-2 text-sm text-zinc-400 ${
+                    !n.isRead ? 'border-l-4 border-l-pxi-purple' : ''
+                  }`}
                 >
-                  {!n.isRead && (
-                    <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full bg-pxi-purple" aria-hidden />
-                  )}
                   <button
                     type="button"
-                    onClick={() => handleHide(n.id)}
-                    className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-zinc-400 hover:text-white hover:bg-white/20 transition-colors z-10"
-                    aria-label="Hide notification"
+                    onClick={() => setHideConfirmId(n.id)}
+                    className={hideNotifIconBtnClass}
+                    aria-label="Delete notification"
                   >
-                    <X size={14} />
+                    <X size={12} />
                   </button>
                   <span className="pr-8 inline-block">{n.type} — {formatDate(n.createdAt)}</span>
                 </div>
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {hideConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setHideConfirmId(null)} />
+          <div className="relative w-full max-w-sm bg-zinc-900 border border-white/10 rounded-2xl p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-white mb-2">Delete notification?</h3>
+            <p className="text-zinc-400 text-sm mb-6">This notification will be permanently removed.</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setHideConfirmId(null)}
+                className="px-4 py-2 rounded-xl border border-white/10 text-zinc-400 text-sm font-medium hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleHide(hideConfirmId)}
+                className="px-4 py-2 rounded-xl bg-red-500/90 text-white text-sm font-medium hover:bg-red-500"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -402,7 +647,7 @@ export default function NotificationsPage() {
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setConfirmAction(null)} />
           <div className="relative w-full max-w-sm bg-zinc-900 border border-white/10 rounded-2xl p-6 shadow-xl">
             <h3 className="text-lg font-bold text-white mb-2">Delete all notifications?</h3>
-            <p className="text-zinc-400 text-sm mb-6">All notifications will be hidden from this list. They are not removed from the server.</p>
+            <p className="text-zinc-400 text-sm mb-6">All notifications will be permanently deleted.</p>
             <div className="flex gap-3 justify-end">
               <button
                 type="button"

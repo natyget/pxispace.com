@@ -290,7 +290,11 @@ function PassportIssued({ user }) {
 
     const { levelText, badgeLetter } = getPassportLevelDisplay(user);
     const levelProgress = getLevelProgress(user?.odysseyXp);
-    const passportType = user?.isPassportIssued ? 'Citizen' : 'Partial';
+    const passportType = user?.isVendor
+        ? 'Diplomat'
+        : user?.isPassportIssued
+          ? 'Citizen'
+          : 'Partial';
 
     return (
         <div className="max-w-2xl mx-auto space-y-6">
@@ -418,7 +422,7 @@ function PassportIssued({ user }) {
                                 </div>
                                 <div className="mt-1 flex items-end">
                                     <span className="text-[52px] leading-[54px] font-extrabold text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.35)]">{passportType.charAt(0).toUpperCase()}</span>
-                                    <span className="mb-1 ml-1 text-[13px] font-semibold text-white">{passportType.slice(1)}</span>
+                                    <span className="mb-1 ml-1 text-[13px] font-semibold text-white capitalize">{passportType.slice(1)}</span>
                                 </div>
                             </div>
 

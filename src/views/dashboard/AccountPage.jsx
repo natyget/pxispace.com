@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { UserCog, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
@@ -17,8 +16,7 @@ const DELETION_ITEMS = [
 ];
 
 export default function AccountPage() {
-    const { user, logout } = useAuth();
-    const router = useRouter();
+    const { logout } = useAuth();
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -60,21 +58,7 @@ export default function AccountPage() {
                     Account Settings
                 </h1>
                 <p className="text-zinc-500 text-sm mt-1">
-                    Manage your PXI account.
-                </p>
-            </div>
-
-            {/* Account Info */}
-            <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5 space-y-3">
-                <h2 className="text-white font-bold text-sm">Account Details</h2>
-                <div className="space-y-1.5">
-                    <Row label="Name" value={user?.name || '—'} />
-                    <Row label="Username" value={user?.username ? `@${user.username}` : '—'} />
-                    <Row label="Email" value={user?.email || '—'} />
-                    <Row label="Tier" value={user?.accountTier || 'CITIZEN'} />
-                </div>
-                <p className="text-zinc-600 text-xs pt-1">
-                    To update your name, username, or avatar use the PXI mobile app.
+                    Delete your account and associated data.
                 </p>
             </div>
 
@@ -150,15 +134,6 @@ export default function AccountPage() {
                     </div>
                 )}
             </div>
-        </div>
-    );
-}
-
-function Row({ label, value }) {
-    return (
-        <div className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
-            <span className="text-zinc-500 text-xs uppercase tracking-widest font-bold">{label}</span>
-            <span className="text-white text-sm">{value}</span>
         </div>
     );
 }

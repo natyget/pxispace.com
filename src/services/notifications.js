@@ -49,7 +49,7 @@ export async function markAllAsRead(userId) {
 }
 
 /**
- * Hide a single notification (soft hide, not deleted).
+ * Delete a single notification (recipient only; requires auth).
  * PUT /api/notifications/:id/hide
  */
 export async function hideNotification(notificationId) {
@@ -58,7 +58,7 @@ export async function hideNotification(notificationId) {
 }
 
 /**
- * Hide all notifications for the user (soft hide, not deleted).
+ * Delete all notifications for the authenticated user.
  * PUT /api/notifications/hide-all
  */
 export async function hideAllNotifications(userId) {
