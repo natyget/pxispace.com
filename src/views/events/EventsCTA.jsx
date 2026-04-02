@@ -27,7 +27,7 @@ const EventsCTA = () => {
               </Button>
             </Link>
 
-            <a href={process.env.NEXT_PUBLIC_IOS_APP_URL || "https://apps.apple.com/"} target="_blank" rel="noopener noreferrer">
+            <a href={process.env.NEXT_PUBLIC_IOS_APP_URL || "https://testflight.apple.com/join/3QqyXJwa"} target="_blank" rel="noopener noreferrer">
               <Button
                 variant="glass"
                 className="bg-black/20 hover:bg-black/40 border-white/20 text-white px-16 py-5 text-lg"
