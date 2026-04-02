@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Smartphone } from 'lucide-react';
 const LogoSVG = "/images/logo.svg";
 import { useAuth } from '../../contexts/AuthContext';
+import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 
 export default function PassportRequiredPage() {
     const router = useRouter();
@@ -38,7 +39,7 @@ export default function PassportRequiredPage() {
                 {/* App Store Buttons */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
                     <a
-                        href="https://apps.apple.com/app/pxi"
+                        href={PXI_APP_STORE_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-3 px-6 py-3.5 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-100 transition-all w-full sm:w-auto justify-center"
