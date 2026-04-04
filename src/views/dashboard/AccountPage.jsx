@@ -31,15 +31,20 @@ export default function AccountPage() {
             // Force full reload so session is terminated immediately (no ghost account)
             window.location.href = '/';
         } catch (err) {
-            const status = err.response?.status;
-            const data = err.response?.data?.data || err.response?.data;
-            const msg = data?.error || err.message;
+            const status = err?.status;
+            const code = err?.code;
+            const msg = err?.data?.error || err?.message;
             if (status === 400 && msg === 'Account already deleted') {
                 await logout();
                 window.location.href = '/';
                 return;
             }
-            setError(err.response?.data?.error || err.message || 'Failed to delete account. Please try again.');
+            if (status === 401 || code === 'ACCOUNT_DELETED' || code === 'INVALID_TOKEN') {
+                await logout();
+                window.location.href = '/';
+                return;
+            }
+            setError(msg || 'Failed to delete account. Please try again.');
             setDeleting(false);
         }
     };
