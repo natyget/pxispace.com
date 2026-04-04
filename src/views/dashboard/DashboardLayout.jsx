@@ -27,6 +27,12 @@ const LogoSVG = "/images/logo.svg";
 const SIDEBAR_BTN_BASE =
     'w-full inline-flex items-center px-[14px] py-[12px] rounded-full text-[14px] font-semibold tracking-wide transition-all duration-300';
 
+function shouldClearAuth(error) {
+    const status = error?.status;
+    const code = error?.code;
+    return status === 401 || status === 403 || status === 404 || code === 'ACCOUNT_DELETED' || code === 'INVALID_TOKEN';
+}
+
 const navItems = [
     { label: 'Overview', path: '/dashboard', icon: LayoutDashboard, end: true },
     { label: 'My events', path: '/dashboard/events', icon: Calendar, end: true },
@@ -85,9 +91,14 @@ export default function DashboardLayout({ children }) {
                         router.replace('/verify-phone');
                     }
                 })
-                .catch(() => { /* Don't redirect on network/API failure; user may have phone */ });
+                .catch(async (error) => {
+                    if (shouldClearAuth(error)) {
+                        await logout();
+                        router.replace('/');
+                    }
+                });
         }
-    }, [mounted, user?.id, user?.phoneNumber, fromMobile, phoneCheckDone, router, updateUser]);
+    }, [mounted, user?.id, user?.phoneNumber, fromMobile, phoneCheckDone, router, updateUser, logout]);
 
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showCreateEventModal, setShowCreateEventModal] = useState(false);

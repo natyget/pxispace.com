@@ -14,10 +14,16 @@ const LogoSVG = "/images/logo.svg";
 
 const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
 
+function shouldClearAuth(error) {
+    const status = error?.status;
+    const code = error?.code;
+    return status === 401 || status === 403 || status === 404 || code === 'ACCOUNT_DELETED' || code === 'INVALID_TOKEN';
+}
+
 export default function LoginPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user, saveAuth, isAuthenticated, updateUser } = useAuth();
+    const { user, saveAuth, isAuthenticated, updateUser, logout } = useAuth();
     const showVerifiedMessage = searchParams.get('verified') === '1';
     const redirectPath = searchParams.get('redirect');
     const safeRedirect = redirectPath && redirectPath.startsWith('/') && !redirectPath.startsWith('//') ? redirectPath : null;
@@ -34,8 +40,15 @@ export default function LoginPage() {
                 // Let the auth context update before navigating so dashboard sees phoneNumber
                 setTimeout(() => router.replace(destination), 0);
             })
-            .catch(() => router.replace(destination));
-    }, [isAuthenticated, user?.id, safeRedirect, router, updateUser]);
+            .catch(async (error) => {
+                if (shouldClearAuth(error)) {
+                    await logout();
+                    hasRedirected.current = false;
+                    return;
+                }
+                router.replace(destination);
+            });
+    }, [isAuthenticated, user?.id, safeRedirect, router, updateUser, logout]);
 
     const handleAuthSuccess = async ({ token, user }) => {
         await saveAuth({ token, user });

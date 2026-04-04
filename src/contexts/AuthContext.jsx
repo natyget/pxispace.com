@@ -4,6 +4,12 @@ import { authStorage, authService } from '../services/auth';
 
 const AuthContext = createContext(null);
 
+function shouldClearAuth(error) {
+    const status = error?.status;
+    const code = error?.code;
+    return status === 401 || status === 403 || status === 404 || code === 'ACCOUNT_DELETED' || code === 'INVALID_TOKEN';
+}
+
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(() => authStorage.getUser());
     const [token, setToken] = useState(() => authStorage.getToken());
@@ -19,7 +25,13 @@ export function AuthProvider({ children }) {
                 localStorage.setItem('pxi_user', JSON.stringify(merged));
                 setUser(merged);
             })
-            .catch(() => { /* network error — keep cached data */ });
+            .catch(async (error) => {
+                if (shouldClearAuth(error)) {
+                    await authStorage.clear();
+                    setToken(null);
+                    setUser(null);
+                }
+            });
     }, []);
 
     const saveAuth = useCallback(async ({ token: newToken, user: newUser }) => {
