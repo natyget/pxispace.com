@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Instagram } from 'lucide-react';
 import { FaTiktok } from 'react-icons/fa';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
+import IosDownloadLink from '@/components/links/IosDownloadLink';
 
 const LogoSVG = '/favicon.svg';
 
@@ -48,14 +49,9 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a
-                  href={PXI_APP_STORE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={linkClass}
-                >
+                <IosDownloadLink href={PXI_APP_STORE_URL} className={linkClass}>
                   Download the app
-                </a>
+                </IosDownloadLink>
               </li>
             </ul>
           </div>

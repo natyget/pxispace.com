@@ -10,6 +10,7 @@ export default function PublicLayout({ children }) {
     pathname === '/' ||
     pathname === '/home' ||
     pathname === '/about' ||
+    pathname === '/beta' ||
     pathname?.startsWith('/events');
   return (
     <div className="relative min-h-screen flex flex-col">

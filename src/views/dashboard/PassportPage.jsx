@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Smartphone, Shield, CheckCircle2, Loader2, RefreshCw, ArrowRight } from 'lucide-react';
@@ -8,6 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { getPassportLevelDisplay } from '../../utils/odysseyTier';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
+import IosDownloadLink from '@/components/links/IosDownloadLink';
 
 // ─── MRZ helper ───────────────────────────────────────────────────────────────
 function formatMRZ(text, len = 37) {
@@ -135,26 +136,6 @@ const PolygonIcon = ({ className }) => (
     </svg>
 );
 
-const VectorIcon = ({ className }) => (
-    <svg width="41" height="34" viewBox="0 0 41 34" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-        <g filter="url(#filter0_d_vector)">
-            <path d="M12 11H29V21H12V11Z" fill="#BB17E8"/>
-            <path fillRule="evenodd" clipRule="evenodd" d="M20.5 13C21.9864 13 23.2194 14.0812 23.4575 15.5H29V16.5H23.4575C23.2194 17.9188 21.9864 19 20.5 19C19.0136 19 17.7806 17.9188 17.5425 16.5H12V15.5H17.5425C17.7806 14.0812 19.0136 13 20.5 13ZM20.5 14C19.3954 14 18.5 14.8954 18.5 16C18.5 17.1046 19.3954 18 20.5 18C21.6046 18 22.5 17.1046 22.5 16C22.5 14.8954 21.6046 14 20.5 14Z" fill="#0C0C0C"/>
-        </g>
-        <defs>
-            <filter id="filter0_d_vector" x="0" y="0" width="41" height="34" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                <feOffset dy="1"/><feGaussianBlur stdDeviation="6"/>
-                <feComposite in2="hardAlpha" operator="out"/>
-                <feColorMatrix type="matrix" values="0 0 0 0 0.733333 0 0 0 0 0.0901961 0 0 0 0 0.909804 0 0 0 1 0"/>
-                <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_vector"/>
-                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_vector" result="shape"/>
-            </filter>
-        </defs>
-    </svg>
-);
-
 const NeonCurvesSVG = ({ className }) => (
     <svg className={className} viewBox="0 0 361 558" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M-100 0 C50 200 300 100 400 300" stroke="url(#neonGrad)" strokeWidth="1" strokeOpacity="0.3"/>
@@ -257,6 +238,7 @@ export default function PassportPage() {
 }
 
 function PassportIssued({ user }) {
+    const chipFilterId = useId().replace(/:/g, '');
     const fullName = user?.name ?? 'PXI CITIZEN';
     const username = user?.username ?? 'citizen';
     const avatarFallback = fullName.charAt(0).toUpperCase();
@@ -361,77 +343,140 @@ function PassportIssued({ user }) {
                         <div className="h-1/2 bg-gradient-to-t from-transparent via-black/55 to-black/90" />
                     </div>
 
-                    <div className="absolute left-0 right-0 bottom-0 top-1/2 z-10 bg-[#0f0f0f]">
-                        <div className="relative h-full px-6 pt-6">
-                            <div className="flex items-start justify-between">
-                                <div className="w-[200px]">
-                                    <h2 className="text-[14px] font-bold text-white tracking-[0.16em] uppercase drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">PXI PASSPORT</h2>
-                                    <div className="mt-1 h-[6px] border-t-[6px] border-white" />
-                                    <div className="mt-2 ml-[-10px] flex items-center gap-1">
-                                        <VectorIcon className="w-[45px] h-[27px]" />
-                                        <span className="text-[9px] font-semibold text-white uppercase tracking-[0.05em]">PASSPORT • PASS • PASAPORTE</span>
+                    <div className="absolute left-0 right-0 bottom-0 top-1/2 z-10 min-h-0 overflow-y-auto bg-[#0f0f0f] px-3 py-2 sm:px-4 sm:py-2">
+                        <div className="mx-auto w-full max-w-[380px] shrink-0 overflow-hidden rounded-lg px-2 sm:px-3">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0 flex-1 pr-1">
+                                            <h2 className="text-[14px] font-bold uppercase tracking-[0.16em] text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">
+                                                PXI PASSPORT
+                                            </h2>
+                                            <div className="mt-1 h-[6px] border-t-[6px] border-white" />
+                                        </div>
+                                        <div className="shrink-0 text-right">
+                                            <p className="text-[9px] uppercase text-white/70">PXI Passport No.</p>
+                                            <p className="text-[11px] uppercase text-white/90">{passportNumber}</p>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[9px] uppercase text-white/70">PXI Passport No.</p>
-                                    <p className="text-[11px] uppercase text-white/90">{passportNumber}</p>
-                                </div>
-                            </div>
 
-                            <div className="mt-3 flex gap-6">
-                                <div className="relative h-[130px] w-[113px] flex-shrink-0 overflow-hidden rounded-[6px] shadow-[0_1px_24px_2px_rgba(255,255,255,0.3)]">
-                                {user?.avatarUrl ? (
-                                    <Image src={user.avatarUrl} alt={fullName} fill unoptimized style={{ objectFit: 'cover' }} />
-                                ) : (
-                                        <div className="flex h-full w-full items-center justify-center bg-pxi-purple/20 text-3xl font-black text-pxi-purple">
-                                        {avatarFallback}
+                                    <div className="mt-1.5 grid grid-cols-[88px_minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-2.5 sm:grid-cols-[100px_minmax(0,1fr)_minmax(0,1fr)] sm:gap-x-3">
+                                        <div className="col-span-2 flex min-w-0 items-center gap-1">
+                                            <svg
+                                                width="41"
+                                                height="34"
+                                                viewBox="0 0 41 34"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="h-[22px] w-[38px] shrink-0 sm:h-[24px] sm:w-[40px]"
+                                                aria-hidden
+                                            >
+                                                <g filter={`url(#${chipFilterId})`}>
+                                                    <path d="M12 11H29V21H12V11Z" fill="#BB17E8" />
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        clipRule="evenodd"
+                                                        d="M20.5 13C21.9864 13 23.2194 14.0812 23.4575 15.5H29V16.5H23.4575C23.2194 17.9188 21.9864 19 20.5 19C19.0136 19 17.7806 17.9188 17.5425 16.5H12V15.5H17.5425C17.7806 14.0812 19.0136 13 20.5 13ZM20.5 14C19.3954 14 18.5 14.8954 18.5 16C18.5 17.1046 19.3954 18 20.5 18C21.6046 18 22.5 17.1046 22.5 16C22.5 14.8954 21.6046 14 20.5 14Z"
+                                                        fill="#0C0C0C"
+                                                    />
+                                                </g>
+                                                <defs>
+                                                    <filter
+                                                        id={chipFilterId}
+                                                        x="0"
+                                                        y="0"
+                                                        width="41"
+                                                        height="34"
+                                                        filterUnits="userSpaceOnUse"
+                                                        colorInterpolationFilters="sRGB"
+                                                    >
+                                                        <feFlood floodOpacity="0" result="BackgroundImageFix" />
+                                                        <feColorMatrix
+                                                            in="SourceAlpha"
+                                                            type="matrix"
+                                                            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                                                            result="hardAlpha"
+                                                        />
+                                                        <feOffset dy="1" />
+                                                        <feGaussianBlur stdDeviation="6" />
+                                                        <feComposite in2="hardAlpha" operator="out" />
+                                                        <feColorMatrix
+                                                            type="matrix"
+                                                            values="0 0 0 0 0.733333 0 0 0 0 0.0901961 0 0 0 0 0.909804 0 0 0 1 0"
+                                                        />
+                                                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_vector" />
+                                                        <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_vector" result="shape" />
+                                                    </filter>
+                                                </defs>
+                                            </svg>
+                                            <span className="whitespace-nowrap text-[7px] font-semibold uppercase tracking-[0.03em] text-white sm:text-[8px]">
+                                                PASSPORT • PASS • PASAPORTE
+                                            </span>
+                                        </div>
+                                        <div className="flex min-w-0 flex-col items-start justify-center">
+                                            <p className="text-[9px] font-semibold uppercase leading-none text-white/80">LEVEL {levelText}</p>
+                                            <div className="mt-1 h-1 w-[72px] overflow-hidden rounded-full bg-[rgba(176,38,255,0.22)] sm:w-[80px]">
+                                                <div
+                                                    className="h-full rounded-full bg-pxi-purple"
+                                                    style={{ width: `${Math.round(levelProgress * 100)}%` }}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-[9px] font-medium uppercase text-white/70">Full name</p>
-                                    <p className="text-[12px] uppercase text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">{fullName.toUpperCase()}</p>
-                                    <p className="mt-2 text-[9px] font-medium uppercase text-white/70">username</p>
-                                    <p className="text-[12px] text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">{username}</p>
-                                    <div className="mt-2 flex gap-10">
-                                        <div>
-                                            <p className="text-[9px] font-medium uppercase text-white/70">Age</p>
-                                            <p className="text-[12px] text-white/90">{String(age)}</p>
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-[9px] font-medium uppercase text-white/70">Insta</p>
-                                            <p className="text-[12px] text-white/90 truncate">{instagram}</p>
-                                        </div>
-                                    </div>
-                                    <div className="mt-2 flex gap-10">
-                                        <div>
-                                            <p className="text-[9px] font-medium uppercase text-white/70">City</p>
-                                            <p className="text-[12px] text-white/90">{city}</p>
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-[9px] font-medium uppercase text-white/70">Bio</p>
-                                            <p className="text-[12px] text-white/90 line-clamp-2">{bio}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div className="absolute left-[258px] top-[60px] z-20">
-                                <p className="text-[10px] font-semibold uppercase text-white/80">LEVEL {levelText}</p>
-                                <div className="mt-1 h-1 w-[88px] rounded-full bg-[rgba(176,38,255,0.22)] overflow-hidden">
-                                    <div className="h-full rounded-full bg-pxi-purple" style={{ width: `${Math.round(levelProgress * 100)}%` }} />
-                                </div>
-                                <div className="mt-1 flex items-end">
-                                    <span className="text-[52px] leading-[54px] font-extrabold text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.35)]">{passportType.charAt(0).toUpperCase()}</span>
-                                    <span className="mb-1 ml-1 text-[13px] font-semibold text-white capitalize">{passportType.slice(1)}</span>
-                                </div>
-                            </div>
+                                    <div className="mt-1 grid grid-cols-[88px_minmax(0,1fr)_minmax(0,1fr)] items-start gap-x-2.5 sm:grid-cols-[100px_minmax(0,1fr)_minmax(0,1fr)] sm:gap-x-3">
+                                        <div className="relative h-[118px] w-full max-w-[88px] overflow-hidden rounded-[6px] shadow-[0_1px_24px_2px_rgba(255,255,255,0.3)] sm:h-[128px] sm:max-w-[100px]">
+                                            {user?.avatarUrl ? (
+                                                <Image src={user.avatarUrl} alt={fullName} fill unoptimized className="object-cover" sizes="112px" />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center bg-pxi-purple/20 text-2xl font-black text-pxi-purple">
+                                                    {avatarFallback}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex min-h-0 min-w-0 flex-col gap-1.5 pl-1 pr-1 sm:pl-2 sm:pr-2">
+                                            <div>
+                                                <p className="text-[9px] font-medium uppercase text-white/70">Full name</p>
+                                                <p className="text-[11px] font-semibold uppercase leading-snug text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)] sm:text-[12px]">
+                                                    {fullName.toUpperCase()}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] font-medium uppercase text-white/70">username</p>
+                                                <p className="truncate text-[11px] text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)] sm:text-[12px]">
+                                                    {username}
+                                                </p>
+                                            </div>
+                                            <p className="text-[11px] text-white/90 sm:text-[12px]">Age {typeof age === 'number' ? age : '—'}</p>
+                                            <div>
+                                                <p className="text-[9px] font-medium uppercase text-white/70">City</p>
+                                                <p className="line-clamp-2 text-[11px] text-white/90 sm:text-[12px]">{city}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex min-h-0 min-w-0 flex-col gap-2">
+                                            <div className="shrink-0">
+                                                <div className="flex items-end">
+                                                    <span className="text-[28px] font-extrabold leading-[30px] text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.35)] sm:text-[36px] sm:leading-9">
+                                                        {passportType.charAt(0).toUpperCase()}
+                                                    </span>
+                                                    <span className="mb-0.5 ml-0.5 text-[11px] font-semibold capitalize text-white sm:text-[13px]">
+                                                        {passportType.slice(1)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <p className="truncate text-[11px] text-white/90 sm:text-[12px]" title={instagram}>
+                                                Insta {instagram}
+                                            </p>
+                                            <div className="min-h-0 flex-1">
+                                                <p className="text-[9px] font-medium uppercase text-white/70">Bio</p>
+                                                <p className="line-clamp-3 text-[11px] leading-snug text-white/90 sm:text-[12px]">{bio}</p>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            <div className="absolute bottom-[38px] left-6 right-6 h-[2px] bg-white/40" />
-                            <div className="absolute bottom-[4px] left-6 right-6 font-mono text-[12px] leading-4 tracking-[0.12em] text-white/70 uppercase overflow-hidden">
-                                <p className="truncate">{mrzLine1}</p>
-                                <p className="truncate">{mrzLine2}</p>
-                            </div>
+                                    <div className="mt-3 h-[2px] w-full bg-white/40 sm:mt-3" />
+                                    <div className="pt-1.5 font-mono text-[10px] uppercase leading-4 tracking-[0.12em] text-white/70 sm:pt-2 sm:text-[11px]">
+                                        <p className="truncate">{mrzLine1}</p>
+                                        <p className="truncate">{mrzLine2}</p>
+                                    </div>
                         </div>
                     </div>
                 </div>
@@ -529,11 +574,11 @@ function PassportNotIssued({ user }) {
                     Your PXI Passport is your digital identity for events. To issue your PXI Passport, please use the PXI mobile app — it only takes a minute.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                    <a href={PXI_APP_STORE_URL} target="_blank" rel="noopener noreferrer"
+                    <IosDownloadLink href={PXI_APP_STORE_URL}
                         className="flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-sm bg-white text-black hover:bg-zinc-200 transition-all w-full sm:w-auto justify-center">
                         <svg viewBox="0 0 24 24" className="w-5 h-5 fill-black"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
                         App Store
-                    </a>
+                    </IosDownloadLink>
                     <a href="https://play.google.com/store/apps/pxi" target="_blank" rel="noopener noreferrer"
                         className="flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-sm bg-white text-black hover:bg-zinc-200 transition-all w-full sm:w-auto justify-center">
                         <svg viewBox="0 0 24 24" className="w-5 h-5 fill-black"><path d="M3.18 23.76c.3.17.64.22.98.14l13.12-7.57L14 13l-10.82 10.76zM.54 1.27C.2 1.6 0 2.14 0 2.87v18.27c0 .73.2 1.27.54 1.6L1.63 21.6 12.35 12 1.63 2.41.54 1.27zM20.46 10.37l-2.98-1.72-3.85 3.35 3.85 3.34 3-1.73c.85-.49.85-1.26-.02-1.74zM4.16.1L17.28 7.67l-3.28 2.87L3.18.24A1.2 1.2 0 0 1 4.16.1z"/></svg>

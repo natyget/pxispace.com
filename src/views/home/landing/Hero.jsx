@@ -2,10 +2,8 @@
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { FaGooglePlay } from 'react-icons/fa';
-import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
+import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 import {
-  APPLE_MARK,
   HERO_SCATTER_ICONS,
   HERO_SCATTER_ICON_EXTRA_PADDING,
   HERO_SCATTER_PHOTOS,
@@ -243,47 +241,12 @@ export default function Hero() {
         </motion.p>
 
         <motion.div
-          className="mt-16 flex w-full flex-col sm:flex-row items-center justify-center gap-4 relative z-10"
+          className="mt-16 w-full relative z-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.7 }}
         >
-          <a
-            href={PXI_APP_STORE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Download on App Store"
-            className="flex w-full max-w-[320px] sm:w-auto sm:max-w-none items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-colors cursor-pointer"
-            data-cursor-hover
-          >
-            <img
-              src={APPLE_MARK}
-              alt=""
-              className="h-[26px] w-[21px] object-contain shrink-0"
-              aria-hidden
-            />
-            <div className="flex flex-col items-start">
-              <span className="text-[10px] uppercase tracking-widest text-white/70 font-bold leading-none mb-1">
-                Download on
-              </span>
-              <span className="text-sm font-bold text-white leading-none">App Store</span>
-            </div>
-          </a>
-          <a
-            href={PXI_PLAY_STORE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex w-full max-w-[320px] sm:w-auto sm:max-w-none items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-colors cursor-pointer"
-            data-cursor-hover
-          >
-            <FaGooglePlay size={26} className="text-white" />
-            <div className="flex flex-col items-start">
-              <span className="text-[10px] uppercase tracking-widest text-white/70 font-bold leading-none mb-1">
-                Get it on
-              </span>
-              <span className="text-sm font-bold text-white leading-none">Google Play</span>
-            </div>
-          </a>
+          <AppStoreCtaPair dataCursorHover />
         </motion.div>
       </motion.div>
     </section>

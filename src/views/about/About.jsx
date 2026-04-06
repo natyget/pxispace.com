@@ -1,5 +1,5 @@
 import React from "react";
-import Button from "./../../components/ui/Button";
+import AppStoreCtaPair from "@/components/links/AppStoreCtaPair";
 import { Users, Heart, Camera } from "lucide-react";
 const PartiesJPEG = "/images/parties.jpeg";
 const GroupJPEG = "/images/group.jpeg";
@@ -177,9 +177,7 @@ const AboutPage = () => {
                     HELP US SHAPE THE FUTURE OF EVENTS
                 </p>
 
-                <Button className="px-16 py-6 text-xl bg-pxi-purple hover:bg-pxi-purple text-white">
-                    Download the App
-                </Button>
+                <AppStoreCtaPair className="max-w-xl mx-auto" />
             </section>
         </div>
     );
