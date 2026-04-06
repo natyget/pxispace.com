@@ -3,22 +3,19 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   ArrowUpRight,
-  ChevronRight,
-  Globe,
-  Instagram,
   Loader2,
   Play,
   Scan,
-  Shield,
   Smartphone,
   X,
 } from 'lucide-react';
 import { eventsService } from '@/services/events';
-import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
+import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
+import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { singleEventMapEmbedSrc } from '@/lib/eventMapEmbed';
@@ -93,9 +90,56 @@ function formatHostPassportNo(userId) {
   return `P${raw.slice(0, 7)}XI`;
 }
 
+/** Age from ISO birthdate; null if missing or invalid. */
+function ageFromBirthdate(birthdate) {
+  if (!birthdate) return null;
+  const d = new Date(birthdate);
+  if (Number.isNaN(d.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - d.getFullYear();
+  const m = today.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age -= 1;
+  if (age < 0 || age > 120) return null;
+  return String(age);
+}
+
+function formatMrzIssuedDate(d = new Date()) {
+  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${day}${months[d.getUTCMonth()]}${String(d.getUTCFullYear()).slice(-2)}`;
+}
+
+function mrzToken(s) {
+  return String(s || '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 18);
+}
+
+function padMrzSegment(prefix, len = 44) {
+  const p = String(prefix);
+  if (p.length >= len) return p.slice(0, len);
+  return `${p}${'<'.repeat(len - p.length)}`;
+}
+
+/** Machine-readable zone style footer from host + passport number (decorative). */
+function buildHostMrzLines(host, passportNo) {
+  const name = host?.name || host?.username || 'HOST';
+  const parts = String(name).trim().split(/\s+/);
+  const first = mrzToken(parts[0] || 'X');
+  const last = parts.length > 1 ? mrzToken(parts.slice(1).join('')) : first;
+  const cityOrUser = mrzToken(host?.city || host?.username || 'X');
+  const line1 = padMrzSegment(`PXI<${last}<<${first}<${cityOrUser}<`);
+  const issued = formatMrzIssuedDate();
+  const pp = mrzToken((passportNo || 'PXXXXXXXI').replace(/[^A-Z0-9]/g, ''));
+  const line2 = padMrzSegment(`ISSUED${issued}<${pp}<PXISPACE<`);
+  return { line1, line2 };
+}
+
 export default function EventsNewEventPage() {
   const { id } = useParams();
   const router = useRouter();
+  const hostPassportChipFilterId = useId().replace(/:/g, '');
   const [apiEvent, setApiEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [guestlistOpen, setGuestlistOpen] = useState(false);
@@ -122,21 +166,27 @@ export default function EventsNewEventPage() {
   const hasHost = !!(apiEvent?.host && (apiEvent.host.name || apiEvent.host.username));
   const organizerName = hasHost ? (apiEvent.host.name || apiEvent.host.username) : '';
   const organizerAvatar = displayImageSrc(apiEvent?.host?.avatarUrl, null);
-  const organizerIgHref = apiEvent?.host?.instagramHandle
-    ? `https://instagram.com/${encodeURIComponent(String(apiEvent.host.instagramHandle).replace(/^@/, ''))}`
-    : apiEvent?.host?.username
-      ? `https://instagram.com/${encodeURIComponent(String(apiEvent.host.username).replace(/^@/, ''))}`
-      : null;
-
   const hostPxiHandle = apiEvent?.host?.username
     ? String(apiEvent.host.username).replace(/^@/, '')
     : null;
   const hostPassportNo = formatHostPassportNo(apiEvent?.host?.id);
+  const hostAge = ageFromBirthdate(apiEvent?.host?.birthdate);
+  const hostInstaLabel = apiEvent?.host?.instagramHandle
+    ? `@${String(apiEvent.host.instagramHandle).replace(/^@/, '')}`
+    : hostPxiHandle
+      ? `@${hostPxiHandle}`
+      : '—';
+  const hostMrz = useMemo(
+    () => (apiEvent?.host ? buildHostMrzLines(apiEvent.host, hostPassportNo) : { line1: '', line2: '' }),
+    [apiEvent?.host, hostPassportNo]
+  );
 
   const eventTitle = apiEvent?.name || 'Event';
   const rawLocation = typeof apiEvent?.location === 'string' ? apiEvent.location.trim() : '';
   const locationLabel = rawLocation || SECTION_EMPTY;
   const goingCount = apiEvent?._count?.tickets ?? 0;
+  const hostEventsCreated = apiEvent?.hostStats?.eventsCreated ?? 0;
+  const hostMembersJoinedAcrossEvents = apiEvent?.hostStats?.membersJoinedAcrossEvents ?? 0;
 
   const guestlistAvatars = useMemo(() => deriveGuestlistAvatars(apiEvent), [apiEvent]);
   const lineup = useMemo(() => deriveLineup(apiEvent), [apiEvent]);
@@ -492,106 +542,175 @@ export default function EventsNewEventPage() {
                 <SectionDivider />
                 <h2 className="text-base font-semibold tracking-tight text-white">Hosted by</h2>
                 {hasHost ? (
-                  <div className="overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-black/50 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex min-w-0 flex-1 items-start gap-3">
-                        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-pxi-purple/40 bg-pxi-purple/15 text-pxi-purple">
-                          <Shield className="h-5 w-5" strokeWidth={2} aria-hidden />
+                  <div className="overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-black/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl">
+                    {/* Outer padding: passport face stays a fixed size; frame grows with padding only. */}
+                    <div className="flex justify-center px-5 py-6 sm:px-10 sm:py-8">
+                      <div className="w-full max-w-[380px] shrink-0 overflow-hidden rounded-lg border border-white/15 bg-gradient-to-b from-white/[0.06] to-black/35 px-3 py-3 sm:px-4 sm:py-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1 pr-1">
+                          <h2 className="text-[14px] font-bold uppercase tracking-[0.16em] text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">
+                            PXI PASSPORT
+                          </h2>
+                          <div className="mt-1 h-[6px] border-t-[6px] border-white" />
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pxi-purple">PXI Passport</p>
-                          <p className="mt-1 text-lg font-bold leading-tight text-white">{organizerName}</p>
-                          {hostPxiHandle ? (
-                            <p className="mt-0.5 truncate text-sm font-medium text-zinc-300">@{hostPxiHandle}</p>
-                          ) : null}
+                        <div className="shrink-0 text-right">
+                          <p className="text-[9px] uppercase text-white/70">PXI Passport No.</p>
                           {hostPassportNo ? (
-                            <p className="mt-2 font-mono text-[11px] tracking-wider text-white/45">{hostPassportNo}</p>
-                          ) : null}
+                            <p className="text-[11px] uppercase text-white/90">{hostPassportNo}</p>
+                          ) : (
+                            <p className="text-[11px] uppercase text-white/50">—</p>
+                          )}
                         </div>
                       </div>
-                      <IosDownloadLink
-                        href={PXI_APP_STORE_URL}
-                        className="flex shrink-0 items-center gap-1 rounded-full border border-pxi-purple/35 bg-pxi-purple/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-pxi-purple transition hover:border-pxi-purple/60 hover:bg-pxi-purple/20 hover:text-white"
-                        aria-label="View host on PXI in the app"
-                      >
-                        PXI
-                        <ChevronRight className="h-4 w-4" aria-hidden />
-                      </IosDownloadLink>
-                    </div>
 
-                    <div className="mt-6 flex justify-center">
-                      <div className="rounded-2xl border-2 border-white/20 bg-zinc-950/80 p-2 shadow-[0_12px_40px_rgba(0,0,0,0.45)]">
-                        {organizerAvatar ? (
-                          <Image
-                            alt=""
-                            width={160}
-                            height={200}
-                            unoptimized
-                            className="h-44 w-36 rounded-lg object-cover"
-                            src={organizerAvatar}
-                          />
-                        ) : (
-                          <div
-                            className="flex h-44 w-36 items-center justify-center rounded-lg bg-zinc-800 text-4xl font-semibold text-zinc-500"
+                      {/* Col 3 = Diplomat / Insta / bio; LEVEL shares this column (x). Row uses items-center so y matches PASSPORT line. */}
+                      <div className="mt-1.5 grid grid-cols-[88px_minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-2.5 sm:grid-cols-[100px_minmax(0,1fr)_minmax(0,1fr)] sm:gap-x-3">
+                        <div className="col-span-2 flex min-w-0 items-center gap-1">
+                          <svg
+                            width="41"
+                            height="34"
+                            viewBox="0 0 41 34"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-[22px] w-[38px] shrink-0 sm:h-[24px] sm:w-[40px]"
                             aria-hidden
                           >
-                            {(organizerName || '?').charAt(0).toUpperCase()}
+                            <g filter={`url(#${hostPassportChipFilterId})`}>
+                              <path d="M12 11H29V21H12V11Z" fill="#BB17E8" />
+                              <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M20.5 13C21.9864 13 23.2194 14.0812 23.4575 15.5H29V16.5H23.4575C23.2194 17.9188 21.9864 19 20.5 19C19.0136 19 17.7806 17.9188 17.5425 16.5H12V15.5H17.5425C17.7806 14.0812 19.0136 13 20.5 13ZM20.5 14C19.3954 14 18.5 14.8954 18.5 16C18.5 17.1046 19.3954 18 20.5 18C21.6046 18 22.5 17.1046 22.5 16C22.5 14.8954 21.6046 14 20.5 14Z"
+                                fill="#0C0C0C"
+                              />
+                            </g>
+                            <defs>
+                              <filter
+                                id={hostPassportChipFilterId}
+                                x="0"
+                                y="0"
+                                width="41"
+                                height="34"
+                                filterUnits="userSpaceOnUse"
+                                colorInterpolationFilters="sRGB"
+                              >
+                                <feFlood floodOpacity="0" result="BackgroundImageFix" />
+                                <feColorMatrix
+                                  in="SourceAlpha"
+                                  type="matrix"
+                                  values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                                  result="hardAlpha"
+                                />
+                                <feOffset dy="1" />
+                                <feGaussianBlur stdDeviation="6" />
+                                <feComposite in2="hardAlpha" operator="out" />
+                                <feColorMatrix
+                                  type="matrix"
+                                  values="0 0 0 0 0.733333 0 0 0 0 0.0901961 0 0 0 0 0.909804 0 0 0 1 0"
+                                />
+                                <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_vector" />
+                                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_vector" result="shape" />
+                              </filter>
+                            </defs>
+                          </svg>
+                          <span className="whitespace-nowrap text-[7px] font-semibold uppercase tracking-[0.03em] text-white sm:text-[8px]">
+                            PASSPORT • PASS • PASAPORTE
+                          </span>
+                        </div>
+                        <div className="flex min-w-0 flex-col items-start justify-center">
+                          <p className="text-[9px] font-semibold uppercase leading-none text-white/80">LEVEL Wanderer</p>
+                          <div className="mt-1 h-1 w-[72px] overflow-hidden rounded-full bg-[rgba(176,38,255,0.22)] sm:w-[80px]">
+                            <div className="h-full w-[8%] rounded-full bg-pxi-purple" />
                           </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {apiEvent?.host?.bio ? (
-                      <p className="mx-auto mt-5 max-w-md text-center text-sm leading-relaxed text-zinc-400">{apiEvent.host.bio}</p>
-                    ) : null}
-                    {apiEvent?.host?.city ? (
-                      <p className="mt-2 text-center text-xs text-zinc-500">{apiEvent.host.city}</p>
-                    ) : null}
-
-                    <div className="mt-6 flex flex-col items-center gap-1 border-t border-white/10 pt-5">
-                      <div className="flex items-center gap-2 text-sm text-white/85">
-                        <span>{apiEvent?._count?.events ?? 0} events</span>
-                        <span className="h-4 w-px bg-zinc-600" aria-hidden />
-                        <span>{goingCount} attendees</span>
-                      </div>
-                      <p className="mt-3 text-center text-[10px] font-medium uppercase tracking-widest text-white/35">
-                        {'Full passport & identity in the PXI app'}
-                      </p>
-                    </div>
-
-                    {(organizerIgHref || apiEvent?.websiteUrl) && (
-                      <div className="mt-5 border-t border-white/10 pt-4">
-                        <p className="mb-2 text-center text-[10px] font-bold uppercase tracking-widest text-white/30">
-                          Elsewhere
-                        </p>
-                        <div className="flex flex-wrap items-center justify-center gap-5">
-                          {organizerIgHref ? (
-                            <a
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              href={organizerIgHref}
-                              className="inline-flex items-center gap-1.5 text-xs text-white/45 transition hover:text-white/80"
-                              aria-label={`${organizerName} on Instagram`}
-                            >
-                              <Instagram className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
-                              <span>Instagram</span>
-                            </a>
-                          ) : null}
-                          {apiEvent?.websiteUrl ? (
-                            <a
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              href={apiEvent.websiteUrl}
-                              className="inline-flex items-center gap-1.5 text-xs text-white/45 transition hover:text-white/80"
-                              aria-label={`${organizerName} website`}
-                            >
-                              <Globe className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
-                              <span>Website</span>
-                            </a>
-                          ) : null}
                         </div>
                       </div>
-                    )}
+
+                      <div className="mt-1 grid grid-cols-[88px_minmax(0,1fr)_minmax(0,1fr)] items-start gap-x-2.5 sm:grid-cols-[100px_minmax(0,1fr)_minmax(0,1fr)] sm:gap-x-3">
+                        <div className="relative h-[118px] w-full max-w-[88px] overflow-hidden rounded-[6px] shadow-[0_1px_24px_2px_rgba(255,255,255,0.3)] sm:h-[128px] sm:max-w-[100px]">
+                          {organizerAvatar ? (
+                            <Image
+                              src={organizerAvatar}
+                              alt={organizerName}
+                              fill
+                              unoptimized
+                              className="object-cover"
+                              sizes="112px"
+                            />
+                          ) : (
+                            <div
+                              className="flex h-full w-full items-center justify-center bg-zinc-800 text-2xl font-semibold text-zinc-500"
+                              aria-hidden
+                            >
+                              {(organizerName || '?').charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex min-h-0 min-w-0 flex-col gap-1.5 pl-1 pr-1 sm:pl-2 sm:pr-2">
+                          <div>
+                            <p className="text-[9px] font-medium uppercase text-white/70">Full name</p>
+                            <p className="text-[11px] font-semibold uppercase leading-snug text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)] sm:text-[12px]">
+                              {String(organizerName).toUpperCase()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-medium uppercase text-white/70">username</p>
+                            <p className="truncate text-[11px] text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)] sm:text-[12px]">
+                              {hostPxiHandle || '—'}
+                            </p>
+                          </div>
+                          <p className="text-[11px] text-white/90 sm:text-[12px]">
+                            Age {hostAge ?? '—'}
+                          </p>
+                          <div>
+                            <p className="text-[9px] font-medium uppercase text-white/70">City</p>
+                            <p className="line-clamp-2 text-[11px] text-white/90 sm:text-[12px]">
+                              {apiEvent.host.city?.trim() || '—'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex min-h-0 min-w-0 flex-col gap-2">
+                          <div className="shrink-0">
+                            <div className="flex items-end">
+                              <span className="text-[28px] font-extrabold leading-[30px] text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.35)] sm:text-[36px] sm:leading-9">
+                                D
+                              </span>
+                              <span className="mb-0.5 ml-0.5 text-[11px] font-semibold capitalize text-white sm:text-[13px]">
+                                iplomat
+                              </span>
+                            </div>
+                          </div>
+                          <p className="truncate text-[11px] text-white/90 sm:text-[12px]" title={hostInstaLabel}>
+                            Insta {hostInstaLabel}
+                          </p>
+                          <div className="min-h-0 flex-1">
+                            <p className="text-[9px] font-medium uppercase text-white/70">Bio</p>
+                            <p className="line-clamp-3 text-[11px] leading-snug text-white/90 sm:text-[12px]">
+                              {apiEvent.host.bio?.trim() || '—'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 h-[2px] w-full bg-white/40 sm:mt-3" />
+                      <div className="pt-1.5 font-mono text-[10px] uppercase leading-4 tracking-[0.12em] text-white/70 sm:pt-2 sm:text-[11px]">
+                        <p className="truncate">{hostMrz.line1}</p>
+                        <p className="truncate">{hostMrz.line2}</p>
+                      </div>
+                    </div>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-1 border-t border-white/10 px-5 py-5">
+                      <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-white/85">
+                        <span>
+                          {hostEventsCreated} {hostEventsCreated === 1 ? 'event' : 'events'} created
+                        </span>
+                        <span className="hidden h-4 w-px bg-zinc-600 sm:block" aria-hidden />
+                        <span>
+                          {hostMembersJoinedAcrossEvents}{' '}
+                          {hostMembersJoinedAcrossEvents === 1 ? 'member' : 'members'} joined
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <p className="text-sm text-zinc-500">{SECTION_EMPTY}</p>
@@ -606,16 +725,7 @@ export default function EventsNewEventPage() {
                     <Smartphone className="size-8 text-zinc-400" aria-hidden />
                     <h3 className="text-center text-xl font-semibold text-white md:text-2xl">More features in the app</h3>
                   </div>
-                  <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
-                    <IosDownloadLink href={PXI_APP_STORE_URL} className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 bg-black/40 px-5 py-3 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-white/10 sm:flex-initial">
-                      <Smartphone className="size-4" />
-                      App Store
-                    </IosDownloadLink>
-                    <a href={PXI_PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 bg-black/40 px-5 py-3 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-white/10 sm:flex-initial">
-                      <Smartphone className="size-4" />
-                      Google Play
-                    </a>
-                  </div>
+                  <AppStoreCtaPair className="max-w-md mx-auto" />
                 </div>
               </div>
             </div>
