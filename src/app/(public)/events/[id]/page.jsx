@@ -13,11 +13,13 @@ import {
   Loader2,
   Play,
   Scan,
+  Shield,
   Smartphone,
   X,
 } from 'lucide-react';
 import { eventsService } from '@/services/events';
 import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
+import IosDownloadLink from '@/components/links/IosDownloadLink';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { singleEventMapEmbedSrc } from '@/lib/eventMapEmbed';
 
@@ -83,6 +85,14 @@ function SectionDivider() {
   return <div className="h-px w-full bg-white/15" />;
 }
 
+/** Public display — mirrors dashboard passport number shape (host user id). */
+function formatHostPassportNo(userId) {
+  if (!userId) return null;
+  const raw = String(userId).replace(/-/g, '').toUpperCase();
+  if (raw.length < 4) return null;
+  return `P${raw.slice(0, 7)}XI`;
+}
+
 export default function EventsNewEventPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -112,9 +122,16 @@ export default function EventsNewEventPage() {
   const hasHost = !!(apiEvent?.host && (apiEvent.host.name || apiEvent.host.username));
   const organizerName = hasHost ? (apiEvent.host.name || apiEvent.host.username) : '';
   const organizerAvatar = displayImageSrc(apiEvent?.host?.avatarUrl, null);
-  const organizerHref = apiEvent?.host?.username
-    ? `https://instagram.com/${encodeURIComponent(String(apiEvent.host.username).replace(/^@/, ''))}`
-    : '#';
+  const organizerIgHref = apiEvent?.host?.instagramHandle
+    ? `https://instagram.com/${encodeURIComponent(String(apiEvent.host.instagramHandle).replace(/^@/, ''))}`
+    : apiEvent?.host?.username
+      ? `https://instagram.com/${encodeURIComponent(String(apiEvent.host.username).replace(/^@/, ''))}`
+      : null;
+
+  const hostPxiHandle = apiEvent?.host?.username
+    ? String(apiEvent.host.username).replace(/^@/, '')
+    : null;
+  const hostPassportNo = formatHostPassportNo(apiEvent?.host?.id);
 
   const eventTitle = apiEvent?.name || 'Event';
   const rawLocation = typeof apiEvent?.location === 'string' ? apiEvent.location.trim() : '';
@@ -298,13 +315,8 @@ export default function EventsNewEventPage() {
                 <h2 className="text-base font-semibold tracking-tight text-white">Organizer</h2>
                 {hasHost ? (
                   <div className="flex items-start justify-between gap-3">
-                    <a
-                      className="mt-0.5 flex flex-row items-start justify-start gap-2 p-0 hover:underline"
-                      href={organizerHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <span className="relative mt-0.5 flex size-5 shrink-0 overflow-hidden rounded-full bg-zinc-800">
+                    <div className="mt-0.5 flex min-w-0 flex-1 flex-row items-start gap-2">
+                      <span className="relative mt-0.5 flex size-5 shrink-0 overflow-hidden rounded-sm border border-white/20 bg-zinc-800">
                         {organizerAvatar ? (
                           <Image className="size-full object-cover" alt="" src={organizerAvatar} width={20} height={20} unoptimized />
                         ) : (
@@ -313,8 +325,20 @@ export default function EventsNewEventPage() {
                           </span>
                         )}
                       </span>
-                      <span className="text-base font-medium tracking-tight text-white">{organizerName}</span>
-                    </a>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-pxi-purple">PXI Passport</p>
+                        <p className="text-base font-medium tracking-tight text-white">{organizerName}</p>
+                        {hostPxiHandle ? (
+                          <p className="truncate text-xs text-zinc-400">@{hostPxiHandle}</p>
+                        ) : null}
+                      </div>
+                    </div>
+                    <IosDownloadLink
+                      href={PXI_APP_STORE_URL}
+                      className="shrink-0 text-xs font-semibold text-pxi-purple hover:text-white"
+                    >
+                      App
+                    </IosDownloadLink>
                   </div>
                 ) : (
                   <p className="text-sm text-zinc-500">{SECTION_EMPTY}</p>
@@ -468,49 +492,106 @@ export default function EventsNewEventPage() {
                 <SectionDivider />
                 <h2 className="text-base font-semibold tracking-tight text-white">Hosted by</h2>
                 {hasHost ? (
-                  <div className="rounded-xl bg-white/5 p-4 backdrop-blur-xl">
-                    <div className="flex justify-between gap-4">
-                      <span className="inline-flex min-w-0 flex-1 flex-wrap items-center text-sm leading-5 font-normal text-zinc-100">{organizerName}</span>
-                      {organizerHref !== '#' ? (
-                        <a className="flex shrink-0 items-center gap-1 text-sm text-white/60 hover:underline" href={organizerHref} target="_blank" rel="noopener noreferrer">
-                          Profile
-                          <ChevronRight className="h-4 w-4" aria-hidden />
-                        </a>
-                      ) : null}
-                    </div>
-
-                    <div className="mb-6 mt-10 flex flex-col items-center">
-                      {organizerAvatar ? (
-                        <Image alt={organizerName} width={200} height={200} unoptimized className="h-52 w-52 rounded-full object-cover opacity-100 transition-opacity duration-300" src={organizerAvatar} />
-                      ) : (
-                        <div className="flex h-52 w-52 items-center justify-center rounded-full bg-zinc-800 text-3xl font-semibold text-zinc-500" aria-hidden>
-                          {(organizerName || '?').charAt(0).toUpperCase()}
+                  <div className="overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-black/50 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-pxi-purple/40 bg-pxi-purple/15 text-pxi-purple">
+                          <Shield className="h-5 w-5" strokeWidth={2} aria-hidden />
                         </div>
-                      )}
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pxi-purple">PXI Passport</p>
+                          <p className="mt-1 text-lg font-bold leading-tight text-white">{organizerName}</p>
+                          {hostPxiHandle ? (
+                            <p className="mt-0.5 truncate text-sm font-medium text-zinc-300">@{hostPxiHandle}</p>
+                          ) : null}
+                          {hostPassportNo ? (
+                            <p className="mt-2 font-mono text-[11px] tracking-wider text-white/45">{hostPassportNo}</p>
+                          ) : null}
+                        </div>
+                      </div>
+                      <IosDownloadLink
+                        href={PXI_APP_STORE_URL}
+                        className="flex shrink-0 items-center gap-1 rounded-full border border-pxi-purple/35 bg-pxi-purple/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-pxi-purple transition hover:border-pxi-purple/60 hover:bg-pxi-purple/20 hover:text-white"
+                        aria-label="View host on PXI in the app"
+                      >
+                        PXI
+                        <ChevronRight className="h-4 w-4" aria-hidden />
+                      </IosDownloadLink>
                     </div>
 
-                    <div className="mb-4 flex flex-col items-center gap-4">
-                      <p className="text-center font-medium text-white/80">{organizerName}</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm text-white/80">{apiEvent?._count?.events ?? 0} events</p>
-                        <div className="h-4 w-px bg-zinc-500" />
-                        <p className="text-sm text-white/80">{goingCount} attendees</p>
+                    <div className="mt-6 flex justify-center">
+                      <div className="rounded-2xl border-2 border-white/20 bg-zinc-950/80 p-2 shadow-[0_12px_40px_rgba(0,0,0,0.45)]">
+                        {organizerAvatar ? (
+                          <Image
+                            alt=""
+                            width={160}
+                            height={200}
+                            unoptimized
+                            className="h-44 w-36 rounded-lg object-cover"
+                            src={organizerAvatar}
+                          />
+                        ) : (
+                          <div
+                            className="flex h-44 w-36 items-center justify-center rounded-lg bg-zinc-800 text-4xl font-semibold text-zinc-500"
+                            aria-hidden
+                          >
+                            {(organizerName || '?').charAt(0).toUpperCase()}
+                          </div>
+                        )}
                       </div>
-                      <div className="my-2 text-white/80">
-                        <div className="flex gap-2">
-                          {apiEvent?.host?.instagramHandle ? (
-                            <a target="_blank" rel="noopener noreferrer" href={`https://instagram.com/${encodeURIComponent(String(apiEvent.host.instagramHandle).replace(/^@/, ''))}`} className="text-white/80 transition hover:text-white" aria-label={`${organizerName} on Instagram`}>
-                              <Instagram className="h-4 w-4" strokeWidth={2} />
+                    </div>
+
+                    {apiEvent?.host?.bio ? (
+                      <p className="mx-auto mt-5 max-w-md text-center text-sm leading-relaxed text-zinc-400">{apiEvent.host.bio}</p>
+                    ) : null}
+                    {apiEvent?.host?.city ? (
+                      <p className="mt-2 text-center text-xs text-zinc-500">{apiEvent.host.city}</p>
+                    ) : null}
+
+                    <div className="mt-6 flex flex-col items-center gap-1 border-t border-white/10 pt-5">
+                      <div className="flex items-center gap-2 text-sm text-white/85">
+                        <span>{apiEvent?._count?.events ?? 0} events</span>
+                        <span className="h-4 w-px bg-zinc-600" aria-hidden />
+                        <span>{goingCount} attendees</span>
+                      </div>
+                      <p className="mt-3 text-center text-[10px] font-medium uppercase tracking-widest text-white/35">
+                        {'Full passport & identity in the PXI app'}
+                      </p>
+                    </div>
+
+                    {(organizerIgHref || apiEvent?.websiteUrl) && (
+                      <div className="mt-5 border-t border-white/10 pt-4">
+                        <p className="mb-2 text-center text-[10px] font-bold uppercase tracking-widest text-white/30">
+                          Elsewhere
+                        </p>
+                        <div className="flex flex-wrap items-center justify-center gap-5">
+                          {organizerIgHref ? (
+                            <a
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              href={organizerIgHref}
+                              className="inline-flex items-center gap-1.5 text-xs text-white/45 transition hover:text-white/80"
+                              aria-label={`${organizerName} on Instagram`}
+                            >
+                              <Instagram className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                              <span>Instagram</span>
                             </a>
                           ) : null}
                           {apiEvent?.websiteUrl ? (
-                            <a target="_blank" rel="noopener noreferrer" href={apiEvent.websiteUrl} className="text-white/80 transition hover:text-white" aria-label={`${organizerName} website`}>
-                              <Globe className="h-4 w-4" strokeWidth={2} />
+                            <a
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              href={apiEvent.websiteUrl}
+                              className="inline-flex items-center gap-1.5 text-xs text-white/45 transition hover:text-white/80"
+                              aria-label={`${organizerName} website`}
+                            >
+                              <Globe className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                              <span>Website</span>
                             </a>
                           ) : null}
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-sm text-zinc-500">{SECTION_EMPTY}</p>
@@ -526,10 +607,10 @@ export default function EventsNewEventPage() {
                     <h3 className="text-center text-xl font-semibold text-white md:text-2xl">More features in the app</h3>
                   </div>
                   <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
-                    <a href={PXI_APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 bg-black/40 px-5 py-3 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-white/10 sm:flex-initial">
+                    <IosDownloadLink href={PXI_APP_STORE_URL} className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 bg-black/40 px-5 py-3 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-white/10 sm:flex-initial">
                       <Smartphone className="size-4" />
                       App Store
-                    </a>
+                    </IosDownloadLink>
                     <a href={PXI_PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 bg-black/40 px-5 py-3 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-white/10 sm:flex-initial">
                       <Smartphone className="size-4" />
                       Google Play

@@ -272,7 +272,7 @@ export default function CreateEventPage() {
       const created = await eventsService.createEvent({
         name: name.trim(),
         description: description.trim() || undefined,
-        location,
+        location: location.trim() || undefined,
         latitude: typeof geo.latitude === 'number' ? geo.latitude : undefined,
         longitude: typeof geo.longitude === 'number' ? geo.longitude : undefined,
         startDate: startDate.toISOString(),

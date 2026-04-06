@@ -1,6 +1,8 @@
 import React from "react";
 import Link from "next/link";
 import Button from "../../components/ui/Button";
+import { PXI_APP_STORE_URL } from "@/lib/appStoreLinks";
+import IosDownloadLink from "@/components/links/IosDownloadLink";
 
 const EventsCTA = () => {
   return (
@@ -27,14 +29,12 @@ const EventsCTA = () => {
               </Button>
             </Link>
 
-            <a href={process.env.NEXT_PUBLIC_IOS_APP_URL || "https://testflight.apple.com/join/3QqyXJwa"} target="_blank" rel="noopener noreferrer">
-              <Button
-                variant="glass"
-                className="bg-black/20 hover:bg-black/40 border-white/20 text-white px-16 py-5 text-lg"
-              >
-                Download the app
-              </Button>
-            </a>
+            <IosDownloadLink
+              href={PXI_APP_STORE_URL}
+              className="inline-flex items-center justify-center gap-2 px-16 py-5 text-lg rounded-full font-bold transition-all duration-300 ease-out transform active:scale-95 whitespace-nowrap glass text-white hover:bg-white/10 bg-black/20 hover:bg-black/40 border border-white/20"
+            >
+              Download the app
+            </IosDownloadLink>
           </div>
         </div>
 

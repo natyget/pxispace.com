@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
+import IosDownloadLink from '@/components/links/IosDownloadLink';
 
 const SECTIONS = [
   {
@@ -748,14 +749,12 @@ export default function LegalHubPage() {
               >
                 Create Event
               </Link>
-              <a
+              <IosDownloadLink
                 href={PXI_APP_STORE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center bg-[rgba(20,10,30,0.75)] text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-[rgba(20,10,30,0.9)] transition-colors"
               >
                 Download the app
-              </a>
+              </IosDownloadLink>
             </div>
           </div>
         </section>

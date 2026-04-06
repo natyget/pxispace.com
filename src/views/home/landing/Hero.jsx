@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { FaGooglePlay } from 'react-icons/fa';
 import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
+import IosDownloadLink from '@/components/links/IosDownloadLink';
 import {
   APPLE_MARK,
   HERO_SCATTER_ICONS,
@@ -248,10 +249,8 @@ export default function Hero() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.7 }}
         >
-          <a
+          <IosDownloadLink
             href={PXI_APP_STORE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
             aria-label="Download on App Store"
             className="flex w-full max-w-[320px] sm:w-auto sm:max-w-none items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-colors cursor-pointer"
             data-cursor-hover
@@ -268,7 +267,7 @@ export default function Hero() {
               </span>
               <span className="text-sm font-bold text-white leading-none">App Store</span>
             </div>
-          </a>
+          </IosDownloadLink>
           <a
             href={PXI_PLAY_STORE_URL}
             target="_blank"

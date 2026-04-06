@@ -24,6 +24,7 @@ import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket }
 import { spotifyEmbedSrc } from '@/lib/spotify';
 import { readFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
+import IosDownloadLink from '@/components/links/IosDownloadLink';
 import { displayImageSrc } from '@/lib/mediaUrl';
 
 const DEFAULT_IMG =
@@ -229,15 +230,13 @@ const EventDetails = ({ basePath = '/events' }) => {
         <div className="border-b border-white/10 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-30">
           <div className="container mx-auto px-6 py-4 flex flex-wrap gap-3 items-center justify-between">
             <div className="flex flex-wrap gap-2">
-              <a
+              <IosDownloadLink
                 href={PXI_APP_STORE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-colors"
               >
                 <Smartphone size={14} />
                 App Store
-              </a>
+              </IosDownloadLink>
               <a
                 href={PXI_PLAY_STORE_URL}
                 target="_blank"
