@@ -18,6 +18,8 @@ import {
     Bell,
     Plus,
     Activity,
+    Users,
+    Flag,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
@@ -32,6 +34,15 @@ function shouldClearAuth(error) {
     const code = error?.code;
     return status === 401 || status === 403 || status === 404 || code === 'ACCOUNT_DELETED' || code === 'INVALID_TOKEN';
 }
+
+const ADMIN_SIDEBAR_MODE_KEY = 'pxi_dashboard_admin_ui_mode';
+
+const adminNavItems = [
+    { label: 'Overview', path: '/dashboard/admin', icon: LayoutDashboard, end: true },
+    { label: 'User Management', path: '/dashboard/admin/users', icon: Users, end: true },
+    { label: 'Event Management', path: '/dashboard/admin/events', icon: Calendar, end: true },
+    { label: 'Report Management', path: '/dashboard/admin/reports', icon: Flag, end: true },
+];
 
 const navItems = [
     { label: 'Overview', path: '/dashboard', icon: LayoutDashboard, end: true },
@@ -102,6 +113,46 @@ export default function DashboardLayout({ children }) {
 
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showCreateEventModal, setShowCreateEventModal] = useState(false);
+    /** ADMIN tier only: 'admin' = platform tools nav, 'user' = normal member nav */
+    const [adminSidebarMode, setAdminSidebarMode] = useState('user');
+
+    useEffect(() => {
+        if (!mounted || typeof window === 'undefined') return;
+        if (user?.accountTier !== 'ADMIN') return;
+        const saved = window.localStorage.getItem(ADMIN_SIDEBAR_MODE_KEY);
+        if (saved === 'admin' || saved === 'user') {
+            setAdminSidebarMode(saved);
+        } else {
+            setAdminSidebarMode('admin');
+        }
+    }, [mounted, user?.accountTier]);
+
+    /** Deep-linking into /dashboard/admin/* should show ADMIN nav */
+    useEffect(() => {
+        if (!mounted || user?.accountTier !== 'ADMIN') return;
+        if (pathname.startsWith('/dashboard/admin')) {
+            setAdminSidebarMode('admin');
+            try {
+                window.localStorage.setItem(ADMIN_SIDEBAR_MODE_KEY, 'admin');
+            } catch {
+                /* ignore */
+            }
+        }
+    }, [mounted, pathname, user?.accountTier]);
+
+    const setAdminSidebarModeAndNavigate = (mode) => {
+        setAdminSidebarMode(mode);
+        try {
+            window.localStorage.setItem(ADMIN_SIDEBAR_MODE_KEY, mode);
+        } catch {
+            /* ignore */
+        }
+        if (mode === 'user' && pathname.startsWith('/dashboard/admin')) {
+            router.replace('/dashboard');
+        } else if (mode === 'admin' && !pathname.startsWith('/dashboard/admin')) {
+            router.replace('/dashboard/admin');
+        }
+    };
 
     const handleLogout = () => {
         logout();
@@ -143,8 +194,48 @@ export default function DashboardLayout({ children }) {
                             </button>
                         </div>
 
-                        <nav className={`flex-1 overflow-y-auto mt-4 ${sidebarCollapsed ? 'flex flex-col items-center gap-2 px-0' : 'space-y-2 px-3 md:px-5'}`}>
-                            {navItems.map(({ label, path, icon: Icon, end, vendorOnly }) => {
+                        {mounted && user?.accountTier === 'ADMIN' && (
+                            <div
+                                className={`px-3 md:px-5 mb-2 ${sidebarCollapsed ? 'flex flex-col items-center' : ''}`}
+                            >
+                                <div
+                                    className={`flex rounded-full bg-white/[0.06] p-0.5 border border-white/10 ${sidebarCollapsed ? 'flex-col w-11 py-1 gap-0.5' : 'w-full'}`}
+                                    role="group"
+                                    aria-label="Switch between platform admin and member dashboard"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => setAdminSidebarModeAndNavigate('admin')}
+                                        className={`${sidebarCollapsed ? 'py-2 text-[10px]' : 'flex-1 py-2 text-xs'} font-bold tracking-wide rounded-full transition-colors ${
+                                            adminSidebarMode === 'admin'
+                                                ? 'bg-white text-black shadow-sm'
+                                                : 'text-white/45 hover:text-white/80'
+                                        }`}
+                                        title="Platform admin"
+                                    >
+                                        {sidebarCollapsed ? 'A' : 'ADMIN'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setAdminSidebarModeAndNavigate('user')}
+                                        className={`${sidebarCollapsed ? 'py-2 text-[10px]' : 'flex-1 py-2 text-xs'} font-bold tracking-wide rounded-full transition-colors ${
+                                            adminSidebarMode === 'user'
+                                                ? 'bg-white text-black shadow-sm'
+                                                : 'text-white/45 hover:text-white/80'
+                                        }`}
+                                        title="Member dashboard"
+                                    >
+                                        {sidebarCollapsed ? 'U' : 'USER'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <nav className={`flex-1 overflow-y-auto mt-2 ${sidebarCollapsed ? 'flex flex-col items-center gap-2 px-0' : 'space-y-2 px-3 md:px-5'}`}>
+                            {(mounted && user?.accountTier === 'ADMIN' && adminSidebarMode === 'admin'
+                                ? adminNavItems
+                                : navItems
+                            ).map(({ label, path, icon: Icon, end, vendorOnly }) => {
                                 if (vendorOnly && mounted && !user?.isVendor) return null;
                                 const isActive = end ? pathname === path : pathname.startsWith(path + '/') || pathname === path;
                                 const showPassportAlert = mounted && path === '/dashboard/passport' && !user?.isPassportIssued;

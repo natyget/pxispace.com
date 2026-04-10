@@ -9,6 +9,7 @@ import { FaApple, FaGoogle } from 'react-icons/fa';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
+import { defaultPostLoginPath } from '../../lib/dashboardPaths';
 import AuthParticles from '../../components/auth/AuthParticles';
 const LogoSVG = "/images/logo.svg";
 
@@ -33,12 +34,12 @@ export default function LoginPage() {
     useEffect(() => {
         if (!isAuthenticated || !user?.id || hasRedirected.current) return;
         hasRedirected.current = true;
-        const destination = safeRedirect || '/dashboard';
         authService.getMe(user.id)
             .then(({ user: fresh }) => {
                 updateUser(fresh);
+                const dest = safeRedirect || defaultPostLoginPath(fresh);
                 // Let the auth context update before navigating so dashboard sees phoneNumber
-                setTimeout(() => router.replace(destination), 0);
+                setTimeout(() => router.replace(dest), 0);
             })
             .catch(async (error) => {
                 if (shouldClearAuth(error)) {
@@ -46,13 +47,13 @@ export default function LoginPage() {
                     hasRedirected.current = false;
                     return;
                 }
-                router.replace(destination);
+                router.replace(safeRedirect || defaultPostLoginPath(user));
             });
     }, [isAuthenticated, user?.id, safeRedirect, router, updateUser, logout]);
 
     const handleAuthSuccess = async ({ token, user }) => {
         await saveAuth({ token, user });
-        router.replace(safeRedirect || '/dashboard');
+        router.replace(safeRedirect || defaultPostLoginPath(user));
     };
 
     // OAuth2 token flow with prompt so user sees: (1) account selection, (2) Cancel/Continue consent
