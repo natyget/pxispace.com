@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft, Eye, EyeOff, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
+import { defaultPostLoginPath } from '../../lib/dashboardPaths';
 import AuthParticles from '../../components/auth/AuthParticles';
 
 const PASSWORD_RULES = [
@@ -51,6 +52,8 @@ export default function EmailAuthPage() {
             await saveAuth({ token, user });
             if (safeRedirect) {
                 router.replace(safeRedirect);
+            } else if (user.accountTier === 'ADMIN') {
+                router.replace('/dashboard/admin');
             } else if (!user.phoneNumber) {
                 router.replace('/verify-phone');
             } else if (!user.isPassportIssued) {
