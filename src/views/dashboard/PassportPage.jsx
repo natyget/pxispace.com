@@ -3,7 +3,7 @@
 import { useState, useEffect, useId } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Smartphone, Shield, CheckCircle2, Loader2, RefreshCw, ArrowRight } from 'lucide-react';
+import { Smartphone, Shield, CheckCircle2, Loader2, RefreshCw, ArrowRight, Share2, Check } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { getPassportLevelDisplay } from '../../utils/odysseyTier';
@@ -20,6 +20,33 @@ import {
     StampWhite,
     GreenStampPositioned,
 } from '@/components/passport/passportVisualParts';
+import { getSiteUrl } from '@/lib/siteUrl';
+
+function ShareProfileLinkButton({ userId }) {
+    const [copied, setCopied] = useState(false);
+    const url = `${getSiteUrl()}/u/${userId}`;
+
+    const onClick = async () => {
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            window.prompt('Copy profile link:', url);
+        }
+    };
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className="mx-auto flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-white/10"
+        >
+            {copied ? <Check size={16} className="shrink-0 text-emerald-400" /> : <Share2 size={16} className="shrink-0" />}
+            {copied ? 'Copied link' : 'Share profile link'}
+        </button>
+    );
+}
 
 // ─── main page ────────────────────────────────────────────────────────────────
 
@@ -96,11 +123,16 @@ function PassportIssued({ user }) {
                     )}
                 </div>
                 <div className="mt-4 flex items-center justify-center">
-                    <button className="text-center">
+                    <button type="button" className="text-center">
                         <p className="text-white text-base font-bold">{user?.friendsCount ?? 0}</p>
                         <p className="text-[10px] uppercase tracking-widest text-white/45">Friends</p>
                     </button>
                 </div>
+                {user?.id ? (
+                    <div className="mt-4 flex justify-center">
+                        <ShareProfileLinkButton userId={user.id} />
+                    </div>
+                ) : null}
             </div>
 
             <div className="flex justify-center">

@@ -19,24 +19,30 @@ import {
 import { displayImageSrc } from '@/lib/mediaUrl';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 
-function OpenInAppBanner({ userId }) {
+function PublicProfileBottomBar({ userId }) {
     /** Same-origin https://…/u/:id does not reliably open the app from Safari; use registered app scheme (see app.json `scheme`). */
     const openInAppUrl = `pxi://u/${userId}`;
+    const year = new Date().getFullYear();
 
     return (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:hidden">
-            <div className="pointer-events-auto flex w-[min(100%,24rem)] items-center gap-2 rounded-2xl border border-white/15 bg-black/85 px-3 py-2.5 shadow-lg backdrop-blur-md">
-                <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold text-white">Open in PXI</p>
-                    <p className="text-[10px] text-zinc-400">Full profile and social features in the app</p>
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-center px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] pt-0 md:hidden">
+            <div className="pointer-events-auto flex w-full max-w-md flex-col items-center gap-2">
+                <div className="flex w-full max-w-[24rem] items-center gap-2 rounded-2xl border border-white/15 bg-black/85 px-3 py-2.5 shadow-lg backdrop-blur-md">
+                    <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-semibold text-white">Open in PXI</p>
+                        <p className="text-[10px] text-zinc-400">Full profile and social features in the app</p>
+                    </div>
+                    <a
+                        href={openInAppUrl}
+                        className="shrink-0 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-black transition hover:bg-zinc-200"
+                        rel="noopener noreferrer"
+                    >
+                        Open
+                    </a>
                 </div>
-                <a
-                    href={openInAppUrl}
-                    className="shrink-0 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-black transition hover:bg-zinc-200"
-                    rel="noopener noreferrer"
-                >
-                    Open
-                </a>
+                <p className="text-center text-[11px] text-zinc-500">
+                    © {year} PXI App. All rights reserved.
+                </p>
             </div>
         </div>
     );
@@ -292,19 +298,20 @@ function PassportReadOnly({ user }) {
 export default function PublicProfileClient({ userId, initialProfile }) {
     if (!initialProfile) {
         return (
-            <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 pt-28 text-center md:pt-32">
+            <div className="relative flex min-h-[60vh] flex-col items-center justify-center px-4 pb-40 pt-28 text-center md:pt-32">
                 <p className="text-lg font-semibold text-white">Profile not found</p>
                 <p className="mt-2 max-w-sm text-sm text-zinc-500">This link may be invalid or the account is no longer available.</p>
                 <Link href="/" className="mt-6 text-sm font-medium text-pxi-purple hover:text-white">
                     Back to PXI
                 </Link>
+                <PublicProfileBottomBar userId={userId} />
             </div>
         );
     }
 
     if (!initialProfile.isPassportIssued) {
         return (
-            <div className="relative min-h-screen bg-[#0a0a0a] pb-28 pt-24 text-white md:pb-12 md:pt-28">
+            <div className="relative min-h-screen bg-[#0a0a0a] pb-40 pt-24 text-white md:pb-40 md:pt-28">
                 <div className="mx-auto max-w-lg px-4">
                     <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-8 text-center">
                         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-pxi-purple/20 bg-pxi-purple/10">
@@ -321,15 +328,15 @@ export default function PublicProfileClient({ userId, initialProfile }) {
                         </div>
                     </div>
                 </div>
-                <OpenInAppBanner userId={userId} />
+                <PublicProfileBottomBar userId={userId} />
             </div>
         );
     }
 
     return (
-        <div className="relative min-h-screen bg-[#0a0a0a] pb-28 pt-24 text-white md:pb-12 md:pt-28">
+        <div className="relative min-h-screen bg-[#0a0a0a] pb-40 pt-24 text-white md:pb-40 md:pt-28">
             <PassportReadOnly user={initialProfile} />
-            <OpenInAppBanner userId={userId} />
+            <PublicProfileBottomBar userId={userId} />
         </div>
     );
 }
