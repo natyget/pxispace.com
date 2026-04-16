@@ -6,6 +6,9 @@ import { resolveDisplayImageUrl } from '@/lib/mediaUrl';
 /** Netlify/SSR: always run profile fetch at request time with runtime env (see `API_BASE_URL`). */
 export const dynamic = 'force-dynamic';
 
+/** Netlify Open Next: ensure Node runtime so `process.env` + `fetch` match serverless (not Edge). */
+export const runtime = 'nodejs';
+
 export async function generateMetadata({ params }) {
     const { id } = await params;
     const site = getSiteUrl();
