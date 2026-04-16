@@ -11,7 +11,8 @@ export default function PublicLayout({ children }) {
     pathname === '/home' ||
     pathname === '/about' ||
     pathname === '/beta' ||
-    pathname?.startsWith('/events');
+    pathname?.startsWith('/events') ||
+    pathname?.startsWith('/u/');
   return (
     <div className="relative min-h-screen flex flex-col">
       {showNavbar ? <Navbar /> : null}
