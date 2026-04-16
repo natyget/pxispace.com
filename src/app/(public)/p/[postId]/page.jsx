@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getPublicPost } from '@/lib/publicPost';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { resolveDisplayImageUrl } from '@/lib/mediaUrl';
+import { toOpenGraphImageUrl } from '@/lib/ogImageUrl';
 import PublicPostBottomBar from '@/views/public/PublicPostBottomBar';
 
 export const dynamic = 'force-dynamic';
@@ -29,7 +30,13 @@ export async function generateMetadata({ params }) {
       : `Photo by ${post.posterName} on PXI`;
 
   const ogImageRaw = post.isPrivateAccount ? null : post.ogImageUrl || post.imageUrl;
-  const ogImage = resolveDisplayImageUrl(ogImageRaw) || `${site}/favicon.svg`;
+  const ogImageResolved = toOpenGraphImageUrl(site, ogImageRaw);
+  const ogImage = ogImageResolved || `${site}/favicon.svg`;
+
+  const ogAlt = post.isPrivateAccount ? 'PXI' : titleBase;
+  /** Common link-preview dimensions (hint for scrapers; asset may differ). */
+  const ogWidth = 1200;
+  const ogHeight = 630;
 
   return {
     title: `${titleBase} — PXI`,
@@ -42,22 +49,20 @@ export async function generateMetadata({ params }) {
       siteName: 'PXI',
       title: `${titleBase} — PXI`,
       description: desc,
-      images: ogImage
-        ? [
-            {
-              url: ogImage,
-              width: 1200,
-              height: 1200,
-              alt: post.isPrivateAccount ? 'PXI' : titleBase,
-            },
-          ]
-        : undefined,
+      images: [
+        {
+          url: ogImage,
+          width: ogWidth,
+          height: ogHeight,
+          alt: ogAlt,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${titleBase} — PXI`,
       description: desc,
-      images: ogImage ? [ogImage] : undefined,
+      images: [ogImage],
     },
   };
 }

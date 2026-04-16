@@ -16,7 +16,7 @@ async function fetchPublicPostUncached(postId) {
   const url = `${base}/api/feed/public/${postId}`;
   const res = await fetch(url, {
     headers: SSR_FETCH_HEADERS,
-    next: { revalidate: 60 },
+    next: { revalidate: 120 },
   });
   if (res.status === 404) return null;
   if (!res.ok) {
