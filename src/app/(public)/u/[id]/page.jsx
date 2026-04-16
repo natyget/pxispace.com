@@ -3,6 +3,9 @@ import { getPublicProfile } from '@/lib/publicProfile';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { resolveDisplayImageUrl } from '@/lib/mediaUrl';
 
+/** Netlify/SSR: always run profile fetch at request time with runtime env (see `API_BASE_URL`). */
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }) {
     const { id } = await params;
     const site = getSiteUrl();
