@@ -1,3 +1,6 @@
+# SSR (e.g. /u/:id) reads `API_BASE_URL` at runtime in Node — set it in the Netlify UI to your
+# backend (same value as NEXT_PUBLIC_API_BASE_URL is fine), so server fetches are not stuck on localhost.
+
 [build]
   command = "npm run build"
   publish = ".next"
