@@ -34,9 +34,23 @@ export async function generateMetadata({ params }) {
   const ogImage = ogImageResolved || `${site}/favicon.svg`;
 
   const ogAlt = post.isPrivateAccount ? 'PXI' : titleBase;
-  /** Common link-preview dimensions (hint for scrapers; asset may differ). */
-  const ogWidth = 1200;
-  const ogHeight = 630;
+
+  /** Match real aspect ratio for og:image — a fixed 1200×630 meta hint stretches Discord embeds. */
+  const ow = post.ogImageWidth;
+  const oh = post.ogImageHeight;
+  const hasOgDims =
+    typeof ow === 'number' &&
+    typeof oh === 'number' &&
+    ow > 0 &&
+    oh > 0 &&
+    Number.isFinite(ow) &&
+    Number.isFinite(oh);
+
+  const ogImageDescriptor = {
+    url: ogImage,
+    alt: ogAlt,
+    ...(hasOgDims ? { width: Math.round(ow), height: Math.round(oh) } : {}),
+  };
 
   return {
     title: `${titleBase} — PXI`,
@@ -49,14 +63,7 @@ export async function generateMetadata({ params }) {
       siteName: 'PXI',
       title: `${titleBase} — PXI`,
       description: desc,
-      images: [
-        {
-          url: ogImage,
-          width: ogWidth,
-          height: ogHeight,
-          alt: ogAlt,
-        },
-      ],
+      images: [ogImageDescriptor],
     },
     twitter: {
       card: 'summary_large_image',
