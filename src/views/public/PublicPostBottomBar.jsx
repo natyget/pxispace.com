@@ -1,7 +1,9 @@
 'use client';
 
+import Link from 'next/link';
+
 /**
- * Fixed bottom CTA — matches public passport pattern (`pxi://u/...`).
+ * `pxi://p/...` opens the native app when installed. Use Get the app → /beta when it is not.
  */
 export default function PublicPostBottomBar({ postId }) {
   const openInAppUrl = `pxi://p/${postId}`;
@@ -13,7 +15,9 @@ export default function PublicPostBottomBar({ postId }) {
         <div className="flex w-full max-w-[24rem] items-center gap-2 rounded-2xl border border-white/15 bg-black/85 px-3 py-2.5 shadow-lg backdrop-blur-md">
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold text-white">Open in PXI</p>
-            <p className="text-[10px] text-zinc-400">Reactions and full album experience in the app</p>
+            <p className="text-[10px] text-zinc-400">
+              Sign in to unlock private posts if you are friends or in the album
+            </p>
           </div>
           <a
             href={openInAppUrl}
@@ -22,6 +26,15 @@ export default function PublicPostBottomBar({ postId }) {
           >
             Open
           </a>
+        </div>
+        <div className="flex w-full max-w-[24rem] items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/60 px-3 py-2">
+          <p className="text-[10px] text-zinc-500">No app on this device?</p>
+          <Link
+            href="/beta"
+            className="shrink-0 text-[10px] font-semibold text-pxi-purple hover:text-white"
+          >
+            Get the app
+          </Link>
         </div>
         <p className="text-center text-[11px] text-zinc-500">© {year} PXI App. All rights reserved.</p>
       </div>

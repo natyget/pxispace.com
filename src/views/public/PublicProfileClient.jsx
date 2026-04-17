@@ -309,6 +309,28 @@ export default function PublicProfileClient({ userId, initialProfile }) {
         );
     }
 
+    if (initialProfile.isPrivateAccount) {
+        return (
+            <div className="relative min-h-screen bg-[#0a0a0a] pb-40 pt-24 text-white md:pb-40 md:pt-28">
+                <div className="mx-auto max-w-lg px-4">
+                    <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-8 text-center">
+                        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-pxi-purple/20 bg-pxi-purple/10">
+                            <Smartphone size={26} className="text-pxi-purple" />
+                        </div>
+                        <h1 className="text-xl font-black tracking-tight">This profile is private</h1>
+                        <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+                            Passport details are only visible in the PXI app for approved connections.
+                        </p>
+                        <div className="mt-8">
+                            <AppStoreCtaPair className="mx-auto max-w-md" />
+                        </div>
+                    </div>
+                </div>
+                <PublicProfileBottomBar userId={userId} />
+            </div>
+        );
+    }
+
     if (!initialProfile.isPassportIssued) {
         return (
             <div className="relative min-h-screen bg-[#0a0a0a] pb-40 pt-24 text-white md:pb-40 md:pt-28">
