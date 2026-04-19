@@ -17,6 +17,7 @@ import { eventsService } from '@/services/events';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
+import PublicAlbumBottomBar from '@/views/public/PublicAlbumBottomBar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { singleEventMapEmbedSrc } from '@/lib/eventMapEmbed';
 
@@ -811,6 +812,8 @@ export default function EventsNewEventPage() {
           </div>
         </div>
       ) : null}
+
+      {albumId ? <PublicAlbumBottomBar albumId={albumId} /> : null}
     </div>
   );
 }
