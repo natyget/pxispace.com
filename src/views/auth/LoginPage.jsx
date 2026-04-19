@@ -177,11 +177,11 @@ export default function LoginPage() {
                 {/* Email */}
                 <GlassActionButton icon={<Mail size={18} />} label="Continue with Email" onClick={() => router.push(safeRedirect ? `/login/email?redirect=${encodeURIComponent(safeRedirect)}` : '/login/email')} last />
 
-                <p className="text-center mt-7" style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, letterSpacing: '0.08em', lineHeight: 1.7 }}>
-                    By continuing you agree to our{' '}
-                    <Link href="/terms_of_service" style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'underline' }}>Terms</Link>
-                    {' '}&amp;{' '}
-                    <Link href="/privacy_policy" style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'underline' }}>Privacy Policy</Link>
+                <p className="text-center mt-7" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, letterSpacing: '0.02em', lineHeight: 1.55 }}>
+                    By signing up, you agree to our{' '}
+                    <Link href="/terms_of_service" style={{ color: 'rgba(176,38,255,0.95)', textDecoration: 'underline' }}>Terms of Service</Link>
+                    {' '}and{' '}
+                    <Link href="/privacy_policy" style={{ color: 'rgba(176,38,255,0.95)', textDecoration: 'underline' }}>Privacy Policy</Link>
                 </p>
             </div>
         </div>

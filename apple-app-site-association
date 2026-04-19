@@ -3,7 +3,7 @@
     "apps": [],
     "details": [{
       "appID": "ZRZM6BR3Y5.com.pxistudio.PXIStudio",
-      "paths": [ "/album/*/join", "/join/*", "/album/*", "/notifications", "/", "NOT /assets/*" ]
+      "paths": [ "/album/*/join", "/join/*", "/album/*", "/p/*", "/u/*", "/notifications", "/", "NOT /assets/*" ]
     }]
   }
 }

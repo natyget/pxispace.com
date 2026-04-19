@@ -128,19 +128,19 @@ export default async function PublicPostPage({ params }) {
           </div>
         )}
 
-        <div className="mt-6 space-y-3">
-          <div className="flex flex-wrap items-baseline gap-2">
-            <p className="text-lg font-bold">{post.posterName}</p>
-            {post.username ? (
-              <span className="text-sm text-zinc-500">@{post.username}</span>
+        {!post.isPrivateAccount ? (
+          <div className="mt-6 space-y-3">
+            <div className="flex flex-wrap items-baseline gap-2">
+              <p className="text-lg font-bold">{post.posterName}</p>
+              {post.username ? (
+                <span className="text-sm text-zinc-500">@{post.username}</span>
+              ) : null}
+            </div>
+
+            {post.caption ? (
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-200">{post.caption}</p>
             ) : null}
-          </div>
 
-          {post.caption && !post.isPrivateAccount ? (
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-200">{post.caption}</p>
-          ) : null}
-
-          {!post.isPrivateAccount ? (
             <div className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Reactions</p>
               {post.reactionCounts?.length ? (
@@ -160,8 +160,8 @@ export default async function PublicPostPage({ params }) {
               )}
               <p className="mt-2 text-xs text-zinc-500">Total: {post.totalReactions ?? 0}</p>
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </div>
 
       <PublicPostBottomBar postId={postId} />

@@ -386,6 +386,27 @@ export default function EmailAuthPage() {
                                 />
                             )}
                         </div>
+
+                        <p
+                            className="text-center"
+                            style={{
+                                marginTop: 4,
+                                marginBottom: 8,
+                                color: 'rgba(255,255,255,0.35)',
+                                fontSize: 11,
+                                letterSpacing: '0.02em',
+                                lineHeight: 1.55,
+                            }}
+                        >
+                            {isLogin ? 'By signing in, you agree to our ' : 'By signing up, you agree to our '}
+                            <Link href="/terms_of_service" style={{ color: 'rgba(176,38,255,0.95)', textDecoration: 'underline' }}>
+                                Terms of Service
+                            </Link>
+                            {' '}and{' '}
+                            <Link href="/privacy_policy" style={{ color: 'rgba(176,38,255,0.95)', textDecoration: 'underline' }}>
+                                Privacy Policy
+                            </Link>
+                        </p>
                     </form>
 
                     {/* Social login footer */}

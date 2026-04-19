@@ -1,12 +1,13 @@
 'use client';
 
-import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
+import Link from 'next/link';
 
 /**
- * `pxi://p/...` opens the native app when installed. Store badges link to iOS/Android download URLs.
+ * `pxi://album/...` opens the native app when installed (see app `scheme` + Android intent filters).
  */
-export default function PublicPostBottomBar({ postId }) {
-  const openInAppUrl = `pxi://p/${postId}`;
+export default function PublicAlbumBottomBar({ albumId }) {
+  if (!albumId) return null;
+  const openInAppUrl = `pxi://album/${albumId}`;
   const year = new Date().getFullYear();
 
   return (
@@ -16,7 +17,7 @@ export default function PublicPostBottomBar({ postId }) {
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold text-white">Open in PXI</p>
             <p className="text-[10px] text-zinc-400">
-              Sign in to unlock private posts if you are friends or in the album
+              View and react in the app; album rules apply for comments and access
             </p>
           </div>
           <a
@@ -27,8 +28,14 @@ export default function PublicPostBottomBar({ postId }) {
             Open
           </a>
         </div>
-        <div className="flex w-full max-w-[24rem] rounded-xl border border-white/10 bg-black/60 px-2 py-2.5 backdrop-blur-sm">
-          <AppStoreCtaPair variant="row" />
+        <div className="flex w-full max-w-[24rem] items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/60 px-3 py-2">
+          <p className="text-[10px] text-zinc-500">No app on this device?</p>
+          <Link
+            href="/beta"
+            className="shrink-0 text-[10px] font-semibold text-pxi-purple hover:text-white"
+          >
+            Get the app
+          </Link>
         </div>
         <p className="text-center text-[11px] text-zinc-500">© {year} PXI App. All rights reserved.</p>
       </div>

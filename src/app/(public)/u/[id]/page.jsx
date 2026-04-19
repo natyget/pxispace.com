@@ -23,6 +23,26 @@ export async function generateMetadata({ params }) {
         };
     }
 
+    if (profile.isPrivateAccount) {
+        return {
+            title: 'Private profile | PXI',
+            description: 'This profile is private. Open the PXI app to connect.',
+            robots: { index: false, follow: false },
+            openGraph: {
+                type: 'profile',
+                url: canonical,
+                siteName: 'PXI',
+                title: 'Private profile | PXI',
+                description: 'This profile is private. Open the PXI app to connect.',
+            },
+            twitter: {
+                card: 'summary',
+                title: 'Private profile | PXI',
+                description: 'This profile is private. Open the PXI app to connect.',
+            },
+        };
+    }
+
     const displayName = profile.name || profile.username || 'PXI member';
     const rawDesc =
         profile.isPassportIssued && profile.bio && String(profile.bio).trim()
