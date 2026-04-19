@@ -67,18 +67,18 @@ const Navbar = () => {
     return (
         <>
         <header
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b will-change-transform ${
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 will-change-transform bg-transparent backdrop-blur-md ${
                 isLanding
-                    ? "py-2 bg-transparent border-transparent backdrop-blur-0"
+                    ? "py-1.5 md:py-2.5"
                     : isScrolled || mobileMenuOpen
-                      ? "py-2.5 bg-transparent border-transparent"
-                      : "py-8 bg-transparent border-transparent"
+                      ? "py-[7.5px] md:py-3"
+                      : "py-4 md:py-5"
             }`}
         >
-            <div className="container mx-auto grid grid-cols-[1fr_auto] items-center gap-x-4 px-6 md:grid-cols-[1fr_auto_1fr]">
+            <div className="container mx-auto grid grid-cols-[1fr_auto] items-center gap-x-[18px] px-6 md:gap-x-4 md:px-6 md:grid-cols-[1fr_auto_1fr]">
                 <Link
                     href="/"
-                    className="flex h-10 min-w-0 items-center justify-self-start gap-3"
+                    className="flex h-[30px] min-w-0 items-center justify-self-start gap-3 md:h-10 md:gap-3"
                     onClick={() => setMobileMenuOpen(false)}
                 >
                     <Image
@@ -86,7 +86,7 @@ const Navbar = () => {
                         alt="PXI Logo"
                         width={36}
                         height={36}
-                        className="h-9 w-9 shrink-0 object-contain"
+                        className="h-[30px] w-[30px] shrink-0 object-contain md:h-9 md:w-9"
                         priority
                     />
                 </Link>
@@ -104,7 +104,7 @@ const Navbar = () => {
                     ))}
                 </div>
 
-                <div className="col-start-2 row-start-1 flex h-10 items-center justify-end justify-self-end gap-3 md:col-start-3">
+                <div className="col-start-2 row-start-1 flex h-[30px] items-center justify-end justify-self-end gap-3 md:h-10 md:gap-3 md:col-start-3">
                     {!mounted ? (
                         /* Skeleton while auth state loads */
                         <div className="hidden h-9 w-28 shrink-0 rounded-full bg-zinc-800/60 animate-pulse md:block" />
@@ -169,11 +169,15 @@ const Navbar = () => {
                     )}
                     <button
                         type="button"
-                        className="flex h-10 w-10 shrink-0 items-center justify-center text-white md:hidden"
+                        className="flex h-[30px] w-[30px] shrink-0 items-center justify-center text-white md:hidden"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                         aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
                     >
-                        {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                        {mobileMenuOpen ? (
+                            <X className="h-[21px] w-[21px]" strokeWidth={2} />
+                        ) : (
+                            <Menu className="h-[21px] w-[21px]" strokeWidth={2} />
+                        )}
                     </button>
                 </div>
             </div>

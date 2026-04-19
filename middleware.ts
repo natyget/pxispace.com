@@ -71,12 +71,10 @@ async function verifyPasetoV4(
     const payloadBytes = combined.slice(0, -sigLength);
     const signatureBytes = combined.slice(-sigLength);
     const footer = segments[1] ? base64UrlDecode(segments[1]) : new Uint8Array(0);
-    const footerStr = footer.length ? new TextDecoder().decode(footer) : '';
-
-    // panva/paseto: PAE(header, payloadBytes, footer); empty footer is filtered so 2 pieces
-    const pieces: (string | Uint8Array)[] = ['v4.public.', payloadBytes];
-    if (footerStr) pieces.push(footerStr);
-    const message = paePieces(pieces);
+    // v4.public signed message uses PAE(header, payload, footer, implicit-assertion).
+    // Empty footer / implicit assertion must still be included as empty pieces.
+    const implicitAssertion = new Uint8Array(0);
+    const message = paePieces(['v4.public.', payloadBytes, footer, implicitAssertion]);
     const keyBytes = Uint8Array.from(atob(publicKeyBase64), (c) => c.charCodeAt(0));
     const cryptoKey = await crypto.subtle.importKey(
       'raw',
@@ -89,8 +87,8 @@ async function verifyPasetoV4(
     const ok = await crypto.subtle.verify(
       'Ed25519',
       cryptoKey,
-      signatureBytes,
-      message
+      signatureBytes as unknown as BufferSource,
+      message as unknown as BufferSource
     );
     if (!ok) return null;
 
@@ -154,9 +152,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  const publicKey = process.env.PASETO_PUBLIC_KEY;
+  const publicKeyRaw = process.env.NEXT_PUBLIC_PASETO_PUBLIC_KEY || process.env.PASETO_PUBLIC_KEY;
+  const publicKey = (publicKeyRaw ?? '').trim().replace(/^['"]|['"]$/g, '');
   if (!publicKey) {
-    console.error('[middleware] PASETO_PUBLIC_KEY not set');
+    console.error('[middleware] NEXT_PUBLIC_PASETO_PUBLIC_KEY not set');
     return NextResponse.redirect(new URL('/503', request.url));
   }
 

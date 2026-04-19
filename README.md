@@ -96,6 +96,6 @@ Set in **Netlify → Site settings → Environment variables**:
 | `NEXT_PUBLIC_API_BASE_URL` | Backend API URL, no trailing slash |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth client ID |
 | `NEXT_PUBLIC_APPLE_SERVICE_ID` | Apple Sign-In service ID |
-| `PASETO_PUBLIC_KEY` | Base64 Ed25519 public key (for Edge middleware) |
+| `NEXT_PUBLIC_PASETO_PUBLIC_KEY` | Base64 Ed25519 public key (for Edge middleware) |
 
 All client-exposed variables must use the `NEXT_PUBLIC_` prefix. After adding or changing any variable, trigger a new deploy for changes to take effect.
