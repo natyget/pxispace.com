@@ -15,11 +15,10 @@ const fadeInUp = {
 
 const SupportHero = () => {
     return (
-        <section className="relative px-4 py-28 lg:py-36 overflow-hidden">
+        <section className="relative px-4 py-24 lg:py-32 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-radial opacity-20" />
-            <div className="absolute inset-0 pointer-events-none bg-gradient-radial opacity-6" />
 
-            <div className="container mx-auto max-w-4xl relative z-10">
+            <div className="container mx-auto max-w-3xl relative z-10">
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
@@ -28,16 +27,22 @@ const SupportHero = () => {
                     className="text-center"
                 >
                     <div className="flex justify-center mb-6">
-                        <Badge icon={FiHelpCircle} text="Support Center" />
+                        <Badge icon={FiHelpCircle} text="Support" />
                     </div>
 
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight heading-gradient">
-                        We're Here to Help
+                        How can we help?
                     </h1>
 
-                    <p className="mt-6 text-color-secondary max-w-2xl mx-auto">
-                        Find answers, get guidance, and learn how to get the
-                        best experience from PXIStudio and PXIClip.
+                    <p className="mt-5 text-color-secondary max-w-xl mx-auto">
+                        Browse the most common questions below, or email us directly at{" "}
+                        <a
+                            href="mailto:support@pxispace.com"
+                            className="text-purple-400 hover:text-purple-300 hover:underline underline-offset-2"
+                        >
+                            support@pxispace.com
+                        </a>
+                        .
                     </p>
                 </motion.div>
             </div>

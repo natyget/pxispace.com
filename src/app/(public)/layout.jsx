@@ -13,15 +13,17 @@ export default function PublicLayout({ children }) {
     pathname === '/beta' ||
     pathname?.startsWith('/events') ||
     pathname?.startsWith('/u/') ||
-    pathname?.startsWith('/p/');
+    pathname?.startsWith('/p/') ||
+    pathname?.startsWith('/album/');
   const isPublicProfile = pathname?.startsWith('/u/');
   const isPublicPost = pathname?.startsWith('/p/');
+  const isPublicAlbum = pathname?.startsWith('/album/');
 
   return (
     <div className="relative min-h-screen flex flex-col">
       {showNavbar ? <Navbar /> : null}
       <main className="flex-1">{children}</main>
-      {!isPublicProfile && !isPublicPost ? <Footer /> : null}
+      {!isPublicProfile && !isPublicPost && !isPublicAlbum ? <Footer /> : null}
     </div>
   );
 }
