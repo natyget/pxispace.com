@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ChevronLeft, UserPlus, Users, Loader2, Search } from 'lucide-react';
 import { eventsService, searchUsers } from '../../services/events';
 import { useAuth } from '@/contexts/AuthContext';
+import GalleryMassUploadSection from './GalleryMassUploadSection';
 
 const LINEUP_ROLE_MAX_LEN = 80;
 
@@ -301,6 +302,11 @@ export default function EventDetailPage() {
     );
   }
 
+  const myAlbumRole = participants.find((p) => p.userId === user?.id)?.role;
+  const isEventCreator = Boolean(user?.id && event?.createdBy && event.createdBy === user.id);
+  const canGalleryMassUpload =
+    isEventCreator || myAlbumRole === 'OWNER' || myAlbumRole === 'ADMIN';
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center gap-4">
@@ -317,6 +323,10 @@ export default function EventDetailPage() {
           <p className="text-zinc-500 text-sm mt-0.5">{formatDate(event.startDate)}</p>
         </div>
       </div>
+
+      {albumId && eventId && canGalleryMassUpload ? (
+        <GalleryMassUploadSection albumId={albumId} eventId={String(eventId)} disabled={!user?.id} />
+      ) : null}
 
       <section className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
         <div className="p-5 border-b border-white/5 flex items-center justify-between gap-3">

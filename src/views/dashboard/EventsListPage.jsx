@@ -196,7 +196,7 @@ export default function EventsListPage() {
                 <div className="w-2.5 h-2.5 rounded-full bg-[#4ade80] animate-pulse shadow-[0_0_12px_rgba(74,222,128,0.8)]" />
                 <h2 className="text-[13px] font-bold uppercase tracking-widest text-[#4ade80]">Live Now</h2>
               </div>
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {liveEvents.map((event, i) => <EventCard key={event.id} event={event} section="live" delay={i * 0.1} />)}
               </div>
             </section>
@@ -205,7 +205,7 @@ export default function EventsListPage() {
           {!!upcomingEvents.length && (
             <section className="space-y-6">
               <h2 className="text-[13px] font-bold uppercase tracking-widest text-white/40">Upcoming</h2>
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {upcomingEvents.map((event, i) => <EventCard key={event.id} event={event} section="upcoming" delay={i * 0.1 + 0.2} />)}
               </div>
             </section>
@@ -214,7 +214,7 @@ export default function EventsListPage() {
           {!!pastEvents.length && (
             <section className="space-y-6">
               <h2 className="text-[13px] font-bold uppercase tracking-widest text-white/40">Past / Scrapbook</h2>
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {pastEvents.map((event, i) => <EventCard key={event.id} event={event} section="past" delay={i * 0.1 + 0.4} />)}
               </div>
             </section>
