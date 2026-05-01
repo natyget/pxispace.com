@@ -71,14 +71,18 @@ const Events = ({ detailBasePath = '/events' }) => {
     setFavoriteIds(readFavoriteEventIds());
   }, []);
 
-  useEffect(() => {
+  const loadDiscoverEvents = useCallback(() => {
     setEventsLoading(true);
-    eventsService
+    return eventsService
       .getDiscoverEvents(48, 0, sortMode)
       .then((res) => setApiEvents((res.events || []).map(normalizeApiEvent)))
       .catch(() => setApiEvents([]))
       .finally(() => setEventsLoading(false));
   }, [sortMode]);
+
+  useEffect(() => {
+    loadDiscoverEvents();
+  }, [loadDiscoverEvents]);
 
   const filteredEvents = useMemo(() => {
     return apiEvents.filter((event) => {
