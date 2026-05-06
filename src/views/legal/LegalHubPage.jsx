@@ -473,6 +473,83 @@ const SECTIONS = [
     )
   },
   {
+    id: 'child-safety',
+    title: 'Child Safety',
+    tldr: "Zero tolerance for CSAM and child exploitation of any kind. Every piece of content is scannable. Every account is age-gated. Any violation means immediate removal, permanent ban, and a report to NCMEC and law enforcement.",
+    content: (
+      <div className="space-y-8 text-gray-400">
+        <div className="bg-red-900/20 border border-red-900/50 p-6 rounded-xl">
+          <h3 className="text-xl font-bold mb-3 text-red-400">Zero Tolerance for CSAE</h3>
+          <p className="leading-relaxed mb-4">
+            PXI Studio has an absolute zero-tolerance policy toward child sexual abuse and exploitation (CSAE)
+            in any form — including child sexual abuse material (CSAM), grooming, solicitation of minors, and
+            any activity that sexually exploits or endangers children.
+          </p>
+          <p className="leading-relaxed">
+            Any content or behaviour that violates this policy results in immediate account termination,
+            content removal, and mandatory reporting to the{' '}
+            <strong className="text-white">NCMEC CyberTipline</strong> and relevant law enforcement.
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-xl font-bold mb-3 text-white">In-App Reporting</h3>
+          <p className="leading-relaxed mb-4">
+            Every profile and piece of content has a built-in <strong className="text-white">Report</strong> button
+            (••• menu or long-press). Child safety reports are reviewed within 24 hours; zero-tolerance violations
+            are acted upon immediately.
+          </p>
+          <p>
+            Direct email: <span className="text-legal-hub-accent">trust@pxispace.com</span>
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-xl font-bold mb-3 text-white">Moderation &amp; Enforcement</h3>
+          <ul className="list-disc pl-5 space-y-2">
+            <li><strong className="text-white">Proactive detection:</strong> Automated scanning for known CSAM hashes is applied to all uploaded media.</li>
+            <li><strong className="text-white">Human review:</strong> Flagged content is reviewed by Trust &amp; Safety before any reinstatement decision.</li>
+            <li><strong className="text-white">Permanent ban:</strong> Confirmed violators are permanently terminated and device-fingerprinted to prevent re-registration.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="text-xl font-bold mb-3 text-white">Age Eligibility</h3>
+          <p className="leading-relaxed">
+            PXI requires all users to be at least <strong className="text-white">16 years old</strong>. Date of birth is
+            verified at account creation. We do not knowingly allow children under 16; accounts discovered to be underage
+            are suspended immediately and their data deleted.
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-xl font-bold mb-3 text-white">Legal Compliance</h3>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>18 U.S.C. § 2258A — mandatory NCMEC reporting</li>
+            <li>PROTECT Our Children Act</li>
+            <li>COPPA</li>
+            <li>UK Online Safety Act (child safety provisions)</li>
+          </ul>
+          <p className="mt-4">
+            We cooperate fully with law enforcement and preserve evidence upon receipt of valid legal process.
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-xl font-bold mb-3 text-white">Designated Contact</h3>
+          <p>
+            Child safety inquiries and law enforcement liaison:{' '}
+            <span className="text-legal-hub-accent">natan@pxispace.com</span> /{' '}
+            <span className="text-legal-hub-accent">trust@pxispace.com</span>
+          </p>
+          <p className="mt-2">
+            Full standalone policy: <span className="text-legal-hub-accent">pxispace.com/child-safety</span>
+          </p>
+        </div>
+      </div>
+    )
+  },
+  {
     id: 'vendor',
     title: 'Vendor Agreement',
     tldr: "Clear cuts, automated payouts via Stripe, and transparent liability for your staff. You run the show, we provide the tools.",
