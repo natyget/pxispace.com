@@ -65,4 +65,6 @@ export const eventsService = {
     api.put(`/api/albums/${albumId}/members/role`, { userId, role }),
 
   removeMember: (albumId, userId) => api.delete(`/api/albums/${albumId}/members/${userId}`),
+
+  deleteEvent: (eventId) => api.delete(`/api/events/${eventId}`),
 };

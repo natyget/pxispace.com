@@ -1,10 +1,21 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { ChevronLeft } from 'lucide-react';
 import { useEventManage } from './EventManageContext';
+
+const TABS = [
+  { label: 'Details',  segment: null },
+  { label: 'Invite',   segment: 'invite' },
+  { label: 'Members',  segment: 'members' },
+  { label: 'Upload',   segment: 'upload' },
+  { label: 'Edit',     segment: 'edit' },
+];
 
 export default function EventManageLayoutInner({ children }) {
   const { loading, error, event, eventId } = useEventManage();
+  const pathname = usePathname();
 
   if (loading && !event) {
     return (
@@ -25,15 +36,67 @@ export default function EventManageLayoutInner({ children }) {
     );
   }
 
-  const title = event.name?.trim() || 'Untitled event';
+  const base = `/dashboard/events/${eventId}`;
+
+  const isActive = (segment) => {
+    if (segment === null) return pathname === base;
+    return pathname === `${base}/${segment}`;
+  };
+
+  const isPast = (() => {
+    const status = String(event?.status || '').toLowerCase();
+    if (status === 'ended' || status === 'past' || status === 'completed') return true;
+    const end = event?.endDate ? new Date(event.endDate).getTime() : null;
+    if (end) return end < Date.now();
+    const start = event?.startDate ? new Date(event.startDate).getTime() : null;
+    if (start) return start < Date.now();
+    return false;
+  })();
+
+  const tabs = TABS.filter(({ segment }) => {
+    if (!isPast) return true;
+    return segment !== 'invite' && segment !== 'edit';
+  });
 
   return (
     <>
-      <header className="mb-6 pb-4 border-b border-white/10">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Event</p>
-        <h1 className="text-xl md:text-2xl font-black text-white tracking-tight leading-tight truncate">
-          {title}
-        </h1>
+      <header className="mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Link
+            href="/dashboard/events"
+            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 shrink-0"
+            aria-label="Back to events"
+          >
+            <ChevronLeft size={22} />
+          </Link>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-0.5">Event</p>
+            <h1 className="text-xl md:text-2xl font-black text-white tracking-tight leading-tight truncate">
+              {event.name?.trim() || 'Untitled event'}
+            </h1>
+          </div>
+        </div>
+        <div className="flex justify-center py-6">
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none bg-white/5 rounded-full p-2 w-full">
+            {tabs.map(({ label, segment }) => {
+              const href = segment ? `${base}/${segment}` : base;
+              const active = isActive(segment);
+              return (
+                <Link
+                  key={label}
+                  href={href}
+                  className={`flex-1 text-center px-4 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-colors ${
+                    active
+                      ? 'bg-white text-black'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </header>
       {children}
     </>

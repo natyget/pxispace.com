@@ -3,7 +3,7 @@
  * to a full App Store URL when the app is live on the store.
  */
 export const PXI_IOS_DOWNLOAD_HREF =
-  process.env.NEXT_PUBLIC_IOS_APP_URL || '/beta';
+  process.env.NEXT_PUBLIC_IOS_APP_URL || 'https://apps.apple.com/app/pxi/id6751762197';
 
 /** @deprecated Use PXI_IOS_DOWNLOAD_HREF; kept for existing imports */
 export const PXI_APP_STORE_URL = PXI_IOS_DOWNLOAD_HREF;

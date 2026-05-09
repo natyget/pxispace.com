@@ -5,20 +5,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   ChevronLeft,
-  UserPlus,
   Users,
-  Settings,
   Share2,
-  ImagePlus,
   Clock,
   MapPin,
-  Smartphone,
-  ScanLine,
-  Pencil,
-  Trash2,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import { useEventManage } from './EventManageContext';
 import {
   coverImageUrl,
@@ -63,12 +55,6 @@ export default function EventDetailsPageView() {
 
   const myAlbumRole = participants.find((p) => p.userId === user?.id)?.role;
   const isEventCreator = Boolean(user?.id && event?.createdBy && event.createdBy === user.id);
-  const canGalleryMassUpload =
-    isEventCreator || myAlbumRole === 'OWNER' || myAlbumRole === 'ADMIN';
-  const canUseMemberActions =
-    isEventCreator || (myAlbumRole && String(myAlbumRole).toUpperCase() !== 'GUEST');
-  const canManageLikeMobile =
-    isEventCreator || myAlbumRole === 'OWNER' || myAlbumRole === 'ADMIN';
   const isAlbumOwner = myAlbumRole === 'OWNER';
 
   const cover = coverImageUrl(event);
@@ -87,9 +73,6 @@ export default function EventDetailsPageView() {
 
   const lineupHint =
     'People highlighted for this event. They confirm by accepting an invite — separate from album staff.';
-
-  const inviteHref = `/dashboard/events/${eventId}/invite`;
-  const uploadHref = `/dashboard/events/${eventId}/upload`;
 
   const handleShareEvent = async () => {
     const url = publicEventPageUrl(String(eventId));
@@ -147,6 +130,17 @@ export default function EventDetailsPageView() {
             </Link>
           </div>
 
+          <div className="absolute right-3 top-3 z-10">
+            <button
+              type="button"
+              onClick={handleShareEvent}
+              className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/45 text-white border border-white/15 hover:bg-black/65 transition-colors"
+              aria-label="Share event"
+            >
+              <Share2 size={18} />
+            </button>
+          </div>
+
           <div className="absolute inset-x-0 bottom-0 p-6 pt-24">
             <p className="text-[1.65rem] font-black text-white tracking-tight leading-none drop-shadow-md">
               {event.name?.trim() || 'Untitled event'}
@@ -155,35 +149,6 @@ export default function EventDetailsPageView() {
         </div>
 
         <div className="px-5 pt-6 pb-8 space-y-6 bg-[#050505]">
-          {user?.id && canUseMemberActions ? (
-            <div className="flex flex-wrap gap-2">
-              <Link
-                href={inviteHref}
-                className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 py-3 text-[11px] font-bold uppercase tracking-widest text-white hover:bg-white/10 transition-colors"
-              >
-                <UserPlus size={16} className="text-pxi-purple" />
-                Invite
-              </Link>
-              <button
-                type="button"
-                onClick={handleShareEvent}
-                className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 py-3 text-[11px] font-bold uppercase tracking-widest text-white hover:bg-white/10 transition-colors"
-              >
-                <Share2 size={16} className="text-pxi-purple" />
-                Share
-              </button>
-              {canGalleryMassUpload ? (
-                <Link
-                  href={uploadHref}
-                  className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 py-3 text-[11px] font-bold uppercase tracking-widest text-white hover:bg-white/10 transition-colors"
-                >
-                  <ImagePlus size={16} className="text-pxi-purple" />
-                  Upload
-                </Link>
-              ) : null}
-            </div>
-          ) : null}
-
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
               <span
@@ -204,14 +169,16 @@ export default function EventDetailsPageView() {
 
             <div className="flex items-center gap-3">
               {host?.avatarUrl ? (
-                <Image
-                  src={host.avatarUrl}
-                  alt=""
-                  width={40}
-                  height={40}
-                  unoptimized
-                  className="rounded-full object-cover border border-white/15"
-                />
+                <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-white/15">
+                  <Image
+                    src={host.avatarUrl}
+                    alt=""
+                    width={40}
+                    height={40}
+                    unoptimized
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               ) : (
                 <div className="w-10 h-10 rounded-full bg-zinc-700 border border-white/10 shrink-0" />
               )}
@@ -347,143 +314,9 @@ export default function EventDetailsPageView() {
             </section>
           ) : null}
 
-          {canManageLikeMobile ? (
-            <section className="rounded-xl border border-pxi-purple/25 bg-gradient-to-br from-[#13061f] to-black/80 p-4 space-y-3">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-pxi-purple">
-                Manage event
-              </p>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                This dashboard mirrors the organizer view from the{' '}
-                <strong className="text-zinc-200">Album details</strong> sheet in the mobile app. Scan tickets, edit full
-                event fields, or delete an event using the app.
-              </p>
-              <ul className="space-y-2 text-xs text-zinc-400">
-                <li className="flex items-start gap-2">
-                  <ScanLine size={16} className="text-pxi-purple shrink-0 mt-0.5" />
-                  <span>
-                    <strong className="text-zinc-200">Scan tickets</strong> — staff check-in (mobile).
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Pencil size={16} className="text-pxi-purple shrink-0 mt-0.5" />
-                  <span>
-                    <strong className="text-zinc-200">Edit details</strong> — name, cover, pricing, schedules (mobile).
-                  </span>
-                </li>
-                {isAlbumOwner ? (
-                  <li className="flex items-start gap-2">
-                    <Trash2 size={16} className="text-red-400 shrink-0 mt-0.5" />
-                    <span>
-                      <strong className="text-red-300">Delete event</strong> — album owner only (mobile).
-                    </span>
-                  </li>
-                ) : (
-                  <li className="text-[11px] text-zinc-500 pl-8">
-                    Delete event is limited to album owner in the app.
-                  </li>
-                )}
-              </ul>
-              <div className="flex flex-wrap items-center gap-2 pt-2">
-                <Link
-                  href={PXI_APP_STORE_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pxi-purple text-white text-[11px] font-bold uppercase tracking-widest hover:brightness-110"
-                >
-                  <Smartphone size={16} />
-                  Open mobile app
-                </Link>
-                <Link
-                  href={publicEventPageUrl(String(eventId))}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white"
-                >
-                  Public guest page (different layout) ↗
-                </Link>
-              </div>
-            </section>
-          ) : null}
         </div>
       </div>
 
-      {albumId ? (
-        <section
-          id="event-members"
-          className="scroll-mt-6 rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden"
-        >
-          <div className="p-5 border-b border-white/5 flex items-center gap-2">
-            <Users size={18} className="text-pxi-purple" />
-            <h2 className="font-bold text-white uppercase tracking-widest text-sm">Members</h2>
-          </div>
-          <div className="p-5 max-h-72 overflow-auto">
-            {participants.length === 0 ? (
-              <p className="text-sm text-zinc-500">No album members yet.</p>
-            ) : (
-              <ul className="space-y-2">
-                {participants.map((p) => {
-                  const handle = String(p.username || '')
-                    .replace(/^@/, '')
-                    .trim();
-                  return (
-                    <li
-                      key={p.userId}
-                      className="flex items-center justify-between gap-2 rounded-lg border border-white/5 bg-zinc-900/30 px-3 py-2 text-sm"
-                    >
-                      <span className="text-white truncate">
-                        {handle ? `@${handle}` : p.userId}
-                        {p.name && <span className="text-zinc-500 font-normal"> · {p.name}</span>}
-                      </span>
-                      <span className="text-xs font-bold text-zinc-400 shrink-0">{p.role || '—'}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </section>
-      ) : null}
-
-      <section id="event-settings" className="scroll-mt-6 rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
-        <div className="p-5 border-b border-white/5 flex items-center gap-2">
-          <Settings size={18} className="text-pxi-purple" />
-          <h2 className="font-bold text-white uppercase tracking-widest text-sm">Settings</h2>
-        </div>
-        <div className="p-5 space-y-3 text-sm text-zinc-300">
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
-            <p className="text-xs text-zinc-500 max-w-xl">
-              Update name, dates, cover, ticketing, and more—same scope as mobile <strong className="text-zinc-300">Edit details</strong>.
-            </p>
-            <Link
-              href={`/dashboard/events/${eventId}/edit`}
-              className="shrink-0 px-4 py-2 rounded-xl bg-pxi-purple text-white text-xs font-bold uppercase tracking-widest hover:brightness-110"
-            >
-              Edit event
-            </Link>
-          </div>
-          <p>
-            <span className="text-zinc-500">Visibility</span>
-            <span className="mx-2">·</span>
-            {event.visibility === 'PUBLIC' ? 'Public' : 'Private'}
-          </p>
-          <p>
-            <span className="text-zinc-500">Starts</span>
-            <span className="mx-2">·</span>
-            {formatDate(event.startDate)}
-            {event.endDate ? (
-              <>
-                {' '}
-                <span className="text-zinc-500">→ Ends</span> {formatDate(event.endDate)}
-              </>
-            ) : null}
-          </p>
-          <p>
-            <span className="text-zinc-500">Location</span>
-            <span className="mx-2">·</span>
-            {event.location || event.venue || '—'}
-          </p>
-        </div>
-      </section>
     </div>
   );
 }

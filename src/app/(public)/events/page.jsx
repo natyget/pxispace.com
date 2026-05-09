@@ -1,6 +1,5 @@
-import EventsDemo from '@/views/eventsDemo/EventsDemo';
+import PublicEventsPage from '@/views/publicEvents/PublicEventsPage';
 
 export default function Page() {
-  return <EventsDemo />;
+  return <PublicEventsPage />;
 }
-

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ClipboardList, Loader2, Search, Send, UserPlus } from 'lucide-react';
+import { ClipboardList, Loader2, Search, Send, UserPlus } from 'lucide-react';
 import { eventsService, searchUsers } from '@/services/events';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventManage } from './EventManageContext';
@@ -333,57 +333,39 @@ export default function EventInvitePageView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link
-          href={`/dashboard/events/${eventId}`}
-          className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 shrink-0"
-          aria-label="Back to event details"
+      <div
+        role="tablist"
+        aria-label="Invite sections"
+        className="flex flex-wrap gap-2"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={invitePageTab === 'send'}
+          onClick={() => setInvitePageTab('send')}
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border transition-colors ${
+            invitePageTab === 'send'
+              ? 'border-pxi-purple bg-pxi-purple/15 text-white'
+              : 'border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
+          }`}
         >
-          <ChevronLeft size={22} />
-        </Link>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <UserPlus size={20} className="text-pxi-purple shrink-0" />
-            <h1 className="text-lg font-black text-white tracking-tight truncate">Invite</h1>
-          </div>
-          <p className="text-xs text-zinc-500 mt-1">
-            Matches mobile invite: friends load by default — type 2+ characters to search everyone.
-          </p>
-          <div
-            role="tablist"
-            aria-label="Invite sections"
-            className="flex flex-wrap gap-2 mt-4"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={invitePageTab === 'send'}
-              onClick={() => setInvitePageTab('send')}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border transition-colors ${
-                invitePageTab === 'send'
-                  ? 'border-pxi-purple bg-pxi-purple/15 text-white'
-                  : 'border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
-              }`}
-            >
-              <Send size={14} aria-hidden />
-              Send invites
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={invitePageTab === 'status'}
-              onClick={() => setInvitePageTab('status')}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border transition-colors ${
-                invitePageTab === 'status'
-                  ? 'border-pxi-purple bg-pxi-purple/15 text-white'
-                  : 'border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
-              }`}
-            >
-              <ClipboardList size={14} aria-hidden />
-              Invite status
-            </button>
-          </div>
-        </div>
+          <Send size={14} aria-hidden />
+          Send invites
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={invitePageTab === 'status'}
+          onClick={() => setInvitePageTab('status')}
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border transition-colors ${
+            invitePageTab === 'status'
+              ? 'border-pxi-purple bg-pxi-purple/15 text-white'
+              : 'border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
+          }`}
+        >
+          <ClipboardList size={14} aria-hidden />
+          Invite status
+        </button>
       </div>
 
       {invitePageTab === 'status' && (

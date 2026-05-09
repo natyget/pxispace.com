@@ -16,11 +16,13 @@ import {
   ImagePlus,
   UserCircle,
   UserPlus,
-  Settings,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { eventsService } from '../../services/events';
 
-function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle, onMenuClose }) {
+function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle, onMenuClose, onDelete }) {
   const cover = (() => {
     const value = event.coverImage;
     if (!value || typeof value !== 'string') return null;
@@ -62,15 +64,12 @@ function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle,
 
   const menuItems = [
     { label: 'Details', href: `/dashboard/events/${eventId}`, icon: Info },
+    !isPast && { label: 'Invite', href: `/dashboard/events/${eventId}/invite#event-invite`, icon: UserPlus },
+    { label: 'Members', href: `/dashboard/events/${eventId}/members`, icon: UserCircle },
     { label: 'Upload', href: `/dashboard/events/${eventId}/upload`, icon: ImagePlus },
-    {
-      label: 'Members',
-      href: `/dashboard/events/${eventId}/members`,
-      icon: UserCircle,
-    },
-    { label: 'Invite', href: `/dashboard/events/${eventId}/invite#event-invite`, icon: UserPlus },
-    { label: 'Setting', href: `/dashboard/events/${eventId}/edit`, icon: Settings },
-  ];
+    !isPast && { label: 'Edit', href: `/dashboard/events/${eventId}/edit`, icon: Pencil },
+    { label: 'Delete', onClick: () => onDelete?.(eventId, event.name), icon: Trash2, danger: true },
+  ].filter(Boolean);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}>
@@ -135,18 +134,31 @@ function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle,
                 role="menu"
                 className="absolute right-0 top-full mt-1.5 min-w-[200px] rounded-xl border border-white/10 bg-zinc-900/95 backdrop-blur-md shadow-xl py-1 z-20"
               >
-                {menuItems.map(({ label, href, icon: Icon }) => (
-                  <Link
-                    key={label}
-                    href={href}
-                    role="menuitem"
-                    onClick={() => onMenuClose()}
-                    className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-zinc-200 hover:bg-white/10 transition-colors"
-                  >
-                    <Icon size={16} className="text-pxi-purple shrink-0" />
-                    {label}
-                  </Link>
-                ))}
+                {menuItems.map(({ label, href, onClick, icon: Icon, danger }) =>
+                  href ? (
+                    <Link
+                      key={label}
+                      href={href}
+                      role="menuitem"
+                      onClick={() => onMenuClose()}
+                      className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-zinc-200 hover:bg-white/10 transition-colors"
+                    >
+                      <Icon size={16} className="text-pxi-purple shrink-0" />
+                      {label}
+                    </Link>
+                  ) : (
+                    <button
+                      key={label}
+                      type="button"
+                      role="menuitem"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMenuClose(); onClick?.(); }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors ${danger ? 'text-red-400 hover:bg-red-500/10' : 'text-zinc-200 hover:bg-white/10'}`}
+                    >
+                      <Icon size={16} className={`shrink-0 ${danger ? 'text-red-400' : 'text-pxi-purple'}`} />
+                      {label}
+                    </button>
+                  )
+                )}
               </div>
             )}
           </div>
@@ -182,6 +194,8 @@ export default function EventsListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [openMenuEventId, setOpenMenuEventId] = useState(null);
+  const [deletingEventId, setDeletingEventId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
     eventsService
@@ -201,6 +215,26 @@ export default function EventsListPage() {
     document.addEventListener('mousedown', onDocDown);
     return () => document.removeEventListener('mousedown', onDocDown);
   }, [openMenuEventId]);
+
+  const handleDeleteEvent = (eventId, eventName) => {
+    setDeleteTarget({ id: eventId, name: eventName });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { id, name } = deleteTarget;
+    setDeletingEventId(id);
+    setDeleteTarget(null);
+    try {
+      await eventsService.deleteEvent(id);
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+      toast.success(`"${name || 'Event'}" deleted.`);
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete event.');
+    } finally {
+      setDeletingEventId(null);
+    }
+  };
 
   const classifyEvent = (event) => {
     const now = Date.now();
@@ -248,6 +282,42 @@ export default function EventsListPage() {
   }
 
   return (
+    <>
+    {deleteTarget && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl overflow-hidden">
+          <div className="px-6 pt-6 pb-4 flex flex-col items-center text-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+              <Trash2 size={24} className="text-red-400" />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-bold text-white">Delete event?</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                <span className="text-white font-semibold">"{deleteTarget.name || 'This event'}"</span> will be permanently deleted. This action cannot be undone.
+              </p>
+            </div>
+          </div>
+          <div className="px-6 pb-6 flex gap-3 mt-2">
+            <button
+              type="button"
+              onClick={() => setDeleteTarget(null)}
+              className="flex-1 min-h-[44px] rounded-xl border border-white/10 text-sm font-semibold text-zinc-200 hover:bg-white/5 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={confirmDelete}
+              disabled={!!deletingEventId}
+              className="flex-1 min-h-[44px] rounded-xl bg-red-500/90 hover:bg-red-500 text-white text-sm font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {deletingEventId ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <div className="max-w-6xl mx-auto space-y-12">
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -296,6 +366,7 @@ export default function EventsListPage() {
                     menuOpen={openMenuEventId === event.id}
                     onMenuToggle={(id) => setOpenMenuEventId((cur) => (cur === id ? null : id))}
                     onMenuClose={() => setOpenMenuEventId(null)}
+                    onDelete={handleDeleteEvent}
                   />
                 ))}
               </div>
@@ -315,6 +386,7 @@ export default function EventsListPage() {
                     menuOpen={openMenuEventId === event.id}
                     onMenuToggle={(id) => setOpenMenuEventId((cur) => (cur === id ? null : id))}
                     onMenuClose={() => setOpenMenuEventId(null)}
+                    onDelete={handleDeleteEvent}
                   />
                 ))}
               </div>
@@ -334,6 +406,7 @@ export default function EventsListPage() {
                     menuOpen={openMenuEventId === event.id}
                     onMenuToggle={(id) => setOpenMenuEventId((cur) => (cur === id ? null : id))}
                     onMenuClose={() => setOpenMenuEventId(null)}
+                    onDelete={handleDeleteEvent}
                   />
                 ))}
               </div>
@@ -342,5 +415,6 @@ export default function EventsListPage() {
         </>
       )}
     </div>
+    </>
   );
 }
