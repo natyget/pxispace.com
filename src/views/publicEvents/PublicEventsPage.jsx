@@ -77,7 +77,7 @@ const CITY_PRESETS = [
   'Atlanta',
 ];
 
-export default function EventsDemo() {
+export default function PublicEventsPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [heroIndex, setHeroIndex] = useState(0);

@@ -12,12 +12,42 @@ import {
   Search,
   DollarSign,
   Images,
+  Users,
 } from 'lucide-react';
+import Cropper from 'react-easy-crop';
+import { GeoapifyContext, GeoapifyGeocoderAutocomplete } from '@geoapify/react-geocoder-autocomplete';
+import { toast } from 'sonner';
 import { eventsService, searchUsers } from '../../services/events';
 import { uploadImageToR2 } from '../../services/media';
 import { authService, authStorage } from '../../services/auth';
 import { useAuth } from '@/contexts/AuthContext';
 
+async function getCroppedBlob(imageSrc, croppedAreaPixels) {
+  const image = await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.addEventListener('load', () => resolve(img));
+    img.addEventListener('error', reject);
+    img.src = imageSrc;
+  });
+  const canvas = document.createElement('canvas');
+  canvas.width = 1200;
+  canvas.height = 1600;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(
+    image,
+    croppedAreaPixels.x,
+    croppedAreaPixels.y,
+    croppedAreaPixels.width,
+    croppedAreaPixels.height,
+    0,
+    0,
+    1200,
+    1600,
+  );
+  return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+}
+
+const GEOAPIFY_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || '';
 const LINEUP_ROLE_MAX = 80;
 
 function toDatetimeLocalValue(d) {
@@ -46,12 +76,19 @@ export default function CreateEventPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [geoLat, setGeoLat] = useState(null);
+  const [geoLon, setGeoLon] = useState(null);
   const [startLocal, setStartLocal] = useState(defaults.current.start);
   const [endLocal, setEndLocal] = useState(defaults.current.end);
 
   const [coverImage, setCoverImage] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
   const [isCoverUploading, setIsCoverUploading] = useState(false);
+
+  const [cropSrc, setCropSrc] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
   const [isPrivate, setIsPrivate] = useState(true);
   const [showPublicConsent, setShowPublicConsent] = useState(false);
@@ -63,6 +100,7 @@ export default function CreateEventPage() {
   const [graceTimeHours, setGraceTimeHours] = useState('0');
   const [graceTimeMinutes, setGraceTimeMinutes] = useState('15');
   const [maxImages, setMaxImages] = useState('100');
+  const [capacity, setCapacity] = useState('');
 
   const [inviteRoleKind, setInviteRoleKind] = useState('lineup');
   const [lineupSubDraft, setLineupSubDraft] = useState('');
@@ -148,19 +186,33 @@ export default function CreateEventPage() {
     return 'Member';
   };
 
-  const onCoverFile = async (e) => {
+  const onCoverFile = (e) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
+    e.target.value = '';
     setFormError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropConfirm = async () => {
+    if (!cropSrc || !croppedAreaPixels) return;
+    setCropSrc(null);
     if (coverPreview && coverPreview.startsWith('blob:')) URL.revokeObjectURL(coverPreview);
-    const blobUrl = URL.createObjectURL(file);
-    setCoverPreview(blobUrl);
-    setCoverImage(null);
     setIsCoverUploading(true);
+    setCoverImage(null);
     try {
-      const publicUrl = await uploadImageToR2(file, {
-        filename: file.name,
-        contentType: file.type,
+      const blob = await getCroppedBlob(cropSrc, croppedAreaPixels);
+      const previewUrl = URL.createObjectURL(blob);
+      setCoverPreview(previewUrl);
+      const publicUrl = await uploadImageToR2(blob, {
+        filename: `event_cover_${Date.now()}.jpg`,
+        contentType: 'image/jpeg',
       });
       setCoverImage(publicUrl);
     } catch (err) {
@@ -260,7 +312,9 @@ export default function CreateEventPage() {
 
     setIsSubmitting(true);
     try {
-      const geo = await tryGetGeo();
+      const geo = geoLat != null && geoLon != null
+        ? { latitude: geoLat, longitude: geoLon }
+        : await tryGetGeo();
       const graceTime =
         (parseInt(graceTimeHours, 10) || 0) * 60 + (parseInt(graceTimeMinutes, 10) || 0);
       const ticketPrice = isPaid ? parseInt(price, 10) : 0;
@@ -284,6 +338,7 @@ export default function CreateEventPage() {
         currency: 'USD',
         graceTime,
         maxImages: parseInt(maxImages, 10) || 100,
+        capacity: capacity.trim() !== '' && parseInt(capacity, 10) > 0 ? parseInt(capacity, 10) : undefined,
         createdBy: user.id,
         featuredPeople: lineupOnly,
       });
@@ -316,19 +371,65 @@ export default function CreateEventPage() {
         }
       }
 
+      toast.success('Event created!');
       router.push(`/dashboard/events/${eventId}`);
     } catch (err) {
-      setFormError(err.message || 'Failed to create event.');
-    } finally {
+      const msg = err.message || 'Failed to create event.';
+      setFormError(msg);
+      toast.error(msg);
       setIsSubmitting(false);
     }
   };
 
   const inputClass =
     'w-full rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 px-3 py-2.5 text-sm focus:border-pxi-purple/50 focus:outline-none';
-  const labelClass = 'block text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5';
+  const labelClass = 'block text-[11px] font-bold text-pxi-purple uppercase tracking-widest mb-1.5';
 
   return (
+    <>
+    {cropSrc && (
+      <div className="fixed inset-0 z-50 flex flex-col bg-black">
+        <div className="relative flex-1">
+          <Cropper
+            image={cropSrc}
+            crop={crop}
+            zoom={zoom}
+            aspect={3 / 4}
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
+          />
+        </div>
+        <div className="flex items-center justify-between px-5 py-4 bg-zinc-900 border-t border-white/10">
+          <button
+            type="button"
+            onClick={() => setCropSrc(null)}
+            className="px-5 py-2.5 rounded-xl text-sm text-zinc-400 hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+          <div className="flex items-center gap-3 flex-1 mx-6">
+            <span className="text-xs text-zinc-500">Zoom</span>
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.01}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="flex-1 accent-pxi-purple"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleCropConfirm}
+            className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-pxi-purple hover:bg-pxi-purple/80 transition-colors"
+          >
+            Use photo
+          </button>
+        </div>
+      </div>
+    )}
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
       <div className="flex items-center gap-3">
         <Link
@@ -351,38 +452,46 @@ export default function CreateEventPage() {
         )}
 
         <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
-          <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-            <ImageIcon size={16} className="text-pxi-purple" />
+          <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest flex items-center gap-2">
+            <ImageIcon size={16} />
             Cover image *
           </h2>
-          <p className="text-xs text-zinc-500">
-            Uploaded to cloud storage (presigned URL). Required before submit, matching the mobile app.
-          </p>
-          <div className="flex flex-wrap items-start gap-4">
-            <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-800 border border-white/10 text-sm text-white hover:border-pxi-purple/40 transition-colors">
-              <input type="file" accept="image/*" className="hidden" onChange={onCoverFile} />
-              Choose image
-            </label>
-            {isCoverUploading && (
-              <span className="inline-flex items-center gap-2 text-sm text-zinc-400">
-                <Loader2 size={16} className="animate-spin" />
-                Uploading…
-              </span>
-            )}
-          </div>
-          {(coverPreview || coverImage) && (
-            <div className="w-full rounded-xl overflow-hidden border border-white/10 bg-zinc-800">
-              <img
-                src={coverImage || coverPreview}
-                alt=""
-                className="w-full max-h-[520px] object-contain bg-black"
-              />
+          <label className="relative block w-full sm:w-[300px] sm:mx-auto cursor-pointer" style={{ aspectRatio: '3/4' }}>
+            <input type="file" accept="image/*" className="hidden" onChange={onCoverFile} disabled={isCoverUploading} />
+            <div className={`w-full h-full rounded-2xl overflow-hidden border ${coverImage || coverPreview ? 'border-white/10' : 'border-dashed border-white/20'} bg-white/5 flex items-center justify-center`}>
+              {(coverImage || coverPreview) ? (
+                <img
+                  src={coverImage || coverPreview}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : !isCoverUploading ? (
+                <div className="flex flex-col items-center gap-3">
+                  <ImageIcon size={36} className="text-white/30" />
+                  <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.15em]">Add cover image</span>
+                </div>
+              ) : null}
+              {isCoverUploading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 rounded-2xl">
+                  <Loader2 size={32} className="animate-spin text-white" />
+                  <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover…</span>
+                </div>
+              )}
             </div>
-          )}
+            {(coverImage || coverPreview) && !isCoverUploading && (
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); setCoverImage(null); setCoverPreview(null); }}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </label>
         </section>
 
         <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
-          <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Basics</h2>
+          <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest">Basics</h2>
           <div>
             <label className={labelClass}>Event name *</label>
             <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />
@@ -395,9 +504,27 @@ export default function CreateEventPage() {
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-          <div>
+          <div className="space-y-2">
             <label className={labelClass}>Venue / location</label>
-            <input className={inputClass} value={location} onChange={(e) => setLocation(e.target.value)} />
+            <div
+              className={`${inputClass} p-0 overflow-visible`}
+              onChange={(e) => {
+                if (e.target.tagName === 'INPUT') setLocation(e.target.value);
+              }}
+            >
+              <GeoapifyContext apiKey={GEOAPIFY_KEY}>
+                <GeoapifyGeocoderAutocomplete
+                  value={location}
+                  placeholder="Search venue or address…"
+                  placeSelect={(result) => {
+                    const props = result?.properties;
+                    setLocation(props?.formatted || '');
+                    setGeoLat(typeof props?.lat === 'number' ? props.lat : null);
+                    setGeoLon(typeof props?.lon === 'number' ? props.lon : null);
+                  }}
+                />
+              </GeoapifyContext>
+            </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
@@ -423,90 +550,8 @@ export default function CreateEventPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
-          <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-            <Search size={16} className="text-pxi-purple" />
-            Invites (optional)
-          </h2>
-          <p className="text-xs text-zinc-500">
-            Choose a role, then search by username. Line-up adds a label (max {LINEUP_ROLE_MAX} chars). Co-host, bouncer, and
-            member invites are sent after the event is created. Paid events: only member invites require payment when the guest
-            accepts; co-host, bouncer, and line-up do not.
-          </p>
-          <div>
-            <label className={labelClass}>Role for next add</label>
-            <select
-              className={inputClass}
-              value={inviteRoleKind}
-              onChange={(e) => setInviteRoleKind(e.target.value)}
-            >
-              <option value="member">Member (audience)</option>
-              <option value="cohost">Co-host</option>
-              <option value="bouncer">Bouncer</option>
-              <option value="lineup">Line-up</option>
-            </select>
-          </div>
-          {inviteRoleKind === 'lineup' && (
-            <div>
-              <label className={labelClass}>Line-up label</label>
-              <input
-                className={inputClass}
-                value={lineupSubDraft}
-                onChange={(e) => setLineupSubDraft(e.target.value.slice(0, LINEUP_ROLE_MAX))}
-                placeholder="DJ, Host, Artist…"
-                maxLength={LINEUP_ROLE_MAX}
-              />
-            </div>
-          )}
-          <div>
-            <label className={labelClass}>Search username</label>
-            <input
-              className={inputClass}
-              value={featuredQuery}
-              onChange={(e) => setFeaturedQuery(e.target.value)}
-              placeholder="Type at least 2 characters…"
-              autoComplete="off"
-            />
-            {featuredLoading && <p className="text-xs text-zinc-500 mt-2">Searching…</p>}
-            {featuredResults.length > 0 && (
-              <ul className="mt-2 rounded-xl border border-white/10 divide-y divide-white/5 max-h-40 overflow-auto">
-                {featuredResults.map((u) => (
-                  <li key={u.id}>
-                    <button
-                      type="button"
-                      className="w-full px-3 py-2 text-left text-sm text-white hover:bg-white/5 flex justify-between items-center gap-2"
-                      onClick={() => addPendingInvite(u)}
-                    >
-                      <span>
-                        @{u.username}
-                        {u.name ? <span className="text-zinc-500"> • {u.name}</span> : null}
-                      </span>
-                      <Plus size={16} className="text-pxi-purple shrink-0" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          {pendingInvites.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {pendingInvites.map((p) => (
-                <span
-                  key={p.id}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-fuchsia-500/40 bg-fuchsia-500/10 text-xs text-fuchsia-200"
-                >
-                  @{p.username} • {formatPendingLabel(p)}
-                  <button type="button" onClick={() => removePendingInvite(p.id)} className="text-zinc-400 hover:text-white">
-                    <X size={14} />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-        </section>
-
         <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-5">
-          <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Configuration</h2>
+          <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest">Configuration</h2>
 
           <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
             <div>
@@ -589,6 +634,18 @@ export default function CreateEventPage() {
                 />
               </div>
             </div>
+            <div>
+              <label className={labelClass}>Capacity (MB)</label>
+              <div className="flex items-center gap-2">
+                <Users size={18} className="text-zinc-500 shrink-0" />
+                <input
+                  className={inputClass}
+                  value={capacity}
+                  onChange={(e) => setCapacity(e.target.value.replace(/[^\d]/g, ''))}
+                  placeholder="Unlimited"
+                />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -656,5 +713,6 @@ export default function CreateEventPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

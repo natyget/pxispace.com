@@ -1,4 +1,67 @@
 @import "tailwindcss";
+@import "@geoapify/geocoder-autocomplete/styles/minimal-dark.css";
+
+/* Geoapify autocomplete — PXI dark theme overrides */
+.geoapify-geocoder-autocomplete-container {
+  width: 100%;
+}
+.geoapify-autocomplete-input {
+  background: transparent !important;
+  border: none !important;
+  color: #fff !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  height: auto !important;
+  width: 100% !important;
+  padding: 0.625rem 2rem 0.625rem 0.75rem !important;
+  outline: none !important;
+}
+.geoapify-autocomplete-input::placeholder {
+  color: rgba(255, 255, 255, 0.35) !important;
+}
+.geoapify-close-button {
+  color: rgba(255, 255, 255, 0.4) !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+.geoapify-autocomplete-items {
+  background: #1c1c1e !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 0.875rem !important;
+  z-index: 100 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+  overflow: hidden !important;
+  margin-top: 4px !important;
+  /* stretch to cover the 1px border of the parent input wrapper */
+  left: -1px !important;
+  right: -1px !important;
+  width: auto !important;
+}
+/* Use a more specific selector to guarantee padding wins over base styles */
+.geoapify-autocomplete-items div.geoapify-autocomplete-item {
+  padding: 0.75rem 1rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  cursor: pointer !important;
+}
+.geoapify-autocomplete-items div.geoapify-autocomplete-item:last-child {
+  border-bottom: none !important;
+}
+.geoapify-autocomplete-items div:hover,
+.geoapify-autocomplete-items .active {
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+.geoapify-autocomplete-items .geoapify-autocomplete-item .main-part {
+  color: #e4e4e7 !important;
+  font-size: 0.8125rem !important;
+}
+.geoapify-autocomplete-items .geoapify-autocomplete-item .secondary-part {
+  color: #71717a !important;
+  font-size: 0.75rem !important;
+  margin-left: 0.5rem !important;
+}
+.geoapify-input-wrapper {
+  width: 100%;
+}
 
 /* Tailwind v4 @theme: custom colors for utilities (bg-pxi-purple, text-pxi-dark, etc.) */
 @theme {

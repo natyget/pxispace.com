@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronLeft, Shield, ShieldCheck, UserMinus, Users } from 'lucide-react';
+import { Shield, ShieldCheck, UserMinus, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { eventsService } from '@/services/events';
 import { useEventManage } from './EventManageContext';
@@ -79,25 +80,6 @@ export default function EventMembersPageView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link
-          href={`/dashboard/events/${eventId}`}
-          className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 shrink-0"
-          aria-label="Back to event details"
-        >
-          <ChevronLeft size={22} />
-        </Link>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <Users size={20} className="text-pxi-purple shrink-0" />
-            <h1 className="text-lg font-black text-white tracking-tight truncate">Members</h1>
-          </div>
-          <p className="text-xs text-zinc-500 mt-1">
-            View all members, update roles, and block/remove members.
-          </p>
-        </div>
-      </div>
-
       <section className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
         <div className="p-5 border-b border-white/5 flex items-center justify-between gap-3">
           <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
@@ -120,14 +102,25 @@ export default function EventMembersPageView() {
                   key={member.userId}
                   className="rounded-xl border border-white/10 bg-zinc-900/40 p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="min-w-0">
-                    <p className="text-sm text-white truncate">
-                      {handle ? `@${handle}` : member.userId}
-                      {member.name ? <span className="text-zinc-500 font-normal"> · {member.name}</span> : null}
-                    </p>
-                    <p className="text-[11px] uppercase tracking-wider text-zinc-500 mt-0.5">
-                      Current role: {member.role || '—'}
-                    </p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    {member.avatarUrl ? (
+                      <div className="w-10 h-10 rounded-full overflow-hidden border border-white/15 shrink-0">
+                        <Image src={member.avatarUrl} alt={handle || ''} width={40} height={40} unoptimized className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-zinc-700 border border-white/10 shrink-0 flex items-center justify-center text-xs font-bold text-zinc-300">
+                        {(handle || member.userId || '?')[0].toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm text-white truncate">
+                        {handle ? `@${handle}` : member.userId}
+                        {member.name ? <span className="text-zinc-500 font-normal"> · {member.name}</span> : null}
+                      </p>
+                      <p className="text-[11px] uppercase tracking-wider text-zinc-500 mt-0.5">
+                        {member.role || '—'}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <div className="inline-flex items-center gap-1.5">

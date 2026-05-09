@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronLeft, ImagePlus } from 'lucide-react';
+import { ImagePlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import GalleryMassUploadSection from '../GalleryMassUploadSection';
 import { useEventManage } from './EventManageContext';
@@ -17,25 +17,6 @@ export default function EventMassUploadPageView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link
-          href={`/dashboard/events/${eventId}`}
-          className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 shrink-0"
-          aria-label="Back to event details"
-        >
-          <ChevronLeft size={22} />
-        </Link>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <ImagePlus size={20} className="text-pxi-purple shrink-0" />
-            <h1 className="text-lg font-black text-white tracking-tight truncate">Upload</h1>
-          </div>
-          <p className="text-xs text-zinc-500 mt-1">
-            Bulk-add photos or videos to the album gallery ({event?.name?.trim() || 'this event'}).
-          </p>
-        </div>
-      </div>
-
       {albumId && eventId && canGalleryMassUpload ? (
         <div id="gallery-mass-upload" className="scroll-mt-6">
           <GalleryMassUploadSection albumId={albumId} eventId={String(eventId)} disabled={!user?.id} />
