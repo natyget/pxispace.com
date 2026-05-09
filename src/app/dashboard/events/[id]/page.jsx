@@ -1,5 +1,5 @@
-import EventDetailPage from '@/views/dashboard/EventDetailPage';
+import EventDetailsPageView from '@/views/dashboard/event-manage/EventDetailsPageView';
 
-export default function Page() {
-  return <EventDetailPage />;
+export default function DashboardEventDetailsPage() {
+  return <EventDetailsPageView />;
 }

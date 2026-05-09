@@ -20,8 +20,11 @@ export const eventsService = {
   /** Create event (same body as mobile CreateEventSheet → POST /api/events). */
   createEvent: (payload) => api.post('/api/events', payload),
 
+  /** Update event (staff on primary album — same shapes as mobile `updateEvent`). */
+  updateEvent: (eventId, payload) => api.put(`/api/events/${eventId}`, payload),
+
   /**
-   * Public discover for web — backend filters PUBLIC + not ended, ranks by vendor when sort=vendor
+   * Public discover for web — same event set as mobile Discovery (GET /api/events?discover=1)
    * @param {string} sort 'vendor' | 'date' | 'tickets'
    */
   getDiscoverEvents: (limit = 48, offset = 0, sort = 'vendor') =>
@@ -47,6 +50,9 @@ export const eventsService = {
       ...(lineupSubrole != null && lineupSubrole !== '' ? { lineupSubrole } : {}),
     }),
 
+  /** Direct-user invites for an album (pending / accepted / declined). Staff or event creator. */
+  getAlbumDirectInvites: (albumId) => api.get(`/api/albums/${albumId}/direct-invites`),
+
   getFeaturedPeople: (albumId) => api.get(`/api/albums/${albumId}/featured-people`),
 
   upsertFeaturedPerson: (albumId, username, role) =>
@@ -55,5 +61,10 @@ export const eventsService = {
   inviteStaff: (eventId, username, role = 'bouncer') =>
     api.post(`/api/events/${eventId}/staff`, { username, role }),
 
+  updateMemberRole: (albumId, userId, role) =>
+    api.put(`/api/albums/${albumId}/members/role`, { userId, role }),
+
   removeMember: (albumId, userId) => api.delete(`/api/albums/${albumId}/members/${userId}`),
+
+  deleteEvent: (eventId) => api.delete(`/api/events/${eventId}`),
 };

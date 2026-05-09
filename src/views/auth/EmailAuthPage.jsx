@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft, Eye, EyeOff, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { defaultPostLoginPath } from '../../lib/dashboardPaths';
@@ -102,6 +103,7 @@ export default function EmailAuthPage() {
         try {
             if (mode === 'login') {
                 const result = await authService.login(email, password);
+                toast.success('Welcome back!');
                 handleAuthSuccess(result);
             } else {
                 if (typeof window !== 'undefined') {
@@ -110,19 +112,23 @@ export default function EmailAuthPage() {
                         sessionStorage.setItem('pxi_after_register_login_redirect', safeRedirect);
                     }
                 }
+                toast.success('Almost there! Verify your phone to finish signing up.');
                 router.replace('/verify-phone');
             }
         } catch (err) {
+            let msg;
             if (err.code === 'NO_PASSWORD') {
-                setError('This account uses social login. Go back and use Google or Apple.');
+                msg = 'This account uses social login. Go back and use Google or Apple.';
             } else if (err.code === 'EMAIL_EXISTS') {
-                setError('An account with this email already exists.');
+                msg = 'An account with this email already exists.';
             } else if (err.code === 'USERNAME_EXISTS') {
-                setError('That username is already taken.');
+                msg = 'That username is already taken.';
                 setUsernameStatus('taken');
             } else {
-                setError(err.data?.error || err.message || 'Something went wrong. Please try again.');
+                msg = err.data?.error || err.message || 'Something went wrong. Please try again.';
             }
+            setError(msg);
+            toast.error(msg);
         } finally {
             setLoading(false);
         }

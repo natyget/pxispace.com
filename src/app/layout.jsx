@@ -1,5 +1,6 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Script from 'next/script';
+import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import GlobalCursorLayer from '@/components/layout/GlobalCursorLayer';
 import './globals.css';
@@ -43,6 +44,20 @@ export default function RootLayout({ children }) {
             <GlobalCursorLayer>{children}</GlobalCursorLayer>
           </AuthProvider>
         </GoogleOAuthProvider>
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            style: {
+              background: '#18181b',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: '#f4f4f5',
+              borderRadius: '0.875rem',
+              fontSize: '0.875rem',
+              fontFamily: 'var(--font-body)',
+            },
+          }}
+          richColors
+        />
       </body>
     </html>
   );

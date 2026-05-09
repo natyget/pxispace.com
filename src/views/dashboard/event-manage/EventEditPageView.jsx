@@ -1,26 +1,25 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  ChevronLeft,
-  Loader2,
-  Image as ImageIcon,
-  Plus,
-  X,
-  Search,
   DollarSign,
+  Image as ImageIcon,
+  Loader2,
   Images,
   Users,
+  X,
+  Trash2,
 } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 import { GeoapifyContext, GeoapifyGeocoderAutocomplete } from '@geoapify/react-geocoder-autocomplete';
 import { toast } from 'sonner';
-import { eventsService, searchUsers } from '../../services/events';
-import { uploadImageToR2 } from '../../services/media';
-import { authService, authStorage } from '../../services/auth';
+import { eventsService } from '@/services/events';
+import { uploadImageToR2 } from '@/services/media';
+import { authService, authStorage } from '@/services/auth';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEventManage } from './EventManageContext';
 
 async function getCroppedBlob(imageSrc, croppedAreaPixels) {
   const image = await new Promise((resolve, reject) => {
@@ -35,156 +34,108 @@ async function getCroppedBlob(imageSrc, croppedAreaPixels) {
   const ctx = canvas.getContext('2d');
   ctx.drawImage(
     image,
-    croppedAreaPixels.x,
-    croppedAreaPixels.y,
-    croppedAreaPixels.width,
-    croppedAreaPixels.height,
-    0,
-    0,
-    1200,
-    1600,
+    croppedAreaPixels.x, croppedAreaPixels.y,
+    croppedAreaPixels.width, croppedAreaPixels.height,
+    0, 0, 1200, 1600,
   );
   return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
 }
 
 const GEOAPIFY_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || '';
-const LINEUP_ROLE_MAX = 80;
 
 function toDatetimeLocalValue(d) {
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function defaultStartEnd() {
-  const start = new Date();
-  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
-  return { start: toDatetimeLocalValue(start), end: toDatetimeLocalValue(end) };
-}
-
 function fromDatetimeLocalValue(v) {
-  // `datetime-local` emits local-time without timezone; this parses as local in JS engines.
-  // We later store UTC via `toISOString()`.
   return new Date(v);
 }
 
-export default function CreateEventPage() {
+export default function EventEditPageView() {
   const router = useRouter();
   const { user, updateUser } = useAuth();
-  const defaults = useRef(defaultStartEnd());
-  const searchTimerRef = useRef(null);
+  const { event, eventId, loading, reloadEvent } = useEventManage();
+
+  const lastHydratedEventId = useRef(null);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [geoLat, setGeoLat] = useState(null);
   const [geoLon, setGeoLon] = useState(null);
-  const [startLocal, setStartLocal] = useState(defaults.current.start);
-  const [endLocal, setEndLocal] = useState(defaults.current.end);
-
-  const [coverImage, setCoverImage] = useState(null);
+  const [startLocal, setStartLocal] = useState('');
+  const [endLocal, setEndLocal] = useState('');
+  const [coverImage, setCoverImage] = useState('');
   const [coverPreview, setCoverPreview] = useState(null);
   const [isCoverUploading, setIsCoverUploading] = useState(false);
-
   const [cropSrc, setCropSrc] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-
   const [isPrivate, setIsPrivate] = useState(true);
   const [showPublicConsent, setShowPublicConsent] = useState(false);
-
   const [isPaid, setIsPaid] = useState(false);
   const [price, setPrice] = useState('');
   const [paidGate, setPaidGate] = useState(null);
-
   const [graceTimeHours, setGraceTimeHours] = useState('0');
   const [graceTimeMinutes, setGraceTimeMinutes] = useState('15');
   const [maxImages, setMaxImages] = useState('100');
   const [capacity, setCapacity] = useState('');
-
-  const [inviteRoleKind, setInviteRoleKind] = useState('lineup');
-  const [lineupSubDraft, setLineupSubDraft] = useState('');
-  const [featuredQuery, setFeaturedQuery] = useState('');
-  const [featuredResults, setFeaturedResults] = useState([]);
-  const [featuredLoading, setFeaturedLoading] = useState(false);
-  /** @type {Array<{ id: string; username: string; name?: string; avatarUrl?: string; kind: 'lineup' | 'member' | 'cohost' | 'bouncer'; lineupSubrole?: string }>} */
-  const [pendingInvites, setPendingInvites] = useState([]);
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formError, setFormError] = useState(null);
 
   useEffect(() => {
     return () => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
       if (coverPreview && coverPreview.startsWith('blob:')) URL.revokeObjectURL(coverPreview);
     };
   }, [coverPreview]);
 
   useEffect(() => {
-    const q = featuredQuery.trim();
-    if (q.length < 2) {
-      setFeaturedResults([]);
-      return;
-    }
-    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    searchTimerRef.current = setTimeout(() => {
-      setFeaturedLoading(true);
-      searchUsers(q)
-        .then((res) => {
-          const list = res.results || res || [];
-          setFeaturedResults(Array.isArray(list) ? list.filter((u) => u.id !== user?.id).slice(0, 8) : []);
-        })
-        .catch(() => setFeaturedResults([]))
-        .finally(() => setFeaturedLoading(false));
-    }, 300);
-    return () => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    };
-  }, [featuredQuery, user?.id]);
+    lastHydratedEventId.current = null;
+  }, [eventId]);
 
-  const addPendingInvite = useCallback(
-    (candidate) => {
-      const normalizedUsername = String(candidate.username || '').replace(/^@/, '').trim();
-      if (!normalizedUsername) return;
-      const lineupSubrole =
-        inviteRoleKind === 'lineup'
-          ? (lineupSubDraft.trim() || 'Line up').slice(0, LINEUP_ROLE_MAX)
-          : undefined;
-      setPendingInvites((prev) => {
-        const exists = prev.find(
-          (p) => p.id === candidate.id || p.username.toLowerCase() === normalizedUsername.toLowerCase()
-        );
-        const entry = {
-          id: candidate.id,
-          username: normalizedUsername,
-          name: candidate.name,
-          avatarUrl: candidate.avatarUrl,
-          kind: inviteRoleKind,
-          lineupSubrole,
-        };
-        if (exists) {
-          return prev.map((p) =>
-            p.id === candidate.id || p.username.toLowerCase() === normalizedUsername.toLowerCase() ? entry : p
-          );
-        }
-        return [...prev, entry];
-      });
-      setFeaturedQuery('');
-      setFeaturedResults([]);
-    },
-    [inviteRoleKind, lineupSubDraft]
-  );
+  useEffect(() => {
+    if (!event || loading || !eventId) return;
+    if (lastHydratedEventId.current === eventId) return;
+    lastHydratedEventId.current = eventId;
 
-  const removePendingInvite = (id) => {
-    setPendingInvites((prev) => prev.filter((p) => p.id !== id));
-  };
+    setFormError(null);
+    setPaidGate(null);
+    setSaveOk(false);
+    setName(event.name || '');
+    setDescription(event.description || '');
+    setLocation(event.location || '');
+    setGeoLat(typeof event.latitude === 'number' ? event.latitude : null);
+    setGeoLon(typeof event.longitude === 'number' ? event.longitude : null);
+    const start = event.startDate ? new Date(event.startDate) : new Date();
+    const end = event.endDate ? new Date(event.endDate) : new Date(start.getTime() + 2 * 60 * 60 * 1000);
+    setStartLocal(toDatetimeLocalValue(start));
+    setEndLocal(toDatetimeLocalValue(end));
 
-  const formatPendingLabel = (p) => {
-    if (p.kind === 'lineup') return `Line-up • ${p.lineupSubrole || 'Line up'}`;
-    if (p.kind === 'cohost') return 'Co-host';
-    if (p.kind === 'bouncer') return 'Bouncer';
-    return 'Member';
-  };
+    const vis = String(event.visibility || '').trim().toUpperCase();
+    setIsPrivate(vis !== 'PUBLIC');
+
+    const ticketType = String(event.ticketType || '').trim().toUpperCase();
+    setIsPaid(ticketType === 'PAID');
+    const tp = event.ticketPrice;
+    setPrice(tp != null && tp > 0 ? String(Math.round(Number(tp))) : '');
+
+    const grace = event.graceTime != null ? Number(event.graceTime) : 15;
+    const safeGrace = Number.isFinite(grace) ? grace : 15;
+    setGraceTimeHours(String(Math.floor(safeGrace / 60)));
+    setGraceTimeMinutes(String(safeGrace % 60));
+
+    const cap = event.maxImagesPerUser ?? event.maxImages ?? 100;
+    setMaxImages(String(cap && cap > 0 ? cap : 100));
+
+    setCapacity(event.capacity != null && event.capacity > 0 ? String(event.capacity) : '');
+
+    const cover = typeof event.coverImage === 'string' ? event.coverImage.trim() : '';
+    setCoverImage(cover || '');
+    setCoverPreview(cover ? cover : null);
+  }, [event, loading, eventId]);
 
   const onCoverFile = (e) => {
     const file = e.target.files?.[0];
@@ -205,7 +156,6 @@ export default function CreateEventPage() {
     setCropSrc(null);
     if (coverPreview && coverPreview.startsWith('blob:')) URL.revokeObjectURL(coverPreview);
     setIsCoverUploading(true);
-    setCoverImage(null);
     try {
       const blob = await getCroppedBlob(cropSrc, croppedAreaPixels);
       const previewUrl = URL.createObjectURL(blob);
@@ -217,7 +167,9 @@ export default function CreateEventPage() {
       setCoverImage(publicUrl);
     } catch (err) {
       setFormError(err.message || 'Cover upload failed');
-      setCoverPreview(null);
+      const prev = typeof event.coverImage === 'string' ? event.coverImage.trim() : '';
+      setCoverImage(prev);
+      setCoverPreview(prev || null);
     } finally {
       setIsCoverUploading(false);
     }
@@ -251,55 +203,47 @@ export default function CreateEventPage() {
     }
   };
 
-  const tryGetGeo = () =>
-    new Promise((resolve) => {
-      if (typeof navigator === 'undefined' || !navigator.geolocation) {
-        resolve({});
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-        () => resolve({}),
-        { timeout: 5000, maximumAge: 60_000 }
-      );
-    });
+
+  const handleDelete = async () => {
+    if (!window.confirm('Delete this event? This cannot be undone.')) return;
+    setIsDeleting(true);
+    try {
+      await eventsService.deleteEvent(eventId);
+      toast.success('Event deleted.');
+      router.push('/dashboard/events');
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete event.');
+      setIsDeleting(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError(null);
-    if (!user?.id) {
-      setFormError('You must be signed in.');
+    if (!eventId || !user?.id) {
+      setFormError('Missing event or session.');
       return;
     }
-    if (!name.trim() || !startLocal || !endLocal) {
-      setFormError('Event name, start, and end are required.');
+    if (!name.trim()) {
+      setFormError('Event name is required.');
       return;
     }
-    if (!coverImage) {
-      setFormError('Please upload a cover image.');
-      return;
-    }
-    if (isCoverUploading) {
-      setFormError('Cover is still uploading.');
-      return;
-    }
-    if (!/^https?:\/\//i.test(String(coverImage).trim())) {
-      setFormError('Cover must be uploaded (HTTPS URL) before creating the event.');
-      return;
-    }
-
     const startDate = fromDatetimeLocalValue(startLocal);
     const endDate = fromDatetimeLocalValue(endLocal);
     if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
       setFormError('Invalid start or end date.');
       return;
     }
-    if (startDate < new Date()) {
-      setFormError('Event cannot start in the past.');
+    if (endDate <= startDate) {
+      setFormError('End time must be after start.');
       return;
     }
-    if (endDate <= startDate) {
-      setFormError('End time must be after start time.');
+    if (!coverImage || !/^https?:\/\//i.test(String(coverImage).trim())) {
+      setFormError('Cover must be an uploaded image URL.');
+      return;
+    }
+    if (isCoverUploading) {
+      setFormError('Cover is still uploading.');
       return;
     }
     if (isPaid) {
@@ -310,80 +254,54 @@ export default function CreateEventPage() {
       }
     }
 
-    setIsSubmitting(true);
+    setIsSaving(true);
     try {
-      const geo = geoLat != null && geoLon != null
-        ? { latitude: geoLat, longitude: geoLon }
-        : await tryGetGeo();
       const graceTime =
         (parseInt(graceTimeHours, 10) || 0) * 60 + (parseInt(graceTimeMinutes, 10) || 0);
       const ticketPrice = isPaid ? parseInt(price, 10) : 0;
-
-      const lineupOnly = pendingInvites
-        .filter((p) => p.kind === 'lineup')
-        .map((p) => ({ username: p.username, role: p.lineupSubrole || 'Line up' }));
-
-      const created = await eventsService.createEvent({
+      await eventsService.updateEvent(eventId, {
         name: name.trim(),
         description: description.trim() || undefined,
         location: location.trim() || undefined,
-        latitude: typeof geo.latitude === 'number' ? geo.latitude : undefined,
-        longitude: typeof geo.longitude === 'number' ? geo.longitude : undefined,
+        latitude: geoLat ?? undefined,
+        longitude: geoLon ?? undefined,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         coverImage: coverImage.trim(),
         visibility: isPrivate ? 'PRIVATE' : 'PUBLIC',
         ticketType: isPaid ? 'PAID' : 'FREE',
         ticketPrice,
-        currency: 'USD',
+        currency: (event.currency || 'USD').trim() || 'USD',
         graceTime,
-        maxImages: parseInt(maxImages, 10) || 100,
-        capacity: capacity.trim() !== '' && parseInt(capacity, 10) > 0 ? parseInt(capacity, 10) : undefined,
-        createdBy: user.id,
-        featuredPeople: lineupOnly,
+        maxImagesPerUser: parseInt(maxImages, 10) || 100,
+        capacity: capacity.trim() !== '' && parseInt(capacity, 10) > 0 ? parseInt(capacity, 10) : null,
       });
-
-      if (created.token && user) {
-        await authStorage.save({ token: created.token, user });
-      }
-
-      const eventId = created.event?.id || created.id;
-      const albumId = created.album?.id;
-      if (!eventId) {
-        setFormError('Event created but no id returned.');
-        return;
-      }
-
-      const postInvites = pendingInvites.filter((p) => p.kind !== 'lineup');
-      if (albumId && postInvites.length > 0) {
-        for (const p of postInvites) {
-          try {
-            if (p.kind === 'cohost') {
-              await eventsService.inviteStaff(eventId, p.username, 'co-host');
-            } else if (p.kind === 'bouncer') {
-              await eventsService.inviteStaff(eventId, p.username, 'bouncer');
-            } else {
-              await eventsService.inviteAlbumUser(albumId, p.username, { role: 'member' });
-            }
-          } catch {
-            /* non-fatal; user can re-invite from event page */
-          }
-        }
-      }
-
-      toast.success('Event created!');
-      router.push(`/dashboard/events/${eventId}`);
+      await reloadEvent?.();
+      toast.success('Event saved.');
     } catch (err) {
-      const msg = err.message || 'Failed to create event.';
+      const msg = err.message || 'Failed to update event.';
       setFormError(msg);
       toast.error(msg);
-      setIsSubmitting(false);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const inputClass =
     'w-full rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 px-3 py-2.5 text-sm focus:border-pxi-purple/50 focus:outline-none';
   const labelClass = 'block text-[11px] font-bold text-pxi-purple uppercase tracking-widest mb-1.5';
+
+  if (loading && !event) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 size={28} className="animate-spin text-zinc-500" />
+      </div>
+    );
+  }
+
+  if (!eventId || !event) {
+    return null;
+  }
 
   return (
     <>
@@ -430,41 +348,23 @@ export default function CreateEventPage() {
         </div>
       </div>
     )}
-    <div className="max-w-4xl mx-auto space-y-6 pb-16">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/dashboard/events"
-          className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5"
-        >
-          <ChevronLeft size={20} />
-        </Link>
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Create event</h1>
-          <p className="text-zinc-500 text-sm mt-0.5">Same fields as the PXI mobile studio flow.</p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-8">
+    <div className="space-y-6 pb-16">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {formError && (
           <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
             {formError}
           </div>
         )}
-
         <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
           <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest flex items-center gap-2">
             <ImageIcon size={16} />
-            Cover image *
+            Cover image
           </h2>
           <label className="relative block w-full sm:w-[300px] sm:mx-auto cursor-pointer" style={{ aspectRatio: '3/4' }}>
             <input type="file" accept="image/*" className="hidden" onChange={onCoverFile} disabled={isCoverUploading} />
             <div className={`w-full h-full rounded-2xl overflow-hidden border ${coverImage || coverPreview ? 'border-white/10' : 'border-dashed border-white/20'} bg-white/5 flex items-center justify-center`}>
               {(coverImage || coverPreview) ? (
-                <img
-                  src={coverImage || coverPreview}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
+                <img src={coverImage || coverPreview} alt="" className="w-full h-full object-cover" />
               ) : !isCoverUploading ? (
                 <div className="flex flex-col items-center gap-3">
                   <ImageIcon size={36} className="text-white/30" />
@@ -481,7 +381,12 @@ export default function CreateEventPage() {
             {(coverImage || coverPreview) && !isCoverUploading && (
               <button
                 type="button"
-                onClick={(e) => { e.preventDefault(); setCoverImage(null); setCoverPreview(null); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const prev = typeof event.coverImage === 'string' ? event.coverImage.trim() : '';
+                  setCoverImage(prev);
+                  setCoverPreview(prev || null);
+                }}
                 className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
               >
                 <X size={16} />
@@ -654,7 +559,7 @@ export default function CreateEventPage() {
             {paidGate === 'no-account' ? (
               <p>To sell tickets, complete vendor setup with Stripe.</p>
             ) : (
-              <p>Stripe is still verifying your account. You can create a free event now or check status from vendor setup.</p>
+              <p>Stripe is still verifying your account. You can save as a free event or check status from vendor setup.</p>
             )}
             <Link href="/dashboard/vendor-upgrade" className="inline-block text-pxi-purple font-bold hover:underline">
               Vendor setup →
@@ -662,25 +567,41 @@ export default function CreateEventPage() {
           </div>
         )}
 
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-4">
-          <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3">
-            <Link
-              href="/dashboard/events"
-              className="inline-flex items-center justify-center min-h-[48px] px-5 rounded-xl border border-white/15 text-sm font-semibold text-zinc-200 hover:bg-white/5"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={isSubmitting || isCoverUploading || !coverImage}
-              className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] px-6 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-45 hover:brightness-110 transition-all"
-            >
-              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : null}
-              {isSubmitting ? 'Creating…' : isCoverUploading ? 'Uploading cover…' : 'Create event'}
-            </button>
-          </div>
+        <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-4 flex flex-col-reverse sm:flex-row gap-3 sm:items-center">
+          <Link
+            href={`/dashboard/events/${eventId}`}
+            className="inline-flex items-center justify-center min-h-[48px] px-5 rounded-xl border border-white/15 text-sm font-semibold text-zinc-200 hover:bg-white/5"
+          >
+            Cancel
+          </Link>
+          <button
+            type="submit"
+            disabled={isSaving || isCoverUploading}
+            className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] px-6 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-45 hover:brightness-110 transition-all"
+          >
+            {isSaving ? <Loader2 size={18} className="animate-spin" /> : null}
+            {isSaving ? 'Saving…' : 'Save'}
+          </button>
         </div>
       </form>
+
+      <section className="rounded-2xl border border-red-500/20 bg-red-500/5 overflow-hidden">
+        <div className="p-5 border-b border-red-500/10">
+          <h2 className="text-xs font-bold text-red-400 uppercase tracking-widest">Danger zone</h2>
+        </div>
+        <div className="p-5">
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-red-500/40 bg-red-500/10 text-red-300 text-xs font-bold uppercase tracking-widest hover:bg-red-500/20 transition-all disabled:opacity-50"
+          >
+            <Trash2 size={14} />
+            {isDeleting ? 'Deleting…' : 'Delete event'}
+          </button>
+          <p className="mt-2 text-xs text-zinc-500">This action is permanent and cannot be undone.</p>
+        </div>
+      </section>
 
       {showPublicConsent && (
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
