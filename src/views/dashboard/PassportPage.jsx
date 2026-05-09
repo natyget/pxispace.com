@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Smartphone, Shield, CheckCircle2, Loader2, RefreshCw, ArrowRight, Share2, Check } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
+import { getRelationshipStatus } from '../../services/friends';
 import { getPassportLevelDisplay } from '../../utils/odysseyTier';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
@@ -14,7 +15,6 @@ import {
     getLevelProgress,
     ODYSSEY_TIER_BANDS,
     HeaderPolygonBadge,
-    NeonCurvesSVG,
     StampRed,
     StampYellow,
     StampCyan,
@@ -62,6 +62,15 @@ export default function PassportPage() {
 }
 
 function PassportIssued({ user }) {
+    const [friendsCount, setFriendsCount] = useState(0);
+
+    useEffect(() => {
+        if (!user?.id) return;
+        getRelationshipStatus(user.id)
+            .then((status) => setFriendsCount(status.friendsCount || 0))
+            .catch(() => {});
+    }, [user?.id]);
+
     const fullName = user?.name ?? 'PXI CITIZEN';
     const username = user?.username ?? 'citizen';
     const avatarFallback = fullName.charAt(0).toUpperCase();
@@ -128,7 +137,7 @@ function PassportIssued({ user }) {
                 </div>
                 <div className="mt-4 flex items-center justify-center">
                     <button type="button" className="text-center">
-                        <p className="text-white text-base font-bold">{user?.friendsCount ?? 0}</p>
+                        <p className="text-white text-base font-bold">{friendsCount}</p>
                         <p className="text-[10px] uppercase tracking-widest text-white/45">Friends</p>
                     </button>
                 </div>
@@ -143,21 +152,25 @@ function PassportIssued({ user }) {
             <div className="flex justify-center">
                 <div className="relative w-[min(95vw,361px)] h-[558px] overflow-hidden rounded-[8px] border border-white bg-black shadow-[0_1px_12px_rgba(255,255,255,0.25)]">
 
-                    {/* Top half: dot grid */}
-                    <div
-                        className="absolute left-0 right-0 top-0 h-1/2 z-[1] opacity-35 pointer-events-none"
-                        style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1px)', backgroundSize: '4px 4px' }}
-                    />
-                    <div className="absolute inset-0 opacity-25 pointer-events-none">
-                        <NeonCurvesSVG className="w-full h-full" />
+                    {/* Top half: world map (matches mobile MapBackground over #0a0a0a) */}
+                    <div className="absolute left-0 right-0 top-0 h-1/2 z-[1] overflow-hidden bg-[#0a0a0a]">
+                        <Image
+                            src="/images/map-world.png"
+                            alt=""
+                            fill
+                            unoptimized
+                            className="object-cover opacity-90"
+                            priority
+                        />
                     </div>
-                    <div className="absolute inset-0 pointer-events-none opacity-90">
+                    {/* Stamps */}
+                    <div className="absolute left-0 right-0 top-0 h-1/2 z-[2] pointer-events-none overflow-hidden opacity-90">
                         <StampRed /><StampYellow /><StampCyan /><StampWhite /><GreenStampPositioned />
                     </div>
-                    <div className="absolute top-[8px] right-[8px] z-20 text-[12px] text-white/60 tracking-[0.08em] uppercase">
+                    <div className="absolute top-[8px] right-[8px] z-[10] text-[12px] text-white/60 tracking-[0.08em] uppercase">
                         {passportNumber}
                     </div>
-                    <div className="absolute left-[-182px] top-[128px] z-20 -rotate-90 text-[16px] tracking-[0.24em] text-white/55 uppercase">
+                    <div className="absolute left-[-182px] top-[128px] z-[10] -rotate-90 text-[16px] tracking-[0.24em] text-white/55 uppercase">
                         SEASON 01 2026
                     </div>
 

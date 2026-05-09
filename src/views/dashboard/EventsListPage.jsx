@@ -64,12 +64,12 @@ function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle,
 
   const menuItems = [
     { label: 'Details', href: `/dashboard/events/${eventId}`, icon: Info },
-    { label: 'Invite', href: `/dashboard/events/${eventId}/invite#event-invite`, icon: UserPlus },
+    !isPast && { label: 'Invite', href: `/dashboard/events/${eventId}/invite#event-invite`, icon: UserPlus },
     { label: 'Members', href: `/dashboard/events/${eventId}/members`, icon: UserCircle },
     { label: 'Upload', href: `/dashboard/events/${eventId}/upload`, icon: ImagePlus },
-    { label: 'Edit', href: `/dashboard/events/${eventId}/edit`, icon: Pencil },
+    !isPast && { label: 'Edit', href: `/dashboard/events/${eventId}/edit`, icon: Pencil },
     { label: 'Delete', onClick: () => onDelete?.(eventId, event.name), icon: Trash2, danger: true },
-  ];
+  ].filter(Boolean);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}>

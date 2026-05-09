@@ -43,6 +43,21 @@ export default function EventManageLayoutInner({ children }) {
     return pathname === `${base}/${segment}`;
   };
 
+  const isPast = (() => {
+    const status = String(event?.status || '').toLowerCase();
+    if (status === 'ended' || status === 'past' || status === 'completed') return true;
+    const end = event?.endDate ? new Date(event.endDate).getTime() : null;
+    if (end) return end < Date.now();
+    const start = event?.startDate ? new Date(event.startDate).getTime() : null;
+    if (start) return start < Date.now();
+    return false;
+  })();
+
+  const tabs = TABS.filter(({ segment }) => {
+    if (!isPast) return true;
+    return segment !== 'invite' && segment !== 'edit';
+  });
+
   return (
     <>
       <header className="mb-6">
@@ -63,7 +78,7 @@ export default function EventManageLayoutInner({ children }) {
         </div>
         <div className="flex justify-center py-6">
           <div className="flex items-center gap-1 overflow-x-auto scrollbar-none bg-white/5 rounded-full p-2 w-full">
-            {TABS.map(({ label, segment }) => {
+            {tabs.map(({ label, segment }) => {
               const href = segment ? `${base}/${segment}` : base;
               const active = isActive(segment);
               return (
