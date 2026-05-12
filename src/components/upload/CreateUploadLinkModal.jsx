@@ -15,8 +15,8 @@ const EXPIRE_OPTIONS = [
 ];
 
 export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
-  const [maxUploads, setMaxUploads] = useState(200);
-  const [maxUses, setMaxUses] = useState(5);
+  const [maxUploads, setMaxUploads] = useState(100);
+  const [maxMb, setMaxMb] = useState(100);
   const [expiresInHours, setExpiresInHours] = useState(24);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -27,7 +27,7 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
     setLoading(true);
     setError(null);
     try {
-      const result = await createUploadLink({ albumId, eventId, maxUploads, maxUses, expiresInHours });
+      const result = await createUploadLink({ albumId, eventId, maxUploads, maxMb, expiresInHours });
       setCreatedLink(`${getSiteUrl()}/upload/${result.token}`);
     } catch (err) {
       setError(err?.message || 'Failed to create upload link');
@@ -67,32 +67,32 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
                 Generate a shareable link that lets photographers upload directly to this event's album — no account required.
               </p>
 
-              {/* Max uploads (capacity) */}
+              {/* Max images */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
-                  Upload Capacity <span className="text-zinc-600 normal-case tracking-normal font-normal">(max total photos)</span>
+                  Max Images <span className="text-zinc-600 normal-case tracking-normal font-normal">(max number of photos)</span>
                 </label>
                 <input
                   type="number"
                   min={1}
-                  max={2000}
+                  max={5000}
                   value={maxUploads}
                   onChange={(e) => setMaxUploads(Number(e.target.value))}
                   className="w-full rounded-xl bg-zinc-800 border border-white/10 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-pxi-purple/60"
                 />
               </div>
 
-              {/* Max uses (amount) */}
+              {/* Max MB (storage capacity) */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
-                  Photographer Limit <span className="text-zinc-600 normal-case tracking-normal font-normal">(max people who can use this link)</span>
+                  Capacity (MB) <span className="text-zinc-600 normal-case tracking-normal font-normal">(max total storage)</span>
                 </label>
                 <input
                   type="number"
                   min={1}
-                  max={200}
-                  value={maxUses}
-                  onChange={(e) => setMaxUses(Number(e.target.value))}
+                  max={50000}
+                  value={maxMb}
+                  onChange={(e) => setMaxMb(Number(e.target.value))}
                   className="w-full rounded-xl bg-zinc-800 border border-white/10 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-pxi-purple/60"
                 />
               </div>

@@ -48,3 +48,16 @@ export async function generateTicket(userId, eventId) {
   const data = await api.post('/api/tickets/generate', { userId, eventId });
   return data;
 }
+
+/**
+ * Get all tickets for a user (for passport stamp display).
+ * GET /api/tickets/user/:userId
+ */
+export async function getUserTickets(userId) {
+  try {
+    const data = await api.get(`/api/tickets/user/${userId}`);
+    return data.tickets ?? [];
+  } catch {
+    return [];
+  }
+}

@@ -68,3 +68,22 @@ export const eventsService = {
 
   deleteEvent: (eventId) => api.delete(`/api/events/${eventId}`),
 };
+
+/** Events list for wallet / passport stamp display. GET /api/events */
+export async function getEventsForWallet(limit = 100, offset = 0) {
+  try {
+    return await api.get(`/api/events?limit=${limit}&offset=${offset}`);
+  } catch {
+    return { events: [] };
+  }
+}
+
+/** Per-event XP for the authenticated user. GET /api/users/me/event-xp */
+export async function getMyEventXp() {
+  try {
+    const data = await api.get('/api/users/me/event-xp');
+    return data.xpByEventId ?? {};
+  } catch {
+    return {};
+  }
+}

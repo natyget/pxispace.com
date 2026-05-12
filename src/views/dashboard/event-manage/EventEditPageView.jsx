@@ -523,7 +523,7 @@ export default function EventEditPageView() {
                 <input
                   className={`${inputClass} w-20`}
                   value={graceTimeMinutes}
-                  onChange={(e) => setGraceTimeMinutes(e.target.value.replace(/[^\d]/g, '').slice(0, 2))}
+                  onChange={(e) => { const v = e.target.value.replace(/[^\d]/g, '').slice(0, 2); setGraceTimeMinutes(v === '' ? '' : String(Math.min(59, parseInt(v, 10)))); }}
                 />
                 <span className="text-xs text-zinc-500">min</span>
               </div>
