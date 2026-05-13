@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Smartphone, Shield, CheckCircle2, Loader2, RefreshCw, ArrowRight, Share2, Check } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { getRelationshipStatus } from '../../services/friends';
+import { getUserTickets } from '../../services/tickets';
+import { getEventsForWallet, getMyEventXp } from '../../services/events';
 import { getPassportLevelDisplay } from '../../utils/odysseyTier';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
@@ -15,11 +17,14 @@ import {
     getLevelProgress,
     ODYSSEY_TIER_BANDS,
     HeaderPolygonBadge,
-    StampRed,
-    StampYellow,
-    StampCyan,
-    StampWhite,
-    GreenStampPositioned,
+    DynamicStamp,
+    getStampShape,
+    getStampLayout,
+    getStampColor,
+    formatStampName,
+    formatStampDate,
+    formatStampCity,
+    getEventYear,
 } from '@/components/passport/passportVisualParts';
 import { getSiteUrl } from '@/lib/siteUrl';
 
@@ -63,6 +68,8 @@ export default function PassportPage() {
 
 function PassportIssued({ user }) {
     const [friendsCount, setFriendsCount] = useState(0);
+    const [attendedEvents, setAttendedEvents] = useState([]);
+    const [selectedSeason, setSelectedSeason] = useState(null);
 
     useEffect(() => {
         if (!user?.id) return;
@@ -70,6 +77,38 @@ function PassportIssued({ user }) {
             .then((status) => setFriendsCount(status.friendsCount || 0))
             .catch(() => {});
     }, [user?.id]);
+
+    useEffect(() => {
+        if (!user?.id) return;
+        Promise.all([
+            getUserTickets(user.id),
+            getEventsForWallet(100, 0),
+            getMyEventXp(),
+        ]).then(([tickets, eventsData, xpByEventId]) => {
+            const events = tickets.flatMap((t) => {
+                const ev = (eventsData.events ?? []).find((e) => e.id === t.eventId);
+                if (!ev) return [];
+                return [{ id: ev.id, name: ev.name, startDate: ev.startDate, location: ev.location, xp: xpByEventId[ev.id] }];
+            });
+            setAttendedEvents(events);
+        }).catch(() => {});
+    }, [user?.id]);
+
+    const availableYears = useMemo(() => {
+        const years = [...new Set(attendedEvents.map((e) => getEventYear(e.startDate)))].sort((a, b) => b - a);
+        return years;
+    }, [attendedEvents]);
+
+    useEffect(() => {
+        if (availableYears.length > 0 && (selectedSeason === null || !availableYears.includes(selectedSeason))) {
+            setSelectedSeason(availableYears[0]);
+        }
+    }, [availableYears]);
+
+    const filteredEvents = useMemo(() => {
+        if (selectedSeason === null) return attendedEvents;
+        return attendedEvents.filter((e) => getEventYear(e.startDate) === selectedSeason);
+    }, [attendedEvents, selectedSeason]);
 
     const fullName = user?.name ?? 'PXI CITIZEN';
     const username = user?.username ?? 'citizen';
@@ -164,14 +203,61 @@ function PassportIssued({ user }) {
                         />
                     </div>
                     {/* Stamps */}
-                    <div className="absolute left-0 right-0 top-0 h-1/2 z-[2] pointer-events-none overflow-hidden opacity-90">
-                        <StampRed /><StampYellow /><StampCyan /><StampWhite /><GreenStampPositioned />
+                    <div className="absolute left-0 right-0 top-0 h-1/2 z-[2] overflow-hidden opacity-90">
+                        {/* Season pills */}
+                        {availableYears.length > 1 && (
+                            <div className="absolute top-2 left-0 right-0 z-10 flex justify-center gap-1.5 px-2">
+                                {availableYears.map((year) => (
+                                    <button
+                                        key={year}
+                                        type="button"
+                                        onClick={() => setSelectedSeason(year)}
+                                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider border transition-all ${
+                                            year === selectedSeason
+                                                ? 'bg-white/20 border-white/60 text-white'
+                                                : 'bg-black/30 border-white/20 text-white/50 hover:bg-white/10'
+                                        }`}
+                                    >
+                                        {year}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {/* Dynamic stamps */}
+                        {filteredEvents.map((event, index) => {
+                            const shape = getStampShape(event.id);
+                            const layout = getStampLayout(event.id, index);
+                            const color = getStampColor(event.xp, 'WANDERER');
+                            return (
+                                <div
+                                    key={event.id}
+                                    style={{
+                                        position: 'absolute',
+                                        left: layout.left,
+                                        top: layout.top,
+                                        width: layout.width,
+                                        height: layout.height,
+                                        transform: `rotate(${layout.rotation}deg)`,
+                                        zIndex: index + 1,
+                                        pointerEvents: 'none',
+                                    }}
+                                >
+                                    <DynamicStamp
+                                        shape={shape}
+                                        color={color}
+                                        name={formatStampName(event.name)}
+                                        date={formatStampDate(event.startDate)}
+                                        city={formatStampCity(event.location)}
+                                    />
+                                </div>
+                            );
+                        })}
                     </div>
                     <div className="absolute top-[8px] right-[8px] z-[10] text-[12px] text-white/60 tracking-[0.08em] uppercase">
                         {passportNumber}
                     </div>
                     <div className="absolute left-[-182px] top-[128px] z-[10] -rotate-90 text-[16px] tracking-[0.24em] text-white/55 uppercase">
-                        SEASON 01 2026
+                        SEASON {selectedSeason ?? '01 2026'}
                     </div>
 
                     {/* Crease fold */}

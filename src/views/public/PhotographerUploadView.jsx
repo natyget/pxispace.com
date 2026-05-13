@@ -83,7 +83,6 @@ export default function PhotographerUploadView({ token }) {
   const [uploadError, setUploadError] = useState(null);
 
   const inputRef = useRef(null);
-  const sessionRef = useRef(true); // true = first file of this session
 
   useEffect(() => {
     getUploadLink(token)
@@ -102,9 +101,6 @@ export default function PhotographerUploadView({ token }) {
     let completed = 0;
     const errors = [];
     const queue = [...files];
-    let isFirst = sessionRef.current;
-    sessionRef.current = false;
-
     const work = async (file) => {
       const type = sniffType(file);
       let uploadFile = file;
@@ -132,9 +128,8 @@ export default function PhotographerUploadView({ token }) {
       await confirmUploadLink(token, {
         r2Url: publicUrl, type,
         width, height, capturedAt,
-        isFirstInSession: isFirst,
+        fileSizeBytes: uploadFile.size,
       });
-      isFirst = false;
 
       completed += 1;
       setProgress({ done: completed, total: files.length, label: safeName });
@@ -213,7 +208,8 @@ export default function PhotographerUploadView({ token }) {
           <div className="p-5 border-b border-white/5">
             <p className="text-xs text-zinc-500">
               Upload your photos directly to this event's album. Up to{' '}
-              <span className="text-white font-bold">{linkInfo.remainingUploads}</span> photos remaining on this link.
+              <span className="text-white font-bold">{linkInfo.remainingImages}</span> images and{' '}
+              <span className="text-white font-bold">{Math.round(linkInfo.remainingMb)} MB</span> remaining on this link.
             </p>
           </div>
           <div className="p-5 space-y-4">

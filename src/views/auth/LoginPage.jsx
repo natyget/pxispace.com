@@ -11,7 +11,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { defaultPostLoginPath } from '../../lib/dashboardPaths';
 import AuthParticles from '../../components/auth/AuthParticles';
-const LogoSVG = "/images/logo.svg";
+const LogoSVG = "/favicon.png";
 
 const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
 
