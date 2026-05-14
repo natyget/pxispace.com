@@ -182,7 +182,7 @@ export default function Hero() {
           aria-hidden
         />
 
-        <motion.h1
+        <motion.h2
           className="font-display font-bold text-[clamp(40px,7vw,88px)] leading-[0.95] tracking-tighter text-white pb-2 relative z-10"
           initial="hidden"
           animate="visible"
@@ -210,7 +210,7 @@ export default function Hero() {
               {word}
             </motion.span>
           ))}
-        </motion.h1>
+        </motion.h2>
 
         <motion.p
           className="text-lg md:text-2xl text-white/80 max-w-[600px] mx-auto mt-8 leading-relaxed font-medium relative z-10"

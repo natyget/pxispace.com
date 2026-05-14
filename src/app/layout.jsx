@@ -8,10 +8,29 @@ import './globals.css';
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
 export const metadata = {
-  title: 'PXI - Pick • Print • Post',
-  description: 'PXI is a compact phone-attached printer that instantly prints your photos.',
+  metadataBase: new URL('https://pxispace.com'),
+  title: {
+    default: 'PXI — Your Social Life, Unfiltered',
+    template: '%s | PXI',
+  },
+  description:
+    'Plan the party, share the camera roll, relive the nostalgia. PXI is the event and social scrapbook app that unifies your best nights in one place.',
   icons: {
     icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'PXI',
+    locale: 'en_US',
+    images: [{ url: '/favicon.svg', width: 512, height: 512, alt: 'PXI' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@pxilabs',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
