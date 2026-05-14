@@ -446,7 +446,7 @@ export default function PublicEventsPage() {
         {loading && events.length === 0 ? (
           <div className="text-neutral-400">Loading…</div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-4">
             {rest.map((ev) => (
               <EventCard key={ev.id} event={ev} detailBasePath="/events" />
             ))}

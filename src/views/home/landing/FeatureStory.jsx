@@ -66,7 +66,7 @@ export default function FeatureStory() {
     <section
       id="features"
       ref={containerRef}
-      className="relative w-full bg-[var(--color-bg-primary)] md:h-[520vh]"
+      className="relative w-full bg-[var(--color-bg-primary)] md:h-[350vh]"
     >
       {/* Desktop / large screens: scroll-driven sticky story */}
       <div className="hidden md:flex md:sticky md:top-0 md:h-[100svh] w-full overflow-hidden flex-col md:flex-row items-center justify-center md:justify-between px-6 md:px-10 max-w-[1200px] mx-auto pt-20 pb-4 md:py-0 gap-6 md:gap-8">
@@ -130,8 +130,8 @@ export default function FeatureStory() {
                   animate={{
                     width: isActive ? 8 : 6,
                     height: isActive ? 8 : 6,
-                    backgroundColor: isActive ? 'var(--color-pxi-purple)' : 'transparent',
-                    borderColor: isActive ? 'transparent' : 'rgba(255,255,255,0.3)',
+                    backgroundColor: isActive ? 'var(--color-pxi-purple)' : 'rgba(0,0,0,0)',
+                    borderColor: isActive ? 'rgba(0,0,0,0)' : 'rgba(255,255,255,0.3)',
                     borderWidth: isActive ? 0 : 1.5,
                   }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}

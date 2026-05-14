@@ -16,17 +16,22 @@ const FLOAT_OFFSETS = [
 ];
 
 export default function FocusScene({ progress }) {
-  const opacity = useTransform(progress, [0.58, 0.64, 0.82, 0.87], [0, 1, 1, 0]);
-  const scale = useTransform(progress, [0.58, 0.64], [0.9, 1]);
-  const plusButtonScale = useTransform(progress, [0.68, 0.69, 0.71], [1, 0.8, 1]);
-  const anchoredEmojiOpacity = useTransform(progress, [0.71, 0.73], [0, 1]);
-  const anchoredEmojiScale = useTransform(progress, [0.71, 0.73], [0.5, 1]);
-  const floatingEmojisOpacity = useTransform(progress, [0.73, 0.75, 0.81, 0.83], [0, 1, 1, 0]);
-  const floatingEmojisY = useTransform(progress, [0.73, 0.83], [0, -150]);
-  const newCommentOpacity = useTransform(progress, [0.78, 0.83], [0, 1]);
-  const newCommentY = useTransform(progress, [0.78, 0.83], [20, 0]);
-  const typingOpacity = useTransform(progress, [0.73, 0.78], [1, 0]);
-  const textOpacity = useTransform(progress, [0.78, 0.83], [0, 1]);
+  const opacity = useTransform(progress, [0.5, 0.53, 0.75, 0.77], [0, 1, 1, 0]);
+  const scale = useTransform(progress, [0.5, 0.53], [0.9, 1]);
+  
+  // Chat bar text sequence
+  const typingOpacity = useTransform(progress, [0.5, 0.53, 0.56, 0.58], [0, 1, 1, 0]);
+  const chatBarTextOpacity = useTransform(progress, [0.58, 0.60, 0.64, 0.65], [0, 1, 1, 0]);
+  const sendButtonScale = useTransform(progress, [0.62, 0.63, 0.64], [1, 0.8, 1]);
+  
+  // Comment appears on screen
+  const newCommentOpacity = useTransform(progress, [0.66, 0.68], [0, 1]);
+  const newCommentY = useTransform(progress, [0.66, 0.68], [20, 0]);
+  
+  // Reaction appears
+  const plusButtonScale = useTransform(progress, [0.68, 0.69, 0.70], [1, 0.8, 1]);
+  const anchoredEmojiOpacity = useTransform(progress, [0.70, 0.72], [0, 1]);
+  const anchoredEmojiScale = useTransform(progress, [0.70, 0.72], [0.5, 1]);
 
   return (
     <motion.div
@@ -78,26 +83,6 @@ export default function FocusScene({ progress }) {
             +
           </motion.div>
         </div>
-        <motion.div
-          className="absolute -right-4 top-1/2 pointer-events-none z-20"
-          style={{ opacity: floatingEmojisOpacity, y: floatingEmojisY }}
-        >
-          {FLOAT_OFFSETS.map((o, i) => (
-            <motion.div
-              key={i}
-              className="absolute text-2xl"
-              initial={{ x: 0, y: 0 }}
-              animate={{
-                x: o.x,
-                y: o.y,
-                rotate: o.r,
-              }}
-              transition={{ duration: 0.6, ease: 'easeOut', delay: i * 0.05 }}
-            >
-              😂
-            </motion.div>
-          ))}
-        </motion.div>
       </motion.div>
       <div className="flex flex-col gap-3 w-full items-center">
         <motion.div
@@ -131,11 +116,14 @@ export default function FocusScene({ progress }) {
           <motion.span className="absolute text-[15px] text-white/45" style={{ opacity: typingOpacity }}>
             Typing...
           </motion.span>
-          <motion.span className="absolute text-[15px] text-white/95" style={{ opacity: textOpacity }}>
+          <motion.span className="absolute text-[15px] text-white/95" style={{ opacity: chatBarTextOpacity }}>
             That&apos;s me on the left! 😂
           </motion.span>
         </div>
-        <motion.div className="w-[42px] h-[42px] rounded-full pxi-home-purple flex items-center justify-center flex-shrink-0 ring-1 ring-white/15">
+        <motion.div 
+          className="w-[42px] h-[42px] rounded-full pxi-home-purple flex items-center justify-center flex-shrink-0 ring-1 ring-white/15"
+          style={{ scale: sendButtonScale }}
+        >
           <Send className="w-5 h-5 text-white" />
         </motion.div>
       </div>

@@ -5,6 +5,7 @@
 .geoapify-geocoder-autocomplete-container {
   width: 100%;
 }
+
 .geoapify-autocomplete-input {
   background: transparent !important;
   border: none !important;
@@ -16,14 +17,17 @@
   padding: 0.625rem 2rem 0.625rem 0.75rem !important;
   outline: none !important;
 }
+
 .geoapify-autocomplete-input::placeholder {
   color: rgba(255, 255, 255, 0.35) !important;
 }
+
 .geoapify-close-button {
   color: rgba(255, 255, 255, 0.4) !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
 }
+
 .geoapify-autocomplete-items {
   background: #1c1c1e !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
@@ -37,28 +41,34 @@
   right: -1px !important;
   width: auto !important;
 }
+
 /* Use a more specific selector to guarantee padding wins over base styles */
 .geoapify-autocomplete-items div.geoapify-autocomplete-item {
   padding: 0.75rem 1rem !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   cursor: pointer !important;
 }
+
 .geoapify-autocomplete-items div.geoapify-autocomplete-item:last-child {
   border-bottom: none !important;
 }
+
 .geoapify-autocomplete-items div:hover,
 .geoapify-autocomplete-items .active {
   background: rgba(255, 255, 255, 0.07) !important;
 }
+
 .geoapify-autocomplete-items .geoapify-autocomplete-item .main-part {
   color: #e4e4e7 !important;
   font-size: 0.8125rem !important;
 }
+
 .geoapify-autocomplete-items .geoapify-autocomplete-item .secondary-part {
   color: #71717a !important;
   font-size: 0.75rem !important;
   margin-left: 0.5rem !important;
 }
+
 .geoapify-input-wrapper {
   width: 100%;
 }
@@ -112,18 +122,22 @@
     --pxi-charcoal: #121212;
     --pxi-violet: #2d1b4e;
   }
+
   html {
     scroll-behavior: smooth;
   }
+
   /* Landing: framer scroll timelines need native scroll steps; smooth + wheel feels like a speed-run */
   html.landing-page-root {
     scroll-behavior: auto;
   }
+
   /* Custom cursor is the only pointer affordance on marketing landing (desktop) */
   .landing-hide-native-cursor,
   .landing-hide-native-cursor * {
     cursor: none !important;
   }
+
   body {
     background: var(--bg-primary);
     color: var(--text-primary);
@@ -133,13 +147,20 @@
     overflow-x: hidden;
     scrollbar-color: var(--color-pxi-purple) var(--bg-primary);
   }
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-heading);
     letter-spacing: 0.08em;
     color: var(--text-primary);
     text-transform: capitalize;
     font-weight: 900;
   }
+
   section[id] {
     scroll-margin-top: 100px;
   }
@@ -152,10 +173,12 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+
   .text-neon {
     color: var(--pxi-purple);
     text-shadow: 0 0 10px rgba(216, 74, 255, 0.6), 0 0 25px rgba(216, 74, 255, 0.4);
   }
+
   .glass-card {
     background: var(--card-bg);
     backdrop-filter: blur(18px);
@@ -163,15 +186,18 @@
     border-radius: 1rem;
     padding: 1.5rem;
   }
+
   .glass-nav {
     background: rgba(10, 10, 10, 0.6);
     backdrop-filter: blur(18px);
     border: 1px solid rgba(168, 85, 247, 0.3);
   }
+
   .neon-pill {
     background: var(--accent-purple);
     box-shadow: 0 0 30px var(--glow-purple);
   }
+
   /* Match navbar active "Home" purple/glow exactly */
   .pxi-home-purple {
     background-color: var(--color-pxi-purple);
@@ -183,13 +209,16 @@
   .bg-neon-card {
     background: linear-gradient(135deg, #9b30ff 0%, #e8359a 45%, #d535a8 55%, #a535e8 100%);
   }
+
   .shadow-neon-card {
     box-shadow: 0 0 20px 5px rgba(180, 40, 220, 0.3);
   }
+
   .ghost-echo {
     position: relative;
     z-index: 1;
   }
+
   .ghost-echo::after {
     content: attr(data-text);
     position: absolute;
@@ -201,9 +230,11 @@
     width: 100%;
     text-align: center;
   }
+
   .legal-hub-hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .legal-hub-hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -213,13 +244,16 @@
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--bg-primary);
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--color-pxi-purple);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-pxi-purple);
 }
@@ -237,10 +271,12 @@
   --PhoneInput-color--focus: #B026FF;
   --PhoneInputCountryFlag-borderColor: rgba(255, 255, 255, 0.2);
 }
+
 .verify-phone-input-wrapper .PhoneInput:focus-within {
   border-color: #B026FF;
   outline: none;
 }
+
 .verify-phone-input-wrapper .PhoneInputInput {
   flex: 1;
   min-width: 0;
@@ -252,16 +288,20 @@
   font-size: 1rem;
   font-weight: 500;
 }
+
 .verify-phone-input-wrapper .PhoneInputInput::placeholder {
   color: rgba(255, 255, 255, 0.4);
 }
+
 .verify-phone-input-wrapper .PhoneInputInput:focus {
   outline: none;
 }
+
 .verify-phone-input-wrapper .PhoneInputCountrySelect {
   background: transparent;
   color: rgba(255, 255, 255, 0.9);
 }
+
 .verify-phone-input-wrapper .PhoneInputCountrySelectArrow {
   border-color: rgba(255, 255, 255, 0.5);
 }
@@ -272,28 +312,58 @@
   color: var(--color-text-body);
   background-color: var(--color-bg-primary);
 }
+
 .landing-v2 .font-display {
   font-family: var(--font-heading);
   letter-spacing: 0.04em;
   text-transform: none;
 }
-.landing-v2 .no-scrollbar::-webkit-scrollbar {
+
+.no-scrollbar::-webkit-scrollbar {
   display: none;
 }
-.landing-v2 .no-scrollbar {
+.no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
+/* ── Hashtag marquee ── */
 @keyframes landing-hashtag-marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.landing-hashtag-marquee {
+  animation: landing-hashtag-marquee 50s linear infinite;
 }
 
-.landing-v2 .landing-hashtag-marquee {
-  animation: landing-hashtag-marquee 50s linear infinite;
+/* ── Hero chaos element drift + tilt (CSS-only, GPU-composited) ── */
+@keyframes hero-drift-0 {
+  0%, 100% { transform: translate(0, 0) rotate(-8deg); }
+  50% { transform: translate(12px, -10px) rotate(8deg); }
+}
+@keyframes hero-drift-1 {
+  0%, 100% { transform: translate(0, 0) rotate(6deg); }
+  50% { transform: translate(-14px, 8px) rotate(-10deg); }
+}
+@keyframes hero-drift-2 {
+  0%, 100% { transform: translate(0, 0) rotate(10deg); }
+  50% { transform: translate(8px, 14px) rotate(-6deg); }
+}
+.hero-drift-0 { animation: hero-drift-0 7s ease-in-out infinite; }
+.hero-drift-1 { animation: hero-drift-1 9s ease-in-out infinite; }
+.hero-drift-2 { animation: hero-drift-2 6s ease-in-out infinite; }
+
+/* ── Below-fold paint deferral — browser skips rendering until near viewport ── */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100vh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-drift-0,
+  .hero-drift-1,
+  .hero-drift-2,
+  .landing-hashtag-marquee {
+    animation: none !important;
+  }
 }
