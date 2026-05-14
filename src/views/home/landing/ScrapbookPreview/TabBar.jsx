@@ -4,16 +4,16 @@ import React from 'react';
 import { motion, useTransform } from 'framer-motion';
 
 export default function TabBar({ progress }) {
-  const threadColor = useTransform(progress, [0.82, 0.87], ['#fff', 'rgba(255,255,255,0.5)']);
+  const threadColor = useTransform(progress, [0.75, 0.77], ['#fff', 'rgba(255,255,255,0.5)']);
   const galleryColor = useTransform(
     progress,
-    [0.82, 0.87],
+    [0.75, 0.77],
     ['rgba(255,255,255,0.5)', '#fff']
   );
-  const activeTabX = useTransform(progress, [0.82, 0.87], ['0%', '100%']);
+  const activeTabX = useTransform(progress, [0.75, 0.77], ['0%', '100%']);
   const barOpacity = useTransform(
     progress,
-    [0.25, 0.29, 0.52, 0.56, 0.79, 0.83],
+    [0.25, 0.29, 0.52, 0.56, 0.73, 0.75],
     [0, 1, 1, 0, 0, 1]
   );
 

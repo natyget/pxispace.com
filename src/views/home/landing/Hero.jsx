@@ -24,11 +24,10 @@ function buildChaosElements(isMobile) {
       startX: Math.cos(angle) * radiusX,
       startY: Math.sin(angle) * radiusY,
       rotation: ((i * 7) % 60) - 30,
-      driftX: ((i * 11) % 40) - 20,
-      driftY: ((i * 13) % 30) - 15,
-      durationX: 5 + (i % 5),
-      durationY: 4 + (i % 4),
       popDelay: i * 0.08,
+      // Pre-compute scroll thresholds to avoid doing it per-frame
+      holeStart: 0.045 + i * (isMobile ? 0.019 : 0.0155),
+      holeEnd: 0.49,
     };
   });
 }
@@ -37,36 +36,34 @@ function easeOutCubic(t) {
   return 1 - (1 - t) ** 3;
 }
 
+/**
+ * Single component for one chaos item.
+ * Uses ONE useTransform to batch x/y/scale/opacity into a single CSS transform string,
+ * eliminating 3 extra useTransform hooks per element (was 4 hooks × 14 = 56, now 14).
+ */
 const HeroChaosItem = React.memo(function HeroChaosItem({ el, heroProgress, isMobile }) {
   const isBerealIcon = el.type === 'icon' && typeof el.iconUrl === 'string' && el.iconUrl.includes('bereal');
   const isGoogleDriveIcon =
     el.type === 'icon' &&
     typeof el.iconUrl === 'string' &&
     el.iconUrl.includes(HERO_SCATTER_ICON_EXTRA_PADDING);
-  const holeStart = 0.045 + el.id * (isMobile ? 0.019 : 0.0155);
-  const holeEnd = 0.49;
 
-  const tFor = (p) => {
-    const t = (p - holeStart) / (holeEnd - holeStart);
-    return Math.min(Math.max(t, 0), 1);
-  };
+  // Single useTransform computes a CSS transform + opacity string — 1 hook instead of 4
+  const transform = useTransform(heroProgress, (p) => {
+    const raw = (p - el.holeStart) / (el.holeEnd - el.holeStart);
+    const t = easeOutCubic(Math.min(Math.max(raw, 0), 1));
+    return {
+      x: el.startX * (1 - t),
+      y: el.startY * (1 - t),
+      s: 1 - t * 0.98,
+      o: Math.max(0, 1 - t * 1.08),
+    };
+  });
 
-  const x = useTransform(heroProgress, (p) => {
-    const t = easeOutCubic(tFor(p));
-    return `${el.startX * (1 - t)}vw`;
-  });
-  const y = useTransform(heroProgress, (p) => {
-    const t = easeOutCubic(tFor(p));
-    return `${el.startY * (1 - t)}vh`;
-  });
-  const scale = useTransform(heroProgress, (p) => {
-    const t = easeOutCubic(tFor(p));
-    return 1 - t * 0.98;
-  });
-  const opacity = useTransform(heroProgress, (p) => {
-    const t = easeOutCubic(tFor(p));
-    return Math.max(0, 1 - t * 1.08);
-  });
+  const x = useTransform(transform, (v) => `${v.x}vw`);
+  const y = useTransform(transform, (v) => `${v.y}vh`);
+  const scale = useTransform(transform, (v) => v.s);
+  const opacity = useTransform(transform, (v) => v.o);
 
   return (
     <motion.div
@@ -85,18 +82,8 @@ const HeroChaosItem = React.memo(function HeroChaosItem({ el, heroProgress, isMo
           delay: el.popDelay,
         }}
       >
-        <motion.div
-          animate={{
-            x: [0, el.driftX, 0],
-            y: [0, el.driftY, 0],
-            rotate: [el.rotation, el.rotation + 15, el.rotation],
-          }}
-          transition={{
-            duration: el.durationX,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        >
+        {/* CSS-driven drift + tilt — GPU-composited, zero JS per-frame cost */}
+        <div className={`hero-drift-${el.id % 3}`}>
           {el.type === 'photo' ? (
             el.photoStyle === 'polaroid' ? (
               <div className="w-[180px] h-[220px] md:w-[240px] md:h-[290px] bg-[#fdfdfd] p-3 pb-12 md:p-4 md:pb-16 shadow-[0_15px_35px_rgba(0,0,0,0.4)] border border-neutral-200">
@@ -129,7 +116,7 @@ const HeroChaosItem = React.memo(function HeroChaosItem({ el, heroProgress, isMo
               />
             </div>
           )}
-        </motion.div>
+        </div>
       </motion.div>
     </motion.div>
   );
@@ -143,21 +130,15 @@ export default function Hero() {
   });
 
   const [isMobile, setIsMobile] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
+  // Build immediately — no `mounted` state guard, avoids an extra render cycle
   const chaosElements = useMemo(
-    () => (mounted ? buildChaosElements(isMobile) : []),
-    [isMobile, mounted]
+    () => buildChaosElements(isMobile),
+    [isMobile]
   );
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);

@@ -662,7 +662,7 @@ export default function LegalHubPage() {
 
     const handleIntersect = (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting && entry.intersectionRatio > 0.2) {
+        if (entry.isIntersecting) {
           setActiveSection(entry.target.id);
         }
       });
@@ -670,8 +670,8 @@ export default function LegalHubPage() {
 
     const observerOptions = {
       root: null,
-      rootMargin: '-20% 0px -60% 0px',
-      threshold: [0.2, 0.5]
+      rootMargin: '-20% 0px -75% 0px',
+      threshold: 0
     };
 
     const observer = new IntersectionObserver(handleIntersect, observerOptions);
@@ -730,7 +730,7 @@ export default function LegalHubPage() {
       </header>
 
       {/* Mobile Navigation (Sticky) */}
-      <div className="md:hidden sticky top-16 z-30 bg-legal-hub-bg/95 backdrop-blur pt-4 pb-2 border-b border-legal-hub-border">
+      <div className="md:hidden sticky top-0 z-30 bg-legal-hub-bg/95 backdrop-blur pt-4 pb-2 border-b border-legal-hub-border">
         <div className="flex overflow-x-auto legal-hub-hide-scrollbar px-4 gap-6">
           {SECTIONS.map((section) => (
             <button

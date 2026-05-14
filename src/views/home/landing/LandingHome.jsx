@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import ScrollProgressBar from './ScrollProgressBar';
 import Hero from './Hero';
 import ScrapbookPreview from './ScrapbookPreview';
@@ -10,34 +10,34 @@ import BestMomentsVault from './BestMomentsVault';
 import HashtagTicker from './HashtagTicker';
 
 export default function LandingHome() {
-  const [isTouch, setIsTouch] = useState(null);
-
+  /* Set landing class for scroll-behavior override (needed for scroll-driven sections) */
   useEffect(() => {
-    setIsTouch(
-      typeof window !== 'undefined' &&
-        ('ontouchstart' in window || navigator.maxTouchPoints > 0)
-    );
-  }, []);
-
-  useEffect(() => {
-    if (isTouch !== false) return;
     document.documentElement.classList.add('landing-page-root');
     return () => document.documentElement.classList.remove('landing-page-root');
-  }, [isTouch]);
+  }, []);
 
   return (
-    <div
-      className="landing-v2 relative w-full min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-body)]"
-    >
-        {isTouch === false && <ScrollProgressBar />}
-        <main>
-          <Hero />
+    <div className="landing-v2 relative w-full min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-body)]">
+      <ScrollProgressBar />
+      <main>
+        <Hero />
+        <div className="cv-auto">
           <ScrapbookPreview />
+        </div>
+        <div className="cv-auto">
           <FeatureStory />
+        </div>
+        <div className="cv-auto">
           <AuthenticContentSection />
+        </div>
+        <div className="cv-auto">
           <BestMomentsVault />
+        </div>
+        <div className="cv-auto">
           <HashtagTicker />
-        </main>
-      </div>
+        </div>
+      </main>
+    </div>
   );
 }
+
