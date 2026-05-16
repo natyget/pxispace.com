@@ -21,7 +21,7 @@ import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 import { eventsService } from '@/services/events';
 import { loadOrganizerAnalytics } from '@/services/organizerAnalytics';
 
-const TIER_COLORS = ['#ffffff', '#c084fc', '#60a5fa', '#f59e0b', '#34d399'];
+const TIER_COLORS = ['#d4d4d8', '#c084fc', '#60a5fa', '#f59e0b', '#34d399'];
 
 function buildHypeSeries(seed = 0) {
     return Array.from({ length: 24 }, (_, i) => {
@@ -64,10 +64,22 @@ function AnalyticsTooltip({ active, payload, label }) {
     if (!active || !payload || !payload.length) return null;
     const point = payload[0].payload;
     return (
-        <div className="bg-black/95 border border-white/10 p-3 rounded-xl shadow-xl">
-            <p className="text-[11px] text-zinc-400">{label}</p>
-            <p className="text-white font-bold text-sm mt-1">Hype: {point.hype}</p>
-            <p className="text-zinc-400 text-xs mt-1">Chat {point.chat} · Reactions {point.reactions} · Scans {point.scans}</p>
+        <div className="bg-zinc-950 border border-white/15 p-3.5 rounded-2xl shadow-2xl min-w-[220px]">
+            <p className="text-[11px] text-zinc-300 font-semibold tracking-wide">{label}</p>
+            <p className="text-white font-black text-base mt-1">Hype Index {point.hype}</p>
+            <p className="text-zinc-200 text-xs mt-1.5">Chat {point.chat} · Reactions {point.reactions} · Gate scans {point.scans}</p>
+        </div>
+    );
+}
+
+function SurfaceTooltip({ active, payload, label }) {
+    if (!active || !payload || !payload.length) return null;
+    return (
+        <div className="bg-zinc-950 border border-white/15 p-3.5 rounded-2xl shadow-2xl min-w-[170px]">
+            {label ? <p className="text-[11px] text-zinc-300 font-semibold tracking-wide">{label}</p> : null}
+            <p className="text-white text-sm font-bold mt-1">
+                {payload[0].name || payload[0].dataKey}: {payload[0].value}
+            </p>
         </div>
     );
 }
@@ -76,6 +88,7 @@ export default function AnalyticsPage() {
     const [events, setEvents] = useState([]);
     const [selectedEventId, setSelectedEventId] = useState('');
     const [eventMode, setEventMode] = useState('live');
+    const [isMobile, setIsMobile] = useState(false);
     const [loading, setLoading] = useState(true);
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
     const [analyticsPayload, setAnalyticsPayload] = useState(null);
@@ -100,6 +113,15 @@ export default function AnalyticsPage() {
         return () => {
             cancelled = true;
         };
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return undefined;
+        const mq = window.matchMedia('(max-width: 768px)');
+        const onChange = () => setIsMobile(mq.matches);
+        onChange();
+        mq.addEventListener('change', onChange);
+        return () => mq.removeEventListener('change', onChange);
     }, []);
 
     const selectedEvent = useMemo(
@@ -156,7 +178,7 @@ export default function AnalyticsPage() {
     }, [selectedEvent?._count?.tickets]);
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8">
+        <div className="max-w-6xl mx-auto space-y-7 md:space-y-8">
             <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
                     <p className="text-xs font-bold tracking-widest uppercase text-pxi-purple">Organizer Intelligence</p>
@@ -169,6 +191,24 @@ export default function AnalyticsPage() {
                     <DataSourceBadge source="Derived" />
                 </div>
             </header>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                <div className="rounded-[1.6rem] border border-white/10 bg-zinc-950/80 px-5 py-4">
+                    <p className="text-[11px] uppercase tracking-widest font-bold text-zinc-400">Current Context</p>
+                    <p className="text-white font-black text-base md:text-lg mt-1 line-clamp-2">{selectedEvent?.name || 'No event selected'}</p>
+                    <p className="text-zinc-300 text-xs mt-1">{eventMode === 'live' ? 'Live event mode' : 'Archived event mode'}</p>
+                </div>
+                <div className="rounded-[1.6rem] border border-white/10 bg-zinc-950/80 px-5 py-4">
+                    <p className="text-[11px] uppercase tracking-widest font-bold text-zinc-400">Peak Hype Window</p>
+                    <p className="text-white font-black text-lg mt-1">{hypeSeries.reduce((best, point) => point.hype > best.hype ? point : best, hypeSeries[0] || { time: '—', hype: 0 }).time}</p>
+                    <p className="text-zinc-300 text-xs mt-1">Composite chat + reactions + scans</p>
+                </div>
+                <div className="rounded-[1.6rem] border border-white/10 bg-zinc-950/80 px-5 py-4">
+                    <p className="text-[11px] uppercase tracking-widest font-bold text-zinc-400">Noise Filtered</p>
+                    <p className="text-white font-black text-lg mt-1">{clusterData[0]?.noiseRatio || '0%'}</p>
+                    <p className="text-zinc-300 text-xs mt-1">Primary DBSCAN cluster ratio</p>
+                </div>
+            </div>
 
             <SectionCard
                 title="Event Context"
@@ -233,12 +273,12 @@ export default function AnalyticsPage() {
                     subtitle="Drop-off from purchase through retained engagement."
                     source={moduleSource}
                 >
-                    <div className="h-[300px]">
+                    <div className="h-[280px] md:h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={funnelData} layout="vertical" margin={{ top: 6, right: 10, left: 20, bottom: 6 }}>
-                                <XAxis type="number" stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} />
-                                <YAxis type="category" dataKey="stage" stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11 }} width={130} />
-                                <Tooltip cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                            <BarChart data={funnelData} layout="vertical" margin={{ top: 6, right: 10, left: isMobile ? 4 : 20, bottom: 6 }}>
+                                <XAxis type="number" stroke="rgba(255,255,255,0.28)" tick={{ fill: 'rgba(255,255,255,0.75)', fontSize: isMobile ? 10 : 11 }} />
+                                <YAxis type="category" dataKey="stage" stroke="rgba(255,255,255,0.28)" tick={{ fill: 'rgba(255,255,255,0.85)', fontSize: isMobile ? 10 : 11 }} width={isMobile ? 95 : 130} />
+                                <Tooltip content={<SurfaceTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
                                 <Bar dataKey="value" radius={[8, 8, 8, 8]} fill="#c084fc" />
                             </BarChart>
                         </ResponsiveContainer>
@@ -251,7 +291,7 @@ export default function AnalyticsPage() {
                 subtitle="Composite of chat volume, reaction velocity, and gate scans."
                 source="Derived"
             >
-                <div className="h-[360px]">
+                <div className="h-[300px] md:h-[360px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={hypeSeries}>
                             <defs>
@@ -260,8 +300,18 @@ export default function AnalyticsPage() {
                                     <stop offset="100%" stopColor="#000000" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <XAxis dataKey="time" stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} />
-                            <YAxis stroke="rgba(255,255,255,0.2)" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} />
+                            <XAxis
+                                dataKey="time"
+                                stroke="rgba(255,255,255,0.28)"
+                                tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: isMobile ? 10 : 11 }}
+                                interval={isMobile ? 3 : 1}
+                                minTickGap={isMobile ? 18 : 10}
+                            />
+                            <YAxis
+                                stroke="rgba(255,255,255,0.28)"
+                                tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: isMobile ? 10 : 11 }}
+                                width={isMobile ? 28 : 40}
+                            />
                             <Tooltip content={<AnalyticsTooltip />} />
                             <Area type="monotone" dataKey="hype" stroke="#ffffff" strokeWidth={2} fill="url(#hypeGradient)" />
                         </AreaChart>
@@ -275,21 +325,21 @@ export default function AnalyticsPage() {
                     subtitle="Crowd split by global passport tiers."
                     source="Derived"
                 >
-                    <div className="h-[320px]">
+                    <div className="h-[280px] md:h-[320px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
-                                <Pie data={tierMix} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={105} innerRadius={55}>
+                                <Pie data={tierMix} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={isMobile ? 88 : 105} innerRadius={isMobile ? 44 : 55}>
                                     {tierMix.map((tier, idx) => (
                                         <Cell key={tier.name} fill={TIER_COLORS[idx % TIER_COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip />
+                            <Tooltip content={<SurfaceTooltip />} />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 mt-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
                         {tierMix.map((tier, idx) => (
-                            <p key={tier.name} className="text-xs text-zinc-300 flex items-center gap-2">
+                            <p key={tier.name} className="text-xs text-zinc-200 flex items-center gap-2">
                                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: TIER_COLORS[idx % TIER_COLORS.length] }} />
                                 {tier.name}: {tier.value}
                             </p>
