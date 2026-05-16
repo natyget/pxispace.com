@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fetchAdminReports } from '@/services/admin';
 import AdminPagination from '@/components/admin/AdminPagination';
+import { useAuth } from '@/contexts/AuthContext';
+import { adminMockReports } from '@/lib/adminMockData';
+import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 
 function formatDate(iso) {
     if (!iso) return '—';
@@ -26,14 +29,24 @@ const statusStyle = {
 };
 
 export default function AdminReportsPage() {
+    const { user } = useAuth();
     const [rows, setRows] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const isLiveAdmin = user?.accountTier === 'ADMIN';
 
     const load = useCallback(async (p) => {
+        if (!isLiveAdmin) {
+            setRows(adminMockReports);
+            setTotal(adminMockReports.length);
+            setTotalPages(1);
+            setError(null);
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         setError(null);
         try {
@@ -47,7 +60,7 @@ export default function AdminReportsPage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [isLiveAdmin]);
 
     useEffect(() => {
         load(page);
@@ -61,6 +74,7 @@ export default function AdminReportsPage() {
                     Trust &amp; safety reports. {total > 0 ? `${total} total.` : null}
                 </p>
             </div>
+            <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
 
             {error && (
                 <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-4 text-red-300 text-sm">{error}</div>

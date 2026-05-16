@@ -1,30 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
-    LayoutDashboard,
-    TrendingUp,
-    Shield,
-    LogOut,
-    Menu,
-    X,
-    ChevronRight,
-    ChevronLeft,
-    UserCog,
-    Calendar,
-    Bell,
-    Plus,
-    Activity,
-    Users,
-    Flag,
-} from 'lucide-react';
+    DashboardSquare01Icon,
+    Shield01Icon,
+    Logout01Icon,
+    Menu01Icon,
+    Cancel01Icon,
+    ArrowLeft01Icon,
+    Calendar01Icon,
+    Notification03Icon,
+    Activity01Icon,
+    Megaphone01Icon,
+    UserGroupIcon,
+    FlagIcon,
+    QrCodeIcon,
+    StarIcon,
+    UserCircleIcon,
+} from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { getNotifications } from '../../services/notifications';
-import { getPassportLevelDisplay } from '../../utils/odysseyTier';
+import { getDashboardCapabilities } from '@/lib/dashboardCapabilities';
+import { canAccessAdminDashboard } from '@/lib/adminAccess';
 const LogoSVG = "/images/logo.svg";
 const SIDEBAR_BTN_BASE =
     'w-full inline-flex items-center px-[14px] py-[12px] rounded-full text-[14px] font-semibold tracking-wide transition-all duration-300';
@@ -38,21 +40,36 @@ function shouldClearAuth(error) {
 const ADMIN_SIDEBAR_MODE_KEY = 'pxi_dashboard_admin_ui_mode';
 
 const adminNavItems = [
-    { label: 'Overview', path: '/dashboard/admin', icon: LayoutDashboard, end: true },
-    { label: 'User Management', path: '/dashboard/admin/users', icon: Users, end: true },
-    { label: 'Event Management', path: '/dashboard/admin/events', icon: Calendar, end: true },
-    { label: 'Report Management', path: '/dashboard/admin/reports', icon: Flag, end: true },
+    { label: 'Overview', path: '/dashboard/admin', icon: DashboardSquare01Icon, end: true },
+    { label: 'User Management', path: '/dashboard/admin/users', icon: UserGroupIcon, end: true },
+    { label: 'Event Management', path: '/dashboard/admin/events', icon: Calendar01Icon, end: true },
+    { label: 'Report Management', path: '/dashboard/admin/reports', icon: FlagIcon, end: true },
+    { label: 'UGC Moderation', path: '/dashboard/admin/ugc', icon: Notification03Icon, end: true },
 ];
 
-const navItems = [
-    { label: 'Overview', path: '/dashboard', icon: LayoutDashboard, end: true },
-    { label: 'My events', path: '/dashboard/events', icon: Calendar, end: true },
-    { label: 'Create event', path: '/dashboard/events/new', icon: Plus, end: true },
-    { label: 'PXI Passport', path: '/dashboard/passport', icon: Shield },
-    { label: 'Earnings', path: '/dashboard/earnings', icon: TrendingUp, vendorOnly: true },
-    { label: 'Analytics', path: '/dashboard/analytics', icon: Activity, vendorOnly: true },
-    { label: 'Notifications', path: '/dashboard/notifications', icon: Bell },
-    { label: 'Settings', path: '/dashboard/account', icon: UserCog },
+const baseNavItems = [
+    { label: 'Command Center', path: '/dashboard', icon: DashboardSquare01Icon, end: true },
+    { label: 'My events', path: '/dashboard/events', icon: Calendar01Icon, end: true },
+    { label: 'Create event', path: '/dashboard/events/new', icon: Calendar01Icon, end: true },
+    { label: 'Analytics', path: '/dashboard/analytics', icon: Activity01Icon, organizerOnly: true, end: true },
+    { label: 'Audience CRM', path: '/dashboard/organizer/audience', icon: UserGroupIcon, organizerOnly: true, end: true },
+    { label: 'Boosts & Campaigns', path: '/dashboard/organizer/campaigns', icon: Megaphone01Icon, organizerOnly: true, end: true },
+    { label: 'PXI Passport', path: '/dashboard/passport', icon: Shield01Icon },
+    { label: 'Vendor Setup', path: '/dashboard/vendor-upgrade', icon: StarIcon, nonVendorOnly: true },
+    { label: 'Earnings', path: '/dashboard/earnings', icon: Activity01Icon, vendorOnly: true },
+];
+
+const bouncerNavItems = [
+    { label: 'Live Operations', path: '/dashboard/live-scan', icon: QrCodeIcon, end: true, bouncerOnly: true },
+];
+
+const organizerMockNavItems = [
+    { label: 'Organizer Studio', path: '/dashboard/organizer/command', icon: DashboardSquare01Icon, end: true, organizerOnly: true },
+];
+
+const footerNavItems = [
+    { label: 'Notifications', path: '/dashboard/notifications', icon: Notification03Icon },
+    { label: 'Settings', path: '/dashboard/account', icon: UserCircleIcon },
 ];
 
 export default function DashboardLayout({ children }) {
@@ -66,7 +83,12 @@ export default function DashboardLayout({ children }) {
     const [mounted, setMounted] = useState(false);
     const [notificationCount, setNotificationCount] = useState(0);
     const [phoneCheckDone, setPhoneCheckDone] = useState(false);
-    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [capabilities, setCapabilities] = useState({
+        hasBouncerAccess: false,
+        loading: true,
+        determined: false,
+        source: {},
+    });
 
     useEffect(() => setMounted(true), []);
 
@@ -80,6 +102,39 @@ export default function DashboardLayout({ children }) {
         mq.addEventListener('change', syncMobileSidebar);
         return () => mq.removeEventListener('change', syncMobileSidebar);
     }, []);
+
+    const refreshCapabilities = useCallback(async () => {
+        if (!mounted || !user?.id) {
+            setCapabilities({ hasBouncerAccess: false, loading: false, determined: false, source: {} });
+            return;
+        }
+        setCapabilities((prev) => ({ ...prev, loading: true }));
+        try {
+            const next = await getDashboardCapabilities(user);
+            setCapabilities({
+                hasBouncerAccess: !!next.hasBouncerAccess,
+                loading: false,
+                determined: !!next.determined,
+                source: next.source || {},
+            });
+            if (next?.freshUser) {
+                updateUser(next.freshUser);
+            }
+        } catch {
+            setCapabilities((prev) => ({ ...prev, loading: false, determined: false, source: {} }));
+        }
+    }, [mounted, user, updateUser]);
+
+    useEffect(() => {
+        refreshCapabilities();
+    }, [refreshCapabilities]);
+
+    useEffect(() => {
+        if (!mounted || typeof window === 'undefined') return undefined;
+        const handleRefresh = () => refreshCapabilities();
+        window.addEventListener('pxi:capabilities-refresh', handleRefresh);
+        return () => window.removeEventListener('pxi:capabilities-refresh', handleRefresh);
+    }, [mounted, refreshCapabilities]);
 
     useEffect(() => {
         if (!mounted || !user?.id) return;
@@ -111,6 +166,15 @@ export default function DashboardLayout({ children }) {
         }
     }, [mounted, user?.id, user?.phoneNumber, fromMobile, phoneCheckDone, router, updateUser, logout]);
 
+    const hasLiveOpsAccess = capabilities.hasBouncerAccess || !!user?.isVendor;
+
+    useEffect(() => {
+        if (!mounted || capabilities.loading || !capabilities.determined) return;
+        if (pathname.startsWith('/dashboard/live-scan') && !hasLiveOpsAccess) {
+            router.replace('/dashboard/notifications');
+        }
+    }, [mounted, pathname, capabilities.loading, capabilities.determined, hasLiveOpsAccess, router]);
+
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showCreateEventModal, setShowCreateEventModal] = useState(false);
     /** ADMIN tier only: 'admin' = platform tools nav, 'user' = normal member nav */
@@ -118,18 +182,18 @@ export default function DashboardLayout({ children }) {
 
     useEffect(() => {
         if (!mounted || typeof window === 'undefined') return;
-        if (user?.accountTier !== 'ADMIN') return;
+        if (!canAccessAdminDashboard(user)) return;
         const saved = window.localStorage.getItem(ADMIN_SIDEBAR_MODE_KEY);
         if (saved === 'admin' || saved === 'user') {
             setAdminSidebarMode(saved);
         } else {
             setAdminSidebarMode('admin');
         }
-    }, [mounted, user?.accountTier]);
+    }, [mounted, user]);
 
     /** Deep-linking into /dashboard/admin/* should show ADMIN nav */
     useEffect(() => {
-        if (!mounted || user?.accountTier !== 'ADMIN') return;
+        if (!mounted || !canAccessAdminDashboard(user)) return;
         if (pathname.startsWith('/dashboard/admin')) {
             setAdminSidebarMode('admin');
             try {
@@ -138,7 +202,7 @@ export default function DashboardLayout({ children }) {
                 /* ignore */
             }
         }
-    }, [mounted, pathname, user?.accountTier]);
+    }, [mounted, pathname, user]);
 
     const setAdminSidebarModeAndNavigate = (mode) => {
         setAdminSidebarMode(mode);
@@ -161,7 +225,15 @@ export default function DashboardLayout({ children }) {
     };
 
     // Use stable placeholder until mounted to avoid hydration mismatch (server has no user, client has name initial)
-    const avatarFallback = mounted ? (user?.name?.charAt(0)?.toUpperCase() || '?') : '?';
+    const avatarFallback = mounted ? (user?.name?.charAt(0)?.toUpperCase() || 'P') : 'P';
+    const hasOrganizerAccess = hasLiveOpsAccess;
+    const showDevCaps = searchParams.get('debugCaps') === '1';
+    const memberNavItems = [
+        ...baseNavItems,
+        ...(hasLiveOpsAccess ? bouncerNavItems : []),
+        ...(hasOrganizerAccess ? organizerMockNavItems : []),
+        ...footerNavItems,
+    ];
 
     return (
         <div className="h-screen bg-[#050505] flex overflow-hidden">
@@ -190,11 +262,11 @@ export default function DashboardLayout({ children }) {
                                 className="ml-auto text-zinc-600 hover:text-zinc-400 md:hidden"
                                 onClick={() => setSidebarOpen(false)}
                             >
-                                <X size={18} />
+                                <HugeiconsIcon icon={Cancel01Icon} size={18} />
                             </button>
                         </div>
 
-                        {mounted && user?.accountTier === 'ADMIN' && (
+                        {mounted && canAccessAdminDashboard(user) && (
                             <div
                                 className={`px-3 md:px-5 mb-2 ${sidebarCollapsed ? 'flex flex-col items-center' : ''}`}
                             >
@@ -232,11 +304,14 @@ export default function DashboardLayout({ children }) {
                         )}
 
                         <nav className={`flex-1 overflow-y-auto mt-2 ${sidebarCollapsed ? 'flex flex-col items-center gap-2 px-0' : 'space-y-2 px-3 md:px-5'}`}>
-                            {(mounted && user?.accountTier === 'ADMIN' && adminSidebarMode === 'admin'
+                            {(mounted && canAccessAdminDashboard(user) && adminSidebarMode === 'admin'
                                 ? adminNavItems
-                                : navItems
-                            ).map(({ label, path, icon: Icon, end, vendorOnly }) => {
+                                : memberNavItems
+                            ).map(({ label, path, icon: Icon, end, vendorOnly, nonVendorOnly, bouncerOnly, organizerOnly }) => {
                                 if (vendorOnly && mounted && !user?.isVendor) return null;
+                                if (nonVendorOnly && mounted && user?.isVendor) return null;
+                                if (bouncerOnly && !hasLiveOpsAccess) return null;
+                                if (organizerOnly && !hasOrganizerAccess) return null;
                                 const isActive = end ? pathname === path : pathname.startsWith(path + '/') || pathname === path;
                                 const showPassportAlert = mounted && path === '/dashboard/passport' && !user?.isPassportIssued;
                                 const showNotificationBadge = path === '/dashboard/notifications' && notificationCount > 0;
@@ -260,7 +335,7 @@ export default function DashboardLayout({ children }) {
                                         title={sidebarCollapsed ? label : undefined}
                                     >
                                         <span className="relative flex-shrink-0">
-                                            <Icon size={20} className={isActive ? 'text-black' : 'text-white/60 group-hover:text-white transition-colors'} />
+                                            <HugeiconsIcon icon={Icon} size={20} className={isActive ? 'text-black' : 'text-white/60 group-hover:text-white transition-colors'} />
                                             {showNotificationBadge && (
                                                 <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-white text-black text-xs font-bold">
                                                     {notificationCount > 99 ? '99+' : notificationCount}
@@ -283,31 +358,13 @@ export default function DashboardLayout({ children }) {
                         aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                         type="button"
                     >
-                        {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                        <HugeiconsIcon icon={ArrowLeft01Icon} className={`w-4 h-4 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
                     </button>
 
                     <div className="p-6 border-t border-white/5 relative">
-                        {userMenuOpen && (
-                            <div className={`absolute bottom-full mb-2 rounded-xl border border-white/10 bg-black/90 p-1.5 ${sidebarCollapsed ? 'left-2 right-2' : 'left-6 right-6'}`}>
-                                <button
-                                    onClick={() => {
-                                        setUserMenuOpen(false);
-                                        setShowLogoutModal(true);
-                                    }}
-                                    className={`${SIDEBAR_BTN_BASE} ${sidebarCollapsed ? 'justify-center' : 'justify-start'} text-red-300 hover:bg-red-500/10 hover:text-red-200`}
-                                    title={sidebarCollapsed ? 'Sign Out' : undefined}
-                                >
-                                    <LogOut size={18} />
-                                    {!sidebarCollapsed && <span className="ml-2">Sign Out</span>}
-                                </button>
-                            </div>
-                        )}
-
-                        <button
-                            onClick={() => setUserMenuOpen((v) => !v)}
-                            className={`${sidebarCollapsed ? 'inline-flex h-11 w-11 mx-auto items-center justify-center rounded-full transition-all duration-300' : `${SIDEBAR_BTN_BASE} justify-center md:justify-start`} bg-transparent border border-transparent text-white/80 hover:bg-white/5`}
-                            title={sidebarCollapsed ? 'User menu' : undefined}
-                            type="button"
+                        <div
+                            className={`${sidebarCollapsed ? 'inline-flex h-11 w-11 mx-auto items-center justify-center rounded-full transition-all duration-300' : `${SIDEBAR_BTN_BASE} justify-center md:justify-start`} bg-transparent border border-transparent text-white/80`}
+                            title={sidebarCollapsed ? 'Profile' : undefined}
                         >
                             {mounted && user?.avatarUrl ? (
                                 <Image
@@ -329,10 +386,26 @@ export default function DashboardLayout({ children }) {
                                         <span className="block text-[14px] font-bold text-white truncate leading-tight">{mounted ? (user?.name || 'PXI User') : 'PXI User'}</span>
                                         <span className="block text-[12px] text-white/40 truncate leading-tight mt-0.5">@{mounted ? (user?.username || '—') : '—'}</span>
                                     </span>
-                                    <ChevronRight size={16} className={`ml-auto block text-white/50 transition-transform ${userMenuOpen ? '-rotate-90' : ''}`} />
                                 </>
                             )}
+                        </div>
+                        <button
+                            onClick={() => setShowLogoutModal(true)}
+                            className={`${sidebarCollapsed ? 'inline-flex h-11 w-11 mt-2 mx-auto items-center justify-center rounded-full transition-all duration-300' : `${SIDEBAR_BTN_BASE} mt-2 justify-start rounded-xl`} text-red-300 hover:bg-red-500/10 hover:text-red-200 border border-white/10`}
+                            title={sidebarCollapsed ? 'Sign Out' : undefined}
+                            type="button"
+                        >
+                            <HugeiconsIcon icon={Logout01Icon} size={18} />
+                            {!sidebarCollapsed && <span className="ml-2">Sign Out</span>}
                         </button>
+                        {showDevCaps && (
+                            <div className={`mt-2 rounded-xl border border-white/10 bg-white/5 px-2 py-1 text-[10px] text-white/70 ${sidebarCollapsed ? 'text-center' : ''}`}>
+                                {capabilities.hasBouncerAccess ? 'LiveOps: enabled' : 'LiveOps: disabled'} ·
+                                {' '}events:{capabilities.source?.events ? 'Y' : 'N'}
+                                {' '}notif:{capabilities.source?.notifications ? 'Y' : 'N'}
+                                {' '}user:{capabilities.source?.user ? 'Y' : 'N'}
+                            </div>
+                        )}
                     </div>
                 </div>
             </aside>
@@ -406,7 +479,7 @@ export default function DashboardLayout({ children }) {
                         onClick={() => setSidebarOpen(true)}
                         className="text-zinc-400 hover:text-white"
                     >
-                        <Menu size={22} />
+                        <HugeiconsIcon icon={Menu01Icon} size={22} />
                     </button>
                     <Image src={LogoSVG} alt="PXI" width={24} height={24} className="h-6 w-6" />
                     <span className="text-white font-black tracking-widest text-sm uppercase">

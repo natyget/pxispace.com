@@ -4,23 +4,11 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import {
-  Book,
-  Calendar,
-  Clock,
-  MapPin,
-  Users,
-  Plus,
-  MoreHorizontal,
-  Info,
-  ImagePlus,
-  UserCircle,
-  UserPlus,
-  Pencil,
-  Trash2,
-} from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { BookIcon, Calendar01Icon, ClockIcon, Location01Icon, UserGroupIcon, MoreHorizontalIcon, ImageAdd02Icon, UserCircleIcon, UserAdd01Icon, PencilIcon, Delete02Icon } from '@hugeicons/core-free-icons';
 import { toast } from 'sonner';
 import { eventsService } from '../../services/events';
+import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 
 function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle, onMenuClose, onDelete }) {
   const cover = (() => {
@@ -63,12 +51,12 @@ function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle,
         : 'border border-white/10 hover:border-white/30 transition-colors';
 
   const menuItems = [
-    { label: 'Details', href: `/dashboard/events/${eventId}`, icon: Info },
-    !isPast && { label: 'Invite', href: `/dashboard/events/${eventId}/invite#event-invite`, icon: UserPlus },
-    { label: 'Members', href: `/dashboard/events/${eventId}/members`, icon: UserCircle },
-    { label: 'Upload', href: `/dashboard/events/${eventId}/upload`, icon: ImagePlus },
-    !isPast && { label: 'Edit', href: `/dashboard/events/${eventId}/edit`, icon: Pencil },
-    { label: 'Delete', onClick: () => onDelete?.(eventId, event.name), icon: Trash2, danger: true },
+    { label: 'Details', href: `/dashboard/events/${eventId}`, icon: Calendar01Icon },
+    !isPast && { label: 'Invite', href: `/dashboard/events/${eventId}/invite#event-invite`, icon: UserAdd01Icon },
+    { label: 'Members', href: `/dashboard/events/${eventId}/members`, icon: UserCircleIcon },
+    { label: 'Upload', href: `/dashboard/events/${eventId}/upload`, icon: ImageAdd02Icon },
+    !isPast && { label: 'Edit', href: `/dashboard/events/${eventId}/edit`, icon: PencilIcon },
+    { label: 'Delete', onClick: () => onDelete?.(eventId, event.name), icon: Delete02Icon, danger: true },
   ].filter(Boolean);
 
   return (
@@ -89,7 +77,7 @@ function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle,
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-zinc-900">
-              <Calendar className="text-zinc-600" size={40} />
+              <HugeiconsIcon icon={Calendar01Icon} className="text-zinc-600" size={40} />
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90" />
@@ -101,7 +89,7 @@ function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle,
               <span className="status-pill status-active animate-pulse">Live</span>
             ) : isPast ? (
               <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                <Book className="w-4 h-4 text-white/70" />
+                <HugeiconsIcon icon={BookIcon} className="w-4 h-4 text-white/70" />
               </span>
             ) : (
               <span className="status-pill bg-white/10 text-white border border-white/20">
@@ -127,7 +115,7 @@ function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle,
               }}
               className="w-9 h-9 rounded-full bg-black/50 border border-white/15 flex items-center justify-center text-white hover:bg-white/10 hover:border-white/25 transition-colors"
             >
-              <MoreHorizontal size={18} strokeWidth={2.25} />
+              <HugeiconsIcon icon={MoreHorizontalIcon} size={18} strokeWidth={2.25} />
             </button>
             {menuOpen && (
               <div
@@ -143,7 +131,7 @@ function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle,
                       onClick={() => onMenuClose()}
                       className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-zinc-200 hover:bg-white/10 transition-colors"
                     >
-                      <Icon size={16} className="text-pxi-purple shrink-0" />
+                      <HugeiconsIcon icon={Icon} size={16} className="text-pxi-purple shrink-0" />
                       {label}
                     </Link>
                   ) : (
@@ -154,7 +142,7 @@ function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle,
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMenuClose(); onClick?.(); }}
                       className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors ${danger ? 'text-red-400 hover:bg-red-500/10' : 'text-zinc-200 hover:bg-white/10'}`}
                     >
-                      <Icon size={16} className={`shrink-0 ${danger ? 'text-red-400' : 'text-pxi-purple'}`} />
+                      <HugeiconsIcon icon={Icon} size={16} className={`shrink-0 ${danger ? 'text-red-400' : 'text-pxi-purple'}`} />
                       {label}
                     </button>
                   )
@@ -171,14 +159,14 @@ function DashboardEventCard({ event, section, delay = 0, menuOpen, onMenuToggle,
             </h3>
             <div className={`space-y-2 text-[13px] font-medium ${isPast ? 'text-white/50' : 'text-white/70'}`}>
               <div className="flex items-center">
-                <Clock className="w-4 h-4 mr-2.5 opacity-50" /> {formatDate(event.startDate)}
+                <HugeiconsIcon icon={ClockIcon} className="w-4 h-4 mr-2.5 opacity-50" /> {formatDate(event.startDate)}
               </div>
               <div className="flex items-center">
-                <MapPin className="w-4 h-4 mr-2.5 opacity-50" /> {event.location || event.venue || 'Venue TBD'}
+                <HugeiconsIcon icon={Location01Icon} className="w-4 h-4 mr-2.5 opacity-50" /> {event.location || event.venue || 'Venue TBD'}
               </div>
               {attendees && (
                 <div className={`flex items-center ${isLive ? 'text-[#4ade80] font-bold' : ''}`}>
-                  <Users className="w-4 h-4 mr-2.5 opacity-80" /> {attendees}
+                  <HugeiconsIcon icon={UserGroupIcon} className="w-4 h-4 mr-2.5 opacity-80" /> {attendees}
                 </div>
               )}
             </div>
@@ -288,7 +276,7 @@ export default function EventsListPage() {
         <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl overflow-hidden">
           <div className="px-6 pt-6 pb-4 flex flex-col items-center text-center gap-4">
             <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-              <Trash2 size={24} className="text-red-400" />
+              <HugeiconsIcon icon={Delete02Icon} size={24} className="text-red-400" />
             </div>
             <div className="space-y-1.5">
               <h3 className="text-lg font-bold text-white">Delete event?</h3>
@@ -324,18 +312,21 @@ export default function EventsListPage() {
           <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">My Events</h1>
           <p className="text-zinc-500 text-sm mt-1">Manage your live, upcoming, and past events.</p>
         </div>
-        <Link
-          href="/dashboard/events/new"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-pxi-purple text-white text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all shrink-0 ml-auto"
-        >
-          <Plus size={16} strokeWidth={2.5} />
-          Create event
-        </Link>
+        <div className="flex items-center gap-2 ml-auto">
+          <DataSourceBadge source="Live" />
+          <Link
+            href="/dashboard/events/new"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-pxi-purple text-white text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all shrink-0"
+          >
+          <HugeiconsIcon icon={Calendar01Icon} size={16} strokeWidth={2.5} />
+            Create event
+          </Link>
+        </div>
       </div>
 
       {events.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-12 text-center">
-          <Calendar className="mx-auto text-zinc-600 mb-4" size={48} />
+          <HugeiconsIcon icon={Calendar01Icon} className="mx-auto text-zinc-600 mb-4" size={48} />
           <p className="text-zinc-400 font-medium">No events yet</p>
           <p className="text-zinc-500 text-sm mt-1 max-w-md mx-auto">
             Create an event on the web or in the PXI mobile app.
@@ -344,7 +335,7 @@ export default function EventsListPage() {
             href="/dashboard/events/new"
             className="inline-flex items-center justify-center gap-2 mt-6 px-5 py-2.5 rounded-xl bg-pxi-purple text-white text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all"
           >
-            <Plus size={16} strokeWidth={2.5} />
+            <HugeiconsIcon icon={Calendar01Icon} size={16} strokeWidth={2.5} />
             Create event
           </Link>
         </div>

@@ -2,35 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-    Star,
-    ShieldCheck,
-    Banknote,
-    Ticket,
-    ArrowRight,
-    Loader2,
-    CheckCircle2,
-    XCircle,
-    RefreshCw,
-    AlertTriangle,
-    Smartphone,
-} from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { StarIcon, HelpCircleIcon, Ticket01Icon, ArrowRight02Icon, Loading02Icon, CheckmarkCircle02Icon, CancelCircleIcon, RefreshIcon, Alert02Icon, SmartPhone01Icon, PercentIcon } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService, authStorage } from '../../services/auth';
 
 const BENEFITS = [
     {
-        icon: Ticket,
+        icon: Ticket01Icon,
         title: 'Sell Tickets',
         desc: 'Create paid events and sell tickets directly through PXI.',
     },
     {
-        icon: Banknote,
+        icon: PercentIcon,
         title: 'Collect Revenue',
         desc: 'Payouts go straight to your connected bank account.',
     },
     {
-        icon: ShieldCheck,
+        icon: CheckmarkCircle02Icon,
         title: 'Secure Verification',
         desc: 'Powered by Stripe — industry-standard identity and payment verification.',
     },
@@ -67,8 +56,8 @@ function StatusRow({ label, enabled, description }) {
         <div className="flex items-start gap-3 py-3 border-b border-white/5 last:border-0">
             <div className="mt-0.5 flex-shrink-0">
                 {enabled
-                    ? <CheckCircle2 size={16} className="text-emerald-400" />
-                    : <XCircle size={16} className="text-red-400" />
+                    ? <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="text-emerald-400" />
+                    : <HugeiconsIcon icon={CancelCircleIcon} size={16} className="text-red-400" />
                 }
             </div>
             <div>
@@ -203,7 +192,7 @@ export default function VendorUpgradePage() {
         return (
             <div className="max-w-xl mx-auto py-12 text-center">
                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                    <CheckCircle2 size={34} className="text-amber-400" />
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={34} className="text-amber-400" />
                 </div>
                 <h1 className="text-3xl font-black text-white mb-3 tracking-tight">
                     You're a Vendor!
@@ -217,7 +206,7 @@ export default function VendorUpgradePage() {
                         href="pxi://vendor-onboarding-complete"
                         className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
                     >
-                        <Smartphone size={14} />
+                        <HugeiconsIcon icon={SmartPhone01Icon} size={14} />
                         Return to PXI App
                     </a>
                 ) : (
@@ -226,7 +215,7 @@ export default function VendorUpgradePage() {
                         className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
                     >
                         Go to Dashboard
-                        <ArrowRight size={14} />
+                        <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
                     </button>
                 )}
             </div>
@@ -238,7 +227,7 @@ export default function VendorUpgradePage() {
             {/* Header */}
             <div>
                 <div className="flex items-center gap-2 mb-2">
-                    <Star size={14} className="text-pxi-purple" />
+                    <HugeiconsIcon icon={StarIcon} size={14} className="text-pxi-purple" />
                     <span className="text-pxi-purple text-xs font-bold uppercase tracking-widest">
                         Vendor Upgrade
                     </span>
@@ -257,7 +246,7 @@ export default function VendorUpgradePage() {
                 {BENEFITS.map(({ icon: Icon, title, desc }) => (
                     <div key={title} className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5">
                         <div className="w-10 h-10 rounded-xl bg-pxi-purple/10 border border-pxi-purple/20 flex items-center justify-center mb-4">
-                            <Icon size={18} className="text-pxi-purple" />
+                            <HugeiconsIcon icon={Icon} size={18} className="text-pxi-purple" />
                         </div>
                         <h3 className="text-white font-bold text-sm mb-1">{title}</h3>
                         <p className="text-zinc-500 text-xs leading-relaxed">{desc}</p>
@@ -268,7 +257,7 @@ export default function VendorUpgradePage() {
             {/* Error banner */}
             {step === 'error' && errorMsg && (
                 <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                    <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
+                    <HugeiconsIcon icon={Alert02Icon} size={16} className="mt-0.5 flex-shrink-0" />
                     {errorMsg}
                 </div>
             )}
@@ -300,7 +289,7 @@ export default function VendorUpgradePage() {
                             <ul className="space-y-1.5">
                                 {stripeStatus.currentlyDue.map((key) => (
                                     <li key={key} className="flex items-center gap-2 text-xs text-zinc-300">
-                                        <XCircle size={13} className="text-amber-400 flex-shrink-0" />
+                                        <HugeiconsIcon icon={CancelCircleIcon} size={13} className="text-amber-400 flex-shrink-0" />
                                         {formatRequirement(key)}
                                     </li>
                                 ))}
@@ -321,7 +310,7 @@ export default function VendorUpgradePage() {
 
                 {step === 'redirecting' ? (
                     <div className="flex items-center gap-3 text-zinc-400 text-sm">
-                        <Loader2 size={16} className="animate-spin text-pxi-purple" />
+                        <HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin text-pxi-purple" />
                         Redirecting to Stripe…
                     </div>
                 ) : (
@@ -333,9 +322,9 @@ export default function VendorUpgradePage() {
                                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {step === 'loading' ? (
-                                    <><Loader2 size={14} className="animate-spin" />Reopening…</>
+                                    <><HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />Reopening…</>
                                 ) : (
-                                    <>Resubmit Verification<ArrowRight size={14} /></>
+                                    <>Resubmit Verification<HugeiconsIcon icon={ArrowRight02Icon} size={14} /></>
                                 )}
                             </button>
                         )}
@@ -351,9 +340,9 @@ export default function VendorUpgradePage() {
                             }`}
                         >
                             {step === 'loading' ? (
-                                <><Loader2 size={14} className="animate-spin" />Connecting…</>
+                                <><HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />Connecting…</>
                             ) : (
-                                <>Start Stripe Verification<ArrowRight size={14} /></>
+                                <>Start Stripe Verification<HugeiconsIcon icon={ArrowRight02Icon} size={14} /></>
                             )}
                         </button>
 
@@ -364,7 +353,7 @@ export default function VendorUpgradePage() {
                                 className="inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-pxi-purple/35 text-pxi-purple font-bold text-xs uppercase tracking-widest hover:bg-pxi-purple/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Resubmit Verification
-                                <ArrowRight size={13} />
+                                <HugeiconsIcon icon={ArrowRight02Icon} size={13} />
                             </button>
                         )}
                     </div>
@@ -386,7 +375,7 @@ export default function VendorUpgradePage() {
                     disabled={checkingStatus}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-zinc-300 text-sm font-medium hover:bg-white/5 transition-all disabled:opacity-50"
                 >
-                    {checkingStatus ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                    {checkingStatus ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" /> : <HugeiconsIcon icon={RefreshIcon} size={14} />}
                     Check Status
                 </button>
             </div>
