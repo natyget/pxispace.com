@@ -1,3 +1,4 @@
+import { HugeiconsIcon } from '@hugeicons/react';
 'use client';
 
 import Link from "next/link";
@@ -72,8 +73,7 @@ const Categories = () => {
                                 <div className="flex items-center justify-between w-full">
                                     <div className="flex items-start gap-4">
                                         <div className="w-12 h-12 rounded-full bg-white/5 border border-purple-500/20 flex items-center justify-center">
-                                            <Icon
-                                                className="text-purple-300"
+                                            <HugeiconsIcon icon={Icon} className="text-purple-300"
                                                 size={18}
                                             />
                                         </div>

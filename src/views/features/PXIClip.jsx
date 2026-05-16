@@ -1,3 +1,4 @@
+import { HugeiconsIcon } from '@hugeicons/react';
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { FiCpu, FiSmartphone, FiPrinter, FiBluetooth } from "react-icons/fi";
@@ -72,7 +73,7 @@ const PXIClip = () => {
                                     variants={fadeInUp}
                                 >
                                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/50">
-                                        <feature.icon className="w-4 h-4 text-cyan-400" />
+                                        <HugeiconsIcon icon={feature.icon} className="w-4 h-4 text-cyan-400" />
                                     </div>
                                     <span className="text-gray-300 font-medium">
                                         {feature.label}

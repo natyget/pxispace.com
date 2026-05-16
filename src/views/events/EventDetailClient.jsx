@@ -4,15 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useState } from 'react';
-import {
-  ArrowLeft,
-  ArrowUpRight,
-  Loader2,
-  Play,
-  Scan,
-  Smartphone,
-  X,
-} from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeftIcon, ArrowUpRightIcon, Loading02Icon, PlayIcon, ScanIcon, SmartPhone01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { eventsService } from '@/services/events';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
@@ -268,7 +261,7 @@ export default function EventDetailClient() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] pt-24 text-zinc-300 md:pt-28">
-        <Loader2 className="size-6 animate-spin" />
+        <HugeiconsIcon icon={Loading02Icon} className="size-6 animate-spin" />
       </div>
     );
   }
@@ -288,7 +281,7 @@ export default function EventDetailClient() {
           href="/events"
           className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/70 px-3 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md hover:bg-white/10 hover:text-white"
         >
-          <ArrowLeft className="size-3.5" />
+          <HugeiconsIcon icon={ArrowLeftIcon} className="size-3.5" />
           Events
         </Link>
       </div>
@@ -342,7 +335,7 @@ export default function EventDetailClient() {
                       className="m-2 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white shadow backdrop-blur-md transition hover:bg-black/70"
                       aria-label="Play"
                     >
-                      <Play className="size-4" strokeWidth={2} />
+                      <HugeiconsIcon icon={PlayIcon} className="size-4" strokeWidth={2} />
                     </button>
                   </div>
                 </div>
@@ -418,7 +411,7 @@ export default function EventDetailClient() {
                       >
                         <span className="hidden sm:inline">View guestlist</span>
                         <span className="sm:hidden">Guestlist</span>
-                        <Scan className="size-4" style={{ color: ACCENT }} aria-hidden />
+                        <HugeiconsIcon icon={ScanIcon} className="size-4" style={{ color: ACCENT }} aria-hidden />
                       </button>
                     ) : null}
                   </div>
@@ -457,7 +450,7 @@ export default function EventDetailClient() {
                     >
                       <span className="hidden sm:inline">View guestlist</span>
                       <span className="sm:hidden">Guestlist</span>
-                      <Scan className="size-4" style={{ color: ACCENT }} aria-hidden />
+                      <HugeiconsIcon icon={ScanIcon} className="size-4" style={{ color: ACCENT }} aria-hidden />
                     </button>
                   </div>
                 )}
@@ -508,7 +501,7 @@ export default function EventDetailClient() {
                               {item.href ? (
                                 <a target="_blank" className="group inline-flex items-center gap-1 text-white" href={item.href} rel="noopener noreferrer">
                                   <span className="relative text-lg font-medium tracking-tight after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-current after:transition-all group-hover:after:w-full">{item.name}</span>
-                                  <ArrowUpRight className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
+                                  <HugeiconsIcon icon={ArrowUpRightIcon} className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
                                 </a>
                               ) : (
                                 <span className="text-lg font-medium tracking-tight text-white">{item.name}</span>
@@ -723,7 +716,7 @@ export default function EventDetailClient() {
                 <h2 className="text-base font-semibold tracking-tight text-white">Get the app</h2>
                 <div className="flex flex-col items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-6 py-8">
                   <div className="flex flex-col items-center gap-2 text-center">
-                    <Smartphone className="size-8 text-zinc-400" aria-hidden />
+                    <HugeiconsIcon icon={SmartPhone01Icon} className="size-8 text-zinc-400" aria-hidden />
                     <h3 className="text-center text-xl font-semibold text-white md:text-2xl">More features in the app</h3>
                   </div>
                   <AppStoreCtaPair className="max-w-md mx-auto" />
@@ -765,7 +758,7 @@ export default function EventDetailClient() {
                 aria-label="Close guestlist"
                 onClick={() => setGuestlistOpen(false)}
               >
-                <X className="h-4 w-4" aria-hidden />
+                <HugeiconsIcon icon={Cancel01Icon} className="h-4 w-4" aria-hidden />
               </button>
             </div>
 
@@ -774,7 +767,7 @@ export default function EventDetailClient() {
                 <div className="py-10 text-center text-zinc-500">{SECTION_NONE}</div>
               ) : participantsLoading ? (
                 <div className="flex items-center justify-center py-10 text-zinc-400">
-                  <Loader2 className="size-6 animate-spin" />
+                  <HugeiconsIcon icon={Loading02Icon} className="size-6 animate-spin" />
                 </div>
               ) : participantsLoaded && participants.length === 0 ? (
                 <div className="py-10 text-center text-zinc-500">{SECTION_EMPTY}</div>

@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { useEventManage } from './EventManageContext';
 
 const TABS = [
@@ -67,7 +68,7 @@ export default function EventManageLayoutInner({ children }) {
             className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 shrink-0"
             aria-label="Back to events"
           >
-            <ChevronLeft size={22} />
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={22} />
           </Link>
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-0.5">Event</p>

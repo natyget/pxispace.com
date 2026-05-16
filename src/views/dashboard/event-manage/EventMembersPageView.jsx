@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Shield, ShieldCheck, UserMinus, Users } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Shield01Icon, HelpCircleIcon, UserRemove01Icon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { eventsService } from '@/services/events';
 import { useEventManage } from './EventManageContext';
@@ -125,9 +126,9 @@ export default function EventMembersPageView() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <div className="inline-flex items-center gap-1.5">
                       {member.role === 'OWNER' ? (
-                        <ShieldCheck size={14} className="text-emerald-400" />
+                        <HugeiconsIcon icon={HelpCircleIcon} size={14} className="text-emerald-400" />
                       ) : (
-                        <Shield size={14} className="text-zinc-500" />
+                        <HugeiconsIcon icon={Shield01Icon} size={14} className="text-zinc-500" />
                       )}
                       <select
                         value={member.role || 'MEMBER'}
@@ -152,7 +153,7 @@ export default function EventMembersPageView() {
                       onClick={() => void handleBlock(member)}
                       className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-500/40 bg-red-500/10 text-red-300 text-xs font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-500/20"
                     >
-                      <UserMinus size={13} />
+                      <HugeiconsIcon icon={UserRemove01Icon} size={13} />
                       {isBusy ? 'Working...' : 'Block'}
                     </button>
                   </div>

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { UserCog, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { HelpCircleIcon, Delete02Icon, Alert02Icon, Loading02Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 
@@ -54,7 +55,7 @@ export default function AccountPage() {
             {/* Header */}
             <div>
                 <div className="flex items-center gap-2 mb-2">
-                    <UserCog size={14} className="text-pxi-purple" />
+                    <HugeiconsIcon icon={HelpCircleIcon} size={14} className="text-pxi-purple" />
                     <span className="text-pxi-purple text-xs font-bold uppercase tracking-widest">
                         Account
                     </span>
@@ -70,7 +71,7 @@ export default function AccountPage() {
             {/* Danger Zone */}
             <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-5 space-y-4">
                 <div className="flex items-center gap-2">
-                    <AlertTriangle size={15} className="text-red-400" />
+                    <HugeiconsIcon icon={Alert02Icon} size={15} className="text-red-400" />
                     <h2 className="text-red-400 font-bold text-sm uppercase tracking-widest">
                         Danger Zone
                     </h2>
@@ -86,7 +87,7 @@ export default function AccountPage() {
                             onClick={() => setShowConfirm(true)}
                             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 text-sm font-bold hover:bg-red-500/10 transition-all"
                         >
-                            <Trash2 size={14} />
+                            <HugeiconsIcon icon={Delete02Icon} size={14} />
                             Delete My Account
                         </button>
                     </>
@@ -118,12 +119,12 @@ export default function AccountPage() {
                             >
                                 {deleting ? (
                                     <>
-                                        <Loader2 size={14} className="animate-spin" />
+                                        <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
                                         Deleting…
                                     </>
                                 ) : (
                                     <>
-                                        <Trash2 size={14} />
+                                        <HugeiconsIcon icon={Delete02Icon} size={14} />
                                         Yes, Permanently Delete
                                     </>
                                 )}

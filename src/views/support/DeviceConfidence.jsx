@@ -1,3 +1,4 @@
+import { HugeiconsIcon } from '@hugeicons/react';
 'use client';
 
 import { motion } from "framer-motion";
@@ -42,7 +43,7 @@ const DeviceConfidence = () => {
                                     className="group rounded-xl border border-purple-500/20 hover:border-purple-500/40 bg-white/2 hover:bg-purple-500/5 p-4 flex items-center gap-3 transition-all duration-300 cursor-pointer"
                                 >
                                     <div className="w-10 h-10 rounded-lg bg-purple-500/10 group-hover:bg-purple-500/20 border border-purple-500/30 flex items-center justify-center transition-all duration-300">
-                                        <Icon className="text-purple-300 group-hover:text-purple-200 transition-colors duration-300" />
+                                        <HugeiconsIcon icon={Icon} className="text-purple-300 group-hover:text-purple-200 transition-colors duration-300" />
                                     </div>
                                     <div className="text-sm text-color-secondary group-hover:text-white transition-colors duration-300">
                                         {p.title}

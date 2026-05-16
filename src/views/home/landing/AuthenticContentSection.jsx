@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Calendar, Image as ImageIcon, Users } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Calendar01Icon, ImageIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 
 const DiscoverJPG = '/images/discover.jpg';
 const CreateJPG = '/images/create.jpg';
@@ -43,7 +44,7 @@ export default function AuthenticContentSection() {
             <div className="space-y-8 md:space-y-10">
               <div className="flex flex-col md:flex-row items-center lg:items-start gap-5 md:gap-6">
                 <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md bg-white/5">
-                  <Calendar className="text-white w-5 h-5" />
+                  <HugeiconsIcon icon={Calendar01Icon} className="text-white w-5 h-5" />
                 </div>
                 <div className="max-w-md">
                   <h3 className="text-xl font-black mb-2 uppercase tracking-tight">
@@ -58,7 +59,7 @@ export default function AuthenticContentSection() {
 
               <div className="flex flex-col md:flex-row items-center lg:items-start gap-5 md:gap-6">
                 <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md bg-white/5">
-                  <ImageIcon className="text-pxi-purple w-5 h-5" />
+                  <HugeiconsIcon icon={ImageIcon} className="text-pxi-purple w-5 h-5" />
                 </div>
                 <div className="max-w-md">
                   <h3 className="text-xl font-black mb-2 uppercase tracking-tight">Social Momentum</h3>
@@ -71,7 +72,7 @@ export default function AuthenticContentSection() {
 
               <div className="flex flex-col md:flex-row items-center lg:items-start gap-5 md:gap-6">
                 <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md bg-white/5">
-                  <Users className="text-blue-400 w-5 h-5" />
+                  <HugeiconsIcon icon={UserGroupIcon} className="text-blue-400 w-5 h-5" />
                 </div>
                 <div className="max-w-md">
                   <h3 className="text-xl font-black mb-2 uppercase tracking-tight">Build Your Tribe</h3>

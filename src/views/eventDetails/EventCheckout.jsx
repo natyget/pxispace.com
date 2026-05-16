@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
-import { Loader2, AlertCircle, ChevronLeft } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Loading02Icon, Alert01Icon, ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import Button from '../../components/ui/Button';
 import { eventsService } from '../../services/events';
 import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket } from '../../services/tickets';
@@ -211,7 +212,7 @@ export default function EventCheckout({ basePath = '/events' }) {
   if (eventLoading && !apiEvent) {
     return (
       <div className="pt-40 flex items-center justify-center text-white min-h-screen bg-black">
-        <Loader2 size={32} className="animate-spin" />
+        <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin" />
       </div>
     );
   }
@@ -233,7 +234,7 @@ export default function EventCheckout({ basePath = '/events' }) {
               href={`${basePath}/${apiEvent.id}`}
               className="inline-flex items-center gap-2 text-sm font-bold text-zinc-400 hover:text-white transition-colors"
             >
-              <ChevronLeft size={18} />
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
               Back to event
             </Link>
           </div>
@@ -349,7 +350,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                   disabled={joining || joinSuccess || !canPurchase}
                 >
                   {joining && !walletOpen ? (
-                    <Loader2 size={20} className="animate-spin mx-auto" />
+                    <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" />
                   ) : (
                     'Apple Pay / Google Pay / Link'
                   )}
@@ -375,12 +376,12 @@ export default function EventCheckout({ basePath = '/events' }) {
                 onClick={handleFreeTicket}
                 disabled={joining || joinSuccess || !canPurchase}
               >
-                {joining ? <Loader2 size={20} className="animate-spin mx-auto" /> : 'Get free ticket'}
+                {joining ? <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" /> : 'Get free ticket'}
               </Button>
             ) : null}
 
             <div className="flex items-start gap-2 px-1">
-              <AlertCircle size={13} className="text-zinc-600 flex-shrink-0 mt-0.5" />
+              <HugeiconsIcon icon={Alert01Icon} size={13} className="text-zinc-600 flex-shrink-0 mt-0.5" />
               <p className="text-zinc-600 text-xs leading-relaxed">
                 The vendor flat fee and consumer fee structure apply to paid tickets as described at checkout. Face-value
                 refunds depend on the organizer.

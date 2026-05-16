@@ -67,7 +67,7 @@ const HeroChaosItem = React.memo(function HeroChaosItem({ el, heroProgress, isMo
 
   return (
     <motion.div
-      className="absolute top-1/2 left-1/2 z-10 will-change-transform"
+      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 will-change-transform"
       style={{ x, y, scale, opacity }}
     >
       <motion.div
@@ -168,7 +168,7 @@ export default function Hero() {
       ))}
 
       <motion.div
-        className="pointer-events-none absolute inset-0 z-[15] bg-[radial-gradient(ellipse_96%_78%_at_50%_46%,rgba(5,5,5,0.76)_0%,rgba(5,5,5,0.38)_50%,rgba(5,5,5,0.1)_66%,transparent_84%)]"
+        className="pointer-events-none absolute inset-0 z-[15] bg-[radial-gradient(ellipse_96%_78%_at_50%_46%,rgba(5,5,5,0.88)_0%,rgba(5,5,5,0.54)_50%,rgba(5,5,5,0.18)_66%,transparent_84%)]"
         style={{ opacity: textOpacity }}
         aria-hidden
       />
@@ -178,7 +178,7 @@ export default function Hero() {
         style={{ y: '-50%', opacity: textOpacity }}
       >
         <div
-          className="pointer-events-none absolute left-1/2 top-[-2.5rem] bottom-[-3.5rem] w-[min(100vw,920px)] max-w-[calc(100%+2.5rem)] -translate-x-1/2 -z-10 bg-[radial-gradient(ellipse_90%_74%_at_50%_42%,rgba(5,5,5,0.55)_0%,rgba(5,5,5,0.16)_56%,transparent_74%)]"
+          className="pointer-events-none absolute left-1/2 top-[-4rem] bottom-[-5rem] w-[min(110vw,1100px)] max-w-none -translate-x-1/2 -z-10 bg-[radial-gradient(ellipse_100%_80%_at_50%_44%,rgba(5,5,5,0.72)_0%,rgba(5,5,5,0.28)_50%,transparent_68%)]"
           aria-hidden
         />
 

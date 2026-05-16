@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Shield } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Shield01Icon } from '@hugeicons/core-free-icons';
 
 const SECTIONS = [
   {
@@ -106,7 +107,7 @@ const SECTIONS = [
         <div className="bg-legal-hub-surface border border-legal-hub-border p-6 rounded-xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1 h-full bg-legal-hub-accent"></div>
           <h3 className="text-lg font-bold text-legal-hub-accent mb-2 flex items-center gap-2">
-            <Shield className="w-5 h-5" />
+            <HugeiconsIcon icon={Shield01Icon} className="w-5 h-5" />
             1. How does Find My Shots work?
           </h3>
           <p className="text-gray-400">Find My Shots uses on-device face recognition to surface photos that include you from an event album. No biometric data is sent to our servers. You can turn the feature off at any time in Settings → Privacy.</p>

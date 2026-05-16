@@ -4,9 +4,9 @@ import React, { useEffect } from 'react';
 import ScrollProgressBar from './ScrollProgressBar';
 import Hero from './Hero';
 import ScrapbookPreview from './ScrapbookPreview';
-import FeatureStory from './FeatureStory';
-import AuthenticContentSection from './AuthenticContentSection';
-import BestMomentsVault from './BestMomentsVault';
+import EventLifecycle from './EventLifecycle';
+import TheLegacy from './TheLegacy';
+import TheEthos from './TheEthos';
 import HashtagTicker from './HashtagTicker';
 
 export default function LandingHome() {
@@ -25,13 +25,13 @@ export default function LandingHome() {
           <ScrapbookPreview />
         </div>
         <div className="cv-auto">
-          <FeatureStory />
+          <EventLifecycle />
         </div>
         <div className="cv-auto">
-          <AuthenticContentSection />
+          <TheLegacy />
         </div>
         <div className="cv-auto">
-          <BestMomentsVault />
+          <TheEthos />
         </div>
         <div className="cv-auto">
           <HashtagTicker />
@@ -40,4 +40,3 @@ export default function LandingHome() {
     </div>
   );
 }
-

@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Search } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Search01Icon } from '@hugeicons/core-free-icons';
 
 const SORT_OPTIONS = [
   { value: 'vendor', label: 'Vendor rank' },
@@ -28,7 +29,7 @@ const EventsHero = ({ searchQuery, setSearchQuery, sortMode, setSortMode }) => {
 
       <div className="flex-1 w-full flex flex-col items-stretch lg:items-end gap-6">
         <div className="relative group w-full lg:max-w-md">
-          <Search
+          <HugeiconsIcon icon={Search01Icon}
             className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-pxi-purple transition-colors"
             size={22}
           />

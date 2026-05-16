@@ -3,13 +3,8 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  ChevronLeft,
-  Users,
-  Share2,
-  Clock,
-  MapPin,
-} from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon, UserGroupIcon, Share01Icon, ClockIcon, Location01Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventManage } from './EventManageContext';
 import {
@@ -114,7 +109,7 @@ export default function EventDetailsPageView() {
             <Image src={cover} alt="" fill unoptimized className="object-cover" priority />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-zinc-600">
-              <Users size={48} />
+              <HugeiconsIcon icon={UserGroupIcon} size={48} />
             </div>
           )}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-[#050505]" />
@@ -126,7 +121,7 @@ export default function EventDetailsPageView() {
               className="inline-flex items-center gap-1 rounded-full bg-black/45 px-2.5 py-2 text-white border border-white/15 hover:bg-black/65"
               aria-label="Back to my events"
             >
-              <ChevronLeft size={20} />
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
             </Link>
           </div>
 
@@ -137,7 +132,7 @@ export default function EventDetailsPageView() {
               className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/45 text-white border border-white/15 hover:bg-black/65 transition-colors"
               aria-label="Share event"
             >
-              <Share2 size={18} />
+              <HugeiconsIcon icon={Share01Icon} size={18} />
             </button>
           </div>
 
@@ -193,7 +188,7 @@ export default function EventDetailsPageView() {
             <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-4 min-h-[6.5rem]">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center shrink-0">
-                  <Clock size={14} className="text-white" />
+                  <HugeiconsIcon icon={ClockIcon} size={14} className="text-white" />
                 </div>
                 <span className="text-[13px] font-bold text-white tracking-tight leading-tight line-clamp-2">
                   {sched.primary}
@@ -208,7 +203,7 @@ export default function EventDetailsPageView() {
             <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-4 min-h-[6.5rem]">
               <div className="flex gap-3">
                 <div className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center shrink-0 self-start mt-0.5">
-                  <MapPin size={14} className="text-white" />
+                  <HugeiconsIcon icon={Location01Icon} size={14} className="text-white" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[13px] font-semibold text-white leading-snug break-words">

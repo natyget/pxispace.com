@@ -1,5 +1,6 @@
 import React from 'react';
-import { Shield } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Shield01Icon } from '@hugeicons/core-free-icons';
 import Link from 'next/link';
 
 function Section({ title, children, highlight }) {
@@ -31,7 +32,7 @@ export default function ChildSafety() {
         {/* Header */}
         <header className="mb-14 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-900/30 border border-red-900/50 mb-6">
-            <Shield className="w-8 h-8 text-red-400" />
+            <HugeiconsIcon icon={Shield01Icon} className="w-8 h-8 text-red-400" />
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white mb-4">
             Child Safety Standards

@@ -1,3 +1,4 @@
+import { HugeiconsIcon } from '@hugeicons/react';
 import React from "react";
 import {
     RiFilePaperLine,
@@ -253,7 +254,7 @@ function Section({ number, title, children, Icon }) {
             <header className="flex items-center gap-4 ">
                 <div className="flex items-center justify-center w-10 h-10 rounded-md bg-white/3 border border-white/6 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
                     {Icon ? (
-                        <Icon className="text-pink-300 w-5 h-5" />
+                        <HugeiconsIcon icon={Icon} className="text-pink-300 w-5 h-5" />
                     ) : (
                         <span className="text-pink-300">#</span>
                     )}
