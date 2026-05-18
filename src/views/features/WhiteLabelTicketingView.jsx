@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ZapIcon, CreditCardIcon, UserGroupIcon, HelpCircleIcon, Shield01Icon, ArrowRight02Icon } from '@hugeicons/core-free-icons';
+import { ZapIcon, CreditCardIcon, UserGroupIcon, HelpCircleIcon, Shield01Icon, ArrowRight02Icon, ChartBarIncreasingIcon } from '@hugeicons/core-free-icons';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 
 const FEATURES = [
@@ -19,7 +19,7 @@ const FEATURES = [
     body: 'Eliminate app-store friction entirely. Attendees purchase tickets via seamless web-based sign-ups that capture essential data and immediately onboard them into dedicated pre-event chat threads, building hype from the moment of purchase.',
   },
   {
-    icon: ChartBar01Icon,
+    icon: ChartBarIncreasingIcon,
     title: 'Full Lifecycle Control',
     body: 'Manage every phase of your event from a single command center. From dormant announcements through live operations to the post-event grace period, you maintain absolute control over ticketing, capacity, and attendee communication.',
   },

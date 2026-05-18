@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Calendar01Icon, HelpCircleIcon, ZapIcon } from '@hugeicons/core-free-icons';
+import { Calendar01Icon, HelpCircleIcon, ZapIcon, ChartBarIncreasingIcon } from '@hugeicons/core-free-icons';
 
 const FEATURES = [
   {
@@ -14,7 +14,7 @@ const FEATURES = [
     body: 'Abandon the friction and bloated interfaces of legacy ticketing monopolies. PXI provides a frictionless, white-label event ticketing infrastructure designed specifically for the modern promoter. Capture high-intent audiences instantly with seamless, web-based sign-ups that bypass app store hurdles and immediately build pre-event hype within dedicated chat threads. From the moment an event transitions from dormant announcements to the crucial grace period of the afterparty, you maintain absolute control over the entire lifecycle. Your brand remains uncompromised, and your revenue is optimized with complete transparency through integrated Stripe Destination Charges.',
   },
   {
-    icon: ChartBar01Icon,
+    icon: ChartBarIncreasingIcon,
     iconColor: 'text-pxi-purple',
     title: 'Real-Time Predictive Analytics & Spatial Intelligence',
     body: 'Operate with unparalleled precision. The PXI dashboard transforms raw crowd data into actionable event promoter analytics. Through our proprietary Command Center, monitor the exact trajectory of your hype index, track the precise conversion of your attendance funnel from the initial ticket sold to the verified time-in-event, and visualize crowd spatial behavior in real time. We replace operational guesswork with empirical data intelligence. Maximize your event ROI, execute flawless promoter link attribution, and anticipate the exact needs of your room before the first baseline even drops.',

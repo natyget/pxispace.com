@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ZapIcon, CreditCardIcon, UserGroupIcon, HelpCircleIcon, ArrowRight02Icon, Message01Icon, ClockIcon, ViewIcon } from '@hugeicons/core-free-icons';
+import { ZapIcon, CreditCardIcon, UserGroupIcon, HelpCircleIcon, ArrowRight02Icon, Message01Icon, ClockIcon, ViewIcon, ChartBarIncreasingIcon } from '@hugeicons/core-free-icons';
 
 import { CheckmarkCircle02Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 
@@ -20,7 +20,7 @@ const FEATURES = [
     body: 'Your event, your brand. PXI provides invisible ticketing infrastructure — no competing logos, no platform watermarks. Web-based sign-ups bypass app store friction and onboard attendees directly into your event thread.',
   },
   {
-    icon: ChartBar01Icon,
+    icon: ChartBarIncreasingIcon,
     title: 'Predictive Analytics',
     body: 'Monitor your hype index, track ticket-to-door conversion in real time, and visualize crowd behavior. Replace guesswork with data. Know exactly what your room needs before the first baseline drops.',
   },
