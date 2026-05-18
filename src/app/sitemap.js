@@ -4,6 +4,12 @@ export default function sitemap() {
   return [
     { url: base, lastModified: new Date(), changeFrequency: 'weekly', priority: 1.0 },
     { url: `${base}/events`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
+    { url: `${base}/organizers`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${base}/features/white-label-event-ticketing`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/features/event-promoter-analytics`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/features/shared-event-photo-gallery`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/features/digital-event-passport`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/competitors/partiful-luma-alternative`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
     { url: `${base}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/beta`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/support`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },

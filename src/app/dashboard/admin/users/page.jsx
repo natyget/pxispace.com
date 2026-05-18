@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { fetchAdminUsers } from '@/services/admin';
 import AdminPagination from '@/components/admin/AdminPagination';
+import { useAuth } from '@/contexts/AuthContext';
+import { adminMockUsers } from '@/lib/adminMockData';
+import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 
 function formatDate(iso) {
     if (!iso) return '—';
@@ -20,6 +23,7 @@ function formatDate(iso) {
 }
 
 export default function AdminUsersPage() {
+    const { user } = useAuth();
     const [rows, setRows] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [page, setPage] = useState(1);
@@ -28,6 +32,7 @@ export default function AdminUsersPage() {
     const [error, setError] = useState(null);
     const [input, setInput] = useState('');
     const [q, setQ] = useState('');
+    const isLiveAdmin = user?.accountTier === 'ADMIN';
 
     useEffect(() => {
         const t = setTimeout(() => setQ(input.trim()), 400);
@@ -39,6 +44,20 @@ export default function AdminUsersPage() {
     }, [q]);
 
     const load = useCallback(async (p) => {
+        if (!isLiveAdmin) {
+            const term = q.trim().toLowerCase();
+            const filtered = term
+                ? adminMockUsers.filter((row) =>
+                    [row.email, row.username, row.id].some((field) => String(field || '').toLowerCase().includes(term))
+                )
+                : adminMockUsers;
+            setRows(filtered);
+            setTotal(filtered.length);
+            setTotalPages(1);
+            setError(null);
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         setError(null);
         try {
@@ -52,7 +71,7 @@ export default function AdminUsersPage() {
         } finally {
             setLoading(false);
         }
-    }, [q]);
+    }, [q, isLiveAdmin]);
 
     useEffect(() => {
         load(page);
@@ -66,6 +85,7 @@ export default function AdminUsersPage() {
                     Search by email, username, or name. {total > 0 ? `${total} users match.` : null}
                 </p>
             </div>
+            <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
 
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
                 <input

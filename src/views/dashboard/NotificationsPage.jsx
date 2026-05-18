@@ -2,13 +2,16 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Bell, Loader2, X, UserPlus, Settings } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Notification03Icon, Loading02Icon, Cancel01Icon, UserAdd01Icon, Settings01Icon } from '@hugeicons/core-free-icons';
 import { getNotifications, acceptInvite, declineInvite, markAllAsRead, hideNotification, hideAllNotifications } from '@/services/notifications';
 import { acceptFriendRequest, rejectFriendRequest } from '@/services/friends';
 import { eventsService } from '@/services/events';
-import { getTicketQuote, createCheckoutSession, generateTicket } from '@/services/tickets';
+import { getTicketQuote, createCheckoutSession } from '@/services/tickets';
 import { useAuth } from '@/contexts/AuthContext';
+import { authService } from '@/services/auth';
 import Button from '@/components/ui/Button';
+import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 
 const formatPrice = (usd, currency = 'USD') => {
   if (usd == null) return null;
@@ -115,7 +118,7 @@ const hideNotifIconBtnClass =
 
 export default function NotificationsPage() {
   const router = useRouter();
-  const { user, isAuthenticated, saveAuth } = useAuth();
+  const { user, isAuthenticated, saveAuth, updateUser } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -131,6 +134,20 @@ export default function NotificationsPage() {
   const settingsRef = useRef(null);
   const [inboxTab, setInboxTab] = useState('unread'); // 'unread' | 'read'
   const [hideConfirmId, setHideConfirmId] = useState(null);
+
+  const emitCapabilitiesRefresh = () => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new Event('pxi:capabilities-refresh'));
+  };
+
+  const markStaffAccessHint = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('pxi_staff_access_hint', '1');
+    } catch {
+      /* ignore */
+    }
+  };
 
   const loadNotifications = () => {
     if (!user?.id) return;
@@ -155,6 +172,8 @@ export default function NotificationsPage() {
     if (payment !== 'success' || !notificationId) return;
     acceptInvite(notificationId)
       .then((res) => {
+        markStaffAccessHint();
+        emitCapabilitiesRefresh();
         loadNotifications();
         if (res?.albumId) router.push('/dashboard/events');
       })
@@ -167,10 +186,19 @@ export default function NotificationsPage() {
     setJoinError(null);
     try {
       const res = await acceptInvite(notification.id);
+      markStaffAccessHint();
       if (res?.token && user) {
-        await saveAuth({ token: res.token, user });
+        try {
+          const me = await authService.getMe(user.id);
+          const fresh = me?.user || me;
+          await saveAuth({ token: res.token, user: fresh || user });
+          if (fresh) updateUser(fresh);
+        } catch {
+          await saveAuth({ token: res.token, user });
+        }
       }
       loadNotifications();
+      emitCapabilitiesRefresh();
     } catch (err) {
       setJoinError(err?.response?.data?.error || err.message || 'Failed to accept staff invite');
     }
@@ -181,10 +209,19 @@ export default function NotificationsPage() {
     setJoinError(null);
     try {
       const res = await acceptInvite(notification.id);
+      markStaffAccessHint();
       if (res?.token && user) {
-        await saveAuth({ token: res.token, user });
+        try {
+          const me = await authService.getMe(user.id);
+          const fresh = me?.user || me;
+          await saveAuth({ token: res.token, user: fresh || user });
+          if (fresh) updateUser(fresh);
+        } catch {
+          await saveAuth({ token: res.token, user });
+        }
       }
       loadNotifications();
+      emitCapabilitiesRefresh();
     } catch (err) {
       setJoinError(err?.response?.data?.error || err.message || 'Failed to accept line-up invite');
     }
@@ -236,8 +273,10 @@ export default function NotificationsPage() {
         if (url) window.open(url, '_blank');
       } else {
         const res = await acceptInvite(eulaNotification.id);
+        markStaffAccessHint();
         setEulaNotification(null);
         setEulaEvent(null);
+        emitCapabilitiesRefresh();
         loadNotifications();
         if (res?.albumId) router.push(`/dashboard/events`);
       }
@@ -351,17 +390,21 @@ export default function NotificationsPage() {
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center justify-between gap-3 mb-8">
         <div className="flex items-center gap-3">
-          <Bell size={24} className="text-pxi-purple" />
-          <h1 className="text-2xl font-black text-white tracking-tight">Notifications</h1>
+          <HugeiconsIcon icon={Notification03Icon} size={24} className="text-pxi-purple" />
+          <div>
+            <h1 className="text-2xl font-black text-white tracking-tight">Notifications</h1>
+            <p className="text-zinc-500 text-sm mt-1">Invites, approvals, and account activity.</p>
+          </div>
         </div>
-        <div className="relative" ref={settingsRef}>
+        <div className="relative flex items-center gap-2" ref={settingsRef}>
+          <DataSourceBadge source="Live" />
           <button
             type="button"
             onClick={() => setSettingsOpen((prev) => !prev)}
             className="p-2 rounded-xl border border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
             aria-label="Notification settings"
           >
-            <Settings size={20} />
+            <HugeiconsIcon icon={Settings01Icon} size={20} />
           </button>
           {settingsOpen && (
             <div className="absolute right-0 top-full mt-2 py-1 min-w-[160px] bg-zinc-900 border border-white/10 rounded-xl shadow-xl z-50">
@@ -405,7 +448,7 @@ export default function NotificationsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={32} className="animate-spin text-pxi-purple" />
+          <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin text-pxi-purple" />
         </div>
       ) : error ? (
         <p className="text-red-400 text-sm">{error}</p>
@@ -432,7 +475,7 @@ export default function NotificationsPage() {
                 className={hideNotifIconBtnClass}
                 aria-label="Delete notification"
               >
-                <X size={12} />
+                <HugeiconsIcon icon={Cancel01Icon} size={12} />
               </button>
               <div className="flex-1 min-w-0 p-5 pr-11 flex flex-col justify-between gap-4">
                 <div className="space-y-1 min-w-0">
@@ -451,14 +494,14 @@ export default function NotificationsPage() {
                       </>
                     ) : n.type === 'LINEUP_INVITE' ? (
                       <>
-                        <UserPlus size={14} className="text-pxi-purple flex-shrink-0" aria-hidden />
+                        <HugeiconsIcon icon={UserAdd01Icon} size={14} className="text-pxi-purple flex-shrink-0" aria-hidden />
                         <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest truncate">
                           Line-up invite · {formatDate(n.createdAt)}
                         </span>
                       </>
                     ) : (
                       <>
-                        <UserPlus size={14} className="text-pxi-purple flex-shrink-0" aria-hidden />
+                        <HugeiconsIcon icon={UserAdd01Icon} size={14} className="text-pxi-purple flex-shrink-0" aria-hidden />
                         <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest truncate">
                           Co-host / staff invite · {formatDate(n.createdAt)}
                         </span>
@@ -504,7 +547,6 @@ export default function NotificationsPage() {
                 )}
               </div>
               <div className="relative w-24 sm:w-28 flex-shrink-0 self-stretch bg-zinc-800">
-                {/* eslint-disable-next-line @next/next/no-img-element -- remote notification cover URL */}
                 <img
                   src={inviteCoverSrc(n)}
                   alt=""
@@ -530,7 +572,7 @@ export default function NotificationsPage() {
                     className={hideNotifIconBtnClass}
                     aria-label="Delete notification"
                   >
-                    <X size={12} />
+                    <HugeiconsIcon icon={Cancel01Icon} size={12} />
                   </button>
                   <div className="flex-1 min-w-0 p-5 pr-11 flex flex-col justify-between gap-4">
                     <div className="space-y-1 min-w-0">
@@ -580,7 +622,7 @@ export default function NotificationsPage() {
                     className={hideNotifIconBtnClass}
                     aria-label="Delete notification"
                   >
-                    <X size={12} />
+                    <HugeiconsIcon icon={Cancel01Icon} size={12} />
                   </button>
                   <span className="pr-8 inline-block">{n.type} — {formatDate(n.createdAt)}</span>
                 </div>
@@ -687,7 +729,7 @@ export default function NotificationsPage() {
                 onClick={() => !joining && setEulaNotification(null) && setEulaEvent(null)}
                 className="text-zinc-500 hover:text-white"
               >
-                <X size={20} />
+                <HugeiconsIcon icon={Cancel01Icon} size={20} />
               </button>
             </div>
             <p className="text-zinc-400 text-sm leading-relaxed">
@@ -710,7 +752,7 @@ export default function NotificationsPage() {
                 onClick={handleEulaConfirm}
                 disabled={joining || !isAuthenticated}
               >
-                {joining ? <Loader2 size={18} className="animate-spin mx-auto" /> : isPaidInvite ? 'Agree & Get Ticket' : 'Agree & Accept'}
+                {joining ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin mx-auto" /> : isPaidInvite ? 'Agree & Get Ticket' : 'Agree & Accept'}
               </Button>
             </div>
           </div>

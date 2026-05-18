@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Instagram } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { InstagramIcon } from '@hugeicons/core-free-icons';
 import { FaTiktok } from 'react-icons/fa';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
@@ -44,6 +45,11 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link href="/organizers" className={linkClass}>
+                  For Organizers
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className={linkClass}>
                   About
                 </Link>
@@ -52,6 +58,40 @@ const Footer = () => {
                 <IosDownloadLink href={PXI_APP_STORE_URL} className={linkClass}>
                   Download the app
                 </IosDownloadLink>
+              </li>
+            </ul>
+          </div>
+
+          {/* Platform */}
+          <div className="lg:col-span-2">
+            <h4 className="font-semibold mb-4 text-white text-sm tracking-wide uppercase">
+              Platform
+            </h4>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link href="/features/white-label-event-ticketing" className={linkClass}>
+                  White-Label Ticketing
+                </Link>
+              </li>
+              <li>
+                <Link href="/features/event-promoter-analytics" className={linkClass}>
+                  Promoter Analytics
+                </Link>
+              </li>
+              <li>
+                <Link href="/features/shared-event-photo-gallery" className={linkClass}>
+                  Shared Gallery
+                </Link>
+              </li>
+              <li>
+                <Link href="/features/digital-event-passport" className={linkClass}>
+                  Digital Passport
+                </Link>
+              </li>
+              <li>
+                <Link href="/competitors/partiful-luma-alternative" className={linkClass}>
+                  PXI vs Everyone
+                </Link>
               </li>
             </ul>
           </div>
@@ -132,7 +172,7 @@ const Footer = () => {
               className="text-gray-600 hover:text-white transition-colors"
               aria-label="PXI on Instagram"
             >
-              <Instagram size={20} />
+              <HugeiconsIcon icon={InstagramIcon} size={20} />
             </a>
             <a
               href="https://www.tiktok.com/@pxi.labs"

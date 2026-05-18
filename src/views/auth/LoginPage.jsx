@@ -4,7 +4,8 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Mail } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Mail01Icon } from '@hugeicons/core-free-icons';
 import { FaApple, FaGoogle } from 'react-icons/fa';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../contexts/AuthContext';
@@ -116,14 +117,26 @@ export default function LoginPage() {
                 </div>
             )}
 
-            {/* Logo / hero */}
-            <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-7 mt-8">
-                <h1 className="text-5xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] mb-4 text-[#E0E0E0] text-center">
+            {/* Top Text */}
+            <div className="relative z-10 w-full flex flex-col items-center px-7 pt-16 md:pt-20">
+                <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase leading-[0.9] text-[#E0E0E0] text-center">
                     PXI STUDIO
                 </h1>
-                <p className="text-lg md:text-xl text-[#AAAAAA] font-medium tracking-tight mb-4 italic uppercase">
+                <p className="text-sm md:text-base text-pxi-purple font-medium tracking-widest mt-3 italic uppercase drop-shadow-[0_0_8px_rgba(216,74,255,0.4)]">
                     Citizenship Bureau
                 </p>
+            </div>
+
+            {/* Center Logo */}
+            <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-7 pointer-events-none">
+                <Image 
+                    src="/images/logo.svg" 
+                    alt="PXI Logo" 
+                    width={220} 
+                    height={220} 
+                    className="w-44 h-44 md:w-52 md:h-52 drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]" 
+                    priority 
+                />
             </div>
 
             {/* Action buttons */}
@@ -150,7 +163,7 @@ export default function LoginPage() {
                 <GlassActionButton icon={<FaApple size={20} />} label="Continue with Apple" onClick={handleApple} />
 
                 {/* Email */}
-                <GlassActionButton icon={<Mail size={18} />} label="Continue with Email" onClick={() => router.push(safeRedirect ? `/login/email?redirect=${encodeURIComponent(safeRedirect)}` : '/login/email')} last />
+                <GlassActionButton icon={<HugeiconsIcon icon={Mail01Icon} size={18} />} label="Continue with Email" onClick={() => router.push(safeRedirect ? `/login/email?redirect=${encodeURIComponent(safeRedirect)}` : '/login/email')} last />
 
                 <p className="text-center mt-7" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, letterSpacing: '0.02em', lineHeight: 1.55 }}>
                     By signing up, you agree to our{' '}

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { ImagePlus, Loader2, CheckCircle2, XCircle, Camera } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ImageAdd02Icon, Loading02Icon, CheckmarkCircle02Icon, CancelCircleIcon, Camera01Icon } from '@hugeicons/core-free-icons';
 import { getUploadLink, presignUploadLink, confirmUploadLink } from '@/services/uploadLink';
 
 const MAX_FILES = 100;
@@ -164,7 +165,7 @@ export default function PhotographerUploadView({ token }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="animate-spin text-pxi-purple" size={32} />
+        <HugeiconsIcon icon={Loading02Icon} className="animate-spin text-pxi-purple" size={32} />
       </div>
     );
   }
@@ -173,7 +174,7 @@ export default function PhotographerUploadView({ token }) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6">
         <div className="max-w-sm w-full text-center space-y-4">
-          <XCircle size={48} className="text-red-400 mx-auto" />
+          <HugeiconsIcon icon={CancelCircleIcon} size={48} className="text-red-400 mx-auto" />
           <h1 className="text-white text-xl font-black">Link Unavailable</h1>
           <p className="text-zinc-400 text-sm">{linkError}</p>
         </div>
@@ -194,7 +195,7 @@ export default function PhotographerUploadView({ token }) {
             </div>
           ) : (
             <div className="w-24 h-24 mx-auto rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center">
-              <Camera size={32} className="text-zinc-600" />
+              <HugeiconsIcon icon={Camera01Icon} size={32} className="text-zinc-600" />
             </div>
           )}
           <div>
@@ -228,7 +229,7 @@ export default function PhotographerUploadView({ token }) {
               onClick={() => inputRef.current?.click()}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-40 hover:opacity-90 transition-opacity"
             >
-              {busy ? <Loader2 className="animate-spin" size={18} /> : <ImagePlus size={18} />}
+              {busy ? <HugeiconsIcon icon={Loading02Icon} className="animate-spin" size={18} /> : <HugeiconsIcon icon={ImageAdd02Icon} size={18} />}
               {busy ? 'Uploading…' : 'Choose Photos'}
             </button>
 
@@ -245,7 +246,7 @@ export default function PhotographerUploadView({ token }) {
 
             {result && (
               <div className="flex items-center gap-2 text-emerald-400 text-xs font-medium">
-                <CheckCircle2 size={16} />
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />
                 {result}
               </div>
             )}

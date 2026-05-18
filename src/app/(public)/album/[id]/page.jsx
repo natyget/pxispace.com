@@ -4,7 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
-import { Loader2, LayoutList, LayoutGrid, Lock } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Loading02Icon, ListViewIcon, GridViewIcon, LockIcon } from '@hugeicons/core-free-icons';
 import { albumsService } from '@/services/albums';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import PublicAlbumBottomBar from '@/views/public/PublicAlbumBottomBar';
@@ -78,7 +79,7 @@ export default function PublicAlbumPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
-        <Loader2 className="size-6 animate-spin text-zinc-400" />
+        <HugeiconsIcon icon={Loading02Icon} className="size-6 animate-spin text-zinc-400" />
       </div>
     );
   }
@@ -86,7 +87,7 @@ export default function PublicAlbumPage() {
   if (!album || denied) {
     return (
       <div className="relative flex min-h-[60vh] flex-col items-center justify-center bg-[#0a0a0a] px-4 pb-40 pt-28 text-center text-white md:pt-32">
-        <Lock className="mb-4 size-8 text-zinc-500" />
+        <HugeiconsIcon icon={LockIcon} className="mb-4 size-8 text-zinc-500" />
         <p className="text-lg font-semibold">{!album ? 'Album not found' : 'Private album'}</p>
         <p className="mt-2 max-w-sm text-sm text-zinc-500">
           {!album
@@ -155,7 +156,7 @@ export default function PublicAlbumPage() {
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <LayoutList className="size-3.5" />
+            <HugeiconsIcon icon={ListViewIcon} className="size-3.5" />
             Thread
           </button>
           <button
@@ -167,7 +168,7 @@ export default function PublicAlbumPage() {
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <LayoutGrid className="size-3.5" />
+            <HugeiconsIcon icon={GridViewIcon} className="size-3.5" />
             Gallery
           </button>
         </div>
@@ -175,7 +176,7 @@ export default function PublicAlbumPage() {
         {/* Content */}
         {mediaLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="size-6 animate-spin text-zinc-500" />
+            <HugeiconsIcon icon={Loading02Icon} className="size-6 animate-spin text-zinc-500" />
           </div>
         ) : imageItems.length === 0 ? (
           <p className="py-12 text-center text-sm text-zinc-500">No photos yet. Open the app to see more.</p>

@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, Eye, EyeOff, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon, ViewIcon, ViewOffIcon, CheckmarkCircle02Icon, CancelCircleIcon, Loading02Icon } from '@hugeicons/core-free-icons';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
@@ -60,7 +61,7 @@ export default function EmailAuthPage() {
             } else if (!user.isPassportIssued) {
                 router.replace('/passport-required');
             } else {
-                router.replace('/dashboard');
+                router.replace(defaultPostLoginPath(user));
             }
         },
         [saveAuth, router, safeRedirect]
@@ -153,7 +154,7 @@ export default function EmailAuthPage() {
                 onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
             >
-                <ChevronLeft size={28} />
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={28} />
             </button>
 
             {/* Scrollable content */}
@@ -264,9 +265,9 @@ export default function EmailAuthPage() {
                                         style={{ paddingLeft: 32 }}
                                     />
                                     <div className="absolute right-5 top-1/2 -translate-y-1/2">
-                                        {usernameStatus === 'checking' && <Loader2 size={14} className="animate-spin" style={{ color: 'rgba(255,255,255,0.4)' }} />}
-                                        {usernameStatus === 'available' && <CheckCircle2 size={14} style={{ color: '#4ade80' }} />}
-                                        {(usernameStatus === 'taken' || usernameStatus === 'invalid') && <XCircle size={14} style={{ color: '#f87171' }} />}
+                                        {usernameStatus === 'checking' && <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" style={{ color: 'rgba(255,255,255,0.4)' }} />}
+                                        {usernameStatus === 'available' && <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} style={{ color: '#4ade80' }} />}
+                                        {(usernameStatus === 'taken' || usernameStatus === 'invalid') && <HugeiconsIcon icon={CancelCircleIcon} size={14} style={{ color: '#f87171' }} />}
                                     </div>
                                 </div>
                                 {username && usernameStatus === 'taken' && <FieldHint color="#f87171">@{username} is already taken</FieldHint>}
@@ -294,7 +295,7 @@ export default function EmailAuthPage() {
                                     onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
                                     onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
                                 >
-                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    {showPassword ? <HugeiconsIcon icon={ViewOffIcon} size={16} /> : <HugeiconsIcon icon={ViewIcon} size={16} />}
                                 </button>
                             </div>
                             {/* Password rules — signup only */}
@@ -310,7 +311,7 @@ export default function EmailAuthPage() {
                                                 color: r.passed ? '#4ade80' : 'rgba(255,255,255,0.25)',
                                             }}
                                         >
-                                            {r.passed ? <CheckCircle2 size={11} /> : <XCircle size={11} />}
+                                            {r.passed ? <HugeiconsIcon icon={CheckmarkCircle02Icon} size={11} /> : <HugeiconsIcon icon={CancelCircleIcon} size={11} />}
                                             {r.label}
                                         </div>
                                     ))}
@@ -364,7 +365,7 @@ export default function EmailAuthPage() {
                             >
                                 {loading ? (
                                     <span className="flex items-center justify-center gap-2">
-                                        <Loader2 size={14} className="animate-spin" />
+                                        <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
                                         {isLogin ? 'INITIATING…' : 'REDIRECTING…'}
                                     </span>
                                 ) : isLogin ? (

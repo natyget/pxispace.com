@@ -3,10 +3,8 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import {
-  Calendar, Check, ClipboardList, Loader2, MapPin,
-  Plus, QrCode, Search, Send, Share2, X,
-} from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Calendar01Icon, CheckmarkBadge01Icon, HelpCircleIcon, Loading02Icon, Location01Icon, QrCodeIcon, Search01Icon, SentIcon, Share01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { eventsService, searchUsers } from '@/services/events';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventManage } from './EventManageContext';
@@ -337,8 +335,8 @@ export default function EventInvitePageView() {
       {/* Page tabs */}
       <div role="tablist" className="flex flex-wrap gap-2">
         {[
-          { id: 'send', icon: <Send size={14} />, label: 'Send invites' },
-          { id: 'status', icon: <ClipboardList size={14} />, label: 'Invite status' },
+          { id: 'send', icon: <HugeiconsIcon icon={SentIcon} size={14} />, label: 'Send invites' },
+          { id: 'status', icon: <HugeiconsIcon icon={HelpCircleIcon} size={14} />, label: 'Invite status' },
         ].map((t) => (
           <button
             key={t.id}
@@ -371,13 +369,13 @@ export default function EventInvitePageView() {
               <div className="flex flex-wrap gap-4">
                 {event.startDate && (
                   <span className="flex items-center gap-1.5 text-xs text-zinc-500 font-medium">
-                    <Calendar size={12} />
+                    <HugeiconsIcon icon={Calendar01Icon} size={12} />
                     {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
                 )}
                 {event.location && (
                   <span className="flex items-center gap-1.5 text-xs text-zinc-500 font-medium truncate max-w-xs">
-                    <MapPin size={12} />
+                    <HugeiconsIcon icon={Location01Icon} size={12} />
                     {event.location}
                   </span>
                 )}
@@ -398,7 +396,7 @@ export default function EventInvitePageView() {
                   <p className="text-[9px] font-black tracking-widest uppercase text-zinc-500 mb-0.5">TAP TO SHARE</p>
                   <p className="text-xs font-medium text-white truncate">{displayUrl}</p>
                 </div>
-                <Share2 size={16} className="text-zinc-500 shrink-0" />
+                <HugeiconsIcon icon={Share01Icon} size={16} className="text-zinc-500 shrink-0" />
               </button>
 
               {/* Instagram */}
@@ -425,7 +423,7 @@ export default function EventInvitePageView() {
                 className="w-[68px] flex flex-col items-center justify-center gap-1 rounded-xl border border-white/20 hover:border-white/35 transition-colors py-2.5 shrink-0"
               >
                 <span className="text-[9px] font-black tracking-widest uppercase text-white">SCAN</span>
-                <QrCode size={20} className="text-white" />
+                <HugeiconsIcon icon={QrCodeIcon} size={20} className="text-white" />
               </button>
             </div>
           )}
@@ -463,7 +461,7 @@ export default function EventInvitePageView() {
 
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={16} />
+              <HugeiconsIcon icon={Search01Icon} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={16} />
               <input
                 type="text"
                 value={inviteQuery}
@@ -474,7 +472,7 @@ export default function EventInvitePageView() {
               />
               {inviteSearching && (
                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                  <Loader2 size={16} className="animate-spin text-zinc-500" />
+                  <HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin text-zinc-500" />
                 </div>
               )}
             </div>
@@ -504,7 +502,7 @@ export default function EventInvitePageView() {
                   onClick={() => setListFilter('all')}
                   className="flex items-center gap-1 px-2 py-1.5 text-xs text-zinc-500 hover:text-zinc-300"
                 >
-                  <X size={12} /> Clear
+                  <HugeiconsIcon icon={Cancel01Icon} size={12} /> Clear
                 </button>
               )}
             </div>
@@ -517,7 +515,7 @@ export default function EventInvitePageView() {
             {/* User list */}
             {loadingAudience ? (
               <div className="py-10 flex justify-center">
-                <Loader2 size={22} className="animate-spin text-zinc-500" />
+                <HugeiconsIcon icon={Loading02Icon} size={22} className="animate-spin text-zinc-500" />
               </div>
             ) : filteredCandidates.length === 0 ? (
               <p className="py-8 text-center text-sm text-zinc-500">
@@ -546,8 +544,8 @@ export default function EventInvitePageView() {
                         selected ? 'bg-white border-white' : 'border-zinc-600'
                       }`}>
                         {selected
-                          ? <Check size={14} strokeWidth={3} className="text-black" />
-                          : <Plus size={14} strokeWidth={2.5} className="text-zinc-400" />
+                          ? <HugeiconsIcon icon={CheckmarkBadge01Icon} size={14} strokeWidth={3} className="text-black" />
+                          : <HugeiconsIcon icon={HelpCircleIcon} size={14} strokeWidth={2.5} className="text-zinc-400" />
                         }
                       </div>
                     </button>
@@ -569,7 +567,7 @@ export default function EventInvitePageView() {
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-white text-black text-sm font-black uppercase tracking-wide disabled:opacity-50 hover:brightness-95 transition-all"
               >
                 {sending
-                  ? <><Loader2 size={16} className="animate-spin" /> Sending…</>
+                  ? <><HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin" /> Sending…</>
                   : `Send Invite${selectedIds.size > 1 ? 's' : ''} · ${selectedIds.size}`
                 }
               </button>
@@ -625,7 +623,7 @@ export default function EventInvitePageView() {
           <div className="p-5 min-h-48">
             {directInvitesLoading ? (
               <div className="py-16 flex justify-center">
-                <Loader2 size={24} className="animate-spin text-zinc-400" />
+                <HugeiconsIcon icon={Loading02Icon} size={24} className="animate-spin text-zinc-400" />
               </div>
             ) : directInvitesError ? (
               <p className="text-sm text-red-400">{directInvitesError}</p>
@@ -705,7 +703,7 @@ export default function EventInvitePageView() {
               onClick={handleShareLink}
               className="flex items-center gap-2 px-5 py-3 rounded-full border border-white/20 bg-white/6 text-sm font-bold text-white hover:bg-white/10 transition-colors"
             >
-              <Share2 size={14} /> Share Link
+              <HugeiconsIcon icon={Share01Icon} size={14} /> Share Link
             </button>
             <button
               type="button"
@@ -729,7 +727,7 @@ export default function EventInvitePageView() {
                 onClick={() => setConfirmOpen(false)}
                 className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20"
               >
-                <X size={14} />
+                <HugeiconsIcon icon={Cancel01Icon} size={14} />
               </button>
             </div>
 

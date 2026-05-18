@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, XCircle, Loader2, Eye, EyeOff } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CheckmarkCircle02Icon, CancelCircleIcon, Loading02Icon, ViewIcon, ViewOffIcon } from '@hugeicons/core-free-icons';
 import { FaApple } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
@@ -284,7 +285,7 @@ export default function SignupPage() {
                                     onClick={() => setShowPassword((v) => !v)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
                                 >
-                                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                                    {showPassword ? <HugeiconsIcon icon={ViewOffIcon} size={15} /> : <HugeiconsIcon icon={ViewIcon} size={15} />}
                                 </button>
                             </div>
                             {password.length > 0 && (
@@ -297,9 +298,9 @@ export default function SignupPage() {
                                             }`}
                                         >
                                             {r.passed ? (
-                                                <CheckCircle2 size={11} />
+                                                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={11} />
                                             ) : (
-                                                <XCircle size={11} />
+                                                <HugeiconsIcon icon={CancelCircleIcon} size={11} />
                                             )}
                                             {r.label}
                                         </div>
@@ -340,7 +341,7 @@ export default function SignupPage() {
                         >
                             {loading ? (
                                 <span className="flex items-center justify-center gap-2">
-                                    <Loader2 size={14} className="animate-spin" />
+                                    <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
                                     Creating account…
                                 </span>
                             ) : (
@@ -365,11 +366,11 @@ export default function SignupPage() {
 }
 function UsernameStatusIcon({ status }) {
     if (status === 'checking')
-        return <Loader2 size={14} className="animate-spin text-zinc-500" />;
+        return <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin text-zinc-500" />;
     if (status === 'available')
-        return <CheckCircle2 size={14} className="text-green-400" />;
+        return <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="text-green-400" />;
     if (status === 'taken' || status === 'invalid')
-        return <XCircle size={14} className="text-red-400" />;
+        return <HugeiconsIcon icon={CancelCircleIcon} size={14} className="text-red-400" />;
     return null;
 }
 

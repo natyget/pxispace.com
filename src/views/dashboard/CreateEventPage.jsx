@@ -3,17 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {
-  ChevronLeft,
-  Loader2,
-  Image as ImageIcon,
-  Plus,
-  X,
-  Search,
-  DollarSign,
-  Images,
-  Users,
-} from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon, Loading02Icon, ImageIcon, HelpCircleIcon, Cancel01Icon, Search01Icon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import Cropper from 'react-easy-crop';
 import { GeoapifyContext, GeoapifyGeocoderAutocomplete } from '@geoapify/react-geocoder-autocomplete';
 import { toast } from 'sonner';
@@ -436,7 +427,7 @@ export default function CreateEventPage() {
           href="/dashboard/events"
           className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5"
         >
-          <ChevronLeft size={20} />
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
         </Link>
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Create event</h1>
@@ -453,7 +444,7 @@ export default function CreateEventPage() {
 
         <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
           <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest flex items-center gap-2">
-            <ImageIcon size={16} />
+            <HugeiconsIcon icon={ImageIcon} size={16} />
             Cover image *
           </h2>
           <label className="relative block w-full sm:w-[300px] sm:mx-auto cursor-pointer" style={{ aspectRatio: '3/4' }}>
@@ -467,13 +458,13 @@ export default function CreateEventPage() {
                 />
               ) : !isCoverUploading ? (
                 <div className="flex flex-col items-center gap-3">
-                  <ImageIcon size={36} className="text-white/30" />
+                  <HugeiconsIcon icon={ImageIcon} size={36} className="text-white/30" />
                   <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.15em]">Add cover image</span>
                 </div>
               ) : null}
               {isCoverUploading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 rounded-2xl">
-                  <Loader2 size={32} className="animate-spin text-white" />
+                  <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin text-white" />
                   <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover…</span>
                 </div>
               )}
@@ -484,7 +475,7 @@ export default function CreateEventPage() {
                 onClick={(e) => { e.preventDefault(); setCoverImage(null); setCoverPreview(null); }}
                 className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
               >
-                <X size={16} />
+                <HugeiconsIcon icon={Cancel01Icon} size={16} />
               </button>
             )}
           </label>
@@ -594,7 +585,7 @@ export default function CreateEventPage() {
 
           {isPaid && (
             <div className="flex items-center gap-2 rounded-xl bg-zinc-800/80 border border-white/10 px-3 py-2">
-              <DollarSign size={18} className="text-zinc-500 shrink-0" />
+              <HugeiconsIcon icon={HelpCircleIcon} size={18} className="text-zinc-500 shrink-0" />
               <input
                 className="flex-1 bg-transparent text-white text-sm outline-none placeholder-zinc-500"
                 placeholder="Price in USD"
@@ -626,7 +617,7 @@ export default function CreateEventPage() {
             <div>
               <label className={labelClass}>Max images per attendee</label>
               <div className="flex items-center gap-2">
-                <Images size={18} className="text-zinc-500 shrink-0" />
+                <HugeiconsIcon icon={HelpCircleIcon} size={18} className="text-zinc-500 shrink-0" />
                 <input
                   className={inputClass}
                   value={maxImages}
@@ -637,7 +628,7 @@ export default function CreateEventPage() {
             <div>
               <label className={labelClass}>Capacity (MB)</label>
               <div className="flex items-center gap-2">
-                <Users size={18} className="text-zinc-500 shrink-0" />
+                <HugeiconsIcon icon={UserGroupIcon} size={18} className="text-zinc-500 shrink-0" />
                 <input
                   className={inputClass}
                   value={capacity}
@@ -675,7 +666,7 @@ export default function CreateEventPage() {
               disabled={isSubmitting || isCoverUploading || !coverImage}
               className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] px-6 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-45 hover:brightness-110 transition-all"
             >
-              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : null}
+              {isSubmitting ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin" /> : null}
               {isSubmitting ? 'Creating…' : isCoverUploading ? 'Uploading cover…' : 'Create event'}
             </button>
           </div>

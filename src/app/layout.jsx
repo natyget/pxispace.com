@@ -10,7 +10,7 @@ const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 export const metadata = {
   metadataBase: new URL('https://pxispace.com'),
   title: {
-    default: 'PXI — Your Social Life, Unfiltered',
+    default: 'PXI | Premier Event Operating System & Digital Scrapbook',
     template: '%s | PXI',
   },
   description:

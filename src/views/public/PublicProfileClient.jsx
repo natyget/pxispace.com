@@ -3,7 +3,8 @@
 import { useId } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CheckCircle2, Smartphone } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CheckmarkCircle02Icon, SmartPhone01Icon } from '@hugeicons/core-free-icons';
 import { getPassportLevelDisplay } from '@/utils/odysseyTier';
 import {
     formatMRZ,
@@ -100,7 +101,7 @@ function PassportReadOnly({ user }) {
                         </h1>
                         {user?.isVendor ? (
                             <span className="relative z-10 inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400 sm:gap-1.5 sm:px-2.5 sm:text-[10px] md:px-3 md:text-[11px]">
-                                <CheckCircle2 size={12} className="shrink-0" />
+                                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="shrink-0" />
                                 Vendor
                             </span>
                         ) : (
@@ -349,7 +350,7 @@ export default function PublicProfileClient({ userId, initialProfile }) {
                 <div className="mx-auto max-w-lg px-4">
                     <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-8 text-center">
                         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-pxi-purple/20 bg-pxi-purple/10">
-                            <Smartphone size={26} className="text-pxi-purple" />
+                            <HugeiconsIcon icon={SmartPhone01Icon} size={26} className="text-pxi-purple" />
                         </div>
                         <h1 className="text-xl font-black tracking-tight">
                             {initialProfile.name || initialProfile.username || 'PXI member'}

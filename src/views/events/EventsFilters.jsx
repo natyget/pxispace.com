@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Heart } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { FavouriteIcon } from '@hugeicons/core-free-icons';
 
 const filterOptions = ['All', 'Free', 'Paid'];
 
@@ -33,7 +34,7 @@ const EventsFilters = ({ filter, setFilter, favoritesOnly, setFavoritesOnly, fav
             : 'bg-zinc-900/50 text-zinc-500 border-white/5 hover:text-white hover:border-white/20'
         }`}
       >
-        <Heart size={16} className={favoritesOnly ? 'fill-current' : ''} />
+        <HugeiconsIcon icon={FavouriteIcon} size={16} className={favoritesOnly ? 'fill-current' : ''} />
         Favorites{favoriteCount > 0 ? ` (${favoriteCount})` : ''}
       </button>
     </div>

@@ -1,9 +1,9 @@
 import About from '@/views/about/About';
 
 export const metadata = {
-  title: 'About',
+  title: 'About — Immortalize the Night',
   description:
-    'PXI is the social scrapbook app that helps you plan events, share photos in real time, and relive your best nights.',
+    'PXI was forged to solve a critical flaw in modern social life. A unified ecosystem built by event operators to handle the logistics of the night, so you can return to the reality of it.',
   alternates: { canonical: 'https://pxispace.com/about' },
 };
 

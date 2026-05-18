@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon, Loading02Icon } from '@hugeicons/core-free-icons';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { useAuth } from '../../contexts/AuthContext';
@@ -129,7 +130,7 @@ export default function VerifyPhonePage() {
                 className="absolute top-5 left-5 z-20 flex items-center justify-center"
                 style={{ padding: 10, color: 'rgba(255,255,255,0.6)', borderRadius: 9999, background: 'transparent' }}
             >
-                <ChevronLeft size={28} />
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={28} />
             </button>
 
             <div className="relative z-10 flex-1 overflow-y-auto flex flex-col">
@@ -184,7 +185,7 @@ export default function VerifyPhonePage() {
                                     letterSpacing: '0.12em',
                                 }}
                             >
-                                {loading ? <Loader2 size={18} className="animate-spin inline" /> : 'SEND CODE'}
+                                {loading ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin inline" /> : 'SEND CODE'}
                             </button>
                         </form>
                     )}
@@ -212,7 +213,7 @@ export default function VerifyPhonePage() {
                                     letterSpacing: '0.12em',
                                 }}
                             >
-                                {loading ? <Loader2 size={18} className="animate-spin inline" /> : 'VERIFY'}
+                                {loading ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin inline" /> : 'VERIFY'}
                             </button>
                             <button
                                 type="button"

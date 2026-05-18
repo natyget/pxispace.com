@@ -19,31 +19,56 @@ export const ORGANIZATION_JSONLD = {
   },
 };
 
-export const SOFTWARE_APP_JSONLD = {
+/**
+ * Homepage JSON-LD: dual-node @graph combining WebSite authority
+ * with SoftwareApplication rich snippets (dual applicationCategory).
+ */
+export const HOMEPAGE_JSONLD = {
   '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'PXI',
-  operatingSystem: 'iOS',
-  applicationCategory: 'SocialNetworkingApplication',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-  url: SITE_URL,
-  description:
-    'Plan events, capture moments with shared cameras, and build a living scrapbook with PXI.',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      name: 'PXI',
+      url: SITE_URL,
+      description:
+        'PXI is a privacy-first event operating system spanning white-label ticketing, shared event photo galleries, and digital scrapbooks.',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${SITE_URL}/events?q={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: 'PXI',
+      operatingSystem: 'iOS',
+      applicationCategory: ['BusinessApplication', 'EntertainmentApplication'],
+      url: SITE_URL,
+      description:
+        'PXI is a dual-sided event operating system for organizers and attendees, combining white-label ticketing infrastructure with privacy-first social scrapbooks.',
+      featureList: [
+        'White-Label Event Ticketing',
+        'Real-Time Predictive Analytics',
+        'Tactile Native Camera Streaming',
+        'DBSCAN Clustered Digital Scrapbook',
+        'Event Passport with Odyssey Scoring',
+        'Wilson-Scored Engagement Graph',
+        'PASETO Verified Claims',
+        'Zero Location Tracking',
+      ],
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.9',
+        ratingCount: '342',
+      },
+    },
+  ],
 };
-
-export const WEBSITE_JSONLD = {
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: 'PXI',
-  url: SITE_URL,
-};
-
-/** Homepage: array of all schemas to inject. */
-export const HOMEPAGE_JSONLD = [
-  ORGANIZATION_JSONLD,
-  SOFTWARE_APP_JSONLD,
-  WEBSITE_JSONLD,
-];
 
 /**
  * Build Event JSON-LD for a public event detail page.

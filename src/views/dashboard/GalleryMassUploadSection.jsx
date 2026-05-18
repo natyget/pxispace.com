@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { Loader2, ImagePlus } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Loading02Icon, ImageAdd02Icon } from '@hugeicons/core-free-icons';
 import { requestPresignedUpload } from '../../services/media';
 import { createFeedItem } from '../../services/feed';
 
@@ -268,7 +269,7 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
   return (
     <section className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
       <div className="p-5 border-b border-white/5 flex items-center gap-2">
-        <ImagePlus size={18} className="text-pxi-purple" />
+        <HugeiconsIcon icon={ImageAdd02Icon} size={18} className="text-pxi-purple" />
         <h2 className="font-bold text-white uppercase tracking-widest text-sm">Gallery · Mass upload</h2>
       </div>
       <div className="p-5 space-y-4">
@@ -294,7 +295,7 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
           onClick={() => inputRef.current?.click()}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
         >
-          {busy ? <Loader2 className="animate-spin" size={18} /> : <ImagePlus size={18} />}
+          {busy ? <HugeiconsIcon icon={Loading02Icon} className="animate-spin" size={18} /> : <HugeiconsIcon icon={ImageAdd02Icon} size={18} />}
           {busy ? 'Uploading…' : 'Choose files'}
         </button>
         {busy && progress.total > 0 && (

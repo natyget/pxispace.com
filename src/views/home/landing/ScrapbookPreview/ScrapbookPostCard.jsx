@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Pin } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PinIcon } from '@hugeicons/core-free-icons';
 import { glassImageCard } from './glassStyles';
 
 export default function ScrapbookPostCard({
@@ -28,7 +29,7 @@ export default function ScrapbookPostCard({
           />
           {pinned && (
             <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/95 backdrop-blur-md border border-white/15 shadow-lg">
-              <Pin className="w-3 h-3 text-amber-300" strokeWidth={2.5} />
+              <HugeiconsIcon icon={PinIcon} className="w-3 h-3 text-amber-300" strokeWidth={2.5} />
               Pinned
             </div>
           )}

@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ImagePlus, Link2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ImageAdd02Icon, Link01Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import GalleryMassUploadSection from '../GalleryMassUploadSection';
 import { useEventManage } from './EventManageContext';
@@ -29,7 +30,7 @@ export default function EventMassUploadPageView() {
           {/* Photographer share link */}
           <div className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
             <div className="p-5 border-b border-white/5 flex items-center gap-2">
-              <Link2 size={18} className="text-pxi-purple" />
+              <HugeiconsIcon icon={Link01Icon} size={18} className="text-pxi-purple" />
               <h2 className="font-bold text-white uppercase tracking-widest text-sm">Photographer Upload Link</h2>
             </div>
             <div className="p-5 space-y-3">
@@ -41,7 +42,7 @@ export default function EventMassUploadPageView() {
                 onClick={() => setShowLinkModal(true)}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/8 border border-white/10 text-white text-sm font-bold uppercase tracking-widest hover:bg-white/12 hover:border-white/20 transition-colors"
               >
-                <Link2 size={16} />
+                <HugeiconsIcon icon={Link01Icon} size={16} />
                 Create Share Link
               </button>
             </div>

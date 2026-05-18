@@ -1,3 +1,4 @@
+import { HugeiconsIcon } from '@hugeicons/react';
 import { useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -95,8 +96,7 @@ const Vision = () => {
                                         colorBgMap[item.color]
                                     }`}
                                 >
-                                    <item.icon
-                                        className={`w-4 h-4 ${
+                                    <HugeiconsIcon icon={item.icon} className={`w-4 h-4 ${
                                             colorTextMap[item.color]
                                         }`}
                                     />

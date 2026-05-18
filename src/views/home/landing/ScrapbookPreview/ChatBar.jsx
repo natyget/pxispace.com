@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Send } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { SentIcon } from '@hugeicons/core-free-icons';
 import { glassOther } from './glassStyles';
 
 export default function ChatBar() {
@@ -11,7 +12,7 @@ export default function ChatBar() {
         <span className="text-[15px] text-white/45">Message...</span>
       </div>
       <div className="w-[44px] h-[44px] rounded-full pxi-home-purple flex items-center justify-center flex-shrink-0 ring-1 ring-white/15">
-        <Send className="w-5 h-5 text-white" />
+        <HugeiconsIcon icon={SentIcon} className="w-5 h-5 text-white" />
       </div>
     </div>
   );

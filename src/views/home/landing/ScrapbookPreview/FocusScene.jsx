@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { motion, useTransform } from 'framer-motion';
-import { Send } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { SentIcon } from '@hugeicons/core-free-icons';
 import { THREAD_POST_SECOND, AVATAR_BABA, AVATAR_KEVIN } from '@/lib/landingAssets';
 import { glassImageCard, glassOther } from './glassStyles';
 
@@ -124,7 +125,7 @@ export default function FocusScene({ progress }) {
           className="w-[42px] h-[42px] rounded-full pxi-home-purple flex items-center justify-center flex-shrink-0 ring-1 ring-white/15"
           style={{ scale: sendButtonScale }}
         >
-          <Send className="w-5 h-5 text-white" />
+          <HugeiconsIcon icon={SentIcon} className="w-5 h-5 text-white" />
         </motion.div>
       </div>
     </motion.div>

@@ -1,3 +1,4 @@
+import { HugeiconsIcon } from '@hugeicons/react';
 import { useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -77,7 +78,7 @@ const Features = () => {
             >
               <div className={`space-y-6 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
                 <div className="inline-block p-4 bg-card border-glow rounded-2xl">
-                  <feature.icon className="text-5xl text-primary" />
+                  <HugeiconsIcon icon={feature.icon} className="text-5xl text-primary" />
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold text-neon">
                   {feature.title}
