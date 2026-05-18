@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Menu01Icon, Cancel01Icon, Logout01Icon, DashboardSquare01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons';
-const LogoSrc = "/Union.svg";
+const LogoSrc = "/favicon.png";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Navbar = () => {
