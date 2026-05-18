@@ -21,8 +21,8 @@ function buildChaosElements(isMobile) {
       photoStyle: i % 4 === 0 ? 'polaroid' : 'standard',
       iconUrl: HERO_SCATTER_ICONS[idx % HERO_SCATTER_ICONS.length],
       photoUrl: HERO_SCATTER_PHOTOS[idx % HERO_SCATTER_PHOTOS.length],
-      startX: Math.cos(angle) * radiusX,
-      startY: Math.sin(angle) * radiusY,
+      startX: roundMotion(Math.cos(angle) * radiusX),
+      startY: roundMotion(Math.sin(angle) * radiusY),
       rotation: ((i * 7) % 60) - 30,
       popDelay: i * 0.08,
       // Pre-compute scroll thresholds to avoid doing it per-frame
@@ -36,27 +36,46 @@ function easeOutCubic(t) {
   return 1 - (1 - t) ** 3;
 }
 
+/** Match Framer Motion SSR transform serialization (4dp) to avoid hydration mismatches. */
+function roundMotion(n, digits = 4) {
+  const factor = 10 ** digits;
+  return Math.round(n * factor) / factor;
+}
+
 /**
  * Single component for one chaos item.
  * Uses ONE useTransform to batch x/y/scale/opacity into a single CSS transform string,
  * eliminating 3 extra useTransform hooks per element (was 4 hooks × 14 = 56, now 14).
  */
-const HeroChaosItem = React.memo(function HeroChaosItem({ el, heroProgress, isMobile }) {
+const HeroChaosItem = React.memo(function HeroChaosItem({ el, heroProgress }) {
+  const [motionReady, setMotionReady] = useState(false);
+  useEffect(() => setMotionReady(true), []);
+
   const isBerealIcon = el.type === 'icon' && typeof el.iconUrl === 'string' && el.iconUrl.includes('bereal');
   const isGoogleDriveIcon =
     el.type === 'icon' &&
     typeof el.iconUrl === 'string' &&
     el.iconUrl.includes(HERO_SCATTER_ICON_EXTRA_PADDING);
 
+  const restStyle = useMemo(
+    () => ({
+      x: `${el.startX}vw`,
+      y: `${el.startY}vh`,
+      scale: 1,
+      opacity: 1,
+    }),
+    [el.startX, el.startY]
+  );
+
   // Single useTransform computes a CSS transform + opacity string — 1 hook instead of 4
   const transform = useTransform(heroProgress, (p) => {
     const raw = (p - el.holeStart) / (el.holeEnd - el.holeStart);
     const t = easeOutCubic(Math.min(Math.max(raw, 0), 1));
     return {
-      x: el.startX * (1 - t),
-      y: el.startY * (1 - t),
-      s: 1 - t * 0.98,
-      o: Math.max(0, 1 - t * 1.08),
+      x: roundMotion(el.startX * (1 - t)),
+      y: roundMotion(el.startY * (1 - t)),
+      s: roundMotion(1 - t * 0.98),
+      o: roundMotion(Math.max(0, 1 - t * 1.08)),
     };
   });
 
@@ -68,7 +87,8 @@ const HeroChaosItem = React.memo(function HeroChaosItem({ el, heroProgress, isMo
   return (
     <motion.div
       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 will-change-transform"
-      style={{ x, y, scale, opacity }}
+      initial={false}
+      style={motionReady ? { x, y, scale, opacity } : restStyle}
     >
       <motion.div
         className="will-change-transform"
@@ -159,12 +179,7 @@ export default function Hero() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[1000px] bg-[var(--color-pxi-purple)]/10 blur-[150px] pointer-events-none -z-10 opacity-60" />
 
       {visibleElements.map((el) => (
-        <HeroChaosItem
-          key={el.id}
-          el={el}
-          heroProgress={heroProgress}
-          isMobile={isMobile}
-        />
+        <HeroChaosItem key={el.id} el={el} heroProgress={heroProgress} />
       ))}
 
       <motion.div

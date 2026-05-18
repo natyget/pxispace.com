@@ -2,11 +2,9 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Menu01Icon, Cancel01Icon, Logout01Icon, DashboardSquare01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons';
-const LogoSrc = "/favicon.png";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Navbar = () => {
@@ -82,13 +80,12 @@ const Navbar = () => {
                     className="flex h-[30px] min-w-0 items-center justify-self-start gap-3 md:h-10 md:gap-3"
                     onClick={() => setMobileMenuOpen(false)}
                 >
-                    <Image
-                        src={LogoSrc}
+                    <img
+                        src="/favicon.png"
                         alt="PXI Logo"
                         width={36}
                         height={36}
                         className="h-[30px] w-[30px] shrink-0 object-contain md:h-9 md:w-9"
-                        priority
                     />
                 </Link>
 
