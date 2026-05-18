@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Link2, Copy, Check, Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, Link01Icon, Copy01Icon, CheckmarkBadge01Icon, Loading02Icon } from '@hugeicons/core-free-icons';
 import { createUploadLink } from '@/services/uploadLink';
 import { getSiteUrl } from '@/lib/siteUrl';
 
@@ -15,8 +16,8 @@ const EXPIRE_OPTIONS = [
 ];
 
 export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
-  const [maxUploads, setMaxUploads] = useState(200);
-  const [maxUses, setMaxUses] = useState(5);
+  const [maxUploads, setMaxUploads] = useState(100);
+  const [maxMb, setMaxMb] = useState(100);
   const [expiresInHours, setExpiresInHours] = useState(24);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -27,7 +28,7 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
     setLoading(true);
     setError(null);
     try {
-      const result = await createUploadLink({ albumId, eventId, maxUploads, maxUses, expiresInHours });
+      const result = await createUploadLink({ albumId, eventId, maxUploads, maxMb, expiresInHours });
       setCreatedLink(`${getSiteUrl()}/upload/${result.token}`);
     } catch (err) {
       setError(err?.message || 'Failed to create upload link');
@@ -52,11 +53,11 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
           <div className="flex items-center gap-2">
-            <Link2 size={18} className="text-pxi-purple" />
+            <HugeiconsIcon icon={Link01Icon} size={18} className="text-pxi-purple" />
             <h2 className="font-bold text-white text-sm uppercase tracking-widest">Photographer Upload Link</h2>
           </div>
           <button type="button" onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
-            <X size={20} />
+            <HugeiconsIcon icon={Cancel01Icon} size={20} />
           </button>
         </div>
 
@@ -67,32 +68,32 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
                 Generate a shareable link that lets photographers upload directly to this event's album — no account required.
               </p>
 
-              {/* Max uploads (capacity) */}
+              {/* Max images */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
-                  Upload Capacity <span className="text-zinc-600 normal-case tracking-normal font-normal">(max total photos)</span>
+                  Max Images <span className="text-zinc-600 normal-case tracking-normal font-normal">(max number of photos)</span>
                 </label>
                 <input
                   type="number"
                   min={1}
-                  max={2000}
+                  max={5000}
                   value={maxUploads}
                   onChange={(e) => setMaxUploads(Number(e.target.value))}
                   className="w-full rounded-xl bg-zinc-800 border border-white/10 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-pxi-purple/60"
                 />
               </div>
 
-              {/* Max uses (amount) */}
+              {/* Max MB (storage capacity) */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
-                  Photographer Limit <span className="text-zinc-600 normal-case tracking-normal font-normal">(max people who can use this link)</span>
+                  Capacity (MB) <span className="text-zinc-600 normal-case tracking-normal font-normal">(max total storage)</span>
                 </label>
                 <input
                   type="number"
                   min={1}
-                  max={200}
-                  value={maxUses}
-                  onChange={(e) => setMaxUses(Number(e.target.value))}
+                  max={50000}
+                  value={maxMb}
+                  onChange={(e) => setMaxMb(Number(e.target.value))}
                   className="w-full rounded-xl bg-zinc-800 border border-white/10 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-pxi-purple/60"
                 />
               </div>
@@ -134,7 +135,7 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
                   disabled={loading}
                   className="flex-1 py-2.5 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {loading ? <Loader2 size={16} className="animate-spin" /> : <Link2 size={16} />}
+                  {loading ? <HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin" /> : <HugeiconsIcon icon={Link01Icon} size={16} />}
                   {loading ? 'Creating…' : 'Create Link'}
                 </button>
               </div>
@@ -152,7 +153,7 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
                   onClick={handleCopy}
                   className="shrink-0 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                 >
-                  {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} className="text-zinc-400" />}
+                  {copied ? <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} className="text-emerald-400" /> : <HugeiconsIcon icon={Copy01Icon} size={16} className="text-zinc-400" />}
                 </button>
               </div>
 
@@ -162,7 +163,7 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
                   onClick={handleCopy}
                   className="flex-1 py-2.5 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest hover:opacity-90 flex items-center justify-center gap-2"
                 >
-                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                  {copied ? <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} /> : <HugeiconsIcon icon={Copy01Icon} size={16} />}
                   {copied ? 'Copied!' : 'Copy Link'}
                 </button>
                 <button

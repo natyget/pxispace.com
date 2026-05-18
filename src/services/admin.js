@@ -28,3 +28,12 @@ export function fetchAdminReports(params = {}) {
     const q = search.toString();
     return api.get(`/api/admin/reports${q ? `?${q}` : ''}`);
 }
+
+export function fetchAdminUgcReports(params = {}) {
+    const search = new URLSearchParams();
+    if (params.page) search.set('page', String(params.page));
+    if (params.limit) search.set('limit', String(params.limit));
+    if (params.status) search.set('status', params.status);
+    const q = search.toString();
+    return api.get(`/api/admin/ugc-reports${q ? `?${q}` : ''}`);
+}

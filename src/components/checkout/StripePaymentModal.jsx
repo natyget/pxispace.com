@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { X, Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, Loading02Icon } from '@hugeicons/core-free-icons';
 import { api } from '@/services/api';
 import Button from '@/components/ui/Button';
 
@@ -71,7 +72,7 @@ const PaymentForm = ({ onSuccess, onCancel, returnUrl }) => {
           className="flex-1 uppercase tracking-widest py-3 !bg-pxi-purple hover:!bg-pxi-purple shadow-[0_0_20px_rgba(216,74,255,0.4)]"
           disabled={!stripe || loading}
         >
-          {loading ? <Loader2 size={18} className="animate-spin mx-auto" /> : 'Pay now'}
+          {loading ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin mx-auto" /> : 'Pay now'}
         </Button>
       </div>
     </form>
@@ -109,7 +110,7 @@ export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open, re
             className="rounded-lg p-1 text-zinc-500 hover:bg-white/5 hover:text-white transition-colors"
             aria-label="Close"
           >
-            <X size={20} />
+            <HugeiconsIcon icon={Cancel01Icon} size={20} />
           </button>
         </div>
         {/* Explicit max-height so Link/card/phone fields can scroll on short viewports */}
@@ -132,7 +133,7 @@ export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open, re
             </Elements>
           ) : (
             <div className="flex items-center justify-center py-12 text-zinc-500">
-              <Loader2 size={24} className="animate-spin" />
+              <HugeiconsIcon icon={Loading02Icon} size={24} className="animate-spin" />
             </div>
           )}
         </div>

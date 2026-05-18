@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Shield } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Shield01Icon } from '@hugeicons/core-free-icons';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 
@@ -43,7 +44,7 @@ const SECTIONS = [
             <div className="bg-legal-hub-surface border border-legal-hub-border p-6 rounded-xl relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1 h-full bg-legal-hub-accent"></div>
               <h4 className="text-lg font-semibold text-legal-hub-accent mb-2 flex items-center gap-2">
-                <Shield className="w-5 h-5" />
+                <HugeiconsIcon icon={Shield01Icon} className="w-5 h-5" />
                 2.3 Biometric Data — BIPA Disclosure (Illinois)
               </h4>
               <p className="text-gray-400 text-sm mb-4">PXI's "Find My Shots" feature uses a native on-device facial geometry vector scan ("FaceVector") to identify your photos within shared event albums. This feature is subject to the Illinois Biometric Information Privacy Act (BIPA), the California Consumer Privacy Act (CPRA Sensitive Data provisions), and analogous state laws.</p>
@@ -662,7 +663,7 @@ export default function LegalHubPage() {
 
     const handleIntersect = (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting && entry.intersectionRatio > 0.2) {
+        if (entry.isIntersecting) {
           setActiveSection(entry.target.id);
         }
       });
@@ -670,8 +671,8 @@ export default function LegalHubPage() {
 
     const observerOptions = {
       root: null,
-      rootMargin: '-20% 0px -60% 0px',
-      threshold: [0.2, 0.5]
+      rootMargin: '-20% 0px -75% 0px',
+      threshold: 0
     };
 
     const observer = new IntersectionObserver(handleIntersect, observerOptions);
@@ -730,7 +731,7 @@ export default function LegalHubPage() {
       </header>
 
       {/* Mobile Navigation (Sticky) */}
-      <div className="md:hidden sticky top-16 z-30 bg-legal-hub-bg/95 backdrop-blur pt-4 pb-2 border-b border-legal-hub-border">
+      <div className="md:hidden sticky top-0 z-30 bg-legal-hub-bg/95 backdrop-blur pt-4 pb-2 border-b border-legal-hub-border">
         <div className="flex overflow-x-auto legal-hub-hide-scrollbar px-4 gap-6">
           {SECTIONS.map((section) => (
             <button

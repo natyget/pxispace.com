@@ -1,13 +1,33 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Image from 'next/image';
-import { X, Calendar, MapPin, ExternalLink } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, Calendar01Icon, Location01Icon, Ticket01Icon } from '@hugeicons/core-free-icons';
 import Button from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
 
 const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' }) => {
   const router = useRouter();
+
+  /* Lock body scroll when open */
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  /* Close on Escape */
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
   if (!open || !event) return null;
 
   const goFull = () => {
@@ -16,14 +36,21 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} aria-hidden />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
+      onClick={onClose}
+    >
+      {/* Backdrop — click anywhere to close */}
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" aria-hidden />
+
+      {/* Floating card */}
       <div
         role="dialog"
         aria-modal="true"
-        className="relative w-full max-w-lg bg-zinc-950 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl"
+        className="relative w-full max-w-lg bg-zinc-950 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative h-52">
+        <div className="relative h-56 md:h-64">
           <Image
             src={event.image}
             alt=""
@@ -37,38 +64,37 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
             type="button"
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-            aria-label="Close"
+            aria-label="Close preview"
           >
-            <X size={20} />
+            <HugeiconsIcon icon={Cancel01Icon} size={20} />
           </button>
         </div>
+
         <div className="p-8 space-y-4">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pxi-purple">{event.status}</p>
           <h2 className="text-2xl font-black uppercase tracking-tighter text-white leading-tight">{event.title}</h2>
           <div className="flex flex-col gap-2 text-zinc-400 text-sm">
             <span className="flex items-center gap-2">
-              <Calendar size={16} className="text-pxi-purple shrink-0" />
+              <HugeiconsIcon icon={Calendar01Icon} size={16} className="text-pxi-purple shrink-0" />
               {event.date}
             </span>
             <span className="flex items-center gap-2">
-              <MapPin size={16} className="text-pxi-purple shrink-0" />
+              <HugeiconsIcon icon={Location01Icon} size={16} className="text-pxi-purple shrink-0" />
               {event.location}
             </span>
           </div>
           {event.description ? (
             <p className="text-zinc-500 text-sm leading-relaxed line-clamp-4">{event.description}</p>
           ) : null}
-          <div className="flex gap-3 pt-2">
-            <Button variant="neon" className="flex-1 uppercase tracking-widest" onClick={goFull} icon={<ExternalLink size={16} />}>
-              Open album
-            </Button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 rounded-xl border border-white/10 text-zinc-400 text-sm font-medium hover:bg-white/5"
+          <div className="pt-2">
+            <Button
+              variant="neon"
+              className="w-full uppercase tracking-widest"
+              onClick={goFull}
+              icon={<HugeiconsIcon icon={Ticket01Icon} size={16} />}
             >
-              Close
-            </button>
+              RSVP
+            </Button>
           </div>
         </div>
       </div>

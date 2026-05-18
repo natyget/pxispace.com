@@ -1,28 +1,24 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Calendar, Image as ImageIcon, Users } from 'lucide-react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Pagination, Autoplay } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/pagination';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Calendar01Icon, ImageIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 
-const DiscoverPNG = '/images/discover.PNG';
-const CreatePNG = '/images/create.PNG';
+const DiscoverJPG = '/images/discover.jpg';
+const CreateJPG = '/images/create.jpg';
+const SLIDES = [DiscoverJPG, CreateJPG];
+const SLIDE_INTERVAL = 3500;
 
 export default function AuthenticContentSection() {
-  const bgRef = useRef(null);
+  const [activeSlide, setActiveSlide] = useState(0);
 
+  /* Auto-cycle between the two screenshots */
   useEffect(() => {
-    const handleScroll = () => {
-      if (bgRef.current) {
-        const scrolled = window.scrollY;
-        bgRef.current.style.transform = `translate(-50%, calc(-50% + ${scrolled * 0.08}px))`;
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const timer = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % SLIDES.length);
+    }, SLIDE_INTERVAL);
+    return () => clearInterval(timer);
   }, []);
 
   return (
@@ -48,7 +44,7 @@ export default function AuthenticContentSection() {
             <div className="space-y-8 md:space-y-10">
               <div className="flex flex-col md:flex-row items-center lg:items-start gap-5 md:gap-6">
                 <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md bg-white/5">
-                  <Calendar className="text-white w-5 h-5" />
+                  <HugeiconsIcon icon={Calendar01Icon} className="text-white w-5 h-5" />
                 </div>
                 <div className="max-w-md">
                   <h3 className="text-xl font-black mb-2 uppercase tracking-tight">
@@ -63,7 +59,7 @@ export default function AuthenticContentSection() {
 
               <div className="flex flex-col md:flex-row items-center lg:items-start gap-5 md:gap-6">
                 <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md bg-white/5">
-                  <ImageIcon className="text-pxi-purple w-5 h-5" />
+                  <HugeiconsIcon icon={ImageIcon} className="text-pxi-purple w-5 h-5" />
                 </div>
                 <div className="max-w-md">
                   <h3 className="text-xl font-black mb-2 uppercase tracking-tight">Social Momentum</h3>
@@ -76,7 +72,7 @@ export default function AuthenticContentSection() {
 
               <div className="flex flex-col md:flex-row items-center lg:items-start gap-5 md:gap-6">
                 <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border border-white/10 backdrop-blur-md bg-white/5">
-                  <Users className="text-blue-400 w-5 h-5" />
+                  <HugeiconsIcon icon={UserGroupIcon} className="text-blue-400 w-5 h-5" />
                 </div>
                 <div className="max-w-md">
                   <h3 className="text-xl font-black mb-2 uppercase tracking-tight">Build Your Tribe</h3>
@@ -99,9 +95,9 @@ export default function AuthenticContentSection() {
           </div>
 
           <div className="lg:w-1/2 relative flex justify-center w-full">
+            {/* Background glow — static, no raw scroll listener */}
             <div
-              ref={bgRef}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-pxi-purple/20 rounded-full blur-[100px] opacity-40 will-change-transform pointer-events-none"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-pxi-purple/20 rounded-full blur-[100px] opacity-40 pointer-events-none"
             />
 
             <div className="relative">
@@ -109,42 +105,21 @@ export default function AuthenticContentSection() {
                 <div className="bg-black p-3 shadow-2xl border-4 border-neutral-900 w-[280px] md:w-[360px] overflow-hidden rounded-[2rem]">
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-28 bg-neutral-900 rounded-b-xl z-20" />
 
-                  <Swiper
-                    spaceBetween={0}
-                    slidesPerView={1}
-                    pagination={{ clickable: true }}
-                    modules={[Pagination, Autoplay]}
-                    autoplay={{ delay: 3500, disableOnInteraction: false }}
-                    loop
-                    className="rounded-[1.5rem] overflow-hidden bg-black"
-                  >
-                    <SwiperSlide>
-                      <div className="aspect-[9/19] w-full overflow-hidden">
-                        <img
-                          src={DiscoverPNG}
-                          alt="Discover"
-                          width={720}
-                          height={1520}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </div>
-                    </SwiperSlide>
-                    <SwiperSlide>
-                      <div className="aspect-[9/19] w-full overflow-hidden">
-                        <img
-                          src={CreatePNG}
-                          alt="Create"
-                          width={720}
-                          height={1520}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </div>
-                    </SwiperSlide>
-                  </Swiper>
+                  {/* CSS crossfade replaces Swiper (eliminates entire library from bundle) */}
+                  <div className="relative rounded-[1.5rem] overflow-hidden bg-black aspect-[9/19]">
+                    {SLIDES.map((src, i) => (
+                      <img
+                        key={src}
+                        src={src}
+                        alt={i === 0 ? 'Discover' : 'Create'}
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+                          i === activeSlide ? 'opacity-100' : 'opacity-0'
+                        }`}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
 

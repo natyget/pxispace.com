@@ -1,3 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /signup
+Disallow: /verify-phone
+Disallow: /passport-required
+Disallow: /stripe/
+Disallow: /api/
 Sitemap: https://pxispace.com/sitemap.xml

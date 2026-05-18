@@ -1,57 +1,79 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import React, { useRef, useEffect, useState } from 'react';
+import { motion, useMotionValue, animate, useInView, useTransform } from 'framer-motion';
 import PhoneFrame from './PhoneFrame';
-import HeadlineOverlay from './HeadlineOverlay';
 import ThreadScene from './ThreadScene';
 import FocusScene from './FocusScene';
 import GalleryScene from './GalleryScene';
 import TabBar from './TabBar';
 
-/** Keep narrative dwell, but reduce animation-active duration for better performance */
-const PREVIEW_SCROLL_VH = 700;
-
 export default function ScrapbookPreview() {
   const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
-  });
+  
+  // Replace scroll progress with an auto-playing time progress (0 to 1)
+  const timeProgress = useMotionValue(0);
+  
+  // Detect when the section is in the viewport.
+  // Using a less strict margin so it plays reliably.
+  const isInView = useInView(containerRef, { margin: "-10% 0px -10% 0px" });
 
-  const combinedOpacity = useTransform(scrollYProgress, (p) => {
-    if (p < 0.17) return 0;
-    if (p < 0.33) return (p - 0.17) / 0.16;
-    if (p < 0.93) return 1;
-    return (1 - p) / (1 - 0.93);
-  });
+  const [isPaused, setIsPaused] = useState(false);
+  const [loopKey, setLoopKey] = useState(0);
 
-  const combinedScale = useTransform(scrollYProgress, (p) => {
-    if (p < 0.17) return 0.92;
-    if (p < 0.33) return 0.92 + ((p - 0.17) / 0.16) * 0.08;
-    if (p < 0.93) return 1;
-    return 1 - ((p - 0.93) / 0.07) * 0.1;
-  });
+  useEffect(() => {
+    let raf;
+    let lastTime = 0;
+    let waitTimeout;
+    let isWaiting = false;
+    
+    const tick = (time) => {
+      if (!lastTime) lastTime = time;
+      const dt = (time - lastTime) / 1000;
+      lastTime = time;
+      
+      const current = timeProgress.get();
+      if (current < 0.93) {
+        timeProgress.set(Math.min(0.93, current + dt / 19.2));
+        raf = requestAnimationFrame(tick);
+      } else if (!isWaiting) {
+        isWaiting = true;
+        waitTimeout = setTimeout(() => {
+          timeProgress.set(0);
+          setLoopKey((k) => k + 1);
+          isWaiting = false;
+          lastTime = 0;
+          if (!isPaused && isInView) {
+            raf = requestAnimationFrame(tick);
+          }
+        }, 0);
+      }
+    };
 
-  const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.035], [1, 0]);
+    if (isInView && !isPaused && !isWaiting) {
+      raf = requestAnimationFrame(tick);
+    }
+    
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      if (waitTimeout) clearTimeout(waitTimeout);
+    };
+  }, [isInView, isPaused, timeProgress]);
 
   return (
     <section
       ref={containerRef}
-      className="relative w-full bg-black text-white font-sans"
-      style={{ height: `${PREVIEW_SCROLL_VH}vh` }}
+      className="relative w-full bg-black text-white font-sans h-screen"
     >
-      <div className="sticky top-0 left-0 w-full h-screen flex items-center justify-center overflow-hidden pt-24 pb-6">
-        <HeadlineOverlay progress={scrollYProgress} />
-
+      <div className="w-full h-full flex flex-col items-center justify-center overflow-hidden">
         <motion.div
           className="relative z-10 flex items-center justify-center"
-          style={{
-            opacity: combinedOpacity,
-            scale: combinedScale,
-          }}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setIsPaused(false)}
         >
-          <PhoneFrame>
+          <PhoneFrame key={loopKey}>
             {/* Solid nav like in-app album header (opaque bar, centered title, aligned actions) */}
             <div className="absolute top-0 left-0 right-0 z-50 pointer-events-none border-b border-white/[0.08] bg-[#0a0a0a]">
               <div className="relative flex h-12 items-center justify-center px-1">
@@ -70,24 +92,11 @@ export default function ScrapbookPreview() {
               </div>
             </div>
 
-            <ThreadScene progress={scrollYProgress} />
-            <FocusScene progress={scrollYProgress} />
-            <GalleryScene progress={scrollYProgress} />
-            <TabBar progress={scrollYProgress} />
+            <ThreadScene progress={timeProgress} />
+            <FocusScene progress={timeProgress} />
+            <GalleryScene progress={timeProgress} />
+            <TabBar progress={timeProgress} />
           </PhoneFrame>
-        </motion.div>
-
-        <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/50"
-          style={{ opacity: scrollHintOpacity }}
-        >
-          <span className="text-xs uppercase tracking-widest font-bold">Scroll to explore</span>
-          <motion.div
-            animate={{ y: [0, 5, 0] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-          >
-            ↓
-          </motion.div>
         </motion.div>
       </div>
     </section>

@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Camera, Users, X } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Camera01Icon, UserGroupIcon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const albums = [
@@ -148,11 +149,11 @@ export default function BestMomentsVault() {
                 </h3>
                 <div className="flex items-center gap-4 text-zinc-400">
                   <div className="flex items-center gap-1.5">
-                    <Camera size={14} />
+                    <HugeiconsIcon icon={Camera01Icon} size={14} />
                     <span className="text-xs font-bold">{album.photos}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Users size={14} />
+                    <HugeiconsIcon icon={UserGroupIcon} size={14} />
                     <span className="text-xs font-bold">{album.members}</span>
                   </div>
                 </div>
@@ -201,7 +202,7 @@ export default function BestMomentsVault() {
                   className="rounded-full p-2 border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
                   aria-label="Close"
                 >
-                  <X className="w-5 h-5 text-white" />
+                  <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-white" />
                 </button>
               </div>
               <div className="overflow-y-auto p-4 md:p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">

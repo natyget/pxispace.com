@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { MapPin } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Location01Icon } from '@hugeicons/core-free-icons';
 
 function bboxForEvents(events) {
   const pts = (events || []).filter(
@@ -40,7 +41,7 @@ const EventsDiscoverMap = ({ events }) => {
   if (!src) {
     return (
       <div className="glass-dark rounded-[2rem] border border-white/10 p-10 text-center text-zinc-500 mb-12">
-        <MapPin className="mx-auto mb-3 opacity-40" size={32} />
+        <HugeiconsIcon icon={Location01Icon} className="mx-auto mb-3 opacity-40" size={32} />
         <p className="text-sm font-medium">No map locations yet — add coordinates to events in the dashboard.</p>
       </div>
     );

@@ -4,8 +4,9 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
-const LogoSrc = "/Union.svg";
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Menu01Icon, Cancel01Icon, Logout01Icon, DashboardSquare01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons';
+const LogoSrc = "/favicon.png";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Navbar = () => {
@@ -129,7 +130,7 @@ const Navbar = () => {
                                 <span className="text-white text-xs font-semibold max-w-[100px] truncate">
                                     {user?.name?.split(" ")[0] || "Account"}
                                 </span>
-                                <ChevronDown
+                                <HugeiconsIcon icon={ArrowDown01Icon}
                                     size={12}
                                     className={`text-zinc-500 transition-transform ${userMenuOpen ? "rotate-180" : ""}`}
                                 />
@@ -146,14 +147,14 @@ const Navbar = () => {
                                         onClick={() => setUserMenuOpen(false)}
                                         className="flex items-center gap-2.5 px-4 py-2.5 text-zinc-300 hover:text-white hover:bg-white/5 text-xs font-medium transition-all"
                                     >
-                                        <LayoutDashboard size={13} />
+                                        <HugeiconsIcon icon={DashboardSquare01Icon} size={13} />
                                         Dashboard
                                     </Link>
                                     <button
                                         onClick={() => { setUserMenuOpen(false); setShowLogoutModal(true); }}
                                         className="flex items-center gap-2.5 w-full px-4 py-2.5 text-zinc-500 hover:text-pxi-purple hover:bg-pxi-purple/10 text-xs font-medium transition-all"
                                     >
-                                        <LogOut size={13} />
+                                        <HugeiconsIcon icon={Logout01Icon} size={13} />
                                         Sign Out
                                     </button>
                                 </div>
@@ -174,9 +175,9 @@ const Navbar = () => {
                         aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
                     >
                         {mobileMenuOpen ? (
-                            <X className="h-[21px] w-[21px]" strokeWidth={2} />
+                            <HugeiconsIcon icon={Cancel01Icon} className="h-[21px] w-[21px]" strokeWidth={2} />
                         ) : (
-                            <Menu className="h-[21px] w-[21px]" strokeWidth={2} />
+                            <HugeiconsIcon icon={Menu01Icon} className="h-[21px] w-[21px]" strokeWidth={2} />
                         )}
                     </button>
                 </div>

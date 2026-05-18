@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { eventsService } from '@/services/events';
 import EventCard from '@/views/events/EventCard';
-import { ChevronDown } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowDown01Icon } from '@hugeicons/core-free-icons';
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
 
@@ -265,7 +266,7 @@ export default function PublicEventsPage() {
                   onClick={() => setOpenMenu((m) => (m === 'trending' ? null : 'trending'))}
                   className="rounded-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/10 transition"
                 >
-                  Trending: {trendingLabel} <ChevronDown size={14} className="inline-block ml-1 -mt-0.5 opacity-70" />
+                  Trending: {trendingLabel} <HugeiconsIcon icon={ArrowDown01Icon} size={14} className="inline-block ml-1 -mt-0.5 opacity-70" />
                 </button>
                 {openMenu === 'trending' ? (
                   <div className="absolute left-0 top-full mt-2 w-44 rounded-2xl border border-white/10 bg-zinc-950/90 backdrop-blur p-2 z-50">
@@ -295,7 +296,7 @@ export default function PublicEventsPage() {
                   onClick={() => setOpenMenu((m) => (m === 'time' ? null : 'time'))}
                   className="rounded-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/10 transition"
                 >
-                  Time: {timeLabel} <ChevronDown size={14} className="inline-block ml-1 -mt-0.5 opacity-70" />
+                  Time: {timeLabel} <HugeiconsIcon icon={ArrowDown01Icon} size={14} className="inline-block ml-1 -mt-0.5 opacity-70" />
                 </button>
                 {openMenu === 'time' ? (
                   <div className="absolute left-0 top-full mt-2 w-52 rounded-2xl border border-white/10 bg-zinc-950/90 backdrop-blur p-2 z-50">
@@ -325,7 +326,7 @@ export default function PublicEventsPage() {
                   onClick={() => setOpenMenu((m) => (m === 'city' ? null : 'city'))}
                   className="rounded-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/10 transition"
                 >
-                  City: {cityLabel} <ChevronDown size={14} className="inline-block ml-1 -mt-0.5 opacity-70" />
+                  City: {cityLabel} <HugeiconsIcon icon={ArrowDown01Icon} size={14} className="inline-block ml-1 -mt-0.5 opacity-70" />
                 </button>
                 {openMenu === 'city' ? (
                   <div className="absolute left-0 top-full mt-2 w-[320px] rounded-2xl border border-white/10 bg-zinc-950/90 backdrop-blur p-2 z-50">
@@ -446,7 +447,7 @@ export default function PublicEventsPage() {
         {loading && events.length === 0 ? (
           <div className="text-neutral-400">Loading…</div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-4">
             {rest.map((ev) => (
               <EventCard key={ev.id} event={ev} detailBasePath="/events" />
             ))}

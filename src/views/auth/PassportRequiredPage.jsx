@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Smartphone } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { SmartPhone01Icon } from '@hugeicons/core-free-icons';
 const LogoSVG = "/images/logo.svg";
 import { useAuth } from '../../contexts/AuthContext';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
@@ -26,7 +27,7 @@ export default function PassportRequiredPage() {
 
                 {/* Icon */}
                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-pxi-purple/10 border border-pxi-purple/20 flex items-center justify-center">
-                    <Smartphone size={32} className="text-pxi-purple" />
+                    <HugeiconsIcon icon={SmartPhone01Icon} size={32} className="text-pxi-purple" />
                 </div>
 
                 <h1 className="text-3xl font-black text-white mb-3 tracking-tight">

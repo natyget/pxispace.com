@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Smartphone, Shield, CheckCircle2, Loader2, RefreshCw, ArrowRight, Share2, Check } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { SmartPhone01Icon, Shield01Icon, CheckmarkCircle02Icon, Loading02Icon, RefreshIcon, ArrowRight02Icon, Share01Icon, CheckmarkBadge01Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { getRelationshipStatus } from '../../services/friends';
+import { getUserTickets } from '../../services/tickets';
+import { getEventsForWallet, getMyEventXp } from '../../services/events';
 import { getPassportLevelDisplay } from '../../utils/odysseyTier';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
@@ -15,11 +18,14 @@ import {
     getLevelProgress,
     ODYSSEY_TIER_BANDS,
     HeaderPolygonBadge,
-    StampRed,
-    StampYellow,
-    StampCyan,
-    StampWhite,
-    GreenStampPositioned,
+    DynamicStamp,
+    getStampShape,
+    getStampLayout,
+    getStampColor,
+    formatStampName,
+    formatStampDate,
+    formatStampCity,
+    getEventYear,
 } from '@/components/passport/passportVisualParts';
 import { getSiteUrl } from '@/lib/siteUrl';
 
@@ -43,7 +49,7 @@ function ShareProfileLinkButton({ userId }) {
             onClick={onClick}
             className="mx-auto flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-white/10"
         >
-            {copied ? <Check size={16} className="shrink-0 text-emerald-400" /> : <Share2 size={16} className="shrink-0" />}
+            {copied ? <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} className="shrink-0 text-emerald-400" /> : <HugeiconsIcon icon={Share01Icon} size={16} className="shrink-0" />}
             {copied ? 'Copied link' : 'Share profile link'}
         </button>
     );
@@ -63,6 +69,8 @@ export default function PassportPage() {
 
 function PassportIssued({ user }) {
     const [friendsCount, setFriendsCount] = useState(0);
+    const [attendedEvents, setAttendedEvents] = useState([]);
+    const [selectedSeason, setSelectedSeason] = useState(null);
 
     useEffect(() => {
         if (!user?.id) return;
@@ -70,6 +78,38 @@ function PassportIssued({ user }) {
             .then((status) => setFriendsCount(status.friendsCount || 0))
             .catch(() => {});
     }, [user?.id]);
+
+    useEffect(() => {
+        if (!user?.id) return;
+        Promise.all([
+            getUserTickets(user.id),
+            getEventsForWallet(100, 0),
+            getMyEventXp(),
+        ]).then(([tickets, eventsData, xpByEventId]) => {
+            const events = tickets.flatMap((t) => {
+                const ev = (eventsData.events ?? []).find((e) => e.id === t.eventId);
+                if (!ev) return [];
+                return [{ id: ev.id, name: ev.name, startDate: ev.startDate, location: ev.location, xp: xpByEventId[ev.id] }];
+            });
+            setAttendedEvents(events);
+        }).catch(() => {});
+    }, [user?.id]);
+
+    const availableYears = useMemo(() => {
+        const years = [...new Set(attendedEvents.map((e) => getEventYear(e.startDate)))].sort((a, b) => b - a);
+        return years;
+    }, [attendedEvents]);
+
+    useEffect(() => {
+        if (availableYears.length > 0 && (selectedSeason === null || !availableYears.includes(selectedSeason))) {
+            setSelectedSeason(availableYears[0]);
+        }
+    }, [availableYears]);
+
+    const filteredEvents = useMemo(() => {
+        if (selectedSeason === null) return attendedEvents;
+        return attendedEvents.filter((e) => getEventYear(e.startDate) === selectedSeason);
+    }, [attendedEvents, selectedSeason]);
 
     const fullName = user?.name ?? 'PXI CITIZEN';
     const username = user?.username ?? 'citizen';
@@ -125,7 +165,7 @@ function PassportIssued({ user }) {
                     </h1>
                     {user?.isVendor ? (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-400">
-                            <CheckCircle2 size={12} />
+                            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} />
                             <span className="sm:hidden">Vendor</span>
                             <span className="hidden sm:inline">You are vendor!</span>
                         </span>
@@ -164,14 +204,61 @@ function PassportIssued({ user }) {
                         />
                     </div>
                     {/* Stamps */}
-                    <div className="absolute left-0 right-0 top-0 h-1/2 z-[2] pointer-events-none overflow-hidden opacity-90">
-                        <StampRed /><StampYellow /><StampCyan /><StampWhite /><GreenStampPositioned />
+                    <div className="absolute left-0 right-0 top-0 h-1/2 z-[2] overflow-hidden opacity-90">
+                        {/* Season pills */}
+                        {availableYears.length > 1 && (
+                            <div className="absolute top-2 left-0 right-0 z-10 flex justify-center gap-1.5 px-2">
+                                {availableYears.map((year) => (
+                                    <button
+                                        key={year}
+                                        type="button"
+                                        onClick={() => setSelectedSeason(year)}
+                                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider border transition-all ${
+                                            year === selectedSeason
+                                                ? 'bg-white/20 border-white/60 text-white'
+                                                : 'bg-black/30 border-white/20 text-white/50 hover:bg-white/10'
+                                        }`}
+                                    >
+                                        {year}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {/* Dynamic stamps */}
+                        {filteredEvents.map((event, index) => {
+                            const shape = getStampShape(event.id);
+                            const layout = getStampLayout(event.id, index);
+                            const color = getStampColor(event.xp, 'WANDERER');
+                            return (
+                                <div
+                                    key={event.id}
+                                    style={{
+                                        position: 'absolute',
+                                        left: layout.left,
+                                        top: layout.top,
+                                        width: layout.width,
+                                        height: layout.height,
+                                        transform: `rotate(${layout.rotation}deg)`,
+                                        zIndex: index + 1,
+                                        pointerEvents: 'none',
+                                    }}
+                                >
+                                    <DynamicStamp
+                                        shape={shape}
+                                        color={color}
+                                        name={formatStampName(event.name)}
+                                        date={formatStampDate(event.startDate)}
+                                        city={formatStampCity(event.location)}
+                                    />
+                                </div>
+                            );
+                        })}
                     </div>
                     <div className="absolute top-[8px] right-[8px] z-[10] text-[12px] text-white/60 tracking-[0.08em] uppercase">
                         {passportNumber}
                     </div>
                     <div className="absolute left-[-182px] top-[128px] z-[10] -rotate-90 text-[16px] tracking-[0.24em] text-white/55 uppercase">
-                        SEASON 01 2026
+                        SEASON {selectedSeason ?? '01 2026'}
                     </div>
 
                     {/* Crease fold */}
@@ -351,12 +438,12 @@ function PassportNotIssued({ user }) {
             <div className="mb-6">
                 <div className="flex items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2">
-                        <Shield size={14} className="text-zinc-500" />
+                        <HugeiconsIcon icon={Shield01Icon} size={14} className="text-zinc-500" />
                         <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest">PXI Passport</span>
                     </div>
                     {user?.isVendor ? (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-400">
-                            <CheckCircle2 size={12} />
+                            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} />
                             <span className="sm:hidden">Vendor</span>
                             <span className="hidden sm:inline">You are vendor!</span>
                         </span>
@@ -371,7 +458,7 @@ function PassportNotIssued({ user }) {
             </div>
             <div className="rounded-2xl p-8 text-center bg-zinc-900/50 border border-white/5">
                 <div className="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center bg-pxi-purple/10 border border-pxi-purple/20">
-                    <Smartphone size={26} className="text-pxi-purple" />
+                    <HugeiconsIcon icon={SmartPhone01Icon} size={26} className="text-pxi-purple" />
                 </div>
                 <h2 className="text-white font-black text-lg mb-2 tracking-tight">Use the PXI Mobile App</h2>
                 <p className="text-zinc-400 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
@@ -399,7 +486,7 @@ function PassportNotIssued({ user }) {
                         </div>
                         {user?.isVendor ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
-                                <CheckCircle2 size={12} />
+                                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} />
                                 Verified
                             </span>
                         ) : null}
@@ -434,7 +521,7 @@ function PassportNotIssued({ user }) {
                             disabled={checkingVendor}
                             className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-200 hover:bg-white/10 disabled:opacity-50"
                         >
-                            {checkingVendor ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+                            {checkingVendor ? <HugeiconsIcon icon={Loading02Icon} size={13} className="animate-spin" /> : <HugeiconsIcon icon={RefreshIcon} size={13} />}
                             Check verification
                         </button>
                         <Link
@@ -442,7 +529,7 @@ function PassportNotIssued({ user }) {
                             className="inline-flex items-center justify-center gap-2 rounded-lg bg-pxi-purple px-3 py-2 text-xs font-semibold text-white hover:brightness-110"
                         >
                             Continue vendor setup
-                            <ArrowRight size={13} />
+                            <HugeiconsIcon icon={ArrowRight02Icon} size={13} />
                         </Link>
                     </div>
                 </div>

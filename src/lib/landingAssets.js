@@ -51,73 +51,28 @@ export const AVATAR_GIFT = `${L}/album/thread/profiles/gift.jpg`;
 export const AVATAR_KEVIN = `${L}/album/thread/profiles/kevin.jpg`;
 export const AVATAR_BABA = `${L}/album/thread/profiles/baba.jpg`;
 
-/** Feature story chapter tease art */
-export const TEASE_BE_THERE = `${L}/tease/be-there-together.png`;
-export const TEASE_AFTER_NIGHT = `${L}/tease/after-the-night-ends.png`;
-export const TEASE_IDENTITY = `${L}/tease/your-event-identity.png`;
-export const TEASE_SHOT = `${L}/tease/shot-on-pxi.png`;
+/** Feature story chapter tease art (compressed JPG) */
+export const TEASE_BE_THERE = `${L}/tease/be-there-together.jpg`;
+export const TEASE_AFTER_NIGHT = `${L}/tease/after-the-night-ends.jpg`;
+export const TEASE_IDENTITY = `${L}/tease/your-event-identity.jpg`;
+export const TEASE_SHOT = `${L}/tease/shot-on-pxi.jpg`;
 
 const GALLERY_DIR = `${L}/album/gallery/afrodisiac`;
 
-/** AFRODISIAC gallery filenames (synced to public/landing) */
+/** AFRODISIAC gallery filenames — curated set of 12 (optimized) */
 export const GALLERY_FILENAMES = [
   'DSC02894.jpg',
-  'DSC02896.jpg',
   'DSC02905.jpg',
-  'DSC02907.jpg',
-  'DSC02911.jpg',
-  'DSC02915.jpg',
   'DSC02918.jpg',
-  'DSC02921.jpg',
-  'DSC02925.jpg',
   'DSC02929.jpg',
-  'DSC02933.jpg',
-  'DSC02936.jpg',
-  'DSC02938.jpg',
   'DSC02941.jpg',
-  'DSC02943.jpg',
-  'DSC02944.jpg',
-  'DSC02949.jpg',
   'DSC02954.jpg',
-  'DSC02956.jpg',
-  'DSC02957.jpg',
-  'DSC02958.jpg',
-  'DSC02960.jpg',
   'DSC02963.jpg',
-  'DSC02964.jpg',
-  'DSC02969.jpg',
-  'DSC02972.jpg',
   'DSC02978.jpg',
-  'DSC02982.jpg',
-  'DSC02992.jpg',
   'DSC02998.jpg',
-  'DSC03000.jpg',
-  'DSC03002.jpg',
-  'DSC03003.jpg',
-  'DSC03006.jpg',
   'DSC03010.jpg',
-  'DSC03011.jpg',
-  'DSC03020.jpg',
-  'DSC03022.jpg',
-  'DSC03023.jpg',
-  'DSC03027.jpg',
-  'DSC03028.jpg',
-  'DSC03032.jpg',
   'DSC03036.jpg',
-  'DSC03048.jpg',
-  'DSC03051.jpg',
-  'DSC03052.jpg',
-  'DSC03055.jpg',
   'DSC03070.jpg',
-  'DSC03071.jpg',
-  'DSC03072.jpg',
-  'DSC03074.jpg',
-  'DSC03075.jpg',
-  'DSC03076.jpg',
-  'DSC03077.jpg',
-  'DSC03080.jpg',
-  'DSC03091.jpg',
-  'DSC03103.jpg',
 ];
 
 export const GALLERY_IMAGE_URLS = GALLERY_FILENAMES.map((f) => `${GALLERY_DIR}/${f}`);

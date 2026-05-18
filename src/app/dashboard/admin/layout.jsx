@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { canAccessAdminDashboard } from '@/lib/adminAccess';
 
 export default function AdminSectionLayout({ children }) {
     const { user, isAuthenticated } = useAuth();
@@ -19,12 +20,12 @@ export default function AdminSectionLayout({ children }) {
             router.replace('/login');
             return;
         }
-        if (user.accountTier !== 'ADMIN') {
+        if (!canAccessAdminDashboard(user)) {
             router.replace('/dashboard');
         }
     }, [mounted, isAuthenticated, user, router]);
 
-    if (!mounted || !isAuthenticated || user?.accountTier !== 'ADMIN') {
+    if (!mounted || !isAuthenticated || !canAccessAdminDashboard(user)) {
         return (
             <div className="flex min-h-[40vh] items-center justify-center text-white/60 text-sm">
                 Loading…

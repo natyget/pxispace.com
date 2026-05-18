@@ -2,7 +2,8 @@
 
 import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckCircle2, Smartphone, ArrowRight, Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CheckmarkCircle02Icon, SmartPhone01Icon, ArrowRight02Icon, Loading02Icon } from '@hugeicons/core-free-icons';
 
 function StripeReturnContent() {
     const router = useRouter();
@@ -21,7 +22,7 @@ function StripeReturnContent() {
         return (
             <div className="relative text-center max-w-md w-full">
                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                    <CheckCircle2 size={36} className="text-emerald-400" />
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={36} className="text-emerald-400" />
                 </div>
                 <h1 className="text-3xl font-black text-white tracking-tight mb-3">
                     Submission Received
@@ -36,7 +37,7 @@ function StripeReturnContent() {
                     href="pxi://vendor-onboarding-complete"
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
                 >
-                    <Smartphone size={14} />
+                    <HugeiconsIcon icon={SmartPhone01Icon} size={14} />
                     Return to PXI App
                 </a>
             </div>
@@ -46,7 +47,7 @@ function StripeReturnContent() {
     return (
         <div className="relative text-center max-w-md w-full">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                <CheckCircle2 size={36} className="text-emerald-400" />
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={36} className="text-emerald-400" />
             </div>
             <h1 className="text-3xl font-black text-white tracking-tight mb-3">
                 Submission Received
@@ -62,10 +63,10 @@ function StripeReturnContent() {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
             >
                 Go to Vendor Status
-                <ArrowRight size={14} />
+                <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
             </button>
             <div className="flex items-center justify-center gap-2 text-zinc-600 text-xs mt-5">
-                <Loader2 size={12} className="animate-spin" />
+                <HugeiconsIcon icon={Loading02Icon} size={12} className="animate-spin" />
                 Redirecting automatically…
             </div>
         </div>
@@ -78,7 +79,7 @@ export default function StripeReturnPage() {
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-pxi-purple/5 blur-3xl" />
             </div>
-            <Suspense fallback={<Loader2 size={24} className="animate-spin text-pxi-purple" />}>
+            <Suspense fallback={<HugeiconsIcon icon={Loading02Icon} size={24} className="animate-spin text-pxi-purple" />}>
                 <StripeReturnContent />
             </Suspense>
         </div>

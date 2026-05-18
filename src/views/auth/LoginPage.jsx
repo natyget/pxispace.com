@@ -4,14 +4,13 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Mail } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Mail01Icon } from '@hugeicons/core-free-icons';
 import { FaApple, FaGoogle } from 'react-icons/fa';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { defaultPostLoginPath } from '../../lib/dashboardPaths';
-import AuthParticles from '../../components/auth/AuthParticles';
-const LogoSVG = "/images/logo.svg";
 
 const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
 
@@ -108,43 +107,36 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black flex flex-col relative overflow-hidden">
-            <AuthParticles />
-
+        <div className="legal-hub min-h-screen bg-legal-hub-bg text-legal-hub-text selection:bg-legal-hub-accent selection:text-black flex flex-col relative overflow-hidden">
             {/* Post-signup message: please log in again to complete profile */}
             {showVerifiedMessage && (
                 <div
-                    className="relative z-20 mx-4 mt-6 rounded-xl px-4 py-3 text-center text-sm font-semibold"
-                    style={{
-                        background: 'rgba(176, 38, 255, 0.12)',
-                        border: '1px solid rgba(176, 38, 255, 0.35)',
-                        color: 'rgba(255, 255, 255, 0.95)',
-                        letterSpacing: '0.02em',
-                    }}
+                    className="relative z-20 mx-4 mt-6 rounded-xl px-4 py-3 text-center text-sm font-semibold bg-legal-hub-surface border border-legal-hub-border text-legal-hub-accent"
                 >
                     Please log in again to complete your profile.
                 </div>
             )}
 
-            {/* Logo / hero */}
-            <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-7">
-                <div className="relative flex items-center justify-center mb-6">
-                    <div style={{
-                        position: 'absolute', width: 160, height: 160,
-                        borderRadius: '50%', background: '#B026FF',
-                        opacity: 0.22, filter: 'blur(50px)',
-                    }} />
-                    <Image src={LogoSVG} alt="PXI" width={110} height={110} style={{ position: 'relative', zIndex: 1 }} priority />
-                </div>
-                <h1
-                    className="font-black uppercase text-white"
-                    style={{ fontSize: 36, letterSpacing: '0.18em', textShadow: '0 0 20px rgba(176,38,255,0.5)', marginBottom: 8 }}
-                >
+            {/* Top Text */}
+            <div className="relative z-10 w-full flex flex-col items-center px-7 pt-16 md:pt-20">
+                <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase leading-[0.9] text-[#E0E0E0] text-center">
                     PXI STUDIO
                 </h1>
-                <p className="uppercase font-bold" style={{ fontSize: 10, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.35)' }}>
-                    CITIZENSHIP BUREAU
+                <p className="text-sm md:text-base text-pxi-purple font-medium tracking-widest mt-3 italic uppercase drop-shadow-[0_0_8px_rgba(216,74,255,0.4)]">
+                    Citizenship Bureau
                 </p>
+            </div>
+
+            {/* Center Logo */}
+            <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-7 pointer-events-none">
+                <Image 
+                    src="/images/logo.svg" 
+                    alt="PXI Logo" 
+                    width={220} 
+                    height={220} 
+                    className="w-44 h-44 md:w-52 md:h-52 drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]" 
+                    priority 
+                />
             </div>
 
             {/* Action buttons */}
@@ -154,16 +146,12 @@ export default function LoginPage() {
                 <button
                     type="button"
                     onClick={() => loginWithGoogle()}
-                    className="w-full flex items-center justify-between transition-all active:scale-[0.99]"
+                    className="w-full flex items-center justify-between transition-all active:scale-[0.99] bg-legal-hub-surface border border-legal-hub-border hover:bg-[#1a1a1a]"
                     style={{
-                        height: 56, background: '#1c1c1c',
-                        border: '1px solid rgba(255,255,255,0.06)',
+                        height: 56,
                         borderRadius: '16px 16px 0 0',
                         paddingLeft: 24, paddingRight: 24,
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = '#252525'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = '#1c1c1c'; }}
                 >
                     <span className="font-black text-white uppercase" style={{ fontSize: 13, letterSpacing: '0.1em' }}>
                         Continue with Google
@@ -175,13 +163,13 @@ export default function LoginPage() {
                 <GlassActionButton icon={<FaApple size={20} />} label="Continue with Apple" onClick={handleApple} />
 
                 {/* Email */}
-                <GlassActionButton icon={<Mail size={18} />} label="Continue with Email" onClick={() => router.push(safeRedirect ? `/login/email?redirect=${encodeURIComponent(safeRedirect)}` : '/login/email')} last />
+                <GlassActionButton icon={<HugeiconsIcon icon={Mail01Icon} size={18} />} label="Continue with Email" onClick={() => router.push(safeRedirect ? `/login/email?redirect=${encodeURIComponent(safeRedirect)}` : '/login/email')} last />
 
                 <p className="text-center mt-7" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, letterSpacing: '0.02em', lineHeight: 1.55 }}>
                     By signing up, you agree to our{' '}
-                    <Link href="/terms_of_service" style={{ color: 'rgba(176,38,255,0.95)', textDecoration: 'underline' }}>Terms of Service</Link>
+                    <Link href="/terms_of_service" className="text-legal-hub-accent underline">Terms of Service</Link>
                     {' '}and{' '}
-                    <Link href="/privacy_policy" style={{ color: 'rgba(176,38,255,0.95)', textDecoration: 'underline' }}>Privacy Policy</Link>
+                    <Link href="/privacy_policy" className="text-legal-hub-accent underline">Privacy Policy</Link>
                 </p>
             </div>
         </div>
@@ -192,15 +180,12 @@ function GlassActionButton({ icon, label, onClick, last }) {
     return (
         <button
             onClick={onClick}
-            className="w-full flex items-center justify-between transition-all active:scale-[0.99]"
+            className="w-full flex items-center justify-between transition-all active:scale-[0.99] bg-legal-hub-surface border border-legal-hub-border hover:bg-[#1a1a1a]"
             style={{
-                height: 56, background: '#1c1c1c',
-                border: '1px solid rgba(255,255,255,0.06)',
+                height: 56,
                 borderRadius: last ? '0 0 16px 16px' : '0',
                 paddingLeft: 24, paddingRight: 24, marginTop: -1,
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#252525'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#1c1c1c'; }}
         >
             <span className="font-black text-white uppercase" style={{ fontSize: 13, letterSpacing: '0.1em' }}>{label}</span>
             <span style={{ color: 'rgba(255,255,255,0.45)', marginLeft: 12, display: 'flex' }}>{icon}</span>

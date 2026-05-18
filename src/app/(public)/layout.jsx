@@ -11,6 +11,9 @@ export default function PublicLayout({ children }) {
     pathname === '/home' ||
     pathname === '/about' ||
     pathname === '/beta' ||
+    pathname?.startsWith('/features') ||
+    pathname?.startsWith('/competitors') ||
+    pathname === '/organizers' ||
     pathname?.startsWith('/events') ||
     pathname?.startsWith('/u/') ||
     pathname?.startsWith('/p/') ||

@@ -4,20 +4,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {
-  Calendar,
-  MapPin,
-  Users,
-  Tag,
-  AlertCircle,
-  Loader2,
-  Heart,
-  Instagram,
-  Globe,
-  Smartphone,
-  Sparkles,
-  Music2,
-} from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Calendar01Icon, Location01Icon, UserGroupIcon, TagIcon, Alert01Icon, Loading02Icon, FavouriteIcon, InstagramIcon, GlobeIcon, SmartPhone01Icon, SparklesIcon, HelpCircleIcon } from '@hugeicons/core-free-icons';
 import Button from '../../components/ui/Button';
 import { eventsService } from '../../services/events';
 import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket } from '../../services/tickets';
@@ -206,7 +194,7 @@ const EventDetails = ({ basePath = '/events' }) => {
   if (eventLoading && !apiEvent) {
     return (
       <div className="pt-40 flex items-center justify-center text-white min-h-screen bg-black">
-        <Loader2 size={32} className="animate-spin" />
+        <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin" />
       </div>
     );
   }
@@ -234,7 +222,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                 href={PXI_APP_STORE_URL}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-colors"
               >
-                <Smartphone size={14} />
+                <HugeiconsIcon icon={SmartPhone01Icon} size={14} />
                 App Store
               </IosDownloadLink>
               <a
@@ -243,7 +231,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-colors"
               >
-                <Smartphone size={14} />
+                <HugeiconsIcon icon={SmartPhone01Icon} size={14} />
                 Google Play
               </a>
             </div>
@@ -251,7 +239,7 @@ const EventDetails = ({ basePath = '/events' }) => {
               href="/dashboard/events"
               className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-pxi-purple text-white text-xs font-black uppercase tracking-widest hover:opacity-90 transition-opacity"
             >
-              <Sparkles size={14} />
+              <HugeiconsIcon icon={SparklesIcon} size={14} />
               Create an event
             </Link>
           </div>
@@ -275,7 +263,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                 onClick={handleToggleFavorite}
                 className="glass px-4 py-2 rounded-full text-xs uppercase inline-flex items-center gap-2 border border-white/10"
               >
-                <Heart size={16} className={favorited ? 'fill-pink-500 text-pink-500' : ''} />
+                <HugeiconsIcon icon={FavouriteIcon} size={16} className={favorited ? 'fill-pink-500 text-pink-500' : ''} />
                 {favorited ? 'Saved' : 'Favorite'}
               </button>
             </div>
@@ -306,7 +294,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm font-bold text-pxi-purple hover:text-white transition-colors"
                 >
-                  <Instagram size={16} /> @{String(host.instagramHandle).replace(/^@/, '')}
+                  <HugeiconsIcon icon={InstagramIcon} size={16} /> @{String(host.instagramHandle).replace(/^@/, '')}
                 </a>
               ) : null}
             </div>
@@ -318,7 +306,7 @@ const EventDetails = ({ basePath = '/events' }) => {
             {/* Meta */}
             <div className="glass-dark p-8 rounded-3xl grid grid-cols-2 md:grid-cols-4 gap-6 border border-white/5">
               <div className="flex items-center gap-3">
-                <Calendar className="text-pxi-purple shrink-0" />
+                <HugeiconsIcon icon={Calendar01Icon} className="text-pxi-purple shrink-0" />
                 <span className="text-sm">
                   {apiEvent.startDate
                     ? new Date(apiEvent.startDate).toLocaleDateString(undefined, { dateStyle: 'medium' })
@@ -326,15 +314,15 @@ const EventDetails = ({ basePath = '/events' }) => {
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <MapPin className="text-pxi-purple shrink-0" />
+                <HugeiconsIcon icon={Location01Icon} className="text-pxi-purple shrink-0" />
                 <span className="text-sm">{apiEvent.location || 'TBA'}</span>
               </div>
               <div className="flex items-center gap-3">
-                <Users className="text-pxi-purple shrink-0" />
+                <HugeiconsIcon icon={UserGroupIcon} className="text-pxi-purple shrink-0" />
                 <span className="text-sm">{apiEvent._count?.tickets ?? 0} attending</span>
               </div>
               <div className="flex items-center gap-3">
-                <Tag className="text-pxi-purple shrink-0" />
+                <HugeiconsIcon icon={TagIcon} className="text-pxi-purple shrink-0" />
                 <span className="text-sm">{apiEvent.ticketType === 'PAID' ? 'Paid' : 'Free'}</span>
               </div>
             </div>
@@ -381,7 +369,7 @@ const EventDetails = ({ basePath = '/events' }) => {
             {(playlistEmbed || topTrackEmbed) && (
               <section>
                 <h2 className="text-3xl font-black uppercase tracking-tighter mb-2 flex items-center gap-2">
-                  <Music2 className="text-pxi-purple" />
+                  <HugeiconsIcon icon={HelpCircleIcon} className="text-pxi-purple" />
                   Soundtrack
                 </h2>
                 <p className="text-zinc-500 text-sm mb-6">
@@ -485,7 +473,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                           rel="noopener noreferrer"
                           className="text-sm font-bold text-pxi-purple hover:text-white inline-flex items-center gap-2"
                         >
-                          <Instagram size={16} /> Instagram
+                          <HugeiconsIcon icon={InstagramIcon} size={16} /> Instagram
                         </a>
                       ) : null}
                       {apiEvent.websiteUrl ? (
@@ -596,7 +584,7 @@ const EventDetails = ({ basePath = '/events' }) => {
             </p>
 
             <div className="flex items-start gap-2 px-1">
-              <AlertCircle size={13} className="text-zinc-600 flex-shrink-0 mt-0.5" />
+              <HugeiconsIcon icon={Alert01Icon} size={13} className="text-zinc-600 flex-shrink-0 mt-0.5" />
               <p className="text-zinc-600 text-xs leading-relaxed">
                 The vendor flat fee and consumer fee structure apply to paid tickets as described at checkout. Face-value
                 refunds depend on the organizer.

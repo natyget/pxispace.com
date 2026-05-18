@@ -3,23 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import {
-    Ticket,
-    Calendar,
-    DollarSign,
-    Activity,
-    Edit,
-    CheckSquare,
-    Radio,
-    Eye,
-    ArrowUpRight,
-    ArrowDownRight,
-    ArrowRight,
-    Star,
-} from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Ticket01Icon, Calendar01Icon, Activity01Icon, EditIcon, RadioIcon, ViewIcon, ArrowRight02Icon, StarIcon } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { eventsService } from '../../services/events';
+import MetricCard from '@/components/dashboard/MetricCard';
+import SectionCard from '@/components/dashboard/SectionCard';
 
 export default function DashboardHome() {
     const { user } = useAuth();
@@ -95,10 +85,10 @@ export default function DashboardHome() {
         : 0;
 
     const kpis = [
-        { title: 'Total Ticket Sales', value: salesCount.toLocaleString(), delta: `${events.length} events`, icon: Ticket, trend: salesCount > 0 ? 'up' : 'neutral' },
-        { title: 'Active Events', value: String(activeEvents), delta: `${events.length} total`, icon: Calendar, trend: 'neutral' },
-        { title: 'Total Net Payout', value: `$${(totalEarnings / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, delta: `Gross $${(totalGross / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: DollarSign, trend: totalEarnings > 0 ? 'up' : 'neutral' },
-        { title: 'Avg Hype Score', value: `${avgHype}/100`, delta: 'From live event metrics', icon: Activity, trend: avgHype > 0 ? 'down' : 'neutral' },
+        { title: 'Total Ticket Sales', value: salesCount.toLocaleString(), description: `${events.length} events`, icon: Ticket01Icon, trend: salesCount > 0 ? 'up' : 'neutral', source: 'Live' },
+        { title: 'Active Events', value: String(activeEvents), description: `${events.length} total`, icon: Calendar01Icon, trend: 'neutral', source: 'Live' },
+        { title: 'Total Net Payout', value: `$${(totalEarnings / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, description: `Gross $${(totalGross / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: StarIcon, trend: totalEarnings > 0 ? 'up' : 'neutral', source: 'Live' },
+        { title: 'Avg Hype Score', value: `${avgHype}/100`, description: 'From event momentum model', icon: Activity01Icon, trend: avgHype > 0 ? 'up' : 'neutral', source: 'Derived' },
     ];
 
     if (!mounted) {
@@ -117,7 +107,7 @@ export default function DashboardHome() {
                     <div className="absolute top-0 right-0 w-48 h-48 bg-pxi-purple/10 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                     <div className="relative">
                         <div className="flex items-center gap-2 mb-1">
-                            <Star size={14} className="text-pxi-purple" />
+                            <HugeiconsIcon icon={StarIcon} size={14} className="text-pxi-purple" />
                             <span className="text-pxi-purple text-xs font-bold uppercase tracking-widest">
                                 Become an Organizer
                             </span>
@@ -134,7 +124,7 @@ export default function DashboardHome() {
                             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:shadow-[0_0_36px_rgba(216,74,255,0.5)] hover:brightness-110 transition-all"
                         >
                             Go to Vendor Setup Page
-                            <ArrowRight size={14} />
+                            <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
                         </Link>
                     </div>
                 </div>
@@ -146,41 +136,30 @@ export default function DashboardHome() {
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
             >
                 {kpis.map((kpi) => (
-                    <div key={kpi.title} className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6 md:p-8 flex flex-col justify-between relative group hover:border-white/20 transition-colors">
-                        <div className="flex items-center justify-between mb-6 md:mb-8">
-                            <span className="text-[11px] md:text-[12px] font-bold tracking-widest text-white/40 uppercase">{kpi.title}</span>
-                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors shrink-0">
-                                <kpi.icon className="h-4 w-4 text-white" />
-                            </div>
-                        </div>
-                        {(vendorLoading || eventsLoading) ? (
-                            <div className="h-10 w-24 bg-white/5 rounded animate-pulse" />
-                        ) : (
-                            <div className="mt-auto flex flex-col items-start gap-3 md:gap-4">
-                                <div className="text-3xl lg:text-[40px] font-[900] text-white tracking-tighter leading-none">{kpi.value}</div>
-                                <div className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] md:text-[11px] font-bold tracking-wider uppercase ${
-                                    kpi.trend === 'up' ? 'bg-[#4ade80]/10 text-[#4ade80] border border-[#4ade80]/20' :
-                                    kpi.trend === 'down' ? 'bg-[#f87171]/10 text-[#f87171] border border-[#f87171]/20' :
-                                    'bg-white/5 text-white/50 border border-white/10'
-                                }`}>
-                                    {kpi.trend === 'up' && <ArrowUpRight className="w-3 h-3" />}
-                                    {kpi.trend === 'down' && <ArrowDownRight className="w-3 h-3" />}
-                                    <span>{kpi.delta}</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    <MetricCard
+                        key={kpi.title}
+                        title={kpi.title}
+                        value={kpi.value}
+                        description={kpi.description}
+                        icon={kpi.icon}
+                        trend={kpi.trend}
+                        source={kpi.source}
+                        loading={vendorLoading || eventsLoading}
+                    />
                 ))}
             </motion.div>
 
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-[20px] font-[800] tracking-tight text-white">Active Events</h2>
-                    <Link href="/dashboard/events" className="text-[13px] font-bold tracking-wide text-white/50 hover:text-white transition-colors uppercase">
-                        View All
+            <SectionCard
+                title="Active Events"
+                subtitle="Top events with ticket and hype snapshots."
+                source="Derived"
+                actions={(
+                    <Link href="/dashboard/events" className="text-[12px] font-bold tracking-wide text-white/60 hover:text-white transition-colors uppercase">
+                        View all
                     </Link>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-zinc-900/40 overflow-x-auto">
+                )}
+            >
+                <div className="overflow-x-auto -mx-6 px-6">
                     {(vendorLoading || eventsLoading) ? (
                         <div className="px-6 py-10 text-center text-zinc-600 text-sm">Loading…</div>
                     ) : eventRows.length === 0 ? (
@@ -227,16 +206,16 @@ export default function DashboardHome() {
                                         <td className="px-6 py-5 text-right">
                                             <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
-                                                    <Edit className="w-4 h-4" />
+                                                    <HugeiconsIcon icon={EditIcon} className="w-4 h-4" />
                                                 </button>
                                                 <button className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
-                                                    <CheckSquare className="w-4 h-4" />
+                                                    <HugeiconsIcon icon={ViewIcon} className="w-4 h-4" />
                                                 </button>
                                                 <button className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
-                                                    <Radio className="w-4 h-4" />
+                                                    <HugeiconsIcon icon={RadioIcon} className="w-4 h-4" />
                                                 </button>
                                                 <Link href="/dashboard/events" className="w-8 h-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
-                                                    <Eye className="w-4 h-4" />
+                                                    <HugeiconsIcon icon={ViewIcon} className="w-4 h-4" />
                                                 </Link>
                                             </div>
                                         </td>
@@ -246,7 +225,7 @@ export default function DashboardHome() {
                         </table>
                     )}
                 </div>
-            </div>
+            </SectionCard>
         </div>
     );
 }

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { ImagePlus, Loader2, CheckCircle2, XCircle, Camera } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ImageAdd02Icon, Loading02Icon, CheckmarkCircle02Icon, CancelCircleIcon, Camera01Icon } from '@hugeicons/core-free-icons';
 import { getUploadLink, presignUploadLink, confirmUploadLink } from '@/services/uploadLink';
 
 const MAX_FILES = 100;
@@ -83,7 +84,6 @@ export default function PhotographerUploadView({ token }) {
   const [uploadError, setUploadError] = useState(null);
 
   const inputRef = useRef(null);
-  const sessionRef = useRef(true); // true = first file of this session
 
   useEffect(() => {
     getUploadLink(token)
@@ -102,9 +102,6 @@ export default function PhotographerUploadView({ token }) {
     let completed = 0;
     const errors = [];
     const queue = [...files];
-    let isFirst = sessionRef.current;
-    sessionRef.current = false;
-
     const work = async (file) => {
       const type = sniffType(file);
       let uploadFile = file;
@@ -132,9 +129,8 @@ export default function PhotographerUploadView({ token }) {
       await confirmUploadLink(token, {
         r2Url: publicUrl, type,
         width, height, capturedAt,
-        isFirstInSession: isFirst,
+        fileSizeBytes: uploadFile.size,
       });
-      isFirst = false;
 
       completed += 1;
       setProgress({ done: completed, total: files.length, label: safeName });
@@ -169,7 +165,7 @@ export default function PhotographerUploadView({ token }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="animate-spin text-pxi-purple" size={32} />
+        <HugeiconsIcon icon={Loading02Icon} className="animate-spin text-pxi-purple" size={32} />
       </div>
     );
   }
@@ -178,7 +174,7 @@ export default function PhotographerUploadView({ token }) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-6">
         <div className="max-w-sm w-full text-center space-y-4">
-          <XCircle size={48} className="text-red-400 mx-auto" />
+          <HugeiconsIcon icon={CancelCircleIcon} size={48} className="text-red-400 mx-auto" />
           <h1 className="text-white text-xl font-black">Link Unavailable</h1>
           <p className="text-zinc-400 text-sm">{linkError}</p>
         </div>
@@ -199,7 +195,7 @@ export default function PhotographerUploadView({ token }) {
             </div>
           ) : (
             <div className="w-24 h-24 mx-auto rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center">
-              <Camera size={32} className="text-zinc-600" />
+              <HugeiconsIcon icon={Camera01Icon} size={32} className="text-zinc-600" />
             </div>
           )}
           <div>
@@ -213,7 +209,8 @@ export default function PhotographerUploadView({ token }) {
           <div className="p-5 border-b border-white/5">
             <p className="text-xs text-zinc-500">
               Upload your photos directly to this event's album. Up to{' '}
-              <span className="text-white font-bold">{linkInfo.remainingUploads}</span> photos remaining on this link.
+              <span className="text-white font-bold">{linkInfo.remainingImages}</span> images and{' '}
+              <span className="text-white font-bold">{Math.round(linkInfo.remainingMb)} MB</span> remaining on this link.
             </p>
           </div>
           <div className="p-5 space-y-4">
@@ -232,7 +229,7 @@ export default function PhotographerUploadView({ token }) {
               onClick={() => inputRef.current?.click()}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-40 hover:opacity-90 transition-opacity"
             >
-              {busy ? <Loader2 className="animate-spin" size={18} /> : <ImagePlus size={18} />}
+              {busy ? <HugeiconsIcon icon={Loading02Icon} className="animate-spin" size={18} /> : <HugeiconsIcon icon={ImageAdd02Icon} size={18} />}
               {busy ? 'Uploading…' : 'Choose Photos'}
             </button>
 
@@ -249,7 +246,7 @@ export default function PhotographerUploadView({ token }) {
 
             {result && (
               <div className="flex items-center gap-2 text-emerald-400 text-xs font-medium">
-                <CheckCircle2 size={16} />
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />
                 {result}
               </div>
             )}

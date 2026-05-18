@@ -1,43 +1,42 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import ScrollProgressBar from './ScrollProgressBar';
 import Hero from './Hero';
 import ScrapbookPreview from './ScrapbookPreview';
-import FeatureStory from './FeatureStory';
-import AuthenticContentSection from './AuthenticContentSection';
-import BestMomentsVault from './BestMomentsVault';
+import EventLifecycle from './EventLifecycle';
+import TheLegacy from './TheLegacy';
+import TheEthos from './TheEthos';
 import HashtagTicker from './HashtagTicker';
 
 export default function LandingHome() {
-  const [isTouch, setIsTouch] = useState(null);
-
+  /* Set landing class for scroll-behavior override (needed for scroll-driven sections) */
   useEffect(() => {
-    setIsTouch(
-      typeof window !== 'undefined' &&
-        ('ontouchstart' in window || navigator.maxTouchPoints > 0)
-    );
-  }, []);
-
-  useEffect(() => {
-    if (isTouch !== false) return;
     document.documentElement.classList.add('landing-page-root');
     return () => document.documentElement.classList.remove('landing-page-root');
-  }, [isTouch]);
+  }, []);
 
   return (
-    <div
-      className="landing-v2 relative w-full min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-body)]"
-    >
-        {isTouch === false && <ScrollProgressBar />}
-        <main>
-          <Hero />
+    <div className="landing-v2 relative w-full min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-body)]">
+      <ScrollProgressBar />
+      <main>
+        <Hero />
+        <div className="cv-auto">
           <ScrapbookPreview />
-          <FeatureStory />
-          <AuthenticContentSection />
-          <BestMomentsVault />
+        </div>
+        <div className="cv-auto">
+          <EventLifecycle />
+        </div>
+        <div className="cv-auto">
+          <TheLegacy />
+        </div>
+        <div className="cv-auto">
+          <TheEthos />
+        </div>
+        <div className="cv-auto">
           <HashtagTicker />
-        </main>
-      </div>
+        </div>
+      </main>
+    </div>
   );
 }
