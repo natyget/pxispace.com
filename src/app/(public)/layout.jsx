@@ -24,14 +24,14 @@ export default function PublicLayout({ children }) {
   return (
     <div
       className={`relative flex flex-col ${
-        isPublicAlbum ? 'min-h-dvh lg:h-dvh lg:max-h-dvh lg:overflow-hidden' : 'min-h-screen'
+        isPublicAlbum ? 'h-dvh max-h-dvh overflow-hidden' : 'min-h-screen'
       }`}
     >
       {showNavbar ? <Navbar /> : null}
       <main
         className={
           isPublicAlbum
-            ? 'flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto bg-black lg:overflow-hidden'
+            ? 'flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-black'
             : 'flex-1'
         }
       >

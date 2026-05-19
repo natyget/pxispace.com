@@ -41,7 +41,8 @@ function formatTicketPrice(event) {
   return `${sym}${price.toFixed(2)}`;
 }
 
-export default function PublicAlbumDetailsPanel({ album, albumId }) {
+export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'column' }) {
+  const isSheet = layout === 'sheet';
   const [shareHint, setShareHint] = useState(null);
   const title = useMemo(() => displayTitle(album), [album]);
   const isPublic = album?.event?.visibility === 'PUBLIC';
@@ -251,8 +252,14 @@ export default function PublicAlbumDetailsPanel({ album, albumId }) {
         </div>
       </div>
 
-      {/* Mobile: fixed to viewport bottom. Desktop: sticky at bottom of the details column. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 shrink-0 border-t border-white/10 bg-[#050505]/95 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-md lg:relative lg:sticky lg:bottom-0 lg:z-10 lg:bg-gradient-to-t lg:from-[#050505] lg:via-[#050505] lg:to-transparent lg:backdrop-blur-none">
+      {/* Sheet: sticky in modal. Mobile page: fixed to viewport. Desktop: sticky in column. */}
+      <div
+        className={
+          isSheet
+            ? 'sticky bottom-0 z-10 shrink-0 border-t border-white/10 bg-[#050505] px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4'
+            : 'shrink-0 border-t border-white/10 bg-gradient-to-t from-[#050505] via-[#050505] to-transparent px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 lg:sticky lg:bottom-0 lg:z-10'
+        }
+      >
         <div className="mx-auto flex w-full max-w-lg flex-row items-stretch gap-3 lg:max-w-none">
           {openInAppUrl ? (
             <a
