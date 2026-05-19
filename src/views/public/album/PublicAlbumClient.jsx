@@ -19,7 +19,7 @@ import {
 } from './buildPublicAlbumTimeline';
 import PublicAlbumDetailsPanel from './PublicAlbumDetailsPanel';
 import PublicAlbumDetailsSheet from './PublicAlbumDetailsSheet';
-import PublicAlbumReadOnlyChatBar from './PublicAlbumReadOnlyChatBar';
+import PublicAlbumJoinEventButton from './PublicAlbumJoinEventButton';
 import PublicAlbumParticipants from './PublicAlbumParticipants';
 import IphonePane from './IphonePane';
 import { mediaDisplayUrl } from './albumMediaLayout';
@@ -361,7 +361,10 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
             </>
           )}
         </div>
-        {tab === 'thread' ? <PublicAlbumReadOnlyChatBar className="lg:hidden" /> : null}
+        {/* Mobile-only join CTA in the spot the read-only chatbar used to live —
+            on the public album page the user can't compose, so this surfaces the
+            primary action (route to /events/[id]/checkout for full EULA + ticket flow). */}
+        <PublicAlbumJoinEventButton album={album} albumId={albumId} className="lg:hidden" />
         </div>
         </div>
 

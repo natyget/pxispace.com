@@ -1,51 +1,41 @@
 'use client';
 
-import { useId } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { CheckmarkCircle02Icon, SmartPhone01Icon } from '@hugeicons/core-free-icons';
 import { getPassportLevelDisplay } from '@/utils/odysseyTier';
 import {
-    formatMRZ,
+    buildPassportFooterLine,
     getLevelProgress,
+    ODYSSEY_TIER_BANDS,
     HeaderPolygonBadge,
-    NeonCurvesSVG,
-    StampRed,
-    StampYellow,
-    StampCyan,
-    StampWhite,
-    GreenStampPositioned,
+    DynamicStamp,
+    getStampShape,
+    getStampLayout,
+    getStampColor,
+    formatStampName,
+    formatStampDate,
+    formatStampCity,
+    getEventYear,
+    renderPassportFooterSegments,
 } from '@/components/passport/passportVisualParts';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
+import AppOpenBanner from '@/components/links/AppOpenBanner';
+import { getUserTickets } from '@/services/tickets';
+import { getEventsForWallet, getUserEventXp } from '@/services/events';
 
 function PublicProfileBottomBar({ userId }) {
     /** Same-origin https://…/u/:id does not reliably open the app from Safari; use registered app scheme (see app.json `scheme`). */
-    const openInAppUrl = `pxi://u/${userId}`;
-    const year = new Date().getFullYear();
-
     return (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-center px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] pt-0 md:hidden">
-            <div className="pointer-events-auto flex w-full max-w-md flex-col items-center gap-2">
-                <div className="flex w-full max-w-[24rem] items-center gap-2 rounded-2xl border border-white/15 bg-black/85 px-3 py-2.5 shadow-lg backdrop-blur-md">
-                    <div className="min-w-0 flex-1">
-                        <p className="text-[11px] font-semibold text-white">Open in PXI</p>
-                        <p className="text-[10px] text-zinc-400">Full profile and social features in the app</p>
-                    </div>
-                    <a
-                        href={openInAppUrl}
-                        className="shrink-0 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-black transition hover:bg-zinc-200"
-                        rel="noopener noreferrer"
-                    >
-                        Open
-                    </a>
-                </div>
-                <p className="text-center text-[11px] text-zinc-500">
-                    © {year} PXI App. All rights reserved.
-                </p>
-            </div>
-        </div>
+        <AppOpenBanner
+            deepLinkUrl={userId ? `pxi://u/${userId}` : null}
+            title="Open in PXI"
+            subtitle="Full profile and social features in the app"
+            storageKey={`pxi_app_banner_user_${userId || 'unknown'}_dismissed`}
+        />
     );
 }
 
@@ -69,25 +59,118 @@ function PassportReadOnly({ user }) {
 
     const passportNumber = `P${String(user?.id || '').slice(0, 7).toUpperCase()}XI`;
     const formatIssuedDate = (dateString) => {
-        if (!dateString) return '01JAN26';
+        if (!dateString) return 'ISSUED??????';
         const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return 'ISSUED??????';
         const day = String(date.getDate()).padStart(2, '0');
         const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
         const year = String(date.getFullYear()).slice(-2);
-        return `${day}${month}${year}`;
+        return `ISSUED${day}${month}${year}`;
     };
-    const nameParts = fullName.toUpperCase().replace(' ', '<');
-    const mrzLine1 = formatMRZ(`PXI<${username.toUpperCase()}<<${nameParts}`, 36);
-    const mrzLine2 = formatMRZ(`ISSUED${formatIssuedDate(user?.passportIssuedAt)}<${passportNumber}<<<PXISPACE`, 36);
+
+    /** Footer width → chevron count: matches mobile NewPassportCard sizing math. */
+    const PASSPORT_FOOTER_CHEV_GLYPH = 6.0;
+    const passportFooterRef = useRef(null);
+    const [passportFooterWidth, setPassportFooterWidth] = useState(0);
+    useLayoutEffect(() => {
+        const node = passportFooterRef.current;
+        if (!node) return;
+        const update = () => setPassportFooterWidth(node.offsetWidth || 0);
+        update();
+        if (typeof ResizeObserver === 'undefined') return;
+        const ro = new ResizeObserver(update);
+        ro.observe(node);
+        return () => ro.disconnect();
+    }, []);
+    const footerChevronCount =
+        passportFooterWidth > 0
+            ? Math.max(5, Math.min(220, Math.floor(passportFooterWidth / PASSPORT_FOOTER_CHEV_GLYPH)))
+            : 56;
+    const passportFooterIssued = formatIssuedDate(user?.passportIssuedAt);
+    const footerUsername = username.replace(/^@/, '').toUpperCase().replace(/\s+/g, '<');
+    const footerFullName = fullName.toUpperCase().replace(/\s+/g, '<');
+    const passportFooterLineOne = buildPassportFooterLine(
+        ['PXI', footerUsername, footerFullName],
+        footerChevronCount,
+    );
+    const passportFooterLineTwo = buildPassportFooterLine(
+        [passportFooterIssued, passportNumber, 'PXISPACE'],
+        footerChevronCount,
+    );
 
     const { levelText, badgeLetter } = getPassportLevelDisplay(user);
     const levelProgress = getLevelProgress(user?.odysseyXp);
     const passportType = user?.isVendor ? 'Diplomat' : user?.isPassportIssued ? 'Citizen' : 'Partial';
 
+    const odessaVsNext = (() => {
+        const current = Math.max(0, Math.floor(Number(user?.odysseyXp) || 0));
+        const band =
+            ODYSSEY_TIER_BANDS.find((b) => b.max === null || current <= b.max) ??
+            ODYSSEY_TIER_BANDS[ODYSSEY_TIER_BANDS.length - 1];
+        if (band.max === null) return `${current.toLocaleString('en-US')}/∞`;
+        return `${current.toLocaleString('en-US')}/${band.max.toLocaleString('en-US')}`;
+    })();
+
     const avatarSrc = displayImageSrc(user?.avatarUrl, null);
 
+    /** Real attended events drive the stamps — same layout/colors as mobile NewPassportCard. */
+    const [attendedEvents, setAttendedEvents] = useState([]);
+    const [selectedSeason, setSelectedSeason] = useState(null);
+
+    useEffect(() => {
+        if (!user?.id) return;
+        let cancelled = false;
+        Promise.all([
+            getUserTickets(user.id),
+            getEventsForWallet(100, 0),
+            getUserEventXp(user.id),
+        ])
+            .then(([tickets, eventsData, xpByEventId]) => {
+                if (cancelled) return;
+                const events = (tickets ?? []).flatMap((t) => {
+                    const ev = (eventsData?.events ?? []).find((e) => e.id === t.eventId);
+                    if (!ev) return [];
+                    return [
+                        {
+                            id: ev.id,
+                            name: ev.name,
+                            startDate: ev.startDate,
+                            location: ev.location,
+                            xp: xpByEventId?.[ev.id],
+                        },
+                    ];
+                });
+                setAttendedEvents(events);
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
+    }, [user?.id]);
+
+    const availableYears = useMemo(() => {
+        const years = [...new Set(attendedEvents.map((e) => getEventYear(e.startDate)))].sort(
+            (a, b) => b - a,
+        );
+        return years;
+    }, [attendedEvents]);
+
+    useEffect(() => {
+        if (
+            availableYears.length > 0 &&
+            (selectedSeason === null || !availableYears.includes(selectedSeason))
+        ) {
+            setSelectedSeason(availableYears[0]);
+        }
+    }, [availableYears]);
+
+    const filteredEvents = useMemo(() => {
+        if (selectedSeason === null) return attendedEvents;
+        return attendedEvents.filter((e) => getEventYear(e.startDate) === selectedSeason);
+    }, [attendedEvents, selectedSeason]);
+
     return (
-        <div className="mx-auto max-w-2xl px-4 sm:px-6">
+        <div className="mx-auto max-w-2xl">
             {/* Same width as passport: badge/title/vendor edges align with card borders */}
             <div className="mx-auto w-full max-w-[min(95vw,361px)] space-y-4 sm:space-y-6">
                 <div className="min-w-0">
@@ -120,29 +203,71 @@ function PassportReadOnly({ user }) {
                 </div>
 
                 <div className="relative h-[558px] w-full min-w-0 overflow-hidden rounded-[8px] border border-white bg-black shadow-[0_1px_12px_rgba(255,255,255,0.25)]">
-                    <div
-                        className="absolute left-0 right-0 top-0 z-[1] h-1/2 opacity-35"
-                        style={{
-                            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1px)',
-                            backgroundSize: '4px 4px',
-                        }}
-                    />
-                    <div className="pointer-events-none absolute inset-0 opacity-25">
-                        <NeonCurvesSVG className="h-full w-full" />
+                    {/* Top half: world map background (matches mobile MapBackground over #0a0a0a) */}
+                    <div className="absolute left-0 right-0 top-0 z-[1] h-1/2 overflow-hidden bg-[#0a0a0a]">
+                        <Image
+                            src="/images/map-world.png"
+                            alt=""
+                            fill
+                            unoptimized
+                            className="object-cover opacity-90"
+                            priority
+                        />
                     </div>
-                    <div className="pointer-events-none absolute inset-0 opacity-90">
-                        <StampRed />
-                        <StampYellow />
-                        <StampCyan />
-                        <StampWhite />
-                        <GreenStampPositioned />
+                    {/* Stamps — same dynamic shape/color logic as mobile NewPassportCard */}
+                    <div className="pointer-events-none absolute left-0 right-0 top-0 z-[2] h-1/2 overflow-hidden opacity-90">
+                        {availableYears.length > 1 && (
+                            <div className="pointer-events-auto absolute left-0 right-0 top-2 z-10 flex justify-center gap-1.5 px-2">
+                                {availableYears.map((year) => (
+                                    <button
+                                        key={year}
+                                        type="button"
+                                        onClick={() => setSelectedSeason(year)}
+                                        className={`rounded-full border px-2 py-0.5 text-[9px] font-bold tracking-wider transition-all ${
+                                            year === selectedSeason
+                                                ? 'border-white/60 bg-white/20 text-white'
+                                                : 'border-white/20 bg-black/30 text-white/50 hover:bg-white/10'
+                                        }`}
+                                    >
+                                        {year}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {filteredEvents.map((event, index) => {
+                            const shape = getStampShape(event.id);
+                            const layout = getStampLayout(event.id, index);
+                            const color = getStampColor(event.xp, 'WANDERER');
+                            return (
+                                <div
+                                    key={event.id}
+                                    style={{
+                                        position: 'absolute',
+                                        left: layout.left,
+                                        top: layout.top,
+                                        width: layout.width,
+                                        height: layout.height,
+                                        transform: `rotate(${layout.rotation}deg)`,
+                                        zIndex: index + 1,
+                                    }}
+                                >
+                                    <DynamicStamp
+                                        shape={shape}
+                                        color={color}
+                                        name={formatStampName(event.name)}
+                                        date={formatStampDate(event.startDate)}
+                                        city={formatStampCity(event.location)}
+                                    />
+                                </div>
+                            );
+                        })}
                     </div>
 
                     <div className="absolute right-[8px] top-[8px] z-20 text-[12px] uppercase tracking-[0.08em] text-white/60">
                         {passportNumber}
                     </div>
                     <div className="absolute left-[-182px] top-[128px] z-20 -rotate-90 text-[16px] uppercase tracking-[0.24em] text-white/55">
-                        SEASON 01 2026
+                        SEASON {selectedSeason ?? '01 2026'}
                     </div>
 
                     <div className="pointer-events-none absolute inset-x-0 top-1/2 z-20 h-[80px] -translate-y-1/2">
@@ -154,7 +279,7 @@ function PassportReadOnly({ user }) {
                         <div className="h-1/2 bg-gradient-to-t from-transparent via-black/55 to-black/90" />
                     </div>
 
-                    <div className="absolute bottom-0 left-0 right-0 top-1/2 z-10 min-h-0 overflow-y-auto bg-[#0f0f0f] px-3 py-2 sm:px-4 sm:py-2">
+                    <div className="absolute bottom-0 left-0 right-0 top-1/2 z-10 min-h-0 overflow-hidden bg-[#0f0f0f] px-3 py-2 sm:px-4 sm:py-2">
                         <div className="mx-auto w-full max-w-[380px] shrink-0 overflow-hidden rounded-lg px-2 sm:px-3">
                             <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0 flex-1 pr-1">
@@ -169,15 +294,16 @@ function PassportReadOnly({ user }) {
                                 </div>
                             </div>
 
-                            <div className="mt-1.5 grid grid-cols-[88px_minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-2.5 sm:grid-cols-[100px_minmax(0,1fr)_minmax(0,1fr)] sm:gap-x-3">
-                                <div className="col-span-2 flex min-w-0 items-center gap-1">
+                            <div className="mt-1.5 flex w-full items-center overflow-hidden" style={{ minHeight: 30 }}>
+                                <div className="flex min-w-0 flex-1 items-center" style={{ gap: 2 }}>
                                     <svg
-                                        width="41"
-                                        height="34"
-                                        viewBox="0 0 41 34"
+                                        width="20"
+                                        height="12"
+                                        viewBox="12 11 17 10"
+                                        preserveAspectRatio="xMinYMid meet"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
-                                        className="h-[22px] w-[38px] shrink-0 sm:h-[24px] sm:w-[40px]"
+                                        className="shrink-0"
                                         aria-hidden
                                     >
                                         <g filter={`url(#${chipFilterId})`}>
@@ -218,75 +344,154 @@ function PassportReadOnly({ user }) {
                                             </filter>
                                         </defs>
                                     </svg>
-                                    <span className="whitespace-nowrap text-[7px] font-semibold uppercase tracking-[0.03em] text-white sm:text-[8px]">
-                                        PASSPORT • PASS • PASAPORTE
+                                    <span className="truncate text-[9px] font-semibold uppercase tracking-[0.05em] text-white">
+                                        PASSPORT • PASS • PORT
                                     </span>
                                 </div>
-                                <div className="flex min-w-0 flex-col items-start justify-center">
-                                    <p className="text-[9px] font-semibold uppercase leading-none text-white/80">LEVEL {levelText}</p>
-                                    <div className="mt-1 h-1 w-[72px] overflow-hidden rounded-full bg-[rgba(176,38,255,0.22)] sm:w-[80px]">
+                                <div className="flex shrink-0 flex-col items-stretch" style={{ width: 108 }}>
+                                    <p className="mb-[3px] text-[9px] font-semibold uppercase leading-[12px] text-white/80">
+                                        LEVEL {levelText}
+                                    </p>
+                                    <div className="h-[4px] w-full overflow-hidden rounded-full bg-[rgba(176,38,255,0.22)]">
                                         <div
                                             className="h-full rounded-full bg-pxi-purple"
-                                            style={{ width: `${Math.round(levelProgress * 100)}%` }}
+                                            style={{ width: `${levelProgress * 100}%` }}
                                         />
                                     </div>
                                 </div>
+                                <div className="ml-2 shrink-0 text-right">
+                                    <span className="text-[10px] font-bold text-white">{odessaVsNext}</span>
+                                </div>
                             </div>
 
-                            <div className="mt-1 grid grid-cols-[88px_minmax(0,1fr)_minmax(0,1fr)] items-start gap-x-2.5 sm:grid-cols-[100px_minmax(0,1fr)_minmax(0,1fr)] sm:gap-x-3">
-                                <div className="relative h-[118px] w-full max-w-[88px] overflow-hidden rounded-[6px] shadow-[0_1px_24px_2px_rgba(255,255,255,0.3)] sm:h-[128px] sm:max-w-[100px]">
+                            {/* Details grid — mirrors mobile NewPassportCard `detailsGrid`: photo (113×130) + info column */}
+                            <div className="mt-2 flex" style={{ gap: 14 }}>
+                                <div
+                                    className="relative shrink-0 overflow-hidden rounded-[6px] shadow-[0_1px_24px_2px_rgba(255,255,255,0.3)]"
+                                    style={{ width: 113, height: 130 }}
+                                >
                                     {avatarSrc ? (
-                                        <Image src={avatarSrc} alt={fullName} fill unoptimized className="object-cover" sizes="112px" />
+                                        <Image
+                                            src={avatarSrc}
+                                            alt={fullName}
+                                            width={113}
+                                            height={130}
+                                            unoptimized
+                                            className="h-full w-full object-cover"
+                                        />
                                     ) : (
                                         <div className="flex h-full w-full items-center justify-center bg-pxi-purple/20 text-2xl font-black text-pxi-purple">
                                             {avatarFallback}
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex min-h-0 min-w-0 flex-col gap-1.5 pl-1 pr-1 sm:pl-2 sm:pr-2">
-                                    <div>
-                                        <p className="text-[9px] font-medium uppercase text-white/70">Full name</p>
-                                        <p className="text-[11px] font-semibold uppercase leading-snug text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)] sm:text-[12px]">
-                                            {fullName.toUpperCase()}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[9px] font-medium uppercase text-white/70">username</p>
-                                        <p className="truncate text-[11px] text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)] sm:text-[12px]">
-                                            {username}
-                                        </p>
-                                    </div>
-                                    <p className="text-[11px] text-white/90 sm:text-[12px]">Age {age}</p>
-                                    <div>
-                                        <p className="text-[9px] font-medium uppercase text-white/70">City</p>
-                                        <p className="line-clamp-2 text-[11px] text-white/90 sm:text-[12px]">{city}</p>
-                                    </div>
-                                </div>
-                                <div className="flex min-h-0 min-w-0 flex-col gap-2">
-                                    <div className="shrink-0">
-                                        <div className="flex items-end">
-                                            <span className="text-[28px] font-extrabold leading-[30px] text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.35)] sm:text-[36px] sm:leading-9">
-                                                {passportType.charAt(0).toUpperCase()}
-                                            </span>
-                                            <span className="mb-0.5 ml-0.5 text-[11px] font-semibold capitalize text-white sm:text-[13px]">
-                                                {passportType.slice(1)}
-                                            </span>
+
+                                <div className="flex min-w-0 flex-1 flex-col">
+                                    {/* Top row: name+username column | passport type badge (height 68, bottom-right) */}
+                                    <div className="flex w-full items-end justify-between" style={{ gap: 10 }}>
+                                        <div className="min-w-0 flex-1">
+                                            <div
+                                                className="flex flex-col justify-center overflow-hidden"
+                                                style={{ height: 34 }}
+                                            >
+                                                <p className="text-[9px] font-medium uppercase text-white/70">Full name</p>
+                                                <p className="truncate text-[12px] font-semibold uppercase leading-snug text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">
+                                                    {fullName.toUpperCase()}
+                                                </p>
+                                            </div>
+                                            <div
+                                                className="flex flex-col justify-center overflow-hidden"
+                                                style={{ height: 34 }}
+                                            >
+                                                <p className="text-[9px] font-medium uppercase text-white/70">username</p>
+                                                <p className="truncate text-[12px] text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">
+                                                    {username}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div
+                                            className="flex shrink-0 flex-col items-end justify-end"
+                                            style={{ height: 68 }}
+                                        >
+                                            <div className="flex items-baseline">
+                                                <span
+                                                    className="font-extrabold text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.35)]"
+                                                    style={{ fontSize: 52, lineHeight: '52px' }}
+                                                >
+                                                    {passportType.charAt(0).toUpperCase()}
+                                                </span>
+                                                <span
+                                                    className="font-semibold capitalize text-white"
+                                                    style={{ fontSize: 13, lineHeight: '13px', marginLeft: 2, marginBottom: 2 }}
+                                                >
+                                                    {passportType.slice(1)}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <p className="truncate text-[11px] text-white/90 sm:text-[12px]" title={instagram}>
-                                        Insta {instagram}
-                                    </p>
-                                    <div className="min-h-0 flex-1">
+
+                                    {/* Meta row: Age | Insta | City */}
+                                    <div
+                                        className="flex items-center justify-between overflow-hidden"
+                                        style={{ height: 34 }}
+                                    >
+                                        <div
+                                            className="flex flex-col justify-center overflow-hidden"
+                                            style={{ width: 38 }}
+                                        >
+                                            <p className="text-[9px] font-medium uppercase text-white/70">Age</p>
+                                            <p className="text-[12px] text-white/90">{age}</p>
+                                        </div>
+                                        <div className="flex min-w-0 flex-1 flex-col justify-center overflow-hidden">
+                                            <p className="text-[9px] font-medium uppercase text-white/70">Insta</p>
+                                            <p className="truncate text-[12px] text-white/90" title={instagram}>
+                                                {instagram}
+                                            </p>
+                                        </div>
+                                        <div className="flex min-w-0 flex-1 flex-col justify-center overflow-hidden">
+                                            <p className="text-[9px] font-medium uppercase text-white/70">City</p>
+                                            <p className="truncate text-[12px] text-white/90">{city}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Bio */}
+                                    <div
+                                        className="flex flex-col justify-center overflow-hidden"
+                                        style={{ height: 34 }}
+                                    >
                                         <p className="text-[9px] font-medium uppercase text-white/70">Bio</p>
-                                        <p className="line-clamp-3 text-[11px] leading-snug text-white/90 sm:text-[12px]">{bio}</p>
+                                        <p className="truncate text-[12px] text-white/90">{bio}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="mt-3 h-[2px] w-full bg-white/40 sm:mt-3" />
-                            <div className="pt-1.5 font-mono text-[10px] uppercase leading-4 tracking-[0.12em] text-white/70 sm:pt-2 sm:text-[11px]">
-                                <p className="truncate">{mrzLine1}</p>
-                                <p className="truncate">{mrzLine2}</p>
+                            <div className="mt-3 h-[2px] w-full bg-white/40" />
+                            <div
+                                ref={passportFooterRef}
+                                className="pt-1.5 font-mono uppercase"
+                                style={{
+                                    color: 'rgba(255,255,255,0.32)',
+                                    letterSpacing: '1.2px',
+                                }}
+                            >
+                                <p
+                                    className="overflow-hidden whitespace-nowrap"
+                                    style={{ fontSize: 12, lineHeight: '15px', marginBottom: 2 }}
+                                >
+                                    {renderPassportFooterSegments(
+                                        passportFooterLineOne,
+                                        'text-[15px]',
+                                    )}
+                                </p>
+                                <p
+                                    className="overflow-hidden whitespace-nowrap"
+                                    style={{ fontSize: 12, lineHeight: '15px' }}
+                                >
+                                    {renderPassportFooterSegments(
+                                        passportFooterLineTwo,
+                                        'text-[15px]',
+                                    )}
+                                </p>
                             </div>
                         </div>
                     </div>

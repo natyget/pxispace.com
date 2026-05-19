@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getPublicAlbumMeta } from '@/lib/publicAlbum';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { buildShareMetadata, resolveShareOgImage } from '@/lib/shareMetadata';
-import PublicAlbumBottomBar from '@/views/public/PublicAlbumBottomBar';
+import AppOpenBanner from '@/components/links/AppOpenBanner';
 import PublicAlbumClient from '@/views/public/album/PublicAlbumClient';
 
 export const dynamic = 'force-dynamic';
@@ -61,7 +61,12 @@ export default async function PublicAlbumPage({ params }) {
         <Link href="/" className="mt-6 text-sm font-medium text-pxi-purple hover:text-white">
           Back to PXI
         </Link>
-        <PublicAlbumBottomBar albumId={id} />
+        <AppOpenBanner
+          deepLinkUrl={`pxi://album/${id}`}
+          title="Open in PXI"
+          subtitle="Tap to try this link in the app"
+          storageKey={`pxi_app_banner_album_${id}_dismissed`}
+        />
       </div>
     );
   }
