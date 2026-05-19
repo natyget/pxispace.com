@@ -346,6 +346,182 @@
   scrollbar-width: none;
 }
 
+/* Public album: scrollbars on the right edge of each 50% column */
+.album-pane-scroll {
+  direction: ltr;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-pxi-purple) #0a0a0a;
+}
+
+.album-pane-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.album-pane-scroll::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+.album-pane-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-pxi-purple);
+  border-radius: 4px;
+}
+
+.album-pane-scroll::-webkit-scrollbar-thumb:hover {
+  background: #c44ef0;
+}
+
+/* Public album: stacked on mobile (details → thread), split on desktop */
+.public-album-page {
+  flex: 1;
+  min-height: 0;
+  background: #000;
+}
+
+@media (max-width: 1023px) {
+  .public-album-page {
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Room for fixed “Join in app” CTA at bottom of viewport */
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Details on top, iPhone thread column below */
+  .album-details-pane {
+    order: 1;
+    flex-shrink: 0;
+    width: 100%;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .album-details-pane .album-pane-scroll {
+    overflow: visible;
+    flex: none;
+    min-height: auto;
+  }
+
+  .public-album-left-slot {
+    order: 2;
+    flex-shrink: 0;
+    width: 100%;
+    min-height: auto;
+    overflow: visible;
+  }
+}
+
+/* Thread column — rounded phone frame (header + tabs + scroll list) */
+.album-thread-shell {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: min(100%, 390px);
+  max-width: 390px;
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 22px;
+  background: #000;
+}
+
+.iphone-pane {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: min(100%, 390px);
+  max-width: 390px;
+  margin-inline: auto;
+  overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  background: #000;
+}
+
+@media (max-width: 1023px) {
+  .iphone-pane {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    height: auto;
+    max-height: none;
+  }
+}
+
+/* Fills the fixed phone frame; thread/gallery scroll inside __scroll, not the page */
+.iphone-pane__inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Scrollable thread/gallery — fixed 600px viewport, content scrolls inside */
+.album-thread-list {
+  box-sizing: border-box;
+  flex: none;
+  height: 600px;
+  max-height: 600px;
+  min-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Gallery: grid scrolls; participants pinned to bottom of the 600px pane */
+.album-gallery-layout {
+  min-height: 0;
+}
+
+.album-details-pane {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  background: #050505;
+}
+
+@media (min-width: 1024px) {
+  .public-album-page {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .public-album-left-slot {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .album-details-pane {
+    align-self: stretch;
+    height: 100%;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .iphone-pane {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .album-thread-shell {
+    border-radius: 22px;
+  }
+}
+
 /* ── Hashtag marquee ── */
 @keyframes landing-hashtag-marquee {
   0% { transform: translateX(0); }

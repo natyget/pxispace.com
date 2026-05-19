@@ -6,8 +6,12 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { ImageAdd02Icon, Loading02Icon, CheckmarkCircle02Icon, CancelCircleIcon, Camera01Icon } from '@hugeicons/core-free-icons';
 import { getUploadLink, presignUploadLink, confirmUploadLink } from '@/services/uploadLink';
 
-const MAX_FILES = 100;
+const MAX_BATCH_FILES = 100;
 const CONCURRENCY = 2;
+
+function formatMb(bytes) {
+  return (bytes / (1024 * 1024)).toFixed(1);
+}
 const GALLERY_PORTRAIT = { w: 1200, h: 1600 };
 const GALLERY_LANDSCAPE = { w: 1600, h: 1200 };
 const JPEG_QUALITY = 0.88;
@@ -78,6 +82,7 @@ export default function PhotographerUploadView({ token }) {
   const [linkError, setLinkError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [pendingFiles, setPendingFiles] = useState([]);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0, label: '' });
   const [result, setResult] = useState(null);
@@ -85,12 +90,33 @@ export default function PhotographerUploadView({ token }) {
 
   const inputRef = useRef(null);
 
+  const pendingBytes = pendingFiles.reduce((sum, f) => sum + f.size, 0);
+  const pendingMb = Number(formatMb(pendingBytes));
+
+  const refreshLinkInfo = useCallback(async () => {
+    try {
+      const updated = await getUploadLink(token);
+      setLinkInfo(updated);
+      return updated;
+    } catch {
+      return null;
+    }
+  }, [token]);
+
   useEffect(() => {
     getUploadLink(token)
       .then(setLinkInfo)
       .catch((err) => setLinkError(err?.message || 'This upload link is invalid or has expired.'))
       .finally(() => setLoading(false));
   }, [token]);
+
+  const applyRemaining = useCallback((remainingImages, remainingMb) => {
+    setLinkInfo((prev) =>
+      prev
+        ? { ...prev, remainingImages, remainingMb }
+        : prev,
+    );
+  }, []);
 
   const runQueue = useCallback(async (files) => {
     if (!files.length) return;
@@ -126,11 +152,15 @@ export default function PhotographerUploadView({ token }) {
       await putToR2(uploadUrl, uploadFile, contentType);
 
       const capturedAt = new Date(file.lastModified || Date.now()).toISOString();
-      await confirmUploadLink(token, {
+      const confirmed = await confirmUploadLink(token, {
         r2Url: publicUrl, type,
         width, height, capturedAt,
         fileSizeBytes: uploadFile.size,
       });
+
+      if (typeof confirmed?.remainingImages === 'number' && typeof confirmed?.remainingMb === 'number') {
+        applyRemaining(confirmed.remainingImages, confirmed.remainingMb);
+      }
 
       completed += 1;
       setProgress({ done: completed, total: files.length, label: safeName });
@@ -148,18 +178,67 @@ export default function PhotographerUploadView({ token }) {
     await Promise.all(Array.from({ length: Math.min(CONCURRENCY, files.length) }, () => worker()));
 
     setBusy(false);
+
+    if (completed > 0) {
+      await refreshLinkInfo();
+    }
+
     if (errors.length) {
-      setUploadError(errors.slice(0, 5).join(' · ') + (errors.length > 5 ? ` +${errors.length - 5} more` : ''));
+      const uploaded = completed;
+      const msg = errors.slice(0, 5).join(' · ') + (errors.length > 5 ? ` +${errors.length - 5} more` : '');
+      setUploadError(
+        uploaded > 0
+          ? `${uploaded} of ${files.length} uploaded. ${msg}`
+          : msg,
+      );
+      if (uploaded > 0) {
+        setResult(`${uploaded} photo${uploaded === 1 ? '' : 's'} uploaded.`);
+        setPendingFiles([]);
+      }
     } else {
       setResult(`${files.length} photo${files.length === 1 ? '' : 's'} uploaded successfully!`);
+      setPendingFiles([]);
     }
-  }, [token]);
+  }, [token, applyRemaining, refreshLinkInfo]);
 
   const onPick = (e) => {
     const raw = Array.from(e.target.files || []);
     e.target.value = '';
     if (!raw.length) return;
-    void runQueue(raw.slice(0, MAX_FILES));
+
+    if (raw.length > MAX_BATCH_FILES) {
+      setUploadError(`You can select at most ${MAX_BATCH_FILES} photos per upload. You chose ${raw.length}.`);
+      return;
+    }
+
+    setUploadError(null);
+    setResult(null);
+    setPendingFiles(raw);
+  };
+
+  const handleUpload = () => {
+    if (!pendingFiles.length || busy || !linkInfo) return;
+
+    if (pendingFiles.length > MAX_BATCH_FILES) {
+      setUploadError(`You can upload at most ${MAX_BATCH_FILES} photos at a time.`);
+      return;
+    }
+
+    if (pendingFiles.length > linkInfo.remainingImages) {
+      setUploadError(
+        `This link only has ${linkInfo.remainingImages} image slot${linkInfo.remainingImages === 1 ? '' : 's'} left, but you selected ${pendingFiles.length}.`,
+      );
+      return;
+    }
+
+    if (pendingMb > linkInfo.remainingMb) {
+      setUploadError(
+        `Selected files are ~${pendingMb} MB, but only ${Math.round(linkInfo.remainingMb)} MB remain on this link.`,
+      );
+      return;
+    }
+
+    void runQueue(pendingFiles);
   };
 
   if (loading) {
@@ -208,9 +287,10 @@ export default function PhotographerUploadView({ token }) {
         <div className="rounded-2xl border border-white/10 bg-zinc-900/60 overflow-hidden">
           <div className="p-5 border-b border-white/5">
             <p className="text-xs text-zinc-500">
-              Upload your photos directly to this event's album. Up to{' '}
+              Upload your photos directly to this event&apos;s album. Up to{' '}
               <span className="text-white font-bold">{linkInfo.remainingImages}</span> images and{' '}
               <span className="text-white font-bold">{Math.round(linkInfo.remainingMb)} MB</span> remaining on this link.
+              Choose up to <span className="text-white font-bold">{MAX_BATCH_FILES}</span> photos per upload.
             </p>
           </div>
           <div className="p-5 space-y-4">
@@ -227,11 +307,35 @@ export default function PhotographerUploadView({ token }) {
               type="button"
               disabled={busy}
               onClick={() => inputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-40 hover:opacity-90 transition-opacity"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/10 bg-zinc-800 text-white text-sm font-bold uppercase tracking-widest disabled:opacity-40 hover:border-white/20 transition-colors"
             >
-              {busy ? <HugeiconsIcon icon={Loading02Icon} className="animate-spin" size={18} /> : <HugeiconsIcon icon={ImageAdd02Icon} size={18} />}
-              {busy ? 'Uploading…' : 'Choose Photos'}
+              <HugeiconsIcon icon={ImageAdd02Icon} size={18} />
+              {pendingFiles.length ? 'Change Selection' : 'Choose Photos'}
             </button>
+
+            {pendingFiles.length > 0 && !busy && (
+              <div className="rounded-xl border border-white/10 bg-zinc-800/60 px-4 py-3 space-y-1">
+                <p className="text-xs text-zinc-400">
+                  <span className="text-white font-bold">{pendingFiles.length}</span>
+                  {' '}photo{pendingFiles.length === 1 ? '' : 's'} selected
+                </p>
+                <p className="text-xs text-zinc-400">
+                  Estimated size: <span className="text-white font-bold">~{pendingMb} MB</span>
+                </p>
+              </div>
+            )}
+
+            {pendingFiles.length > 0 && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={handleUpload}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-40 hover:opacity-90 transition-opacity"
+              >
+                {busy ? <HugeiconsIcon icon={Loading02Icon} className="animate-spin" size={18} /> : <HugeiconsIcon icon={ImageAdd02Icon} size={18} />}
+                {busy ? 'Uploading…' : `Upload ${pendingFiles.length} Photo${pendingFiles.length === 1 ? '' : 's'}`}
+              </button>
+            )}
 
             {busy && progress.total > 0 && (
               <div className="space-y-1.5">

@@ -6,6 +6,9 @@ import { Cancel01Icon, Link01Icon, Copy01Icon, CheckmarkBadge01Icon, Loading02Ic
 import { createUploadLink } from '@/services/uploadLink';
 import { getSiteUrl } from '@/lib/siteUrl';
 
+const MAX_UPLOAD_OPTIONS = [100, 200, 500, 1000];
+const CAPACITY_OPTIONS = [0.1, 0.2, 0.5, 1.0];
+
 const EXPIRE_OPTIONS = [
   { label: '2 hours', value: 2 },
   { label: '6 hours', value: 6 },
@@ -15,9 +18,17 @@ const EXPIRE_OPTIONS = [
   { label: '7 days', value: 168 },
 ];
 
+function optionButtonClass(selected) {
+  return `py-2 rounded-xl text-xs font-bold border transition-colors ${
+    selected
+      ? 'bg-pxi-purple border-pxi-purple text-white'
+      : 'bg-zinc-800 border-white/10 text-zinc-400 hover:text-white hover:border-white/20'
+  }`;
+}
+
 export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
   const [maxUploads, setMaxUploads] = useState(100);
-  const [maxMb, setMaxMb] = useState(100);
+  const [capacityGb, setCapacityGb] = useState(0.1);
   const [expiresInHours, setExpiresInHours] = useState(24);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -28,6 +39,7 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
     setLoading(true);
     setError(null);
     try {
+      const maxMb = Math.round(capacityGb * 1000);
       const result = await createUploadLink({ albumId, eventId, maxUploads, maxMb, expiresInHours });
       setCreatedLink(`${getSiteUrl()}/upload/${result.token}`);
     } catch (err) {
@@ -68,34 +80,40 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
                 Generate a shareable link that lets photographers upload directly to this event's album — no account required.
               </p>
 
-              {/* Max images */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
                   Max Images <span className="text-zinc-600 normal-case tracking-normal font-normal">(max number of photos)</span>
                 </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={5000}
-                  value={maxUploads}
-                  onChange={(e) => setMaxUploads(Number(e.target.value))}
-                  className="w-full rounded-xl bg-zinc-800 border border-white/10 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-pxi-purple/60"
-                />
+                <div className="grid grid-cols-4 gap-2">
+                  {MAX_UPLOAD_OPTIONS.map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setMaxUploads(value)}
+                      className={optionButtonClass(maxUploads === value)}
+                    >
+                      {value.toLocaleString()}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Max MB (storage capacity) */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
-                  Capacity (MB) <span className="text-zinc-600 normal-case tracking-normal font-normal">(max total storage)</span>
+                  Capacity <span className="text-zinc-600 normal-case tracking-normal font-normal">(max total storage)</span>
                 </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={50000}
-                  value={maxMb}
-                  onChange={(e) => setMaxMb(Number(e.target.value))}
-                  className="w-full rounded-xl bg-zinc-800 border border-white/10 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-pxi-purple/60"
-                />
+                <div className="grid grid-cols-4 gap-2">
+                  {CAPACITY_OPTIONS.map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setCapacityGb(value)}
+                      className={optionButtonClass(capacityGb === value)}
+                    >
+                      {value.toFixed(1)} GB
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Expiry */}
