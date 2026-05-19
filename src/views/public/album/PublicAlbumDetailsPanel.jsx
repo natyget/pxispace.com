@@ -41,7 +41,8 @@ function formatTicketPrice(event) {
   return `${sym}${price.toFixed(2)}`;
 }
 
-export default function PublicAlbumDetailsPanel({ album, albumId }) {
+export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'column' }) {
+  const isSheet = layout === 'sheet';
   const [shareHint, setShareHint] = useState(null);
   const title = useMemo(() => displayTitle(album), [album]);
   const isPublic = album?.event?.visibility === 'PUBLIC';
@@ -251,24 +252,32 @@ export default function PublicAlbumDetailsPanel({ album, albumId }) {
         </div>
       </div>
 
-      {/* Mobile: fixed to viewport bottom. Desktop: sticky at bottom of the details column. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 shrink-0 border-t border-white/10 bg-[#050505]/95 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-md lg:relative lg:sticky lg:bottom-0 lg:z-10 lg:bg-gradient-to-t lg:from-[#050505] lg:via-[#050505] lg:to-transparent lg:backdrop-blur-none">
+      {/* Sheet: sticky in modal. Mobile page: fixed to viewport. Desktop: sticky in column.
+          Primary CTA always says "Join Event" and routes to the web checkout flow when an
+          event exists (handles EULA + free ticket / paid Stripe session). Private albums
+          with no event fall back to a deep link into the app. */}
+      <div
+        className={
+          isSheet
+            ? 'sticky bottom-0 z-10 shrink-0 border-t border-white/10 bg-[#050505] px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4'
+            : 'shrink-0 border-t border-white/10 bg-gradient-to-t from-[#050505] via-[#050505] to-transparent px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 lg:sticky lg:bottom-0 lg:z-10'
+        }
+      >
         <div className="mx-auto flex w-full max-w-lg flex-row items-stretch gap-3 lg:max-w-none">
-          {openInAppUrl ? (
+          {album?.event?.id ? (
+            <Link
+              href={`/events/${album.event.id}/checkout`}
+              className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-white px-2 py-4 text-center text-[11px] font-black uppercase leading-tight tracking-[0.1em] text-black shadow-lg transition hover:bg-zinc-200 sm:text-sm sm:tracking-[0.15em]"
+            >
+              {ticketLabel ? `Join Event · ${ticketLabel}` : 'Join Event'}
+            </Link>
+          ) : openInAppUrl ? (
             <a
               href={openInAppUrl}
               className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-white px-2 py-4 text-center text-[11px] font-black uppercase leading-tight tracking-[0.1em] text-black shadow-lg transition hover:bg-zinc-200 sm:text-sm sm:tracking-[0.15em]"
             >
-              {ticketLabel ? `Get ticket · ${ticketLabel}` : isPublic ? 'Join event in app' : 'Join album in app'}
+              Open album in app
             </a>
-          ) : null}
-          {album?.event?.id ? (
-            <Link
-              href={`/events/${album.event.id}`}
-              className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-white/15 bg-white/5 px-2 py-4 text-center text-sm font-semibold text-white transition hover:bg-white/10"
-            >
-              View event page
-            </Link>
           ) : null}
         </div>
       </div>

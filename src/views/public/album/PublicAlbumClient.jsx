@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Loading02Icon, LockIcon } from '@hugeicons/core-free-icons';
+import { Loading02Icon, LockIcon, MoreHorizontalCircle02Icon } from '@hugeicons/core-free-icons';
 import { albumsService } from '@/services/albums';
 import PublicAlbumBottomBar from '@/views/public/PublicAlbumBottomBar';
 import PublicAlbumMasonryGrid from './PublicAlbumMasonryGrid';
@@ -18,12 +18,12 @@ import {
   timelineRowKey,
 } from './buildPublicAlbumTimeline';
 import PublicAlbumDetailsPanel from './PublicAlbumDetailsPanel';
+import PublicAlbumDetailsSheet from './PublicAlbumDetailsSheet';
+import PublicAlbumJoinEventButton from './PublicAlbumJoinEventButton';
 import PublicAlbumParticipants from './PublicAlbumParticipants';
 import IphonePane from './IphonePane';
 import { mediaDisplayUrl } from './albumMediaLayout';
 import {
-  IPHONE_VIEWPORT_WIDTH,
-  PUBLIC_ALBUM_THREAD_LIST_HEIGHT,
   PUBLIC_ALBUM_THREAD_LIST_HORIZONTAL_INSET,
   THREAD_MEDIA_TILT_DEG,
   THREAD_PAGE_HORIZONTAL_GUTTER,
@@ -50,10 +50,13 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [threadFocusOpen, setThreadFocusOpen] = useState(false);
   const [threadFocusIndex, setThreadFocusIndex] = useState(0);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [threadHasMore, setThreadHasMore] = useState(false);
   const [loadingMoreThread, setLoadingMoreThread] = useState(false);
   const threadShellRef = useRef(null);
   const threadListRef = useRef(null);
+  const threadEndRef = useRef(null);
+  const threadTopRef = useRef(null);
 
   const setThreadScrollEl = useCallback((el) => {
     threadListRef.current = el;
@@ -91,10 +94,10 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
     threadMedia,
   ]);
 
-  const markLoadingOlderRef = useRef(null);
-  const { handleThreadScroll, markLoadingOlder } = useAlbumThreadScroll({
+  const { handleThreadScroll } = useAlbumThreadScroll({
     scrollRef: threadListRef,
     listRef: threadListRef,
+    topRef: threadTopRef,
     albumId,
     active: threadScrollActive,
     threadItemCount: threadTimeline.length,
@@ -235,17 +238,24 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
       <div className="public-album-left-slot flex flex-col items-center">
         <div
           ref={threadShellRef}
-          className="album-thread-shell w-full"
-          style={{ maxWidth: IPHONE_VIEWPORT_WIDTH }}
+          className="album-thread-shell flex w-full flex-col max-lg:min-h-0 max-lg:flex-1 max-lg:border-0 max-lg:rounded-none max-lg:outline-none max-lg:ring-0 max-lg:shadow-none"
         >
-        <div className="album-thread-chrome w-full shrink-0 bg-black">
+        <div className="album-thread-chrome relative z-[5] w-full shrink-0 bg-black max-lg:border-b max-lg:border-white/5">
           <div
-            className="flex h-14 items-center justify-center"
+            className="relative flex h-14 items-center justify-center"
             style={{ paddingLeft: THREAD_PAGE_HORIZONTAL_GUTTER, paddingRight: THREAD_PAGE_HORIZONTAL_GUTTER }}
           >
-            <h1 className="truncate text-center text-xl font-black uppercase tracking-[0.24em] text-white">
+            <h1 className="truncate px-10 text-center text-xl font-black uppercase tracking-[0.24em] text-white">
               {albumTitle}
             </h1>
+            <button
+              type="button"
+              onClick={() => setDetailsOpen(true)}
+              className="absolute right-3 top-1/2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white lg:hidden"
+              aria-label="Album details"
+            >
+              <HugeiconsIcon icon={MoreHorizontalCircle02Icon} size={26} />
+            </button>
           </div>
           <div
             className="pb-4 pt-4"
@@ -278,14 +288,13 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
           </div>
         </div>
 
+        <div className="album-thread-body flex min-h-0 min-w-0 flex-1 flex-col">
         <div
           ref={setThreadScrollEl}
-          className={`album-thread-list no-scrollbar relative box-border flex flex-col overflow-x-hidden ${
+          className={`album-thread-list no-scrollbar relative box-border flex min-h-0 flex-col overflow-x-hidden max-lg:flex-1 max-lg:min-h-0 ${
             tab === 'gallery' ? 'overflow-hidden' : 'overflow-y-auto pb-5 pt-5'
           }`}
           style={{
-            height: PUBLIC_ALBUM_THREAD_LIST_HEIGHT,
-            maxHeight: PUBLIC_ALBUM_THREAD_LIST_HEIGHT,
             paddingLeft: PUBLIC_ALBUM_THREAD_LIST_HORIZONTAL_INSET,
             paddingRight: PUBLIC_ALBUM_THREAD_LIST_HORIZONTAL_INSET,
           }}
@@ -315,6 +324,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
             </div>
           ) : (
             <>
+              <div ref={threadTopRef} className="h-px w-full shrink-0" aria-hidden />
               {(() => {
                 let mediaIndex = 0;
                 return threadTimeline.map((row, idx) => {
@@ -347,19 +357,32 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
                   );
                 });
               })()}
+              <div ref={threadEndRef} className="h-px w-full shrink-0" aria-hidden />
             </>
           )}
+        </div>
+        {/* Mobile-only join CTA in the spot the read-only chatbar used to live —
+            on the public album page the user can't compose, so this surfaces the
+            primary action (route to /events/[id]/checkout for full EULA + ticket flow). */}
+        <PublicAlbumJoinEventButton album={album} albumId={albumId} className="lg:hidden" />
         </div>
         </div>
 
       </div>
 
-      {/* Right: album details — full width of the right 50% */}
+      {/* Right: album details — desktop only; mobile uses three-dot sheet */}
       <div className="album-details-pane">
         <div className="album-pane-scroll min-h-0 flex-1">
           <PublicAlbumDetailsPanel album={album} albumId={albumId} />
         </div>
       </div>
+
+      <PublicAlbumDetailsSheet
+        open={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+        album={album}
+        albumId={albumId}
+      />
 
       {lightboxOpen && tab === 'gallery' ? (
         <PublicAlbumLightbox

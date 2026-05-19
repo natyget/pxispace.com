@@ -191,6 +191,14 @@ export default function EventCheckout({ basePath = '/events' }) {
     }
   };
 
+  /** After successful free ticket issue, fire the album/event deep link so the native app opens to it. */
+  const eventAlbumId = apiEvent?.albumId || apiEvent?.albums?.[0]?.id || null;
+  const successDeepLinkUrl = eventAlbumId
+    ? `pxi://album/${eventAlbumId}`
+    : apiEvent?.id
+      ? `pxi://event/${apiEvent.id}`
+      : null;
+
   const handleFreeTicket = async () => {
     if (!apiEvent || !isFreeEvent || !isAuthenticated || !user?.id) return;
     if (!canPurchase) {
@@ -202,6 +210,16 @@ export default function EventCheckout({ basePath = '/events' }) {
     try {
       await generateTicket(user.id, apiEvent.id);
       setJoinSuccess(true);
+      // Attempt to open the album in the app right away on mobile; harmless if app isn't installed.
+      if (successDeepLinkUrl && typeof window !== 'undefined') {
+        try {
+          window.localStorage.setItem('pxi_pending_deeplink', successDeepLinkUrl);
+        } catch {}
+        const ua = navigator.userAgent || '';
+        if (/iPhone|iPad|iPod|Android/i.test(ua)) {
+          window.location.href = successDeepLinkUrl;
+        }
+      }
     } catch (err) {
       setJoinError(err.message || err.data?.error || 'Something went wrong.');
     } finally {
@@ -337,7 +355,17 @@ export default function EventCheckout({ basePath = '/events' }) {
             ) : null}
 
             {joinSuccess && (
-              <p className="text-green-400 text-sm font-medium">You’re in! Open the PXI app to view your ticket.</p>
+              <div className="space-y-3 rounded-2xl border border-green-500/30 bg-green-500/10 p-4">
+                <p className="text-green-300 text-sm font-semibold">You’re in! Your ticket has been issued.</p>
+                {successDeepLinkUrl ? (
+                  <a
+                    href={successDeepLinkUrl}
+                    className="block w-full rounded-xl bg-white py-3 text-center text-xs font-black uppercase tracking-widest text-black transition hover:bg-zinc-200"
+                  >
+                    Open in PXI app
+                  </a>
+                ) : null}
+              </div>
             )}
             {joinError && <p className="text-red-400 text-sm">{joinError}</p>}
 
@@ -376,7 +404,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                 onClick={handleFreeTicket}
                 disabled={joining || joinSuccess || !canPurchase}
               >
-                {joining ? <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" /> : 'Get free ticket'}
+                {joining ? <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" /> : 'Join Event'}
               </Button>
             ) : null}
 
