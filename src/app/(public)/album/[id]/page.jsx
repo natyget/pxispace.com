@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import { getPublicAlbumMeta } from '@/lib/publicAlbum';
 import { getSiteUrl } from '@/lib/siteUrl';
-import { resolveDisplayImageUrl } from '@/lib/mediaUrl';
-import { toOpenGraphImageUrl } from '@/lib/ogImageUrl';
+import { buildShareMetadata, resolveShareOgImage } from '@/lib/shareMetadata';
 import PublicAlbumBottomBar from '@/views/public/PublicAlbumBottomBar';
 import PublicAlbumClient from '@/views/public/album/PublicAlbumClient';
 
@@ -16,11 +15,15 @@ export async function generateMetadata({ params }) {
   const { album, denied } = await getPublicAlbumMeta(id);
 
   if (!album || denied) {
-    return {
-      title: 'Album | PXI',
+    return buildShareMetadata({
+      site,
+      canonical,
+      title: 'Album',
       description: denied ? 'This album is private.' : 'This album could not be found.',
+      ogImage: resolveShareOgImage(site),
+      ogAlt: 'PXI',
       robots: { index: false, follow: false },
-    };
+    });
   }
 
   const title =
@@ -29,30 +32,21 @@ export async function generateMetadata({ params }) {
     album.name ||
     'Album';
 
-  const coverRaw = album.event?.coverImage || album.coverImage;
-  const ogImageResolved = toOpenGraphImageUrl(site, coverRaw ? resolveDisplayImageUrl(coverRaw) : null);
-  const ogImage = ogImageResolved || `${site}/favicon.svg`;
+  const ogImage = resolveShareOgImage(
+    site,
+    album.ogImageUrl,
+    album.event?.coverImage,
+    album.coverImage,
+  );
 
-  return {
-    title: `${title} — PXI`,
+  return buildShareMetadata({
+    site,
+    canonical,
+    title,
     description: `Shared album on PXI — view photos from ${title}.`,
-    metadataBase: new URL(site),
-    alternates: { canonical },
-    openGraph: {
-      type: 'website',
-      url: canonical,
-      siteName: 'PXI',
-      title: `${title} — PXI`,
-      description: `Shared album on PXI — view photos from ${title}.`,
-      images: [{ url: ogImage, alt: title }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${title} — PXI`,
-      description: `Shared album on PXI — view photos from ${title}.`,
-      images: [ogImage],
-    },
-  };
+    ogImage,
+    ogAlt: title,
+  });
 }
 
 export default async function PublicAlbumPage({ params }) {
