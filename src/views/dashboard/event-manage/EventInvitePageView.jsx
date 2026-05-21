@@ -8,6 +8,7 @@ import { Calendar01Icon, CheckmarkBadge01Icon, HelpCircleIcon, Loading02Icon, Lo
 import { eventsService, searchUsers } from '@/services/events';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventManage } from './EventManageContext';
+import { eventShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
 
 const LINEUP_ROLE_MAX_LEN = 80;
 
@@ -252,12 +253,14 @@ export default function EventInvitePageView() {
     if (!eventId) return;
     const url = getPublicEventUrl(eventId);
     const title = event?.name || 'PXI Event';
+    const text = eventShareLead(title, 'invite');
+    const message = shareMessageWithUrl(text, url);
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title, text: `Join "${title}" on PXI`, url });
+        await navigator.share({ title, text, url });
       } catch { /* dismissed */ }
     } else {
-      await navigator.clipboard.writeText(url).catch(() => {});
+      await navigator.clipboard.writeText(message).catch(() => {});
       toast.success('Link copied to clipboard');
     }
   };
@@ -266,14 +269,16 @@ export default function EventInvitePageView() {
     if (!eventId) return;
     const url = getPublicEventUrl(eventId);
     const title = event?.name || 'PXI Event';
+    const text = eventShareLead(title, 'invite');
+    const message = shareMessageWithUrl(text, url);
     // On mobile browsers navigator.share surfaces Instagram Stories as a native target
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title, text: `Join "${title}" on PXI`, url });
+        await navigator.share({ title, text, url });
         return;
       } catch { /* dismissed — fall through to clipboard */ }
     }
-    await navigator.clipboard.writeText(url).catch(() => {});
+    await navigator.clipboard.writeText(message).catch(() => {});
     toast.success('Link copied — open Instagram and paste in your Story');
   };
 
