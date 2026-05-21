@@ -7,6 +7,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Clock01Icon, LocationShare01Icon, Share01Icon } from '@hugeicons/core-free-icons';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { getSiteUrl } from '@/lib/siteUrl';
+import { albumShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
 import { formatAlbumSchedule } from './publicAlbumDate';
 
 function displayTitle(album) {
@@ -60,12 +61,23 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
 
   const handleCopyPublicLink = async () => {
     if (!publicAlbumUrl) return;
+    const message = shareMessageWithUrl(albumShareLead(title), publicAlbumUrl);
     try {
-      await navigator.clipboard.writeText(publicAlbumUrl);
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title, text: albumShareLead(title), url: publicAlbumUrl });
+        return;
+      }
+      await navigator.clipboard.writeText(message);
       setShareHint('Link copied');
       setTimeout(() => setShareHint(null), 2500);
     } catch {
-      window.prompt('Copy album link:', publicAlbumUrl);
+      try {
+        await navigator.clipboard.writeText(message);
+        setShareHint('Link copied');
+        setTimeout(() => setShareHint(null), 2500);
+      } catch {
+        window.prompt('Copy album link:', message);
+      }
     }
   };
 

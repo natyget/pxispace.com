@@ -123,7 +123,7 @@ export default function DashboardLayout({ children }) {
         } catch {
             setCapabilities((prev) => ({ ...prev, loading: false, determined: false, source: {} }));
         }
-    }, [mounted, user, updateUser]);
+    }, [mounted, user?.id, updateUser]);
 
     useEffect(() => {
         refreshCapabilities();
