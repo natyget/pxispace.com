@@ -73,6 +73,24 @@
   width: 100%;
 }
 
+.create-event-location-field .create-event-location-geocoder,
+.create-event-location-field .geoapify-geocoder-autocomplete-container,
+.create-event-location-field .geoapify-input-wrapper {
+  width: 100%;
+}
+
+.create-event-location-field .geoapify-autocomplete-input {
+  /* Match event name input (py-2.5 = 0.625rem) */
+  padding: 0.625rem 2rem 0.625rem 2.25rem !important;
+}
+
+.create-event-location-field .geoapify-autocomplete-items {
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
 /* Tailwind v4 @theme: custom colors for utilities (bg-pxi-purple, text-pxi-dark, etc.) */
 @theme {
   --color-pxi-purple: #d84aff;

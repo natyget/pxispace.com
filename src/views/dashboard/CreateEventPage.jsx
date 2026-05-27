@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowLeft01Icon, Loading02Icon, ImageIcon, HelpCircleIcon, Cancel01Icon, Search01Icon, UserGroupIcon } from '@hugeicons/core-free-icons';
+import { ArrowLeft01Icon, Loading02Icon, ImageIcon, HelpCircleIcon, Cancel01Icon, Search01Icon, UserGroupIcon, Location01Icon } from '@hugeicons/core-free-icons';
 import Cropper from 'react-easy-crop';
 import { GeoapifyContext, GeoapifyGeocoderAutocomplete } from '@geoapify/react-geocoder-autocomplete';
 import { toast } from 'sonner';
@@ -12,6 +12,11 @@ import { eventsService, searchUsers } from '../../services/events';
 import { uploadImageToR2 } from '../../services/media';
 import { authService, authStorage } from '../../services/auth';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  buildTicketPricingPayload,
+  createEmptyTier,
+  validatePaidPricing,
+} from '@/lib/ticketTiers';
 
 async function getCroppedBlob(imageSrc, croppedAreaPixels) {
   const image = await new Promise((resolve, reject) => {
@@ -86,6 +91,8 @@ export default function CreateEventPage() {
 
   const [isPaid, setIsPaid] = useState(false);
   const [price, setPrice] = useState('');
+  const [useTierList, setUseTierList] = useState(false);
+  const [ticketTiers, setTicketTiers] = useState([]);
   const [paidGate, setPaidGate] = useState(null);
 
   const [graceTimeHours, setGraceTimeHours] = useState('0');
@@ -218,6 +225,7 @@ export default function CreateEventPage() {
     setPaidGate(null);
     if (!checked) {
       setIsPaid(false);
+      setUseTierList(false);
       return;
     }
     if (user?.isVendor) {
@@ -293,13 +301,12 @@ export default function CreateEventPage() {
       setFormError('End time must be after start time.');
       return;
     }
-    if (isPaid) {
-      const p = parseInt(price, 10);
-      if (!price.trim() || Number.isNaN(p) || p <= 0) {
-        setFormError('Paid events need a ticket price greater than 0.');
-        return;
-      }
+    const pricingCheck = validatePaidPricing({ isPaid, useTierList, price, tiers: ticketTiers });
+    if (!pricingCheck.ok) {
+      setFormError(pricingCheck.error);
+      return;
     }
+    const pricing = buildTicketPricingPayload({ isPaid, useTierList, price, tiers: ticketTiers });
 
     setIsSubmitting(true);
     try {
@@ -308,7 +315,6 @@ export default function CreateEventPage() {
         : await tryGetGeo();
       const graceTime =
         (parseInt(graceTimeHours, 10) || 0) * 60 + (parseInt(graceTimeMinutes, 10) || 0);
-      const ticketPrice = isPaid ? parseInt(price, 10) : 0;
 
       const lineupOnly = pendingInvites
         .filter((p) => p.kind === 'lineup')
@@ -324,8 +330,9 @@ export default function CreateEventPage() {
         endDate: endDate.toISOString(),
         coverImage: coverImage.trim(),
         visibility: isPrivate ? 'PRIVATE' : 'PUBLIC',
-        ticketType: isPaid ? 'PAID' : 'FREE',
-        ticketPrice,
+        ticketType: pricing.ticketType,
+        ticketPrice: pricing.ticketPrice,
+        ...(pricing.ticketTiersJson ? { ticketTiersJson: pricing.ticketTiersJson } : {}),
         currency: 'USD',
         graceTime,
         maxImages: parseInt(maxImages, 10) || 100,
@@ -375,6 +382,8 @@ export default function CreateEventPage() {
   const inputClass =
     'w-full rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 px-3 py-2.5 text-sm focus:border-pxi-purple/50 focus:outline-none';
   const labelClass = 'block text-[11px] font-bold text-pxi-purple uppercase tracking-widest mb-1.5';
+  const sectionCardClass = 'rounded-2xl border border-white/10 bg-zinc-900/50 p-5';
+  const sectionTitleClass = 'text-sm font-semibold text-white/90 border-b border-white/5 pb-4 mb-2';
 
   return (
     <>
@@ -421,7 +430,7 @@ export default function CreateEventPage() {
         </div>
       </div>
     )}
-    <div className="max-w-4xl mx-auto space-y-6 pb-16">
+    <div className="max-w-5xl mx-auto space-y-6 pb-16">
       <div className="flex items-center gap-3">
         <Link
           href="/dashboard/events"
@@ -435,114 +444,128 @@ export default function CreateEventPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {formError && (
           <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
             {formError}
           </div>
         )}
 
-        <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
-          <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest flex items-center gap-2">
-            <HugeiconsIcon icon={ImageIcon} size={16} />
-            Cover image *
-          </h2>
-          <label className="relative block w-full sm:w-[300px] sm:mx-auto cursor-pointer" style={{ aspectRatio: '3/4' }}>
-            <input type="file" accept="image/*" className="hidden" onChange={onCoverFile} disabled={isCoverUploading} />
-            <div className={`w-full h-full rounded-2xl overflow-hidden border ${coverImage || coverPreview ? 'border-white/10' : 'border-dashed border-white/20'} bg-white/5 flex items-center justify-center`}>
-              {(coverImage || coverPreview) ? (
-                <img
-                  src={coverImage || coverPreview}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              ) : !isCoverUploading ? (
-                <div className="flex flex-col items-center gap-3">
-                  <HugeiconsIcon icon={ImageIcon} size={36} className="text-white/30" />
-                  <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.15em]">Add cover image</span>
-                </div>
-              ) : null}
-              {isCoverUploading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 rounded-2xl">
-                  <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin text-white" />
-                  <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover…</span>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,380px)_1fr] gap-8">
+          {/* Left column: cover, then basics */}
+          <div className="flex flex-col gap-8">
+            <label className="relative block w-full max-w-[340px] mx-auto cursor-pointer" style={{ aspectRatio: '3/4' }}>
+              <input type="file" accept="image/*" className="hidden" onChange={onCoverFile} disabled={isCoverUploading} />
+              <div className={`w-full h-full rounded-2xl overflow-hidden border ${coverImage || coverPreview ? 'border-white/10' : 'border-dashed border-white/20'} bg-white/5 flex items-center justify-center`}>
+                {(coverImage || coverPreview) ? (
+                  <img
+                    src={coverImage || coverPreview}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                ) : !isCoverUploading ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <HugeiconsIcon icon={ImageIcon} size={36} className="text-white/30" />
+                    <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.15em]">Add cover image</span>
+                  </div>
+                ) : null}
+                {isCoverUploading && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 rounded-2xl">
+                    <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin text-white" />
+                    <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover…</span>
+                  </div>
+                )}
+              </div>
+              {(coverImage || coverPreview) && !isCoverUploading && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); setCoverImage(null); setCoverPreview(null); }}
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+                >
+                  <HugeiconsIcon icon={Cancel01Icon} size={16} />
+                </button>
               )}
-            </div>
-            {(coverImage || coverPreview) && !isCoverUploading && (
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); setCoverImage(null); setCoverPreview(null); }}
-                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
-              >
-                <HugeiconsIcon icon={Cancel01Icon} size={16} />
-              </button>
-            )}
-          </label>
-        </section>
+            </label>
 
-        <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
-          <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest">Basics</h2>
-          <div>
-            <label className={labelClass}>Event name *</label>
-            <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />
-          </div>
-          <div>
-            <label className={labelClass}>Description</label>
-            <textarea
-              className={`${inputClass} min-h-[88px] resize-y`}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className={labelClass}>Venue / location</label>
-            <div
-              className={`${inputClass} p-0 overflow-visible`}
-              onChange={(e) => {
-                if (e.target.tagName === 'INPUT') setLocation(e.target.value);
-              }}
-            >
-              <GeoapifyContext apiKey={GEOAPIFY_KEY}>
-                <GeoapifyGeocoderAutocomplete
-                  value={location}
-                  placeholder="Search venue or address…"
-                  placeSelect={(result) => {
-                    const props = result?.properties;
-                    setLocation(props?.formatted || '');
-                    setGeoLat(typeof props?.lat === 'number' ? props.lat : null);
-                    setGeoLon(typeof props?.lon === 'number' ? props.lon : null);
-                  }}
+            <section className={`${sectionCardClass} space-y-4`}>
+              <h2 className={sectionTitleClass}>Basics</h2>
+              <div>
+                <label className={labelClass}>Event name *</label>
+                <input
+                  className={inputClass}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Name your event..."
+                  required
                 />
-              </GeoapifyContext>
-            </div>
+              </div>
+              <div>
+                <label className={labelClass}>Description</label>
+                <textarea
+                  className={`${inputClass} min-h-[88px] resize-y`}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Describe the experience..."
+                />
+              </div>
+              <div className="space-y-2">
+                <label className={labelClass}>Venue / location</label>
+                <div
+                  className={`${inputClass} !py-0 px-0 overflow-visible relative create-event-location-field`}
+                  onChange={(e) => {
+                    if (e.target.tagName === 'INPUT') setLocation(e.target.value);
+                  }}
+                >
+                  <HugeiconsIcon
+                    icon={Location01Icon}
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 shrink-0 pointer-events-none z-10"
+                  />
+                  <div className="w-full create-event-location-geocoder">
+                    <GeoapifyContext apiKey={GEOAPIFY_KEY}>
+                      <GeoapifyGeocoderAutocomplete
+                        value={location}
+                        placeholder="Search venue or address..."
+                        placeSelect={(result) => {
+                          const props = result?.properties;
+                          setLocation(props?.formatted || '');
+                          setGeoLat(typeof props?.lat === 'number' ? props.lat : null);
+                          setGeoLon(typeof props?.lon === 'number' ? props.lon : null);
+                        }}
+                      />
+                    </GeoapifyContext>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Start *</label>
-              <input
-                type="datetime-local"
-                className={inputClass}
-                value={startLocal}
-                onChange={(e) => setStartLocal(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label className={labelClass}>End *</label>
-              <input
-                type="datetime-local"
-                className={inputClass}
-                value={endLocal}
-                onChange={(e) => setEndLocal(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-        </section>
 
-        <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-5">
-          <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest">Configuration</h2>
+          {/* Right column: configuration, then actions */}
+          <div className="flex flex-col gap-8">
+            <section className={`${sectionCardClass} space-y-5 flex-1`}>
+              <h2 className={sectionTitleClass}>Configuration</h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Start date & time *</label>
+                  <input
+                    type="datetime-local"
+                    className={inputClass}
+                    value={startLocal}
+                    onChange={(e) => setStartLocal(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>End date & time *</label>
+                  <input
+                    type="datetime-local"
+                    className={inputClass}
+                    value={endLocal}
+                    onChange={(e) => setEndLocal(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
 
           <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
             <div>
@@ -584,16 +607,124 @@ export default function CreateEventPage() {
           </div>
 
           {isPaid && (
-            <div className="flex items-center gap-2 rounded-xl bg-zinc-800/80 border border-white/10 px-3 py-2">
-              <HugeiconsIcon icon={HelpCircleIcon} size={18} className="text-zinc-500 shrink-0" />
-              <input
-                className="flex-1 bg-transparent text-white text-sm outline-none placeholder-zinc-500"
-                placeholder="Price in USD"
-                inputMode="numeric"
-                value={price}
-                onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ''))}
-              />
-            </div>
+            <>
+              <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-bold text-white">Ticket tiers</p>
+                  <p className="text-xs text-zinc-500">VVIP, VIP, general admission, and more.</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={useTierList}
+                  onClick={() => {
+                    const next = !useTierList;
+                    setUseTierList(next);
+                    if (next && ticketTiers.length === 0) {
+                      setTicketTiers([createEmptyTier()]);
+                    }
+                  }}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${useTierList ? 'bg-pxi-purple' : 'bg-zinc-600'}`}
+                >
+                  <span
+                    className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${useTierList ? 'left-6' : 'left-1'}`}
+                  />
+                </button>
+              </div>
+
+              {useTierList ? (
+                <div className="space-y-3">
+                  {ticketTiers.map((tier, index) => (
+                    <div
+                      key={tier.id}
+                      className="rounded-xl border border-white/10 bg-zinc-800/30 p-4 space-y-3"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                          Tier {index + 1}
+                        </span>
+                        {ticketTiers.length > 1 ? (
+                          <button
+                            type="button"
+                            onClick={() => setTicketTiers((prev) => prev.filter((t) => t.id !== tier.id))}
+                            className="text-[11px] font-semibold text-zinc-400 hover:text-white"
+                          >
+                            Remove
+                          </button>
+                        ) : null}
+                      </div>
+                      <div>
+                        <label className={labelClass}>Tier name</label>
+                        <input
+                          className={inputClass}
+                          value={tier.name}
+                          onChange={(e) =>
+                            setTicketTiers((prev) =>
+                              prev.map((t) => (t.id === tier.id ? { ...t, name: e.target.value } : t))
+                            )
+                          }
+                          placeholder="e.g. VIP"
+                        />
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className={labelClass}>Capacity</label>
+                          <input
+                            className={inputClass}
+                            value={tier.capacity}
+                            onChange={(e) =>
+                              setTicketTiers((prev) =>
+                                prev.map((t) =>
+                                  t.id === tier.id
+                                    ? { ...t, capacity: e.target.value.replace(/[^\d]/g, '') }
+                                    : t
+                                )
+                              )
+                            }
+                            placeholder="Unlimited"
+                            inputMode="numeric"
+                          />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Price (USD)</label>
+                          <input
+                            className={inputClass}
+                            value={tier.price}
+                            onChange={(e) =>
+                              setTicketTiers((prev) =>
+                                prev.map((t) =>
+                                  t.id === tier.id ? { ...t, price: e.target.value.replace(/[^\d]/g, '') } : t
+                                )
+                              )
+                            }
+                            placeholder="50"
+                            inputMode="numeric"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setTicketTiers((prev) => [...prev, createEmptyTier()])}
+                    className="w-full rounded-xl border border-dashed border-white/15 py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white hover:border-white/25 transition-colors"
+                  >
+                    + Add tier
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 rounded-xl bg-zinc-800/80 border border-white/10 px-3 py-2">
+                  <HugeiconsIcon icon={HelpCircleIcon} size={18} className="text-zinc-500 shrink-0" />
+                  <input
+                    className="flex-1 bg-transparent text-white text-sm outline-none placeholder-zinc-500"
+                    placeholder="Price in USD"
+                    inputMode="numeric"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ''))}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           <div className="grid sm:grid-cols-2 gap-4">
@@ -638,37 +769,37 @@ export default function CreateEventPage() {
               </div>
             </div>
           </div>
-        </section>
+            </section>
 
-        {paidGate && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 space-y-2">
-            {paidGate === 'no-account' ? (
-              <p>To sell tickets, complete vendor setup with Stripe.</p>
-            ) : (
-              <p>Stripe is still verifying your account. You can create a free event now or check status from vendor setup.</p>
+            {paidGate && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 space-y-2">
+                {paidGate === 'no-account' ? (
+                  <p>To sell tickets, complete vendor setup with Stripe.</p>
+                ) : (
+                  <p>Stripe is still verifying your account. You can create a free event now or check status from vendor setup.</p>
+                )}
+                <Link href="/dashboard/vendor-upgrade" className="inline-block text-pxi-purple font-bold hover:underline">
+                  Vendor setup →
+                </Link>
+              </div>
             )}
-            <Link href="/dashboard/vendor-upgrade" className="inline-block text-pxi-purple font-bold hover:underline">
-              Vendor setup →
-            </Link>
-          </div>
-        )}
 
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-4">
-          <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3">
-            <Link
-              href="/dashboard/events"
-              className="inline-flex items-center justify-center min-h-[48px] px-5 rounded-xl border border-white/15 text-sm font-semibold text-zinc-200 hover:bg-white/5"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={isSubmitting || isCoverUploading || !coverImage}
-              className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] px-6 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-45 hover:brightness-110 transition-all"
-            >
-              {isSubmitting ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin" /> : null}
-              {isSubmitting ? 'Creating…' : isCoverUploading ? 'Uploading cover…' : 'Create event'}
-            </button>
+            <div className="flex items-center justify-end gap-6 pt-2 mt-auto">
+              <Link
+                href="/dashboard/events"
+                className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </Link>
+              <button
+                type="submit"
+                disabled={isSubmitting || isCoverUploading || !coverImage}
+                className="inline-flex items-center justify-center gap-2 min-h-[48px] px-8 rounded-full bg-white text-black text-xs font-bold uppercase tracking-wider disabled:opacity-45 hover:bg-white/90 transition-all"
+              >
+                {isSubmitting ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin" /> : null}
+                {isSubmitting ? 'Creating…' : isCoverUploading ? 'Uploading cover…' : 'Create event'}
+              </button>
+            </div>
           </div>
         </div>
       </form>

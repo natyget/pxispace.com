@@ -12,6 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { StripePaymentModal } from '@/components/checkout/StripePaymentModal';
 import TicketDeliveryActions from '@/components/tickets/TicketDeliveryActions';
+import TicketEmailPreview from '@/components/tickets/TicketEmailPreview';
+import { buildTicketEmailPreviewInput } from '@/lib/ticketEmailPreview';
 
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
@@ -78,6 +80,7 @@ export default function EventCheckout({ basePath = '/events' }) {
   const [walletSecret, setWalletSecret] = useState(null);
   const [walletOpen, setWalletOpen] = useState(false);
   const [issuedTicketId, setIssuedTicketId] = useState(null);
+  const [issuedPreview, setIssuedPreview] = useState(null);
 
   const checkoutReturnPath = useMemo(() => {
     if (!id) return basePath;
@@ -212,7 +215,14 @@ export default function EventCheckout({ basePath = '/events' }) {
     try {
       const result = await generateTicket(user.id, apiEvent.id);
       setJoinSuccess(true);
-      setIssuedTicketId(result?.ticket?.id ?? null);
+      const ticketId = result?.ticket?.id ?? null;
+      const qrValue = result?.ticket?.pasetoToken ?? null;
+      setIssuedTicketId(ticketId);
+      if (ticketId && qrValue && apiEvent) {
+        setIssuedPreview(buildTicketEmailPreviewInput(apiEvent, ticketId, qrValue));
+      } else {
+        setIssuedPreview(null);
+      }
       // Attempt to open the album in the app right away on mobile; harmless if app isn't installed.
       if (successDeepLinkUrl && typeof window !== 'undefined') {
         try {
@@ -359,7 +369,7 @@ export default function EventCheckout({ basePath = '/events' }) {
 
             {joinSuccess && (
               <div className="space-y-4 rounded-2xl border border-green-500/30 bg-green-500/10 p-4">
-                <p className="text-green-300 text-sm font-semibold">You’re in! Your ticket has been issued.</p>
+                <p className="text-green-300 text-sm font-semibold">You’re in!</p>
                 {successDeepLinkUrl ? (
                   <a
                     href={successDeepLinkUrl}
@@ -369,7 +379,12 @@ export default function EventCheckout({ basePath = '/events' }) {
                   </a>
                 ) : null}
                 {issuedTicketId ? (
-                  <TicketDeliveryActions ticketId={issuedTicketId} />
+                  <>
+                    {issuedPreview ? (
+                      <TicketEmailPreview preview={issuedPreview} className="mt-2" compact />
+                    ) : null}
+                    <TicketDeliveryActions ticketId={issuedTicketId} />
+                  </>
                 ) : (
                   <p className="text-zinc-400 text-xs">Preparing your delivery options…</p>
                 )}
@@ -447,8 +462,13 @@ export default function EventCheckout({ basePath = '/events' }) {
               try {
                 const tickets = await getUserTickets(user.id);
                 const found = tickets.find((t) => t.eventId === apiEvent.id);
-                if (found?.id) {
+                if (found?.id && found.pasetoSignature) {
                   setIssuedTicketId(found.id);
+                  setIssuedPreview(
+                    buildTicketEmailPreviewInput(apiEvent, found.id, found.pasetoSignature, {
+                      paidTotalUsd: quoteTotal ?? undefined,
+                    }),
+                  );
                   break;
                 }
               } catch {
