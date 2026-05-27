@@ -41,13 +41,10 @@ export function AuthProvider({ children }) {
     }, []);
 
     const updateUser = useCallback((updatedUser) => {
-        setUser((prev) => {
-            if (!prev) return prev;
-            const merged = { ...prev, ...updatedUser };
-            localStorage.setItem('pxi_user', JSON.stringify(merged));
-            return merged;
-        });
-    }, []);
+        const merged = { ...user, ...updatedUser };
+        localStorage.setItem('pxi_user', JSON.stringify(merged));
+        setUser(merged);
+    }, [user]);
 
     const logout = useCallback(async () => {
         await authStorage.clear();

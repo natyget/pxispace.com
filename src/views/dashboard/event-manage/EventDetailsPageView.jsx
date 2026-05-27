@@ -15,7 +15,6 @@ import {
   hostFromEvent,
   publicEventPageUrl,
 } from './eventDetailHelpers';
-import { eventShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
 
 function formatDate(d) {
   return d ? new Date(d).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '—';
@@ -73,27 +72,25 @@ export default function EventDetailsPageView() {
   const handleShareEvent = async () => {
     const url = publicEventPageUrl(String(eventId));
     const title = event?.name || 'Event';
-    const text = eventShareLead(title);
-    const message = shareMessageWithUrl(text, url);
     try {
       if (navigator.share) {
         await navigator.share({
           title,
-          text,
+          text: `Join "${title}" on PXI`,
           url,
         });
         return;
       }
-      await navigator.clipboard.writeText(message);
+      await navigator.clipboard.writeText(url);
       setShareHint('Link copied');
       setTimeout(() => setShareHint(null), 2500);
     } catch {
       try {
-        await navigator.clipboard.writeText(message);
+        await navigator.clipboard.writeText(url);
         setShareHint('Link copied');
         setTimeout(() => setShareHint(null), 2500);
       } catch {
-        window.prompt('Copy event link:', message);
+        window.prompt('Copy event link:', url);
       }
     }
   };

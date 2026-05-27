@@ -7,11 +7,10 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Loading02Icon, Alert01Icon, ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import Button from '../../components/ui/Button';
 import { eventsService } from '../../services/events';
-import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket, getUserTickets } from '../../services/tickets';
+import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket } from '../../services/tickets';
 import { useAuth } from '@/contexts/AuthContext';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { StripePaymentModal } from '@/components/checkout/StripePaymentModal';
-import TicketDeliveryActions from '@/components/tickets/TicketDeliveryActions';
 
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
@@ -77,7 +76,6 @@ export default function EventCheckout({ basePath = '/events' }) {
   const [selectedTierId, setSelectedTierId] = useState(null);
   const [walletSecret, setWalletSecret] = useState(null);
   const [walletOpen, setWalletOpen] = useState(false);
-  const [issuedTicketId, setIssuedTicketId] = useState(null);
 
   const checkoutReturnPath = useMemo(() => {
     if (!id) return basePath;
@@ -193,14 +191,6 @@ export default function EventCheckout({ basePath = '/events' }) {
     }
   };
 
-  /** After successful free ticket issue, fire the album/event deep link so the native app opens to it. */
-  const eventAlbumId = apiEvent?.albumId || apiEvent?.albums?.[0]?.id || null;
-  const successDeepLinkUrl = eventAlbumId
-    ? `pxi://album/${eventAlbumId}`
-    : apiEvent?.id
-      ? `pxi://event/${apiEvent.id}`
-      : null;
-
   const handleFreeTicket = async () => {
     if (!apiEvent || !isFreeEvent || !isAuthenticated || !user?.id) return;
     if (!canPurchase) {
@@ -210,19 +200,8 @@ export default function EventCheckout({ basePath = '/events' }) {
     setJoining(true);
     setJoinError(null);
     try {
-      const result = await generateTicket(user.id, apiEvent.id);
+      await generateTicket(user.id, apiEvent.id);
       setJoinSuccess(true);
-      setIssuedTicketId(result?.ticket?.id ?? null);
-      // Attempt to open the album in the app right away on mobile; harmless if app isn't installed.
-      if (successDeepLinkUrl && typeof window !== 'undefined') {
-        try {
-          window.localStorage.setItem('pxi_pending_deeplink', successDeepLinkUrl);
-        } catch {}
-        const ua = navigator.userAgent || '';
-        if (/iPhone|iPad|iPod|Android/i.test(ua)) {
-          window.location.href = successDeepLinkUrl;
-        }
-      }
     } catch (err) {
       setJoinError(err.message || err.data?.error || 'Something went wrong.');
     } finally {
@@ -358,22 +337,7 @@ export default function EventCheckout({ basePath = '/events' }) {
             ) : null}
 
             {joinSuccess && (
-              <div className="space-y-4 rounded-2xl border border-green-500/30 bg-green-500/10 p-4">
-                <p className="text-green-300 text-sm font-semibold">You’re in! Your ticket has been issued.</p>
-                {successDeepLinkUrl ? (
-                  <a
-                    href={successDeepLinkUrl}
-                    className="block w-full rounded-xl bg-white py-3 text-center text-xs font-black uppercase tracking-widest text-black transition hover:bg-zinc-200"
-                  >
-                    Open in PXI app
-                  </a>
-                ) : null}
-                {issuedTicketId ? (
-                  <TicketDeliveryActions ticketId={issuedTicketId} />
-                ) : (
-                  <p className="text-zinc-400 text-xs">Preparing your delivery options…</p>
-                )}
-              </div>
+              <p className="text-green-400 text-sm font-medium">You’re in! Open the PXI app to view your ticket.</p>
             )}
             {joinError && <p className="text-red-400 text-sm">{joinError}</p>}
 
@@ -412,7 +376,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                 onClick={handleFreeTicket}
                 disabled={joining || joinSuccess || !canPurchase}
               >
-                {joining ? <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" /> : 'Join Event'}
+                {joining ? <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" /> : 'Get free ticket'}
               </Button>
             ) : null}
 
@@ -435,28 +399,10 @@ export default function EventCheckout({ basePath = '/events' }) {
           setWalletOpen(false);
           setWalletSecret(null);
         }}
-        onSuccess={async () => {
+        onSuccess={() => {
           setWalletOpen(false);
           setWalletSecret(null);
           setJoinSuccess(true);
-          // Paid-ticket fulfillment happens in the Stripe webhook, so the ticket
-          // row may take a moment to appear. Poll briefly for the matching ticket
-          // so the delivery-actions block can show wallet/email buttons.
-          if (apiEvent?.id && user?.id) {
-            for (let i = 0; i < 6; i += 1) {
-              try {
-                const tickets = await getUserTickets(user.id);
-                const found = tickets.find((t) => t.eventId === apiEvent.id);
-                if (found?.id) {
-                  setIssuedTicketId(found.id);
-                  break;
-                }
-              } catch {
-                // Network blip while polling for the webhook-issued ticket; retry below.
-              }
-              await new Promise((r) => setTimeout(r, 1500));
-            }
-          }
         }}
       />
     </>

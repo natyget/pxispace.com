@@ -10,7 +10,7 @@ import { eventsService } from '@/services/events';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
-import AppOpenBanner from '@/components/links/AppOpenBanner';
+import PublicAlbumBottomBar from '@/views/public/PublicAlbumBottomBar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { singleEventMapEmbedSrc } from '@/lib/eventMapEmbed';
 
@@ -727,15 +727,14 @@ export default function EventDetailClient() {
         </div>
       </div>
 
-      {/* Primary CTA — sits above the dismissible app banner (banner = z-40, this = z-50). */}
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
         <button
           type="button"
           onClick={() => router.push(`/events/${apiEvent.id}/checkout`)}
-          className="pointer-events-auto inline-flex h-[3.375rem] w-[min(25.5rem,calc(100vw-1.5rem))] shrink-0 items-center justify-center rounded-full px-8 text-sm font-semibold uppercase tracking-wide text-white shadow-md shadow-black/40 transition hover:opacity-90"
+          className="pointer-events-auto inline-flex h-[3.375rem] min-w-[25.5rem] shrink-0 items-center justify-center rounded-full px-8 text-sm font-semibold uppercase tracking-wide text-white shadow-md shadow-black/40 transition hover:opacity-90"
           style={{ backgroundColor: ACCENT }}
         >
-          Join Event
+          Continue to checkout
         </button>
       </div>
 
@@ -807,14 +806,7 @@ export default function EventDetailClient() {
         </div>
       ) : null}
 
-      {/* Dismissible banner sits below the Join Event CTA (4.75rem ≈ button + spacing) so it never obscures it. */}
-      <AppOpenBanner
-        deepLinkUrl={albumId ? `pxi://album/${albumId}` : `pxi://event/${apiEvent.id}`}
-        title="Already have PXI?"
-        subtitle="Tap to open this event in the app"
-        bottomOffset="4.75rem"
-        storageKey={`pxi_app_banner_event_${apiEvent.id}_dismissed`}
-      />
+      {albumId ? <PublicAlbumBottomBar albumId={albumId} /> : null}
     </div>
   );
 }

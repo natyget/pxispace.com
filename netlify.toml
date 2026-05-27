@@ -1,8 +1,5 @@
-# SSR link previews (events, albums, posts, profiles) need at runtime:
-#   API_BASE_URL — backend origin (e.g. https://dev.pxispace.com for test)
-#   NEXT_PUBLIC_SITE_URL — canonical web host (e.g. https://test.pxispace.com)
-#   NEXT_PUBLIC_R2_PUBLIC_URL — same as backend R2_PUBLIC_URL (absolute og:image URLs)
-# Without these, shared links fall back to the PXI logo in iMessage / Instagram / Discord.
+# SSR (e.g. /u/:id) reads `API_BASE_URL` at runtime in Node — set it in the Netlify UI to your
+# backend (same value as NEXT_PUBLIC_API_BASE_URL is fine), so server fetches are not stuck on localhost.
 #
 # If profiles work locally but not on test: the API host may be blocking Netlify egress (Cloudflare
 # Bot Fight / WAF). Allow `GET /api/*` from Netlify IPs or lower security for that path; check
