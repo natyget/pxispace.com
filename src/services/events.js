@@ -87,3 +87,14 @@ export async function getMyEventXp() {
     return {};
   }
 }
+
+/** Per-event XP for any user (used for public passport stamp display). GET /api/users/:id/event-xp */
+export async function getUserEventXp(userId) {
+  if (!userId) return {};
+  try {
+    const data = await api.get(`/api/users/${encodeURIComponent(userId)}/event-xp`);
+    return data.xpByEventId ?? {};
+  } catch {
+    return {};
+  }
+}
