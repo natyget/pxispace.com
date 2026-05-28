@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useEffect, useId, useMemo, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeftIcon, ArrowUpRightIcon, Loading02Icon, PlayIcon, ScanIcon, SmartPhone01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
@@ -10,7 +10,7 @@ import { eventsService } from '@/services/events';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
-import PublicAlbumBottomBar from '@/views/public/PublicAlbumBottomBar';
+import EventDetailBottomBar from '@/views/events/EventDetailBottomBar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { singleEventMapEmbedSrc } from '@/lib/eventMapEmbed';
 
@@ -132,7 +132,6 @@ function buildHostMrzLines(host, passportNo) {
 
 export default function EventDetailClient() {
   const { id } = useParams();
-  const router = useRouter();
   const hostPassportChipFilterId = useId().replace(/:/g, '');
   const [apiEvent, setApiEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -309,7 +308,11 @@ export default function EventDetailClient() {
         </div>
 
         <div className="relative z-10">
-          <main className="mx-auto mt-2 flex min-h-screen w-full max-w-5xl flex-col justify-around px-3 pb-20 sm:px-6 md:mt-4 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:gap-8 md:pb-24 2xl:max-w-6xl 2xl:gap-12">
+          <main
+            className={`mx-auto mt-2 flex min-h-screen w-full max-w-5xl flex-col justify-around px-3 sm:px-6 md:mt-4 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:gap-8 md:pb-24 2xl:max-w-6xl 2xl:gap-12 ${
+              albumId ? 'pb-40 md:pb-24' : 'pb-24 md:pb-24'
+            }`}
+          >
             <div className="order-1 flex flex-col md:order-2 md:w-[330px] lg:w-[375px] 2xl:w-[400px]">
               <div className="relative top-0 mx-auto h-auto w-full max-w-[400px] md:sticky md:top-28">
                 <div className="relative px-6 pb-6 md:px-0 md:pb-0">
@@ -727,22 +730,7 @@ export default function EventDetailClient() {
         </div>
       </div>
 
-      <div
-        className={`pointer-events-none fixed inset-x-0 z-[51] flex justify-center px-4 ${
-          albumId
-            ? 'bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] md:bottom-0 md:pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]'
-            : 'bottom-0 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]'
-        }`}
-      >
-        <button
-          type="button"
-          onClick={() => router.push(`/events/${apiEvent.id}/checkout`)}
-          className="pointer-events-auto inline-flex h-[3.375rem] w-full max-w-[25.5rem] min-w-0 items-center justify-center rounded-full px-8 text-sm font-semibold uppercase tracking-wide text-white shadow-md shadow-black/40 transition hover:opacity-90"
-          style={{ backgroundColor: ACCENT }}
-        >
-          Continue to checkout
-        </button>
-      </div>
+      <EventDetailBottomBar albumId={albumId} eventId={apiEvent.id} />
 
       {guestlistOpen ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
@@ -812,7 +800,6 @@ export default function EventDetailClient() {
         </div>
       ) : null}
 
-      {albumId ? <PublicAlbumBottomBar albumId={albumId} showNoAppHint={false} /> : null}
     </div>
   );
 }
