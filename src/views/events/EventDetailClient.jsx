@@ -727,11 +727,17 @@ export default function EventDetailClient() {
         </div>
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
+      <div
+        className={`pointer-events-none fixed inset-x-0 z-[51] flex justify-center px-4 ${
+          albumId
+            ? 'bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] md:bottom-0 md:pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]'
+            : 'bottom-0 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]'
+        }`}
+      >
         <button
           type="button"
           onClick={() => router.push(`/events/${apiEvent.id}/checkout`)}
-          className="pointer-events-auto inline-flex h-[3.375rem] min-w-[25.5rem] shrink-0 items-center justify-center rounded-full px-8 text-sm font-semibold uppercase tracking-wide text-white shadow-md shadow-black/40 transition hover:opacity-90"
+          className="pointer-events-auto inline-flex h-[3.375rem] w-full max-w-[25.5rem] min-w-0 items-center justify-center rounded-full px-8 text-sm font-semibold uppercase tracking-wide text-white shadow-md shadow-black/40 transition hover:opacity-90"
           style={{ backgroundColor: ACCENT }}
         >
           Continue to checkout
@@ -806,7 +812,7 @@ export default function EventDetailClient() {
         </div>
       ) : null}
 
-      {albumId ? <PublicAlbumBottomBar albumId={albumId} /> : null}
+      {albumId ? <PublicAlbumBottomBar albumId={albumId} showNoAppHint={false} /> : null}
     </div>
   );
 }

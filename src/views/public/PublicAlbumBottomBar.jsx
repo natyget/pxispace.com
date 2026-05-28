@@ -5,7 +5,7 @@ import Link from 'next/link';
 /**
  * `pxi://album/...` opens the native app when installed (see app `scheme` + Android intent filters).
  */
-export default function PublicAlbumBottomBar({ albumId }) {
+export default function PublicAlbumBottomBar({ albumId, showNoAppHint = true }) {
   if (!albumId) return null;
   const openInAppUrl = `pxi://album/${albumId}`;
   const year = new Date().getFullYear();
@@ -28,15 +28,17 @@ export default function PublicAlbumBottomBar({ albumId }) {
             Open
           </a>
         </div>
-        <div className="flex w-full max-w-[24rem] items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/60 px-3 py-2">
-          <p className="text-[10px] text-zinc-500">No app on this device?</p>
-          <Link
-            href="/beta"
-            className="shrink-0 text-[10px] font-semibold text-pxi-purple hover:text-white"
-          >
-            Get the app
-          </Link>
-        </div>
+        {showNoAppHint ? (
+          <div className="flex w-full max-w-[24rem] items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/60 px-3 py-2">
+            <p className="text-[10px] text-zinc-500">No app on this device?</p>
+            <Link
+              href="/beta"
+              className="shrink-0 text-[10px] font-semibold text-pxi-purple hover:text-white"
+            >
+              Get the app
+            </Link>
+          </div>
+        ) : null}
         <p className="text-center text-[11px] text-zinc-500">© {year} PXI App. All rights reserved.</p>
       </div>
     </div>
