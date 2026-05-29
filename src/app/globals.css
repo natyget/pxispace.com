@@ -81,7 +81,11 @@
 
 .create-event-location-field .geoapify-autocomplete-input {
   /* Match event name input (py-2.5 = 0.625rem) */
-  padding: 0.625rem 2rem 0.625rem 2.25rem !important;
+  padding: 0.625rem 2.25rem 0.625rem 2.0rem !important;
+}
+
+.create-event-location-field input.geoapify-autocomplete-input {
+  padding-left: 2.0rem !important;
 }
 
 .create-event-location-field .geoapify-autocomplete-items {

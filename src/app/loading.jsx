@@ -1,5 +1,5 @@
-import { GenericPageSkeleton } from '@/components/skeleton/AppSkeletons';
+import { PxiLoadingScreen } from '@/components/loading/PxiLoading';
 
 export default function Loading() {
-  return <GenericPageSkeleton />;
+  return <PxiLoadingScreen />;
 }

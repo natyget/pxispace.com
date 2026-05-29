@@ -1,15 +1,25 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon, ViewIcon, ViewOffIcon, CheckmarkCircle02Icon, CancelCircleIcon, Loading02Icon } from '@hugeicons/core-free-icons';
+import { FaApple, FaGoogle } from 'react-icons/fa';
+import { useGoogleLogin } from '@react-oauth/google';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { defaultPostLoginPath } from '../../lib/dashboardPaths';
 import AuthParticles from '../../components/auth/AuthParticles';
+
+const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
+
+function shouldClearAuth(error) {
+    const status = error?.status;
+    const code = error?.code;
+    return status === 401 || status === 403 || status === 404 || code === 'ACCOUNT_DELETED' || code === 'INVALID_TOKEN';
+}
 
 const PASSWORD_RULES = [
     { id: 'length', label: 'At least 8 characters', test: (p) => p.length >= 8 },
@@ -32,9 +42,10 @@ function useDebounce(value, delay) {
 export default function EmailAuthPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { saveAuth } = useAuth();
+    const { user, saveAuth, isAuthenticated, updateUser, logout } = useAuth();
 
     const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login');
+    const showVerifiedMessage = searchParams.get('verified') === '1';
     const redirectPath = searchParams.get('redirect');
     const safeRedirect = redirectPath && redirectPath.startsWith('/') && !redirectPath.startsWith('//') ? redirectPath : null;
 
@@ -50,22 +61,94 @@ export default function EmailAuthPage() {
     const debouncedUsername = useDebounce(username, 500);
 
     const handleAuthSuccess = useCallback(
-        async ({ token, user }) => {
-            await saveAuth({ token, user });
+        async ({ token, user: authUser }) => {
+            await saveAuth({ token, user: authUser });
             if (safeRedirect) {
                 router.replace(safeRedirect);
-            } else if (user.accountTier === 'ADMIN') {
+            } else if (authUser.accountTier === 'ADMIN') {
                 router.replace('/dashboard/admin');
-            } else if (!user.phoneNumber) {
+            } else if (!authUser.phoneNumber) {
                 router.replace('/verify-phone');
-            } else if (!user.isPassportIssued) {
+            } else if (!authUser.isPassportIssued) {
                 router.replace('/passport-required');
             } else {
-                router.replace(defaultPostLoginPath(user));
+                router.replace(defaultPostLoginPath(authUser));
             }
         },
         [saveAuth, router, safeRedirect]
     );
+
+    const hasRedirected = useRef(false);
+    useEffect(() => {
+        if (!isAuthenticated || !user?.id || hasRedirected.current) return;
+        hasRedirected.current = true;
+        authService.getMe(user.id)
+            .then(({ user: fresh }) => {
+                updateUser(fresh);
+                const dest = safeRedirect || defaultPostLoginPath(fresh);
+                setTimeout(() => router.replace(dest), 0);
+            })
+            .catch(async (error) => {
+                if (shouldClearAuth(error)) {
+                    await logout();
+                    hasRedirected.current = false;
+                    return;
+                }
+                router.replace(safeRedirect || defaultPostLoginPath(user));
+            });
+    }, [isAuthenticated, user?.id, safeRedirect, router, updateUser, logout]);
+
+    const loginWithGoogle = useGoogleLogin({
+        flow: 'implicit',
+        scope: '',
+        prompt: 'select_account consent',
+        onSuccess: async (tokenResponse) => {
+            try {
+                const result = await authService.googleTokenAuth(tokenResponse.access_token);
+                handleAuthSuccess(result);
+            } catch {
+                setError('Google sign-in failed. Please try again.');
+                toast.error('Google sign-in failed. Please try again.');
+            }
+        },
+        onError: () => {
+            setError('Google sign-in failed. Please try again.');
+            toast.error('Google sign-in failed. Please try again.');
+        },
+    });
+
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src =
+            'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
+        script.async = true;
+        script.onload = () => {
+            window.AppleID?.auth.init({
+                clientId: APPLE_SERVICE_ID,
+                scope: 'name email',
+                redirectURI: window.location.origin,
+                usePopup: true,
+            });
+        };
+        document.head.appendChild(script);
+    }, []);
+
+    const handleApple = async () => {
+        try {
+            const response = await window.AppleID.auth.signIn();
+            const identityToken = response.authorization.id_token;
+            const fullName = response.user?.name
+                ? { givenName: response.user.name.firstName, familyName: response.user.name.lastName }
+                : undefined;
+            const result = await authService.appleAuth(identityToken, fullName);
+            handleAuthSuccess(result);
+        } catch (err) {
+            if (err?.error !== 'popup_closed_by_user') {
+                setError('Apple sign-in failed. Please try again.');
+                toast.error('Apple sign-in failed. Please try again.');
+            }
+        }
+    };
 
     // Username availability check (signup mode only)
     useEffect(() => {
@@ -138,13 +221,26 @@ export default function EmailAuthPage() {
     const isLogin = mode === 'login';
 
     return (
-        <div className="min-h-screen bg-black flex flex-col relative overflow-hidden">
+        <div className="flex flex-1 flex-col min-h-0 bg-black relative overflow-hidden">
             <AuthParticles />
+
+            {showVerifiedMessage && (
+                <div
+                    className="relative z-20 mx-4 mt-6 rounded-xl px-4 py-3 text-center text-sm font-semibold"
+                    style={{
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: 'rgba(216,74,255,0.95)',
+                    }}
+                >
+                    Please log in again to complete your profile.
+                </div>
+            )}
 
             {/* Back button */}
             <button
-                onClick={() => router.push('/login')}
-                className="absolute top-5 left-5 z-20 flex items-center justify-center"
+                onClick={() => router.push('/')}
+                className="absolute top-20 left-5 z-20 flex items-center justify-center md:top-24"
                 style={{
                     padding: 10,
                     color: 'rgba(255,255,255,0.6)',
@@ -158,55 +254,48 @@ export default function EmailAuthPage() {
             </button>
 
             {/* Scrollable content */}
-            <div className="relative z-10 flex-1 overflow-y-auto flex flex-col">
-                <div className="w-full max-w-sm mx-auto px-7 pt-24 pb-12 flex flex-col flex-1">
+            <div className="relative z-10 flex-1 overflow-y-auto flex flex-col items-center px-4">
+                <div className="w-full max-w-[400px] pt-[5.5rem] pb-12 flex flex-col md:pt-[5.5rem]">
 
                     {/* Header */}
-                    <div className="mb-8 text-center">
+                    <div className="mb-4 text-center">
                         <h1
                             className="font-black uppercase text-white"
                             style={{
                                 fontSize: 34,
                                 letterSpacing: '0.18em',
-                                textShadow: '0 0 20px rgba(176,38,255,0.5)',
-                                marginBottom: 8,
+                                textShadow: '0 0 20px rgba(216,74,255,0.5)',
                             }}
                         >
                             PXI STUDIO
                         </h1>
-                        <p
-                            className="uppercase font-bold"
-                            style={{
-                                fontSize: 10,
-                                letterSpacing: '0.35em',
-                                color: 'rgba(255,255,255,0.35)',
-                            }}
-                        >
-                            {isLogin ? 'SESSION // RESUME' : 'IDENTITY // CREATE'}
-                        </p>
                     </div>
 
-                    {/* Mode toggle */}
+                    {/* Auth card */}
                     <div
-                        className="flex p-1 mb-8"
+                        className="flex flex-col rounded-2xl p-6"
                         style={{
-                            background: 'rgba(255,255,255,0.05)',
-                            borderRadius: 12,
+                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid rgba(255,255,255,0.12)',
+                            boxShadow: '0 0 40px rgba(216, 74, 255, 0.08)',
                         }}
                     >
+                    {/* Mode toggle */}
+                    <div className="flex mb-6 border-b border-white/10">
                         {['login', 'signup'].map((m) => (
                             <button
                                 key={m}
+                                type="button"
                                 onClick={() => switchMode(m)}
-                                className="flex-1 font-black uppercase transition-all"
+                                className="flex-1 font-black uppercase transition-colors"
                                 style={{
                                     paddingTop: 12,
                                     paddingBottom: 12,
-                                    borderRadius: 9,
                                     fontSize: 12,
                                     letterSpacing: '0.15em',
-                                    background: mode === m ? '#B026FF' : 'transparent',
                                     color: mode === m ? '#fff' : 'rgba(255,255,255,0.4)',
+                                    borderBottom: mode === m ? '2px solid var(--color-pxi-purple)' : '2px solid transparent',
+                                    marginBottom: -1,
                                 }}
                             >
                                 {m === 'login' ? 'LOG IN' : 'SIGN UP'}
@@ -234,22 +323,22 @@ export default function EmailAuthPage() {
                     <form onSubmit={handleSubmit} className="flex flex-col" style={{ gap: 0 }}>
 
                         {/* Email */}
-                        <AuthField label="EMAIL">
+                        <AuthField>
                             <AuthInput
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="you@example.com"
+                                placeholder="EMAIL ADDRESS"
                                 required
                             />
                         </AuthField>
 
                         {/* Username (signup only) */}
                         {!isLogin && (
-                            <AuthField label="USERNAME">
+                            <AuthField>
                                 <div className="relative">
                                     <span
-                                        className="absolute left-6 top-1/2 -translate-y-1/2 font-semibold select-none"
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 font-semibold select-none"
                                         style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}
                                     >
                                         @
@@ -260,11 +349,11 @@ export default function EmailAuthPage() {
                                         onChange={(e) =>
                                             setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))
                                         }
-                                        placeholder="yourusername"
+                                        placeholder="USERNAME"
                                         maxLength={20}
-                                        style={{ paddingLeft: 32 }}
+                                        style={{ paddingLeft: 28 }}
                                     />
-                                    <div className="absolute right-5 top-1/2 -translate-y-1/2">
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
                                         {usernameStatus === 'checking' && <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" style={{ color: 'rgba(255,255,255,0.4)' }} />}
                                         {usernameStatus === 'available' && <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} style={{ color: '#4ade80' }} />}
                                         {(usernameStatus === 'taken' || usernameStatus === 'invalid') && <HugeiconsIcon icon={CancelCircleIcon} size={14} style={{ color: '#f87171' }} />}
@@ -277,20 +366,20 @@ export default function EmailAuthPage() {
                         )}
 
                         {/* Password */}
-                        <AuthField label="PASSWORD">
+                        <AuthField>
                             <div className="relative">
                                 <AuthInput
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
+                                    placeholder="PASSWORD"
                                     required
-                                    style={{ paddingRight: 52 }}
+                                    style={{ paddingRight: 44 }}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((v) => !v)}
-                                    className="absolute right-5 top-1/2 -translate-y-1/2"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2"
                                     style={{ color: 'rgba(255,255,255,0.35)' }}
                                     onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
                                     onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
@@ -321,12 +410,12 @@ export default function EmailAuthPage() {
 
                         {/* Confirm password — signup only */}
                         {!isLogin && (
-                            <AuthField label="CONFIRM PASSWORD">
+                            <AuthField>
                                 <AuthInput
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="••••••••"
+                                    placeholder="CONFIRM PASSWORD"
                                     required
                                     focusColor={
                                         confirmPassword
@@ -347,31 +436,21 @@ export default function EmailAuthPage() {
                             <button
                                 type="submit"
                                 disabled={!canSubmit}
-                                className="w-full font-black uppercase transition-all"
-                                style={{
-                                    height: 56,
-                                    borderRadius: 16,
-                                    border: '1px solid rgba(255,255,255,0.15)',
-                                    background: canSubmit
-                                        ? 'linear-gradient(90deg, #B026FF 0%, #7A00CC 100%)'
-                                        : 'linear-gradient(90deg, rgba(176,38,255,0.3) 0%, rgba(122,0,204,0.3) 100%)',
-                                    color: canSubmit ? '#fff' : 'rgba(255,255,255,0.3)',
-                                    fontSize: 13,
-                                    letterSpacing: '0.15em',
-                                    cursor: canSubmit ? 'pointer' : 'not-allowed',
-                                    position: 'relative',
-                                    zIndex: 2,
-                                }}
+                                className={`relative z-[2] h-14 w-full rounded-full border border-white/15 font-black uppercase text-[13px] tracking-[0.15em] transition-all ${
+                                    canSubmit
+                                        ? 'cursor-pointer bg-pxi-purple text-white shadow-[0_0_20px_rgba(216,74,255,0.4)] hover:brightness-110'
+                                        : 'cursor-not-allowed bg-pxi-purple/30 text-white/30'
+                                }`}
                             >
                                 {loading ? (
                                     <span className="flex items-center justify-center gap-2">
                                         <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
-                                        {isLogin ? 'INITIATING…' : 'REDIRECTING…'}
+                                        {isLogin ? 'LOGGING IN…' : 'CREATING ACCOUNT…'}
                                     </span>
                                 ) : isLogin ? (
-                                    'INITIATE SESSION'
+                                    'LOG IN'
                                 ) : (
-                                    'SIGN UP'
+                                    'CREATE ACCOUNT'
                                 )}
                             </button>
 
@@ -406,24 +485,39 @@ export default function EmailAuthPage() {
                             }}
                         >
                             {isLogin ? 'By signing in, you agree to our ' : 'By signing up, you agree to our '}
-                            <Link href="/terms_of_service" style={{ color: 'rgba(176,38,255,0.95)', textDecoration: 'underline' }}>
+                            <Link href="/terms_of_service" className="text-pxi-purple underline">
                                 Terms of Service
                             </Link>
                             {' '}and{' '}
-                            <Link href="/privacy_policy" style={{ color: 'rgba(176,38,255,0.95)', textDecoration: 'underline' }}>
+                            <Link href="/privacy_policy" className="text-pxi-purple underline">
                                 Privacy Policy
                             </Link>
                         </p>
                     </form>
 
-                    {/* Social login footer */}
-                    <div className="flex gap-3 mt-auto">
-                        <FooterPill onClick={() => router.push('/login')}>
-                            SOCIAL LOGIN
+                    {/* Social login */}
+                    <div className="flex items-center gap-3 mt-6">
+                        <div className="flex-1 h-px bg-white/15" />
+                        <p
+                            className="shrink-0 font-bold uppercase"
+                            style={{
+                                fontSize: 10,
+                                letterSpacing: '0.2em',
+                                color: 'rgba(255,255,255,0.35)',
+                            }}
+                        >
+                            OR CONTINUE WITH
+                        </p>
+                        <div className="flex-1 h-px bg-white/15" />
+                    </div>
+                    <div className="flex gap-3 mt-3">
+                        <FooterPill onClick={() => loginWithGoogle()} icon={<FaGoogle size={14} />}>
+                            GOOGLE
                         </FooterPill>
-                        <FooterPill onClick={() => router.push('/')}>
-                            BACK TO HOME
+                        <FooterPill onClick={handleApple} icon={<FaApple size={14} />}>
+                            APPLE
                         </FooterPill>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -433,23 +527,8 @@ export default function EmailAuthPage() {
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
-function AuthField({ label, children }) {
-    return (
-        <div style={{ marginBottom: 16 }}>
-            <p
-                className="font-bold uppercase"
-                style={{
-                    fontSize: 9,
-                    letterSpacing: '0.2em',
-                    color: 'rgba(255,255,255,0.4)',
-                    marginBottom: 10,
-                }}
-            >
-                {label}
-            </p>
-            {children}
-        </div>
-    );
+function AuthField({ children }) {
+    return <div style={{ marginBottom: 12 }}>{children}</div>;
 }
 
 function AuthInput({ focusColor, style = {}, ...props }) {
@@ -462,17 +541,17 @@ function AuthInput({ focusColor, style = {}, ...props }) {
             {...props}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            className="w-full text-white font-semibold outline-none transition-all"
+            className="w-full text-white font-semibold outline-none transition-all placeholder:text-xs placeholder:font-medium placeholder:text-white/35 placeholder:uppercase placeholder:tracking-wide"
             style={{
-                height: 56,
-                borderRadius: 20,
+                height: 48,
+                borderRadius: 12,
                 background: focused ? '#252525' : '#1c1c1c',
                 border: `1px solid ${focused ? activeFocus : 'rgba(255,255,255,0.05)'}`,
                 boxShadow: focused ? `0 0 0 3px ${activeFocus.replace('0.5', '0.1')}` : 'none',
                 fontSize: 14,
                 letterSpacing: '0.03em',
-                paddingLeft: 24,
-                paddingRight: 24,
+                paddingLeft: 16,
+                paddingRight: 16,
                 color: '#fff',
                 ...style,
             }}
@@ -497,9 +576,10 @@ function FieldHint({ color, children }) {
     );
 }
 
-function FooterPill({ onClick, children }) {
+function FooterPill({ onClick, icon, children }) {
     return (
         <button
+            type="button"
             onClick={onClick}
             className="flex-1 font-bold uppercase transition-all"
             style={{
@@ -515,7 +595,10 @@ function FooterPill({ onClick, children }) {
             onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
         >
-            {children}
+            <span className="flex items-center justify-center gap-2">
+                {icon}
+                {children}
+            </span>
         </button>
     );
 }

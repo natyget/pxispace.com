@@ -75,3 +75,34 @@ export function buildTicketPricingPayload(input) {
   const ticketPrice = parseInt(String(price || '').replace(/[^\d]/g, ''), 10);
   return { ticketType: 'PAID', ticketPrice, ticketTiersJson: null };
 }
+
+/** @param {number | null | undefined} usd @param {string} [currency] */
+export function formatTicketPrice(usd, currency = 'USD') {
+  if (usd == null || !Number.isFinite(Number(usd))) return '—';
+  const sym = currency === 'EUR' ? '€' : '$';
+  return `${sym}${Number(usd).toFixed(2)}`;
+}
+
+/**
+ * Display-ready tiers for an event (multi-tier list or single GA price).
+ * @param {Record<string, unknown> | null | undefined} event
+ * @returns {{ id: string | null, label: string, priceUsd: number, capacity?: number }[]}
+ */
+export function parseEventTicketTiers(event) {
+  if (!event || String(event.ticketType || '').toUpperCase() !== 'PAID') return [];
+  const raw = event.ticketTiersJson;
+  if (Array.isArray(raw) && raw.length) {
+    const rows = raw.filter((t) => t && typeof t.priceUsd === 'number' && t.priceUsd > 0);
+    if (rows.length) {
+      return rows.map((t) => ({
+        id: t.id ?? null,
+        label: t.label || t.name || 'Ticket',
+        priceUsd: t.priceUsd,
+        ...(t.capacity != null && Number(t.capacity) > 0 ? { capacity: Number(t.capacity) } : {}),
+      }));
+    }
+  }
+  const base = Number(event.ticketPrice);
+  if (base > 0) return [{ id: null, label: 'General admission', priceUsd: base }];
+  return [];
+}

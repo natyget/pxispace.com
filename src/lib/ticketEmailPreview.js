@@ -1,3 +1,5 @@
+import { parseEventTicketTiers } from './ticketTiers';
+
 export function formatTicketDisplayId(ticketId) {
   if (!ticketId) return '#PXI-TICKET';
   const compact = ticketId.replace(/-/g, '').toUpperCase();
@@ -16,6 +18,7 @@ export function formatCurrency(amount, currency) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
 }
 
+/** @deprecated Use tierLabel from buildTicketEmailPreviewInput when available. */
 export function tierLabelFromPrice(price, currency) {
   if (price == null || price === 0) return 'General';
   if (price >= 100) return 'VIP';
@@ -45,13 +48,41 @@ export function ticketTypeLabel(isPrivate) {
 
 /**
  * @param {object} event API event row
+ * @param {{ selectedTierId?: string | null }} [options]
+ */
+export function resolveTierDisplayForEvent(event, options = {}) {
+  const tiers = parseEventTicketTiers(event);
+  const selected =
+    options.selectedTierId != null
+      ? tiers.find((t) => t.id === options.selectedTierId) ?? tiers[0]
+      : tiers[0];
+
+  if (selected) {
+    return {
+      tierLabel: selected.label,
+      tierPriceUsd: selected.priceUsd,
+    };
+  }
+
+  const base = Number(event?.ticketPrice);
+  if (String(event?.ticketType || '').toUpperCase() === 'PAID' && base > 0) {
+    return { tierLabel: 'General admission', tierPriceUsd: base };
+  }
+
+  return { tierLabel: 'General', tierPriceUsd: 0 };
+}
+
+/**
+ * @param {object} event API event row
  * @param {string} ticketId
  * @param {string} qrValue paseto token / signature
- * @param {{ paidTotalUsd?: number }} [options]
+ * @param {{ selectedTierId?: string | null, tierLabel?: string, tierPriceUsd?: number }} [options]
  */
 export function buildTicketEmailPreviewInput(event, ticketId, qrValue, options = {}) {
-  const isPaid = event?.ticketType === 'PAID' && (event?.ticketPrice ?? 0) > 0;
-  const ticketPrice = isPaid ? (options.paidTotalUsd ?? event.ticketPrice ?? 0) : 0;
+  const { tierLabel, tierPriceUsd } =
+    options.tierLabel != null && options.tierPriceUsd != null
+      ? { tierLabel: options.tierLabel, tierPriceUsd: options.tierPriceUsd }
+      : resolveTierDisplayForEvent(event, { selectedTierId: options.selectedTierId });
 
   return {
     ticketId,
@@ -61,7 +92,9 @@ export function buildTicketEmailPreviewInput(event, ticketId, qrValue, options =
     eventStartDate: event.startDate,
     eventCoverImage: event.coverImage ?? null,
     isPrivate: event.visibility === 'PRIVATE',
-    ticketPrice,
+    tierLabel,
+    tierPriceUsd,
+    ticketPrice: tierPriceUsd,
     currency: event.currency ?? 'USD',
     albumName: event.name,
   };

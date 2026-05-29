@@ -50,27 +50,7 @@ export function PublicRouteSkeleton() {
   );
 }
 
-export function PublicLogoLoading() {
-  return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050505]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(216,74,255,0.16),transparent_58%)]" />
-      <div className="relative flex flex-col items-center gap-5">
-        <div className="relative">
-          <div className="absolute inset-[-14px] animate-pulse rounded-full bg-pxi-purple/20 blur-xl" />
-          <img
-            src="/Union.svg"
-            alt="PXI"
-            width={64}
-            height={64}
-            className="relative h-16 w-16 animate-[pulse_1.6s_ease-in-out_infinite]"
-            draggable={false}
-          />
-        </div>
-        <p className="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-400">Loading PXI</p>
-      </div>
-    </div>
-  );
-}
+export { PxiLoadingLanding as PublicLogoLoading } from '@/components/loading/PxiLoading';
 
 export function GenericPageSkeleton() {
   return (

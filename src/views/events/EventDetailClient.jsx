@@ -44,6 +44,30 @@ function formatEventTime(date) {
   }
 }
 
+function formatPrice(usd, currency = 'USD') {
+  if (usd == null) return null;
+  const sym = currency === 'EUR' ? '€' : '$';
+  return `${sym}${Number(usd).toFixed(2)}`;
+}
+
+function parseTicketTiers(event) {
+  if (!event || event.ticketType !== 'PAID') return [];
+  const raw = event.ticketTiersJson;
+  if (Array.isArray(raw) && raw.length) {
+    const rows = raw.filter((t) => t && t.id && typeof t.priceUsd === 'number' && t.priceUsd > 0);
+    if (rows.length) {
+      return rows.map((t) => ({
+        id: t.id,
+        label: t.label || t.name || 'Ticket',
+        priceUsd: t.priceUsd,
+      }));
+    }
+  }
+  const base = Number(event.ticketPrice);
+  if (base > 0) return [{ id: null, label: 'General admission', priceUsd: base }];
+  return [];
+}
+
 function deriveGuestlistAvatars(apiEvent) {
   const featured = Array.isArray(apiEvent?.featuredPeople) ? apiEvent.featuredPeople : [];
   const scrap = Array.isArray(apiEvent?.scrapbookThumbnails) ? apiEvent.scrapbookThumbnails : [];
@@ -184,6 +208,7 @@ export default function EventDetailClient() {
 
   const guestlistAvatars = useMemo(() => deriveGuestlistAvatars(apiEvent), [apiEvent]);
   const lineup = useMemo(() => deriveLineup(apiEvent), [apiEvent]);
+  const ticketTiers = useMemo(() => parseTicketTiers(apiEvent), [apiEvent]);
 
   const mapSrc = singleEventMapEmbedSrc(apiEvent?.latitude, apiEvent?.longitude);
   const hasMap = !!mapSrc;
@@ -309,7 +334,7 @@ export default function EventDetailClient() {
         </div>
 
         <div className="relative z-10">
-          <main className="mx-auto mt-2 flex min-h-screen w-full max-w-5xl flex-col justify-around px-3 pb-20 sm:px-6 md:mt-4 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:gap-8 md:pb-24 2xl:max-w-6xl 2xl:gap-12">
+          <main className="mx-auto mt-2 flex w-full max-w-5xl flex-col px-3 pb-40 sm:px-6 md:mt-4 md:grid md:pb-32 md:grid-cols-[minmax(0,1fr)_auto] md:gap-8 2xl:max-w-6xl 2xl:gap-12">
             <div className="order-1 flex flex-col md:order-2 md:w-[330px] lg:w-[375px] 2xl:w-[400px]">
               <div className="relative top-0 mx-auto h-auto w-full max-w-[400px] md:sticky md:top-28">
                 <div className="relative px-6 pb-6 md:px-0 md:pb-0">
@@ -359,12 +384,12 @@ export default function EventDetailClient() {
                 <h2 className="text-base font-semibold tracking-tight text-white">Organizer</h2>
                 {hasHost ? (
                   <div className="flex items-start justify-between gap-3">
-                    <div className="mt-0.5 flex min-w-0 flex-1 flex-row items-start gap-2">
-                      <span className="relative mt-0.5 flex size-5 shrink-0 overflow-hidden rounded-sm border border-white/20 bg-zinc-800">
+                    <div className="mt-0.5 flex min-w-0 flex-1 flex-row items-start gap-3">
+                      <span className="relative flex size-10 shrink-0 overflow-hidden rounded-full border border-white/20 bg-zinc-800">
                         {organizerAvatar ? (
-                          <Image className="size-full object-cover" alt="" src={organizerAvatar} width={20} height={20} unoptimized />
+                          <Image className="size-full object-cover" alt="" src={organizerAvatar} width={40} height={40} unoptimized />
                         ) : (
-                          <span className="flex size-full items-center justify-center text-[9px] font-semibold text-zinc-400" aria-hidden>
+                          <span className="flex size-full items-center justify-center text-sm font-semibold text-zinc-400" aria-hidden>
                             {(organizerName || '?').charAt(0).toUpperCase()}
                           </span>
                         )}
@@ -471,6 +496,26 @@ export default function EventDetailClient() {
                   )}
                 </div>
               </div>
+
+              {ticketTiers.length > 0 ? (
+                <div className="flex flex-col gap-4">
+                  <SectionDivider />
+                  <h2 className="text-base font-semibold tracking-tight text-white">Ticket tiers</h2>
+                  <div className="space-y-2">
+                    {ticketTiers.map((tier) => (
+                      <div
+                        key={tier.id || tier.label}
+                        className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                      >
+                        <span className="text-sm font-medium text-zinc-100">{tier.label}</span>
+                        <span className="text-sm font-bold text-white">
+                          {formatPrice(tier.priceUsd, apiEvent.currency || 'USD')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="flex flex-col gap-8">
                 <SectionDivider />
@@ -711,7 +756,7 @@ export default function EventDetailClient() {
                 )}
               </div>
 
-              <div className="flex flex-col gap-6 pb-16">
+              <div className="flex flex-col gap-6">
                 <SectionDivider />
                 <h2 className="text-base font-semibold tracking-tight text-white">Get the app</h2>
                 <div className="flex flex-col items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-6 py-8">

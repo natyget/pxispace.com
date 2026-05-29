@@ -445,12 +445,6 @@ export default function CreateEventPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {formError && (
-          <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-            {formError}
-          </div>
-        )}
-
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,380px)_1fr] gap-8">
           {/* Left column: cover, then basics */}
           <div className="flex flex-col gap-8">
@@ -784,21 +778,28 @@ export default function CreateEventPage() {
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-6 pt-2 mt-auto">
-              <Link
-                href="/dashboard/events"
-                className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                disabled={isSubmitting || isCoverUploading || !coverImage}
-                className="inline-flex items-center justify-center gap-2 min-h-[48px] px-8 rounded-full bg-white text-black text-xs font-bold uppercase tracking-wider disabled:opacity-45 hover:bg-white/90 transition-all"
-              >
-                {isSubmitting ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin" /> : null}
-                {isSubmitting ? 'Creating…' : isCoverUploading ? 'Uploading cover…' : 'Create event'}
-              </button>
+            <div className="pt-2 mt-auto space-y-3">
+              {formError ? (
+                <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                  {formError}
+                </div>
+              ) : null}
+              <div className="flex items-center justify-end gap-6">
+                <Link
+                  href="/dashboard/events"
+                  className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || isCoverUploading || !coverImage}
+                  className="inline-flex items-center justify-center gap-2 min-h-[48px] px-8 rounded-full bg-white text-black text-xs font-bold uppercase tracking-wider disabled:opacity-45 hover:bg-white/90 transition-all"
+                >
+                  {isSubmitting ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin" /> : null}
+                  {isSubmitting ? 'Creating…' : isCoverUploading ? 'Uploading cover…' : 'Create event'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

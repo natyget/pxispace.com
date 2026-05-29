@@ -36,9 +36,10 @@ export default function TicketEmailPreview({ preview, className = '', compact = 
   const eventTitle = (preview.eventName || '').trim();
   const ticketDisplayId = formatTicketDisplayId(preview.ticketId);
   const eventDate = formatEventDateShort(preview.eventStartDate);
-  const tier = tierLabelFromPrice(preview.ticketPrice, currency);
+  const faceUsd = preview.tierPriceUsd ?? preview.ticketPrice;
+  const tier = preview.tierLabel ?? tierLabelFromPrice(faceUsd, currency);
   const typeLabel = ticketTypeLabel(preview.isPrivate);
-  const priceLabel = priceLabelFromPrice(preview.ticketPrice, currency);
+  const priceLabel = priceLabelFromPrice(faceUsd, currency);
   const locationPrimary = formatLocationLine(preview.eventLocation);
   const locationSecondary = formatLocationSubline(preview.eventLocation);
   const coverSrc = displayImageSrc(preview.eventCoverImage);

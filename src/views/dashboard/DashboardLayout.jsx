@@ -230,8 +230,8 @@ export default function DashboardLayout({ children }) {
     const showDevCaps = searchParams.get('debugCaps') === '1';
     const memberNavItems = [
         ...baseNavItems,
-        ...(hasLiveOpsAccess ? bouncerNavItems : []),
-        ...(hasOrganizerAccess ? organizerMockNavItems : []),
+        ...(mounted && hasLiveOpsAccess ? bouncerNavItems : []),
+        ...(mounted && hasOrganizerAccess ? organizerMockNavItems : []),
         ...footerNavItems,
     ];
 
@@ -310,8 +310,8 @@ export default function DashboardLayout({ children }) {
                             ).map(({ label, path, icon: Icon, end, vendorOnly, nonVendorOnly, bouncerOnly, organizerOnly }) => {
                                 if (vendorOnly && mounted && !user?.isVendor) return null;
                                 if (nonVendorOnly && mounted && user?.isVendor) return null;
-                                if (bouncerOnly && !hasLiveOpsAccess) return null;
-                                if (organizerOnly && !hasOrganizerAccess) return null;
+                                if (bouncerOnly && mounted && !hasLiveOpsAccess) return null;
+                                if (organizerOnly && mounted && !hasOrganizerAccess) return null;
                                 const isActive = end ? pathname === path : pathname.startsWith(path + '/') || pathname === path;
                                 const showPassportAlert = mounted && path === '/dashboard/passport' && !user?.isPassportIssued;
                                 const showNotificationBadge = path === '/dashboard/notifications' && notificationCount > 0;

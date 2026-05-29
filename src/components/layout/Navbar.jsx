@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Menu01Icon, Cancel01Icon, Logout01Icon, DashboardSquare01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from "../../contexts/AuthContext";
+import { PxiLoadingIcon } from '@/components/loading/PxiLoading';
 
 const Navbar = () => {
     const [mounted, setMounted] = useState(false);
@@ -104,8 +105,11 @@ const Navbar = () => {
 
                 <div className="col-start-2 row-start-1 flex h-[30px] items-center justify-end justify-self-end gap-3 md:h-10 md:gap-3 md:col-start-3">
                     {!mounted ? (
-                        /* Skeleton while auth state loads */
-                        <div className="hidden h-9 w-28 shrink-0 rounded-full bg-zinc-800/60 animate-pulse md:block" />
+                        isLanding ? null : (
+                            <div className="hidden h-10 w-10 shrink-0 items-center justify-center md:flex" aria-hidden>
+                                <PxiLoadingIcon />
+                            </div>
+                        )
                     ) : isAuthenticated ? (
                         <div className="relative hidden md:block" ref={userMenuRef}>
                             <button

@@ -466,7 +466,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                   setIssuedTicketId(found.id);
                   setIssuedPreview(
                     buildTicketEmailPreviewInput(apiEvent, found.id, found.pasetoSignature, {
-                      paidTotalUsd: quoteTotal ?? undefined,
+                      selectedTierId: apiTierId,
                     }),
                   );
                   break;
