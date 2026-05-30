@@ -45,7 +45,7 @@ function PassportReadOnly({ user }) {
     const username = user?.username ?? 'citizen';
     const avatarFallback = fullName.charAt(0).toUpperCase();
     const city = user?.city ?? '—';
-    const bio = user?.bio ?? '—';
+    const bio = user?.bio?.trim() ? user.bio.trim() : '—';
     const instagram = user?.instagramHandle
         ? user.instagramHandle.startsWith('@')
             ? user.instagramHandle

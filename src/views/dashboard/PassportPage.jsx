@@ -115,12 +115,13 @@ function PassportIssued({ user }) {
     const username = user?.username ?? 'citizen';
     const avatarFallback = fullName.charAt(0).toUpperCase();
     const city = user?.city ?? '—';
-    const bio = user?.bio ?? '—';
+    const bio = user?.bio?.trim() ? user.bio.trim() : '—';
     const instagram = user?.instagramHandle
         ? (user.instagramHandle.startsWith('@') ? user.instagramHandle : `@${user.instagramHandle}`)
         : '—';
 
     const age = (() => {
+        if (user?.showAge === false) return '—';
         if (!user?.birthdate) return '—';
         const birth = new Date(user.birthdate);
         const today = new Date();

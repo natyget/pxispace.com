@@ -308,7 +308,7 @@
   padding: 0 1rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.75rem;
+  border-radius: 9999px;
   --PhoneInput-color--focus: #B026FF;
   --PhoneInputCountryFlag-borderColor: rgba(255, 255, 255, 0.2);
 }
@@ -345,6 +345,97 @@
 
 .verify-phone-input-wrapper .PhoneInputCountrySelectArrow {
   border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Verification code (OTP) — Untitled UI–style 6-digit input with separator */
+.verification-code-input-group {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.verification-code-input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.verification-code-input__cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.verification-code-input__separator {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+  margin: 0 0.125rem;
+}
+
+.verification-code-input__slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.verification-code-input__slot--active {
+  border-color: rgba(168, 85, 247, 0.55);
+  background: #252525;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+}
+
+.verification-code-input__slot--filled {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.verification-code-input__slot--disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.verification-code-input__char {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.verification-code-input__placeholder {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.22);
+  line-height: 1;
+}
+
+.verification-code-input__caret {
+  position: absolute;
+  bottom: 0.5rem;
+  width: 2px;
+  height: 1.125rem;
+  border-radius: 1px;
+  background: rgba(168, 85, 247, 0.9);
+  animation: verification-code-caret-blink 1s step-end infinite;
+}
+
+@keyframes verification-code-caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 /* Public landing (v2): Inter + display utility without affecting other routes */
@@ -636,6 +727,67 @@
 .cv-auto {
   content-visibility: auto;
   contain-intrinsic-size: auto 100vh;
+}
+
+/* Auth login — match mobile app GlassInput on small screens */
+.auth-field-gap {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 767px) {
+  .auth-field-gap {
+    margin-bottom: 18px;
+  }
+
+  .auth-glass-input {
+    height: 56px !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .auth-glass-input::placeholder {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  .auth-social-pill {
+    min-height: 48px !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 2px !important;
+    color: rgba(255, 255, 255, 0.55) !important;
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .auth-field-gap {
+    margin-bottom: 12px;
+  }
+
+  .auth-glass-input {
+    height: 48px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    font-size: 14px !important;
+    letter-spacing: 0.03em !important;
+  }
+
+  .auth-glass-input::placeholder {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

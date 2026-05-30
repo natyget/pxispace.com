@@ -8,13 +8,14 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
-import AuthParticles from '../../components/auth/AuthParticles';
+import VerificationCodeInput from '../../components/auth/VerificationCodeInput';
+import { defaultPostLoginPath } from '../../lib/dashboardPaths';
 
 const PENDING_SIGNUP_KEY = 'pxi_pending_signup';
 
 export default function VerifyPhonePage() {
     const router = useRouter();
-    const { user, saveAuth, logout } = useAuth();
+    const { user, saveAuth } = useAuth();
     const [pendingSignup, setPendingSignup] = useState(null);
     const [phoneValue, setPhoneValue] = useState('');
     const [step, setStep] = useState('phone');
@@ -68,15 +69,17 @@ export default function VerifyPhonePage() {
         try {
             if (pendingSignup) {
                 await authService.verifyOtp(fullPhone, trimmedCode);
-                // Backend saves phone to user profile only when OTP verification succeeds; register persists it
-                await authService.register(
+                // Register returns token + user — keep session (no relogin), same as mobile signup flow.
+                const registerResult = await authService.register(
                     pendingSignup.email,
                     pendingSignup.password,
                     pendingSignup.username,
                     fullPhone
                 );
                 sessionStorage.removeItem(PENDING_SIGNUP_KEY);
-                await logout();
+                const { token, user: newUser } = registerResult;
+                await saveAuth({ token, user: newUser });
+
                 const postCheckout =
                     typeof window !== 'undefined'
                         ? sessionStorage.getItem('pxi_after_register_login_redirect')
@@ -84,11 +87,14 @@ export default function VerifyPhonePage() {
                 if (postCheckout && typeof window !== 'undefined') {
                     sessionStorage.removeItem('pxi_after_register_login_redirect');
                 }
-                router.replace(
-                    postCheckout
-                        ? `/login?verified=1&redirect=${encodeURIComponent(postCheckout)}`
-                        : '/login?verified=1'
-                );
+
+                if (!newUser.isPassportIssued) {
+                    router.replace('/passport-required');
+                } else if (postCheckout) {
+                    router.replace(postCheckout);
+                } else {
+                    router.replace(defaultPostLoginPath(newUser));
+                }
             } else if (user) {
                 // Backend saves phoneNumber to profile only when OTP verification succeeds
                 const result = await authService.verifyPhone(fullPhone, trimmedCode);
@@ -96,7 +102,7 @@ export default function VerifyPhonePage() {
                 if (!result.user.isPassportIssued) {
                     router.replace('/passport-required');
                 } else {
-                    router.replace('/dashboard');
+                    router.replace(defaultPostLoginPath(result.user));
                 }
             } else {
                 setError('Session expired. Please sign in again.');
@@ -123,7 +129,6 @@ export default function VerifyPhonePage() {
 
     return (
         <div className="min-h-screen bg-black flex flex-col relative overflow-hidden">
-            <AuthParticles />
             <button
                 type="button"
                 onClick={handleBack}
@@ -192,16 +197,19 @@ export default function VerifyPhonePage() {
 
                     {step === 'code' && (
                         <form onSubmit={handleVerify} className="flex flex-col gap-4">
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                autoComplete="one-time-code"
-                                value={code}
-                                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                placeholder="000000"
-                                maxLength={6}
-                                className="w-full h-14 rounded-xl px-5 bg-white/5 border border-white/10 text-white font-semibold text-center text-xl tracking-widest outline-none focus:border-[#B026FF]"
-                            />
+                            <div>
+                                <p
+                                    className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-white/50 mb-2.5 ml-1"
+                                >
+                                    Verification code
+                                </p>
+                                <VerificationCodeInput
+                                    value={code}
+                                    onChange={setCode}
+                                    disabled={loading}
+                                    autoFocus
+                                />
+                            </div>
                             <button
                                 type="submit"
                                 disabled={code.trim().replace(/\s/g, '').length < 6 || loading}

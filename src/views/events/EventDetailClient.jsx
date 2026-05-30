@@ -188,7 +188,10 @@ export default function EventDetailClient() {
     ? String(apiEvent.host.username).replace(/^@/, '')
     : null;
   const hostPassportNo = formatHostPassportNo(apiEvent?.host?.id);
-  const hostAge = ageFromBirthdate(apiEvent?.host?.birthdate);
+  const hostAge =
+    typeof apiEvent?.host?.age === 'number' && !Number.isNaN(apiEvent.host.age)
+      ? apiEvent.host.age
+      : null;
   const hostInstaLabel = apiEvent?.host?.instagramHandle
     ? `@${String(apiEvent.host.instagramHandle).replace(/^@/, '')}`
     : hostPxiHandle

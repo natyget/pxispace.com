@@ -464,7 +464,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                     <p className="text-2xl font-black">{host.name || host.username || 'Host'}</p>
                     {host.username ? <p className="text-zinc-500">@{host.username}</p> : null}
                     {host.city ? <p className="text-zinc-400 text-sm mt-2">{host.city}</p> : null}
-                    {host.bio ? <p className="text-zinc-400 mt-4 leading-relaxed">{host.bio}</p> : null}
+                    <p className="text-zinc-400 mt-4 leading-relaxed">{host.bio?.trim() ? host.bio.trim() : '—'}</p>
                     <div className="flex flex-wrap gap-3 mt-6">
                       {host.instagramHandle ? (
                         <a

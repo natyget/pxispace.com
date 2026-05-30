@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon, ViewIcon, ViewOffIcon, CheckmarkCircle02Icon, CancelCircleIcon, Loading02Icon } from '@hugeicons/core-free-icons';
@@ -11,8 +12,6 @@ import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { defaultPostLoginPath } from '../../lib/dashboardPaths';
-import AuthParticles from '../../components/auth/AuthParticles';
-
 const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
 
 function shouldClearAuth(error) {
@@ -222,8 +221,6 @@ export default function EmailAuthPage() {
 
     return (
         <div className="flex flex-1 flex-col min-h-0 bg-black relative overflow-hidden">
-            <AuthParticles />
-
             {showVerifiedMessage && (
                 <div
                     className="relative z-20 mx-4 mt-6 rounded-xl px-4 py-3 text-center text-sm font-semibold"
@@ -254,31 +251,24 @@ export default function EmailAuthPage() {
             </button>
 
             {/* Scrollable content */}
-            <div className="relative z-10 flex-1 overflow-y-auto flex flex-col items-center px-4">
-                <div className="w-full max-w-[400px] pt-[5.5rem] pb-12 flex flex-col md:pt-[5.5rem]">
+            <div className="relative z-10 flex-1 overflow-y-auto flex flex-col items-center px-0 md:px-4">
+                <div className="w-full max-w-[400px] px-4 pt-[5.5rem] pb-12 flex flex-col md:px-0 md:pt-[5.5rem]">
 
                     {/* Header */}
-                    <div className="mb-4 text-center">
-                        <h1
-                            className="font-black uppercase text-white"
-                            style={{
-                                fontSize: 34,
-                                letterSpacing: '0.18em',
-                                textShadow: '0 0 20px rgba(216,74,255,0.5)',
-                            }}
-                        >
-                            PXI STUDIO
-                        </h1>
+                    <div className="mb-5 flex justify-center">
+                        <Image
+                            src="/favicon.png"
+                            alt="PXI"
+                            width={200}
+                            height={120}
+                            priority
+                            className="h-[120px] w-[200px] object-contain"
+                        />
                     </div>
 
-                    {/* Auth card */}
+                    {/* Auth card — panel chrome on md+ only (mobile matches app: no card wrapper) */}
                     <div
-                        className="flex flex-col rounded-2xl p-6"
-                        style={{
-                            background: 'rgba(255,255,255,0.03)',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                            boxShadow: '0 0 40px rgba(216, 74, 255, 0.08)',
-                        }}
+                        className="flex flex-col p-0 md:rounded-2xl md:border md:border-white/12 md:bg-white/[0.03] md:p-6 md:shadow-[0_0_40px_rgba(216,74,255,0.08)]"
                     >
                     {/* Mode toggle */}
                     <div className="flex mb-6 border-b border-white/10">
@@ -337,12 +327,6 @@ export default function EmailAuthPage() {
                         {!isLogin && (
                             <AuthField>
                                 <div className="relative">
-                                    <span
-                                        className="absolute left-4 top-1/2 -translate-y-1/2 font-semibold select-none"
-                                        style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}
-                                    >
-                                        @
-                                    </span>
                                     <AuthInput
                                         type="text"
                                         value={username}
@@ -351,9 +335,8 @@ export default function EmailAuthPage() {
                                         }
                                         placeholder="USERNAME"
                                         maxLength={20}
-                                        style={{ paddingLeft: 28 }}
                                     />
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                    <div className="absolute right-6 top-1/2 -translate-y-1/2">
                                         {usernameStatus === 'checking' && <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" style={{ color: 'rgba(255,255,255,0.4)' }} />}
                                         {usernameStatus === 'available' && <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} style={{ color: '#4ade80' }} />}
                                         {(usernameStatus === 'taken' || usernameStatus === 'invalid') && <HugeiconsIcon icon={CancelCircleIcon} size={14} style={{ color: '#f87171' }} />}
@@ -374,12 +357,12 @@ export default function EmailAuthPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="PASSWORD"
                                     required
-                                    style={{ paddingRight: 44 }}
+                                    style={{ paddingRight: 48 }}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((v) => !v)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2"
+                                    className="absolute right-6 top-1/2 -translate-y-1/2"
                                     style={{ color: 'rgba(255,255,255,0.35)' }}
                                     onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
                                     onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
@@ -432,7 +415,7 @@ export default function EmailAuthPage() {
                         )}
 
                         {/* Submit button */}
-                        <div className="relative mt-2" style={{ marginBottom: 28 }}>
+                        <div className="relative mt-2 mb-2">
                             <button
                                 type="submit"
                                 disabled={!canSubmit}
@@ -488,15 +471,20 @@ export default function EmailAuthPage() {
                             <Link href="/terms_of_service" className="text-pxi-purple underline">
                                 Terms of Service
                             </Link>
-                            {' '}and{' '}
+                            {', '}
                             <Link href="/privacy_policy" className="text-pxi-purple underline">
                                 Privacy Policy
                             </Link>
+                            {', and '}
+                            <Link href="/legal#cookie" className="text-pxi-purple underline">
+                                Cookie Policy
+                            </Link>
+                            .
                         </p>
                     </form>
 
                     {/* Social login */}
-                    <div className="flex items-center gap-3 mt-6">
+                    <div className="flex items-center gap-3 mt-2">
                         <div className="flex-1 h-px bg-white/15" />
                         <p
                             className="shrink-0 font-bold uppercase"
@@ -510,11 +498,17 @@ export default function EmailAuthPage() {
                         </p>
                         <div className="flex-1 h-px bg-white/15" />
                     </div>
-                    <div className="flex gap-3 mt-3">
-                        <FooterPill onClick={() => loginWithGoogle()} icon={<FaGoogle size={14} />}>
+                    <div className="flex gap-[12px] mt-3">
+                        <FooterPill
+                            onClick={() => loginWithGoogle()}
+                            icon={<FaGoogle size={14} className="text-white/50" />}
+                        >
                             GOOGLE
                         </FooterPill>
-                        <FooterPill onClick={handleApple} icon={<FaApple size={14} />}>
+                        <FooterPill
+                            onClick={handleApple}
+                            icon={<FaApple size={14} className="text-white/50" />}
+                        >
                             APPLE
                         </FooterPill>
                     </div>
@@ -527,8 +521,12 @@ export default function EmailAuthPage() {
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
+/** Matches mobile `GlassInput` + auth pill radius (56px tall, 24px horizontal padding). */
+const AUTH_INPUT_HEIGHT_PX = 56;
+const AUTH_INPUT_PADDING_X_PX = 24;
+
 function AuthField({ children }) {
-    return <div style={{ marginBottom: 12 }}>{children}</div>;
+    return <div className="auth-field-gap">{children}</div>;
 }
 
 function AuthInput({ focusColor, style = {}, ...props }) {
@@ -541,17 +539,20 @@ function AuthInput({ focusColor, style = {}, ...props }) {
             {...props}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            className="w-full text-white font-semibold outline-none transition-all placeholder:text-xs placeholder:font-medium placeholder:text-white/35 placeholder:uppercase placeholder:tracking-wide"
+            className="auth-glass-input w-full text-sm font-semibold text-white outline-none transition-all placeholder:text-sm placeholder:font-semibold placeholder:text-white/30 placeholder:uppercase placeholder:tracking-[0.5px]"
             style={{
-                height: 48,
-                borderRadius: 12,
+                height: AUTH_INPUT_HEIGHT_PX,
+                borderRadius: 9999,
                 background: focused ? '#252525' : '#1c1c1c',
                 border: `1px solid ${focused ? activeFocus : 'rgba(255,255,255,0.05)'}`,
-                boxShadow: focused ? `0 0 0 3px ${activeFocus.replace('0.5', '0.1')}` : 'none',
+                boxShadow: focused
+                    ? '0 0 10px rgba(168, 85, 247, 0.2)'
+                    : 'none',
                 fontSize: 14,
-                letterSpacing: '0.03em',
-                paddingLeft: 16,
-                paddingRight: 16,
+                fontWeight: 600,
+                letterSpacing: '0.5px',
+                paddingLeft: AUTH_INPUT_PADDING_X_PX,
+                paddingRight: AUTH_INPUT_PADDING_X_PX,
                 color: '#fff',
                 ...style,
             }}
@@ -581,19 +582,7 @@ function FooterPill({ onClick, icon, children }) {
         <button
             type="button"
             onClick={onClick}
-            className="flex-1 font-bold uppercase transition-all"
-            style={{
-                paddingTop: 12,
-                paddingBottom: 12,
-                borderRadius: 9999,
-                border: '1px solid rgba(255,255,255,0.1)',
-                background: 'rgba(255,255,255,0.03)',
-                fontSize: 10,
-                letterSpacing: '0.15em',
-                color: 'rgba(255,255,255,0.4)',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+            className="auth-social-pill flex-1 min-h-12 rounded-full border-0 bg-white/[0.06] px-4 py-3 text-[10px] font-bold uppercase tracking-[2px] text-white/[0.55] transition-all hover:text-white/70 active:bg-white/10"
         >
             <span className="flex items-center justify-center gap-2">
                 {icon}
