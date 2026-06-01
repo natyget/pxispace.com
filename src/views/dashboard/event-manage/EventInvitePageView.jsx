@@ -9,6 +9,7 @@ import { eventsService, searchUsers } from '@/services/events';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventManage } from './EventManageContext';
 import { eventShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
+import { shareEventQrImage, shareEventToInstagramStory } from '@/lib/inviteShare';
 
 const LINEUP_ROLE_MAX_LEN = 80;
 
@@ -22,6 +23,15 @@ const ROLE_TABS = [
 function getPublicEventUrl(id) {
   const base = (process.env.NEXT_PUBLIC_SITE_URL || 'https://pxispace.com').replace(/\/$/, '');
   return `${base}/events/${id}`;
+}
+
+function resolveInviteRsvpState(userId, memberIds, inviteByUserId) {
+  if (memberIds.has(userId)) return 'coming';
+  const inv = inviteByUserId.get(userId);
+  if (!inv) return 'none';
+  if (inv.status === 'PENDING') return 'pending';
+  if (inv.status === 'ACCEPTED') return 'coming';
+  return 'pass';
 }
 
 function formatStoredInviteRole(inviteRole, lineupSubrole) {
@@ -104,6 +114,22 @@ export default function EventInvitePageView() {
   const [directInvites, setDirectInvites] = useState([]);
   const [directInvitesLoading, setDirectInvitesLoading] = useState(false);
   const [directInvitesError, setDirectInvitesError] = useState(null);
+  const [inviteActionBusyId, setInviteActionBusyId] = useState(null);
+
+  const memberUserIds = useMemo(
+    () => new Set((participants || []).map((p) => p.userId)),
+    [participants],
+  );
+
+  const inviteByUserId = useMemo(() => {
+    const map = new Map();
+    (directInvites || []).forEach((inv) => {
+      if (inv.user?.id) map.set(inv.user.id, inv);
+    });
+    return map;
+  }, [directInvites]);
+
+  const isSearchMode = inviteQuery.trim().length >= 2;
 
   // ── Load direct invites ────────────────────────────────────────────────────
   const loadDirectInvites = useCallback(async () => {
@@ -122,8 +148,12 @@ export default function EventInvitePageView() {
   }, [albumId]);
 
   useEffect(() => {
-    if (invitePageTab !== 'status' || !albumId) return;
+    if (!albumId) return;
     loadDirectInvites();
+  }, [albumId, loadDirectInvites]);
+
+  useEffect(() => {
+    if (invitePageTab === 'status' && albumId) loadDirectInvites();
   }, [invitePageTab, albumId, loadDirectInvites]);
 
   const statusCounts = useMemo(() => {
@@ -217,13 +247,25 @@ export default function EventInvitePageView() {
 
   // ── Filtered list ──────────────────────────────────────────────────────────
   const filteredCandidates = useMemo(() => {
-    const base = inviteQuery.trim().length >= 2 ? inviteResults.map((u) => ({
-      id: u.id, username: u.username, name: u.name, avatarUrl: u.avatarUrl, source: 'search',
-    })) : audienceCandidates;
-    if (listFilter === 'attendees') return base.filter((u) => u.source === 'attendee');
-    if (listFilter === 'friends') return base.filter((u) => u.source === 'friend');
-    return base;
-  }, [audienceCandidates, inviteResults, inviteQuery, listFilter]);
+    const base = isSearchMode
+      ? inviteResults.map((u) => ({
+          id: u.id,
+          username: u.username,
+          name: u.name,
+          avatarUrl: u.avatarUrl,
+          source: 'search',
+        }))
+      : audienceCandidates;
+    return base.filter((u) => {
+      if (listFilter === 'attendees') return u.source === 'attendee';
+      if (listFilter === 'friends') return u.source === 'friend';
+      if (!isSearchMode) {
+        const state = resolveInviteRsvpState(u.id, memberUserIds, inviteByUserId);
+        if (state !== 'none') return false;
+      }
+      return true;
+    });
+  }, [audienceCandidates, inviteResults, isSearchMode, listFilter, memberUserIds, inviteByUserId]);
 
   const toggleSelect = (id) => {
     setSelectedIds((prev) => {
@@ -267,19 +309,56 @@ export default function EventInvitePageView() {
 
   const handleIGShare = async () => {
     if (!eventId) return;
-    const url = getPublicEventUrl(eventId);
     const title = event?.name || 'PXI Event';
-    const text = eventShareLead(title, 'invite');
-    const message = shareMessageWithUrl(text, url);
-    // On mobile browsers navigator.share surfaces Instagram Stories as a native target
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      try {
-        await navigator.share({ title, text, url });
-        return;
-      } catch { /* dismissed — fall through to clipboard */ }
+    try {
+      await shareEventToInstagramStory(eventId, title, {
+        coverImageUrl: event?.coverImage,
+        scrapbookThumbUrl: event?.scrapbookThumbnails?.[0],
+      });
+    } catch {
+      toast.success('Link copied — open Instagram and paste in your Story');
     }
-    await navigator.clipboard.writeText(message).catch(() => {});
-    toast.success('Link copied — open Instagram and paste in your Story');
+  };
+
+  const handleShareQr = async () => {
+    if (!eventId) return;
+    try {
+      await shareEventQrImage(eventId, event?.name);
+      toast.success('QR image ready to share');
+    } catch {
+      toast.error('Could not share QR code');
+    }
+  };
+
+  const handleInviteAction = async (person, state) => {
+    if (!albumId || !eventId) return;
+    setInviteActionBusyId(person.id);
+    try {
+      if (state === 'pending') {
+        const inv = inviteByUserId.get(person.id);
+        if (!inv) return;
+        await eventsService.cancelAlbumDirectInvite(albumId, inv.id);
+        toast.success('Invite cancelled');
+        await loadDirectInvites();
+        return;
+      }
+      if (state === 'pass') {
+        await eventsService.inviteAlbumUser(albumId, person.username, { role: 'member' });
+        toast.success(`Resent invite to @${person.username}`);
+        await loadDirectInvites();
+        return;
+      }
+      if (state === 'coming') {
+        await eventsService.removeMember(albumId, person.id);
+        toast.success('Guest removed');
+        reloadParticipants();
+        await loadDirectInvites();
+      }
+    } catch {
+      toast.error('Could not update invitation');
+    } finally {
+      setInviteActionBusyId(null);
+    }
   };
 
   // ── Send invites ───────────────────────────────────────────────────────────
@@ -310,9 +389,9 @@ export default function EventInvitePageView() {
     }
     setSending(false);
     setSelectedIds(new Set());
-    reloadParticipants();
+    await reloadParticipants();
     reloadFeaturedPeople();
-    loadDirectInvites();
+    await loadDirectInvites();
     if (failed.length > 0) {
       setSendError(`Some invites failed: ${failed.map((u) => `@${u}`).join(', ')}`);
     } else {
@@ -514,7 +593,13 @@ export default function EventInvitePageView() {
 
             {/* Section label */}
             <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
-              {listFilter === 'attendees' ? 'OG Attendees' : listFilter === 'friends' ? 'Friends' : 'Previous Guests & Friends'}
+              {isSearchMode
+                ? 'Search results'
+                : listFilter === 'attendees'
+                  ? 'OG Attendees'
+                  : listFilter === 'friends'
+                    ? 'Friends'
+                    : 'Not yet invited'}
             </p>
 
             {/* User list */}
@@ -533,6 +618,42 @@ export default function EventInvitePageView() {
               <div className="space-y-0 divide-y divide-white/[0.06]">
                 {filteredCandidates.slice(0, 20).map((c) => {
                   const selected = selectedIds.has(c.id);
+                  const rsvpState = resolveInviteRsvpState(c.id, memberUserIds, inviteByUserId);
+                  const busy = inviteActionBusyId === c.id;
+
+                  if (isSearchMode && rsvpState !== 'none') {
+                    const tagLabel =
+                      rsvpState === 'pending' ? 'Pending' : rsvpState === 'coming' ? 'Coming' : 'Pass';
+                    const actionLabel =
+                      rsvpState === 'pending' ? 'Cancel' : rsvpState === 'coming' ? 'Remove' : 'Resend';
+                    return (
+                      <div
+                        key={c.id}
+                        className="w-full flex items-center gap-3 py-2.5 rounded-xl px-1"
+                      >
+                        <UserAvatar user={c} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-white font-semibold truncate">{c.name || c.username}</p>
+                          <p className="text-xs text-zinc-500 truncate">@{c.username}</p>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => handleInviteAction(c, rsvpState)}
+                          className={`shrink-0 px-3 py-2 rounded-full text-[11px] font-bold border transition-colors ${
+                            rsvpState === 'pending'
+                              ? 'border-amber-500/50 bg-amber-500/10 text-amber-100'
+                              : rsvpState === 'coming'
+                                ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-100'
+                                : 'border-white/25 bg-white/8 text-zinc-200'
+                          } disabled:opacity-50`}
+                        >
+                          {busy ? '…' : `${tagLabel} · ${actionLabel}`}
+                        </button>
+                      </div>
+                    );
+                  }
+
                   return (
                     <button
                       key={c.id}
@@ -705,10 +826,10 @@ export default function EventInvitePageView() {
             </div>
             <button
               type="button"
-              onClick={handleShareLink}
+              onClick={handleShareQr}
               className="flex items-center gap-2 px-5 py-3 rounded-full border border-white/20 bg-white/6 text-sm font-bold text-white hover:bg-white/10 transition-colors"
             >
-              <HugeiconsIcon icon={Share01Icon} size={14} /> Share Link
+              <HugeiconsIcon icon={Share01Icon} size={14} /> Share QR
             </button>
             <button
               type="button"
