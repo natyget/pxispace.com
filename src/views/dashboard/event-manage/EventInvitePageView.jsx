@@ -707,22 +707,14 @@ export default function EventInvitePageView() {
         <section role="tabpanel" className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
           <div className="p-5 border-b border-white/5 flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-bold text-white uppercase tracking-widest text-sm">Direct invites</h2>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={directInvitesLoading}
-                onClick={loadDirectInvites}
-                className="px-3 py-2 rounded-xl border border-white/10 text-xs font-bold uppercase tracking-widest text-zinc-300 hover:bg-white/5 disabled:opacity-50"
-              >
-                Refresh
-              </button>
-              <Link
-                href={`/dashboard/events/${eventId}`}
-                className="px-4 py-2 rounded-xl border border-white/10 text-xs font-bold uppercase tracking-widest text-zinc-300 hover:bg-white/5"
-              >
-                Done
-              </Link>
-            </div>
+            <button
+              type="button"
+              disabled={directInvitesLoading}
+              onClick={loadDirectInvites}
+              className="px-3 py-2 rounded-xl border border-white/10 text-xs font-bold uppercase tracking-widest text-zinc-300 hover:bg-white/5 disabled:opacity-50"
+            >
+              Refresh
+            </button>
           </div>
 
           <div className="p-5 border-b border-white/5 flex flex-wrap gap-2">

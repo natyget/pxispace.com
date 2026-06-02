@@ -25,6 +25,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { getNotifications } from '../../services/notifications';
+import { NOTIFICATIONS_REFRESH_EVENT } from '@/lib/notificationEvents';
 import { getDashboardCapabilities } from '@/lib/dashboardCapabilities';
 import { canAccessAdminDashboard } from '@/lib/adminAccess';
 const LogoSVG = "/images/logo.svg";
@@ -136,14 +137,26 @@ export default function DashboardLayout({ children }) {
         return () => window.removeEventListener('pxi:capabilities-refresh', handleRefresh);
     }, [mounted, refreshCapabilities]);
 
+    const refreshNotificationCount = useCallback(() => {
+        if (!user?.id) return;
+        getNotifications(user.id, 50)
+            .then((res) => setNotificationCount(res.unreadCount ?? 0))
+            .catch(() => setNotificationCount(0));
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (!mounted || !user?.id) return undefined;
+        const onInboxRefresh = () => refreshNotificationCount();
+        window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, onInboxRefresh);
+        return () => window.removeEventListener(NOTIFICATIONS_REFRESH_EVENT, onInboxRefresh);
+    }, [mounted, user?.id, refreshNotificationCount]);
+
     useEffect(() => {
         if (!mounted || !user?.id) return;
         // Skip phone verification when user came from mobile app (e.g. "Go to Web" for vendor setup)
         if (user.phoneNumber || fromMobile) {
             setPhoneCheckDone(true);
-            getNotifications(user.id, 50)
-                .then((res) => setNotificationCount(res.unreadCount ?? res.notifications?.length ?? 0))
-                .catch(() => setNotificationCount(0));
+            refreshNotificationCount();
             return;
         }
         // Refetch user once to avoid stale cache (e.g. user added phone on mobile)
