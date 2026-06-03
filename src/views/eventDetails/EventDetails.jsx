@@ -10,7 +10,8 @@ import Button from '../../components/ui/Button';
 import { eventsService } from '../../services/events';
 import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket } from '../../services/tickets';
 import { spotifyEmbedSrc } from '@/lib/spotify';
-import { readFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
+import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
+import { useAuth } from '@/contexts/AuthContext';
 import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -82,6 +83,8 @@ const PUBLIC_EULA_COPY = (
 const EventDetails = ({ basePath = '/events' }) => {
   const { id } = useParams();
   const router = useRouter();
+  const { user } = useAuth();
+  const isLoggedIn = !!user?.id;
   const [apiEvent, setApiEvent] = useState(null);
   const [eventLoading, setEventLoading] = useState(!!id);
   const [quoteTotal, setQuoteTotal] = useState(null);
@@ -91,8 +94,8 @@ const EventDetails = ({ basePath = '/events' }) => {
   const [selectedTierId, setSelectedTierId] = useState(null);
 
   useEffect(() => {
-    setFavoriteIds(readFavoriteEventIds());
-  }, []);
+    loadFavoriteEventIds(isLoggedIn).then(setFavoriteIds).catch(() => setFavoriteIds(new Set()));
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (!id) {
@@ -178,8 +181,12 @@ const EventDetails = ({ basePath = '/events' }) => {
 
   const handleToggleFavorite = () => {
     if (!apiEvent?.id) return;
-    toggleFavoriteEventId(apiEvent.id);
-    setFavoriteIds(readFavoriteEventIds());
+    const isFavorite = favoriteIds.has(String(apiEvent.id));
+    toggleFavoriteEventId(apiEvent.id, isFavorite, isLoggedIn)
+      .then(setFavoriteIds)
+      .catch(() => {
+        loadFavoriteEventIds(isLoggedIn).then(setFavoriteIds).catch(() => setFavoriteIds(new Set()));
+      });
   };
 
   const goToCheckout = () => {

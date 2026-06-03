@@ -30,7 +30,7 @@ const EventCard = ({ event, favorited, onToggleFavorite, onQuickView, detailBase
           className="absolute top-6 right-6 p-3 rounded-full bg-black/40 border border-white/10 text-white hover:bg-black/60 transition-colors backdrop-blur-md"
           aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
         >
-          <HugeiconsIcon icon={FavouriteIcon} size={20} className={favorited ? 'fill-pink-500 text-pink-500' : ''} />
+          <HugeiconsIcon icon={FavouriteIcon} size={20} className={favorited ? 'fill-pxi-purple text-pxi-purple' : ''} />
         </button>
 
         <div className="absolute top-8 left-8 px-4 py-1.5 glass rounded-full border-white/10 backdrop-blur-xl">
