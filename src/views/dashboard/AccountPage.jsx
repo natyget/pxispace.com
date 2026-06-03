@@ -5,6 +5,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { HelpCircleIcon, Delete02Icon, Alert02Icon, Loading02Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
+import BlockedAccountsSection from '@/components/account/BlockedAccountsSection';
 
 const DELETION_ITEMS = [
     'Your profile, name, username, and avatar',
@@ -64,9 +65,11 @@ export default function AccountPage() {
                     Account Settings
                 </h1>
                 <p className="text-zinc-500 text-sm mt-1">
-                    Delete your account and associated data.
+                    Manage blocked members and account deletion.
                 </p>
             </div>
+
+            <BlockedAccountsSection />
 
             {/* Danger Zone */}
             <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-5 space-y-4">

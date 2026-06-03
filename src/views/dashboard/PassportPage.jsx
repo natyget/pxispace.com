@@ -10,23 +10,23 @@ import { authService } from '../../services/auth';
 import { getRelationshipStatus } from '../../services/friends';
 import { getUserTickets } from '../../services/tickets';
 import { getEventsForWallet, getMyEventXp } from '../../services/events';
-import { getPassportLevelDisplay } from '../../utils/odysseyTier';
+import { getPassportLevelDisplay, getOdysseyTierFromXp } from '../../utils/odysseyTier';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 import {
-    formatMRZ,
     getLevelProgress,
     ODYSSEY_TIER_BANDS,
     HeaderPolygonBadge,
-    DynamicStamp,
-    getStampShape,
-    getStampLayout,
-    getStampColor,
-    formatStampName,
-    formatStampDate,
-    formatStampCity,
     getEventYear,
 } from '@/components/passport/passportVisualParts';
+import { PassportMrzFooter } from '@/components/passport/PassportMrzFooter';
+import { PassportStampsLayer } from '@/components/passport/PassportStampsLayer';
+import {
+    PassportCardShell,
+    PASSPORT_AVATAR_FRAME_CLASS,
+    PASSPORT_ID_OVERLAY_CLASS,
+} from '@/components/passport/PassportCardShell';
+import { usePassportSeason } from '@/hooks/usePassportSeason';
 import { getSiteUrl } from '@/lib/siteUrl';
 import UserAvatar from '@/components/ui/UserAvatar';
 
@@ -71,7 +71,8 @@ export default function PassportPage() {
 function PassportIssued({ user }) {
     const [friendsCount, setFriendsCount] = useState(0);
     const [attendedEvents, setAttendedEvents] = useState([]);
-    const [selectedSeason, setSelectedSeason] = useState(null);
+    const { availableYears, selectedSeason, setSelectedSeason, filteredEvents } =
+        usePassportSeason(attendedEvents);
 
     useEffect(() => {
         if (!user?.id) return;
@@ -96,22 +97,6 @@ function PassportIssued({ user }) {
         }).catch(() => {});
     }, [user?.id]);
 
-    const availableYears = useMemo(() => {
-        const years = [...new Set(attendedEvents.map((e) => getEventYear(e.startDate)))].sort((a, b) => b - a);
-        return years;
-    }, [attendedEvents]);
-
-    useEffect(() => {
-        if (availableYears.length > 0 && (selectedSeason === null || !availableYears.includes(selectedSeason))) {
-            setSelectedSeason(availableYears[0]);
-        }
-    }, [availableYears]);
-
-    const filteredEvents = useMemo(() => {
-        if (selectedSeason === null) return attendedEvents;
-        return attendedEvents.filter((e) => getEventYear(e.startDate) === selectedSeason);
-    }, [attendedEvents, selectedSeason]);
-
     const fullName = user?.name ?? 'PXI CITIZEN';
     const username = user?.username ?? 'citizen';
     const city = user?.city ?? '—';
@@ -132,19 +117,9 @@ function PassportIssued({ user }) {
     })();
 
     const passportNumber = `P${String(user?.id || '0512026').slice(0, 7).toUpperCase()}XI`;
-    const formatIssuedDate = (dateString) => {
-        if (!dateString) return '01JAN26';
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-        const year = String(date.getFullYear()).slice(-2);
-        return `${day}${month}${year}`;
-    };
-    const nameParts = fullName.toUpperCase().replace(' ', '<');
-    const mrzLine1 = formatMRZ(`PXI<${username.toUpperCase()}<<${nameParts}`, 36);
-    const mrzLine2 = formatMRZ(`ISSUED${formatIssuedDate(user?.passportIssuedAt)}<${passportNumber}<<<PXISPACE`, 36);
 
     const { levelText, badgeLetter } = getPassportLevelDisplay(user);
+    const tierId = getOdysseyTierFromXp(user?.odysseyXp).id;
     const levelProgress = getLevelProgress(user?.odysseyXp);
     const passportType = user?.isVendor ? 'Diplomat' : user?.isPassportIssued ? 'Citizen' : 'Partial';
 
@@ -191,91 +166,41 @@ function PassportIssued({ user }) {
 
             {/* Passport card */}
             <div className="flex justify-center">
-                <div className="relative w-[min(95vw,361px)] h-[558px] overflow-hidden rounded-[8px] border border-white bg-black shadow-[0_1px_12px_rgba(255,255,255,0.25)]">
-
-                    {/* Top half: world map (matches mobile MapBackground over #0a0a0a) */}
-                    <div className="absolute left-0 right-0 top-0 h-1/2 z-[1] overflow-hidden bg-[#0a0a0a]">
-                        <Image
-                            src="/images/map-world.png"
-                            alt=""
-                            fill
-                            unoptimized
-                            className="object-cover opacity-90"
-                            priority
-                        />
-                    </div>
-                    {/* Stamps */}
-                    <div className="absolute left-0 right-0 top-0 h-1/2 z-[2] overflow-hidden opacity-90">
-                        {/* Season pills */}
-                        {availableYears.length > 1 && (
-                            <div className="absolute top-2 left-0 right-0 z-10 flex justify-center gap-1.5 px-2">
-                                {availableYears.map((year) => (
-                                    <button
-                                        key={year}
-                                        type="button"
-                                        onClick={() => setSelectedSeason(year)}
-                                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider border transition-all ${
-                                            year === selectedSeason
-                                                ? 'bg-white/20 border-white/60 text-white'
-                                                : 'bg-black/30 border-white/20 text-white/50 hover:bg-white/10'
-                                        }`}
-                                    >
-                                        {year}
-                                    </button>
-                                ))}
+                <PassportCardShell
+                    top={
+                        <>
+                            <Image
+                                src="/images/map-world.png"
+                                alt=""
+                                fill
+                                unoptimized
+                                className="object-cover opacity-90"
+                                priority
+                            />
+                            <div className="absolute inset-0 z-[2] overflow-hidden opacity-90">
+                                <PassportStampsLayer
+                                    events={filteredEvents}
+                                    availableYears={availableYears}
+                                    selectedSeason={selectedSeason}
+                                    onSelectSeason={setSelectedSeason}
+                                    fallbackTierId={tierId}
+                                    seasonPillsPointerEvents
+                                />
                             </div>
-                        )}
-                        {/* Dynamic stamps */}
-                        {filteredEvents.map((event, index) => {
-                            const shape = getStampShape(event.id);
-                            const layout = getStampLayout(event.id, index);
-                            const color = getStampColor(event.xp, 'WANDERER');
-                            return (
-                                <div
-                                    key={event.id}
-                                    style={{
-                                        position: 'absolute',
-                                        left: layout.left,
-                                        top: layout.top,
-                                        width: layout.width,
-                                        height: layout.height,
-                                        transform: `rotate(${layout.rotation}deg)`,
-                                        zIndex: index + 1,
-                                        pointerEvents: 'none',
-                                    }}
-                                >
-                                    <DynamicStamp
-                                        shape={shape}
-                                        color={color}
-                                        name={formatStampName(event.name)}
-                                        date={formatStampDate(event.startDate)}
-                                        city={formatStampCity(event.location)}
-                                    />
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <div className="absolute top-[8px] right-[8px] z-[10] text-[12px] text-white/60 tracking-[0.08em] uppercase">
-                        {passportNumber}
-                    </div>
-                    <div className="absolute left-[-182px] top-[128px] z-[10] -rotate-90 text-[16px] tracking-[0.24em] text-white/55 uppercase">
-                        SEASON {selectedSeason ?? '01 2026'}
-                    </div>
-
-                    {/* Crease fold */}
-                    <div className="absolute inset-x-0 top-1/2 z-20 h-[80px] -translate-y-1/2 pointer-events-none">
-                        <div className="h-1/2 bg-gradient-to-b from-transparent via-black/55 to-black/90" />
-                        <div className="relative h-0">
-                            <div className="h-[3px] bg-[#050505] shadow-[0_0_6px_3px_rgba(0,0,0,0.9)]" />
-                            <div className="absolute left-0 right-0 top-[-1px] border-t-2 border-dashed border-white/40" />
-                        </div>
-                        <div className="h-1/2 bg-gradient-to-t from-transparent via-black/55 to-black/90" />
-                    </div>
-
-                    {/* Bottom half */}
-                    <div className="absolute left-0 right-0 bottom-0 top-1/2 z-10 overflow-hidden bg-[#0f0f0f]">
-                        {/* Content — px-6 pt-6 matches mobile bottomContent paddingHorizontal:24 paddingTop:24 */}
-                        <div className="px-6 pt-6 h-full relative">
+                        </>
+                    }
+                    overlay={
+                        <>
+                            <div className={`absolute top-[8px] right-[8px] z-10 ${PASSPORT_ID_OVERLAY_CLASS}`}>
+                                {passportNumber}
+                            </div>
+                            <div className="absolute left-[-182px] top-[128px] z-10 -rotate-90 text-[16px] uppercase tracking-[0.24em] text-white/55">
+                                SEASON {selectedSeason ?? '01 2026'}
+                            </div>
+                        </>
+                    }
+                    bottom={
+                        <div className="relative h-full px-6 pt-6">
 
                             {/* Header row: title+line | passport number */}
                             <div className="flex items-start justify-between gap-2 mb-1">
@@ -319,7 +244,10 @@ function PassportIssued({ user }) {
                             {/* Details grid: photo | info column (matching mobile detailsGrid) */}
                             <div className="flex mt-2" style={{ gap: 14 }}>
                                 {/* Photo (matching mobile photoContainer: 113×130) */}
-                                <div className="shrink-0 rounded-[6px] overflow-hidden shadow-[0_1px_24px_2px_rgba(255,255,255,0.3)]" style={{ width: 113, height: 130 }}>
+                                <div
+                                    className={`shrink-0 overflow-hidden rounded-[6px] ${PASSPORT_AVATAR_FRAME_CLASS}`}
+                                    style={{ width: 113, height: 130 }}
+                                >
                                     <UserAvatar user={user} size={130} rounded="md" className="!w-[113px] !h-[130px]" alt={fullName} />
                                 </div>
 
@@ -374,18 +302,16 @@ function PassportIssued({ user }) {
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Separator line — absolute bottom:38, left/right:24 (matching mobile separatorLine) */}
-                        <div className="absolute left-6 right-6 h-[2px] bg-white/40" style={{ bottom: 38 }} />
-
-                        {/* MRZ footer — absolute bottom:4, left/right:24 (matching mobile passportFooterContainer) */}
-                        <div className="absolute left-6 right-6" style={{ bottom: 4 }}>
-                            <p className="font-mono text-[12px] leading-[15px] uppercase tracking-[0.12em] text-[rgba(255,255,255,0.32)] truncate mb-[2px]">{mrzLine1}</p>
-                            <p className="font-mono text-[12px] leading-[15px] uppercase tracking-[0.12em] text-[rgba(255,255,255,0.32)] truncate text-right">{mrzLine2}</p>
+                            <PassportMrzFooter
+                                userId={user?.id}
+                                username={username}
+                                fullName={fullName}
+                                issuedAt={user?.createdAt ?? user?.passportIssuedAt}
+                            />
                         </div>
-                    </div>
-                </div>
+                    }
+                />
             </div>
 
             <p className="text-zinc-600 text-xs text-center">
