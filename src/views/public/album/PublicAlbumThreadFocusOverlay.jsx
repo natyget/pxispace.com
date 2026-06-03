@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { ALBUM_MEDIA_FRAME_COLOR } from './albumLayoutConstants';
 import { mediaDisplayUrl } from './albumMediaLayout';
@@ -23,7 +24,6 @@ import { getThreadReactionPills, normalizeEmojiForDisplay } from './albumSocialD
 
 function FocusCommentCard({ comment, index }) {
   const actor = comment.sender ?? comment.author ?? {};
-  const avatar = displayImageSrc(actor.avatarUrl, null);
   const rawUsername = String(actor.username ?? actor.handle ?? '').trim();
   const displayName = rawUsername.replace(/^@+/, '') || 'Member';
   const tilt = COMMENT_TILTS_DEG[index % COMMENT_TILTS_DEG.length];
@@ -44,12 +44,8 @@ function FocusCommentCard({ comment, index }) {
           aria-hidden
         />
         <div className="relative z-[2] flex items-start gap-2 px-[9px] py-[7px]">
-          <span className="size-8 shrink-0 overflow-hidden rounded-full border border-white/30 bg-[#12141a]">
-            {avatar ? (
-              <Image src={avatar} alt="" width={32} height={32} unoptimized className="size-full object-cover" />
-            ) : (
-              <span className="flex size-full items-center justify-center text-[10px] text-zinc-500">?</span>
-            )}
+          <span className="size-8 shrink-0 overflow-hidden rounded-full border border-white/30">
+            <UserAvatar user={{ avatarUrl: actor.avatarUrl }} size={32} className="size-full" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="mb-1 flex items-center justify-between gap-2">
@@ -137,7 +133,6 @@ export default function PublicAlbumThreadFocusOverlay({
 
   if (!mounted || !item || !layout) return null;
 
-  const authorSrc = displayImageSrc(item.author?.avatarUrl, null);
   const hasMedia = Boolean((isVideo && fullVideoSrc) || previewSrc);
 
   const overlay = (
@@ -248,18 +243,9 @@ export default function PublicAlbumThreadFocusOverlay({
                         <span className="truncate text-xs font-extrabold text-white">
                           {item.author.username || 'Member'}
                         </span>
-                        {authorSrc ? (
-                          <span className="relative size-7 shrink-0 overflow-hidden rounded-full border border-white/35">
-                            <Image
-                              src={authorSrc}
-                              alt=""
-                              width={28}
-                              height={28}
-                              unoptimized
-                              className="size-full object-cover"
-                            />
-                          </span>
-                        ) : null}
+                        <span className="relative size-7 shrink-0 overflow-hidden rounded-full border border-white/35">
+                          <UserAvatar user={{ avatarUrl: item.author?.avatarUrl }} size={28} className="size-full" />
+                        </span>
                       </span>
                     </span>
                   ) : null}

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import UserAvatar from '@/components/ui/UserAvatar';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { UserGroupIcon, Share01Icon, ClockIcon, Location01Icon } from '@hugeicons/core-free-icons';
@@ -158,20 +159,11 @@ export default function EventDetailsPageView() {
             </div>
 
             <div className="flex items-center gap-3">
-              {host?.avatarUrl ? (
-                <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-white/15">
-                  <Image
-                    src={host.avatarUrl}
-                    alt=""
-                    width={40}
-                    height={40}
-                    unoptimized
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-zinc-700 border border-white/10 shrink-0" />
-              )}
+              <UserAvatar
+                user={{ avatarUrl: host?.avatarUrl }}
+                size={40}
+                className="shrink-0 border border-white/15"
+              />
               <p className="text-sm text-zinc-300">
                 Hosted by{' '}
                 <span className="font-semibold text-white">{host?.name || 'Unknown host'}</span>
@@ -262,20 +254,11 @@ export default function EventDetailsPageView() {
                     className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-zinc-900/40 px-3 py-2.5"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      {person.avatarUrl ? (
-                        <Image
-                          src={person.avatarUrl}
-                          alt=""
-                          width={40}
-                          height={40}
-                          unoptimized
-                          className="rounded-full object-cover border border-white/10 shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-300 shrink-0">
-                          {(person.name || person.username || '?')[0]?.toUpperCase()}
-                        </div>
-                      )}
+                      <UserAvatar
+                        user={{ avatarUrl: person.avatarUrl }}
+                        size={40}
+                        className="shrink-0 border border-white/10"
+                      />
                       <div className="min-w-0">
                         <p className="text-sm text-white truncate font-medium">
                           {person.name?.trim() || `@${person.username || 'unknown'}`}
