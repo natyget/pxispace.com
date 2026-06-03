@@ -68,8 +68,6 @@ export default function EmailAuthPage() {
                 router.replace('/dashboard/admin');
             } else if (!authUser.phoneNumber) {
                 router.replace('/verify-phone');
-            } else if (!authUser.isPassportIssued) {
-                router.replace('/passport-required');
             } else {
                 router.replace(defaultPostLoginPath(authUser));
             }

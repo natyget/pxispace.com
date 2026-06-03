@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { senderDisplayForInvite } from '@/lib/notifications/inviteNotificationCopy';
 import NotificationMediaThumb from '../NotificationMediaThumb';
 import { NOTIFICATION_CARD_CLASS, NOTIFICATION_ROW_CLASS } from '../notificationStyles';
@@ -10,11 +11,6 @@ import {
   resolveMediaThumbAspect,
   thumbnailSizeForMediaAspect,
 } from '@/lib/notifications/notificationMediaThumb';
-import { displayImageSrc } from '@/lib/mediaUrl';
-
-function avatarSrc(user) {
-  return displayImageSrc(user?.avatarUrl, null) || `https://i.pravatar.cc/300?u=${user?.id || 'anon'}`;
-}
 
 function DiagonalAvatarStack({ senders }) {
   const primary = senders[0];
@@ -25,12 +21,7 @@ function DiagonalAvatarStack({ senders }) {
   if (!secondary) {
     return (
       <Link href={primary.id ? `/u/${primary.id}` : '#'} className="w-12 h-12 shrink-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={avatarSrc(primary)}
-          alt=""
-          className="w-12 h-12 rounded-full object-cover bg-[#0c0c0c]"
-        />
+        <UserAvatar user={primary} size={48} />
       </Link>
     );
   }
@@ -41,15 +32,13 @@ function DiagonalAvatarStack({ senders }) {
         href={secondary.id ? `/u/${secondary.id}` : '#'}
         className="absolute bottom-0 right-0 w-[34px] h-[34px] rounded-full border-2 border-[#050505] overflow-hidden"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={avatarSrc(secondary)} alt="" className="w-full h-full object-cover" />
+        <UserAvatar user={secondary} size={34} />
       </Link>
       <Link
         href={primary.id ? `/u/${primary.id}` : '#'}
         className="absolute top-0 left-0 w-[34px] h-[34px] rounded-full border-2 border-[#050505] overflow-hidden z-[1]"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={avatarSrc(primary)} alt="" className="w-full h-full object-cover" />
+        <UserAvatar user={primary} size={34} />
       </Link>
     </div>
   );
@@ -57,6 +46,7 @@ function DiagonalAvatarStack({ senders }) {
 
 export default function GroupedPhotoReactionCard({ item, onClick }) {
   const albumName = item.albumName?.trim() || 'album';
+  const thumbUri = item.previewUrl?.trim() || null;
   const primaryName = item.senders[0] ? senderDisplayForInvite(item.senders[0]) : 'Someone';
   const secondaryName = item.senders[1] ? senderDisplayForInvite(item.senders[1]) : null;
   const othersCount = Math.max(0, item.count - 1);
@@ -94,7 +84,7 @@ export default function GroupedPhotoReactionCard({ item, onClick }) {
           {item.time ? <p className="text-white/35 text-xs font-medium mt-1.5">{item.time}</p> : null}
         </div>
         <NotificationMediaThumb
-          url={item.previewUrl}
+          uri={thumbUri}
           width={thumbSize.width}
           height={thumbSize.height}
           borderRadius={NOTIFICATION_THUMB_RADIUS}

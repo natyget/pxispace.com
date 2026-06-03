@@ -88,9 +88,7 @@ export default function VerifyPhonePage() {
                     sessionStorage.removeItem('pxi_after_register_login_redirect');
                 }
 
-                if (!newUser.isPassportIssued) {
-                    router.replace('/passport-required');
-                } else if (postCheckout) {
+                if (postCheckout) {
                     router.replace(postCheckout);
                 } else {
                     router.replace(defaultPostLoginPath(newUser));
@@ -99,11 +97,7 @@ export default function VerifyPhonePage() {
                 // Backend saves phoneNumber to profile only when OTP verification succeeds
                 const result = await authService.verifyPhone(fullPhone, trimmedCode);
                 saveAuth({ token: result.token, user: result.user });
-                if (!result.user.isPassportIssued) {
-                    router.replace('/passport-required');
-                } else {
-                    router.replace(defaultPostLoginPath(result.user));
-                }
+                router.replace(defaultPostLoginPath(result.user));
             } else {
                 setError('Session expired. Please sign in again.');
                 router.replace('/login');

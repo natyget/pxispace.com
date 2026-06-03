@@ -8,7 +8,7 @@ import {
   senderDisplayForInvite,
 } from '@/lib/notifications/inviteNotificationCopy';
 import { formatInviteRespondedAt } from '@/lib/notifications/notificationTime';
-import { displayImageSrc } from '@/lib/mediaUrl';
+import UserAvatar from '@/components/ui/UserAvatar';
 import NotificationMediaThumb from '../NotificationMediaThumb';
 import { NOTIFICATION_CARD_CLASS, PASS_BTN_CLASS, RSVP_INNER_CLASS, RSVP_OUTER_CLASS } from '../notificationStyles';
 
@@ -18,9 +18,6 @@ const AVATAR = 32;
 const AVATAR_STEP = AVATAR - AVATAR / 3;
 const MAX_AVATARS = 5;
 
-function memberAvatarUri(userId, avatarUrl) {
-  return displayImageSrc(avatarUrl, null) || `https://i.pravatar.cc/300?u=${userId}`;
-}
 
 function buildMemberSlots(previewMembers, totalMembers, sender) {
   const members = [...(previewMembers ?? [])];
@@ -62,12 +59,7 @@ function MemberAvatarStack({ previewMembers, totalMembers, sender }) {
               +{slot.count}
             </div>
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={memberAvatarUri(slot.member.userId, slot.member.avatarUrl)}
-              alt=""
-              className="w-full h-full object-cover"
-            />
+            <UserAvatar user={{ avatarUrl: slot.member.avatarUrl }} size={32} />
           )}
         </div>
       ))}

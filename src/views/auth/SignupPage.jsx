@@ -52,8 +52,6 @@ export default function SignupPage() {
             saveAuth({ token, user });
             if (!user.phoneNumber) {
                 router.replace('/verify-phone');
-            } else if (!user.isPassportIssued) {
-                router.replace('/passport-required');
             } else {
                 router.replace('/dashboard');
             }

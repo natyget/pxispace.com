@@ -22,6 +22,8 @@ import {
     renderPassportFooterSegments,
 } from '@/components/passport/passportVisualParts';
 import { displayImageSrc } from '@/lib/mediaUrl';
+import UserAvatar from '@/components/ui/UserAvatar';
+import AnonymousAvatarSilhouette from '@/components/ui/AnonymousAvatarSilhouette';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 import AppOpenBanner from '@/components/links/AppOpenBanner';
 import { getUserTickets } from '@/services/tickets';
@@ -43,7 +45,6 @@ function PassportReadOnly({ user }) {
     const chipFilterId = useId().replace(/:/g, '');
     const fullName = user?.name ?? 'PXI CITIZEN';
     const username = user?.username ?? 'citizen';
-    const avatarFallback = fullName.charAt(0).toUpperCase();
     const city = user?.city ?? '—';
     const bio = user?.bio?.trim() ? user.bio.trim() : '—';
     const instagram = user?.instagramHandle
@@ -370,20 +371,14 @@ function PassportReadOnly({ user }) {
                                     className="relative shrink-0 overflow-hidden rounded-[6px] shadow-[0_1px_24px_2px_rgba(255,255,255,0.3)]"
                                     style={{ width: 113, height: 130 }}
                                 >
-                                    {avatarSrc ? (
-                                        <Image
-                                            src={avatarSrc}
-                                            alt={fullName}
-                                            width={113}
-                                            height={130}
-                                            unoptimized
-                                            className="h-full w-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="flex h-full w-full items-center justify-center bg-pxi-purple/20 text-2xl font-black text-pxi-purple">
-                                            {avatarFallback}
-                                        </div>
-                                    )}
+                                    <UserAvatar
+                                        user={user}
+                                        src={avatarSrc}
+                                        size={130}
+                                        rounded="md"
+                                        className="!w-[113px] !h-[130px]"
+                                        alt={fullName}
+                                    />
                                 </div>
 
                                 <div className="flex min-w-0 flex-1 flex-col">
@@ -554,8 +549,8 @@ export default function PublicProfileClient({ userId, initialProfile }) {
             <div className="relative min-h-screen bg-[#0a0a0a] pb-40 pt-24 text-white md:pb-40 md:pt-28">
                 <div className="mx-auto max-w-lg px-4">
                     <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-8 text-center">
-                        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-pxi-purple/20 bg-pxi-purple/10">
-                            <HugeiconsIcon icon={SmartPhone01Icon} size={26} className="text-pxi-purple" />
+                        <div className="mx-auto mb-5 flex justify-center">
+                            <AnonymousAvatarSilhouette size={64} />
                         </div>
                         <h1 className="text-xl font-black tracking-tight">
                             {initialProfile.name || initialProfile.username || 'PXI member'}

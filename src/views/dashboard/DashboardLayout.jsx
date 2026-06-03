@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -237,8 +238,6 @@ export default function DashboardLayout({ children }) {
         router.replace('/');
     };
 
-    // Use stable placeholder until mounted to avoid hydration mismatch (server has no user, client has name initial)
-    const avatarFallback = mounted ? (user?.name?.charAt(0)?.toUpperCase() || 'P') : 'P';
     const hasOrganizerAccess = hasLiveOpsAccess;
     const showDevCaps = searchParams.get('debugCaps') === '1';
     const memberNavItems = [
@@ -379,19 +378,10 @@ export default function DashboardLayout({ children }) {
                             className={`${sidebarCollapsed ? 'inline-flex h-11 w-11 mx-auto items-center justify-center rounded-full transition-all duration-300' : `${SIDEBAR_BTN_BASE} justify-center md:justify-start`} bg-transparent border border-transparent text-white/80`}
                             title={sidebarCollapsed ? 'Profile' : undefined}
                         >
-                            {mounted && user?.avatarUrl ? (
-                                <Image
-                                    src={user.avatarUrl}
-                                    alt={user?.name ?? ''}
-                                    width={36}
-                                    height={36}
-                                    unoptimized
-                                    className="w-10 h-10 rounded-full overflow-hidden"
-                                />
+                            {mounted ? (
+                                <UserAvatar user={user} size={40} alt={user?.name ?? ''} />
                             ) : (
-                                <div className="w-10 h-10 rounded-full bg-pxi-purple/20 flex items-center justify-center text-pxi-purple font-bold text-sm">
-                                    {avatarFallback}
-                                </div>
+                                <UserAvatar size={40} />
                             )}
                             {!sidebarCollapsed && (
                                 <>

@@ -50,30 +50,7 @@ function formatInviteWhen(iso) {
   }
 }
 
-function UserAvatar({ user, size = 38 }) {
-  const initial = ((user?.name || user?.username || '?').charAt(0)).toUpperCase();
-  const dim = `${size}px`;
-  if (user?.avatarUrl) {
-    return (
-      <img
-        src={user.avatarUrl}
-        alt=""
-        style={{ width: dim, height: dim }}
-        className="rounded-full object-cover shrink-0"
-      />
-    );
-  }
-  return (
-    <div
-      style={{ width: dim, height: dim }}
-      className="rounded-full bg-violet-900/50 flex items-center justify-center shrink-0 text-white font-bold text-base"
-    >
-      {initial}
-    </div>
-  );
-}
-
-export default function EventInvitePageView() {
+import UserAvatar from '@/components/ui/UserAvatar';
   const { user } = useAuth();
   const { event, eventId, albumId, participants, reloadParticipants, reloadFeaturedPeople } =
     useEventManage();

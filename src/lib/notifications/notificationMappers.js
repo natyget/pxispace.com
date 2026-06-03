@@ -3,10 +3,7 @@ import { formatNotificationCompactTime, formatNotificationListTime } from './not
 import { senderDisplayForThreadMessage, threadMessageNotificationCopy } from './threadMessageNotificationCopy';
 
 export function userAvatarForCard(user) {
-  return (
-    user?.avatarUrl ||
-    (user?.id ? `https://i.pravatar.cc/300?u=${user.id}` : 'https://i.pravatar.cc/300?u=anon')
-  );
+  return user?.avatarUrl || null;
 }
 
 export function albumInviteCardItemFromNotification(notification) {

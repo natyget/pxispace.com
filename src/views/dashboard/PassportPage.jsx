@@ -28,6 +28,7 @@ import {
     getEventYear,
 } from '@/components/passport/passportVisualParts';
 import { getSiteUrl } from '@/lib/siteUrl';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 function ShareProfileLinkButton({ userId }) {
     const [copied, setCopied] = useState(false);
@@ -113,7 +114,6 @@ function PassportIssued({ user }) {
 
     const fullName = user?.name ?? 'PXI CITIZEN';
     const username = user?.username ?? 'citizen';
-    const avatarFallback = fullName.charAt(0).toUpperCase();
     const city = user?.city ?? '—';
     const bio = user?.bio?.trim() ? user.bio.trim() : '—';
     const instagram = user?.instagramHandle
@@ -320,13 +320,7 @@ function PassportIssued({ user }) {
                             <div className="flex mt-2" style={{ gap: 14 }}>
                                 {/* Photo (matching mobile photoContainer: 113×130) */}
                                 <div className="shrink-0 rounded-[6px] overflow-hidden shadow-[0_1px_24px_2px_rgba(255,255,255,0.3)]" style={{ width: 113, height: 130 }}>
-                                    {user?.avatarUrl ? (
-                                        <Image src={user.avatarUrl} alt={fullName} width={113} height={130} unoptimized className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-pxi-purple/20 text-2xl font-black text-pxi-purple">
-                                            {avatarFallback}
-                                        </div>
-                                    )}
+                                    <UserAvatar user={user} size={130} rounded="md" className="!w-[113px] !h-[130px]" alt={fullName} />
                                 </div>
 
                                 {/* Info column (matching mobile infoColumn → infoStack) */}
