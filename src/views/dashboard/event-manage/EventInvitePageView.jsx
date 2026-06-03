@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEventManage } from './EventManageContext';
 import { eventShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
 import { shareEventQrImage, shareEventToInstagramStory } from '@/lib/inviteShare';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 const LINEUP_ROLE_MAX_LEN = 80;
 
@@ -50,7 +51,7 @@ function formatInviteWhen(iso) {
   }
 }
 
-import UserAvatar from '@/components/ui/UserAvatar';
+export default function EventInvitePageView() {
   const { user } = useAuth();
   const { event, eventId, albumId, participants, reloadParticipants, reloadFeaturedPeople } =
     useEventManage();

@@ -1,34 +1,16 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { SmartPhone01Icon, Shield01Icon, CheckmarkCircle02Icon, Loading02Icon, RefreshIcon, ArrowRight02Icon, Share01Icon, CheckmarkBadge01Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { getRelationshipStatus } from '../../services/friends';
-import { getUserTickets } from '../../services/tickets';
-import { getEventsForWallet, getMyEventXp } from '../../services/events';
-import { getPassportLevelDisplay, getOdysseyTierFromXp } from '../../utils/odysseyTier';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
-import {
-    getLevelProgress,
-    ODYSSEY_TIER_BANDS,
-    HeaderPolygonBadge,
-    getEventYear,
-} from '@/components/passport/passportVisualParts';
-import { PassportMrzFooter } from '@/components/passport/PassportMrzFooter';
-import { PassportStampsLayer } from '@/components/passport/PassportStampsLayer';
-import {
-    PassportCardShell,
-    PASSPORT_AVATAR_FRAME_CLASS,
-    PASSPORT_ID_OVERLAY_CLASS,
-} from '@/components/passport/PassportCardShell';
-import { usePassportSeason } from '@/hooks/usePassportSeason';
+import { PxiPassportSection } from '@/components/passport/PxiPassportSection';
 import { getSiteUrl } from '@/lib/siteUrl';
-import UserAvatar from '@/components/ui/UserAvatar';
 
 function ShareProfileLinkButton({ userId }) {
     const [copied, setCopied] = useState(false);
@@ -70,9 +52,6 @@ export default function PassportPage() {
 
 function PassportIssued({ user }) {
     const [friendsCount, setFriendsCount] = useState(0);
-    const [attendedEvents, setAttendedEvents] = useState([]);
-    const { availableYears, selectedSeason, setSelectedSeason, filteredEvents } =
-        usePassportSeason(attendedEvents);
 
     useEffect(() => {
         if (!user?.id) return;
@@ -81,243 +60,32 @@ function PassportIssued({ user }) {
             .catch(() => {});
     }, [user?.id]);
 
-    useEffect(() => {
-        if (!user?.id) return;
-        Promise.all([
-            getUserTickets(user.id),
-            getEventsForWallet(100, 0),
-            getMyEventXp(),
-        ]).then(([tickets, eventsData, xpByEventId]) => {
-            const events = tickets.flatMap((t) => {
-                const ev = (eventsData.events ?? []).find((e) => e.id === t.eventId);
-                if (!ev) return [];
-                return [{ id: ev.id, name: ev.name, startDate: ev.startDate, location: ev.location, xp: xpByEventId[ev.id] }];
-            });
-            setAttendedEvents(events);
-        }).catch(() => {});
-    }, [user?.id]);
-
-    const fullName = user?.name ?? 'PXI CITIZEN';
-    const username = user?.username ?? 'citizen';
-    const city = user?.city ?? '—';
-    const bio = user?.bio?.trim() ? user.bio.trim() : '—';
-    const instagram = user?.instagramHandle
-        ? (user.instagramHandle.startsWith('@') ? user.instagramHandle : `@${user.instagramHandle}`)
-        : '—';
-
-    const age = (() => {
-        if (user?.showAge === false) return '—';
-        if (!user?.birthdate) return '—';
-        const birth = new Date(user.birthdate);
-        const today = new Date();
-        let a = today.getFullYear() - birth.getFullYear();
-        const m = today.getMonth() - birth.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) a--;
-        return a;
-    })();
-
-    const passportNumber = `P${String(user?.id || '0512026').slice(0, 7).toUpperCase()}XI`;
-
-    const { levelText, badgeLetter } = getPassportLevelDisplay(user);
-    const tierId = getOdysseyTierFromXp(user?.odysseyXp).id;
-    const levelProgress = getLevelProgress(user?.odysseyXp);
-    const passportType = user?.isVendor ? 'Diplomat' : user?.isPassportIssued ? 'Citizen' : 'Partial';
-
-    const odessaVsNext = (() => {
-        const current = Math.max(0, Math.floor(Number(user?.odysseyXp) || 0));
-        const band = ODYSSEY_TIER_BANDS.find((b) => b.max === null || current <= b.max) ?? ODYSSEY_TIER_BANDS[ODYSSEY_TIER_BANDS.length - 1];
-        if (band.max === null) return `${current.toLocaleString('en-US')}/∞`;
-        return `${current.toLocaleString('en-US')}/${band.max.toLocaleString('en-US')}`;
-    })();
+    const headerRight = user?.isVendor ? (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400 sm:gap-1.5 sm:px-2.5 sm:text-[10px] md:px-3 md:text-[11px]">
+            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="shrink-0" />
+            Vendor
+        </span>
+    ) : (
+        <Link
+            href="/dashboard/vendor-upgrade"
+            className="inline-flex items-center rounded-full border border-pxi-purple/30 bg-pxi-purple/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-pxi-purple hover:bg-pxi-purple/30"
+        >
+            Vendor Setup
+        </Link>
+    );
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6">
-            {/* Above-card header */}
-            <div className="relative px-2">
-                <div className="flex items-center justify-between">
-                    <HeaderPolygonBadge letter={badgeLetter} progress={levelProgress} />
-                    <h1 className="absolute left-0 right-0 text-center text-[22px] font-bold text-white tracking-wide pointer-events-none">
-                        PXI Passport
-                    </h1>
-                    {user?.isVendor ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-400">
-                            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} />
-                            <span className="sm:hidden">Vendor</span>
-                            <span className="hidden sm:inline">You are vendor!</span>
-                        </span>
-                    ) : (
-                        <Link href="/dashboard/vendor-upgrade" className="inline-flex items-center rounded-full bg-pxi-purple/20 border border-pxi-purple/30 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-pxi-purple hover:bg-pxi-purple/30">
-                            Vendor Setup
-                        </Link>
-                    )}
-                </div>
-                <div className="mt-4 flex items-center justify-center">
-                    <button type="button" className="text-center">
-                        <p className="text-white text-base font-bold">{friendsCount}</p>
-                        <p className="text-[10px] uppercase tracking-widest text-white/45">Friends</p>
-                    </button>
-                </div>
-                {user?.id ? (
-                    <div className="mt-4 flex justify-center">
-                        <ShareProfileLinkButton userId={user.id} />
-                    </div>
-                ) : null}
-            </div>
-
-            {/* Passport card */}
-            <div className="flex justify-center">
-                <PassportCardShell
-                    top={
-                        <>
-                            <Image
-                                src="/images/map-world.png"
-                                alt=""
-                                fill
-                                unoptimized
-                                className="object-cover opacity-90"
-                                priority
-                            />
-                            <div className="absolute inset-0 z-[2] overflow-hidden opacity-90">
-                                <PassportStampsLayer
-                                    events={filteredEvents}
-                                    availableYears={availableYears}
-                                    selectedSeason={selectedSeason}
-                                    onSelectSeason={setSelectedSeason}
-                                    fallbackTierId={tierId}
-                                    seasonPillsPointerEvents
-                                />
-                            </div>
-                        </>
-                    }
-                    overlay={
-                        <>
-                            <div className={`absolute top-[8px] right-[8px] z-10 ${PASSPORT_ID_OVERLAY_CLASS}`}>
-                                {passportNumber}
-                            </div>
-                            <div className="absolute left-[-182px] top-[128px] z-10 -rotate-90 text-[16px] uppercase tracking-[0.24em] text-white/55">
-                                SEASON {selectedSeason ?? '01 2026'}
-                            </div>
-                        </>
-                    }
-                    bottom={
-                        <div className="relative h-full px-6 pt-6">
-
-                            {/* Header row: title+line | passport number */}
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                                <div className="shrink-0" style={{ width: 200 }}>
-                                    <p className="text-[14px] font-bold uppercase tracking-[0.16em] text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">
-                                        PXI PASSPORT
-                                    </p>
-                                    <div className="mt-1 h-[6px] border-t-[6px] border-white" />
-                                </div>
-                                <div className="shrink-0 text-right">
-                                    <p className="text-[9px] uppercase text-white/70">PXI Passport No.</p>
-                                    <p className="text-[11px] uppercase text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]">{passportNumber}</p>
-                                </div>
-                            </div>
-
-                            {/* Multi-lang + level + XP row (3 slots, matching mobile multiLangLevelRow) */}
-                            <div className="flex items-center w-full overflow-hidden mt-1" style={{ minHeight: 30 }}>
-                                {/* Slot 1: icon + "PASSPORT • PASS • PORT" */}
-                                <div className="flex-1 min-w-0 flex items-center" style={{ gap: 2 }}>
-                                    <svg width="20" height="12" viewBox="12 11 17 10" preserveAspectRatio="xMinYMid meet" fill="none" className="shrink-0" aria-hidden>
-                                        <path d="M12 11H29V21H12V11Z" fill="#BB17E8" />
-                                        <path fillRule="evenodd" clipRule="evenodd" d="M20.5 13C21.9864 13 23.2194 14.0812 23.4575 15.5H29V16.5H23.4575C23.2194 17.9188 21.9864 19 20.5 19C19.0136 19 17.7806 17.9188 17.5425 16.5H12V15.5H17.5425C17.7806 14.0812 19.0136 13 20.5 13ZM20.5 14C19.3954 14 18.5 14.8954 18.5 16C18.5 17.1046 19.3954 18 20.5 18C21.6046 18 22.5 17.1046 22.5 16C22.5 14.8954 21.6046 14 20.5 14Z" fill="#0C0C0C" />
-                                    </svg>
-                                    <span className="text-[9px] font-semibold uppercase tracking-[0.05em] text-white truncate">
-                                        PASSPORT • PASS • PORT
-                                    </span>
-                                </div>
-                                {/* Slot 2: LEVEL label + progress bar (fixed 108px, matching mobile levelBadgeInline) */}
-                                <div className="shrink-0 flex flex-col items-stretch" style={{ width: 108 }}>
-                                    <p className="text-[9px] font-semibold uppercase text-white/80 leading-[12px] mb-[3px]">LEVEL {levelText}</p>
-                                    <div className="h-[4px] w-full rounded-full overflow-hidden bg-[rgba(176,38,255,0.22)]">
-                                        <div className="h-full rounded-full bg-pxi-purple" style={{ width: `${levelProgress * 100}%` }} />
-                                    </div>
-                                </div>
-                                {/* Slot 3: XP score (matching mobile odessaScoreSlot) */}
-                                <div className="shrink-0 ml-2 text-right">
-                                    <span className="text-[10px] font-bold text-white">{odessaVsNext}</span>
-                                </div>
-                            </div>
-
-                            {/* Details grid: photo | info column (matching mobile detailsGrid) */}
-                            <div className="flex mt-2" style={{ gap: 14 }}>
-                                {/* Photo (matching mobile photoContainer: 113×130) */}
-                                <div
-                                    className={`shrink-0 overflow-hidden rounded-[6px] ${PASSPORT_AVATAR_FRAME_CLASS}`}
-                                    style={{ width: 113, height: 130 }}
-                                >
-                                    <UserAvatar user={user} size={130} rounded="md" className="!w-[113px] !h-[130px]" alt={fullName} />
-                                </div>
-
-                                {/* Info column (matching mobile infoColumn → infoStack) */}
-                                <div className="flex-1 min-w-0 flex flex-col">
-                                    {/* infoTopRow: name+username column | type badge cell */}
-                                    <div className="flex items-end justify-between w-full" style={{ gap: 10 }}>
-                                        {/* infoNameColumn */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex flex-col justify-center overflow-hidden" style={{ height: 34 }}>
-                                                <p className="text-[9px] font-medium uppercase text-white/70">Full name</p>
-                                                <p className="text-[12px] font-semibold uppercase leading-snug text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)] truncate">{fullName.toUpperCase()}</p>
-                                            </div>
-                                            <div className="flex flex-col justify-center overflow-hidden" style={{ height: 34 }}>
-                                                <p className="text-[9px] font-medium uppercase text-white/70">username</p>
-                                                <p className="text-[12px] text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)] truncate">{username}</p>
-                                            </div>
-                                        </div>
-                                        {/* typeBadgeColumnCell: height 68, align bottom-right */}
-                                        <div className="shrink-0 flex flex-col items-end justify-end" style={{ height: 68 }}>
-                                            <div className="flex items-baseline">
-                                                <span className="font-extrabold text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.35)]" style={{ fontSize: 52, lineHeight: '52px' }}>
-                                                    {passportType.charAt(0).toUpperCase()}
-                                                </span>
-                                                <span className="font-semibold capitalize text-white" style={{ fontSize: 13, lineHeight: '13px', marginLeft: 2, marginBottom: 2 }}>
-                                                    {passportType.slice(1)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* infoMetaPrimaryRow: Age | Insta | City */}
-                                    <div className="flex items-center justify-between overflow-hidden" style={{ height: 34 }}>
-                                        <div className="flex flex-col justify-center overflow-hidden" style={{ width: 38 }}>
-                                            <p className="text-[9px] font-medium uppercase text-white/70">Age</p>
-                                            <p className="text-[12px] text-white/90">{typeof age === 'number' ? age : '—'}</p>
-                                        </div>
-                                        <div className="flex-1 min-w-0 flex flex-col justify-center overflow-hidden">
-                                            <p className="text-[9px] font-medium uppercase text-white/70">Insta</p>
-                                            <p className="text-[12px] text-white/90 truncate">{instagram}</p>
-                                        </div>
-                                        <div className="flex-1 min-w-0 flex flex-col justify-center overflow-hidden">
-                                            <p className="text-[9px] font-medium uppercase text-white/70">City</p>
-                                            <p className="text-[12px] text-white/90 truncate">{city}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* infoGridRowBio */}
-                                    <div className="flex flex-col justify-center overflow-hidden" style={{ height: 34 }}>
-                                        <p className="text-[9px] font-medium uppercase text-white/70">Bio</p>
-                                        <p className="text-[12px] text-white/90 truncate">{bio}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <PassportMrzFooter
-                                userId={user?.id}
-                                username={username}
-                                fullName={fullName}
-                                issuedAt={user?.createdAt ?? user?.passportIssuedAt}
-                            />
-                        </div>
-                    }
-                />
-            </div>
-
-            <p className="text-zinc-600 text-xs text-center">
+        <PxiPassportSection
+            user={user}
+            friendsCount={friendsCount}
+            headerRight={headerRight}
+            eventsMode="self"
+            headerBelowFriends={user?.id ? <ShareProfileLinkButton userId={user.id} /> : null}
+        >
+            <p className="mt-6 text-center text-xs text-zinc-600">
                 To update your PXI Passport details, use the PXI mobile app.
             </p>
-        </div>
+        </PxiPassportSection>
     );
 }
 
@@ -363,10 +131,9 @@ function PassportNotIssued({ user }) {
                         <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest">PXI Passport</span>
                     </div>
                     {user?.isVendor ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-400">
-                            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} />
-                            <span className="sm:hidden">Vendor</span>
-                            <span className="hidden sm:inline">You are vendor!</span>
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400 sm:gap-1.5 sm:px-2.5 sm:text-[10px] md:px-3 md:text-[11px]">
+                            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="shrink-0" />
+                            Vendor
                         </span>
                     ) : (
                         <Link href="/dashboard/vendor-upgrade" className="inline-flex items-center rounded-full bg-pxi-purple/20 border border-pxi-purple/30 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-pxi-purple hover:bg-pxi-purple/30">
