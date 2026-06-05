@@ -98,6 +98,9 @@
 /* Tailwind v4 @theme: custom colors for utilities (bg-pxi-purple, text-pxi-dark, etc.) */
 @theme {
   --color-pxi-purple: #d84aff;
+  --color-newpurple-base: #f01fff;
+  /** `#f01fff` at 80% opacity */
+  --color-newpurple: rgb(240 31 255 / 0.8);
   --color-pxi-dark: #050505;
   --color-pxi-charcoal: #121212;
   --color-pxi-violet: #2d1b4e;
@@ -140,6 +143,8 @@
     --glow-purple: rgba(168, 85, 247, 0.4);
     --glow-cyan: rgba(6, 182, 212, 0.4);
     --pxi-purple: #d84aff;
+    --newpurple-base: #f01fff;
+    --newpurple: rgb(240 31 255 / 0.8);
     --pxi-dark: #050505;
     --pxi-charcoal: #121212;
     --pxi-violet: #2d1b4e;
