@@ -1,13 +1,13 @@
 'use client';
 
 import Image from 'next/image';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { formatAlbumPostTime } from './publicAlbumDate';
 import { isGifContent } from './buildPublicAlbumTimeline';
 
 export default function PublicAlbumThreadMessage({ message, rotation = 0 }) {
   const author = message.author;
-  const avatarSrc = displayImageSrc(author?.avatarUrl, null);
   const timeLabel = formatAlbumPostTime(message.createdAt);
   const isGif = isGifContent(message.content);
   const gifSrc = isGif ? displayImageSrc(message.content.trim(), null) : null;
@@ -17,20 +17,9 @@ export default function PublicAlbumThreadMessage({ message, rotation = 0 }) {
       className="mb-3 flex w-full items-end justify-start gap-2.5"
       style={{ transform: `rotate(${rotation}deg)` }}
     >
-      {avatarSrc ? (
-        <div className="mb-0.5 size-[38px] shrink-0 overflow-hidden rounded-full border-[1.5px] border-white/40 bg-[#12141a]">
-          <Image
-            src={avatarSrc}
-            alt=""
-            width={38}
-            height={38}
-            unoptimized
-            className="size-full object-cover"
-          />
-        </div>
-      ) : (
-        <div className="mb-0.5 size-[38px] shrink-0 rounded-full border-[1.5px] border-white/40 bg-[#12141a]" />
-      )}
+      <div className="mb-0.5 size-[38px] shrink-0 overflow-hidden rounded-full border-[1.5px] border-white/40">
+        <UserAvatar user={{ avatarUrl: author?.avatarUrl }} size={38} className="size-full" />
+      </div>
       <div
         className={`max-w-[300px] shrink overflow-hidden rounded-[14px] border-[1.5px] border-[rgba(52,56,64,0.92)] bg-white/[0.08] ${
           isGif ? 'border-0 bg-transparent' : 'rounded-bl-lg'

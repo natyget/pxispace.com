@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { eventsService } from '@/services/events';
 import EventCard from '@/views/events/EventCard';
+import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
+import { useAuth } from '@/contexts/AuthContext';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowDown01Icon } from '@hugeicons/core-free-icons';
+import { ArrowDown01Icon, FavouriteIcon } from '@hugeicons/core-free-icons';
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
 
@@ -79,8 +81,12 @@ const CITY_PRESETS = [
 ];
 
 export default function PublicEventsPage() {
+  const { user } = useAuth();
+  const isLoggedIn = !!user?.id;
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [favoriteIds, setFavoriteIds] = useState(() => new Set());
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [heroIndex, setHeroIndex] = useState(0);
   const [bgCover, setBgCover] = useState(null);
   const [bgPrevCover, setBgPrevCover] = useState(null);
@@ -104,6 +110,24 @@ export default function PublicEventsPage() {
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const loadFavorites = useCallback(() => {
+    loadFavoriteEventIds(isLoggedIn).then(setFavoriteIds).catch(() => setFavoriteIds(new Set()));
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    loadFavorites();
+  }, [loadFavorites]);
+
+  const handleToggleFavorite = useCallback(
+    (id) => {
+      const isFavorite = favoriteIds.has(String(id));
+      toggleFavoriteEventId(id, isFavorite, isLoggedIn)
+        .then(setFavoriteIds)
+        .catch(() => loadFavorites());
+    },
+    [favoriteIds, isLoggedIn, loadFavorites]
+  );
 
   const filteredSortedEvents = useMemo(() => {
     let list = [...events];
@@ -161,8 +185,12 @@ export default function PublicEventsPage() {
       list = list.filter((e) => String(e.venue || '').toLowerCase().includes(cq));
     }
 
+    if (favoritesOnly) {
+      list = list.filter((e) => favoriteIds.has(String(e.id)));
+    }
+
     return list;
-  }, [events, trending, timeFilter, cityFilter, searchQuery]);
+  }, [events, trending, timeFilter, cityFilter, searchQuery, favoritesOnly, favoriteIds]);
 
   const heroEvents = useMemo(() => filteredSortedEvents.slice(0, 8), [filteredSortedEvents]);
   const featured = useMemo(
@@ -360,6 +388,23 @@ export default function PublicEventsPage() {
                   </div>
                 ) : null}
               </div>
+
+              <button
+                type="button"
+                onClick={() => setFavoritesOnly((v) => !v)}
+                className={`rounded-full border px-4 py-2.5 text-sm font-bold transition ${
+                  favoritesOnly
+                    ? 'border-pxi-purple bg-pxi-purple/20 text-pxi-purple'
+                    : 'border-white/10 bg-white/5 text-white hover:bg-white/10'
+                }`}
+              >
+                <HugeiconsIcon
+                  icon={FavouriteIcon}
+                  size={16}
+                  className={`inline-block mr-1.5 -mt-0.5 ${favoritesOnly ? 'fill-current' : ''}`}
+                />
+                Favorites{favoriteIds.size > 0 ? ` (${favoriteIds.size})` : ''}
+              </button>
             </div>
           </div>
 
@@ -449,7 +494,13 @@ export default function PublicEventsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-4">
             {rest.map((ev) => (
-              <EventCard key={ev.id} event={ev} detailBasePath="/events" />
+              <EventCard
+                key={ev.id}
+                event={ev}
+                detailBasePath="/events"
+                favorited={favoriteIds.has(String(ev.id))}
+                onToggleFavorite={handleToggleFavorite}
+              />
             ))}
           </div>
         )}

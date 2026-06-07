@@ -10,9 +10,11 @@ import Button from '../../components/ui/Button';
 import { eventsService } from '../../services/events';
 import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket } from '../../services/tickets';
 import { spotifyEmbedSrc } from '@/lib/spotify';
-import { readFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
+import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
+import { useAuth } from '@/contexts/AuthContext';
 import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 
 const DEFAULT_IMG =
@@ -81,6 +83,8 @@ const PUBLIC_EULA_COPY = (
 const EventDetails = ({ basePath = '/events' }) => {
   const { id } = useParams();
   const router = useRouter();
+  const { user } = useAuth();
+  const isLoggedIn = !!user?.id;
   const [apiEvent, setApiEvent] = useState(null);
   const [eventLoading, setEventLoading] = useState(!!id);
   const [quoteTotal, setQuoteTotal] = useState(null);
@@ -90,8 +94,8 @@ const EventDetails = ({ basePath = '/events' }) => {
   const [selectedTierId, setSelectedTierId] = useState(null);
 
   useEffect(() => {
-    setFavoriteIds(readFavoriteEventIds());
-  }, []);
+    loadFavoriteEventIds(isLoggedIn).then(setFavoriteIds).catch(() => setFavoriteIds(new Set()));
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (!id) {
@@ -177,8 +181,12 @@ const EventDetails = ({ basePath = '/events' }) => {
 
   const handleToggleFavorite = () => {
     if (!apiEvent?.id) return;
-    toggleFavoriteEventId(apiEvent.id);
-    setFavoriteIds(readFavoriteEventIds());
+    const isFavorite = favoriteIds.has(String(apiEvent.id));
+    toggleFavoriteEventId(apiEvent.id, isFavorite, isLoggedIn)
+      .then(setFavoriteIds)
+      .catch(() => {
+        loadFavoriteEventIds(isLoggedIn).then(setFavoriteIds).catch(() => setFavoriteIds(new Set()));
+      });
   };
 
   const goToCheckout = () => {
@@ -422,12 +430,11 @@ const EventDetails = ({ basePath = '/events' }) => {
                         key={fp.id || fp.userId}
                         className="glass-dark rounded-2xl border border-white/10 p-6 flex gap-4 items-center"
                       >
-                        <img
-                          src={displayImageSrc(u.avatarUrl, DEFAULT_IMG)}
+                        <UserAvatar
+                          user={{ avatarUrl: u.avatarUrl }}
+                          size={64}
                           alt=""
-                          className="w-16 h-16 rounded-full object-cover border border-white/10"
-                          onError={onImageErrorToDefault}
-                          referrerPolicy="no-referrer-when-downgrade"
+                          className="border border-white/10"
                         />
                         <div>
                           <p className="font-black text-white">{u.name || u.username || 'Performer'}</p>
@@ -453,18 +460,18 @@ const EventDetails = ({ basePath = '/events' }) => {
                   Host credentials — scrapbook stamps represent events organized, not places visited.
                 </p>
                 <div className="flex flex-col md:flex-row gap-8 items-start">
-                  <img
-                    src={displayImageSrc(host.avatarUrl, DEFAULT_IMG)}
+                  <UserAvatar
+                    user={{ avatarUrl: host.avatarUrl }}
+                    size={112}
+                    rounded="lg"
                     alt=""
-                    className="w-28 h-28 rounded-2xl object-cover border border-white/10 shrink-0"
-                    onError={onImageErrorToDefault}
-                    referrerPolicy="no-referrer-when-downgrade"
+                    className="shrink-0 border border-white/10"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-2xl font-black">{host.name || host.username || 'Host'}</p>
                     {host.username ? <p className="text-zinc-500">@{host.username}</p> : null}
                     {host.city ? <p className="text-zinc-400 text-sm mt-2">{host.city}</p> : null}
-                    {host.bio ? <p className="text-zinc-400 mt-4 leading-relaxed">{host.bio}</p> : null}
+                    <p className="text-zinc-400 mt-4 leading-relaxed">{host.bio?.trim() ? host.bio.trim() : '—'}</p>
                     <div className="flex flex-wrap gap-3 mt-6">
                       {host.instagramHandle ? (
                         <a

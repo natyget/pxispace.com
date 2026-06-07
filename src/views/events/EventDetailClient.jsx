@@ -11,6 +11,7 @@ import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 import AppOpenBanner from '@/components/links/AppOpenBanner';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { singleEventMapEmbedSrc } from '@/lib/eventMapEmbed';
 
@@ -42,6 +43,30 @@ function formatEventTime(date) {
   } catch {
     return 'Time TBA';
   }
+}
+
+function formatPrice(usd, currency = 'USD') {
+  if (usd == null) return null;
+  const sym = currency === 'EUR' ? '€' : '$';
+  return `${sym}${Number(usd).toFixed(2)}`;
+}
+
+function parseTicketTiers(event) {
+  if (!event || event.ticketType !== 'PAID') return [];
+  const raw = event.ticketTiersJson;
+  if (Array.isArray(raw) && raw.length) {
+    const rows = raw.filter((t) => t && t.id && typeof t.priceUsd === 'number' && t.priceUsd > 0);
+    if (rows.length) {
+      return rows.map((t) => ({
+        id: t.id,
+        label: t.label || t.name || 'Ticket',
+        priceUsd: t.priceUsd,
+      }));
+    }
+  }
+  const base = Number(event.ticketPrice);
+  if (base > 0) return [{ id: null, label: 'General admission', priceUsd: base }];
+  return [];
 }
 
 function deriveGuestlistAvatars(apiEvent) {
@@ -159,12 +184,14 @@ export default function EventDetailClient() {
   const heroImage = useMemo(() => displayImageSrc(apiEvent?.coverImage, null), [apiEvent]);
   const hasHost = !!(apiEvent?.host && (apiEvent.host.name || apiEvent.host.username));
   const organizerName = hasHost ? (apiEvent.host.name || apiEvent.host.username) : '';
-  const organizerAvatar = displayImageSrc(apiEvent?.host?.avatarUrl, null);
   const hostPxiHandle = apiEvent?.host?.username
     ? String(apiEvent.host.username).replace(/^@/, '')
     : null;
   const hostPassportNo = formatHostPassportNo(apiEvent?.host?.id);
-  const hostAge = ageFromBirthdate(apiEvent?.host?.birthdate);
+  const hostAge =
+    typeof apiEvent?.host?.age === 'number' && !Number.isNaN(apiEvent.host.age)
+      ? apiEvent.host.age
+      : null;
   const hostInstaLabel = apiEvent?.host?.instagramHandle
     ? `@${String(apiEvent.host.instagramHandle).replace(/^@/, '')}`
     : hostPxiHandle
@@ -184,6 +211,7 @@ export default function EventDetailClient() {
 
   const guestlistAvatars = useMemo(() => deriveGuestlistAvatars(apiEvent), [apiEvent]);
   const lineup = useMemo(() => deriveLineup(apiEvent), [apiEvent]);
+  const ticketTiers = useMemo(() => parseTicketTiers(apiEvent), [apiEvent]);
 
   const mapSrc = singleEventMapEmbedSrc(apiEvent?.latitude, apiEvent?.longitude);
   const hasMap = !!mapSrc;
@@ -237,13 +265,18 @@ export default function EventDetailClient() {
     if (participantsLoaded && participants.length) {
       return participants.slice(0, 5).map((p, i) => {
         const label = (p?.name || p?.username || p?.userId || `Guest ${i + 1}`).replace(/^@/, '');
-        const src = displayImageSrc(p?.avatarUrl, null);
-        return { key: p?.userId || `${label}-${i}`, label, src };
+        return {
+          key: p?.userId || `${label}-${i}`,
+          label,
+          kind: 'user',
+          avatarUrl: p?.avatarUrl ?? null,
+        };
       });
     }
     return guestlistAvatars.slice(0, 5).map((src, i) => ({
       key: `fallback-${src}-${i}`,
       label: '',
+      kind: 'media',
       src,
     }));
   }, [participantsLoaded, participants, guestlistAvatars]);
@@ -309,7 +342,7 @@ export default function EventDetailClient() {
         </div>
 
         <div className="relative z-10">
-          <main className="mx-auto mt-2 flex min-h-screen w-full max-w-5xl flex-col justify-around px-3 pb-20 sm:px-6 md:mt-4 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:gap-8 md:pb-24 2xl:max-w-6xl 2xl:gap-12">
+          <main className="mx-auto mt-2 flex w-full max-w-5xl flex-col px-3 pb-40 sm:px-6 md:mt-4 md:grid md:pb-32 md:grid-cols-[minmax(0,1fr)_auto] md:gap-8 2xl:max-w-6xl 2xl:gap-12">
             <div className="order-1 flex flex-col md:order-2 md:w-[330px] lg:w-[375px] 2xl:w-[400px]">
               <div className="relative top-0 mx-auto h-auto w-full max-w-[400px] md:sticky md:top-28">
                 <div className="relative px-6 pb-6 md:px-0 md:pb-0">
@@ -359,16 +392,13 @@ export default function EventDetailClient() {
                 <h2 className="text-base font-semibold tracking-tight text-white">Organizer</h2>
                 {hasHost ? (
                   <div className="flex items-start justify-between gap-3">
-                    <div className="mt-0.5 flex min-w-0 flex-1 flex-row items-start gap-2">
-                      <span className="relative mt-0.5 flex size-5 shrink-0 overflow-hidden rounded-sm border border-white/20 bg-zinc-800">
-                        {organizerAvatar ? (
-                          <Image className="size-full object-cover" alt="" src={organizerAvatar} width={20} height={20} unoptimized />
-                        ) : (
-                          <span className="flex size-full items-center justify-center text-[9px] font-semibold text-zinc-400" aria-hidden>
-                            {(organizerName || '?').charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </span>
+                    <div className="mt-0.5 flex min-w-0 flex-1 flex-row items-start gap-3">
+                      <UserAvatar
+                        user={{ avatarUrl: apiEvent?.host?.avatarUrl }}
+                        size={40}
+                        alt={organizerName}
+                        className="shrink-0 border border-white/20"
+                      />
                       <div className="min-w-0">
                         <p className="text-[9px] font-black uppercase tracking-widest text-pxi-purple">PXI Passport</p>
                         <p className="text-base font-medium tracking-tight text-white">{organizerName}</p>
@@ -426,10 +456,12 @@ export default function EventDetailClient() {
                             style={{ zIndex: previewGuestTiles.length - i }}
                             title={tile.label || undefined}
                           >
-                            {tile.src ? (
+                            {tile.kind === 'user' ? (
+                              <UserAvatar user={{ avatarUrl: tile.avatarUrl }} size={32} className="size-full" />
+                            ) : tile.src ? (
                               <Image src={tile.src} alt="" className="size-full object-cover" width={32} height={32} unoptimized />
                             ) : (
-                              (tile.label || '?').replace(/^@/, '').charAt(0) || '?'
+                              <UserAvatar size={32} className="size-full" />
                             )}
                           </span>
                         ))}
@@ -472,6 +504,26 @@ export default function EventDetailClient() {
                 </div>
               </div>
 
+              {ticketTiers.length > 0 ? (
+                <div className="flex flex-col gap-4">
+                  <SectionDivider />
+                  <h2 className="text-base font-semibold tracking-tight text-white">Ticket tiers</h2>
+                  <div className="space-y-2">
+                    {ticketTiers.map((tier) => (
+                      <div
+                        key={tier.id || tier.label}
+                        className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                      >
+                        <span className="text-sm font-medium text-zinc-100">{tier.label}</span>
+                        <span className="text-sm font-bold text-white">
+                          {formatPrice(tier.priceUsd, apiEvent.currency || 'USD')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="flex flex-col gap-8">
                 <SectionDivider />
                 <h2 className="text-base font-semibold tracking-tight text-white">Lineup</h2>
@@ -481,20 +533,14 @@ export default function EventDetailClient() {
                       {lineup.map((item) => (
                         <div key={item.key} className="flex flex-col">
                           <div className="flex flex-col gap-2">
-                            <div className="group relative aspect-square w-full overflow-hidden rounded-sm bg-zinc-800">
+                            <div className="group relative aspect-square w-full overflow-hidden rounded-sm">
                               {item.href ? (
                                 <a target="_blank" className="relative block h-full w-full" href={item.href} rel="noopener noreferrer">
-                                  {item.image ? (
-                                    <Image alt={item.alt} width={400} height={400} unoptimized className="h-full w-full object-cover transition-all duration-200 ease-in-out" src={item.image} />
-                                  ) : (
-                                    <span className="flex h-full w-full items-center justify-center text-2xl font-medium text-zinc-500">{(item.name || '?').charAt(0).toUpperCase()}</span>
-                                  )}
+                                  <UserAvatar src={item.image} size={400} rounded="md" className="!h-full !w-full transition-all duration-200 ease-in-out" alt={item.alt} />
                                   <div className="absolute inset-0 bg-black/0 transition-all duration-200 ease-in-out group-hover:bg-black/20" />
                                 </a>
-                              ) : item.image ? (
-                                <Image alt={item.alt} width={400} height={400} unoptimized className="h-full w-full object-cover" src={item.image} />
                               ) : (
-                                <span className="flex h-full w-full items-center justify-center text-2xl font-medium text-zinc-500">{(item.name || '?').charAt(0).toUpperCase()}</span>
+                                <UserAvatar src={item.image} size={400} rounded="md" className="!h-full !w-full" alt={item.alt} />
                               )}
                             </div>
                             <div className="flex flex-col gap-1">
@@ -621,23 +667,13 @@ export default function EventDetailClient() {
 
                       <div className="mt-1 grid grid-cols-[88px_minmax(0,1fr)_minmax(0,1fr)] items-start gap-x-2.5 sm:grid-cols-[100px_minmax(0,1fr)_minmax(0,1fr)] sm:gap-x-3">
                         <div className="relative h-[118px] w-full max-w-[88px] overflow-hidden rounded-[6px] shadow-[0_1px_24px_2px_rgba(255,255,255,0.3)] sm:h-[128px] sm:max-w-[100px]">
-                          {organizerAvatar ? (
-                            <Image
-                              src={organizerAvatar}
-                              alt={organizerName}
-                              fill
-                              unoptimized
-                              className="object-cover"
-                              sizes="112px"
-                            />
-                          ) : (
-                            <div
-                              className="flex h-full w-full items-center justify-center bg-zinc-800 text-2xl font-semibold text-zinc-500"
-                              aria-hidden
-                            >
-                              {(organizerName || '?').charAt(0).toUpperCase()}
-                            </div>
-                          )}
+                          <UserAvatar
+                            user={{ avatarUrl: apiEvent?.host?.avatarUrl }}
+                            size={130}
+                            rounded="md"
+                            alt={organizerName}
+                            className="!h-full !w-full"
+                          />
                         </div>
                         <div className="flex min-h-0 min-w-0 flex-col gap-1.5 pl-1 pr-1 sm:pl-2 sm:pr-2">
                           <div>
@@ -711,7 +747,7 @@ export default function EventDetailClient() {
                 )}
               </div>
 
-              <div className="flex flex-col gap-6 pb-16">
+              <div className="flex flex-col gap-6">
                 <SectionDivider />
                 <h2 className="text-base font-semibold tracking-tight text-white">Get the app</h2>
                 <div className="flex flex-col items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-6 py-8">
@@ -778,19 +814,13 @@ export default function EventDetailClient() {
                     const label = String(
                       p?.name || p?.username || p?.userId || `Member ${idx + 1}`
                     ).replace(/^@/, '');
-                    const src = displayImageSrc(p?.avatarUrl, null);
-                    const initial = (label || '?').charAt(0).toUpperCase();
                     return (
                       <div key={p?.userId || p?.id || `${label}-${idx}`} className="flex flex-col items-center gap-1.5 min-w-0">
                         <span
-                          className="relative inline-flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#0a0a0a] bg-zinc-800 text-sm font-bold text-zinc-200 ring-1 ring-white/10"
+                          className="relative inline-flex size-12 shrink-0 overflow-hidden rounded-full border-2 border-[#0a0a0a] ring-1 ring-white/10"
                           title={label}
                         >
-                          {src ? (
-                            <Image src={src} alt={label} className="size-full object-cover" width={48} height={48} unoptimized />
-                          ) : (
-                            initial
-                          )}
+                          <UserAvatar user={{ avatarUrl: p?.avatarUrl }} size={48} alt={label} className="size-full" />
                         </span>
                         {label ? (
                           <span className="max-w-full truncate text-center text-[10px] font-medium text-zinc-500" title={label}>

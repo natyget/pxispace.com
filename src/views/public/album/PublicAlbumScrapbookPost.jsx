@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useMemo } from 'react';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import {
   getThreadLayoutMetrics,
@@ -29,13 +30,9 @@ export default function PublicAlbumScrapbookPost({
   const intrinsic = resolveIntrinsicSize(item, { canonicalImage: !isVideo });
   const box = threadMediaBox(intrinsic.width, intrinsic.height, metrics);
   const src = displayImageSrc(mediaDisplayUrl(item), null);
-  const authorSrc = displayImageSrc(item.author?.avatarUrl, null);
   const timeLabel = formatAlbumPostTime(item.createdAt);
   const reactionPills = getThreadReactionPills(item);
   const lastComment = getLastThreadComment(item);
-  const lastCommentAvatar = lastComment
-    ? displayImageSrc(lastComment.sender?.avatarUrl, null)
-    : null;
 
   if (!src) return null;
 
@@ -93,18 +90,9 @@ export default function PublicAlbumScrapbookPost({
                     <span className="truncate text-xs font-extrabold tracking-wide text-white">
                       {item.author.username || 'Member'}
                     </span>
-                    {authorSrc ? (
-                      <span className="relative size-7 shrink-0 overflow-hidden rounded-full border border-white/35 bg-[#12141a]">
-                        <Image
-                          src={authorSrc}
-                          alt=""
-                          width={28}
-                          height={28}
-                          unoptimized
-                          className="size-full object-cover"
-                        />
-                      </span>
-                    ) : null}
+                    <span className="relative size-7 shrink-0 overflow-hidden rounded-full border border-white/35">
+                      <UserAvatar user={{ avatarUrl: item.author?.avatarUrl }} size={28} className="size-full" />
+                    </span>
                   </span>
                 </span>
               ) : null}
@@ -113,21 +101,12 @@ export default function PublicAlbumScrapbookPost({
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[28] px-[5px] pb-[7px] pt-[3px]">
                   <div className="overflow-hidden rounded-[14px] border-[1.5px] border-[rgba(138,144,158,0.48)] bg-[rgba(92,96,108,0.38)]">
                     <div className="flex items-start gap-2 px-[9px] py-[7px]">
-                      <span className="size-8 shrink-0 overflow-hidden rounded-full border border-white/30 bg-[#12141a]">
-                        {lastCommentAvatar ? (
-                          <Image
-                            src={lastCommentAvatar}
-                            alt=""
-                            width={32}
-                            height={32}
-                            unoptimized
-                            className="size-full object-cover"
-                          />
-                        ) : (
-                          <span className="flex size-full items-center justify-center text-[10px] text-zinc-500">
-                            ?
-                          </span>
-                        )}
+                      <span className="size-8 shrink-0 overflow-hidden rounded-full border border-white/30">
+                        <UserAvatar
+                          user={{ avatarUrl: lastComment?.sender?.avatarUrl }}
+                          size={32}
+                          className="size-full"
+                        />
                       </span>
                       <span className="min-w-0 flex-1">
                         <p className="mb-1 text-[11px] font-extrabold tracking-wide text-[rgba(158,162,176,0.98)]">

@@ -13,6 +13,11 @@ import { uploadImageToR2 } from '@/services/media';
 import { authService, authStorage } from '@/services/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventManage } from './EventManageContext';
+import {
+  buildTicketPricingPayload,
+  createEmptyTier,
+  validatePaidPricing,
+} from '@/lib/ticketTiers';
 
 async function getCroppedBlob(imageSrc, croppedAreaPixels) {
   const image = await new Promise((resolve, reject) => {
@@ -70,6 +75,8 @@ export default function EventEditPageView() {
   const [showPublicConsent, setShowPublicConsent] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
   const [price, setPrice] = useState('');
+  const [useTierList, setUseTierList] = useState(false);
+  const [ticketTiers, setTicketTiers] = useState([]);
   const [paidGate, setPaidGate] = useState(null);
   const [graceTimeHours, setGraceTimeHours] = useState('0');
   const [graceTimeMinutes, setGraceTimeMinutes] = useState('15');
@@ -96,7 +103,6 @@ export default function EventEditPageView() {
 
     setFormError(null);
     setPaidGate(null);
-    setSaveOk(false);
     setName(event.name || '');
     setDescription(event.description || '');
     setLocation(event.location || '');
@@ -112,8 +118,26 @@ export default function EventEditPageView() {
 
     const ticketType = String(event.ticketType || '').trim().toUpperCase();
     setIsPaid(ticketType === 'PAID');
-    const tp = event.ticketPrice;
-    setPrice(tp != null && tp > 0 ? String(Math.round(Number(tp))) : '');
+    const rawTiers = Array.isArray(event.ticketTiersJson) ? event.ticketTiersJson : [];
+    const hydratedTiers = rawTiers
+      .filter((t) => t && (t.id || t.label || t.name))
+      .map((t, idx) => ({
+        id: t.id || `tier_${eventId}_${idx}`,
+        name: String(t.label || t.name || '').trim(),
+        capacity: t.capacity != null ? String(t.capacity) : '',
+        price: t.priceUsd != null ? String(Math.round(Number(t.priceUsd))) : '',
+      }))
+      .filter((t) => t.name || t.price);
+    if (ticketType === 'PAID' && hydratedTiers.length > 0) {
+      setUseTierList(true);
+      setTicketTiers(hydratedTiers);
+      setPrice('');
+    } else {
+      setUseTierList(false);
+      setTicketTiers([]);
+      const tp = event.ticketPrice;
+      setPrice(tp != null && tp > 0 ? String(Math.round(Number(tp))) : '');
+    }
 
     const grace = event.graceTime != null ? Number(event.graceTime) : 15;
     const safeGrace = Number.isFinite(grace) ? grace : 15;
@@ -172,6 +196,7 @@ export default function EventEditPageView() {
     setPaidGate(null);
     if (!checked) {
       setIsPaid(false);
+      setUseTierList(false);
       return;
     }
     if (user?.isVendor) {
@@ -239,19 +264,17 @@ export default function EventEditPageView() {
       setFormError('Cover is still uploading.');
       return;
     }
-    if (isPaid) {
-      const p = parseInt(price, 10);
-      if (!price.trim() || Number.isNaN(p) || p <= 0) {
-        setFormError('Paid events need a ticket price greater than 0.');
-        return;
-      }
+    const pricingCheck = validatePaidPricing({ isPaid, useTierList, price, tiers: ticketTiers });
+    if (!pricingCheck.ok) {
+      setFormError(pricingCheck.error);
+      return;
     }
 
     setIsSaving(true);
     try {
       const graceTime =
         (parseInt(graceTimeHours, 10) || 0) * 60 + (parseInt(graceTimeMinutes, 10) || 0);
-      const ticketPrice = isPaid ? parseInt(price, 10) : 0;
+      const pricing = buildTicketPricingPayload({ isPaid, useTierList, price, tiers: ticketTiers });
       await eventsService.updateEvent(eventId, {
         name: name.trim(),
         description: description.trim() || undefined,
@@ -262,8 +285,9 @@ export default function EventEditPageView() {
         endDate: endDate.toISOString(),
         coverImage: coverImage.trim(),
         visibility: isPrivate ? 'PRIVATE' : 'PUBLIC',
-        ticketType: isPaid ? 'PAID' : 'FREE',
-        ticketPrice,
+        ticketType: pricing.ticketType,
+        ticketPrice: pricing.ticketPrice,
+        ...(pricing.ticketTiersJson ? { ticketTiersJson: pricing.ticketTiersJson } : { ticketTiersJson: null }),
         currency: (event.currency || 'USD').trim() || 'USD',
         graceTime,
         maxImagesPerUser: parseInt(maxImages, 10) || 100,
@@ -491,16 +515,124 @@ export default function EventEditPageView() {
           </div>
 
           {isPaid && (
-            <div className="flex items-center gap-2 rounded-xl bg-zinc-800/80 border border-white/10 px-3 py-2">
-              <HugeiconsIcon icon={HelpCircleIcon} size={18} className="text-zinc-500 shrink-0" />
-              <input
-                className="flex-1 bg-transparent text-white text-sm outline-none placeholder-zinc-500"
-                placeholder="Price in USD"
-                inputMode="numeric"
-                value={price}
-                onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ''))}
-              />
-            </div>
+            <>
+              <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-bold text-white">Ticket tiers</p>
+                  <p className="text-xs text-zinc-500">VVIP, VIP, general admission, and more.</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={useTierList}
+                  onClick={() => {
+                    const next = !useTierList;
+                    setUseTierList(next);
+                    if (next && ticketTiers.length === 0) {
+                      setTicketTiers([createEmptyTier()]);
+                    }
+                  }}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${useTierList ? 'bg-pxi-purple' : 'bg-zinc-600'}`}
+                >
+                  <span
+                    className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${useTierList ? 'left-6' : 'left-1'}`}
+                  />
+                </button>
+              </div>
+
+              {useTierList ? (
+                <div className="space-y-3">
+                  {ticketTiers.map((tier, index) => (
+                    <div
+                      key={tier.id}
+                      className="rounded-xl border border-white/10 bg-zinc-800/30 p-4 space-y-3"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                          Tier {index + 1}
+                        </span>
+                        {ticketTiers.length > 1 ? (
+                          <button
+                            type="button"
+                            onClick={() => setTicketTiers((prev) => prev.filter((t) => t.id !== tier.id))}
+                            className="text-[11px] font-semibold text-zinc-400 hover:text-white"
+                          >
+                            Remove
+                          </button>
+                        ) : null}
+                      </div>
+                      <div>
+                        <label className={labelClass}>Tier name</label>
+                        <input
+                          className={inputClass}
+                          value={tier.name}
+                          onChange={(e) =>
+                            setTicketTiers((prev) =>
+                              prev.map((t) => (t.id === tier.id ? { ...t, name: e.target.value } : t))
+                            )
+                          }
+                          placeholder="e.g. VIP"
+                        />
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className={labelClass}>Capacity</label>
+                          <input
+                            className={inputClass}
+                            value={tier.capacity}
+                            onChange={(e) =>
+                              setTicketTiers((prev) =>
+                                prev.map((t) =>
+                                  t.id === tier.id
+                                    ? { ...t, capacity: e.target.value.replace(/[^\d]/g, '') }
+                                    : t
+                                )
+                              )
+                            }
+                            placeholder="Unlimited"
+                            inputMode="numeric"
+                          />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Price (USD)</label>
+                          <input
+                            className={inputClass}
+                            value={tier.price}
+                            onChange={(e) =>
+                              setTicketTiers((prev) =>
+                                prev.map((t) =>
+                                  t.id === tier.id ? { ...t, price: e.target.value.replace(/[^\d]/g, '') } : t
+                                )
+                              )
+                            }
+                            placeholder="50"
+                            inputMode="numeric"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setTicketTiers((prev) => [...prev, createEmptyTier()])}
+                    className="w-full rounded-xl border border-dashed border-white/15 py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white hover:border-white/25 transition-colors"
+                  >
+                    + Add tier
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 rounded-xl bg-zinc-800/80 border border-white/10 px-3 py-2">
+                  <HugeiconsIcon icon={HelpCircleIcon} size={18} className="text-zinc-500 shrink-0" />
+                  <input
+                    className="flex-1 bg-transparent text-white text-sm outline-none placeholder-zinc-500"
+                    placeholder="Price in USD"
+                    inputMode="numeric"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ''))}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           <div className="grid sm:grid-cols-2 gap-4">

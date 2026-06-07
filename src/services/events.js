@@ -53,6 +53,9 @@ export const eventsService = {
   /** Direct-user invites for an album (pending / accepted / declined). Staff or event creator. */
   getAlbumDirectInvites: (albumId) => api.get(`/api/albums/${albumId}/direct-invites`),
 
+  cancelAlbumDirectInvite: (albumId, inviteId) =>
+    api.delete(`/api/albums/${albumId}/direct-invites/${inviteId}`),
+
   getFeaturedPeople: (albumId) => api.get(`/api/albums/${albumId}/featured-people`),
 
   upsertFeaturedPerson: (albumId, username, role) =>

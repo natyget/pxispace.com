@@ -52,8 +52,6 @@ export default function SignupPage() {
             saveAuth({ token, user });
             if (!user.phoneNumber) {
                 router.replace('/verify-phone');
-            } else if (!user.isPassportIssued) {
-                router.replace('/passport-required');
             } else {
                 router.replace('/dashboard');
             }
@@ -247,9 +245,6 @@ export default function SignupPage() {
                                 Username
                             </label>
                             <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm select-none">
-                                    @
-                                </span>
                                 <input
                                     type="text"
                                     value={username}
@@ -258,7 +253,7 @@ export default function SignupPage() {
                                     }
                                     placeholder="yourusername"
                                     maxLength={20}
-                                    className="w-full bg-zinc-800/60 border border-white/8 rounded-xl pl-8 pr-10 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-pxi-purple/50 focus:ring-1 focus:ring-pxi-purple/20 transition-all"
+                                    className="w-full bg-zinc-800/60 border border-white/8 rounded-xl px-4 pr-10 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-pxi-purple/50 focus:ring-1 focus:ring-pxi-purple/20 transition-all"
                                 />
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                     <UsernameStatusIcon status={usernameStatus} />
