@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon, ViewIcon, ViewOffIcon, CheckmarkCircle02Icon, CancelCircleIcon, Loading02Icon } from '@hugeicons/core-free-icons';
@@ -254,12 +253,11 @@ export default function EmailAuthPage() {
 
                     {/* Header */}
                     <div className="mb-5 flex justify-center">
-                        <Image
+                        <img
                             src="/favicon.png"
                             alt="PXI"
                             width={200}
                             height={120}
-                            priority
                             className="h-[120px] w-[200px] object-contain"
                         />
                     </div>
