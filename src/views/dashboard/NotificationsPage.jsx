@@ -11,7 +11,6 @@ import { getTicketQuote, createCheckoutSession } from '@/services/tickets';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth';
 import Button from '@/components/ui/Button';
-import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 
 const formatPrice = (usd, currency = 'USD') => {
   if (usd == null) return null;
@@ -393,11 +392,9 @@ export default function NotificationsPage() {
           <HugeiconsIcon icon={Notification03Icon} size={24} className="text-pxi-purple" />
           <div>
             <h1 className="text-2xl font-black text-white tracking-tight">Notifications</h1>
-            <p className="text-zinc-500 text-sm mt-1">Invites, approvals, and account activity.</p>
           </div>
         </div>
         <div className="relative flex items-center gap-2" ref={settingsRef}>
-          <DataSourceBadge source="Live" />
           <button
             type="button"
             onClick={() => setSettingsOpen((prev) => !prev)}

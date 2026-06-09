@@ -1,6 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+/* global process */
+/* eslint-disable no-unused-vars */
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -12,6 +15,14 @@ import { eventsService, searchUsers } from '../../services/events';
 import { uploadImageToR2 } from '../../services/media';
 import { authService, authStorage } from '../../services/auth';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEvents } from '@/lib/dashboardStore';
+import {
+  assignRosterToEvent,
+  clearCreateEventTeamAssignments,
+  getCreateEventTeamAssignments,
+  listTeamRosters,
+  setCreateEventTeamAssignments,
+} from '@/services/teamRosters';
 
 async function getCroppedBlob(imageSrc, croppedAreaPixels) {
   const image = await new Promise((resolve, reject) => {
@@ -41,6 +52,10 @@ async function getCroppedBlob(imageSrc, croppedAreaPixels) {
 const GEOAPIFY_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || '';
 const LINEUP_ROLE_MAX = 80;
 
+function memberDisplayName(member) {
+  return member?.name || member?.handle || member?.contact || 'Team member';
+}
+
 function toDatetimeLocalValue(d) {
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -58,9 +73,10 @@ function fromDatetimeLocalValue(v) {
   return new Date(v);
 }
 
-export default function CreateEventPage() {
+export default function CreateEventPage({ embedded = false, onCancel, onCreated }) {
   const router = useRouter();
   const { user, updateUser } = useAuth();
+  const { invalidate } = useEvents({ limit: 100, offset: 0 });
   const defaults = useRef(defaultStartEnd());
   const searchTimerRef = useRef(null);
 
@@ -100,6 +116,9 @@ export default function CreateEventPage() {
   const [featuredLoading, setFeaturedLoading] = useState(false);
   /** @type {Array<{ id: string; username: string; name?: string; avatarUrl?: string; kind: 'lineup' | 'member' | 'cohost' | 'bouncer'; lineupSubrole?: string }>} */
   const [pendingInvites, setPendingInvites] = useState([]);
+  const [teamRosters, setTeamRosters] = useState([]);
+  const [teamAssignments, setTeamAssignments] = useState([]);
+  const [teamAssignmentsLoading, setTeamAssignmentsLoading] = useState(true);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
@@ -110,6 +129,28 @@ export default function CreateEventPage() {
       if (coverPreview && coverPreview.startsWith('blob:')) URL.revokeObjectURL(coverPreview);
     };
   }, [coverPreview]);
+
+  useEffect(() => {
+    let alive = true;
+    Promise.all([listTeamRosters(), getCreateEventTeamAssignments()])
+      .then(([rosters, assignments]) => {
+        if (!alive) return;
+        const rosterIds = new Set(rosters.map((roster) => roster.id));
+        setTeamRosters(rosters);
+        setTeamAssignments(assignments.filter((assignment) => rosterIds.has(assignment.rosterId)));
+      })
+      .catch(() => {
+        if (!alive) return;
+        setTeamRosters([]);
+        setTeamAssignments([]);
+      })
+      .finally(() => {
+        if (alive) setTeamAssignmentsLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     const q = featuredQuery.trim();
@@ -169,6 +210,46 @@ export default function CreateEventPage() {
   const removePendingInvite = (id) => {
     setPendingInvites((prev) => prev.filter((p) => p.id !== id));
   };
+
+  const persistTeamAssignments = useCallback((updater) => {
+    setTeamAssignments((current) => {
+      const next = typeof updater === 'function' ? updater(current) : updater;
+      void setCreateEventTeamAssignments(next);
+      return next;
+    });
+  }, []);
+
+  const toggleTeamRoster = useCallback(
+    (rosterId) => {
+      persistTeamAssignments((current) => {
+        if (current.some((assignment) => assignment.rosterId === rosterId)) {
+          return current.filter((assignment) => assignment.rosterId !== rosterId);
+        }
+        return [...current, { rosterId, memberIds: [] }];
+      });
+    },
+    [persistTeamAssignments]
+  );
+
+  const setTeamRosterMembers = useCallback(
+    (rosterId, memberIds) => {
+      persistTeamAssignments((current) => {
+        const existing = current.find((assignment) => assignment.rosterId === rosterId);
+        if (!existing) return [...current, { rosterId, memberIds }];
+        return current.map((assignment) =>
+          assignment.rosterId === rosterId ? { ...assignment, memberIds } : assignment
+        );
+      });
+    },
+    [persistTeamAssignments]
+  );
+
+  const assignmentByRosterId = useMemo(
+    () => new Map(teamAssignments.map((assignment) => [assignment.rosterId, assignment])),
+    [teamAssignments]
+  );
+
+  const assignedTeamCount = teamAssignments.length;
 
   const formatPendingLabel = (p) => {
     if (p.kind === 'lineup') return `Line-up • ${p.lineupSubrole || 'Line up'}`;
@@ -345,6 +426,18 @@ export default function CreateEventPage() {
         return;
       }
 
+      if (teamAssignments.length > 0) {
+        for (const assignment of teamAssignments) {
+          try {
+            await assignRosterToEvent(assignment.rosterId, eventId, { memberIds: assignment.memberIds });
+          } catch {
+            /* non-fatal; teams can be adjusted from Teams & Security */
+          }
+        }
+        await clearCreateEventTeamAssignments();
+        setTeamAssignments([]);
+      }
+
       const postInvites = pendingInvites.filter((p) => p.kind !== 'lineup');
       if (albumId && postInvites.length > 0) {
         for (const p of postInvites) {
@@ -363,6 +456,8 @@ export default function CreateEventPage() {
       }
 
       toast.success('Event created!');
+      invalidate();
+      onCreated?.(created.event || created);
       router.push(`/dashboard/events/${eventId}`);
     } catch (err) {
       const msg = err.message || 'Failed to create event.';
@@ -373,8 +468,10 @@ export default function CreateEventPage() {
   };
 
   const inputClass =
-    'w-full rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 px-3 py-2.5 text-sm focus:border-pxi-purple/50 focus:outline-none';
-  const labelClass = 'block text-[11px] font-bold text-pxi-purple uppercase tracking-widest mb-1.5';
+    'dashboard-input min-h-[44px] w-full rounded-xl px-3 py-2.5 text-sm text-white';
+  const labelClass = 'mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-white/45';
+  const sectionClass = 'dashboard-surface-b rounded-2xl p-5';
+  const footerClass = 'dashboard-surface-b rounded-2xl p-4';
 
   return (
     <>
@@ -421,29 +518,30 @@ export default function CreateEventPage() {
         </div>
       </div>
     )}
-    <div className="max-w-4xl mx-auto space-y-6 pb-16">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/dashboard/events"
-          className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5"
-        >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
-        </Link>
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Create event</h1>
-          <p className="text-zinc-500 text-sm mt-0.5">Same fields as the PXI mobile studio flow.</p>
+    <div className={`${embedded ? 'space-y-6 pb-6' : 'max-w-4xl mx-auto space-y-6 pb-16'}`}>
+      {!embedded && (
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/events"
+            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5"
+          >
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
+          </Link>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Create event</h1>
+          </div>
         </div>
-      </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {formError && (
           <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
             {formError}
           </div>
         )}
 
-        <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
-          <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest flex items-center gap-2">
+        <section className={`${sectionClass} space-y-4`}>
+          <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/60">
             <HugeiconsIcon icon={ImageIcon} size={16} />
             Cover image *
           </h2>
@@ -481,8 +579,8 @@ export default function CreateEventPage() {
           </label>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
-          <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest">Basics</h2>
+        <section className={`${sectionClass} space-y-4`}>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Basics</h2>
           <div>
             <label className={labelClass}>Event name *</label>
             <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />
@@ -498,7 +596,7 @@ export default function CreateEventPage() {
           <div className="space-y-2">
             <label className={labelClass}>Venue / location</label>
             <div
-              className={`${inputClass} p-0 overflow-visible`}
+              className={`${inputClass} overflow-visible p-0`}
               onChange={(e) => {
                 if (e.target.tagName === 'INPUT') setLocation(e.target.value);
               }}
@@ -506,7 +604,7 @@ export default function CreateEventPage() {
               <GeoapifyContext apiKey={GEOAPIFY_KEY}>
                 <GeoapifyGeocoderAutocomplete
                   value={location}
-                  placeholder="Search venue or address…"
+                  placeholder=""
                   placeSelect={(result) => {
                     const props = result?.properties;
                     setLocation(props?.formatted || '');
@@ -541,10 +639,10 @@ export default function CreateEventPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-5">
-          <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest">Configuration</h2>
+        <section className={`${sectionClass} space-y-5`}>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Configuration</h2>
 
-          <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 rounded-xl bg-white/[0.035] px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Public event</p>
               <p className="text-xs text-zinc-500">Anyone can discover this event.</p>
@@ -557,15 +655,15 @@ export default function CreateEventPage() {
                 if (isPrivate) setShowPublicConsent(true);
                 else setIsPrivate(true);
               }}
-              className={`relative w-12 h-7 rounded-full transition-colors ${!isPrivate ? 'bg-pxi-purple' : 'bg-zinc-600'}`}
+              className={`relative h-7 w-12 rounded-full transition-colors ${!isPrivate ? 'bg-white/25' : 'bg-white/10'}`}
             >
               <span
-                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${!isPrivate ? 'left-6' : 'left-1'}`}
+                className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${!isPrivate ? 'left-6' : 'left-1'}`}
               />
             </button>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 rounded-xl bg-white/[0.035] px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Paid ticket</p>
               <p className="text-xs text-zinc-500">Requires verified vendor / Stripe.</p>
@@ -575,24 +673,27 @@ export default function CreateEventPage() {
               role="switch"
               aria-checked={isPaid}
               onClick={() => handlePaidToggle(!isPaid)}
-              className={`relative w-12 h-7 rounded-full transition-colors ${isPaid ? 'bg-pxi-purple' : 'bg-zinc-600'}`}
+              className={`relative h-7 w-12 rounded-full transition-colors ${isPaid ? 'bg-white/25' : 'bg-white/10'}`}
             >
               <span
-                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${isPaid ? 'left-6' : 'left-1'}`}
+                className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${isPaid ? 'left-6' : 'left-1'}`}
               />
             </button>
           </div>
 
           {isPaid && (
-            <div className="flex items-center gap-2 rounded-xl bg-zinc-800/80 border border-white/10 px-3 py-2">
-              <HugeiconsIcon icon={HelpCircleIcon} size={18} className="text-zinc-500 shrink-0" />
-              <input
-                className="flex-1 bg-transparent text-white text-sm outline-none placeholder-zinc-500"
-                placeholder="Price in USD"
-                inputMode="numeric"
-                value={price}
-                onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ''))}
-              />
+            <div>
+              <label className={labelClass}>Price in USD</label>
+              <div className="flex items-center gap-2 rounded-xl bg-white/[0.055] px-3 py-2">
+                <HugeiconsIcon icon={HelpCircleIcon} size={18} className="shrink-0 text-zinc-500" />
+                <input
+                  aria-label="Price in USD"
+                  className="flex-1 bg-transparent text-sm text-white outline-none"
+                  inputMode="numeric"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ''))}
+                />
+              </div>
             </div>
           )}
 
@@ -633,11 +734,90 @@ export default function CreateEventPage() {
                   className={inputClass}
                   value={capacity}
                   onChange={(e) => setCapacity(e.target.value.replace(/[^\d]/g, ''))}
-                  placeholder="Unlimited"
                 />
               </div>
             </div>
           </div>
+        </section>
+
+        <section className={`${sectionClass} space-y-4`}>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Event team</h2>
+              <p className="mt-1 text-xs text-zinc-500">
+                {assignedTeamCount ? `${assignedTeamCount} team${assignedTeamCount === 1 ? '' : 's'} selected` : 'Optional'}
+              </p>
+            </div>
+            <Link href="/dashboard/team" className="shrink-0 rounded-full bg-white/[0.055] px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-300 transition hover:bg-white/[0.08] hover:text-white">
+              Manage teams
+            </Link>
+          </div>
+
+          {teamAssignmentsLoading ? (
+            <div className="h-20 rounded-2xl bg-white/[0.035] animate-pulse" />
+          ) : teamRosters.length ? (
+            <div className="space-y-3">
+              {teamRosters.map((roster) => {
+                const assignment = assignmentByRosterId.get(roster.id);
+                const selectedMemberIds = assignment?.memberIds || [];
+                const wholeTeam = Boolean(assignment && selectedMemberIds.length === 0);
+
+                return (
+                  <div key={roster.id} className={`rounded-2xl px-4 py-4 transition ${assignment ? 'bg-white/[0.06] shadow-[0_0_0_1px_rgba(255,255,255,0.12)]' : 'bg-white/[0.025] shadow-[0_0_0_1px_rgba(255,255,255,0.05)]'}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <button type="button" onClick={() => toggleTeamRoster(roster.id)} className="min-w-0 flex-1 text-left">
+                        <p className="truncate text-sm font-bold text-white">{roster.name}</p>
+                        <p className="mt-1 text-xs text-zinc-500">
+                          {roster.members.length} member{roster.members.length === 1 ? '' : 's'}
+                        </p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleTeamRoster(roster.id)}
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition ${assignment ? 'bg-white text-black' : 'bg-white/[0.055] text-zinc-300 hover:bg-white/[0.08] hover:text-white'}`}
+                      >
+                        {assignment ? 'Selected' : 'Choose'}
+                      </button>
+                    </div>
+
+                    {assignment && roster.members.length ? (
+                      <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto dashboard-scrollbar-none">
+                        <button
+                          type="button"
+                          onClick={() => setTeamRosterMembers(roster.id, [])}
+                          className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition ${wholeTeam ? 'bg-white/[0.12] text-white' : 'bg-white/[0.045] text-zinc-400 hover:bg-white/[0.07] hover:text-zinc-200'}`}
+                        >
+                          Whole team
+                        </button>
+                        {roster.members.map((member) => {
+                          const active = selectedMemberIds.includes(member.id);
+                          return (
+                            <button
+                              type="button"
+                              key={member.id}
+                              onClick={() => {
+                                const memberIds = active
+                                  ? selectedMemberIds.filter((memberId) => memberId !== member.id)
+                                  : [...selectedMemberIds, member.id];
+                                setTeamRosterMembers(roster.id, memberIds);
+                              }}
+                              className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition ${active ? 'bg-white/[0.12] text-white' : 'bg-white/[0.045] text-zinc-400 hover:bg-white/[0.07] hover:text-zinc-200'}`}
+                            >
+                              {memberDisplayName(member)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-white/[0.025] px-4 py-5 text-sm text-zinc-500">
+              Create a team in Teams &amp; Security, then return here to attach it.
+            </div>
+          )}
         </section>
 
         {paidGate && (
@@ -653,14 +833,24 @@ export default function CreateEventPage() {
           </div>
         )}
 
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-4">
+        <div className={footerClass}>
           <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3">
-            <Link
-              href="/dashboard/events"
-              className="inline-flex items-center justify-center min-h-[48px] px-5 rounded-xl border border-white/15 text-sm font-semibold text-zinc-200 hover:bg-white/5"
-            >
-              Cancel
-            </Link>
+            {embedded ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-white/[0.04] px-5 text-sm font-semibold text-zinc-200 transition-colors hover:bg-white/[0.07]"
+              >
+                Cancel
+              </button>
+            ) : (
+              <Link
+                href="/dashboard/events"
+                className="inline-flex items-center justify-center min-h-[48px] px-5 rounded-xl border border-white/15 text-sm font-semibold text-zinc-200 hover:bg-white/5"
+              >
+                Cancel
+              </Link>
+            )}
             <button
               type="submit"
               disabled={isSubmitting || isCoverUploading || !coverImage}
@@ -675,7 +865,7 @@ export default function CreateEventPage() {
 
       {showPublicConsent && (
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900 p-5 space-y-4">
+          <div className="dashboard-surface-b w-full max-w-md rounded-2xl p-5 space-y-4">
             <h3 className="text-lg font-bold text-white">Public event</h3>
             <p className="text-sm text-zinc-300 leading-relaxed">
               By making this event public, you agree that photos and content from this event may be curated into public

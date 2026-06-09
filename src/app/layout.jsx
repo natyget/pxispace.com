@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+import { env } from 'node:process';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Script from 'next/script';
 import { Toaster } from 'sonner';
@@ -6,7 +8,7 @@ import GlobalCursorLayer from '@/components/layout/GlobalCursorLayer';
 import { getSiteUrl } from '@/lib/siteUrl';
 import './globals.css';
 
-const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+const googleClientId = env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 const site = getSiteUrl();
 
 export const metadata = {
@@ -59,7 +61,7 @@ export default function RootLayout({ children }) {
           `}
         </Script>
       </head>
-      <body>
+      <body className="theme-matte density-compact">
         <GoogleOAuthProvider clientId={googleClientId} locale="en">
           <AuthProvider>
             <GlobalCursorLayer>{children}</GlobalCursorLayer>
