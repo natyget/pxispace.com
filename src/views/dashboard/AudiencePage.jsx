@@ -8,7 +8,6 @@ import SegmentedToggle from '@/components/dashboard/SegmentedToggle';
 import Modal from '@/components/ui/Modal';
 import { useEvents, useNotifications } from '@/lib/dashboardStore';
 import {
-    BEHAVIOR_STAMPS,
     buildAudienceRows,
     exportSegmentToCampaignDraft,
     deleteAudienceSegment,
@@ -30,9 +29,8 @@ const FILTER_DEFAULTS = {
     search: '',
     pricePaid: 'all',
     odysseyScore: 'all',
-    engagementIndex: 'all',
-    eventsAttendedCount: 'all',
-    stamp: 'all',
+    eventCountOperator: 'gte',
+    eventCountValue: '',
 };
 const DEFAULT_CAMPAIGN_MIX = {
     sms: true,
@@ -77,23 +75,14 @@ const PRICE_FILTERS = [
 ];
 const SCORE_FILTERS = [
     { value: 'all', label: 'Odyssey Score' },
-    { value: 'top', label: '10,000+' },
-    { value: 'strong', label: '5,000 - 9,999' },
-    { value: 'rising', label: '2,000 - 4,999' },
-    { value: 'new', label: 'Under 2,000' },
+    { value: '2000', label: '2,000+' },
+    { value: '5000', label: '5,000+' },
+    { value: '10000', label: '10,000+' },
 ];
-const ENGAGEMENT_FILTERS = [
-    { value: 'all', label: 'Engagement Index' },
-    { value: 'high', label: 'High' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'low', label: 'Low' },
-];
-const EVENT_COUNT_FILTERS = [
-    { value: 'all', label: 'Events Attended' },
-    { value: 'none', label: '0 events' },
-    { value: 'oneTwo', label: '1 - 2 events' },
-    { value: 'threeFive', label: '3 - 5 events' },
-    { value: 'sixPlus', label: '6+ events' },
+const EVENT_COUNT_OPERATORS = [
+    { value: 'gte', label: 'Events ≥' },
+    { value: 'lte', label: 'Events ≤' },
+    { value: 'eq', label: 'Events =' },
 ];
 const AUDIENCE_SECTION_CLASS =
     'dashboard-surface-b !border-0 shadow-[0_22px_80px_rgba(0,0,0,0.28)] [&>header]:!border-0 [&>header]:pb-3';
@@ -235,26 +224,17 @@ function matchesPriceFilter(row, filter) {
 }
 
 function matchesScoreFilter(row, filter) {
-    if (filter === 'top') return row.odysseyScore >= 10000;
-    if (filter === 'strong') return row.odysseyScore >= 5000 && row.odysseyScore < 10000;
-    if (filter === 'rising') return row.odysseyScore >= 2000 && row.odysseyScore < 5000;
-    if (filter === 'new') return row.odysseyScore < 2000;
-    return true;
+    if (filter === 'all') return true;
+    return row.odysseyScore >= Number(filter || 0);
 }
 
-function matchesEngagementFilter(row, filter) {
-    if (filter === 'high') return row.engagementIndex >= 70;
-    if (filter === 'medium') return row.engagementIndex >= 40 && row.engagementIndex < 70;
-    if (filter === 'low') return row.engagementIndex < 40;
-    return true;
-}
-
-function matchesEventCountFilter(row, filter) {
-    if (filter === 'none') return row.eventsAttendedCount === 0;
-    if (filter === 'oneTwo') return row.eventsAttendedCount >= 1 && row.eventsAttendedCount <= 2;
-    if (filter === 'threeFive') return row.eventsAttendedCount >= 3 && row.eventsAttendedCount <= 5;
-    if (filter === 'sixPlus') return row.eventsAttendedCount >= 6;
-    return true;
+function matchesEventCountFilter(row, operator, rawValue) {
+    if (rawValue === '' || rawValue == null) return true;
+    const value = Number(rawValue);
+    if (!Number.isFinite(value)) return true;
+    if (operator === 'lte') return row.eventsAttendedCount <= value;
+    if (operator === 'eq') return row.eventsAttendedCount === value;
+    return row.eventsAttendedCount >= value;
 }
 
 export default function AudiencePage() {
@@ -269,7 +249,7 @@ export default function AudiencePage() {
     const [selectedDraftId, setSelectedDraftId] = useState(null);
     const [audienceFilters, setAudienceFilters] = useState(FILTER_DEFAULTS);
     const [selectedAudienceRows, setSelectedAudienceRows] = useState([]);
-    const [segmentName, setSegmentName] = useState('High-value Passport segment');
+    const [segmentName, setSegmentName] = useState('');
     const [segmentDrafts, setSegmentDrafts] = useState(() => listAudienceSegments());
     const [selectedSegmentId, setSelectedSegmentId] = useState(null);
     const [handoffStatus, setHandoffStatus] = useState('');
@@ -324,9 +304,7 @@ export default function AudiencePage() {
                 matchesSearch &&
                 matchesPriceFilter(row, audienceFilters.pricePaid) &&
                 matchesScoreFilter(row, audienceFilters.odysseyScore) &&
-                matchesEngagementFilter(row, audienceFilters.engagementIndex) &&
-                matchesEventCountFilter(row, audienceFilters.eventsAttendedCount) &&
-                (audienceFilters.stamp === 'all' || row.stampTypes.includes(audienceFilters.stamp))
+                matchesEventCountFilter(row, audienceFilters.eventCountOperator, audienceFilters.eventCountValue)
             );
         });
     }, [audienceFilters, audienceRows]);
@@ -348,9 +326,9 @@ export default function AudiencePage() {
             .slice(0, 3)
             .map(([stamp]) => stamp);
         const averagePrice = rows.length ? rows.reduce((sum, row) => sum + row.pricePaid, 0) / rows.length : 0;
-        const averageEngagement = rows.length ? Math.round(rows.reduce((sum, row) => sum + row.engagementIndex, 0) / rows.length) : 0;
+        const averageOdyssey = rows.length ? Math.round(rows.reduce((sum, row) => sum + row.odysseyScore, 0) / rows.length) : 0;
 
-        return { topStamps, averagePrice, averageEngagement };
+        return { topStamps, averagePrice, averageOdyssey };
     }, [rowsForSegment]);
     const segmentIsActive = selectedAudienceRows.length > 0;
 
@@ -544,9 +522,13 @@ export default function AudiencePage() {
     }
 
     function handleSaveSegment() {
+        if (!segmentName.trim()) {
+            setHandoffStatus('Add a segment name before saving.');
+            return;
+        }
         const rows = rowsForSegment;
         const saved = saveAudienceSegment({
-            name: segmentName.trim() || 'Untitled audience segment',
+            name: segmentName.trim(),
             filters: audienceFilters,
             rowIds: rows.map((row) => row.id),
             rowCount: rows.length,
@@ -556,12 +538,12 @@ export default function AudiencePage() {
         setHandoffStatus('Segment draft saved.');
     }
 
-    function handleLoadSegment(segment) {
-        setSegmentName(segment.name);
-        setAudienceFilters({ ...FILTER_DEFAULTS, ...(segment.filters || {}) });
-        setSelectedAudienceRows(segment.rowIds || []);
-        setSelectedSegmentId(segment.id);
-        setHandoffStatus(`${segment.rowCount || 0} rows loaded into the segment draft.`);
+    function resetSegmentDraft() {
+        setSegmentName('');
+        setAudienceFilters(FILTER_DEFAULTS);
+        setSelectedAudienceRows([]);
+        setSelectedSegmentId(null);
+        setHandoffStatus('Segment draft reset.');
     }
 
     async function handleExportSegment() {
@@ -645,8 +627,8 @@ export default function AudiencePage() {
                                         <p className="mt-2 text-3xl font-black tracking-tight text-white">{formatMoney(segmentStats.averagePrice)}</p>
                                     </div>
                                     <div className="rounded-2xl bg-white/[0.04] px-5 py-4">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Avg. engagement</p>
-                                        <p className="mt-2 text-3xl font-black tracking-tight text-white">{segmentStats.averageEngagement}</p>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Avg. Odyssey</p>
+                                        <p className="mt-2 text-3xl font-black tracking-tight text-white">{segmentStats.averageOdyssey.toLocaleString()}</p>
                                     </div>
                                 </div>
 
@@ -670,9 +652,17 @@ export default function AudiencePage() {
                                         <button
                                             type="button"
                                             onClick={handleSaveSegment}
-                                            className="rounded-full bg-white px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-black transition hover:bg-zinc-200"
+                                            disabled={!segmentName.trim()}
+                                            className="pill-solid px-5 py-2.5 text-xs font-bold uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-40"
                                         >
                                             Save Segment
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={resetSegmentDraft}
+                                            className="pill-ghost px-5 py-2.5 text-xs font-bold uppercase tracking-widest"
+                                        >
+                                            Reset Draft
                                         </button>
                                         <button
                                             type="button"
@@ -697,18 +687,11 @@ export default function AudiencePage() {
                                                         selectedSegmentId === segment.id ? 'bg-white/[0.08]' : 'bg-white/[0.035]'
                                                     }`}
                                                 >
-                                                    <button type="button" onClick={() => handleLoadSegment(segment)} className="min-w-0 text-left">
+                                                    <div className="min-w-0 text-left">
                                                         <p className="truncate text-sm font-bold text-zinc-100">{segment.name}</p>
                                                         <p className="mt-1 text-xs leading-5 text-zinc-500">{segment.rowCount} rows · {formatUpdatedAt(segment.savedAt)}</p>
-                                                    </button>
+                                                    </div>
                                                     <div className="flex shrink-0 gap-2">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleLoadSegment(segment)}
-                                                            className="glow-chip rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-300 whitespace-nowrap"
-                                                        >
-                                                            Load
-                                                        </button>
                                                         <button
                                                             type="button"
                                                             onClick={() => {
@@ -751,7 +734,7 @@ export default function AudiencePage() {
                                         </p>
                                     </div>
 
-                                    <div className="mt-5 grid gap-3 lg:grid-cols-[1.1fr_1fr_1.2fr]">
+                                    <div className="mt-5 grid gap-3 lg:grid-cols-[1.3fr_1fr_1fr_0.9fr]">
                                         <label className="space-y-2 rounded-2xl bg-white/[0.035] p-3">
                                             <span className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Find</span>
                                             <input
@@ -764,50 +747,45 @@ export default function AudiencePage() {
                                         </label>
 
                                         <div className="space-y-2 rounded-2xl bg-white/[0.035] p-3">
-                                            <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Spend & score</p>
-                                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                                                <select
-                                                    value={audienceFilters.pricePaid}
-                                                    onChange={(event) => updateAudienceFilter('pricePaid', event.target.value)}
-                                                    className={AUDIENCE_SELECT_CLASS}
-                                                >
-                                                    {PRICE_FILTERS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                                                </select>
-                                                <select
-                                                    value={audienceFilters.odysseyScore}
-                                                    onChange={(event) => updateAudienceFilter('odysseyScore', event.target.value)}
-                                                    className={AUDIENCE_SELECT_CLASS}
-                                                >
-                                                    {SCORE_FILTERS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                                                </select>
-                                            </div>
+                                            <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Spend</p>
+                                            <select
+                                                value={audienceFilters.pricePaid}
+                                                onChange={(event) => updateAudienceFilter('pricePaid', event.target.value)}
+                                                className={AUDIENCE_SELECT_CLASS}
+                                            >
+                                                {PRICE_FILTERS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                            </select>
                                         </div>
 
                                         <div className="space-y-2 rounded-2xl bg-white/[0.035] p-3">
-                                            <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Behavior</p>
-                                            <div className="grid gap-2 sm:grid-cols-3">
+                                            <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Odyssey</p>
+                                            <select
+                                                value={audienceFilters.odysseyScore}
+                                                onChange={(event) => updateAudienceFilter('odysseyScore', event.target.value)}
+                                                className={AUDIENCE_SELECT_CLASS}
+                                            >
+                                                {SCORE_FILTERS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-2 rounded-2xl bg-white/[0.035] p-3">
+                                            <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Events attended</p>
+                                            <div className="grid grid-cols-[1fr_88px] gap-2">
                                                 <select
-                                                    value={audienceFilters.engagementIndex}
-                                                    onChange={(event) => updateAudienceFilter('engagementIndex', event.target.value)}
+                                                    value={audienceFilters.eventCountOperator}
+                                                    onChange={(event) => updateAudienceFilter('eventCountOperator', event.target.value)}
                                                     className={AUDIENCE_SELECT_CLASS}
                                                 >
-                                                    {ENGAGEMENT_FILTERS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                                    {EVENT_COUNT_OPERATORS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                                                 </select>
-                                                <select
-                                                    value={audienceFilters.eventsAttendedCount}
-                                                    onChange={(event) => updateAudienceFilter('eventsAttendedCount', event.target.value)}
-                                                    className={AUDIENCE_SELECT_CLASS}
-                                                >
-                                                    {EVENT_COUNT_FILTERS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                                                </select>
-                                                <select
-                                                    value={audienceFilters.stamp}
-                                                    onChange={(event) => updateAudienceFilter('stamp', event.target.value)}
-                                                    className={AUDIENCE_SELECT_CLASS}
-                                                >
-                                                    <option value="all">Stamp Type</option>
-                                                    {BEHAVIOR_STAMPS.map((stamp) => <option key={stamp} value={stamp}>{stamp}</option>)}
-                                                </select>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={audienceFilters.eventCountValue}
+                                                    onChange={(event) => updateAudienceFilter('eventCountValue', event.target.value)}
+                                                    className={AUDIENCE_INPUT_CLASS}
+                                                    placeholder="0"
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -830,8 +808,6 @@ export default function AudiencePage() {
                                                     <th className="px-4 py-2">Audience</th>
                                                     <th className="px-4 py-2">Price Paid</th>
                                                     <th className="px-4 py-2">Odyssey</th>
-                                                    <th className="px-4 py-2">Engagement</th>
-                                                    <th className="px-4 py-2">Stamps</th>
                                                     <th className="px-4 py-2">Events</th>
                                                     <th className="px-4 py-2">Invite</th>
                                                 </tr>
@@ -861,21 +837,6 @@ export default function AudiencePage() {
                                                             <td className={`px-4 py-5 align-top transition-colors ${rowSurface}`}>
                                                                 <p className="font-mono text-sm font-bold text-zinc-100">{row.odysseyScore.toLocaleString()}</p>
                                                                 <p className="mt-1 text-[11px] leading-5 text-zinc-500">{row.stampTier}</p>
-                                                            </td>
-                                                            <td className={`px-4 py-5 align-top transition-colors ${rowSurface}`}>
-                                                                <div className="h-2 w-24 overflow-hidden rounded-full bg-white/[0.07]">
-                                                                    <div className="h-full rounded-full bg-zinc-300/70" style={{ width: `${row.engagementIndex}%` }} />
-                                                                </div>
-                                                                <p className="mt-1 font-mono text-[11px] leading-5 text-zinc-500">{row.engagementIndex}</p>
-                                                            </td>
-                                                            <td className={`px-4 py-5 align-top transition-colors ${rowSurface}`}>
-                                                                <div className="flex max-w-[220px] flex-wrap gap-1.5">
-                                                                    {row.stampTypes.map((stamp) => (
-                                                                        <span key={stamp} className="rounded-full bg-white/[0.07] px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                                                                            {stamp}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
                                                             </td>
                                                             <td className={`px-4 py-5 align-top transition-colors ${rowSurface}`}>
                                                                 <p className="font-mono text-sm font-bold text-zinc-100">{row.eventsAttendedCount}</p>

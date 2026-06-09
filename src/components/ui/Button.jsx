@@ -12,12 +12,12 @@ const Button = ({
 
     const variants = {
         primary:
-            "bg-pxi-purple text-white shadow-[0_0_20px_rgba(216,74,255,0.4)] hover:shadow-[0_0_30px_rgba(216,74,255,0.6)]",
+            "pill-solid",
         secondary:
-            "bg-zinc-900 text-white border border-white/10 hover:bg-zinc-800",
+            "pill-ghost",
         outline:
-            "bg-transparent border-2 border-pxi-purple text-pxi-purple hover:bg-pxi-purple/10",
-        glass: "glass text-white hover:bg-white/10",
+            "pill-ghost text-white",
+        glass: "pill-ghost",
         neon: "neon-pill text-white hover:scale-105 active:scale-95",
         "neon-outlet":
             "neon-pill-outlet text-white hover:scale-102 active:scale-95",

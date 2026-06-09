@@ -12,7 +12,7 @@ function trendIconFor(trend) {
 export function StatRow({ items = [], className = '' }) {
     return (
         <div
-            className={`dashboard-surface grid gap-3 rounded-2xl p-4 ${className}`.trim()}
+            className={`glass-panel grid gap-3 rounded-2xl p-4 ${className}`.trim()}
             style={{ gridTemplateColumns: `repeat(${Math.min(Math.max(items.length, 1), 3)}, minmax(0, 1fr))` }}
         >
             {items.map((item) => (
@@ -89,7 +89,7 @@ export default function MetricCard({
     const TrendIcon = trendIconFor(trend);
 
     return (
-        <div className={`dashboard-surface relative flex min-h-[132px] flex-col justify-between rounded-2xl ${dense ? 'p-4 md:p-5' : 'p-5 md:p-6'}`}>
+        <div className={`glass-panel relative flex min-h-[132px] flex-col justify-between rounded-2xl ${dense ? 'p-4 md:p-5' : 'p-5 md:p-6'}`}>
             <div className="mb-4 flex items-center justify-between gap-3">
                 <span className="text-[11px] md:text-[12px] font-bold tracking-widest text-white/40 uppercase">{title}</span>
                 {actions ? (
@@ -106,7 +106,7 @@ export default function MetricCard({
                 <div className="mt-auto flex flex-col items-start gap-3">
                     <div className="max-w-full truncate text-2xl font-[900] leading-none tracking-tight text-white">{value}</div>
                     {sparkline ? (
-                        <div className="h-8 w-full overflow-hidden rounded-md border border-white/5 bg-white/[0.02]">
+                        <div className="h-8 w-full overflow-hidden rounded-md bg-white/[0.035] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
                             {Array.isArray(sparkline?.points) ? (
                                 <MicroChart points={sparkline.points} color={sparkline.color || '#d84aff'} />
                             ) : (
@@ -114,7 +114,7 @@ export default function MetricCard({
                             )}
                         </div>
                     ) : null}
-                    <div className="inline-flex max-w-full items-center gap-1 rounded-full border border-white/10 bg-white/[0.055] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-300 md:text-[11px]">
+                    <div className="pill-ghost inline-flex max-w-full items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-300 md:text-[11px]">
                         {TrendIcon ? <HugeiconsIcon icon={TrendIcon} className="h-3 w-3 shrink-0 text-white/50" /> : null}
                         <span>{description}</span>
                     </div>

@@ -468,10 +468,10 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   };
 
   const inputClass =
-    'dashboard-input min-h-[44px] w-full rounded-xl px-3 py-2.5 text-sm text-white';
+    'glass-field min-h-[44px] w-full rounded-2xl px-4 py-3 text-sm text-white';
   const labelClass = 'mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-white/45';
-  const sectionClass = 'dashboard-surface-b rounded-2xl p-5';
-  const footerClass = 'dashboard-surface-b rounded-2xl p-4';
+  const sectionClass = 'glass-panel rounded-[1.75rem] p-5';
+  const footerClass = 'glass-panel rounded-[1.75rem] p-4';
 
   return (
     <>
@@ -488,11 +488,11 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
           />
         </div>
-        <div className="flex items-center justify-between px-5 py-4 bg-zinc-900 border-t border-white/10">
+        <div className="glass-panel flex items-center justify-between px-5 py-4 rounded-none">
           <button
             type="button"
             onClick={() => setCropSrc(null)}
-            className="px-5 py-2.5 rounded-xl text-sm text-zinc-400 hover:text-white transition-colors"
+            className="pill-ghost px-5 py-2.5 text-sm"
           >
             Cancel
           </button>
@@ -511,7 +511,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           <button
             type="button"
             onClick={handleCropConfirm}
-            className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-pxi-purple hover:bg-pxi-purple/80 transition-colors"
+            className="pill-solid px-5 py-2.5 text-sm"
           >
             Use photo
           </button>
@@ -523,7 +523,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/events"
-            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5"
+            className="pill-ghost p-2 text-zinc-400 hover:text-white"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
           </Link>
@@ -535,7 +535,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {formError && (
-          <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <div className="glass-panel rounded-2xl px-4 py-3 text-sm text-red-200">
             {formError}
           </div>
         )}
@@ -547,7 +547,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           </h2>
           <label className="relative block w-full sm:w-[300px] sm:mx-auto cursor-pointer" style={{ aspectRatio: '3/4' }}>
             <input type="file" accept="image/*" className="hidden" onChange={onCoverFile} disabled={isCoverUploading} />
-            <div className={`w-full h-full rounded-2xl overflow-hidden border ${coverImage || coverPreview ? 'border-white/10' : 'border-dashed border-white/20'} bg-white/5 flex items-center justify-center`}>
+            <div className="glass-field flex h-full w-full items-center justify-center overflow-hidden rounded-2xl">
               {(coverImage || coverPreview) ? (
                 <img
                   src={coverImage || coverPreview}
@@ -642,7 +642,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         <section className={`${sectionClass} space-y-5`}>
           <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Configuration</h2>
 
-          <div className="flex items-center justify-between gap-4 rounded-xl bg-white/[0.035] px-4 py-3">
+          <div className="glass-field flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Public event</p>
               <p className="text-xs text-zinc-500">Anyone can discover this event.</p>
@@ -663,7 +663,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             </button>
           </div>
 
-          <div className="flex items-center justify-between gap-4 rounded-xl bg-white/[0.035] px-4 py-3">
+          <div className="glass-field flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Paid ticket</p>
               <p className="text-xs text-zinc-500">Requires verified vendor / Stripe.</p>
@@ -684,7 +684,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           {isPaid && (
             <div>
               <label className={labelClass}>Price in USD</label>
-              <div className="flex items-center gap-2 rounded-xl bg-white/[0.055] px-3 py-2">
+              <div className="glass-field flex items-center gap-2 rounded-2xl px-3 py-2">
                 <HugeiconsIcon icon={HelpCircleIcon} size={18} className="shrink-0 text-zinc-500" />
                 <input
                   aria-label="Price in USD"
@@ -748,7 +748,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                 {assignedTeamCount ? `${assignedTeamCount} team${assignedTeamCount === 1 ? '' : 's'} selected` : 'Optional'}
               </p>
             </div>
-            <Link href="/dashboard/team" className="shrink-0 rounded-full bg-white/[0.055] px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-300 transition hover:bg-white/[0.08] hover:text-white">
+            <Link href="/dashboard/team" className="pill-ghost shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest">
               Manage teams
             </Link>
           </div>
@@ -763,7 +763,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                 const wholeTeam = Boolean(assignment && selectedMemberIds.length === 0);
 
                 return (
-                  <div key={roster.id} className={`rounded-2xl px-4 py-4 transition ${assignment ? 'bg-white/[0.06] shadow-[0_0_0_1px_rgba(255,255,255,0.12)]' : 'bg-white/[0.025] shadow-[0_0_0_1px_rgba(255,255,255,0.05)]'}`}>
+                  <div key={roster.id} className={`rounded-2xl px-4 py-4 transition ${assignment ? 'glass-panel-strong' : 'glass-panel'}`}>
                     <div className="flex items-center justify-between gap-3">
                       <button type="button" onClick={() => toggleTeamRoster(roster.id)} className="min-w-0 flex-1 text-left">
                         <p className="truncate text-sm font-bold text-white">{roster.name}</p>
@@ -774,7 +774,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                       <button
                         type="button"
                         onClick={() => toggleTeamRoster(roster.id)}
-                        className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition ${assignment ? 'bg-white text-black' : 'bg-white/[0.055] text-zinc-300 hover:bg-white/[0.08] hover:text-white'}`}
+                        className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${assignment ? 'pill-solid' : 'pill-ghost'}`}
                       >
                         {assignment ? 'Selected' : 'Choose'}
                       </button>
@@ -785,7 +785,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                         <button
                           type="button"
                           onClick={() => setTeamRosterMembers(roster.id, [])}
-                          className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition ${wholeTeam ? 'bg-white/[0.12] text-white' : 'bg-white/[0.045] text-zinc-400 hover:bg-white/[0.07] hover:text-zinc-200'}`}
+                          className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${wholeTeam ? 'pill-solid' : 'pill-ghost'}`}
                         >
                           Whole team
                         </button>
@@ -801,7 +801,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                                   : [...selectedMemberIds, member.id];
                                 setTeamRosterMembers(roster.id, memberIds);
                               }}
-                              className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition ${active ? 'bg-white/[0.12] text-white' : 'bg-white/[0.045] text-zinc-400 hover:bg-white/[0.07] hover:text-zinc-200'}`}
+                              className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${active ? 'pill-solid' : 'pill-ghost'}`}
                             >
                               {memberDisplayName(member)}
                             </button>
@@ -814,14 +814,14 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               })}
             </div>
           ) : (
-            <div className="rounded-2xl bg-white/[0.025] px-4 py-5 text-sm text-zinc-500">
+            <div className="glass-field rounded-2xl px-4 py-5 text-sm text-zinc-500">
               Create a team in Teams &amp; Security, then return here to attach it.
             </div>
           )}
         </section>
 
         {paidGate && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 space-y-2">
+          <div className="glass-panel rounded-2xl px-4 py-3 text-sm text-amber-200 space-y-2">
             {paidGate === 'no-account' ? (
               <p>To sell tickets, complete vendor setup with Stripe.</p>
             ) : (
@@ -839,14 +839,14 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               <button
                 type="button"
                 onClick={onCancel}
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-white/[0.04] px-5 text-sm font-semibold text-zinc-200 transition-colors hover:bg-white/[0.07]"
+                className="pill-ghost inline-flex min-h-[48px] items-center justify-center px-5 text-sm font-semibold"
               >
                 Cancel
               </button>
             ) : (
               <Link
                 href="/dashboard/events"
-                className="inline-flex items-center justify-center min-h-[48px] px-5 rounded-xl border border-white/15 text-sm font-semibold text-zinc-200 hover:bg-white/5"
+                className="pill-ghost inline-flex min-h-[48px] items-center justify-center px-5 text-sm font-semibold"
               >
                 Cancel
               </Link>
@@ -854,7 +854,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             <button
               type="submit"
               disabled={isSubmitting || isCoverUploading || !coverImage}
-              className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] px-6 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-45 hover:brightness-110 transition-all"
+              className="pill-solid flex-1 inline-flex min-h-[48px] items-center justify-center gap-2 px-6 text-sm font-bold uppercase tracking-widest disabled:opacity-45"
             >
               {isSubmitting ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin" /> : null}
               {isSubmitting ? 'Creating…' : isCoverUploading ? 'Uploading cover…' : 'Create event'}
@@ -865,7 +865,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
 
       {showPublicConsent && (
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-          <div className="dashboard-surface-b w-full max-w-md rounded-2xl p-5 space-y-4">
+          <div className="glass-panel-strong w-full max-w-md rounded-2xl p-5 space-y-4">
             <h3 className="text-lg font-bold text-white">Public event</h3>
             <p className="text-sm text-zinc-300 leading-relaxed">
               By making this event public, you agree that photos and content from this event may be curated into public
@@ -875,7 +875,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               <button
                 type="button"
                 onClick={() => setShowPublicConsent(false)}
-                className="px-4 py-2.5 rounded-xl border border-white/10 text-sm text-zinc-300 hover:bg-white/5"
+                className="pill-ghost px-4 py-2.5 text-sm"
               >
                 Keep private
               </button>
@@ -885,7 +885,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                   setIsPrivate(false);
                   setShowPublicConsent(false);
                 }}
-                className="px-4 py-2.5 rounded-xl bg-pxi-purple text-sm font-bold text-white"
+                className="pill-solid px-4 py-2.5 text-sm font-bold"
               >
                 I understand, make public
               </button>

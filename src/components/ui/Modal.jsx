@@ -30,7 +30,7 @@ export default function Modal({ open, title, description, onClose, children, foo
     <Portal>
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md" onClick={onClose}>
         <div
-          className={`dashboard-modal-panel dashboard-surface-b w-full ${maxWidth} rounded-2xl p-6 text-white ${className}`.trim()}
+          className={`dashboard-modal-panel glass-panel-strong w-full ${maxWidth} rounded-2xl p-6 text-white ${className}`.trim()}
           onClick={(event) => event.stopPropagation()}
         >
           {title ? <h2 className="text-lg font-black tracking-tight text-white">{title}</h2> : null}

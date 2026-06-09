@@ -248,11 +248,13 @@
   .dashboard-surface-a,
   .matte-surface,
   .dashboard-surface {
-    background: var(--dashboard-surface-a-soft);
-    border: 1px solid var(--dashboard-border-subtle);
+    background: rgba(255, 255, 255, 0.038);
+    border: 0;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    box-shadow: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 14px 42px rgba(0, 0, 0, 0.34);
   }
 
   .dashboard-page-surface {
@@ -264,17 +266,112 @@
   .dashboard-surface-b,
   .dashboard-glass-surface,
   .dashboard-surface-frosted {
-    background: var(--dashboard-surface-b-bg);
-    border: 1px solid var(--dashboard-border-subtle);
+    background: rgba(255, 255, 255, 0.052);
+    border: 0;
     backdrop-filter: blur(var(--dashboard-surface-b-blur));
     -webkit-backdrop-filter: blur(var(--dashboard-surface-b-blur));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.075),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.025),
+      0 18px 48px rgba(0, 0, 0, 0.42);
   }
 
   .dashboard-popover-surface {
-    background: var(--dashboard-surface-popover);
-    border: 1px solid var(--dashboard-border-subtle);
+    background: rgba(14, 14, 18, 0.86);
+    border: 0;
     backdrop-filter: blur(var(--dashboard-surface-b-blur));
     -webkit-backdrop-filter: blur(var(--dashboard-surface-b-blur));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.075),
+      0 18px 46px rgba(0, 0, 0, 0.52);
+  }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.045);
+    border: 0;
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.075),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.025),
+      0 16px 44px rgba(0, 0, 0, 0.45);
+  }
+
+  .glass-panel-strong {
+    background: rgba(255, 255, 255, 0.065);
+    border: 0;
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.03),
+      0 22px 58px rgba(0, 0, 0, 0.5);
+  }
+
+  .glass-field {
+    background: rgba(255, 255, 255, 0.062);
+    border: 0;
+    color: var(--dashboard-text-primary);
+    outline: none;
+    box-shadow:
+      inset 0 2px 8px rgba(0, 0, 0, 0.58),
+      inset 0 1px 0 rgba(255, 255, 255, 0.045),
+      0 1px 0 rgba(255, 255, 255, 0.025);
+  }
+
+  .glass-field::placeholder {
+    color: rgba(255, 255, 255, 0.34);
+  }
+
+  .glass-field:focus {
+    box-shadow:
+      inset 0 2px 8px rgba(0, 0, 0, 0.52),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+      0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 12px 26px rgba(0, 0, 0, 0.26);
+  }
+
+  .pill-solid {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: #fff;
+    color: #050506;
+    font-weight: 900;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 12px 26px rgba(255, 255, 255, 0.08),
+      0 14px 34px rgba(0, 0, 0, 0.34);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+  }
+
+  .pill-solid:hover {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      0 14px 32px rgba(255, 255, 255, 0.12),
+      0 16px 38px rgba(0, 0, 0, 0.38);
+  }
+
+  .pill-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.065);
+    color: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.02),
+      0 10px 28px rgba(0, 0, 0, 0.3);
+    transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .pill-ghost:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
   }
 
   .dashboard-route-fade {
@@ -282,10 +379,14 @@
   }
 
   .dashboard-input {
-    background: var(--dashboard-input-bg);
+    background: rgba(255, 255, 255, 0.062);
     border: none;
     color: var(--dashboard-text-primary);
     outline: none;
+    box-shadow:
+      inset 0 2px 8px rgba(0, 0, 0, 0.58),
+      inset 0 1px 0 rgba(255, 255, 255, 0.045),
+      0 1px 0 rgba(255, 255, 255, 0.025);
   }
 
   .dashboard-input::placeholder {
@@ -293,14 +394,21 @@
   }
 
   .dashboard-input:focus {
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    box-shadow:
+      inset 0 2px 8px rgba(0, 0, 0, 0.52),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+      0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 12px 26px rgba(0, 0, 0, 0.26);
   }
 
   .dashboard-modal-panel :is(input, textarea, select) {
-    background: var(--dashboard-input-bg);
+    background: rgba(255, 255, 255, 0.062);
     border: none;
     color: var(--dashboard-text-primary);
     outline: none;
+    box-shadow:
+      inset 0 2px 8px rgba(0, 0, 0, 0.58),
+      inset 0 1px 0 rgba(255, 255, 255, 0.045);
   }
 
   .dashboard-modal-panel :is(input, textarea, select)::placeholder {
@@ -318,6 +426,9 @@
     background: rgba(255, 255, 255, 0.045);
     padding: 0.25rem;
     scrollbar-width: none;
+    box-shadow:
+      inset 0 2px 8px rgba(0, 0, 0, 0.46),
+      inset 0 1px 0 rgba(255, 255, 255, 0.055);
   }
 
   .dashboard-segmented-toggle::-webkit-scrollbar {
@@ -338,7 +449,7 @@
     letter-spacing: 0.08em;
     line-height: 1;
     text-transform: uppercase;
-    transition: background 0.18s ease, color 0.18s ease;
+    transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
   }
 
   .dashboard-segmented-toggle__item:hover {
@@ -347,8 +458,12 @@
   }
 
   .dashboard-segmented-toggle__item[data-active='true'] {
-    background: var(--dashboard-active-overlay);
-    color: #fff;
+    background: #fff;
+    color: #050506;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 8px 18px rgba(255, 255, 255, 0.08),
+      0 10px 24px rgba(0, 0, 0, 0.34);
   }
 
   .hairline-border {
@@ -493,26 +608,34 @@
 
   /* Dashboard borderless glow surfaces */
   .glow-surface {
-    background: var(--dashboard-surface-a-soft);
-    border: 1px solid var(--dashboard-border-subtle);
+    background: rgba(255, 255, 255, 0.045);
+    border: 0;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    box-shadow: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 14px 36px rgba(0, 0, 0, 0.34);
   }
 
   .glow-surface-soft {
     background: rgba(255, 255, 255, 0.045);
-    box-shadow: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.055),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.02);
   }
 
   .glow-chip {
     background: rgba(255, 255, 255, 0.05);
-    box-shadow: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.055),
+      0 8px 20px rgba(0, 0, 0, 0.22);
   }
 
   .glow-active {
-    background: var(--dashboard-active-overlay);
-    box-shadow: none;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 12px 28px rgba(0, 0, 0, 0.28);
   }
 
   .glow-interactive {
@@ -520,12 +643,16 @@
   }
 
   .glow-interactive:hover {
-    background: rgba(255, 255, 255, 0.055);
-    box-shadow: none;
+    background: rgba(255, 255, 255, 0.075);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 16px 36px rgba(0, 0, 0, 0.34);
   }
 
   .dashboard-glow-popover {
-    box-shadow: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.075),
+      0 18px 46px rgba(0, 0, 0, 0.52);
   }
 }
 

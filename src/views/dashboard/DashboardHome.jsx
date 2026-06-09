@@ -11,7 +11,8 @@ import { eventsService } from '../../services/events';
 import SectionCard from '@/components/dashboard/SectionCard';
 import { MicroChart, StatRow } from '@/components/dashboard/MetricCard';
 import { useNotifications } from '@/lib/dashboardStore';
-import { buildCommandCenterUpdates } from '@/services/commandCenter';
+import { buildCommandCenterUpdates, listSupportQueue } from '@/services/commandCenter';
+import { helpRequestsService } from '@/services/helpRequests';
 
 const DASHBOARD_RENDER_NOW = Date.now();
 const BASE_CHART_COLOR = '#d4d4d8';
@@ -61,7 +62,8 @@ export default function DashboardHome() {
     const [vendorLoading, setVendorLoading] = useState(false);
     const [events, setEvents] = useState([]);
     const [eventsLoading, setEventsLoading] = useState(false);
-    const { unreadCount: notificationCount } = useNotifications(50);
+    const [helpRequests, setHelpRequests] = useState([]);
+    const { notifications, unreadCount: notificationCount } = useNotifications(50);
 
     useEffect(() => {
         const frame = requestAnimationFrame(() => setMounted(true));
@@ -111,6 +113,14 @@ export default function DashboardHome() {
             clearTimeout(timer);
         };
     }, [user?.isVendor]);
+
+    useEffect(() => {
+        if (!mounted) return;
+        helpRequestsService
+            .listOrganizerHelpRequests({ events })
+            .then(setHelpRequests)
+            .catch(() => setHelpRequests([]));
+    }, [events, mounted]);
 
     const { eventRows, summary } = useMemo(() => {
         const now = DASHBOARD_RENDER_NOW;
@@ -185,6 +195,28 @@ export default function DashboardHome() {
         () => buildCommandCenterUpdates({ events, unreadCount: notificationCount, vendorDashboard: vendorData }),
         [events, notificationCount, vendorData]
     );
+    const upcomingAndLiveEvents = useMemo(
+        () => eventRows.filter((event) => event.status === 'Active' || event.status === 'Scheduled').slice(0, 4),
+        [eventRows]
+    );
+    const urgentQueue = useMemo(() => {
+        const localRequests = helpRequests
+            .filter((request) => request.status !== 'resolved')
+            .slice(0, 3)
+            .map((request) => ({
+                id: request.id,
+                title: request.subject || 'Customer ticket',
+                event: request.eventName || 'Hosted event',
+                severity: request.type === 'safety-security' || request.type === 'access-issue' ? 'high' : 'medium',
+                detail: request.message || 'Attendee needs organizer follow-up.',
+                action: request.status === 'reviewing' ? 'Continue review' : 'Review ticket',
+                href: request.eventId ? `/dashboard/events/${request.eventId}/members` : '/dashboard/events',
+            }));
+        if (localRequests.length) return localRequests;
+        return listSupportQueue({ events, notifications }).requests.slice(0, 3);
+    }, [events, helpRequests, notifications]);
+    const reminderUpdates = updates.filter((update) => update.group !== 'product');
+    const productUpdates = updates.filter((update) => update.group === 'product');
     const metricsLoading = vendorLoading || eventsLoading;
 
     if (!mounted) {
@@ -229,10 +261,10 @@ export default function DashboardHome() {
             <Motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]"
+                className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(340px,0.75fr)]"
             >
                 <SectionCard
-                    title="Event Pulse"
+                    title="Upcoming + Live"
                     actions={(
                         <Link href="/dashboard/events" className="text-[12px] font-bold tracking-wide text-white/60 hover:text-white transition-colors uppercase whitespace-nowrap">
                             View all
@@ -246,15 +278,15 @@ export default function DashboardHome() {
                                 <div key={item} className="h-28 rounded-2xl bg-white/[0.035] animate-pulse" />
                             ))}
                         </div>
-                    ) : eventRows.length === 0 ? (
+                    ) : upcomingAndLiveEvents.length === 0 ? (
                         <div className="dashboard-surface-frosted rounded-2xl px-4 py-6 text-center">
-                            <p className="text-sm font-semibold text-white">No events yet.</p>
-                            <Link href="/dashboard/events/new" className="mt-3 inline-flex rounded-full bg-pxi-purple px-4 py-2 text-xs font-bold uppercase tracking-widest text-white whitespace-nowrap">
-                                Create event
+                            <p className="text-sm font-semibold text-white">No live or upcoming events yet.</p>
+                            <Link href="/dashboard/events" className="pill-ghost mt-3 px-4 py-2 text-xs font-bold uppercase tracking-widest whitespace-nowrap">
+                                Open events
                             </Link>
                         </div>
                     ) : (
-                        eventRows.map((event) => (
+                        upcomingAndLiveEvents.map((event) => (
                             <article key={event.id} className="dashboard-surface-frosted rounded-2xl p-4">
                                 <div className="flex min-w-0 items-start justify-between gap-3">
                                     <div className="min-w-0">
@@ -290,6 +322,32 @@ export default function DashboardHome() {
                 </SectionCard>
 
                 <div className="space-y-4">
+                    <SectionCard title="Urgent notices" dense bodyClassName="space-y-3">
+                        {urgentQueue.map((notice) => (
+                            <Link
+                                key={notice.id}
+                                href={notice.href}
+                                className={`block rounded-2xl p-4 transition hover:bg-white/[0.075] ${
+                                    notice.severity === 'high' ? 'bg-white/[0.075] shadow-[inset_0_1px_0_rgba(255,255,255,0.09)]' : 'bg-white/[0.04]'
+                                }`}
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="truncate text-sm font-black text-white">{notice.title}</p>
+                                        <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-white/35">{notice.event}</p>
+                                        <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-white/50">{notice.detail}</p>
+                                    </div>
+                                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                                        notice.severity === 'high' ? 'bg-red-400/14 text-red-100' : 'bg-white/[0.08] text-white/60'
+                                    }`}>
+                                        {notice.severity}
+                                    </span>
+                                </div>
+                                <p className="mt-3 text-[10px] font-black uppercase tracking-widest text-white/55">{notice.action}</p>
+                            </Link>
+                        ))}
+                    </SectionCard>
+
                     <SectionCard title="Snapshot" dense bodyClassName="space-y-4">
                         <StatRow
                             className="!rounded-xl !p-3"
@@ -323,50 +381,41 @@ export default function DashboardHome() {
                         </div>
                     </SectionCard>
 
-                    <SectionCard title="PXI Updates" dense bodyClassName="space-y-3">
-                        {updates.map((update) => (
-                            <Link
-                                key={update.id}
-                                href={update.href}
-                                className="block rounded-xl bg-white/[0.035] p-3 transition hover:bg-white/[0.06]"
-                            >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-bold text-white">{update.title}</p>
-                                        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500">{update.detail}</p>
-                                    </div>
-                                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-white/45 whitespace-nowrap">
-                                        {update.action}
-                                    </span>
-                                </div>
-                            </Link>
-                        ))}
+                    <SectionCard title="PXI Updates" dense bodyClassName="flex min-h-[420px] flex-col gap-5">
+                        <div className="space-y-3">
+                            <p className="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">Reminders</p>
+                            {reminderUpdates.map((update) => (
+                                <UpdateLink key={update.id} update={update} />
+                            ))}
+                        </div>
+                        <div className="mt-auto space-y-3">
+                            <p className="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">Product + Policy</p>
+                            {productUpdates.map((update) => (
+                                <UpdateLink key={update.id} update={update} />
+                            ))}
+                        </div>
                     </SectionCard>
                 </div>
             </Motion.div>
-
-            <nav className="dashboard-surface dashboard-scrollbar-none flex flex-nowrap items-center gap-1 overflow-x-auto rounded-full p-1" aria-label="Command Center actions">
-                {[
-                    { href: '/dashboard/events', label: 'Events' },
-                    { href: '/dashboard/analytics', label: 'Analytics' },
-                    { href: '/dashboard/audience', label: 'Audience' },
-                    { href: '/dashboard/earnings', label: 'Earnings' },
-                ].map((item) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className="shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest text-white/60 transition hover:bg-white/[0.07] hover:text-white whitespace-nowrap"
-                    >
-                        {item.label}
-                    </Link>
-                ))}
-                <Link
-                    href="/dashboard/events/new"
-                    className="ml-auto shrink-0 rounded-full bg-pxi-purple px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:brightness-110 whitespace-nowrap"
-                >
-                    Create
-                </Link>
-            </nav>
         </div>
+    );
+}
+
+function UpdateLink({ update }) {
+    return (
+        <Link
+            href={update.href}
+            className="block rounded-2xl bg-white/[0.04] p-4 transition hover:bg-white/[0.075]"
+        >
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-white">{update.title}</p>
+                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500">{update.detail}</p>
+                </div>
+                <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-white/45 whitespace-nowrap">
+                    {update.action}
+                </span>
+            </div>
+        </Link>
     );
 }

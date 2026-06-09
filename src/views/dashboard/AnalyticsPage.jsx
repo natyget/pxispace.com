@@ -118,27 +118,24 @@ function HypeActivityLayer({ points = [] }) {
     );
 }
 
-function HypeIndexChart({ series, isMobile, timeframe, onTimeframeChange }) {
+function HypeIndexChart({ series, isMobile, hasSelection, currentLabel, previousLabel }) {
     const latest = series[series.length - 1] || { current: 0, previous: 0 };
     const delta = latest.previous ? Math.round(((latest.current - latest.previous) / latest.previous) * 100) : 0;
     const change = {
-        label: `${delta >= 0 ? '+' : ''}${delta}% vs prev`,
+        label: hasSelection ? `${delta >= 0 ? '+' : ''}${delta}%` : '-',
         tone: delta >= 0 ? 'positive' : 'negative',
     };
 
     return (
         <TimeSeriesChartShell
             title="Hype Index"
-            subheading="Live event energy compared with the previous period."
-            liveValue={latest.current}
+            subheading="Selected event energy compared across albums."
+            liveValue={hasSelection ? latest.current : '-'}
             unit="index"
             change={change}
-            timeframe={timeframe}
-            onTimeframeChange={onTimeframeChange}
             chartClassName="relative h-[320px] md:h-[390px]"
         >
             <div className="relative h-full">
-                <HypeActivityLayer points={series} />
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={series} margin={{ top: 18, right: 14, left: isMobile ? -14 : 4, bottom: 8 }}>
                         <defs>
@@ -172,7 +169,7 @@ function HypeIndexChart({ series, isMobile, timeframe, onTimeframeChange }) {
                         <Area
                             type="monotone"
                             {...getTimeSeriesProps('previous')}
-                            name="Previous period"
+                            name={previousLabel}
                             strokeWidth={1.8}
                             dot={false}
                             activeDot={false}
@@ -181,11 +178,22 @@ function HypeIndexChart({ series, isMobile, timeframe, onTimeframeChange }) {
                         <Area
                             type="monotone"
                             {...getTimeSeriesProps('current')}
-                            name="Current period"
+                            name={currentLabel}
                             fill="url(#analyticsHypeGradient)"
                             strokeWidth={2.6}
                             dot={false}
                             activeDot={{ r: 5, fill: '#ffffff', stroke: '#09090b' }}
+                            isAnimationActive={false}
+                        />
+                        <Area
+                            type="monotone"
+                            dataKey="scanIndex"
+                            name="Scan activity"
+                            stroke="rgba(255,255,255,0.36)"
+                            fill="rgba(255,255,255,0.055)"
+                            strokeWidth={1.4}
+                            dot={false}
+                            activeDot={false}
                             isAnimationActive={false}
                         />
                     </AreaChart>
@@ -197,13 +205,15 @@ function HypeIndexChart({ series, isMobile, timeframe, onTimeframeChange }) {
 
 function EventFilterBar({ events, selectedEventIds, onChange, loading, spatialNote }) {
     const allIds = events.map((event) => event.id);
-    const allSelected = selectedEventIds.length === allIds.length;
-    const activeShortcutId = FILTER_SHORTCUTS.find((shortcut) => sameIdSet(idsForShortcut(events, shortcut), selectedEventIds))?.id;
+    const allSelected = selectedEventIds.length > 0 && selectedEventIds.length === allIds.length;
+    const activeShortcutId = [...FILTER_SHORTCUTS]
+        .reverse()
+        .find((shortcut) => selectedEventIds.length > 0 && sameIdSet(idsForShortcut(events, shortcut), selectedEventIds))?.id;
 
     const toggleEvent = (eventId) => {
         onChange((current) => {
             if (current.includes(eventId)) {
-                return current.length === 1 ? current : current.filter((id) => id !== eventId);
+                return current.filter((id) => id !== eventId);
             }
             return [...current, eventId];
         });
@@ -215,8 +225,8 @@ function EventFilterBar({ events, selectedEventIds, onChange, loading, spatialNo
     };
 
     return (
-        <div className="dashboard-surface rounded-2xl p-4">
-            <div className="flex flex-wrap items-center gap-2 border-b border-white/5 pb-3">
+        <div className="glass-panel rounded-2xl p-4">
+            <div className="flex flex-wrap items-center gap-2 pb-3 shadow-[inset_0_-1px_0_rgba(255,255,255,0.035)]">
                 {FILTER_SHORTCUTS.map((shortcut) => {
                     const ids = idsForShortcut(events, shortcut);
                     const disabled = !ids.length;
@@ -238,6 +248,13 @@ function EventFilterBar({ events, selectedEventIds, onChange, loading, spatialNo
                     );
                 })}
                 {loading ? <span className="px-2 text-xs font-semibold text-zinc-500">Syncing events</span> : null}
+                <button
+                    type="button"
+                    onClick={() => onChange([])}
+                    className="pill-ghost px-4 py-2 text-xs font-black uppercase tracking-widest"
+                >
+                    Clear
+                </button>
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -250,7 +267,7 @@ function EventFilterBar({ events, selectedEventIds, onChange, loading, spatialNo
                             onClick={() => toggleEvent(event.id)}
                             aria-pressed={selected}
                             className={`rounded-2xl px-4 py-3 text-left text-xs font-bold transition ${
-                                selected ? 'bg-white/[0.12] text-white ring-1 ring-white/10' : 'glow-chip text-zinc-400 hover:text-white'
+                                selected ? 'pill-solid' : 'pill-ghost text-zinc-400 hover:text-white'
                             }`}
                         >
                             <span className="block">{event.name}</span>
@@ -264,7 +281,7 @@ function EventFilterBar({ events, selectedEventIds, onChange, loading, spatialNo
             </div>
 
             <p className="mt-3 text-xs font-semibold text-zinc-500">
-                {selectedEventIds.length === 1 ? 'Single-event mode.' : `${selectedEventIds.length} events selected.`}
+                {selectedEventIds.length === 0 ? '- selected.' : selectedEventIds.length === 1 ? 'Single-event mode.' : `${selectedEventIds.length} events selected.`}
                 {spatialNote ? ` ${spatialNote}` : ''}
             </p>
         </div>
@@ -315,8 +332,8 @@ function AudienceComposition({ composition, insights, isMobile }) {
                                     onFocus={() => setActiveIndex(index)}
                                     className="flex w-full items-center justify-between gap-4 rounded-xl px-1 py-2 text-left"
                                 >
-                                    <span className={`text-sm font-black transition ${active ? 'text-pxi-purple' : 'text-zinc-300'}`}>{segment.name}</span>
-                                    <span className={`text-xs font-bold transition ${active ? 'text-pxi-purple' : 'text-zinc-500'}`}>
+                                    <span className={`text-sm font-black transition ${active ? 'text-white' : 'text-zinc-300'}`}>{segment.name}</span>
+                                    <span className={`text-xs font-bold transition ${active ? 'text-white' : 'text-zinc-500'}`}>
                                         {formatNumber(segment.value)} · {percent}%
                                     </span>
                                 </button>
@@ -372,7 +389,6 @@ function AnalyticsPageContent() {
     const [selectedEventIds, setSelectedEventIds] = useState([]);
     const [isMobile, setIsMobile] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [hypeTimeframe, setHypeTimeframe] = useState('1D');
 
     useEffect(() => {
         let cancelled = false;
@@ -405,11 +421,7 @@ function AnalyticsPageContent() {
         if (!eventOptions.length) return;
         setSelectedEventIds((current) => {
             const validIds = new Set(eventOptions.map((event) => event.id));
-            const validCurrent = current.filter((id) => validIds.has(id));
-            if (!validCurrent.length || validCurrent.length !== current.length) {
-                return eventOptions.map((event) => event.id);
-            }
-            return current;
+            return current.filter((id) => validIds.has(id));
         });
     }, [eventOptions]);
 
@@ -417,6 +429,13 @@ function AnalyticsPageContent() {
         () => buildAnalyticsMock(eventOptions, selectedEventIds),
         [eventOptions, selectedEventIds]
     );
+    const hasSelection = selectedEventIds.length > 0;
+    const currentLabel = analytics.selectedEvents.length === 1
+        ? analytics.selectedEvents[0].name
+        : analytics.selectedEvents.length > 1
+            ? `${analytics.selectedEvents[0].name} + ${analytics.selectedEvents.length - 1}`
+            : 'Selected albums';
+    const previousLabel = analytics.selectedEvents.length === 1 ? 'Prior album' : 'Comparison baseline';
 
     const spatialVenues = useMemo(
         () => Array.from(new Set(analytics.selectedEvents.map((event) => event.venue).filter(Boolean))),
@@ -461,8 +480,9 @@ function AnalyticsPageContent() {
             <HypeIndexChart
                 series={analytics.hypeSeries}
                 isMobile={isMobile}
-                timeframe={hypeTimeframe}
-                onTimeframeChange={setHypeTimeframe}
+                hasSelection={hasSelection}
+                currentLabel={currentLabel}
+                previousLabel={previousLabel}
             />
 
             <SectionCard title="Spatial Intelligence">
@@ -482,12 +502,12 @@ function AnalyticsPageContent() {
                 />
             </SectionCard>
 
-            <SectionCard title="Top Moments">
-                <TopMoments moments={analytics.moments} />
+            <SectionCard title="Attendee Lifecycle">
+                <FunnelChart data={analytics.funnel} singleSelection={analytics.selectedEvents.length <= 1} />
             </SectionCard>
 
-            <SectionCard title="Attendee Lifecycle">
-                <FunnelChart data={analytics.funnel} />
+            <SectionCard title="Top Moments">
+                <TopMoments moments={analytics.moments} />
             </SectionCard>
         </div>
     );

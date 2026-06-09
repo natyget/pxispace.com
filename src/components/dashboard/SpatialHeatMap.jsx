@@ -118,7 +118,7 @@ export default function SpatialHeatMap({ rooms = [], timeSlices = [], eventCompa
                 </div>
             ) : null}
 
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
+            <div className="min-h-[720px] space-y-4">
                 <div className="glow-surface-soft overflow-hidden rounded-2xl p-3">
                     <svg viewBox="0 0 760 470" role="img" aria-label="Club floor plan heat map" className="h-auto w-full">
                         <defs>
@@ -215,16 +215,16 @@ export default function SpatialHeatMap({ rooms = [], timeSlices = [], eventCompa
                     </svg>
                 </div>
 
-                <aside className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <aside className="grid min-h-[150px] gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     {rooms.map((room) => {
                         const reading = roomReadingFor(activeSlice.rooms, room.id);
                         const faded = Boolean(hoveredRoomId && hoveredRoomId !== room.id);
                         return (
                             <div
                                 key={room.id}
-                                className={`glow-surface-soft rounded-2xl p-4 transition duration-200 ${faded ? 'opacity-25' : 'opacity-100'}`}
-                                style={{ visibility: faded ? 'hidden' : 'visible' }}
-                                aria-hidden={faded}
+                                className={`glow-surface-soft rounded-2xl p-4 transition duration-200 ${
+                                    hoveredRoomId === room.id ? 'bg-white/[0.095] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_18px_36px_rgba(0,0,0,0.34)]' : faded ? 'opacity-35' : 'opacity-100'
+                                }`}
                             >
                                 <p className="text-sm font-black text-white">{room.label}</p>
                                 <div className="mt-3 flex items-end justify-between gap-3">

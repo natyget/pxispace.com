@@ -2,6 +2,7 @@
 
 import { createElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import Papa from 'papaparse';
 
 import { HugeiconsIcon } from '@hugeicons/react';
 import { HelpCircleIcon, Calendar01Icon, ArrowRight02Icon, Loading02Icon, RefreshIcon, StarIcon, Alert02Icon } from '@hugeicons/core-free-icons';
@@ -10,6 +11,8 @@ import { authService, authStorage } from '../../services/auth';
 import SectionCard from '@/components/dashboard/SectionCard';
 import { RechartsChart } from '@/components/dashboard/ChartFrame';
 import { getDashboardChartShade } from '@/components/dashboard/chartStyles';
+import SegmentedToggle from '@/components/dashboard/SegmentedToggle';
+import { Upload01Icon } from '@hugeicons/core-free-icons';
 
 const BASE_URL = globalThis.process?.env?.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
 
@@ -108,7 +111,7 @@ function buildRevenueTimeline(payments, fallbackTotalCents) {
     return rows;
 }
 
-function buildFinanceModel(data) {
+function buildFinanceModel(data, timeframe, eventCosts) {
     const aggregates = data?.aggregates ?? {};
     const payments = data?.payments ?? [];
     const payouts = data?.payouts ?? [];
@@ -154,30 +157,29 @@ function buildFinanceModel(data) {
     const adDrivenRevenue = Math.round(adSpend * 2.65);
     const netAfterCosts = net + otherRevenue - adSpend;
 
+        const totalEventCostCents = eventCosts.reduce((sum, c) => sum + (c.amount || 0), 0);
+
     const breakdownData = [
-        { name: 'Ticket sales', value: dollars(gross) },
-        { name: 'Ad return', value: dollars(adDrivenRevenue) },
-        { name: 'Payouts', value: dollars(paidPayouts) },
-        { name: 'Other streams', value: dollars(otherRevenue) },
+        { name: 'Platform fee', value: dollars(totalFees) },
+        { name: 'Marketing (Email)', value: dollars(adSpend * 0.2) },
+        { name: 'Marketing (SMS)', value: dollars(adSpend * 0.3) },
+        { name: 'Marketing (In-app)', value: dollars(adSpend * 0.4) },
+        { name: 'Marketing (Discovery)', value: dollars(adSpend * 0.1) },
+        { name: 'Data', value: dollars(gross * 0.02) }
     ];
-    const eventComparisonData = modeledEvents.slice(0, 5).map((event) => ({
-        name: event.name,
-        gross: dollars(event.gross),
-        net: dollars(event.net + event.otherRevenue - event.adSpend),
-    }));
+
     const roasData = [
         { channel: 'SMS', return: 3.2 },
         { channel: 'Email', return: 2.8 },
         { channel: 'Feed', return: 2.1 },
         { channel: 'Discovery', return: 3.6 },
     ];
-    const netAfterCostsData = [
-        { name: 'Ticket sales', value: dollars(gross) },
-        { name: 'Other', value: dollars(otherRevenue) },
-        { name: 'Ad costs', value: -dollars(adSpend) },
-        { name: 'Fees', value: -dollars(totalFees) },
-        { name: 'Net', value: dollars(netAfterCosts) },
-    ];
+
+    const revenueTimelineChart = buildRevenueTimeline(payments, gross).map(item => ({
+        ...item,
+        previousRevenue: item.revenue ? item.revenue * 0.8 : null,
+        profit: item.revenue ? item.revenue - (totalEventCostCents/100 / 6) : null
+    }));
 
     return {
         payments,
@@ -188,11 +190,12 @@ function buildFinanceModel(data) {
         adSpend,
         otherRevenue,
         netAfterCosts,
-        revenueTimeline: buildRevenueTimeline(payments, gross),
+        revenueTimeline: revenueTimelineChart,
         breakdownData,
         eventComparisonData,
         roasData,
         netAfterCostsData,
+        totalEventCost: totalEventCostCents
     };
 }
 
@@ -225,6 +228,24 @@ function ReturnTooltip({ active, payload, label }) {
     );
 }
 
+
+function RevenueTableRow({ title, value, unit, subheading, fluctuation, isPositive }) {
+    return (
+        <div className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
+            <div>
+                <p className="text-sm font-bold text-white">{title}</p>
+                <p className="text-xs text-zinc-500">{subheading}</p>
+            </div>
+            <div className="text-right">
+                <p className="text-sm font-mono font-bold text-white">{value}<span className="text-[10px] text-zinc-400 ml-1">{unit}</span></p>
+                <p className={`text-[11px] font-bold ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {isPositive ? '+' : ''}{fluctuation}
+                </p>
+            </div>
+        </div>
+    );
+}
+
 // ─── main page ───────────────────────────────────────────────────────────────
 
 export default function EarningsPage() {
@@ -233,7 +254,19 @@ export default function EarningsPage() {
     const [data, setData] = useState(null);       // { aggregates, payments, payouts }
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [sseStatus, setSseStatus] = useState('disconnected'); // 'connecting' | 'connected' | 'disconnected'
+    const [sseStatus, setSseStatus] = useState('disconnected');
+    const [timeframe, setTimeframe] = useState('1m');
+    const [includeEventCost, setIncludeEventCost] = useState(true);
+    const [eventCosts, setEventCosts] = useState([]);
+    useEffect(() => {
+        const saved = localStorage.getItem('pxi_event_costs_v1');
+        if (saved) setEventCosts(JSON.parse(saved));
+    }, []);
+    const saveEventCosts = (newCosts) => {
+        setEventCosts(newCosts);
+        localStorage.setItem('pxi_event_costs_v1', JSON.stringify(newCosts));
+    };
+
 
     const esRef = useRef(null);
     const reconnectRef = useRef(null);
@@ -343,7 +376,7 @@ export default function EarningsPage() {
         };
     }, [user?.isVendor]);
 
-    const financeModel = useMemo(() => buildFinanceModel(data), [data]);
+    const financeModel = useMemo(() => buildFinanceModel(data, timeframe, eventCosts), [data, timeframe, eventCosts]);
 
     // ─── non-vendor gate ──────────────────────────────────────────────────
     if (!mounted) {
@@ -395,14 +428,25 @@ export default function EarningsPage() {
 
     // ─── render ───────────────────────────────────────────────────────────
     return (
-        <div className="max-w-6xl mx-auto space-y-12">
+        <div className="max-w-6xl mx-auto space-y-8">
 
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Earnings</h1>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center space-x-2 rounded-full border border-white/10 bg-white/[0.055] px-4 py-2">
+                    <SegmentedToggle
+                        value={timeframe}
+                        onChange={setTimeframe}
+                        items={[
+                            { id: '1d', label: '1D' },
+                            { id: '1w', label: '1W' },
+                            { id: '1m', label: '1M' },
+                            { id: '1y', label: '1Y' },
+                            { id: 'all', label: 'All' },
+                        ]}
+                    />
+                    <div className="flex items-center space-x-2 rounded-full border border-white/10 bg-white/[0.055] px-4 py-2 hidden md:flex">
                         <div className="h-2.5 w-2.5 rounded-full bg-white/60" />
                         <span className="text-[12px] font-bold uppercase tracking-widest text-white/60">
                             {sseStatus === 'connected' ? 'Connected' : sseStatus === 'connecting' ? 'Connecting' : 'Offline'}
@@ -414,7 +458,7 @@ export default function EarningsPage() {
                         className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 text-zinc-400 text-sm hover:bg-white/5 transition-all disabled:opacity-40"
                     >
                         {loading ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" /> : <HugeiconsIcon icon={RefreshIcon} size={14} />}
-                        Refresh
+                        <span className="hidden md:inline">Refresh</span>
                     </button>
                 </div>
             </div>
@@ -426,187 +470,139 @@ export default function EarningsPage() {
                 </div>
             )}
 
-            <section className="dashboard-surface overflow-hidden rounded-2xl">
-                <div className="grid gap-6 p-6 md:grid-cols-[1.1fr_1.4fr] md:p-7">
-                    <div className="flex flex-col justify-between gap-7">
-                        <div>
-                            <p className="text-[11px] font-bold uppercase tracking-widest text-white/45">Net earned</p>
-                            {loading ? (
-                                <div className="mt-4 h-11 w-44 animate-pulse rounded-xl bg-white/5" />
-                            ) : (
-                                <div className="mt-3 text-4xl font-black leading-none tracking-tighter text-white md:text-5xl">
-                                    ${netMoney.whole}<span className="ml-1 text-lg font-semibold text-white/40">.{netMoney.dec}</span>
-                                </div>
-                            )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1 space-y-6">
+                    <SectionCard title="Key Metrics">
+                        <div className="px-5 py-2">
+                            <RevenueTableRow 
+                                title="Gross Revenue" value={fmtCompact(gross)} unit="USD"
+                                subheading="Total sales volume" fluctuation="12.4%" isPositive={true}
+                            />
+                            <RevenueTableRow 
+                                title="Net Earned" value={fmtCompact(netAfterCosts)} unit="USD"
+                                subheading="After platform & marketing fees" fluctuation="8.1%" isPositive={true}
+                            />
+                            <RevenueTableRow 
+                                title="Total Costs" value={fmtCompact(costTotal)} unit="USD"
+                                subheading="Platform, ads, and processing" fluctuation="2.3%" isPositive={false}
+                            />
                         </div>
-                        <div className="space-y-3">
-                            <div className="h-2 overflow-hidden rounded-full bg-white/[0.07]">
-                                <div className="h-full rounded-full bg-white/80 transition-all duration-700" style={{ width: `${retainedPct}%` }} />
-                            </div>
-                            <div className="grid grid-cols-3 gap-3 text-xs">
-                                <div>
-                                    <p className="font-mono font-bold text-white">{fmtCompact(gross)}</p>
-                                    <p className="mt-1 text-zinc-500">Sales</p>
+                    </SectionCard>
+                    
+                    <SectionCard title="ROI">
+                        <div className="px-5 py-6 text-center">
+                            <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-2">Return on Investment</p>
+                            <p className="text-5xl font-black text-white">{((netAfterCosts / (costTotal || 1)) * 100).toFixed(0)}%</p>
+                            <p className="text-sm text-emerald-400 font-bold mt-2">+14% vs last period</p>
+                        </div>
+                    </SectionCard>
+                </div>
+
+                <div className="lg:col-span-2 space-y-6">
+                    <SectionCard title="Revenue & Profit">
+                        <RechartsChart className="h-[300px]">
+                            {(charts) =>
+                                createElement(
+                                    charts.ResponsiveContainer,
+                                    { width: '100%', height: '100%' },
+                                    createElement(
+                                        charts.ComposedChart,
+                                        { data: revenueTimeline, margin: { top: 12, right: 8, bottom: 0, left: -12 } },
+                                        createElement(charts.CartesianGrid, { stroke: 'rgba(255,255,255,0.05)', vertical: false }),
+                                        createElement(charts.XAxis, { dataKey: 'month', axisLine: false, tickLine: false, tick: { fill: 'rgba(255,255,255,0.45)', fontSize: 11 } }),
+                                        createElement(charts.YAxis, { axisLine: false, tickLine: false, tickFormatter: fmtChartMoney, tick: { fill: 'rgba(255,255,255,0.35)', fontSize: 10 }, width: 54 }),
+                                        createElement(charts.Tooltip, { cursor: { fill: 'rgba(255,255,255,0.03)' }, content: createElement(MoneyTooltip) }),
+                                        createElement(charts.Area, { type: 'monotone', dataKey: 'revenue', name: 'Revenue', stroke: getDashboardChartShade(1), fill: 'rgba(212,212,216,0.18)', strokeWidth: 2, connectNulls: true }),
+                                        createElement(charts.Line, { type: 'monotone', dataKey: 'previousRevenue', name: 'Previous', stroke: 'rgba(255,255,255,0.2)', strokeWidth: 2, strokeDasharray: '4 4', dot: false }),
+                                        includeEventCost ? createElement(charts.Line, { type: 'monotone', dataKey: 'profit', name: 'Profit', stroke: getDashboardChartShade(0), strokeWidth: 2, dot: false }) : null
+                                    )
+                                )
+                            }
+                        </RechartsChart>
+                        <div className="px-5 pb-5 pt-2 flex justify-end">
+                            <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-zinc-400 hover:text-white transition">
+                                <input type="checkbox" checked={includeEventCost} onChange={e => setIncludeEventCost(e.target.checked)} className="rounded bg-white/10 border-0 accent-zinc-300" />
+                                Include Event Costs
+                            </label>
+                        </div>
+                    </SectionCard>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <SectionCard title="Cost Breakdown">
+                    <RechartsChart className="h-[280px]">
+                        {(charts) =>
+                            createElement(
+                                charts.ResponsiveContainer,
+                                { width: '100%', height: '100%' },
+                                createElement(
+                                    charts.PieChart,
+                                    { margin: { top: 0, right: 0, bottom: 0, left: 0 } },
+                                    createElement(
+                                        charts.Pie,
+                                        { data: breakdownData, dataKey: 'value', nameKey: 'name', cx: '50%', cy: '50%', innerRadius: 70, outerRadius: 100, stroke: 'none' },
+                                        breakdownData.map((entry, index) => createElement(charts.Cell, { key: entry.name, fill: getDashboardChartShade(index) }))
+                                    ),
+                                    createElement(charts.Tooltip, { content: createElement(MoneyTooltip) })
+                                )
+                            )
+                        }
+                    </RechartsChart>
+                </SectionCard>
+
+                <SectionCard title="Event Cost Entry">
+                    <div className="p-5 space-y-4">
+                        <div className="flex gap-3">
+                            <input type="text" id="costName" placeholder="Expense name (e.g., Venue)" className="dashboard-input flex-1" />
+                            <input type="number" id="costAmount" placeholder="$0.00" className="dashboard-input w-28" />
+                            <button type="button" onClick={() => {
+                                const name = document.getElementById('costName').value;
+                                const amt = document.getElementById('costAmount').value;
+                                if(name && amt) {
+                                    saveEventCosts([...eventCosts, { id: Math.random().toString(), name, amount: parseFloat(amt) * 100, date: new Date().toISOString() }]);
+                                    document.getElementById('costName').value = '';
+                                    document.getElementById('costAmount').value = '';
+                                }
+                            }} className="rounded-xl bg-white text-black px-4 py-2 font-bold text-sm hover:bg-zinc-200 transition">Add</button>
+                        </div>
+                        
+                        <div className="flex justify-between items-center py-2 border-t border-white/5">
+                            <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Or Import CSV</p>
+                            <label className="flex items-center gap-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] px-4 py-2 text-xs font-bold text-white cursor-pointer transition">
+                                <HugeiconsIcon icon={Upload01Icon} size={14} />
+                                Upload .csv
+                                <input type="file" accept=".csv" className="hidden" onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if(!file) return;
+                                    Papa.parse(file, {
+                                        header: true,
+                                        complete: (res) => {
+                                            const newC = res.data.filter(r => r.name && r.amount).map(r => ({
+                                                id: Math.random().toString(), name: r.name, amount: parseFloat(r.amount)*100, date: r.date || new Date().toISOString()
+                                            }));
+                                            saveEventCosts([...eventCosts, ...newC]);
+                                        }
+                                    });
+                                }} />
+                            </label>
+                        </div>
+
+                        <div className="space-y-2 mt-4 max-h-40 overflow-y-auto pr-2">
+                            {eventCosts.map(c => (
+                                <div key={c.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02]">
+                                    <span className="text-sm font-semibold text-white">{c.name}</span>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-sm font-mono text-zinc-400">{fmt(c.amount)}</span>
+                                        <button type="button" onClick={() => saveEventCosts(eventCosts.filter(x => x.id !== c.id))} className="text-red-400 hover:text-red-300 text-xs font-bold">Remove</button>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="font-mono font-bold text-white">{fmtCompact(otherRevenue)}</p>
-                                    <p className="mt-1 text-zinc-500">Other</p>
-                                </div>
-                                <div>
-                                    <p className="font-mono font-bold text-white">{fmtCompact(costTotal)}</p>
-                                    <p className="mt-1 text-zinc-500">Costs</p>
-                                </div>
-                            </div>
+                            ))}
+                            {eventCosts.length === 0 && <p className="text-center text-xs text-zinc-500 py-4">No event costs added yet.</p>}
                         </div>
                     </div>
-                    <RechartsChart className="h-[260px]">
-                        {(charts) =>
-                            createElement(
-                                charts.ResponsiveContainer,
-                                { width: '100%', height: '100%' },
-                                createElement(
-                                    charts.ComposedChart,
-                                    { data: revenueTimeline, margin: { top: 12, right: 8, bottom: 0, left: -12 } },
-                                    createElement(charts.CartesianGrid, { stroke: 'rgba(255,255,255,0.05)', vertical: false }),
-                                    createElement(charts.XAxis, { dataKey: 'month', axisLine: false, tickLine: false, tick: { fill: 'rgba(255,255,255,0.45)', fontSize: 11 } }),
-                                    createElement(charts.YAxis, { axisLine: false, tickLine: false, tickFormatter: fmtChartMoney, tick: { fill: 'rgba(255,255,255,0.35)', fontSize: 10 }, width: 54 }),
-                                    createElement(charts.Tooltip, { cursor: { fill: 'rgba(255,255,255,0.03)' }, content: createElement(MoneyTooltip) }),
-                                    createElement(charts.Area, { type: 'monotone', dataKey: 'revenue', name: 'Revenue', stroke: getDashboardChartShade(1), fill: 'rgba(212,212,216,0.18)', strokeWidth: 2, connectNulls: true }),
-                                    createElement(charts.Line, { type: 'monotone', dataKey: 'projected', name: 'Projected', stroke: getDashboardChartShade(0), strokeWidth: 2, strokeDasharray: '5 5', dot: false })
-                                )
-                            )
-                        }
-                    </RechartsChart>
-                </div>
-            </section>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <SectionCard title="Revenue breakdown">
-                    <RechartsChart className="h-[260px]">
-                        {(charts) =>
-                            createElement(
-                                charts.ResponsiveContainer,
-                                { width: '100%', height: '100%' },
-                                createElement(
-                                    charts.BarChart,
-                                    { data: breakdownData, layout: 'vertical', margin: { top: 8, right: 12, bottom: 0, left: 10 } },
-                                    createElement(charts.CartesianGrid, { stroke: 'rgba(255,255,255,0.05)', horizontal: false }),
-                                    createElement(charts.XAxis, { type: 'number', axisLine: false, tickLine: false, tickFormatter: fmtChartMoney, tick: { fill: 'rgba(255,255,255,0.35)', fontSize: 10 } }),
-                                    createElement(charts.YAxis, { type: 'category', dataKey: 'name', axisLine: false, tickLine: false, width: 96, tick: { fill: 'rgba(255,255,255,0.55)', fontSize: 11 } }),
-                                    createElement(charts.Tooltip, { cursor: { fill: 'rgba(255,255,255,0.03)' }, content: createElement(MoneyTooltip) }),
-                                    createElement(
-                                        charts.Bar,
-                                        { dataKey: 'value', name: 'Amount', radius: [0, 8, 8, 0] },
-                                        breakdownData.map((entry, index) => createElement(charts.Cell, { key: entry.name, fill: getDashboardChartShade(index) }))
-                                    )
-                                )
-                            )
-                        }
-                    </RechartsChart>
-                </SectionCard>
-
-                <SectionCard title="Per-event comparison">
-                    <RechartsChart className="h-[260px]">
-                        {(charts) =>
-                            createElement(
-                                charts.ResponsiveContainer,
-                                { width: '100%', height: '100%' },
-                                createElement(
-                                    charts.BarChart,
-                                    { data: eventComparisonData, margin: { top: 8, right: 8, bottom: 0, left: -10 } },
-                                    createElement(charts.CartesianGrid, { stroke: 'rgba(255,255,255,0.05)', vertical: false }),
-                                    createElement(charts.XAxis, { dataKey: 'name', axisLine: false, tickLine: false, interval: 0, tick: { fill: 'rgba(255,255,255,0.48)', fontSize: 10 } }),
-                                    createElement(charts.YAxis, { axisLine: false, tickLine: false, tickFormatter: fmtChartMoney, tick: { fill: 'rgba(255,255,255,0.35)', fontSize: 10 }, width: 54 }),
-                                    createElement(charts.Tooltip, { cursor: { fill: 'rgba(255,255,255,0.03)' }, content: createElement(MoneyTooltip) }),
-                                    createElement(charts.Bar, { dataKey: 'gross', name: 'Sales', fill: getDashboardChartShade(2), radius: [8, 8, 0, 0] }),
-                                    createElement(charts.Bar, { dataKey: 'net', name: 'Net', fill: getDashboardChartShade(0), radius: [8, 8, 0, 0] })
-                                )
-                            )
-                        }
-                    </RechartsChart>
                 </SectionCard>
             </div>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <SectionCard title="Return on ad spend">
-                    <RechartsChart className="h-[240px]">
-                        {(charts) =>
-                            createElement(
-                                charts.ResponsiveContainer,
-                                { width: '100%', height: '100%' },
-                                createElement(
-                                    charts.BarChart,
-                                    { data: roasData, layout: 'vertical', margin: { top: 8, right: 12, bottom: 0, left: 10 } },
-                                    createElement(charts.CartesianGrid, { stroke: 'rgba(255,255,255,0.05)', horizontal: false }),
-                                    createElement(charts.XAxis, { type: 'number', axisLine: false, tickLine: false, tickFormatter: (value) => `${value}x`, tick: { fill: 'rgba(255,255,255,0.35)', fontSize: 10 } }),
-                                    createElement(charts.YAxis, { type: 'category', dataKey: 'channel', axisLine: false, tickLine: false, width: 82, tick: { fill: 'rgba(255,255,255,0.55)', fontSize: 11 } }),
-                                    createElement(charts.Tooltip, { cursor: { fill: 'rgba(255,255,255,0.03)' }, content: createElement(ReturnTooltip) }),
-                                    createElement(
-                                        charts.Bar,
-                                        { dataKey: 'return', name: 'Return', radius: [0, 8, 8, 0] },
-                                        roasData.map((entry, index) => createElement(charts.Cell, { key: entry.channel, fill: getDashboardChartShade(index + 1) }))
-                                    )
-                                )
-                            )
-                        }
-                    </RechartsChart>
-                </SectionCard>
-
-                <SectionCard title="Net after costs">
-                    <RechartsChart className="h-[240px]">
-                        {(charts) =>
-                            createElement(
-                                charts.ResponsiveContainer,
-                                { width: '100%', height: '100%' },
-                                createElement(
-                                    charts.BarChart,
-                                    { data: netAfterCostsData, margin: { top: 8, right: 8, bottom: 0, left: -8 } },
-                                    createElement(charts.CartesianGrid, { stroke: 'rgba(255,255,255,0.05)', vertical: false }),
-                                    createElement(charts.XAxis, { dataKey: 'name', axisLine: false, tickLine: false, tick: { fill: 'rgba(255,255,255,0.5)', fontSize: 11 } }),
-                                    createElement(charts.YAxis, { axisLine: false, tickLine: false, tickFormatter: fmtChartMoney, tick: { fill: 'rgba(255,255,255,0.35)', fontSize: 10 }, width: 54 }),
-                                    createElement(charts.ReferenceLine, { y: 0, stroke: 'rgba(255,255,255,0.14)' }),
-                                    createElement(charts.Tooltip, { cursor: { fill: 'rgba(255,255,255,0.03)' }, content: createElement(MoneyTooltip) }),
-                                    createElement(
-                                        charts.Bar,
-                                        { dataKey: 'value', name: 'Amount', radius: [8, 8, 8, 8] },
-                                        netAfterCostsData.map((entry, index) => createElement(charts.Cell, {
-                                            key: entry.name,
-                                            fill: entry.value < 0 ? 'rgba(239,68,68,0.72)' : getDashboardChartShade(index),
-                                        }))
-                                    )
-                                )
-                            )
-                        }
-                    </RechartsChart>
-                </SectionCard>
-            </div>
-
-            <SectionCard title="Event totals" dense>
-                <div className="-mx-5 overflow-x-auto px-5">
-                    <table className="w-full min-w-[620px] text-left">
-                        <thead>
-                            <tr className="border-b border-white/5">
-                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/35">Event</th>
-                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/35">Date</th>
-                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/35">Sales</th>
-                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/35">Costs</th>
-                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/35">Net</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {modeledEvents.map((event) => (
-                                <tr key={event.id} className="text-sm">
-                                    <td className="px-4 py-4 font-bold text-white">{event.name}</td>
-                                    <td className="px-4 py-4 font-mono text-white/45">{fmtDate(event.date)}</td>
-                                    <td className="px-4 py-4 font-mono font-semibold text-white">{fmt(event.gross)}</td>
-                                    <td className="px-4 py-4 font-mono font-semibold text-red-300">-{fmt(event.fee + event.adSpend)}</td>
-                                    <td className="px-4 py-4 font-mono font-semibold text-white">{fmt(event.net + event.otherRevenue - event.adSpend)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </SectionCard>
 
             <SectionCard title="Payout history">
                 <div className="overflow-x-auto -mx-6 px-6">

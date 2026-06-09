@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import NotificationsPage from '@/views/dashboard/NotificationsPage';
 
 export default function Page() {
-  redirect('/dashboard?panel=notifications');
+  return <NotificationsPage />;
 }

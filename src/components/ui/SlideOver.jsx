@@ -32,7 +32,7 @@ export default function SlideOver({ open, title, description, size = 'md', onClo
     <Portal>
       <div className="fixed inset-0 z-[9999] flex justify-end bg-black/70 backdrop-blur-md" onClick={onClose}>
         <aside
-          className={`dashboard-surface-b h-full w-full ${widthClass} border-y-0 border-r-0 p-6 shadow-[0_4px_20px_rgba(255,255,255,0.04)]`}
+          className={`glass-panel-strong h-full w-full ${widthClass} p-6`}
           onClick={(event) => event.stopPropagation()}
         >
           <div className="mb-5 flex items-start justify-between gap-4">
@@ -50,7 +50,7 @@ export default function SlideOver({ open, title, description, size = 'md', onClo
             </button>
           </div>
           <div className="h-[calc(100%-5rem)] overflow-y-auto pr-1">{children}</div>
-          {footer ? <div className="mt-4 border-t border-white/5 pt-4">{footer}</div> : null}
+          {footer ? <div className="mt-4 pt-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">{footer}</div> : null}
         </aside>
       </div>
     </Portal>

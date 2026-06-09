@@ -54,7 +54,7 @@ export default function ActionMenu({
         aria-label={ariaLabel}
         aria-expanded={open}
         onClick={toggleMenu}
-        className={`${buttonSize} inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50`}
+        className={`${buttonSize} pill-ghost inline-flex items-center justify-center text-white/70 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-50`}
       >
         <MoreHorizontal className="h-4 w-4" />
       </button>
@@ -62,7 +62,7 @@ export default function ActionMenu({
       {open && (
         <div
           role="menu"
-          className={`${menuAlign} absolute top-[calc(100%+6px)] z-50 min-w-[190px] rounded-xl border border-white/10 bg-zinc-950/95 p-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.45)] backdrop-blur`}
+          className={`${menuAlign} glass-panel absolute top-[calc(100%+6px)] z-50 min-w-[190px] rounded-xl p-1.5`}
         >
           {items.map((item) => {
             const toneClass =

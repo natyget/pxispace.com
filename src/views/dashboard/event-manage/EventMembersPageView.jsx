@@ -8,6 +8,7 @@ import { Shield01Icon, HelpCircleIcon, UserRemove01Icon, UserGroupIcon } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { eventsService } from '@/services/events';
 import { useEventManage } from './EventManageContext';
+import EventInvitePageView from './EventInvitePageView';
 
 const ROLE_OPTIONS = ['MEMBER', 'BOUNCER', 'ADMIN'];
 
@@ -16,6 +17,7 @@ export default function EventMembersPageView() {
   const { event, eventId, albumId, participants, reloadParticipants } = useEventManage();
   const [busyByUserId, setBusyByUserId] = useState({});
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('attending');
 
   const myAlbumRole = participants.find((p) => p.userId === user?.id)?.role;
   const isOwner = myAlbumRole === 'OWNER';
@@ -81,8 +83,30 @@ export default function EventMembersPageView() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
-        <div className="p-5 border-b border-white/5 flex items-center justify-between gap-3">
+      <div className="dashboard-segmented-toggle w-full">
+        {[
+          { id: 'attending', label: 'Attending' },
+          { id: 'send', label: 'Send invites' },
+          { id: 'status', label: 'Invite status' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className="dashboard-segmented-toggle__item flex-1"
+            data-active={activeTab === tab.id}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'send' ? <EventInvitePageView initialTab="send" showTabs={false} /> : null}
+      {activeTab === 'status' ? <EventInvitePageView initialTab="status" showTabs={false} /> : null}
+
+      {activeTab === 'attending' ? (
+      <section className="glass-panel overflow-hidden rounded-2xl">
+        <div className="flex items-center justify-between gap-3 p-5 shadow-[inset_0_-1px_0_rgba(255,255,255,0.035)]">
           <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
             {event?.name || 'Event'} · {participants.length} members
           </p>
@@ -101,14 +125,14 @@ export default function EventMembersPageView() {
               return (
                 <div
                   key={member.userId}
-                  className="rounded-xl border border-white/10 bg-zinc-900/40 p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+                  className="glass-field flex flex-col gap-2 rounded-2xl p-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <UserAvatar
                       user={{ avatarUrl: member.avatarUrl }}
                       size={40}
                       alt={handle || ''}
-                      className="shrink-0 border border-white/15"
+                      className="shrink-0"
                     />
                     <div className="min-w-0">
                       <p className="text-sm text-white truncate">
@@ -131,7 +155,7 @@ export default function EventMembersPageView() {
                         value={member.role || 'MEMBER'}
                         disabled={!canManageMembers || isOwnerRow || isBusy}
                         onChange={(e) => void handleRoleChange(member, e.target.value)}
-                        className="rounded-lg bg-zinc-800 border border-white/10 text-white text-xs px-2.5 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="glass-field rounded-full px-2.5 py-2 text-xs text-white disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {isOwnerRow ? (
                           <option value="OWNER">OWNER</option>
@@ -148,7 +172,7 @@ export default function EventMembersPageView() {
                       type="button"
                       disabled={!canManageMembers || isOwnerRow || isBusy}
                       onClick={() => void handleBlock(member)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-500/40 bg-red-500/10 text-red-300 text-xs font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-500/20"
+                      className="pill-ghost inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-widest text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <HugeiconsIcon icon={UserRemove01Icon} size={13} />
                       {isBusy ? 'Working...' : 'Block'}
@@ -162,6 +186,7 @@ export default function EventMembersPageView() {
           {error ? <p className="text-sm text-red-400 pt-1">{error}</p> : null}
         </div>
       </section>
+      ) : null}
     </div>
   );
 }

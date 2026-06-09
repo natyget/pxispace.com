@@ -10,7 +10,7 @@ function soldTickets(event) {
   return Math.max(0, (event?._count?.tickets ?? 0) - 1);
 }
 
-function eventStatus(event, now = Date.now()) {
+export function eventStatus(event, now = Date.now()) {
   const startMs = toTime(event?.startDate);
   const endMs = toTime(event?.endDate);
   const statusRaw = String(event?.status || '').toUpperCase();
@@ -253,6 +253,7 @@ export function buildCommandCenterUpdates({ events = [], unreadCount = 0, vendor
           detail: `${nextEvent.name || 'Hosted event'} · ${eventTimeLabel(nextEvent)}`,
           href: nextEvent.id ? `/dashboard/events/${nextEvent.id}` : '/dashboard/events',
           action: 'Open event',
+          group: 'reminder',
         }
       : {
           id: 'next-event',
@@ -260,6 +261,7 @@ export function buildCommandCenterUpdates({ events = [], unreadCount = 0, vendor
           detail: 'Create a hosted event and Command Center will track sales, audience, and payout signals.',
           href: '/dashboard/events/new',
           action: 'Create event',
+          group: 'reminder',
         },
     {
       id: 'audience-followup',
@@ -270,6 +272,7 @@ export function buildCommandCenterUpdates({ events = [], unreadCount = 0, vendor
           : 'Build a segment from recent attendees before the next announcement.',
       href: unreadCount > 0 ? '/dashboard/notifications' : '/dashboard/audience',
       action: unreadCount > 0 ? 'Review' : 'Open audience',
+      group: 'reminder',
     },
     {
       id: 'payouts',
@@ -280,6 +283,31 @@ export function buildCommandCenterUpdates({ events = [], unreadCount = 0, vendor
           : `${money(netPayout)} net earned across ticket activity.`,
       href: '/dashboard/earnings',
       action: 'View earnings',
+      group: 'reminder',
+    },
+    {
+      id: 'privacy-policy',
+      title: 'Privacy policy refresh',
+      detail: 'New privacy language is ready for organizer review before the next public drop.',
+      href: '/privacy_policy',
+      action: 'Read',
+      group: 'product',
+    },
+    {
+      id: 'new-features',
+      title: 'New dashboard features',
+      detail: 'Gallery controls, invite status, and campaign reporting are being tightened around the new glass UI.',
+      href: '/dashboard/audience?view=campaigns',
+      action: 'Preview',
+      group: 'product',
+    },
+    {
+      id: 'pxi-response',
+      title: 'PXI response queue',
+      detail: 'Responses from PXI support and product will appear here alongside organizer reminders.',
+      href: '/dashboard/notifications',
+      action: 'Open',
+      group: 'product',
     },
   ];
 }

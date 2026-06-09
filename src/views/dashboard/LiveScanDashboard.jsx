@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
     Alert02Icon,
@@ -12,6 +12,9 @@ import {
 } from '@hugeicons/core-free-icons';
 import Modal from '@/components/ui/Modal';
 import { useDashboardShellStore } from '@/lib/dashboardShellStore';
+import { listTeamRosters } from '@/services/teamRosters';
+
+const GATES_STORAGE_KEY = 'pxi.live_ops.gates.v1';
 
 const recentScans = [
     { id: 'scan-1', ticket: 'PXI-4218', name: '@_julesx', state: 'Accepted', gate: 'North Entry', at: '8:09 PM' },
@@ -88,7 +91,7 @@ function StateChip({ state, muted = false }) {
 
 function GlassPanel({ children, className = '', muted = false }) {
     return (
-        <section className={cx('dashboard-surface-b rounded-2xl p-5 shadow-[0_18px_70px_rgba(0,0,0,0.25)]', muted && 'grayscale opacity-65', className)}>
+        <section className={cx('glass-panel rounded-2xl p-5', muted && 'grayscale opacity-65', className)}>
             {children}
         </section>
     );
@@ -219,7 +222,7 @@ function RecentScansSection({ isLive }) {
     );
 }
 
-function GateCard({ gate, isLive, menuOpen, onOpen, onTogglePause, onToggleMenu, onDelete }) {
+function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onToggleMenu, onDelete }) {
     const issueScans = gate.scans.filter((scan) => scan.state === 'Flagged' || scan.state === 'Manual Check');
 
     return (
@@ -231,7 +234,7 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onTogglePause, onToggleMenu,
                 if (event.key === 'Enter' || event.key === ' ') onOpen(gate.id);
             }}
             className={cx(
-                'dashboard-surface-b relative min-h-[260px] cursor-pointer rounded-2xl p-5 transition hover:border-white/20',
+                'glass-panel relative min-h-[260px] cursor-pointer rounded-2xl p-5 transition hover:bg-white/[0.07]',
                 !isLive && 'grayscale opacity-65'
             )}
         >
@@ -252,18 +255,22 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onTogglePause, onToggleMenu,
                             event.stopPropagation();
                             onToggleMenu(gate.id);
                         }}
-                        className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-sm font-black text-zinc-300 hover:bg-white/10 hover:text-white"
+                        className="pill-ghost px-3 py-1 text-sm font-black"
                         aria-label={`${gate.name} options`}
                     >
                         ...
                     </button>
                     {menuOpen ? (
                         <div
-                            className="dashboard-surface-b absolute right-0 top-9 z-20 w-40 rounded-xl p-2 shadow-2xl"
+                            className="glass-panel absolute right-0 top-9 z-20 w-44 rounded-xl p-2"
                             onClick={(event) => event.stopPropagation()}
                         >
-                            <button type="button" className="w-full rounded-lg px-3 py-2 text-left text-xs font-bold text-zinc-300 hover:bg-white/10">
-                                Gate options
+                            <button
+                                type="button"
+                                onClick={() => onEdit(gate)}
+                                className="w-full rounded-lg px-3 py-2 text-left text-xs font-bold text-zinc-300 hover:bg-white/10"
+                            >
+                                Edit gate
                             </button>
                             <button
                                 type="button"
@@ -316,7 +323,83 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onTogglePause, onToggleMenu,
             <p className="mt-4 text-xs font-semibold text-zinc-500">
                 {issueScans.length ? `${issueScans.length} issue${issueScans.length > 1 ? 's' : ''} flagged` : 'No active issues'}
             </p>
+            {gate.assignedPeople?.length ? (
+                <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-white/35">
+                    {gate.assignedPeople.length} assigned
+                </p>
+            ) : null}
         </article>
+    );
+}
+
+function GateEditModal({ open, gate, rosterMembers, onClose, onSave }) {
+    const [name, setName] = useState('');
+    const [assignedPeople, setAssignedPeople] = useState([]);
+
+    useEffect(() => {
+        if (!open) return;
+        setName(gate?.name || '');
+        setAssignedPeople(gate?.assignedPeople || []);
+    }, [gate, open]);
+
+    const togglePerson = (member) => {
+        const id = member.id;
+        setAssignedPeople((current) => (
+            current.some((person) => person.id === id)
+                ? current.filter((person) => person.id !== id)
+                : [...current, member]
+        ));
+    };
+
+    return (
+        <Modal
+            open={open}
+            onClose={onClose}
+            title={gate?.id ? 'Edit gate' : 'Create gate'}
+            description="Name the gate and assign the people who should run it."
+            maxWidth="max-w-2xl"
+        >
+            <div className="space-y-5">
+                <label className="block">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Gate name</span>
+                    <input
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        className="glass-field mt-2 min-h-[46px] w-full rounded-2xl px-4 text-sm text-white"
+                        placeholder="North Entry"
+                    />
+                </label>
+                <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Assign people</p>
+                    <div className="mt-3 flex max-h-64 flex-wrap gap-2 overflow-y-auto">
+                        {rosterMembers.length ? rosterMembers.map((member) => {
+                            const active = assignedPeople.some((person) => person.id === member.id);
+                            return (
+                                <button
+                                    key={member.id}
+                                    type="button"
+                                    onClick={() => togglePerson(member)}
+                                    className={`px-3 py-2 text-xs font-bold ${active ? 'pill-solid' : 'pill-ghost'}`}
+                                >
+                                    {member.label}
+                                </button>
+                            );
+                        }) : <p className="text-sm text-zinc-500">Create a team first to assign staff here.</p>}
+                    </div>
+                </div>
+                <div className="flex justify-end gap-3">
+                    <button type="button" onClick={onClose} className="pill-ghost px-4 py-2 text-sm font-bold">Cancel</button>
+                    <button
+                        type="button"
+                        disabled={!name.trim()}
+                        onClick={() => onSave({ ...gate, name: name.trim(), assignedPeople })}
+                        className="pill-solid px-4 py-2 text-sm disabled:opacity-40"
+                    >
+                        Save gate
+                    </button>
+                </div>
+            </div>
+        </Modal>
     );
 }
 
@@ -425,38 +508,83 @@ export default function LiveScanDashboard({ isLiveEvent }) {
     const shellLiveEvent = useDashboardShellStore((store) => store.isLiveEvent);
     const eventIsLive = isLiveEvent ?? shellLiveEvent;
     const [gates, setGates] = useState(initialGates);
+    const [teamRosters, setTeamRosters] = useState([]);
     const [selectedGateId, setSelectedGateId] = useState(null);
     const [menuGateId, setMenuGateId] = useState(null);
     const [chatOpen, setChatOpen] = useState(false);
+    const [editingGate, setEditingGate] = useState(null);
 
     const selectedGate = gates.find((gate) => gate.id === selectedGateId);
+    const rosterMembers = useMemo(() => teamRosters.flatMap((roster) => (
+        (roster.members || []).map((member) => ({
+            id: `${roster.id}:${member.id}`,
+            label: member.name || member.handle || member.contact || member.id,
+            rosterId: roster.id,
+            memberId: member.id,
+            role: member.role,
+        }))
+    )), [teamRosters]);
+
+    useEffect(() => {
+        try {
+            const stored = JSON.parse(window.localStorage.getItem(GATES_STORAGE_KEY) || 'null');
+            if (Array.isArray(stored)) setGates(stored);
+        } catch {
+            setGates(initialGates);
+        }
+        listTeamRosters().then(setTeamRosters).catch(() => setTeamRosters([]));
+    }, []);
+
+    const persistGates = (updater) => {
+        setGates((current) => {
+            const next = typeof updater === 'function' ? updater(current) : updater;
+            try {
+                window.localStorage.setItem(GATES_STORAGE_KEY, JSON.stringify(next));
+            } catch {
+                /* local persistence only */
+            }
+            return next;
+        });
+    };
 
     const addGate = () => {
         if (!eventIsLive) return;
-        const nextNumber = gates.length + 1;
-        setGates((current) => [
-            ...current,
-            {
-                id: `gate-${Date.now()}`,
-                name: `Gate ${nextNumber}`,
-                velocity: '0 scans/min',
-                paused: false,
-                issue: false,
-                scans: [],
-                incidentLog: ['Gate added to operations board'],
-            },
-        ]);
+        setEditingGate({
+            id: '',
+            name: `Gate ${gates.length + 1}`,
+            velocity: '0 scans/min',
+            paused: false,
+            issue: false,
+            scans: [],
+            incidentLog: ['Gate added to operations board'],
+            assignedPeople: [],
+        });
     };
 
     const toggleGatePause = (gateId) => {
         if (!eventIsLive) return;
-        setGates((current) => current.map((gate) => (gate.id === gateId ? { ...gate, paused: !gate.paused } : gate)));
+        persistGates((current) => current.map((gate) => (gate.id === gateId ? { ...gate, paused: !gate.paused } : gate)));
     };
 
     const deleteGate = (gateId) => {
-        setGates((current) => current.filter((gate) => gate.id !== gateId));
+        persistGates((current) => current.filter((gate) => gate.id !== gateId));
         setMenuGateId(null);
         if (selectedGateId === gateId) setSelectedGateId(null);
+    };
+
+    const saveGate = (gate) => {
+        const savedGate = {
+            ...gate,
+            id: gate.id || `gate-${Date.now()}`,
+            scans: gate.scans || [],
+            incidentLog: gate.incidentLog?.length ? gate.incidentLog : ['Gate added to operations board'],
+        };
+        persistGates((current) => {
+            if (gate.id) return current.map((item) => (item.id === gate.id ? savedGate : item));
+            return [...current, savedGate];
+        });
+        setEditingGate(null);
+        setMenuGateId(null);
     };
 
     return (
@@ -503,13 +631,14 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                             isLive={eventIsLive}
                             menuOpen={menuGateId === gate.id}
                             onOpen={setSelectedGateId}
+                            onEdit={setEditingGate}
                             onTogglePause={toggleGatePause}
                             onToggleMenu={(gateId) => setMenuGateId((current) => (current === gateId ? null : gateId))}
                             onDelete={deleteGate}
                         />
                     ))}
                     {!gates.length ? (
-                        <div className="dashboard-surface-b rounded-2xl border-dashed p-8 text-center text-sm font-semibold text-zinc-500 lg:col-span-3">
+                        <div className="glass-panel rounded-2xl p-8 text-center text-sm font-semibold text-zinc-500 lg:col-span-3">
                             Add a gate when Operations is live.
                         </div>
                     ) : null}
@@ -546,6 +675,13 @@ export default function LiveScanDashboard({ isLiveEvent }) {
             </GlassPanel>
 
             <GateDetailsModal gate={selectedGate} open={!!selectedGate} onClose={() => setSelectedGateId(null)} />
+            <GateEditModal
+                open={!!editingGate}
+                gate={editingGate}
+                rosterMembers={rosterMembers}
+                onClose={() => setEditingGate(null)}
+                onSave={saveGate}
+            />
             <TeamChatModal open={chatOpen} onClose={() => setChatOpen(false)} />
         </div>
     );

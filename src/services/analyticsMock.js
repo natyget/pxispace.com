@@ -42,11 +42,13 @@ const ROOM_BLUEPRINTS = [
 ];
 
 const AUDIENCE_SEGMENTS = [
-    { name: 'Scene Staples', ratio: 0.3 },
-    { name: 'First Timers', ratio: 0.24 },
-    { name: 'High Rollers', ratio: 0.18 },
-    { name: 'Creators', ratio: 0.16 },
-    { name: 'Community Voices', ratio: 0.12 },
+    { name: 'Partial', ratio: 0.12 },
+    { name: 'Wanderer', ratio: 0.22 },
+    { name: 'Seeker', ratio: 0.2 },
+    { name: 'Voyager', ratio: 0.16 },
+    { name: 'Pathfinder', ratio: 0.13 },
+    { name: 'Luminary', ratio: 0.1 },
+    { name: 'Odyssey', ratio: 0.07 },
 ];
 
 const MOMENT_TITLES = [
@@ -107,7 +109,7 @@ export function normalizeAnalyticsEvents(events = []) {
 
 function selectedOrAll(events, selectedEventIds) {
     const selected = events.filter((event) => selectedEventIds.includes(event.id));
-    return selected.length ? selected : events;
+    return selected;
 }
 
 function buildMomentImage(title, eventName, seed) {
@@ -161,13 +163,15 @@ function buildHypeSeries(selectedEvents) {
             };
         });
         const current = Math.round(average(eventPoints.map((point) => point.hype)));
+        const scans = eventPoints.reduce((sum, point) => sum + point.scans, 0);
         return {
             time,
             current,
             previous: Math.round(average(eventPoints.map((point) => point.previous))),
             hype: current,
             reactions: eventPoints.reduce((sum, point) => sum + point.reactions, 0),
-            scans: eventPoints.reduce((sum, point) => sum + point.scans, 0),
+            scans,
+            scanIndex: clamp(Math.round(scans / Math.max(selectedEvents.length, 1) / 5), 0, 100),
             posts: eventPoints.reduce((sum, point) => sum + point.posts, 0),
         };
     });
@@ -231,8 +235,8 @@ function buildAudience(selectedEvents) {
     });
 
     const topSegment = composition.slice().sort((a, b) => b.value - a.value)[0];
-    const firstTimers = composition.find((segment) => segment.name === 'First Timers');
-    const creators = composition.find((segment) => segment.name === 'Creators');
+    const firstTimers = composition.find((segment) => segment.name === 'Partial' || segment.name === 'Wanderer');
+    const creators = composition.find((segment) => segment.name === 'Voyager' || segment.name === 'Pathfinder');
     const retainedPool = Math.round(totalTickets * 0.31);
 
     return {

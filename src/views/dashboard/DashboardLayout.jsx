@@ -308,13 +308,13 @@ export default function DashboardLayout({ children }) {
                 <>
                     <button
                         onClick={handleLogout}
-                        className="flex-1 rounded-xl bg-pxi-purple px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-pxi-purple/90"
+                        className="pill-solid flex-1 px-4 py-2.5 text-sm"
                     >
                         Sign Out
                     </button>
                     <button
                         onClick={() => dashboardShellActions.closeTopLayer()}
-                        className="glow-surface-soft flex-1 rounded-xl px-4 py-2.5 text-sm font-medium text-zinc-400 transition-all hover:bg-white/5"
+                        className="pill-ghost flex-1 px-4 py-2.5 text-sm font-medium"
                     >
                         Cancel
                     </button>
@@ -366,28 +366,31 @@ export default function DashboardLayout({ children }) {
             )}
 
             <aside
-                className={`dashboard-sidebar dashboard-surface-b fixed top-0 left-0 z-50 flex h-full flex-col overflow-hidden border-y-0 border-l-0 border-r border-white/[0.06] transition-all duration-300 ease-in-out
+                className={`dashboard-sidebar glass-panel fixed top-0 left-0 z-50 flex h-full flex-col overflow-hidden transition-all duration-300 ease-in-out shadow-[12px_0_42px_rgba(0,0,0,0.42)]
                     ${sidebarCollapsed ? 'md:w-[72px] w-[240px]' : 'w-[240px]'}
                     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:static md:z-auto md:translate-x-0`}
             >
                 <div className="flex h-full flex-col justify-between">
                     <div className="flex min-h-0 flex-col">
                         <div className={`flex items-center px-4 py-4 ${sidebarCollapsed ? 'justify-center' : 'justify-center md:justify-start'}`}>
-                            {!sidebarCollapsed && (
-                                <Link href="/" className="flex min-w-0 items-center">
-                                    <span className="text-neon text-lg font-black uppercase tracking-[0.28em]">
-                                        PXI
-                                    </span>
-                                </Link>
-                            )}
                             <button
                                 onClick={() => dashboardShellActions.toggleSidebar()}
-                                className={`${sidebarCollapsed ? '' : 'ml-auto'} hidden h-8 w-8 items-center justify-center rounded-full bg-white/[0.055] text-white/55 transition hover:bg-white/10 hover:text-white md:flex`}
+                                className={`group relative hidden items-center justify-center overflow-hidden rounded-full transition md:flex ${sidebarCollapsed ? 'h-11 w-11' : 'h-12 w-[94px]'}`}
                                 aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                                 type="button"
                             >
-                                <HugeiconsIcon icon={sidebarCollapsed ? PanelLeftOpenIcon : PanelLeftCloseIcon} size={16} />
+                                <img
+                                    src="/favicon.png"
+                                    alt="PXI"
+                                    className={`${sidebarCollapsed ? 'h-[38px]' : 'h-[44px]'} w-auto translate-y-[3px] object-contain transition duration-200 group-hover:scale-75 group-hover:opacity-0`}
+                                />
+                                <span className="pill-ghost absolute inset-0 flex items-center justify-center opacity-0 transition duration-200 group-hover:opacity-100">
+                                    <HugeiconsIcon icon={sidebarCollapsed ? PanelLeftOpenIcon : PanelLeftCloseIcon} size={26} />
+                                </span>
                             </button>
+                            <Link href="/" className="flex min-w-0 items-center md:hidden">
+                                <img src="/favicon.png" alt="PXI" className="h-[38px] w-auto translate-y-[4px] object-contain" />
+                            </Link>
                             <button
                                 className="ml-auto text-zinc-600 hover:text-zinc-400 md:hidden"
                                 onClick={closeMobileSidebar}
@@ -454,7 +457,7 @@ export default function DashboardLayout({ children }) {
                         </nav>
                     </div>
 
-                    <div className={`relative border-t border-white/[0.06] ${sidebarCollapsed ? 'flex justify-center px-0 py-5' : 'p-4'}`}>
+                    <div className={`relative shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${sidebarCollapsed ? 'flex justify-center px-0 py-5' : 'p-4'}`}>
                         <AccountCardPopover
                             user={mounted ? user : null}
                             collapsed={sidebarCollapsed}
@@ -483,7 +486,7 @@ export default function DashboardLayout({ children }) {
             />
 
             <div className="flex min-w-0 flex-1 flex-col">
-                <header className="flex items-center gap-4 border-b border-white/[0.06] bg-[var(--dashboard-bg-elev-1)] px-5 py-4 md:hidden">
+                <header className="glass-panel flex items-center gap-4 rounded-none px-5 py-4 md:hidden">
                     <button
                         onClick={() => setSidebarOpen(true)}
                         className="text-zinc-400 hover:text-white"
@@ -491,9 +494,7 @@ export default function DashboardLayout({ children }) {
                     >
                         <HugeiconsIcon icon={Menu01Icon} size={22} />
                     </button>
-                    <span className="text-neon text-sm font-black uppercase tracking-widest">
-                        PXI
-                    </span>
+                    <img src="/favicon.png" alt="PXI" className="h-[38px] w-auto translate-y-[4px] object-contain" />
                 </header>
 
                 <main className="flex-1 overflow-auto p-6 md:p-8">
