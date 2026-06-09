@@ -11,8 +11,13 @@ export default function PublicLayout({ children }) {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setHydrated(true);
-  }, []);
+    if (pathname === '/' || pathname === '/home') {
+      const timer = setTimeout(() => setHydrated(true), 1800);
+      return () => clearTimeout(timer);
+    } else {
+      setHydrated(true);
+    }
+  }, [pathname]);
 
   const isLanding = pathname === '/' || pathname === '/home';
   const showNavbar =
@@ -51,7 +56,7 @@ export default function PublicLayout({ children }) {
       >
         {children}
       </main>
-      {!isPublicProfile && !isPublicPost && !isPublicAlbum && !isPublicEventFlow ? (
+      {!isLanding && !isPublicProfile && !isPublicPost && !isPublicAlbum && !isPublicEventFlow ? (
         <Footer />
       ) : null}
       </div>
