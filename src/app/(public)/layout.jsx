@@ -35,6 +35,9 @@ export default function PublicLayout({ children }) {
   const isPublicProfile = pathname?.startsWith('/u/');
   const isPublicPost = pathname?.startsWith('/p/');
   const isPublicAlbum = pathname?.startsWith('/album/');
+  const isPublicEventFlow =
+    (pathname?.startsWith('/events/') && pathname !== '/events') ||
+    (pathname?.startsWith('/events-old/') && pathname !== '/events-old');
 
   return (
     <>
