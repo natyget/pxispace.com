@@ -9,7 +9,7 @@ import { FaTiktok } from 'react-icons/fa';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 
-const LogoSVG = '/favicon.svg';
+const LogoSVG = '/favicon.png';
 
 const linkClass = 'text-gray-500 hover:text-pxi-purple transition-colors';
 
@@ -17,11 +17,11 @@ const Footer = () => {
   return (
     <footer className="bg-black pt-24 pb-12 border-t border-gray-900">
       <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 gap-10 pt-12 border-t border-gray-800 text-left sm:grid-cols-2 lg:grid-cols-12 lg:gap-x-8 xl:gap-x-12">
+        <div className="grid grid-cols-2 gap-y-12 gap-x-8 pt-12 border-t border-gray-800 text-left md:grid-cols-5">
           {/* Brand */}
-          <div className="sm:col-span-2 lg:col-span-4">
+          <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2 mb-4 cursor-pointer">
-              <Image src={LogoSVG} alt="PXI" width={32} height={32} className="h-8 w-8" />
+              <img src={LogoSVG} alt="PXI" className="h-8 w-auto object-contain" />
             </Link>
             <p className="text-gray-500 max-w-sm text-sm leading-relaxed">
               Your social life, unfiltered. Plan the party, share the camera roll, and relive the nostalgia.
@@ -29,7 +29,7 @@ const Footer = () => {
           </div>
 
           {/* Product */}
-          <div className="lg:col-span-2">
+          <div>
             <h4 className="font-semibold mb-4 text-white text-sm tracking-wide uppercase">
               Product
             </h4>
@@ -63,7 +63,7 @@ const Footer = () => {
           </div>
 
           {/* Platform */}
-          <div className="lg:col-span-2">
+          <div>
             <h4 className="font-semibold mb-4 text-white text-sm tracking-wide uppercase">
               Platform
             </h4>
@@ -97,7 +97,7 @@ const Footer = () => {
           </div>
 
           {/* Legal */}
-          <div className="lg:col-span-3">
+          <div>
             <h4 className="font-semibold mb-4 text-white text-sm tracking-wide uppercase">
               Legal
             </h4>
@@ -131,7 +131,7 @@ const Footer = () => {
           </div>
 
           {/* Support */}
-          <div className="lg:col-span-3">
+          <div>
             <h4 className="font-semibold mb-4 text-white text-sm tracking-wide uppercase">
               Support
             </h4>

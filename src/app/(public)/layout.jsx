@@ -1,11 +1,25 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { usePathname } from 'next/navigation';
+import { PxiLoadingLanding } from '@/components/loading/PxiLoading';
 
 export default function PublicLayout({ children }) {
   const pathname = usePathname();
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    if (pathname === '/' || pathname === '/home') {
+      const timer = setTimeout(() => setHydrated(true), 1800);
+      return () => clearTimeout(timer);
+    } else {
+      setHydrated(true);
+    }
+  }, [pathname]);
+
+  const isLanding = pathname === '/' || pathname === '/home';
   const showNavbar =
     pathname === '/' ||
     pathname === '/home' ||
@@ -21,12 +35,32 @@ export default function PublicLayout({ children }) {
   const isPublicProfile = pathname?.startsWith('/u/');
   const isPublicPost = pathname?.startsWith('/p/');
   const isPublicAlbum = pathname?.startsWith('/album/');
+  const isPublicEventFlow =
+    (pathname?.startsWith('/events/') && pathname !== '/events') ||
+    (pathname?.startsWith('/events-old/') && pathname !== '/events-old');
 
   return (
-    <div className="relative min-h-screen flex flex-col">
-      {showNavbar ? <Navbar /> : null}
-      <main className="flex-1">{children}</main>
-      {!isPublicProfile && !isPublicPost && !isPublicAlbum ? <Footer /> : null}
-    </div>
+    <>
+      {isLanding && !hydrated ? <PxiLoadingLanding /> : null}
+      <div
+        className={`relative flex flex-col ${
+          isPublicAlbum ? 'h-dvh max-h-dvh overflow-hidden' : 'min-h-screen'
+        }`}
+      >
+        {showNavbar ? <Navbar /> : null}
+        <main
+          className={
+            isPublicAlbum
+              ? 'flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-black'
+              : 'flex-1'
+          }
+        >
+          {children}
+        </main>
+        {!isLanding && !isPublicProfile && !isPublicPost && !isPublicAlbum && !isPublicEventFlow ? (
+          <Footer />
+        ) : null}
+      </div>
+    </>
   );
 }
