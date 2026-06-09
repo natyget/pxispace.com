@@ -865,3 +865,123 @@
     animation: none !important;
   }
 }
+
+/* ── Splash screen: Neo-Glass loading ── */
+@keyframes splash-crt-scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes splash-neon-pulse {
+  0%, 100% {
+    box-shadow: 0 0 60px 20px rgba(176, 38, 255, 0.15),
+                0 0 120px 40px rgba(176, 38, 255, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 80px 30px rgba(176, 38, 255, 0.3),
+                0 0 160px 60px rgba(176, 38, 255, 0.15);
+  }
+}
+
+@keyframes splash-logo-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0px);
+  }
+}
+
+@keyframes splash-reveal {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-3%);
+  }
+}
+
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #050505;
+  overflow: hidden;
+}
+
+.splash-screen--exiting {
+  animation: splash-reveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+.splash-crt-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.015) 0px,
+    rgba(255, 255, 255, 0.015) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+.splash-crt-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(176, 38, 255, 0.12) 20%,
+    rgba(176, 38, 255, 0.2) 50%,
+    rgba(176, 38, 255, 0.12) 80%,
+    transparent 100%
+  );
+  animation: splash-crt-scanline 3s linear infinite;
+  z-index: 2;
+}
+
+.splash-neon-ring {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 9999px;
+  animation: splash-neon-pulse 2.5s ease-in-out infinite;
+  z-index: 0;
+}
+
+.splash-logo {
+  position: relative;
+  z-index: 10;
+  animation: splash-logo-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-crt-line,
+  .splash-neon-ring {
+    animation: none !important;
+  }
+
+  .splash-logo {
+    animation: none !important;
+    opacity: 1;
+  }
+
+  .splash-screen--exiting {
+    animation: none !important;
+    opacity: 0;
+  }
+}

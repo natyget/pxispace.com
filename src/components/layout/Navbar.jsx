@@ -162,7 +162,7 @@ const Navbar = () => {
                             href="/login"
                             className="hidden h-10 items-center rounded-full bg-pxi-purple px-5 text-xs font-bold uppercase tracking-widest text-white shadow-[0_0_16px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all md:inline-flex"
                         >
-                            Launch
+                            Sign Up
                         </Link>
                     )}
                     <button
@@ -186,7 +186,7 @@ const Navbar = () => {
                         onClick={() => setMobileMenuOpen(false)}
                         className="fixed inset-0 z-40"
                     />
-                    <div className="md:hidden absolute top-full left-0 w-full glass-car p-8 flex flex-col gap-6 animate-fade-up h-screen z-50 bg-black/95 backdrop-blur-3xl">
+                    <div className="md:hidden absolute top-full left-0 w-full p-8 flex flex-col gap-6 animate-fade-up h-screen z-50 bg-black/60 backdrop-blur-md border-b border-white/5">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.path}
@@ -222,7 +222,7 @@ const Navbar = () => {
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-white"
                             >
-                                Launch
+                                Sign Up
                             </Link>
                         )}
                     </div>

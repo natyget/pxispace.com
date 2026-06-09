@@ -50,10 +50,11 @@ const CHAPTERS = [
 ];
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
+  hidden: { opacity: 0, y: 28, filter: 'blur(8px)' },
   visible: {
     opacity: 1,
     y: 0,
+    filter: 'blur(0px)',
     transition: { duration: 0.6, ease: [0.2, 0.65, 0.3, 0.9] },
   },
 };
@@ -62,8 +63,13 @@ export default function EventLifecycle() {
   return (
     <section
       id="lifecycle"
-      className="relative w-full bg-[var(--color-bg-primary)] py-20 md:py-32"
+      className="relative w-full bg-[var(--color-bg-primary)] py-20 md:py-32 overflow-hidden"
     >
+      {/* Large watermark text behind content */}
+      <div className="absolute top-8 left-1/2 -translate-x-1/2 text-[14vw] md:text-[10vw] font-black text-white/[0.02] tracking-widest pointer-events-none select-none leading-none z-0 whitespace-nowrap">
+        EVERY CHAPTER
+      </div>
+
       {/* Section intro */}
       <div className="container mx-auto px-6 max-w-5xl mb-16 md:mb-24 text-center">
         <motion.h2

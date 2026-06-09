@@ -22,16 +22,16 @@ export default function LandingHome() {
       <main>
         <Hero />
         <div className="cv-auto">
-          <ScrapbookPreview />
+          <article><ScrapbookPreview /></article>
         </div>
         <div className="cv-auto">
-          <EventLifecycle />
+          <article><EventLifecycle /></article>
         </div>
         <div className="cv-auto">
-          <TheLegacy />
+          <article><TheLegacy /></article>
         </div>
         <div className="cv-auto">
-          <TheEthos />
+          <article><TheEthos /></article>
         </div>
         <div className="cv-auto">
           <HashtagTicker />
