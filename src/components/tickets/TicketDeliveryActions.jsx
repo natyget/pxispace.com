@@ -106,8 +106,6 @@ export default function TicketDeliveryActions({ ticketId, className = '' }) {
 
   return (
     <div className={`space-y-3 ${className}`}>
-      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Get your ticket</p>
-
       <button
         type="button"
         onClick={handleEmail}

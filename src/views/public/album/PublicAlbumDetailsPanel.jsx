@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Clock01Icon, LocationShare01Icon, Share01Icon } from '@hugeicons/core-free-icons';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { albumShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
@@ -49,7 +50,6 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
   const isPublic = album?.event?.visibility === 'PUBLIC';
   const coverSrc = displayImageSrc(album?.event?.coverImage || album?.coverImage, null);
   const host = album?.host;
-  const hostAvatar = displayImageSrc(host?.avatarUrl, null);
   const schedule = useMemo(() => formatAlbumSchedule(album?.event), [album?.event]);
   const location = useMemo(() => formatLocation(album?.event), [album?.event]);
   const ticketLabel = formatTicketPrice(album?.event);
@@ -135,13 +135,11 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
             </div>
             {host ? (
               <div className="flex items-center gap-3">
-                <div className="relative size-11 shrink-0 overflow-hidden rounded-full border border-white/15 bg-zinc-800">
-                  {hostAvatar ? (
-                    <Image src={hostAvatar} alt="" width={44} height={44} unoptimized className="size-full object-cover" />
-                  ) : (
-                    <div className="flex size-full items-center justify-center text-sm text-zinc-500">?</div>
-                  )}
-                </div>
+                <UserAvatar
+                  user={{ avatarUrl: host?.avatarUrl }}
+                  size={44}
+                  className="shrink-0 border border-white/15"
+                />
                 <p className="text-sm text-white/60">
                   Hosted by <span className="font-bold text-white">{host.name || host.username || 'Host'}</span>
                 </p>
@@ -195,20 +193,16 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
             </p>
             {lineup.length > 0 ? (
               <ul className="space-y-2">
-                {lineup.map((person) => {
-                  const avatar = displayImageSrc(person.avatarUrl, null);
-                  return (
+                {lineup.map((person) => (
                     <li
                       key={person.id || person.userId}
                       className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5"
                     >
-                      {avatar ? (
-                        <Image src={avatar} alt="" width={40} height={40} unoptimized className="size-10 rounded-full object-cover" />
-                      ) : (
-                        <div className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-sm font-bold text-white/70">
-                          {(person.name || person.username || '?')[0]?.toUpperCase()}
-                        </div>
-                      )}
+                      <UserAvatar
+                        user={{ avatarUrl: person.avatarUrl }}
+                        size={40}
+                        className="shrink-0 border border-white/10"
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold text-white">
                           {person.name?.trim() || `@${person.username || 'unknown'}`}
@@ -221,8 +215,7 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
                         {person.role || 'Line up'}
                       </span>
                     </li>
-                  );
-                })}
+                ))}
               </ul>
             ) : (
               <p className="text-sm italic text-white/45">No one on the line up yet.</p>
@@ -238,22 +231,15 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
             {participants.length > 0 ? (
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-3">
-                  {participants.slice(0, 6).map((p, i) => {
-                    const avatar = displayImageSrc(p.avatarUrl, null);
-                    return (
+                  {participants.slice(0, 6).map((p, i) => (
                       <div
                         key={`${p.userId}-${i}`}
-                        className="relative size-12 overflow-hidden rounded-full border-[3px] border-[#050505] bg-zinc-800"
+                        className="relative size-12 overflow-hidden rounded-full border-[3px] border-[#050505]"
                         style={{ zIndex: 10 - i }}
                       >
-                        {avatar ? (
-                          <Image src={avatar} alt="" width={48} height={48} unoptimized className="size-full object-cover" />
-                        ) : (
-                          <div className="flex size-full items-center justify-center text-xs text-zinc-500">?</div>
-                        )}
+                        <UserAvatar user={{ avatarUrl: p.avatarUrl }} size={48} className="size-full" />
                       </div>
-                    );
-                  })}
+                  ))}
                 </div>
                 <p className="text-sm font-bold text-[#d946ef]">Join in the app to see everyone</p>
               </div>

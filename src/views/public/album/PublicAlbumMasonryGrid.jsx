@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { mediaDisplayUrl } from './albumMediaLayout';
 
@@ -21,7 +22,6 @@ export default function PublicAlbumMasonryGrid({ items, onPressItem }) {
       {items.map((item, index) => {
         const src = displayImageSrc(mediaDisplayUrl(item), null);
         if (!src) return null;
-        const authorSrc = displayImageSrc(item.author?.avatarUrl, null);
         const badge = gridBadge(item);
 
         return (
@@ -39,9 +39,9 @@ export default function PublicAlbumMasonryGrid({ items, onPressItem }) {
               className="object-cover transition group-hover:brightness-110"
               sizes="33vw"
             />
-            {item.author && authorSrc ? (
+            {item.author ? (
               <span className="absolute bottom-1.5 left-1.5 size-6 overflow-hidden rounded-full border-[1.5px] border-white/50 bg-black/40">
-                <Image src={authorSrc} alt="" width={24} height={24} unoptimized className="size-full object-cover" />
+                <UserAvatar user={{ avatarUrl: item.author?.avatarUrl }} size={24} className="size-full" />
               </span>
             ) : null}
             {badge.kind !== 'none' ? (

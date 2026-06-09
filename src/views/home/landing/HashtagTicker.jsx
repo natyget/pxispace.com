@@ -16,7 +16,7 @@ const tagData = [
 function TagItem({ tag }) {
   return (
     <span className="relative inline-flex shrink-0 select-none group">
-      <span className="whitespace-nowrap text-5xl font-black uppercase text-transparent bg-clip-text bg-gradient-to-b from-gray-700 to-gray-900 transition-colors group-hover:from-pxi-purple group-hover:to-white md:text-7xl cursor-default">
+      <span className="whitespace-nowrap text-3xl font-black uppercase text-transparent bg-clip-text bg-gradient-to-b from-gray-700 to-gray-900 transition-colors group-hover:from-pxi-purple group-hover:to-white md:text-5xl cursor-default">
         #{tag.name}
       </span>
       {/* Simple CSS tooltip — no portal, no layout thrashing */}
@@ -45,15 +45,15 @@ export default function HashtagTicker() {
   }, []);
 
   return (
-    <section id="hashtags" ref={sectionRef} className="border-t border-gray-900 bg-[#050505] py-16">
-      <div className="relative w-full overflow-hidden">
-        {/* Gradient edge fades */}
-        <div className="absolute inset-y-0 left-0 w-24 sm:w-48 bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent z-10 pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-24 sm:w-48 bg-gradient-to-l from-[#050505] via-[#050505]/80 to-transparent z-10 pointer-events-none" />
+    <section id="hashtags" ref={sectionRef} className="border-t border-gray-900 bg-black py-16">
+      <div className="relative w-full overflow-hidden flex whitespace-nowrap bg-black">
+        {/* Gradient Edges */}
+        <div className="absolute inset-y-0 left-0 w-24 sm:w-48 bg-gradient-to-r from-black via-black/80 to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute inset-y-0 right-0 w-24 sm:w-48 bg-gradient-to-l from-black via-black/80 to-transparent z-10 pointer-events-none"></div>
         {/* Pure CSS marquee — zero JS per-frame cost */}
         <div
-          className={`flex w-max flex-nowrap items-center gap-x-10 ${
-            isVisible ? 'landing-hashtag-marquee' : ''
+          className={`flex flex-nowrap items-center gap-x-10 ${
+            isVisible ? 'animate-marquee-slow' : ''
           }`}
           style={{ animationPlayState: isVisible ? 'running' : 'paused' }}
         >

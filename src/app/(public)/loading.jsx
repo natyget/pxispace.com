@@ -1,5 +1,5 @@
-import { PublicLogoLoading } from '@/components/skeleton/AppSkeletons';
+import { PxiLoadingMain } from '@/components/loading/PxiLoading';
 
-export default function Loading() {
-  return <PublicLogoLoading />;
+export default function PublicLoading() {
+  return <PxiLoadingMain />;
 }

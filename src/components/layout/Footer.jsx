@@ -9,7 +9,7 @@ import { FaTiktok } from 'react-icons/fa';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 
-const LogoSVG = '/favicon.svg';
+const LogoSVG = '/favicon.png';
 
 const linkClass = 'text-gray-500 hover:text-pxi-purple transition-colors';
 
@@ -21,7 +21,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2 mb-4 cursor-pointer">
-              <Image src={LogoSVG} alt="PXI" width={32} height={32} className="h-8 w-8" />
+              <img src={LogoSVG} alt="PXI" className="h-8 w-auto object-contain" />
             </Link>
             <p className="text-gray-500 max-w-sm text-sm leading-relaxed">
               Your social life, unfiltered. Plan the party, share the camera roll, and relive the nostalgia.

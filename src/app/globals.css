@@ -73,9 +73,34 @@
   width: 100%;
 }
 
+.create-event-location-field .create-event-location-geocoder,
+.create-event-location-field .geoapify-geocoder-autocomplete-container,
+.create-event-location-field .geoapify-input-wrapper {
+  width: 100%;
+}
+
+.create-event-location-field .geoapify-autocomplete-input {
+  /* Match event name input (py-2.5 = 0.625rem) */
+  padding: 0.625rem 2.25rem 0.625rem 2.0rem !important;
+}
+
+.create-event-location-field input.geoapify-autocomplete-input {
+  padding-left: 2.0rem !important;
+}
+
+.create-event-location-field .geoapify-autocomplete-items {
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
 /* Tailwind v4 @theme: custom colors for utilities (bg-pxi-purple, text-pxi-dark, etc.) */
 @theme {
   --color-pxi-purple: #d84aff;
+  --color-newpurple-base: #f01fff;
+  /** `#f01fff` at 80% opacity */
+  --color-newpurple: rgb(240 31 255 / 0.8);
   --color-pxi-dark: #050505;
   --color-pxi-charcoal: #121212;
   --color-pxi-violet: #2d1b4e;
@@ -118,6 +143,8 @@
     --glow-purple: rgba(168, 85, 247, 0.4);
     --glow-cyan: rgba(6, 182, 212, 0.4);
     --pxi-purple: #d84aff;
+    --newpurple-base: #f01fff;
+    --newpurple: rgb(240 31 255 / 0.8);
     --pxi-dark: #050505;
     --pxi-charcoal: #121212;
     --pxi-violet: #2d1b4e;
@@ -156,6 +183,18 @@
 
   html {
     scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
+  body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  body::-webkit-scrollbar {
+    display: none;
   }
 
   /* Landing: framer scroll timelines need native scroll steps; smooth + wheel feels like a speed-run */
@@ -516,7 +555,7 @@
   padding: 0 1rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.75rem;
+  border-radius: 9999px;
   --PhoneInput-color--focus: #B026FF;
   --PhoneInputCountryFlag-borderColor: rgba(255, 255, 255, 0.2);
 }
@@ -553,6 +592,97 @@
 
 .verify-phone-input-wrapper .PhoneInputCountrySelectArrow {
   border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Verification code (OTP) — Untitled UI–style 6-digit input with separator */
+.verification-code-input-group {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.verification-code-input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.verification-code-input__cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.verification-code-input__separator {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+  margin: 0 0.125rem;
+}
+
+.verification-code-input__slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.verification-code-input__slot--active {
+  border-color: rgba(168, 85, 247, 0.55);
+  background: #252525;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+}
+
+.verification-code-input__slot--filled {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.verification-code-input__slot--disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.verification-code-input__char {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.verification-code-input__placeholder {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.22);
+  line-height: 1;
+}
+
+.verification-code-input__caret {
+  position: absolute;
+  bottom: 0.5rem;
+  width: 2px;
+  height: 1.125rem;
+  border-radius: 1px;
+  background: rgba(168, 85, 247, 0.9);
+  animation: verification-code-caret-blink 1s step-end infinite;
+}
+
+@keyframes verification-code-caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 /* Public landing (v2): Inter + display utility without affecting other routes */
@@ -814,13 +944,59 @@
   }
 }
 
-/* ── Hashtag marquee ── */
-@keyframes landing-hashtag-marquee {
-  0% { transform: translateX(0); }
+/* ── Hashtag marquee & Float animations ── */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
 }
-.landing-hashtag-marquee {
-  animation: landing-hashtag-marquee 50s linear infinite;
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+  width: max-content;
+}
+
+.animate-marquee-slow {
+  animation: marquee 100s linear infinite;
+  width: max-content;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px) rotate(var(--tw-rotate, 0deg)) scale(var(--tw-scale-x, 1)); }
+  100% { transform: translateY(-15px) rotate(var(--tw-rotate, 0deg)) scale(var(--tw-scale-x, 1)); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite alternate;
+}
+
+.animate-float-slow {
+  animation: float 8s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes fade-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+}
+
+@keyframes glitch {
+  0%, 100% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); }
+  5% { opacity: 0.8; transform: scale(1.01) translate(-1px, 1px); filter: drop-shadow(0 0 25px rgba(216,74,255,0.5)); }
+  10% { opacity: 1; transform: scale(1) translate(0); filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); }
+  35% { opacity: 1; transform: scale(1); }
+  36% { opacity: 0.4; }
+  38% { opacity: 1; transform: scale(1.02); }
+  40% { opacity: 1; transform: scale(1); }
+  60% { opacity: 1; filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); }
+  62% { filter: drop-shadow(0 0 30px rgba(176,38,255,0.8)); opacity: 0.9; }
+  64% { filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); opacity: 1; }
+}
+
+.animate-glitch {
+  animation: glitch 4s infinite linear;
 }
 
 @keyframes dashboard-route-fade {
@@ -855,6 +1031,67 @@
 .cv-auto {
   content-visibility: auto;
   contain-intrinsic-size: auto 100vh;
+}
+
+/* Auth login — match mobile app GlassInput on small screens */
+.auth-field-gap {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 767px) {
+  .auth-field-gap {
+    margin-bottom: 18px;
+  }
+
+  .auth-glass-input {
+    height: 56px !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .auth-glass-input::placeholder {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  .auth-social-pill {
+    min-height: 48px !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 2px !important;
+    color: rgba(255, 255, 255, 0.55) !important;
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .auth-field-gap {
+    margin-bottom: 12px;
+  }
+
+  .auth-glass-input {
+    height: 48px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    font-size: 14px !important;
+    letter-spacing: 0.03em !important;
+  }
+
+  .auth-glass-input::placeholder {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

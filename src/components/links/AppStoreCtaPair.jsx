@@ -6,14 +6,14 @@ import IosDownloadLink from '@/components/links/IosDownloadLink';
 import { APPLE_MARK } from '@/lib/landingAssets';
 
 const BTN_CLASS =
-  'flex w-full max-w-[320px] sm:w-auto sm:max-w-none items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-colors cursor-pointer';
+  'flex w-full max-w-[320px] sm:w-auto sm:max-w-none items-center justify-center gap-3 px-6 py-4 md:px-10 md:py-5 rounded-full bg-white/10 border-0 backdrop-blur-[60px] hover:bg-white/20 transition-all cursor-pointer -translate-y-full md:translate-y-0';
 
 /** Compact side-by-side row (e.g. bottom of a blurred public preview on mobile). */
 const BTN_ROW_CLASS =
-  'flex min-w-0 flex-1 items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white/10 border border-white/20 hover:bg-white/20 transition-colors cursor-pointer';
+  'flex min-w-0 flex-1 items-center justify-center gap-2 px-3 py-2.5 rounded-full bg-white/5 backdrop-blur-3xl border-0 hover:bg-white/10 transition-colors cursor-pointer';
 
 /**
- * Matched to landing hero: “Download on App Store” + “Get it on Google Play”.
+ * Matched to landing hero: “Download on App Store” (Google Play hidden).
  * @param {'default' | 'row'} [variant] — `row`: two equal columns with smaller copy (mobile blur footers).
  */
 export default function AppStoreCtaPair({ className = '', variant = 'default', dataCursorHover = false }) {
@@ -56,28 +56,6 @@ export default function AppStoreCtaPair({ className = '', variant = 'default', d
           </span>
         </div>
       </IosDownloadLink>
-      <a
-        href={PXI_PLAY_STORE_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={btnClass}
-        {...dataProps}
-      >
-        <FaGooglePlay size={isRow ? 22 : 26} className="text-white shrink-0" />
-        <div className={['flex flex-col', isRow ? 'min-w-0 items-start text-left' : 'items-start'].join(' ')}>
-          <span
-            className={[
-              'font-bold uppercase tracking-widest text-white/70 leading-none',
-              isRow ? 'text-[8px] mb-0.5' : 'text-[10px] mb-1',
-            ].join(' ')}
-          >
-            Get it on
-          </span>
-          <span className={[isRow ? 'text-xs' : 'text-sm', 'font-bold text-white leading-none'].join(' ')}>
-            Google Play
-          </span>
-        </div>
-      </a>
     </div>
   );
 }

@@ -2,6 +2,15 @@
 const nextConfig = {
   reactStrictMode: true,
   eslint: { ignoreDuringBuilds: true },
+  async redirects() {
+    return [
+      {
+        source: '/login/email',
+        destination: '/login',
+        permanent: false,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },

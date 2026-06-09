@@ -1,169 +1,18 @@
 // Shared SVG + helpers for dashboard Passport and public profile preview.
+// Passport stamps: use PassportStampsLayer only (not inline stamp logic).
 
-// ─── Stamp layout utilities ───────────────────────────────────────────────────
-
-const STAMP_SHAPES = ['HEXAGON', 'RECTANGLE', 'CIRCLE', 'OVAL', 'TRIANGLE'];
-
-export const STAMP_TIER_COLORS = {
-    WANDERER:   '#F59E0B',
-    SEEKER:     '#3B82F6',
-    VOYAGER:    '#10B981',
-    PATHFINDER: '#F97316',
-    LUMINARY:   '#F59E0B',
-    ODYSSEY:    '#E5E7EB',
-};
-
-export const STAMP_DIMENSIONS = {
-    HEXAGON:   { w: 90, h: 90 },
-    RECTANGLE: { w: 108, h: 65 },
-    CIRCLE:    { w: 88, h: 88 },
-    OVAL:      { w: 106, h: 64 },
-    TRIANGLE:  { w: 90, h: 90 },
-};
-
-function seededHash(id, salt) {
-    let h = (salt * 2654435761) >>> 0;
-    for (let i = 0; i < id.length; i++) {
-        h = ((h ^ id.charCodeAt(i)) >>> 0);
-        h = Math.imul(h, 2654435761) >>> 0;
-    }
-    return h / 0x100000000;
-}
-
-function xpToTierId(xp) {
-    if (xp <= 500)   return 'WANDERER';
-    if (xp <= 2500)  return 'SEEKER';
-    if (xp <= 7000)  return 'VOYAGER';
-    if (xp <= 15000) return 'PATHFINDER';
-    if (xp <= 30000) return 'LUMINARY';
-    return 'ODYSSEY';
-}
-
-export function getStampColor(xp, fallbackTierId) {
-    const tierId = xp != null ? xpToTierId(Math.max(0, Math.floor(xp))) : fallbackTierId;
-    return STAMP_TIER_COLORS[tierId] ?? '#F59E0B';
-}
-
-export function getStampShape(eventId) {
-    return STAMP_SHAPES[Math.floor(seededHash(eventId, 7) * STAMP_SHAPES.length)];
-}
-
-const GRID_COLS = 3;
-const GRID_ROWS = 2;
-const AREA_W = 355;
-const AREA_H = 265;
-const YEAR_ROW_H = 28;
-const PAD_X = 18;
-const PAD_Y = 14;
-
-export function getStampLayout(eventId, slotIndex) {
-    const shape = getStampShape(eventId);
-    const { w, h } = STAMP_DIMENSIONS[shape];
-    const col = slotIndex % GRID_COLS;
-    const row = Math.floor(slotIndex / GRID_COLS) % GRID_ROWS;
-    const gridW = AREA_W - PAD_X * 2;
-    const gridH = AREA_H - PAD_Y * 2;
-    const cellW = gridW / GRID_COLS;
-    const cellH = gridH / GRID_ROWS;
-    const centerX = PAD_X + col * cellW + cellW / 2;
-    const centerY = YEAR_ROW_H + PAD_Y + row * cellH + cellH / 2;
-    const jitterX = (seededHash(eventId, 1) - 0.5) * 24;
-    const jitterY = (seededHash(eventId, 2) - 0.5) * 18;
-    return {
-        left:     Math.round(centerX - w / 2 + jitterX),
-        top:      Math.round(centerY - h / 2 + jitterY),
-        rotation: Math.round((seededHash(eventId, 3) - 0.5) * 30),
-        width: w,
-        height: h,
-    };
-}
-
-export function formatStampName(name) {
-    return name.toUpperCase().slice(0, 11);
-}
-
-export function formatStampDate(startDate) {
-    try {
-        const d = new Date(startDate);
-        if (isNaN(d.getTime())) return '';
-        return d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase() + ' ' + d.getFullYear();
-    } catch { return ''; }
-}
-
-export function formatStampCity(location) {
-    if (!location) return '';
-    return location.split(',')[0].toUpperCase().slice(0, 10);
-}
-
-export function getEventYear(startDate) {
-    try {
-        const y = new Date(startDate).getFullYear();
-        return isNaN(y) ? new Date().getFullYear() : y;
-    } catch { return new Date().getFullYear(); }
-}
-
-export function DynamicStamp({ shape, color, name, date, city }) {
-    const filter = `drop-shadow(0 0 6px ${color})`;
-    const fill = color;
-    const fo = 0.1;
-
-    if (shape === 'HEXAGON') return (
-        <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none" style={{ filter, opacity: 0.85 }}>
-            <path d="M50 5 L89 27.5 V72.5 L50 95 L11 72.5 V27.5 L50 5Z" stroke={fill} strokeWidth="2" fill={fill} fillOpacity={fo} />
-            <path d="M50 9 L85 29.5 V70.5 L50 91 L15 70.5 V29.5 L50 9Z" stroke={fill} strokeWidth="1" />
-            <text x="50" y="24" textAnchor="middle" fill={fill} fontSize="5" letterSpacing="1.5" fontFamily="Courier New, monospace">ADMITTED</text>
-            <text x="50" y="48" textAnchor="middle" fill={fill} fontSize="9" fontWeight="bold" fontFamily="Courier New, monospace">{name}</text>
-            <text x="50" y="61" textAnchor="middle" fill={fill} fontSize="7" fontFamily="Courier New, monospace">{date}</text>
-            <path d="M30 66 H70" stroke={fill} strokeWidth="0.5" strokeDasharray="2 2" />
-            <text x="50" y="77" textAnchor="middle" fill={fill} fontSize="6" fontFamily="Courier New, monospace">{city}</text>
-        </svg>
-    );
-
-    if (shape === 'CIRCLE') return (
-        <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none" style={{ filter, opacity: 0.85 }}>
-            <circle cx="50" cy="50" r="46" stroke={fill} strokeWidth="2" fill={fill} fillOpacity={fo} />
-            <circle cx="50" cy="50" r="34" stroke={fill} strokeWidth="1" />
-            <text x="50" y="30" textAnchor="middle" fill={fill} fontSize="5" letterSpacing="1.5" fontFamily="Courier New, monospace">ADMITTED</text>
-            <text x="50" y="47" textAnchor="middle" fill={fill} fontSize="9" fontWeight="bold" fontFamily="Courier New, monospace">{name}</text>
-            <text x="50" y="60" textAnchor="middle" fill={fill} fontSize="7" fontFamily="Courier New, monospace">{date}</text>
-            <text x="50" y="72" textAnchor="middle" fill={fill} fontSize="6" fontFamily="Courier New, monospace">{city}</text>
-        </svg>
-    );
-
-    if (shape === 'TRIANGLE') return (
-        <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none" style={{ filter, opacity: 0.85 }}>
-            <path d="M50 10 L90 85 H10 L50 10Z" stroke={fill} strokeWidth="2" fill={fill} fillOpacity={fo} strokeLinejoin="round" />
-            <path d="M50 16 L84 81 H16 L50 16Z" stroke={fill} strokeWidth="1" strokeLinejoin="round" />
-            <text x="50" y="38" textAnchor="middle" fill={fill} fontSize="6" fontWeight="bold" fontFamily="Courier New, monospace">ADMITTED</text>
-            <text x="50" y="53" textAnchor="middle" fill={fill} fontSize="8" fontWeight="bold" fontFamily="Courier New, monospace">{name}</text>
-            <text x="50" y="64" textAnchor="middle" fill={fill} fontSize="6" fontFamily="Courier New, monospace">{date}</text>
-            <line x1="38" y1="69" x2="62" y2="69" stroke={fill} strokeWidth="0.5" />
-            <text x="50" y="76" textAnchor="middle" fill={fill} fontSize="5" fontFamily="Courier New, monospace">{city}</text>
-        </svg>
-    );
-
-    if (shape === 'RECTANGLE') return (
-        <svg viewBox="0 0 100 60" width="100%" height="100%" fill="none" style={{ filter, opacity: 0.85 }}>
-            <rect x="2" y="2" width="96" height="56" rx="6" stroke={fill} strokeWidth="2" fill={fill} fillOpacity={fo} />
-            <rect x="6" y="6" width="88" height="48" rx="4" stroke={fill} strokeWidth="1" strokeDasharray="3 2" />
-            <text x="10" y="18" fill={fill} fontSize="6" fontWeight="bold" fontFamily="Courier New, monospace">ADMITTED</text>
-            <text x="50" y="37" textAnchor="middle" fill={fill} fontSize="10" fontWeight="bold" fontFamily="Courier New, monospace">{name}</text>
-            <text x="50" y="50" textAnchor="middle" fill={fill} fontSize="7" fontFamily="Courier New, monospace">{date}{city ? ` · ${city}` : ''}</text>
-        </svg>
-    );
-
-    // OVAL (default)
-    return (
-        <svg viewBox="0 0 100 60" width="100%" height="100%" fill="none" style={{ filter, opacity: 0.85 }}>
-            <ellipse cx="50" cy="30" rx="48" ry="28" stroke={fill} strokeWidth="2" fill={fill} fillOpacity={fo} />
-            <ellipse cx="50" cy="30" rx="44" ry="24" stroke={fill} strokeWidth="1" />
-            <text x="50" y="15" textAnchor="middle" fill={fill} fontSize="5" letterSpacing="1.5" fontFamily="Courier New, monospace">ADMITTED</text>
-            <text x="50" y="31" textAnchor="middle" fill={fill} fontSize="9" fontWeight="bold" fontFamily="Courier New, monospace">{name}</text>
-            <line x1="18" y1="37" x2="82" y2="37" stroke={fill} strokeWidth="0.5" />
-            <text x="50" y="47" textAnchor="middle" fill={fill} fontSize="7" fontFamily="Courier New, monospace">{date}{city ? ` · ${city}` : ''}</text>
-        </svg>
-    );
-}
+export { getEventYear } from '@/utils/stampLayout';
+export { StampShapeGraphic } from './StampShapeGraphic';
+export { PassportStampsLayer } from './PassportStampsLayer';
+export {
+    PassportCardShell,
+    PASSPORT_INFO_PANEL_BG,
+    PASSPORT_AVATAR_FRAME_CLASS,
+    PASSPORT_FOOTER_TEXT_CLASS,
+    PASSPORT_FOOTER_CHEV_CLASS,
+    PASSPORT_ID_OVERLAY_CLASS,
+} from './PassportCardShell';
+export { PassportMrzFooter, formatPassportIssuedDate } from './PassportMrzFooter';
 
 export function formatMRZ(text, len = 37) {
     if (text.length >= len) return text.substring(0, len);

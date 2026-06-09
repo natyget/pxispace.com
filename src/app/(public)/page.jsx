@@ -21,7 +21,7 @@ export default function Page() {
   return (
     <>
       {/* Visually hidden H1 for SEO — visible heading is in client Hero component */}
-      <h1 className="sr-only">
+      <h1 className="hidden">
         PXI — Premier Event Operating System & Digital Scrapbook
       </h1>
       <p className="sr-only">

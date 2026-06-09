@@ -10,7 +10,8 @@ import EventsCTA from './EventsCTA';
 import EventsDiscoverMap from './EventsDiscoverMap';
 import EventPreviewModal from './EventPreviewModal';
 import { eventsService } from '../../services/events';
-import { readFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
+import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
+import { useAuth } from '@/contexts/AuthContext';
 
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
@@ -53,6 +54,8 @@ const normalizeApiEvent = (e) => {
 };
 
 const Events = ({ detailBasePath = '/events' }) => {
+  const { user } = useAuth();
+  const isLoggedIn = !!user?.id;
   const [filter, setFilter] = useState('All');
   const [sortMode, setSortMode] = useState('vendor');
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,12 +67,12 @@ const Events = ({ detailBasePath = '/events' }) => {
   const [previewEvent, setPreviewEvent] = useState(null);
 
   const loadFavorites = useCallback(() => {
-    setFavoriteIds(readFavoriteEventIds());
-  }, []);
+    loadFavoriteEventIds(isLoggedIn).then(setFavoriteIds).catch(() => setFavoriteIds(new Set()));
+  }, [isLoggedIn]);
 
   useEffect(() => {
-    setFavoriteIds(readFavoriteEventIds());
-  }, []);
+    loadFavorites();
+  }, [loadFavorites]);
 
   const loadDiscoverEvents = useCallback(() => {
     setEventsLoading(true);
@@ -108,10 +111,12 @@ const Events = ({ detailBasePath = '/events' }) => {
 
   const handleToggleFavorite = useCallback(
     (id) => {
-      toggleFavoriteEventId(id);
-      loadFavorites();
+      const isFavorite = favoriteIds.has(String(id));
+      toggleFavoriteEventId(id, isFavorite, isLoggedIn)
+        .then(setFavoriteIds)
+        .catch(() => loadFavorites());
     },
-    [loadFavorites]
+    [favoriteIds, isLoggedIn, loadFavorites]
   );
 
   return (
