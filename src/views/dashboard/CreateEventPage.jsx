@@ -270,8 +270,8 @@ export default function CreateEventPage() {
       setFormError('You must be signed in.');
       return;
     }
-    if (!name.trim() || !startLocal || !endLocal) {
-      setFormError('Event name, start, and end are required.');
+    if (!name.trim() || !location.trim() || !startLocal || !endLocal) {
+      setFormError('Event name, venue / location, start, and end are required.');
       return;
     }
     if (!coverImage) {
@@ -323,7 +323,7 @@ export default function CreateEventPage() {
       const created = await eventsService.createEvent({
         name: name.trim(),
         description: description.trim() || undefined,
-        location: location.trim() || undefined,
+        location: location.trim(),
         latitude: typeof geo.latitude === 'number' ? geo.latitude : undefined,
         longitude: typeof geo.longitude === 'number' ? geo.longitude : undefined,
         startDate: startDate.toISOString(),
@@ -503,7 +503,7 @@ export default function CreateEventPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className={labelClass}>Venue / location</label>
+                <label className={labelClass}>Venue / location *</label>
                 <div
                   className={`${inputClass} !py-0 px-0 overflow-visible relative create-event-location-field`}
                   onChange={(e) => {

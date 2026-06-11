@@ -246,6 +246,10 @@ export default function EventEditPageView() {
       setFormError('Event name is required.');
       return;
     }
+    if (!location.trim()) {
+      setFormError('Venue / location is required.');
+      return;
+    }
     const startDate = fromDatetimeLocalValue(startLocal);
     const endDate = fromDatetimeLocalValue(endLocal);
     if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
@@ -278,7 +282,7 @@ export default function EventEditPageView() {
       await eventsService.updateEvent(eventId, {
         name: name.trim(),
         description: description.trim() || undefined,
-        location: location.trim() || undefined,
+        location: location.trim(),
         latitude: geoLat ?? undefined,
         longitude: geoLon ?? undefined,
         startDate: startDate.toISOString(),
@@ -427,7 +431,7 @@ export default function EventEditPageView() {
             />
           </div>
           <div className="space-y-2">
-            <label className={labelClass}>Venue / location</label>
+            <label className={labelClass}>Venue / location *</label>
             <div
               className={`${inputClass} p-0 overflow-visible`}
               onChange={(e) => {
