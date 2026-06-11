@@ -11,6 +11,7 @@ import {
   resolveMediaThumbAspect,
   thumbnailSizeForMediaAspect,
 } from '@/lib/notifications/notificationMediaThumb';
+import { uploadNotificationContentLabel } from '@/lib/notifications/uploadNotificationCopy';
 
 function truncateComment(text, max = 20) {
   const trimmed = String(text || '').trim();
@@ -120,8 +121,11 @@ export function PhotoCommentCard({ item, onClick }) {
 export function PhotoUploadCard({ item, onClick }) {
   const senderName = item.user?.name?.trim() || 'Someone';
   const albumName = item.albumName?.trim() || 'album';
-  const count = item.uploadCount || 1;
-  const label = count === 1 ? 'a new photo' : `${count} new photos`;
+  const label = uploadNotificationContentLabel({
+    photoCount: item.photoCount,
+    videoCount: item.videoCount,
+    uploadCount: item.uploadCount,
+  });
   const preview =
     (item.previewUrls?.length ? item.previewUrls[0] : null) || item.previewUrl || null;
 

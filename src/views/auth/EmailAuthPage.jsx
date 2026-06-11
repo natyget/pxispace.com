@@ -27,6 +27,7 @@ const PASSWORD_RULES = [
 ];
 
 const HANDLE_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function useDebounce(value, delay) {
     const [debounced, setDebounced] = useState(value);
@@ -55,8 +56,10 @@ export default function EmailAuthPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(searchParams.get('error') || '');
     const [usernameStatus, setUsernameStatus] = useState('idle');
+    const [emailStatus, setEmailStatus] = useState('idle');
 
     const debouncedUsername = useDebounce(username, 500);
+    const debouncedEmail = useDebounce(email, 500);
 
     const handleAuthSuccess = useCallback(
         async ({ token, user: authUser }) => {
@@ -146,6 +149,19 @@ export default function EmailAuthPage() {
         }
     };
 
+    // Email availability check (signup mode only)
+    useEffect(() => {
+        if (mode !== 'signup') { setEmailStatus('idle'); return; }
+        const normalized = debouncedEmail.trim().toLowerCase();
+        if (!normalized) { setEmailStatus('idle'); return; }
+        if (!EMAIL_REGEX.test(normalized)) { setEmailStatus('invalid'); return; }
+        setEmailStatus('checking');
+        authService
+            .checkEmail(normalized)
+            .then((result) => setEmailStatus(result))
+            .catch(() => setEmailStatus('error'));
+    }, [debouncedEmail, mode]);
+
     // Username availability check (signup mode only)
     useEffect(() => {
         if (mode !== 'signup' || !debouncedUsername) { setUsernameStatus('idle'); return; }
@@ -165,6 +181,7 @@ export default function EmailAuthPage() {
         setPassword('');
         setConfirmPassword('');
         setUsernameStatus('idle');
+        setEmailStatus('idle');
     };
 
     const passwordRules = PASSWORD_RULES.map((r) => ({ ...r, passed: r.test(password) }));
@@ -173,7 +190,14 @@ export default function EmailAuthPage() {
 
     const canSubmit = mode === 'login'
         ? email && password && !loading
-        : email && HANDLE_REGEX.test(username) && usernameStatus === 'available' && passwordValid && passwordsMatch && !loading;
+        : email &&
+          EMAIL_REGEX.test(email.trim().toLowerCase()) &&
+          emailStatus === 'available' &&
+          HANDLE_REGEX.test(username) &&
+          usernameStatus === 'available' &&
+          passwordValid &&
+          passwordsMatch &&
+          !loading;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -186,8 +210,35 @@ export default function EmailAuthPage() {
                 toast.success('Welcome back!');
                 handleAuthSuccess(result);
             } else {
+                const normalizedEmail = email.trim().toLowerCase();
+                const emailCheck = await authService.checkEmail(normalizedEmail);
+                if (emailCheck === 'taken') {
+                    setEmailStatus('taken');
+                    const msg = 'An account with this email already exists. Try logging in instead.';
+                    setError(msg);
+                    toast.error(msg);
+                    return;
+                }
+                if (emailCheck === 'invalid') {
+                    setEmailStatus('invalid');
+                    const msg = 'Please enter a valid email address.';
+                    setError(msg);
+                    toast.error(msg);
+                    return;
+                }
+                if (emailCheck !== 'available') {
+                    setEmailStatus('error');
+                    const msg = 'Could not verify email availability. Please check your connection and try again.';
+                    setError(msg);
+                    toast.error(msg);
+                    return;
+                }
+
                 if (typeof window !== 'undefined') {
-                    sessionStorage.setItem('pxi_pending_signup', JSON.stringify({ email, username, password }));
+                    sessionStorage.setItem(
+                        'pxi_pending_signup',
+                        JSON.stringify({ email: normalizedEmail, username, password }),
+                    );
                     if (safeRedirect) {
                         sessionStorage.setItem('pxi_after_register_login_redirect', safeRedirect);
                     }
@@ -310,13 +361,37 @@ export default function EmailAuthPage() {
 
                         {/* Email */}
                         <AuthField>
-                            <AuthInput
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="EMAIL ADDRESS"
-                                required
-                            />
+                            <div className="relative">
+                                <AuthInput
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="EMAIL ADDRESS"
+                                    required
+                                    style={!isLogin ? { paddingRight: 48 } : undefined}
+                                />
+                                {!isLogin && (
+                                    <div className="absolute right-6 top-1/2 -translate-y-1/2">
+                                        {emailStatus === 'checking' && <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" style={{ color: 'rgba(255,255,255,0.4)' }} />}
+                                        {emailStatus === 'available' && <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} style={{ color: '#4ade80' }} />}
+                                        {(emailStatus === 'taken' || emailStatus === 'invalid' || emailStatus === 'error') && (
+                                            <HugeiconsIcon icon={CancelCircleIcon} size={14} style={{ color: '#f87171' }} />
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                            {!isLogin && email && emailStatus === 'taken' && (
+                                <FieldHint color="#f87171">This email is already used. Try logging in instead.</FieldHint>
+                            )}
+                            {!isLogin && email && emailStatus === 'available' && (
+                                <FieldHint color="#4ade80">Email is available</FieldHint>
+                            )}
+                            {!isLogin && email && emailStatus === 'invalid' && (
+                                <FieldHint color="rgba(255,255,255,0.3)">Please enter a valid email address</FieldHint>
+                            )}
+                            {!isLogin && email && emailStatus === 'error' && (
+                                <FieldHint color="#f87171">Could not verify email availability</FieldHint>
+                            )}
                         </AuthField>
 
                         {/* Username (signup only) */}

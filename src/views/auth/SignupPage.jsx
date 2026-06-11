@@ -22,6 +22,7 @@ const PASSWORD_RULES = [
 ];
 
 const HANDLE_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function useDebounce(value, delay) {
     const [debounced, setDebounced] = useState(value);
@@ -44,8 +45,10 @@ export default function SignupPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [usernameStatus, setUsernameStatus] = useState('idle'); // idle | checking | available | taken | invalid
+    const [emailStatus, setEmailStatus] = useState('idle'); // idle | checking | available | taken | invalid | error
     const googleBtnRef = useRef(null);
     const debouncedUsername = useDebounce(username, 500);
+    const debouncedEmail = useDebounce(email, 500);
 
     const handleAuthSuccess = useCallback(
         ({ token, user }) => {
@@ -58,6 +61,18 @@ export default function SignupPage() {
         },
         [saveAuth, router]
     );
+
+    // Email availability check
+    useEffect(() => {
+        const normalized = debouncedEmail.trim().toLowerCase();
+        if (!normalized) { setEmailStatus('idle'); return; }
+        if (!EMAIL_REGEX.test(normalized)) { setEmailStatus('invalid'); return; }
+        setEmailStatus('checking');
+        authService
+            .checkEmail(normalized)
+            .then((result) => setEmailStatus(result))
+            .catch(() => setEmailStatus('error'));
+    }, [debouncedEmail]);
 
     // Username availability check
     useEffect(() => {
@@ -149,6 +164,8 @@ export default function SignupPage() {
 
     const canSubmit =
         email &&
+        EMAIL_REGEX.test(email.trim().toLowerCase()) &&
+        emailStatus === 'available' &&
         HANDLE_REGEX.test(username) &&
         usernameStatus === 'available' &&
         passwordValid &&
@@ -161,7 +178,28 @@ export default function SignupPage() {
         setError('');
         setLoading(true);
         try {
-            sessionStorage.setItem('pxi_pending_signup', JSON.stringify({ email, username, password }));
+            const normalizedEmail = email.trim().toLowerCase();
+            const emailCheck = await authService.checkEmail(normalizedEmail);
+            if (emailCheck === 'taken') {
+                setEmailStatus('taken');
+                setError('An account with this email already exists. Try logging in instead.');
+                return;
+            }
+            if (emailCheck === 'invalid') {
+                setEmailStatus('invalid');
+                setError('Please enter a valid email address.');
+                return;
+            }
+            if (emailCheck !== 'available') {
+                setEmailStatus('error');
+                setError('Could not verify email availability. Please check your connection and try again.');
+                return;
+            }
+
+            sessionStorage.setItem(
+                'pxi_pending_signup',
+                JSON.stringify({ email: normalizedEmail, username, password }),
+            );
             router.replace('/verify-phone');
         } catch (err) {
             setError(err.message || 'Something went wrong. Please try again.');
@@ -230,14 +268,20 @@ export default function SignupPage() {
                             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">
                                 Email
                             </label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="you@example.com"
-                                required
-                                className="w-full bg-zinc-800/60 border border-white/8 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-pxi-purple/50 focus:ring-1 focus:ring-pxi-purple/20 transition-all"
-                            />
+                            <div className="relative">
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="you@example.com"
+                                    required
+                                    className="w-full bg-zinc-800/60 border border-white/8 rounded-xl px-4 pr-10 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-pxi-purple/50 focus:ring-1 focus:ring-pxi-purple/20 transition-all"
+                                />
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <EmailStatusIcon status={emailStatus} />
+                                </div>
+                            </div>
+                            <EmailStatusMessage status={emailStatus} email={email} />
                         </div>
 
                         <div>
@@ -359,6 +403,37 @@ export default function SignupPage() {
         </div>
     );
 }
+function EmailStatusIcon({ status }) {
+    if (status === 'checking')
+        return <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin text-zinc-500" />;
+    if (status === 'available')
+        return <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="text-green-400" />;
+    if (status === 'taken' || status === 'invalid' || status === 'error')
+        return <HugeiconsIcon icon={CancelCircleIcon} size={14} className="text-red-400" />;
+    return null;
+}
+
+function EmailStatusMessage({ status, email }) {
+    if (!email) return null;
+    if (status === 'invalid')
+        return <p className="text-zinc-600 text-xs mt-1.5">Please enter a valid email address</p>;
+    if (status === 'taken')
+        return (
+            <p className="text-red-400 text-xs mt-1.5">
+                An account with this email already exists. Try logging in instead.
+            </p>
+        );
+    if (status === 'available')
+        return <p className="text-green-400 text-xs mt-1.5">Email is available</p>;
+    if (status === 'error')
+        return (
+            <p className="text-red-400 text-xs mt-1.5">
+                Could not verify email availability. Please try again.
+            </p>
+        );
+    return null;
+}
+
 function UsernameStatusIcon({ status }) {
     if (status === 'checking')
         return <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin text-zinc-500" />;

@@ -71,6 +71,41 @@ export const authService = {
     checkUsername: (username) =>
         api.get(`/api/auth/check-username?username=${encodeURIComponent(username)}`),
 
+    /**
+     * Pre-signup email availability (public). Tries check-username?email= then check-email.
+     * @returns {Promise<'available'|'taken'|'invalid'|'error'>}
+     */
+    checkEmail: async (email) => {
+        const normalized = String(email).trim().toLowerCase();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(normalized)) return 'invalid';
+
+        const parsePayload = (data) => {
+            const reason = data.emailReason ?? data.reason;
+            if (reason === 'invalid_format') return 'invalid';
+            const available = data.emailAvailable ?? data.available;
+            if (available === false) return 'taken';
+            if (available === true) return 'available';
+            return null;
+        };
+
+        const endpoints = [
+            `/api/auth/check-username?email=${encodeURIComponent(normalized)}`,
+            `/api/auth/check-email?email=${encodeURIComponent(normalized)}`,
+        ];
+
+        for (const endpoint of endpoints) {
+            try {
+                const data = await api.get(endpoint);
+                const result = parsePayload(data);
+                if (result) return result;
+            } catch {
+                // try next endpoint
+            }
+        }
+        return 'error';
+    },
+
     login: (identifier, password) =>
         api.post('/api/auth/login', { identifier, password }),
 
