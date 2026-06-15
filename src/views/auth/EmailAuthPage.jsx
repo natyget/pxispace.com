@@ -11,6 +11,12 @@ import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { defaultPostLoginPath } from '../../lib/dashboardPaths';
+import {
+    isValidUsername,
+    sanitizeUsernameInput,
+    PROFILE_USERNAME_MAX_LENGTH,
+    USERNAME_RULES_HINT,
+} from '../../utils/username';
 const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
 
 function shouldClearAuth(error) {
@@ -26,7 +32,6 @@ const PASSWORD_RULES = [
     { id: 'number', label: 'One number', test: (p) => /[0-9]/.test(p) },
 ];
 
-const HANDLE_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function useDebounce(value, delay) {
@@ -165,7 +170,7 @@ export default function EmailAuthPage() {
     // Username availability check (signup mode only)
     useEffect(() => {
         if (mode !== 'signup' || !debouncedUsername) { setUsernameStatus('idle'); return; }
-        if (!HANDLE_REGEX.test(debouncedUsername)) { setUsernameStatus('invalid'); return; }
+        if (!isValidUsername(debouncedUsername)) { setUsernameStatus('invalid'); return; }
         setUsernameStatus('checking');
         authService
             .checkUsername(debouncedUsername)
@@ -193,7 +198,7 @@ export default function EmailAuthPage() {
         : email &&
           EMAIL_REGEX.test(email.trim().toLowerCase()) &&
           emailStatus === 'available' &&
-          HANDLE_REGEX.test(username) &&
+          isValidUsername(username) &&
           usernameStatus === 'available' &&
           passwordValid &&
           passwordsMatch &&
@@ -402,10 +407,10 @@ export default function EmailAuthPage() {
                                         type="text"
                                         value={username}
                                         onChange={(e) =>
-                                            setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))
+                                            setUsername(sanitizeUsernameInput(e.target.value))
                                         }
                                         placeholder="USERNAME"
-                                        maxLength={20}
+                                        maxLength={PROFILE_USERNAME_MAX_LENGTH}
                                     />
                                     <div className="absolute right-6 top-1/2 -translate-y-1/2">
                                         {usernameStatus === 'checking' && <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" style={{ color: 'rgba(255,255,255,0.4)' }} />}
@@ -415,7 +420,7 @@ export default function EmailAuthPage() {
                                 </div>
                                 {username && usernameStatus === 'taken' && <FieldHint color="#f87171">@{username} is already taken</FieldHint>}
                                 {username && usernameStatus === 'available' && <FieldHint color="#4ade80">@{username} is available</FieldHint>}
-                                {username && usernameStatus === 'invalid' && <FieldHint color="rgba(255,255,255,0.3)">3–20 characters, letters, numbers, and _ only</FieldHint>}
+                                {username && usernameStatus === 'invalid' && <FieldHint color="rgba(255,255,255,0.3)">{USERNAME_RULES_HINT}</FieldHint>}
                             </AuthField>
                         )}
 

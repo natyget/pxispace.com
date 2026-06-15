@@ -9,6 +9,12 @@ import { CheckmarkCircle02Icon, CancelCircleIcon, Loading02Icon, ViewIcon, ViewO
 import { FaApple } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
+import {
+    isValidUsername,
+    sanitizeUsernameInput,
+    PROFILE_USERNAME_MAX_LENGTH,
+    USERNAME_RULES_HINT,
+} from '../../utils/username';
 const LogoSVG = "/images/logo.svg";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
@@ -21,7 +27,6 @@ const PASSWORD_RULES = [
     { id: 'number', label: 'One number', test: (p) => /[0-9]/.test(p) },
 ];
 
-const HANDLE_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function useDebounce(value, delay) {
@@ -77,7 +82,7 @@ export default function SignupPage() {
     // Username availability check
     useEffect(() => {
         if (!debouncedUsername) { setUsernameStatus('idle'); return; }
-        if (!HANDLE_REGEX.test(debouncedUsername)) { setUsernameStatus('invalid'); return; }
+        if (!isValidUsername(debouncedUsername)) { setUsernameStatus('invalid'); return; }
         setUsernameStatus('checking');
         authService
             .checkUsername(debouncedUsername)
@@ -166,7 +171,7 @@ export default function SignupPage() {
         email &&
         EMAIL_REGEX.test(email.trim().toLowerCase()) &&
         emailStatus === 'available' &&
-        HANDLE_REGEX.test(username) &&
+        isValidUsername(username) &&
         usernameStatus === 'available' &&
         passwordValid &&
         passwordsMatch &&
@@ -293,10 +298,10 @@ export default function SignupPage() {
                                     type="text"
                                     value={username}
                                     onChange={(e) =>
-                                        setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))
+                                        setUsername(sanitizeUsernameInput(e.target.value))
                                     }
                                     placeholder="yourusername"
-                                    maxLength={20}
+                                    maxLength={PROFILE_USERNAME_MAX_LENGTH}
                                     className="w-full bg-zinc-800/60 border border-white/8 rounded-xl px-4 pr-10 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-pxi-purple/50 focus:ring-1 focus:ring-pxi-purple/20 transition-all"
                                 />
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -449,7 +454,7 @@ function UsernameStatusMessage({ status, username }) {
     if (status === 'invalid')
         return (
             <p className="text-zinc-600 text-xs mt-1.5">
-                3–20 characters, letters, numbers, and underscores only
+                {USERNAME_RULES_HINT}
             </p>
         );
     if (status === 'taken')

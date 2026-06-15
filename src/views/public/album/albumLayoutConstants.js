@@ -15,8 +15,10 @@ export const ALBUM_HEADER_HEIGHT = 56;
 export const THREAD_MEDIA_TILT_DEG = 2.8;
 export const THREAD_CARD_MEDIA_ROW_GAP = 4;
 export const THREAD_SCRAPBOOK_BORDER_PX = 7;
+/** Thread reaction bar — minimum track width (mobile hugs content up to media width). */
+export const THREAD_REACTION_BAR_MIN_WIDTH = 300;
 
-/** Polaroid frame — `scrapbookFrame.ts` */
+/** Polaroid frame — `albumMediaFrame.ts` */
 export const ALBUM_MEDIA_FRAME_COLOR = 'rgba(48, 52, 60, 0.94)';
 
 /** iPhone 14/15 logical points (matches React Native `Dimensions` on standard devices). */

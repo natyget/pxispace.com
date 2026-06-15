@@ -7,10 +7,9 @@ import { Loading02Icon, LockIcon, MoreHorizontalCircle02Icon } from '@hugeicons/
 import { albumsService } from '@/services/albums';
 import PublicAlbumBottomBar from '@/views/public/PublicAlbumBottomBar';
 import PublicAlbumMasonryGrid from './PublicAlbumMasonryGrid';
-import PublicAlbumScrapbookPost from './PublicAlbumScrapbookPost';
+import PublicAlbumThreadMediaCard from './PublicAlbumThreadMediaCard';
 import PublicAlbumThreadMessage from './PublicAlbumThreadMessage';
 import PublicAlbumThreadJoinEvent from './PublicAlbumThreadJoinEvent';
-import PublicAlbumLightbox from './PublicAlbumLightbox';
 import PublicAlbumThreadFocusOverlay from './PublicAlbumThreadFocusOverlay';
 import {
   buildPublicAlbumTimeline,
@@ -30,6 +29,9 @@ import {
 } from './albumLayoutConstants';
 import { useThreadPaneWidth } from './useThreadPaneWidth';
 import { useAlbumThreadScroll } from './useAlbumThreadScroll';
+import { publicAlbumMediaId, useAlbumThreadActiveVideo } from './useAlbumThreadActiveVideo';
+import { syncStableMediaRotations } from './stableMediaRotations';
+import { markAlbumVideoUserActivation } from './albumExclusivePlayback';
 
 function normalizeMediaList(raw) {
   if (!Array.isArray(raw)) return [];
@@ -57,6 +59,9 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   const threadListRef = useRef(null);
   const threadEndRef = useRef(null);
   const threadTopRef = useRef(null);
+  const mediaRotationByIdRef = useRef(new Map());
+  const lastViewableThreadVideoIdRef = useRef(null);
+  const [pinnedThreadVideoId, setPinnedThreadVideoId] = useState(null);
 
   const setThreadScrollEl = useCallback((el) => {
     threadListRef.current = el;
@@ -67,7 +72,29 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
     () => buildPublicAlbumTimeline(threadMedia, threadMessages, participants),
     [threadMedia, threadMessages, participants],
   );
+  const mediaRotationById = useMemo(
+    () => syncStableMediaRotations(threadTimeline, mediaRotationByIdRef.current),
+    [threadTimeline],
+  );
+  const openInAppUrl = albumId ? `pxi://album/${albumId}` : null;
   const threadScrollActive = tab === 'thread' && !contentLoading;
+  const activeThreadVideoId = useAlbumThreadActiveVideo({
+    scrollRef: threadListRef,
+    active: threadScrollActive,
+    enabled: !threadFocusOpen,
+  });
+  const effectiveThreadVideoId = threadFocusOpen
+    ? null
+    : (pinnedThreadVideoId ?? activeThreadVideoId);
+
+  useEffect(() => {
+    if (activeThreadVideoId && !threadFocusOpen) {
+      lastViewableThreadVideoIdRef.current = activeThreadVideoId;
+      if (pinnedThreadVideoId && pinnedThreadVideoId === activeThreadVideoId) {
+        setPinnedThreadVideoId(null);
+      }
+    }
+  }, [activeThreadVideoId, threadFocusOpen, pinnedThreadVideoId]);
   const loadOlderThread = useCallback(async () => {
     if (!albumId || loadingMoreThread || !threadHasMore) return;
     setLoadingMoreThread(true);
@@ -131,6 +158,10 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   }, []);
 
   useEffect(() => {
+    mediaRotationByIdRef.current = new Map();
+  }, [albumId]);
+
+  useEffect(() => {
     if (!albumId) {
       setLoading(false);
       return;
@@ -171,20 +202,34 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   }, [album]);
 
   const eventId = album?.event?.id || null;
-  const lightboxItems = tab === 'gallery' ? galleryMedia : threadMedia;
-
   const openLightbox = (index) => {
+    markAlbumVideoUserActivation();
     setLightboxIndex(index);
     setLightboxOpen(true);
   };
 
   const openThreadFocus = (mediaIndex) => {
+    const item = threadMedia[mediaIndex];
+    const mediaId = publicAlbumMediaId(item);
+    if (String(item?.type || '').toUpperCase() === 'VIDEO' && mediaId) {
+      lastViewableThreadVideoIdRef.current = mediaId;
+    } else if (activeThreadVideoId) {
+      lastViewableThreadVideoIdRef.current = activeThreadVideoId;
+    }
+    markAlbumVideoUserActivation();
     setThreadFocusIndex(mediaIndex);
     setThreadFocusOpen(true);
   };
 
+  const closeThreadFocus = () => {
+    setThreadFocusOpen(false);
+    const resumeId = lastViewableThreadVideoIdRef.current;
+    if (resumeId) setPinnedThreadVideoId(resumeId);
+  };
+
   useEffect(() => {
     if (tab !== 'thread') setThreadFocusOpen(false);
+    if (tab !== 'gallery') setLightboxOpen(false);
   }, [tab]);
 
   if (loading) {
@@ -344,14 +389,20 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
                   }
                   const currentMediaIndex = mediaIndex;
                   mediaIndex += 1;
-                  const mediaTilt =
-                    currentMediaIndex % 2 === 0 ? -THREAD_MEDIA_TILT_DEG : THREAD_MEDIA_TILT_DEG;
+                  const mediaId = publicAlbumMediaId(row.data);
+                  const mediaTilt = mediaRotationById.get(mediaId) ?? THREAD_MEDIA_TILT_DEG;
                   return (
-                    <PublicAlbumScrapbookPost
+                    <PublicAlbumThreadMediaCard
                       key={key}
                       item={row.data}
                       rotation={mediaTilt}
                       paneWidth={threadPaneWidth}
+                      openInAppUrl={openInAppUrl}
+                      isPlaybackActive={
+                        String(row.data.type || '').toUpperCase() === 'VIDEO' &&
+                        Boolean(mediaId) &&
+                        effectiveThreadVideoId === mediaId
+                      }
                       onPress={() => openThreadFocus(currentMediaIndex)}
                     />
                   );
@@ -385,9 +436,10 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
       />
 
       {lightboxOpen && tab === 'gallery' ? (
-        <PublicAlbumLightbox
-          items={lightboxItems}
+        <PublicAlbumThreadFocusOverlay
+          items={galleryMedia}
           index={lightboxIndex}
+          albumId={albumId}
           onClose={() => setLightboxOpen(false)}
           onIndexChange={setLightboxIndex}
         />
@@ -397,7 +449,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
           items={threadMedia}
           index={threadFocusIndex}
           albumId={albumId}
-          onClose={() => setThreadFocusOpen(false)}
+          onClose={closeThreadFocus}
           onIndexChange={setThreadFocusIndex}
         />
       ) : null}

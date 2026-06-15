@@ -14,6 +14,9 @@ import AppOpenBanner from '@/components/links/AppOpenBanner';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { singleEventMapEmbedSrc } from '@/lib/eventMapEmbed';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { buildEventJsonLd } from '@/lib/seo/schemas';
+import { getSiteUrl } from '@/lib/siteUrl';
 
 const ACCENT = '#c44d54';
 const SECTION_EMPTY = 'Empty yet';
@@ -301,14 +304,23 @@ export default function EventDetailClient() {
 
   if (!apiEvent) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] pt-24 text-zinc-400 md:pt-28">
-        Event not found.
+      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-[#0a0a0a] px-4 pt-24 text-center text-white md:pt-28">
+        <p className="text-lg font-semibold">Event not found</p>
+        <p className="mt-2 max-w-sm text-sm text-zinc-500">
+          This link may be invalid or the event was removed.
+        </p>
+        <Link href="/events" className="mt-6 text-sm font-medium text-pxi-purple hover:text-white">
+          Browse events
+        </Link>
       </div>
     );
   }
 
+  const isPublicEvent = apiEvent.visibility !== 'PRIVATE';
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] pt-24 font-sans text-white antialiased md:pt-28">
+      {isPublicEvent ? <JsonLd data={buildEventJsonLd(apiEvent, getSiteUrl())} /> : null}
       <div className="fixed left-3 top-24 z-50 md:top-28">
         <Link
           href="/events"
