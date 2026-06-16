@@ -22,7 +22,6 @@ export function PassportStampsLayer({
     availableYears,
     selectedSeason,
     onSelectSeason,
-    fallbackTierId = 'WANDERER',
     seasonPillsPointerEvents = true,
 }) {
     const containerRef = useRef(null);
@@ -106,7 +105,7 @@ export function PassportStampsLayer({
                 const shape = stampShapesByEventId.get(event.id) ?? getStampShape(event.id);
                 const layout = stampLayoutsByEventId.get(event.id);
                 if (!layout) return null;
-                const color = getStampColor(event.xp, fallbackTierId);
+                const color = getStampColor(event.xp);
 
                 return (
                     <div

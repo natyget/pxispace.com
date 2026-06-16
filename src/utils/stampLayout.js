@@ -106,8 +106,10 @@ function xpToTierId(xp) {
     return 'ODYSSEY';
 }
 
-export function getStampColor(xp, fallbackTierId) {
-    const tierId = xp != null ? xpToTierId(Math.max(0, Math.floor(xp))) : fallbackTierId;
+/** Stamp color from per-event Odyssey XP (missing XP treated as 0 → WANDERER amber). */
+export function getStampColor(xp) {
+    const score = xp == null ? 0 : Math.max(0, Math.floor(xp));
+    const tierId = xpToTierId(score);
     return STAMP_TIER_COLORS[tierId] ?? '#B026FF';
 }
 

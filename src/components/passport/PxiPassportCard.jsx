@@ -113,7 +113,6 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
                             availableYears={availableYears}
                             selectedSeason={selectedSeason}
                             onSelectSeason={setSelectedSeason}
-                            fallbackTierId={tierId}
                             seasonPillsPointerEvents
                         />
                     </div>
