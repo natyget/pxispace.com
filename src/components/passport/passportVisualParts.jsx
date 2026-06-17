@@ -1,6 +1,7 @@
 // Shared SVG + helpers for dashboard Passport and public profile preview.
 // Passport stamps: use PassportStampsLayer only (not inline stamp logic).
 
+export { PassportDottedText } from './PassportDottedText';
 export { getEventYear } from '@/utils/stampLayout';
 export { StampShapeGraphic } from './StampShapeGraphic';
 export { PassportStampsLayer } from './PassportStampsLayer';

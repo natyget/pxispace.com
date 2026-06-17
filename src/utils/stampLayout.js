@@ -1,33 +1,62 @@
-export const STAMP_SHAPES = [
-    'HEXAGON',
-    'RECTANGLE',
-    'CIRCLE',
-    'OVAL',
-    'TRIANGLE',
-    'DIAMOND',
-    'STAR',
-    'SHIELD',
-    'ARCH',
-    'POSTMARK',
+/** @typedef {'square-border'|'circle-exit'|'diamond-pass'|'hexagon-pass'|'oval-entry'|'arch-gate'|'star-burst'|'shield-crest'|'visa-sticker'|'barcode-label'|'wax-seal'|'hologram-ticket'} StampType */
+/** @typedef {1|2|3|4} StampLevel */
+/** @typedef {'staff'|'member'|'owner'} StampRoleSlot */
+
+/** Passport stamp template ids — aligned with passport-stamp-studio `StampType`. */
+export const STAMP_TYPES = [
+    'square-border',
+    'circle-exit',
+    'diamond-pass',
+    'hexagon-pass',
+    'oval-entry',
+    'arch-gate',
+    'star-burst',
+    'shield-crest',
+    'visa-sticker',
+    'barcode-label',
+    'wax-seal',
+    'hologram-ticket',
 ];
 
+/** @deprecated Use STAMP_TYPES */
+export const STAMP_SHAPES = STAMP_TYPES;
+
+/**
+ * Per-level templates ordered [staff, member, owner] — least to most ornate.
+ * Level from ticket price; slot from album role.
+ */
+export const STAMP_TYPES_BY_LEVEL = {
+    1: ['square-border', 'circle-exit', 'diamond-pass'],
+    2: ['hexagon-pass', 'oval-entry', 'arch-gate'],
+    3: ['star-burst', 'shield-crest', 'visa-sticker'],
+    4: ['barcode-label', 'wax-seal', 'hologram-ticket'],
+};
+
+const STAMP_SLOT_INDEX = {
+    staff: 0,
+    member: 1,
+    owner: 2,
+};
+
 export const STAMP_VIEWBOX = {
-    HEXAGON:   { w: 100, h: 100 },
-    CIRCLE:    { w: 100, h: 100 },
-    TRIANGLE:  { w: 100, h: 100 },
-    DIAMOND:   { w: 100, h: 100 },
-    STAR:      { w: 100, h: 100 },
-    ARCH:      { w: 100, h: 100 },
-    POSTMARK:  { w: 100, h: 100 },
-    SHIELD:    { w: 100, h: 120 },
-    RECTANGLE: { w: 100, h: 60 },
-    OVAL:      { w: 100, h: 60 },
+    'square-border':   { w: 100, h: 100 },
+    'circle-exit':     { w: 100, h: 100 },
+    'diamond-pass':    { w: 100, h: 100 },
+    'hexagon-pass':    { w: 100, h: 100 },
+    'oval-entry':      { w: 100, h: 60 },
+    'arch-gate':       { w: 100, h: 120 },
+    'star-burst':      { w: 100, h: 100 },
+    'shield-crest':    { w: 100, h: 120 },
+    'visa-sticker':    { w: 100, h: 62 },
+    'barcode-label':   { w: 100, h: 100 },
+    'wax-seal':        { w: 100, h: 100 },
+    'hologram-ticket': { w: 100, h: 56 },
 };
 
 /** Inner stamp fill (0 = transparent; strokes/text use full tier color). */
 export const STAMP_SHAPE_FILL_OPACITY = 0;
 
-/** SVG text sizes in stamp viewBox units (100×100 or 100×60). */
+/** SVG text sizes in stamp viewBox units. */
 export const STAMP_FONT = {
     name: 11,
     nameCompact: 10,
@@ -49,16 +78,18 @@ export const STAMP_TIER_COLORS = {
 };
 
 export const STAMP_DIMENSIONS = {
-    HEXAGON:   { w: 90, h: 90 },
-    RECTANGLE: { w: 108, h: 65 },
-    CIRCLE:    { w: 88, h: 88 },
-    OVAL:      { w: 106, h: 64 },
-    TRIANGLE:  { w: 90, h: 90 },
-    DIAMOND:   { w: 90, h: 90 },
-    STAR:      { w: 92, h: 92 },
-    SHIELD:    { w: 86, h: 104 },
-    ARCH:      { w: 90, h: 90 },
-    POSTMARK:  { w: 88, h: 88 },
+    'square-border':   { w: 76, h: 76 },
+    'circle-exit':     { w: 80, h: 80 },
+    'diamond-pass':    { w: 98, h: 98 },
+    'hexagon-pass':    { w: 90, h: 90 },
+    'oval-entry':      { w: 106, h: 64 },
+    'arch-gate':       { w: 86, h: 104 },
+    'star-burst':      { w: 92, h: 92 },
+    'shield-crest':    { w: 86, h: 104 },
+    'visa-sticker':    { w: 110, h: 68 },
+    'barcode-label':   { w: 80, h: 80 },
+    'wax-seal':        { w: 80, h: 80 },
+    'hologram-ticket': { w: 112, h: 63 },
 };
 
 export function getStampViewBox(shape) {
@@ -88,6 +119,43 @@ export const DEFAULT_STAMP_LAYOUT_AREA = {
     yearRowHeight: 26,
 };
 
+/** Level 1 staff (square-border) — thinner frame, more room for copy. */
+export const SQUARE_BORDER_RECT = { x: 8, y: 8, w: 84, h: 84 };
+export const SQUARE_BORDER_STROKE = 3;
+
+/** Level 3 staff (star-burst) — outer tips at R=46; valleys at R=31. */
+export const STAR_BURST_PATH =
+    'M50 4 L68 25 L94 36 L80 60 L77 87 L50 81 L23 87 L21 60 L6 36 L32 25 Z';
+export const STAR_BURST_INNER_CIRCLE = { cx: 50, cy: 46, r: 22 };
+
+/** Level 4 staff (barcode-label) — square label with rounded corners. */
+export const BARCODE_LABEL_BORDER_RX = 5;
+export const BARCODE_LABEL_LINE_GAP = 10;
+export const BARCODE_LABEL_TEXT_START = 38;
+export const BARCODE_LABEL_SIGNATURE_POS = {
+    topLeft: { x: 5, y: 6 },
+    bottomRight: { x: 80, y: 82 },
+};
+
+export const ARCH_GATE_OUTER_PATH = 'M6 50 Q50 8 94 50 V118 H6 Z';
+export const ARCH_GATE_INNER_PATH = 'M12 54 Q50 16 88 54 V113 H12 Z';
+
+/** Level 1 member (outline) & level 4 member (filled) — shared circle geometry. */
+export const CIRCLE_MEMBER_STAMP = { cx: 50, cy: 50, rOuter: 46, rInner: 38 };
+export const CIRCLE_MEMBER_TEXT_START = 34;
+export const CIRCLE_MEMBER_TEXT_AVAIL = 44;
+/** Ink on filled wax-seal (level 4 member). */
+export const WAX_SEAL_INK = 'rgba(0,0,0,0.55)';
+
+/** Line spacing for oval-entry (level 2 member). */
+export const OVAL_ENTRY_LINE_GAP = 10;
+
+export const VISA_STICKER_PAD_X = 8;
+export const VISA_STICKER_LINE_GAP = 10;
+
+/** Wider line spacing for hologram-ticket (level 4 owner). */
+export const HOLOGRAM_TICKET_LINE_GAP = 11;
+
 function seededHash(id, salt) {
     let h = (salt * 2654435761) >>> 0;
     for (let i = 0; i < id.length; i++) {
@@ -113,44 +181,58 @@ export function getStampColor(xp) {
     return STAMP_TIER_COLORS[tierId] ?? '#B026FF';
 }
 
-/** Stable shape from event id alone (single-stamp / legacy callers). */
-export function getStampShape(eventId) {
-    return STAMP_SHAPES[Math.floor(seededHash(eventId, 7) * STAMP_SHAPES.length)];
+/** Map album RBAC role → stamp template slot within a price level. */
+export function albumRoleToStampSlot(albumRole) {
+    const role = String(albumRole || 'MEMBER').toUpperCase();
+    if (role === 'OWNER' || role === 'ADMIN') return 'owner';
+    if (role === 'MEMBER') return 'member';
+    return 'staff';
 }
 
-/**
- * Assign shapes for all stamps on one passport spread.
- * When count ≤ 10, each stamp gets a unique shape; otherwise shapes cycle by slot
- * so neighbors differ even when ids hash to the same bucket.
- */
-export function assignDiverseStampShapes(eventIds) {
+/** Map ticket face price (USD) to stamp prestige level. */
+export function getStampLevel(ticketPriceUsd) {
+    const price = Math.max(0, ticketPriceUsd);
+    if (price <= 0) return 1;
+    if (price <= 50) return 2;
+    if (price <= 100) return 3;
+    return 4;
+}
+
+/** Stamp template from ticket price level + album role. */
+export function getStampTypeForEvent(ticketPriceUsd, albumRole) {
+    const pool = STAMP_TYPES_BY_LEVEL[getStampLevel(ticketPriceUsd)];
+    const slot = albumRoleToStampSlot(albumRole);
+    return pool[STAMP_SLOT_INDEX[slot]];
+}
+
+/** @deprecated Use getStampTypeForEvent */
+export function getStampShape(_eventId, ticketPriceUsd = 0, albumRole) {
+    return getStampTypeForEvent(ticketPriceUsd, albumRole);
+}
+
+/** Assign stamp templates from ticket price + role per event. */
+export function assignStampTypes(events) {
     const map = new Map();
-    const used = new Set();
-    const preferUnique = eventIds.length <= STAMP_SHAPES.length;
-
-    for (let i = 0; i < eventIds.length; i++) {
-        const id = eventIds[i];
-        const preferred = Math.floor(seededHash(id, 7) * STAMP_SHAPES.length);
-        let idx = (preferred + i * 3) % STAMP_SHAPES.length;
-        let shape = STAMP_SHAPES[idx];
-
-        if (preferUnique) {
-            if (used.has(shape)) {
-                for (let off = 0; off < STAMP_SHAPES.length; off++) {
-                    const candidate = STAMP_SHAPES[(idx + off) % STAMP_SHAPES.length];
-                    if (!used.has(candidate)) {
-                        shape = candidate;
-                        break;
-                    }
-                }
-            }
-            used.add(shape);
-        }
-
-        map.set(id, shape);
+    for (const e of events) {
+        map.set(e.id, getStampTypeForEvent(e.ticketPriceUsd ?? 0, e.albumRole));
     }
-
     return map;
+}
+
+/** @deprecated Use assignStampTypes */
+export function assignDiverseStampShapes(eventIdsOrEvents) {
+    if (eventIdsOrEvents.length === 0) return new Map();
+    const first = eventIdsOrEvents[0];
+    if (typeof first === 'string') {
+        return assignStampTypes(
+            eventIdsOrEvents.map((id) => ({
+                id,
+                ticketPriceUsd: 0,
+                albumRole: 'MEMBER',
+            })),
+        );
+    }
+    return assignStampTypes(eventIdsOrEvents);
 }
 
 function clamp(v, min, max) {
@@ -165,10 +247,6 @@ function maxScaleForPassport(base, area) {
     return Math.min(byW, byH, STAMP_MAX_LAYOUT_SCALE);
 }
 
-/**
- * Scale stamp to fill the passport map area based on count (fewer → larger, more → smaller).
- * Uses canvas area × fill factor / count, with overlap-friendly boost.
- */
 export function getStampScaleForCount(count, base, area) {
     const c = Math.max(1, Math.floor(count));
     const yearRow = area.yearRowHeight ?? 0;
@@ -176,7 +254,6 @@ export function getStampScaleForCount(count, base, area) {
     const availW = Math.max(1, area.width - pad * 2);
     const availH = Math.max(1, area.height - yearRow - pad * 2);
 
-    // Power curve: ~6 stamps = “comfortable fill”, 30+ = dense pack
     const fillFactor = clamp(0.34 + 0.54 * Math.pow(6 / c, 0.42), 0.4, 0.9);
 
     const targetPerStampArea = (availW * availH * fillFactor) / c;
@@ -194,9 +271,11 @@ export function getStampSize(
     totalCount,
     area,
     shapeOverride,
+    ticketPriceUsd = 0,
+    albumRole,
 ) {
     const count = Math.max(1, totalCount);
-    const shape = shapeOverride ?? getStampShape(eventId);
+    const shape = shapeOverride ?? getStampTypeForEvent(ticketPriceUsd, albumRole);
     const base = STAMP_DIMENSIONS[shape];
     const scale = getStampScaleForCount(count, base, area);
     return {
@@ -206,18 +285,21 @@ export function getStampSize(
     };
 }
 
-const LOW_ROTATION_SHAPES = ['RECTANGLE', 'OVAL', 'ARCH'];
+const LOW_ROTATION_TYPES = [
+    'oval-entry',
+    'barcode-label',
+    'hologram-ticket',
+    'visa-sticker',
+];
 
-/** Rotation bands — passport-stamp-studio shape categories. */
 export function getStampRotationDeg(eventId, shape) {
     const t = seededHash(eventId, 3);
-    if (LOW_ROTATION_SHAPES.includes(shape)) {
+    if (LOW_ROTATION_TYPES.includes(shape)) {
         return Math.round((t - 0.5) * 20);
     }
     return Math.round((t - 0.5) * 60);
 }
 
-/** Keep axis-aligned stamp box inside passport; extra inset for rotation. */
 export function clampStampPosition(params) {
     const { centerX, centerY, w, h, rotationDeg, area } = params;
     const yearRow = area.yearRowHeight ?? 0;
@@ -261,19 +343,10 @@ function placementBounds(w, h, area) {
     return { minCX, maxCX, minCY, maxCY };
 }
 
-function seededAttemptUnit(
-    eventId,
-    slotIndex,
-    attempt,
-    salt,
-) {
+function seededAttemptUnit(eventId, slotIndex, attempt, salt) {
     return seededHash(`${eventId}#${slotIndex}#${attempt}`, salt);
 }
 
-/**
- * Best-candidate center (passport-stamp-studio Poisson-disk approximation).
- * Picks the random center farthest from existing stamps; allows overlap when crowded.
- */
 export function findBestCandidateCenter(eventId, slotIndex, w, h, placed, area) {
     const { minCX, maxCX, minCY, maxCY } = placementBounds(w, h, area);
 
@@ -314,25 +387,43 @@ export function findBestCandidateCenter(eventId, slotIndex, w, h, placed, area) 
     return { cx: bestCX, cy: bestCY };
 }
 
-function buildPassportStampLayoutBundle(
-    eventIds,
-    area,
-) {
+function toStampEvents(eventsOrIds) {
+    if (eventsOrIds.length === 0) return [];
+    const first = eventsOrIds[0];
+    if (typeof first === 'string') {
+        return eventsOrIds.map((id) => ({
+            id,
+            ticketPriceUsd: 0,
+            albumRole: 'MEMBER',
+        }));
+    }
+    return eventsOrIds;
+}
+
+function buildPassportStampLayoutBundle(eventsOrIds, area) {
+    const events = toStampEvents(eventsOrIds);
     const layouts = new Map();
-    const shapes = assignDiverseStampShapes(eventIds);
-    const count = eventIds.length;
+    const shapes = assignStampTypes(events);
+    const count = events.length;
     if (count === 0) {
         return { layouts, shapes };
     }
 
     const placed = [];
 
-    eventIds.forEach((eventId, slotIndex) => {
-        const shape = shapes.get(eventId);
-        const { w, h } = getStampSize(eventId, count, area, shape);
-        const rotation = getStampRotationDeg(eventId, shape);
+    events.forEach((event, slotIndex) => {
+        const shape = shapes.get(event.id);
+        const { w, h } = getStampSize(
+            event.id,
+            count,
+            area,
+            shape,
+            event.ticketPriceUsd ?? 0,
+            event.albumRole,
+        );
+        const rotation = getStampRotationDeg(event.id, shape);
         const { cx, cy } = findBestCandidateCenter(
-            eventId,
+            event.id,
             slotIndex,
             w,
             h,
@@ -351,47 +442,47 @@ function buildPassportStampLayoutBundle(
             area,
         });
 
-        layouts.set(eventId, { left, top, rotation, width: w, height: h });
+        layouts.set(event.id, { left, top, rotation, width: w, height: h });
     });
 
     return { layouts, shapes };
 }
 
-/** Layout + per-event shapes for one passport spread. */
 export function computePassportStampBundle(
-    eventIds,
+    eventsOrIds,
     area = DEFAULT_STAMP_LAYOUT_AREA,
 ) {
-    return buildPassportStampLayoutBundle(eventIds, area);
+    return buildPassportStampLayoutBundle(eventsOrIds, area);
 }
 
-/**
- * Layout all stamps in stable order using studio-style best-candidate placement.
- */
 export function computeStampLayouts(
-    eventIds,
+    eventsOrIds,
     area = DEFAULT_STAMP_LAYOUT_AREA,
 ) {
-    return buildPassportStampLayoutBundle(eventIds, area).layouts;
+    return buildPassportStampLayoutBundle(eventsOrIds, area).layouts;
 }
 
-/** Single-stamp helper — pass full `eventIds` in display order when batching. */
 export function getStampLayout(
     eventId,
     slotIndex,
     totalCount = 6,
     area = DEFAULT_STAMP_LAYOUT_AREA,
     eventIdsInOrder,
+    ticketPriceUsd = 0,
 ) {
     const ids =
         eventIdsInOrder ??
         Array.from({ length: Math.max(1, totalCount) }, (_, i) => `__passport_slot_${i}`);
-    const map = computeStampLayouts(ids, area);
+    const events = ids.map((id) => ({
+        id,
+        ticketPriceUsd: id === eventId ? ticketPriceUsd : 0,
+    }));
+    const map = computeStampLayouts(events, area);
     const key = ids[slotIndex] ?? eventId;
     return (
         map.get(key) ??
         map.get(eventId) ??
-        computeStampLayouts([eventId], area).get(eventId)
+        computeStampLayouts([{ id: eventId, ticketPriceUsd }], area).get(eventId)
     );
 }
 
@@ -399,17 +490,90 @@ export function formatStampName(name) {
     return name.toUpperCase().slice(0, 11);
 }
 
+/** Two short lines for diamond-pass — keeps title inside the narrow center column. */
+export function splitDiamondPassTitleLines(name) {
+    const n = name.trim();
+    if (!n) return [''];
+    const space = n.indexOf(' ');
+    if (space > 0 && space <= 7) {
+        const second = n.slice(space + 1);
+        if (second.length <= 7) return [n.slice(0, space), second];
+    }
+    if (n.length <= 7) return [n];
+    const cut = Math.ceil(n.length / 2);
+    return [n.slice(0, cut), n.slice(cut)];
+}
+
+/** Standard stamp copy: date → name (optional split) → city → role. */
+export function buildStampFieldLines(date, name, city, role, splitName = false) {
+    const nameParts = splitName ? splitDiamondPassTitleLines(name) : [name];
+    return [
+        { text: date, size: STAMP_FONT.dateCompact },
+        ...nameParts.map((part) => ({ text: part, size: STAMP_FONT.nameCompact, bold: true })),
+        { text: city, size: STAMP_FONT.cityCompact },
+        { text: role, size: STAMP_FONT.cityCompact },
+    ];
+}
+
+export function stampFieldLineGap(lineCount, avail) {
+    return Math.min(11, avail / Math.max(1, lineCount));
+}
+
+/** Diamond-pass: event title centered at widest row (y=50); date above; city + role below. */
+export function layoutDiamondPassFields(date, name, city, role) {
+    const nameParts = splitDiamondPassTitleLines(name);
+    const nameLineGap = 8;
+    const blockGap = 10;
+    const nameBlockHeight = (nameParts.length - 1) * nameLineGap;
+    const firstNameY = 50 - nameBlockHeight / 2;
+
+    return [
+        { text: date, size: STAMP_FONT.dateCompact, y: firstNameY - blockGap },
+        ...nameParts.map((part, i) => ({
+            text: part,
+            size: STAMP_FONT.nameCompact,
+            bold: true,
+            y: firstNameY + i * nameLineGap,
+        })),
+        { text: city, size: STAMP_FONT.cityCompact, y: firstNameY + nameBlockHeight + blockGap },
+        { text: role, size: STAMP_FONT.cityCompact, y: firstNameY + nameBlockHeight + blockGap * 2 },
+    ];
+}
+
+/** Oval-entry: event name vertically centered (viewBox height 60 → y=30). */
+export function layoutOvalEntryFields(date, name, city, role) {
+    const nameY = 30;
+    const gap = OVAL_ENTRY_LINE_GAP;
+    return [
+        { text: date, size: STAMP_FONT.dateCompact, y: nameY - gap },
+        { text: name, size: STAMP_FONT.nameCompact, bold: true, y: nameY },
+        { text: city, size: STAMP_FONT.cityCompact, y: nameY + gap },
+        { text: role, size: STAMP_FONT.cityCompact, y: nameY + gap * 2 },
+    ];
+}
+
 export function formatStampDate(startDate) {
     try {
         const d = new Date(startDate);
         if (isNaN(d.getTime())) return '';
-        return d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase() + ' ' + d.getFullYear();
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+        return `${day} ${month}`;
     } catch { return ''; }
 }
 
 export function formatStampCity(location) {
     if (!location) return '';
     return String(location).split(',')[0].toUpperCase().slice(0, 10);
+}
+
+/** Short album role label for stamp face (OWNER, ADMIN, MEMBER, BOUNCER, …). */
+export function formatStampRole(albumRole) {
+    const role = String(albumRole || 'MEMBER').toUpperCase();
+    if (role === 'OWNER' || role === 'ADMIN' || role === 'MEMBER' || role === 'BOUNCER') {
+        return role;
+    }
+    return role.slice(0, 8);
 }
 
 export function getEventYear(startDate) {

@@ -126,6 +126,7 @@
   :root {
     --font-heading: "Stack Sans Notch", sans-serif;
     --font-body: "Cabin", sans-serif;
+    --font-passport-dotted: "Codystar", monospace;
     --text-primary: #f5f5f5;
     --text-secondary: #a0a0a0;
     --text-tertiary: #666666;

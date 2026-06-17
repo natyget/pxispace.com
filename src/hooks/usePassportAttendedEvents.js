@@ -1,8 +1,47 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { api } from '@/services/api';
 import { getUserTickets } from '@/services/tickets';
 import { getEventsForWallet, getMyEventXp, getUserEventXp } from '@/services/events';
+import { resolvePassportStampPriceUsd } from '@/utils/resolveTicketFacePrice';
+
+const EMPTY_EVENTS_PAGE = { events: [], pagination: { limit: 100, offset: 0, total: 0 } };
+
+async function fetchPassportEventsFromApi(userId) {
+    try {
+        const response = await api.get(`/api/users/${userId}/passport-events`);
+        return response.events ?? [];
+    } catch {
+        return null;
+    }
+}
+
+async function fetchPassportEventsLegacy(userId, mode) {
+    const xpPromise = mode === 'public' ? getUserEventXp(userId) : getMyEventXp();
+    const [tickets, eventsData, xpByEventId] = await Promise.all([
+        getUserTickets(userId),
+        getEventsForWallet(100, 0).catch(() => EMPTY_EVENTS_PAGE),
+        xpPromise,
+    ]);
+
+    return (tickets ?? []).flatMap((ticket) => {
+        const ev = (eventsData?.events ?? []).find((e) => e.id === ticket.eventId);
+        if (!ev) return [];
+        const albumRole = 'MEMBER';
+        return [
+            {
+                id: ev.id,
+                name: ev.name,
+                startDate: ev.startDate,
+                location: ev.location,
+                xp: xpByEventId?.[ev.id],
+                ticketPriceUsd: resolvePassportStampPriceUsd(ticket, ev, albumRole),
+                albumRole,
+            },
+        ];
+    });
+}
 
 /**
  * Attended events for passport stamps.
@@ -18,29 +57,21 @@ export function usePassportAttendedEvents(userId, mode = 'self') {
             return;
         }
         let cancelled = false;
-        const xpPromise = mode === 'public' ? getUserEventXp(userId) : getMyEventXp();
 
-        Promise.all([getUserTickets(userId), getEventsForWallet(100, 0), xpPromise])
-            .then(([tickets, eventsData, xpByEventId]) => {
+        (async () => {
+            try {
+                const fromApi = await fetchPassportEventsFromApi(userId);
                 if (cancelled) return;
-                const events = (tickets ?? []).flatMap((t) => {
-                    const ev = (eventsData?.events ?? []).find((e) => e.id === t.eventId);
-                    if (!ev) return [];
-                    return [
-                        {
-                            id: ev.id,
-                            name: ev.name,
-                            startDate: ev.startDate,
-                            location: ev.location,
-                            xp: xpByEventId?.[ev.id],
-                        },
-                    ];
-                });
-                setAttendedEvents(events);
-            })
-            .catch(() => {
+                if (fromApi) {
+                    setAttendedEvents(fromApi);
+                    return;
+                }
+                const legacy = await fetchPassportEventsLegacy(userId, mode);
+                if (!cancelled) setAttendedEvents(legacy);
+            } catch {
                 if (!cancelled) setAttendedEvents([]);
-            });
+            }
+        })();
 
         return () => {
             cancelled = true;

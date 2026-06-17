@@ -3,11 +3,12 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
 import {
     computePassportStampBundle,
-    getStampShape,
+    getStampTypeForEvent,
     getStampColor,
     formatStampName,
     formatStampDate,
     formatStampCity,
+    formatStampRole,
     DEFAULT_STAMP_LAYOUT_AREA,
     MAX_VISIBLE_PASSPORT_STAMPS,
 } from '@/utils/stampLayout';
@@ -66,14 +67,9 @@ export function PassportStampsLayer({
 
     const stampOverflowCount = Math.max(0, events.length - visibleStamps.length);
 
-    const visibleStampIds = useMemo(
-        () => visibleStamps.map((e) => e.id),
-        [visibleStamps],
-    );
-
     const { layouts: stampLayoutsByEventId, shapes: stampShapesByEventId } = useMemo(
-        () => computePassportStampBundle(visibleStampIds, stampLayoutArea),
-        [visibleStampIds, stampLayoutArea],
+        () => computePassportStampBundle(visibleStamps, stampLayoutArea),
+        [visibleStamps, stampLayoutArea],
     );
 
     return (
@@ -102,7 +98,9 @@ export function PassportStampsLayer({
             )}
 
             {visibleStamps.map((event, index) => {
-                const shape = stampShapesByEventId.get(event.id) ?? getStampShape(event.id);
+                const shape =
+                    stampShapesByEventId.get(event.id) ??
+                    getStampTypeForEvent(event.ticketPriceUsd ?? 0, event.albumRole);
                 const layout = stampLayoutsByEventId.get(event.id);
                 if (!layout) return null;
                 const color = getStampColor(event.xp);
@@ -119,6 +117,7 @@ export function PassportStampsLayer({
                             transform: `rotate(${layout.rotation}deg)`,
                             zIndex: index + 1,
                             pointerEvents: 'none',
+                            filter: `drop-shadow(0 0 6px ${color})`,
                         }}
                     >
                         <StampShapeGraphic
@@ -127,6 +126,7 @@ export function PassportStampsLayer({
                             name={formatStampName(event.name)}
                             date={formatStampDate(event.startDate)}
                             city={formatStampCity(event.location)}
+                            role={formatStampRole(event.albumRole)}
                         />
                     </div>
                 );

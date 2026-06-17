@@ -20,12 +20,13 @@ export const PASSPORT_ID_OVERLAY_CLASS =
 /**
  * Two-panel passport card: map/stamps top + info bottom, no gap between backgrounds.
  * Grey border + soft diffusion shadow (no white outline).
+ * Overlay renders outside the clipped inner stack so season label can sit on the left edge.
  */
 export function PassportCardShell({ top, bottom, overlay, className = '' }) {
     return (
         <div
             className={[
-                'relative flex h-[558px] w-[min(95vw,361px)] min-w-0 flex-col overflow-hidden rounded-[8px]',
+                'relative flex h-[558px] w-[min(95vw,361px)] min-w-0 flex-col overflow-visible rounded-[8px]',
                 'border border-zinc-500/25',
                 'shadow-[0_10px_36px_rgba(0,0,0,0.72),0_0_32px_rgba(120,120,120,0.14)]',
                 className,
@@ -34,15 +35,17 @@ export function PassportCardShell({ top, bottom, overlay, className = '' }) {
                 .join(' ')}
             style={{ backgroundColor: PASSPORT_INFO_PANEL_BG }}
         >
-            <div className="relative min-h-0 flex-1 overflow-hidden bg-[#0a0a0a]">{top}</div>
-            <div
-                className="relative min-h-0 flex-1 overflow-hidden"
-                style={{ backgroundColor: PASSPORT_INFO_PANEL_BG }}
-            >
-                {bottom}
+            <div className="absolute inset-0 flex flex-col overflow-hidden rounded-[8px]">
+                <div className="relative min-h-0 flex-1 overflow-hidden bg-[#0a0a0a]">{top}</div>
+                <div
+                    className="relative min-h-0 flex-1 overflow-hidden"
+                    style={{ backgroundColor: PASSPORT_INFO_PANEL_BG }}
+                >
+                    {bottom}
+                </div>
+                <PassportCreaseOverlay />
             </div>
             {overlay}
-            <PassportCreaseOverlay />
         </div>
     );
 }
