@@ -2,7 +2,7 @@
 
 import { useId, useMemo } from 'react';
 import Image from 'next/image';
-import { getPassportLevelDisplay, getOdysseyTierFromXp } from '@/utils/odysseyTier';
+import { getPassportLevelDisplay, getOdysseyTierFromXp, getPassportLevelBadgeTheme } from '@/utils/odysseyTier';
 import { getLevelProgress, ODYSSEY_TIER_BANDS } from '@/components/passport/passportVisualParts';
 import { PassportMrzFooter } from '@/components/passport/PassportMrzFooter';
 import { PassportStampsLayer } from '@/components/passport/PassportStampsLayer';
@@ -81,6 +81,7 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
 
     const { levelText, badgeLetter } = getPassportLevelDisplay(user);
     const tierId = getOdysseyTierFromXp(user?.odysseyXp).id;
+    const badgeTheme = getPassportLevelBadgeTheme(tierId);
     const levelProgress = getLevelProgress(user?.odysseyXp);
 
     const odessaVsNext = useMemo(() => {
@@ -163,10 +164,16 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
                                 <p className="mb-[3px] text-[9px] font-semibold uppercase leading-[12px] text-white/80">
                                     LEVEL {levelText}
                                 </p>
-                                <div className="h-[4px] w-full overflow-hidden rounded-full bg-[rgba(176,38,255,0.22)]">
+                                <div
+                                    className="h-[4px] w-full overflow-hidden rounded-full"
+                                    style={{ backgroundColor: badgeTheme.progressTrack }}
+                                >
                                     <div
-                                        className="h-full rounded-full bg-pxi-purple"
-                                        style={{ width: `${levelProgress * 100}%` }}
+                                        className="h-full rounded-full"
+                                        style={{
+                                            width: `${levelProgress * 100}%`,
+                                            backgroundColor: badgeTheme.progressFill,
+                                        }}
                                     />
                                 </div>
                             </div>

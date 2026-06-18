@@ -3,15 +3,18 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowLeftIcon, ArrowUpRightIcon, Loading02Icon, PlayIcon, ScanIcon, SmartPhone01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
+import { ArrowLeftIcon, ArrowUpRightIcon, Loading02Icon, ScanIcon, SmartPhone01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { eventsService } from '@/services/events';
+import { api } from '@/services/api';
 import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 import AppOpenBanner from '@/components/links/AppOpenBanner';
 import UserAvatar from '@/components/ui/UserAvatar';
+import { PxiPassportCard } from '@/components/passport/PxiPassportCard';
+import { usePassportAttendedEvents } from '@/hooks/usePassportAttendedEvents';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { singleEventMapEmbedSrc } from '@/lib/eventMapEmbed';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -19,6 +22,9 @@ import { buildEventJsonLd } from '@/lib/seo/schemas';
 import { getSiteUrl } from '@/lib/siteUrl';
 
 const ACCENT = '#c44d54';
+const NAVBAR_TOP = 'top-[var(--public-navbar-height)]';
+/** Mobile: edge-to-edge under navbar; desktop: offset below fixed header */
+const DESKTOP_NAVBAR_OFFSET = 'md:pt-[var(--public-navbar-height)]';
 const SECTION_EMPTY = 'Empty yet';
 const SECTION_NONE = 'None';
 
@@ -104,70 +110,27 @@ function SectionDivider() {
   return <div className="h-px w-full bg-white/15" />;
 }
 
-/** Public display — mirrors dashboard passport number shape (host user id). */
-function formatHostPassportNo(userId) {
-  if (!userId) return null;
-  const raw = String(userId).replace(/-/g, '').toUpperCase();
-  if (raw.length < 4) return null;
-  return `P${raw.slice(0, 7)}XI`;
-}
+function EventHostPassport({ user }) {
+  const attendedEvents = usePassportAttendedEvents(user?.id, 'public');
 
-/** Age from ISO birthdate; null if missing or invalid. */
-function ageFromBirthdate(birthdate) {
-  if (!birthdate) return null;
-  const d = new Date(birthdate);
-  if (Number.isNaN(d.getTime())) return null;
-  const today = new Date();
-  let age = today.getFullYear() - d.getFullYear();
-  const m = today.getMonth() - d.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age -= 1;
-  if (age < 0 || age > 120) return null;
-  return String(age);
-}
-
-function formatMrzIssuedDate(d = new Date()) {
-  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-  const day = String(d.getUTCDate()).padStart(2, '0');
-  return `${day}${months[d.getUTCMonth()]}${String(d.getUTCFullYear()).slice(-2)}`;
-}
-
-function mrzToken(s) {
-  return String(s || '')
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, '')
-    .slice(0, 18);
-}
-
-function padMrzSegment(prefix, len = 44) {
-  const p = String(prefix);
-  if (p.length >= len) return p.slice(0, len);
-  return `${p}${'<'.repeat(len - p.length)}`;
-}
-
-/** Machine-readable zone style footer from host + passport number (decorative). */
-function buildHostMrzLines(host, passportNo) {
-  const name = host?.name || host?.username || 'HOST';
-  const parts = String(name).trim().split(/\s+/);
-  const first = mrzToken(parts[0] || 'X');
-  const last = parts.length > 1 ? mrzToken(parts.slice(1).join('')) : first;
-  const cityOrUser = mrzToken(host?.city || host?.username || 'X');
-  const line1 = padMrzSegment(`PXI<${last}<<${first}<${cityOrUser}<`);
-  const issued = formatMrzIssuedDate();
-  const pp = mrzToken((passportNo || 'PXXXXXXXI').replace(/[^A-Z0-9]/g, ''));
-  const line2 = padMrzSegment(`ISSUED${issued}<${pp}<PXISPACE<`);
-  return { line1, line2 };
+  return (
+    <div className="mx-auto w-full max-w-[min(95vw,361px)]">
+      <PxiPassportCard user={user} attendedEvents={attendedEvents} />
+    </div>
+  );
 }
 
 export default function EventDetailClient() {
   const { id } = useParams();
   const router = useRouter();
-  const hostPassportChipFilterId = useId().replace(/:/g, '');
   const [apiEvent, setApiEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [guestlistOpen, setGuestlistOpen] = useState(false);
   const [participants, setParticipants] = useState([]);
   const [participantsLoading, setParticipantsLoading] = useState(false);
   const [participantsLoaded, setParticipantsLoaded] = useState(false);
+  const [hostProfile, setHostProfile] = useState(null);
+  const [hostProfileLoading, setHostProfileLoading] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -184,27 +147,38 @@ export default function EventDetailClient() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  useEffect(() => {
+    const hostId = apiEvent?.host?.id;
+    if (!hostId) {
+      setHostProfile(null);
+      setHostProfileLoading(false);
+      return;
+    }
+    setHostProfileLoading(true);
+    api
+      .get(`/api/users/public-profile/${encodeURIComponent(hostId)}`)
+      .then((data) => setHostProfile(data?.user ?? null))
+      .catch(() => setHostProfile(null))
+      .finally(() => setHostProfileLoading(false));
+  }, [apiEvent?.host?.id]);
+
   const heroImage = useMemo(() => displayImageSrc(apiEvent?.coverImage, null), [apiEvent]);
+  const hostPassportUser = useMemo(() => {
+    if (!apiEvent?.host) return null;
+    if (hostProfile?.isPassportIssued) {
+      return {
+        ...apiEvent.host,
+        ...hostProfile,
+        avatarUrl: hostProfile.avatarUrl ?? apiEvent.host.avatarUrl,
+      };
+    }
+    return null;
+  }, [apiEvent?.host, hostProfile]);
   const hasHost = !!(apiEvent?.host && (apiEvent.host.name || apiEvent.host.username));
   const organizerName = hasHost ? (apiEvent.host.name || apiEvent.host.username) : '';
   const hostPxiHandle = apiEvent?.host?.username
     ? String(apiEvent.host.username).replace(/^@/, '')
     : null;
-  const hostPassportNo = formatHostPassportNo(apiEvent?.host?.id);
-  const hostAge =
-    typeof apiEvent?.host?.age === 'number' && !Number.isNaN(apiEvent.host.age)
-      ? apiEvent.host.age
-      : null;
-  const hostInstaLabel = apiEvent?.host?.instagramHandle
-    ? `@${String(apiEvent.host.instagramHandle).replace(/^@/, '')}`
-    : hostPxiHandle
-      ? `@${hostPxiHandle}`
-      : '—';
-  const hostMrz = useMemo(
-    () => (apiEvent?.host ? buildHostMrzLines(apiEvent.host, hostPassportNo) : { line1: '', line2: '' }),
-    [apiEvent?.host, hostPassportNo]
-  );
-
   const eventTitle = apiEvent?.name || 'Event';
   const rawLocation = typeof apiEvent?.location === 'string' ? apiEvent.location.trim() : '';
   const locationLabel = rawLocation || SECTION_EMPTY;
@@ -296,7 +270,7 @@ export default function EventDetailClient() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] pt-24 text-zinc-300 md:pt-28">
+      <div className={`flex min-h-screen items-center justify-center bg-[#0a0a0a] ${DESKTOP_NAVBAR_OFFSET} text-zinc-300`}>
         <HugeiconsIcon icon={Loading02Icon} className="size-6 animate-spin" />
       </div>
     );
@@ -304,7 +278,7 @@ export default function EventDetailClient() {
 
   if (!apiEvent) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-[#0a0a0a] px-4 pt-24 text-center text-white md:pt-28">
+      <div className={`flex min-h-[60vh] flex-col items-center justify-center bg-[#0a0a0a] px-4 ${DESKTOP_NAVBAR_OFFSET} text-center text-white`}>
         <p className="text-lg font-semibold">Event not found</p>
         <p className="mt-2 max-w-sm text-sm text-zinc-500">
           This link may be invalid or the event was removed.
@@ -319,9 +293,9 @@ export default function EventDetailClient() {
   const isPublicEvent = apiEvent.visibility !== 'PRIVATE';
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] pt-24 font-sans text-white antialiased md:pt-28">
+    <div className={`min-h-screen bg-[#0a0a0a] font-sans text-white antialiased ${DESKTOP_NAVBAR_OFFSET}`}>
       {isPublicEvent ? <JsonLd data={buildEventJsonLd(apiEvent, getSiteUrl())} /> : null}
-      <div className="fixed left-3 top-24 z-50 md:top-28">
+      <div className={`fixed left-3 z-50 ${NAVBAR_TOP}`}>
         <Link
           href="/events"
           className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/70 px-3 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md hover:bg-white/10 hover:text-white"
@@ -354,34 +328,21 @@ export default function EventDetailClient() {
         </div>
 
         <div className="relative z-10">
-          <main className="mx-auto mt-2 flex w-full max-w-5xl flex-col px-3 pb-40 sm:px-6 md:mt-4 md:grid md:pb-32 md:grid-cols-[minmax(0,1fr)_auto] md:gap-8 2xl:max-w-6xl 2xl:gap-12">
+          <main className="mx-auto flex w-full max-w-5xl flex-col px-3 pb-40 sm:px-6 md:mt-4 md:grid md:pb-32 md:grid-cols-[minmax(0,1fr)_auto] md:gap-8 2xl:max-w-6xl 2xl:gap-12">
             <div className="order-1 flex flex-col md:order-2 md:w-[330px] lg:w-[375px] 2xl:w-[400px]">
-              <div className="relative top-0 mx-auto h-auto w-full max-w-[400px] md:sticky md:top-28">
-                <div className="relative px-6 pb-6 md:px-0 md:pb-0">
-                  <div className="relative w-full" style={{ paddingBottom: '125%' }}>
-                    <div className="absolute inset-0 overflow-hidden rounded-xl bg-zinc-900">
-                      <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
-                        {heroImage ? (
-                          <Image
-                            alt={`${eventTitle} flyer`}
-                            width={512}
-                            height={640}
-                            unoptimized
-                            className="h-full max-h-full w-full max-w-full object-cover transition-opacity duration-300"
-                            src={heroImage}
-                          />
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-6 left-6 right-6 flex justify-end md:bottom-0 md:left-0 md:right-0">
-                    <button
-                      type="button"
-                      className="m-2 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white shadow backdrop-blur-md transition hover:bg-black/70"
-                      aria-label="Play"
-                    >
-                      <HugeiconsIcon icon={PlayIcon} className="size-4" strokeWidth={2} />
-                    </button>
+              <div className={`relative top-0 mx-auto h-auto w-full md:sticky ${NAVBAR_TOP} md:max-w-[400px]`}>
+                <div className="relative -mx-3 w-[calc(100%+1.5rem)] sm:-mx-6 sm:w-[calc(100%+3rem)] md:mx-0 md:w-full">
+                  <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-900 md:rounded-xl">
+                    {heroImage ? (
+                      <Image
+                        alt={`${eventTitle} flyer`}
+                        fill
+                        unoptimized
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        className="object-cover transition-opacity duration-300"
+                        src={heroImage}
+                      />
+                    ) : null}
                   </div>
                 </div>
 
@@ -400,7 +361,7 @@ export default function EventDetailClient() {
             </div>
 
             <div className="order-2 mb-0 mt-4 flex flex-col gap-4 border-t border-white/15 pt-2 md:order-1 md:mt-2 md:pt-0">
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 pt-12 md:pt-0">
                 <h2 className="text-base font-semibold tracking-tight text-white">Organizer</h2>
                 {hasHost ? (
                   <div className="flex items-start justify-between gap-3">
@@ -594,164 +555,27 @@ export default function EventDetailClient() {
                 <SectionDivider />
                 <h2 className="text-base font-semibold tracking-tight text-white">Hosted by</h2>
                 {hasHost ? (
-                  <div className="overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-black/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl">
-                    {/* Outer padding: passport face stays a fixed size; frame grows with padding only. */}
-                    <div className="flex justify-center px-5 py-6 sm:px-10 sm:py-8">
-                      <div className="w-full max-w-[380px] shrink-0 overflow-hidden rounded-lg border border-white/15 bg-gradient-to-b from-white/[0.06] to-black/35 px-3 py-3 sm:px-4 sm:py-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1 pr-1">
-                          <h2 className="text-[14px] font-bold uppercase tracking-[0.16em] text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">
-                            PXI PASSPORT
-                          </h2>
-                          <div className="mt-1 h-[6px] border-t-[6px] border-white" />
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <p className="text-[9px] uppercase text-white/70">PXI Passport No.</p>
-                          {hostPassportNo ? (
-                            <p className="text-[11px] uppercase text-white/90">{hostPassportNo}</p>
-                          ) : (
-                            <p className="text-[11px] uppercase text-white/50">—</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Col 3 = Diplomat / Insta / bio; LEVEL shares this column (x). Row uses items-center so y matches PASSPORT line. */}
-                      <div className="mt-1.5 grid grid-cols-[88px_minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-2.5 sm:grid-cols-[100px_minmax(0,1fr)_minmax(0,1fr)] sm:gap-x-3">
-                        <div className="col-span-2 flex min-w-0 items-center gap-1">
-                          <svg
-                            width="41"
-                            height="34"
-                            viewBox="0 0 41 34"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-[22px] w-[38px] shrink-0 sm:h-[24px] sm:w-[40px]"
-                            aria-hidden
-                          >
-                            <g filter={`url(#${hostPassportChipFilterId})`}>
-                              <path d="M12 11H29V21H12V11Z" fill="#BB17E8" />
-                              <path
-                                fillRule="evenodd"
-                                clipRule="evenodd"
-                                d="M20.5 13C21.9864 13 23.2194 14.0812 23.4575 15.5H29V16.5H23.4575C23.2194 17.9188 21.9864 19 20.5 19C19.0136 19 17.7806 17.9188 17.5425 16.5H12V15.5H17.5425C17.7806 14.0812 19.0136 13 20.5 13ZM20.5 14C19.3954 14 18.5 14.8954 18.5 16C18.5 17.1046 19.3954 18 20.5 18C21.6046 18 22.5 17.1046 22.5 16C22.5 14.8954 21.6046 14 20.5 14Z"
-                                fill="#0C0C0C"
-                              />
-                            </g>
-                            <defs>
-                              <filter
-                                id={hostPassportChipFilterId}
-                                x="0"
-                                y="0"
-                                width="41"
-                                height="34"
-                                filterUnits="userSpaceOnUse"
-                                colorInterpolationFilters="sRGB"
-                              >
-                                <feFlood floodOpacity="0" result="BackgroundImageFix" />
-                                <feColorMatrix
-                                  in="SourceAlpha"
-                                  type="matrix"
-                                  values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                                  result="hardAlpha"
-                                />
-                                <feOffset dy="1" />
-                                <feGaussianBlur stdDeviation="6" />
-                                <feComposite in2="hardAlpha" operator="out" />
-                                <feColorMatrix
-                                  type="matrix"
-                                  values="0 0 0 0 0.733333 0 0 0 0 0.0901961 0 0 0 0 0.909804 0 0 0 1 0"
-                                />
-                                <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_vector" />
-                                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_vector" result="shape" />
-                              </filter>
-                            </defs>
-                          </svg>
-                          <span className="whitespace-nowrap text-[7px] font-semibold uppercase tracking-[0.03em] text-white sm:text-[8px]">
-                            PASSPORT • PASS • PASAPORTE
-                          </span>
-                        </div>
-                        <div className="flex min-w-0 flex-col items-start justify-center">
-                          <p className="text-[9px] font-semibold uppercase leading-none text-white/80">LEVEL Wanderer</p>
-                          <div className="mt-1 h-1 w-[72px] overflow-hidden rounded-full bg-[rgba(176,38,255,0.22)] sm:w-[80px]">
-                            <div className="h-full w-[8%] rounded-full bg-pxi-purple" />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-1 grid grid-cols-[88px_minmax(0,1fr)_minmax(0,1fr)] items-start gap-x-2.5 sm:grid-cols-[100px_minmax(0,1fr)_minmax(0,1fr)] sm:gap-x-3">
-                        <div className="relative h-[118px] w-full max-w-[88px] overflow-hidden rounded-[6px] shadow-[0_1px_24px_2px_rgba(255,255,255,0.3)] sm:h-[128px] sm:max-w-[100px]">
-                          <UserAvatar
-                            user={{ avatarUrl: apiEvent?.host?.avatarUrl }}
-                            size={130}
-                            rounded="md"
-                            alt={organizerName}
-                            className="!h-full !w-full"
-                          />
-                        </div>
-                        <div className="flex min-h-0 min-w-0 flex-col gap-1.5 pl-1 pr-1 sm:pl-2 sm:pr-2">
-                          <div>
-                            <p className="text-[9px] font-medium uppercase text-white/70">Full name</p>
-                            <p className="text-[11px] font-semibold uppercase leading-snug text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)] sm:text-[12px]">
-                              {String(organizerName).toUpperCase()}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] font-medium uppercase text-white/70">username</p>
-                            <p className="truncate text-[11px] text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)] sm:text-[12px]">
-                              {hostPxiHandle || '—'}
-                            </p>
-                          </div>
-                          <p className="text-[11px] text-white/90 sm:text-[12px]">
-                            Age {hostAge ?? '—'}
-                          </p>
-                          <div>
-                            <p className="text-[9px] font-medium uppercase text-white/70">City</p>
-                            <p className="line-clamp-2 text-[11px] text-white/90 sm:text-[12px]">
-                              {apiEvent.host.city?.trim() || '—'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex min-h-0 min-w-0 flex-col gap-2">
-                          <div className="shrink-0">
-                            <div className="flex items-end">
-                              <span className="text-[28px] font-extrabold leading-[30px] text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.35)] sm:text-[36px] sm:leading-9">
-                                D
-                              </span>
-                              <span className="mb-0.5 ml-0.5 text-[11px] font-semibold capitalize text-white sm:text-[13px]">
-                                iplomat
-                              </span>
-                            </div>
-                          </div>
-                          <p className="truncate text-[11px] text-white/90 sm:text-[12px]" title={hostInstaLabel}>
-                            Insta {hostInstaLabel}
-                          </p>
-                          <div className="min-h-0 flex-1">
-                            <p className="text-[9px] font-medium uppercase text-white/70">Bio</p>
-                            <p className="line-clamp-3 text-[11px] leading-snug text-white/90 sm:text-[12px]">
-                              {apiEvent.host.bio?.trim() || '—'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 h-[2px] w-full bg-white/40 sm:mt-3" />
-                      <div className="pt-1.5 font-mono text-[10px] uppercase leading-4 tracking-[0.12em] text-white/70 sm:pt-2 sm:text-[11px]">
-                        <p className="truncate">{hostMrz.line1}</p>
-                        <p className="truncate">{hostMrz.line2}</p>
-                      </div>
-                    </div>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-1 border-t border-white/10 px-5 py-5">
-                      <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-white/85">
-                        <span>
-                          {hostEventsCreated} {hostEventsCreated === 1 ? 'event' : 'events'} created
-                        </span>
-                        <span className="hidden h-4 w-px bg-zinc-600 sm:block" aria-hidden />
-                        <span>
-                          {hostMembersJoinedAcrossEvents}{' '}
-                          {hostMembersJoinedAcrossEvents === 1 ? 'member' : 'members'} joined
-                        </span>
-                      </div>
+                  <div className="flex flex-col gap-6">
+                    {hostProfileLoading ? (
+                      <p className="text-sm text-zinc-500">Loading passport…</p>
+                    ) : hostPassportUser ? (
+                      <EventHostPassport user={hostPassportUser} />
+                    ) : (
+                      <p className="text-sm text-zinc-500">
+                        {hostProfile?.isPrivateAccount
+                          ? 'This host’s passport is private.'
+                          : 'This host has not published their PXI Passport on the web yet.'}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4 text-sm text-white/85">
+                      <span>
+                        {hostEventsCreated} {hostEventsCreated === 1 ? 'event' : 'events'} created
+                      </span>
+                      <span className="hidden h-4 w-px bg-zinc-600 sm:block" aria-hidden />
+                      <span>
+                        {hostMembersJoinedAcrossEvents}{' '}
+                        {hostMembersJoinedAcrossEvents === 1 ? 'member' : 'members'} joined
+                      </span>
                     </div>
                   </div>
                 ) : (

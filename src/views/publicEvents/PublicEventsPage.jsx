@@ -438,6 +438,21 @@ export default function PublicEventsPage() {
             <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/45 to-black" />
           </div>
         ) : null}
+        {heroEvents.length > 0 ? (
+          <div className="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center gap-2">
+            {heroEvents.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setHeroIndex(i)}
+                className={`pointer-events-auto h-2 w-2 rounded-full transition-colors ${
+                  i === heroIndex ? 'bg-white' : 'bg-neutral-700 hover:bg-neutral-500'
+                }`}
+                aria-label={`Go to event ${i + 1}`}
+              />
+            ))}
+          </div>
+        ) : null}
         <div className="relative z-10 mx-auto grid max-w-[1440px] grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center">
           <div className="relative order-2 lg:order-1 flex justify-center [perspective:1000px]">
             {featured ? (
@@ -453,7 +468,7 @@ export default function PublicEventsPage() {
 
           <div className="order-1 lg:order-2 space-y-6">
             <div className="space-y-2">
-              <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tight">
+              <h1 className="text-3xl md:text-7xl font-bold leading-tight tracking-tight">
                 {featured?.title || (loading ? 'Loading…' : 'No events')}
               </h1>
               <p className="text-xl text-neutral-400 font-medium">
@@ -466,22 +481,6 @@ export default function PublicEventsPage() {
             >
               Open event
             </Link>
-
-            <div className="flex gap-2 pt-8">
-              {heroEvents.length > 0
-                ? heroEvents.map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setHeroIndex(i)}
-                      className={`h-2 w-2 rounded-full transition-colors ${
-                        i === heroIndex ? 'bg-white' : 'bg-neutral-700 hover:bg-neutral-500'
-                      }`}
-                      aria-label={`Go to event ${i + 1}`}
-                    />
-                  ))
-                : null}
-            </div>
           </div>
         </div>
       </section>
