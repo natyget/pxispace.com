@@ -126,6 +126,7 @@
   :root {
     --font-heading: "Stack Sans Notch", sans-serif;
     --font-body: "Cabin", sans-serif;
+    --font-passport-dotted: "Codystar", monospace;
     --text-primary: #f5f5f5;
     --text-secondary: #a0a0a0;
     --text-tertiary: #666666;
@@ -148,6 +149,14 @@
     --pxi-dark: #050505;
     --pxi-charcoal: #121212;
     --pxi-violet: #2d1b4e;
+    /* Fixed public Navbar: mobile py-4 + 30px row; md py-5 + 40px row */
+    --public-navbar-height: 62px;
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --public-navbar-height: 80px;
+    }
   }
 
   html {

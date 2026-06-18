@@ -1,6 +1,7 @@
 // Shared SVG + helpers for dashboard Passport and public profile preview.
 // Passport stamps: use PassportStampsLayer only (not inline stamp logic).
 
+export { PassportDottedText } from './PassportDottedText';
 export { getEventYear } from '@/utils/stampLayout';
 export { StampShapeGraphic } from './StampShapeGraphic';
 export { PassportStampsLayer } from './PassportStampsLayer';
@@ -70,7 +71,14 @@ export function getLevelProgress(odysseyXp) {
     return Math.max(0.08, withinTier);
 }
 
-export function HeaderPolygonBadge({ letter, progress }) {
+export function HeaderPolygonBadge({
+    letter,
+    progress,
+    hexFill = '#7F1B99',
+    hexStroke = 'rgba(176,38,255,0.9)',
+    ringMuted = 'rgba(176,38,255,0.22)',
+    ringBright = 'rgba(176,38,255,0.9)',
+}) {
     const size = 64;
     const stroke = 6;
     const center = size / 2;
@@ -91,7 +99,7 @@ export function HeaderPolygonBadge({ letter, progress }) {
                     cx={center}
                     cy={center}
                     r={radius}
-                    stroke="rgba(176,38,255,0.5)"
+                    stroke={ringMuted}
                     strokeWidth={stroke}
                     fill="none"
                 />
@@ -99,7 +107,7 @@ export function HeaderPolygonBadge({ letter, progress }) {
                     cx={center}
                     cy={center}
                     r={radius}
-                    stroke="#C85AFF"
+                    stroke={ringBright}
                     strokeWidth={stroke}
                     fill="none"
                     strokeLinecap="round"
@@ -118,11 +126,11 @@ export function HeaderPolygonBadge({ letter, progress }) {
             >
                 <path
                     d="M39.8184 19.6525C40.9842 18.9794 41.5671 18.6429 42.1868 18.5111C42.7351 18.3946 43.3018 18.3946 43.8501 18.5111C44.4698 18.6429 45.0527 18.9794 46.2184 19.6525L58.005 26.4574C59.1707 27.1305 59.7536 27.467 60.1775 27.9378C60.5526 28.3544 60.836 28.8451 61.0092 29.3783C61.205 29.9808 61.205 30.6539 61.205 32V45.6099C61.205 46.956 61.205 47.6291 61.0092 48.2316C60.836 48.7647 60.5526 49.2555 60.1775 49.6721C59.7536 50.1429 59.1707 50.4794 58.005 51.1525L46.2184 57.9574C45.0527 58.6305 44.4698 58.967 43.8501 59.0987C43.3018 59.2153 42.7351 59.2153 42.1868 59.0987C41.5671 58.967 40.9842 58.6305 39.8184 57.9574L28.0319 51.1525C26.8661 50.4794 26.2832 50.1429 25.8593 49.6721C25.4842 49.2555 25.2009 48.7647 25.0277 48.2316C24.8319 47.6291 24.8319 46.956 24.8319 45.6099V32C24.8319 30.6539 24.8319 29.9808 25.0277 29.3783C25.2009 28.8451 25.4842 28.3544 25.8593 27.9378C26.2832 27.467 26.8661 27.1305 28.0319 26.4574L39.8184 19.6525Z"
-                    fill="#7F1B99"
+                    fill={hexFill}
                 />
                 <path
                     d="M39.8184 19.6525C40.9842 18.9794 41.5671 18.6429 42.1868 18.5111C42.7351 18.3946 43.3018 18.3946 43.8501 18.5111C44.4698 18.6429 45.0527 18.9794 46.2184 19.6525L58.005 26.4574C59.1707 27.1305 59.7536 27.467 60.1775 27.9378C60.5526 28.3544 60.836 28.8451 61.0092 29.3783C61.205 29.9808 61.205 30.6539 61.205 32V45.6099C61.205 46.956 61.205 47.6291 61.0092 48.2316C60.836 48.7647 60.5526 49.2555 60.1775 49.6721C59.7536 50.1429 59.1707 50.4794 58.005 51.1525L46.2184 57.9574C45.0527 58.6305 44.4698 58.967 43.8501 59.0987C43.3018 59.2153 42.7351 59.2153 42.1868 59.0987C41.5671 58.967 40.9842 58.6305 39.8184 57.9574L28.0319 51.1525C26.8661 50.4794 26.2832 50.1429 25.8593 49.6721C25.4842 49.2555 25.2009 48.7647 25.0277 48.2316C24.8319 47.6291 24.8319 46.956 24.8319 45.6099V32C24.8319 30.6539 24.8319 29.9808 25.0277 29.3783C25.2009 28.8451 25.4842 28.3544 25.8593 27.9378C26.2832 27.467 26.8661 27.1305 28.0319 26.4574L39.8184 19.6525Z"
-                    stroke="rgba(176,38,255,0.9)"
+                    stroke={hexStroke}
                     strokeWidth="5"
                 />
             </svg>

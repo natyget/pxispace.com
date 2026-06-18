@@ -1,4 +1,4 @@
-/** Match mobile `ScrapbookPost.tsx` thread sizing heuristics. */
+/** Match mobile `AlbumThreadMediaCard.tsx` thread sizing heuristics. */
 
 import {
   IPHONE_VIEWPORT_WIDTH,
@@ -48,7 +48,7 @@ export function threadMediaBox(width, height, metrics) {
   const H_MAX = metrics.threadInnerMaxH;
   if (!width || !height) {
     const w = Math.max(1, W_MAX);
-    const h = Math.max(1, Math.min(H_MAX, Math.round((w * 9) / 16)));
+    const h = Math.max(1, Math.min(H_MAX, Math.round((w * 4) / 3)));
     return boxWithBorder(w, h);
   }
   const scale = Math.min(W_MAX / width, H_MAX / height);
@@ -66,12 +66,13 @@ function boxWithBorder(width, height) {
   };
 }
 
-export function resolveIntrinsicSize(item, { canonicalImage = false } = {}) {
+export function resolveIntrinsicSize(item, { canonicalImage = false, forThread = false } = {}) {
+  const isVideo = String(item?.type || '').toUpperCase() === 'VIDEO';
   const mw = item?.metadata?.width;
   const mh = item?.metadata?.height;
   if (typeof mw === 'number' && typeof mh === 'number' && mw > 0 && mh > 0) {
     const px = { width: mw, height: mh };
-    if (canonicalImage && String(item?.type || '').toUpperCase() !== 'VIDEO') {
+    if (forThread || (canonicalImage && !isVideo)) {
       return snapToCanonical(px.width, px.height);
     }
     return px;
@@ -81,7 +82,11 @@ export function resolveIntrinsicSize(item, { canonicalImage = false } = {}) {
   if (ar === '4:3') return { ...INTRINSIC_MEDIA_4_3 };
   if (typeof ar === 'string' && ar.includes(':')) {
     const [a, b] = ar.split(':').map(Number);
-    if (a > 0 && b > 0) return { width: a * 100, height: b * 100 };
+    if (a > 0 && b > 0) {
+      const px = { width: a * 100, height: b * 100 };
+      if (forThread) return snapToCanonical(px.width, px.height);
+      return px;
+    }
   }
-  return { width: 3, height: 4 };
+  return { ...INTRINSIC_MEDIA_3_4 };
 }

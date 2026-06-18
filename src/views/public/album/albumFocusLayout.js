@@ -4,11 +4,12 @@ import { IPHONE_VIEWPORT_HEIGHT, IPHONE_VIEWPORT_WIDTH } from './albumLayoutCons
 import { resolveIntrinsicSize } from './albumMediaLayout';
 
 export const FOCUS_MODAL_WIDTH = IPHONE_VIEWPORT_WIDTH;
-/** ~78% of iPhone logical height — matches mobile sheet proportion. */
-export const FOCUS_MODAL_HEIGHT = Math.round(IPHONE_VIEWPORT_HEIGHT * 0.78);
+/** ~86% of iPhone logical height — matches mobile `SHEET_HEIGHT_RATIO`. */
+export const FOCUS_MODAL_HEIGHT = Math.round(IPHONE_VIEWPORT_HEIGHT * 0.86);
 export const FOCUS_MODAL_RADIUS_PX = 26;
 export const FOCUS_MODAL_COMMENTS_HEIGHT = 140;
 export const FOCUS_MODAL_CTA_HEIGHT = 72;
+export const FOCUS_HEADER_ROW_H = 64;
 export const FOCUS_SHEET_MEDIA_BORDER_PX = 7;
 export const FOCUS_MEDIA_ZONE_PADDING_Y = 12;
 
@@ -44,15 +45,13 @@ export function getFocusModalLayout(item) {
     commentsSectionHeight -
     FOCUS_MODAL_CTA_HEIGHT -
     2 * FOCUS_MEDIA_ZONE_PADDING_Y -
-    36; /* modal header row */
-  const maxMediaHeight = Math.min(Math.max(160, focusMediaColumnBudget * 0.96), 400);
-  const maxMediaWidth = FOCUS_MODAL_WIDTH - 32;
+    FOCUS_HEADER_ROW_H;
+  const maxMediaHeight = Math.max(188, focusMediaColumnBudget * 0.96);
+  const maxMediaWidth = Math.min(FOCUS_MODAL_WIDTH - 32, 420);
   const maxMediaInnerW = Math.max(1, maxMediaWidth - 2 * FOCUS_SHEET_MEDIA_BORDER_PX);
   const maxMediaInnerH = Math.max(1, maxMediaHeight - 2 * FOCUS_SHEET_MEDIA_BORDER_PX);
 
-  const intrinsic = resolveIntrinsicSize(item, {
-    canonicalImage: String(item?.type || '').toUpperCase() !== 'VIDEO',
-  });
+  const intrinsic = resolveIntrinsicSize(item);
   const mediaDisplay = fitMediaToMaxBox(intrinsic.width, intrinsic.height, maxMediaInnerW, maxMediaInnerH);
 
   return {
@@ -60,6 +59,7 @@ export function getFocusModalLayout(item) {
     outerW: mediaDisplay.width + 2 * FOCUS_SHEET_MEDIA_BORDER_PX,
     outerH: mediaDisplay.height + 2 * FOCUS_SHEET_MEDIA_BORDER_PX,
     commentsSectionHeight,
+    focusMediaZoneMinHeight: focusMediaColumnBudget,
   };
 }
 

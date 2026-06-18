@@ -11,20 +11,25 @@ export const SSR_FETCH_HEADERS = {
  */
 export async function ssrFetchJson(url, opts = {}) {
   const { revalidate = 120, logTag = 'ssrFetch' } = opts;
-  const res = await fetch(url, {
-    headers: SSR_FETCH_HEADERS,
-    next: { revalidate },
-  });
-  if (res.status === 404) return { status: 404, data: null };
-  if (res.status === 403) return { status: 403, data: null };
-  if (!res.ok) {
-    console.error(`[${logTag}] upstream error`, {
-      status: res.status,
-      statusText: res.statusText,
-      url,
+  try {
+    const res = await fetch(url, {
+      headers: SSR_FETCH_HEADERS,
+      next: { revalidate },
     });
-    return { status: res.status, data: null };
+    if (res.status === 404) return { status: 404, data: null };
+    if (res.status === 403) return { status: 403, data: null };
+    if (!res.ok) {
+      console.error(`[${logTag}] upstream error`, {
+        status: res.status,
+        statusText: res.statusText,
+        url,
+      });
+      return { status: res.status, data: null };
+    }
+    const data = await res.json();
+    return { status: 200, data };
+  } catch (error) {
+    console.error(`[${logTag}] fetch failed`, { url, error });
+    return { status: 0, data: null };
   }
-  const data = await res.json();
-  return { status: 200, data };
 }

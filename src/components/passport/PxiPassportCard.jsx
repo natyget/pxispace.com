@@ -2,11 +2,12 @@
 
 import { useId, useMemo } from 'react';
 import Image from 'next/image';
-import { getPassportLevelDisplay, getOdysseyTierFromXp } from '@/utils/odysseyTier';
+import { getPassportLevelDisplay, getOdysseyTierFromXp, getPassportLevelBadgeTheme } from '@/utils/odysseyTier';
 import { getLevelProgress, ODYSSEY_TIER_BANDS } from '@/components/passport/passportVisualParts';
 import { PassportMrzFooter } from '@/components/passport/PassportMrzFooter';
 import { PassportStampsLayer } from '@/components/passport/PassportStampsLayer';
-import { PassportCardShell, PASSPORT_ID_OVERLAY_CLASS } from '@/components/passport/PassportCardShell';
+import { PassportCardShell } from '@/components/passport/PassportCardShell';
+import { PassportDottedText } from '@/components/passport/PassportDottedText';
 import { usePassportSeason } from '@/hooks/usePassportSeason';
 import { getPassportDisplayFields } from '@/components/passport/pxiPassportDisplay';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -80,6 +81,7 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
 
     const { levelText, badgeLetter } = getPassportLevelDisplay(user);
     const tierId = getOdysseyTierFromXp(user?.odysseyXp).id;
+    const badgeTheme = getPassportLevelBadgeTheme(tierId);
     const levelProgress = getLevelProgress(user?.odysseyXp);
 
     const odessaVsNext = useMemo(() => {
@@ -113,7 +115,6 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
                             availableYears={availableYears}
                             selectedSeason={selectedSeason}
                             onSelectSeason={setSelectedSeason}
-                            fallbackTierId={tierId}
                             seasonPillsPointerEvents
                         />
                     </div>
@@ -121,11 +122,18 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
             }
             overlay={
                 <>
-                    <div className={`absolute right-[8px] top-[8px] z-10 ${PASSPORT_ID_OVERLAY_CLASS}`}>
-                        {passportNumber}
+                    <div className="pointer-events-none absolute right-1 top-2 z-10">
+                        <PassportDottedText text={passportNumber} fontSize={14} width={120} />
                     </div>
-                    <div className="absolute left-[-182px] top-[128px] z-10 -rotate-90 text-[16px] uppercase tracking-[0.24em] text-white/55">
-                        SEASON {selectedSeason ?? '01 2026'}
+                    <div
+                        className="pointer-events-none absolute z-10 flex items-center justify-center"
+                        style={{ top: 130, left: -185, width: 400, transform: 'rotate(-90deg)' }}
+                    >
+                        <PassportDottedText
+                            text={`SEASON ${selectedSeason ?? new Date().getFullYear()}`}
+                            fontSize={24}
+                            width={300}
+                        />
                     </div>
                 </>
             }
@@ -148,7 +156,7 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
                         <div className="mt-1.5 flex w-full items-center overflow-hidden" style={{ minHeight: 30 }}>
                             <div className="flex min-w-0 flex-1 items-center" style={{ gap: 2 }}>
                                 <PassportChipIcon filterId={chipFilterId} />
-                                <span className="truncate text-[9px] font-semibold uppercase tracking-[0.05em] text-white">
+                                <span className="truncate text-[8px] font-semibold uppercase tracking-[0.04em] text-white">
                                     PASSPORT • PASS • PORT
                                 </span>
                             </div>
@@ -156,10 +164,16 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
                                 <p className="mb-[3px] text-[9px] font-semibold uppercase leading-[12px] text-white/80">
                                     LEVEL {levelText}
                                 </p>
-                                <div className="h-[4px] w-full overflow-hidden rounded-full bg-[rgba(176,38,255,0.22)]">
+                                <div
+                                    className="h-[4px] w-full overflow-hidden rounded-full"
+                                    style={{ backgroundColor: badgeTheme.progressTrack }}
+                                >
                                     <div
-                                        className="h-full rounded-full bg-pxi-purple"
-                                        style={{ width: `${levelProgress * 100}%` }}
+                                        className="h-full rounded-full"
+                                        style={{
+                                            width: `${levelProgress * 100}%`,
+                                            backgroundColor: badgeTheme.progressFill,
+                                        }}
                                     />
                                 </div>
                             </div>

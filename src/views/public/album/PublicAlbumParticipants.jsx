@@ -9,7 +9,7 @@ export default function PublicAlbumParticipants({ participants = [], pinned = fa
     <section
       className={`shrink-0 px-2 py-5 ${pinned ? 'mt-auto border-t border-white/[0.08] bg-black' : ''}`}
     >
-      <p className="mb-3 px-2 text-[10px] font-black uppercase tracking-[0.24em] text-white/40">
+      <p className="mb-3 px-2 text-[10px] font-black uppercase tracking-[0.24em] text-pxi-purple">
         Participants
       </p>
       <div className={`flex gap-3 overflow-x-auto px-2 ${pinned ? '' : 'pb-2'}`}>

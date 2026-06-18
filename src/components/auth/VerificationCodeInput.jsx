@@ -48,12 +48,7 @@ export default function VerificationCodeInput({
                             >
                                 {slot.char != null ? (
                                     <span className="verification-code-input__char">{slot.char}</span>
-                                ) : (
-                                    <span className="verification-code-input__placeholder">
-                                        {slot.placeholderChar ?? '0'}
-                                    </span>
-                                )}
-                                {slot.hasFakeCaret ? (
+                                ) : slot.hasFakeCaret ? (
                                     <span className="verification-code-input__caret" aria-hidden />
                                 ) : null}
                             </div>

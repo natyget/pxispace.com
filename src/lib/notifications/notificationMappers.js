@@ -124,6 +124,8 @@ export function photoUploadCardItemFromNotification(notification) {
     albumName: String(data.albumName || '').trim() || 'album',
     mediaId: data.mediaId,
     uploadCount: Math.max(1, Number(data.uploadCount) || 1),
+    photoCount: typeof data.photoCount === 'number' ? data.photoCount : undefined,
+    videoCount: typeof data.videoCount === 'number' ? data.videoCount : undefined,
     time: formatNotificationCompactTime(notification.createdAt),
     previewUrls,
     previewUrl: data.previewUrl ?? null,

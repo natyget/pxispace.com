@@ -4,12 +4,19 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Clock01Icon, LocationShare01Icon, Share01Icon } from '@hugeicons/core-free-icons';
+import { Clock01Icon, Location01Icon, Share01Icon } from '@hugeicons/core-free-icons';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { albumShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
 import { formatAlbumSchedule } from './publicAlbumDate';
+import { formatTicketPrice, parseEventTicketTiers } from '@/lib/ticketTiers';
+
+function eventRequiresPaidTicket(event) {
+  if (!event || String(event.ticketType ?? '').toUpperCase() !== 'PAID') return false;
+  if (parseEventTicketTiers(event).length > 0) return true;
+  return Number(event.ticketPrice ?? 0) > 0;
+}
 
 function displayTitle(album) {
   const eventName = album?.event?.name?.trim();
@@ -34,13 +41,20 @@ function formatLocation(event) {
   return { primary: 'Location TBD', secondary: '' };
 }
 
-function formatTicketPrice(event) {
-  const type = String(event?.ticketType ?? '').toUpperCase();
-  if (type !== 'PAID') return null;
-  const price = Number(event?.ticketPrice ?? 0);
-  if (!Number.isFinite(price) || price <= 0) return 'PAID';
-  const sym = event?.currency === 'EUR' ? '€' : '$';
-  return `${sym}${price.toFixed(2)}`;
+function InfoMetaCard({ icon, primary, secondary }) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div className="flex min-w-0 items-center gap-2">
+        <HugeiconsIcon icon={icon} size={18} className="shrink-0 text-white" aria-hidden />
+        <p className="min-w-0 flex-1 text-sm font-bold leading-snug text-white">{primary}</p>
+      </div>
+      {secondary ? (
+        <p className="w-full text-[11px] font-bold uppercase leading-relaxed tracking-wide text-white/45">
+          {secondary}
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'column' }) {
@@ -48,11 +62,18 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
   const [shareHint, setShareHint] = useState(null);
   const title = useMemo(() => displayTitle(album), [album]);
   const isPublic = album?.event?.visibility === 'PUBLIC';
+  const isPaidEvent = eventRequiresPaidTicket(album?.event);
   const coverSrc = displayImageSrc(album?.event?.coverImage || album?.coverImage, null);
   const host = album?.host;
   const schedule = useMemo(() => formatAlbumSchedule(album?.event), [album?.event]);
   const location = useMemo(() => formatLocation(album?.event), [album?.event]);
-  const ticketLabel = formatTicketPrice(album?.event);
+  const ticketTiers = useMemo(() => parseEventTicketTiers(album?.event), [album?.event]);
+  const ticketLabel = useMemo(() => {
+    if (!isPaidEvent) return null;
+    const tier = ticketTiers[0];
+    if (tier) return formatTicketPrice(tier.priceUsd, album?.event?.currency);
+    return formatTicketPrice(album?.event?.ticketPrice, album?.event?.currency) || 'PAID';
+  }, [isPaidEvent, ticketTiers, album?.event?.ticketPrice, album?.event?.currency]);
   const lineup = album?.featuredPeople || album?.lineup || [];
   const participants = album?.previewParticipants || [];
   const memberCount = album?.memberCount ?? participants.length;
@@ -121,17 +142,23 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
               <span
-                className={`rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
-                  isPublic ? 'bg-white text-black' : 'border border-white/20 bg-white/5 text-white/80'
+                className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
+                  isPublic
+                    ? 'border-purple-500/50 bg-purple-500/20 text-purple-200'
+                    : 'border-white/20 bg-white/5 text-white/60'
                 }`}
               >
-                {isPublic ? 'Public event' : 'Private album'}
+                {isPublic ? 'PUBLIC' : 'PRIVATE'}
               </span>
-              {ticketLabel ? (
-                <span className="rounded-lg border border-amber-500/40 bg-amber-500/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-amber-200">
-                  Paid event
-                </span>
-              ) : null}
+              <span
+                className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
+                  isPaidEvent
+                    ? 'border-amber-400/55 bg-amber-400/15 text-amber-200'
+                    : 'border-green-400/45 bg-green-400/12 text-green-300'
+                }`}
+              >
+                {isPaidEvent ? 'PAID' : 'FREE'}
+              </span>
             </div>
             {host ? (
               <div className="flex items-center gap-3">
@@ -147,47 +174,47 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
             ) : null}
           </div>
 
-          {/* Schedule + location */}
+          {/* Schedule + location — icon inline with primary; secondary spans full width (mobile AlbumDetailsModal) */}
           <div className="flex flex-row gap-3">
-            <div className="flex min-w-0 flex-1 gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-              <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-white/10">
-                <HugeiconsIcon icon={Clock01Icon} className="size-3 text-white" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-white">{schedule.primary}</p>
-                {schedule.secondary ? (
-                  <p className="mt-1 text-[11px] font-bold uppercase leading-relaxed tracking-wide text-white/45">
-                    {schedule.secondary}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-            <div className="flex min-w-0 flex-1 gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-              <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-white/10">
-                <HugeiconsIcon icon={LocationShare01Icon} className="size-3 text-white" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-white">{location.primary}</p>
-                {location.secondary ? (
-                  <p className="mt-1 text-[11px] font-bold uppercase leading-relaxed tracking-wide text-white/45">
-                    {location.secondary}
-                  </p>
-                ) : null}
-              </div>
-            </div>
+            <InfoMetaCard icon={Clock01Icon} primary={schedule.primary} secondary={schedule.secondary} />
+            <InfoMetaCard icon={Location01Icon} primary={location.primary} secondary={location.secondary} />
           </div>
 
           {/* About */}
           <section className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">About</h3>
+            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-pxi-purple">About</h3>
             <p className="text-sm font-light leading-relaxed text-white/80">
               {album?.event?.description?.trim() || 'No description provided.'}
             </p>
           </section>
 
+          {ticketTiers.length > 0 ? (
+            <section className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-pxi-purple">Ticket tiers</h3>
+              <ul className="space-y-2">
+                {ticketTiers.map((tier) => (
+                  <li
+                    key={tier.id || tier.label}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-white">{tier.label}</p>
+                      {tier.capacity != null ? (
+                        <p className="mt-0.5 text-[11px] text-white/45">Capacity {tier.capacity}</p>
+                      ) : null}
+                    </div>
+                    <p className="shrink-0 text-sm font-bold text-amber-200">
+                      {formatTicketPrice(tier.priceUsd, album?.event?.currency || 'USD')}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           {/* Line up */}
           <section className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Line up</h3>
+            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-pxi-purple">Line up</h3>
             <p className="text-xs leading-relaxed text-white/40">
               People highlighted for this event. They confirm by accepting an invite — separate from album staff.
             </p>
@@ -225,8 +252,8 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
           {/* Who's going */}
           <section className="space-y-3">
             <div className="flex items-end justify-between gap-2">
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Who&apos;s going</h3>
-              <span className="text-xs font-bold text-white">{memberCount} members</span>
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-pxi-purple">Who&apos;s going</h3>
+              <span className="text-xs font-bold uppercase text-white">{memberCount} members</span>
             </div>
             {participants.length > 0 ? (
               <div className="flex items-center gap-3">
@@ -241,7 +268,7 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
                       </div>
                   ))}
                 </div>
-                <p className="text-sm font-bold text-[#d946ef]">Join in the app to see everyone</p>
+                <p className="text-[11px] font-semibold text-white/45">view</p>
               </div>
             ) : (
               <p className="text-sm text-white/45">Be the first to join in the app.</p>
