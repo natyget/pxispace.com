@@ -61,49 +61,45 @@ const Navbar = () => {
 
     const linkClass = (path) =>
         pathname === path
-            ? "bg-pxi-purple text-white shadow-[0_0_20px_rgba(216,74,255,0.4)]"
-            : "text-zinc-400 hover:text-white";
+            ? "bg-gradient-to-r from-[#d946ef] to-[#c026d3] text-white shadow-[0_0_20px_rgba(217,70,239,0.4)]"
+            : "text-white/50 hover:text-white";
 
     return (
         <>
         <header
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 will-change-transform bg-transparent backdrop-blur-md ${
-                isLanding
-                    ? "py-1.5 md:py-2.5"
-                    : isScrolled || mobileMenuOpen
-                      ? "py-[7.5px] md:py-3"
-                      : "py-4 md:py-5"
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 will-change-transform bg-black/80 backdrop-blur-md ${
+                isScrolled || mobileMenuOpen
+                    ? "py-[7.5px] md:py-3"
+                    : "py-3 md:py-6"
             }`}
         >
-            <div className="container mx-auto grid grid-cols-[1fr_auto] items-center gap-x-[18px] px-6 md:gap-x-4 md:px-6 md:grid-cols-[1fr_auto_1fr]">
+            <div className="container mx-auto flex items-center justify-between px-6 relative">
+                
+                {/* Left: Brand Logo */}
                 <Link
                     href="/"
-                    className="flex h-[30px] min-w-0 items-center justify-self-start gap-3 md:h-10 md:gap-3"
+                    className="flex min-w-0 items-center z-20"
                     onClick={() => setMobileMenuOpen(false)}
                 >
-                    <img
-                        src="/favicon.png"
-                        alt="PXI Logo"
-                        width={36}
-                        height={36}
-                        className="h-[30px] w-[30px] shrink-0 object-contain md:h-9 md:w-9"
-                    />
+                    <img src="/favicon.png" alt="PXI" className="h-[38px] md:h-[44px] translate-y-[4px] w-auto object-contain" />
                 </Link>
 
-                <div className={`col-start-2 row-start-1 hidden items-center justify-self-center md:col-start-2 z-10 bg-zinc-900/50 p-1 rounded-full border border-white/5 backdrop-blur-md gap-1 ${isLanding ? "lg:flex" : "md:flex"}`}>
+                {/* Center: Toggle Menu */}
+                <div className="hidden absolute left-1/2 -translate-x-1/2 items-center justify-center z-10 bg-[#131313] p-1 md:p-1.5 rounded-full md:flex">
                     {navLinks.map((link) => (
                         <Link
                             key={link.path}
                             href={link.path}
                             onClick={() => setMobileMenuOpen(false)}
-                            className={`flex h-9 items-center px-5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${linkClass(link.path)}`}
+                            className={`flex items-center justify-center h-[34px] px-8 rounded-full text-[10px] font-bold uppercase tracking-widest leading-none transition-colors ${linkClass(link.path)}`}
                         >
                             {link.name}
                         </Link>
                     ))}
                 </div>
 
-                <div className="col-start-2 row-start-1 flex h-[30px] items-center justify-end justify-self-end gap-3 md:h-10 md:gap-3 md:col-start-3">
+                {/* Right: Actions */}
+                <div className="flex h-[30px] items-center justify-end gap-3 md:h-10 md:gap-3">
                     {!mounted ? (
                         isLanding ? null : (
                             <div className="hidden h-10 w-10 shrink-0 items-center justify-center md:flex" aria-hidden>
@@ -154,9 +150,9 @@ const Navbar = () => {
                     ) : (
                         <Link
                             href="/login"
-                            className="hidden h-10 items-center rounded-full bg-pxi-purple px-5 text-xs font-bold uppercase tracking-widest text-white shadow-[0_0_16px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all md:inline-flex"
+                            className="hidden h-[34px] px-6 items-center justify-center rounded-full bg-pxi-purple text-white shadow-[0_0_20px_rgba(216,74,255,0.4)] text-[10px] sm:text-xs font-bold uppercase tracking-[0.05em] leading-none hover:scale-105 hover:brightness-110 transition-all duration-300 md:flex"
                         >
-                            Launch
+                            Sign Up
                         </Link>
                     )}
                     <button
@@ -180,7 +176,7 @@ const Navbar = () => {
                         onClick={() => setMobileMenuOpen(false)}
                         className="fixed inset-0 z-40"
                     />
-                    <div className="md:hidden absolute top-full left-0 w-full glass-car p-8 flex flex-col gap-6 animate-fade-up h-screen z-50 bg-black/95 backdrop-blur-3xl">
+                    <div className="md:hidden absolute top-full left-0 w-full p-8 flex flex-col gap-6 animate-fade-up h-screen z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.path}
@@ -216,7 +212,7 @@ const Navbar = () => {
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-white"
                             >
-                                Launch
+                                Sign Up
                             </Link>
                         )}
                     </div>

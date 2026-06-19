@@ -582,7 +582,7 @@ const EventDetails = ({ basePath = '/events' }) => {
               onClick={goToCheckout}
               disabled={!canPurchase}
             >
-              Join Event
+              Continue to checkout
             </Button>
             <p className="text-zinc-500 text-xs text-center leading-relaxed">
               {isPaidEvent

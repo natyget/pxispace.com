@@ -1,18 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { PxiLoadingLanding } from '@/components/loading/PxiLoading';
 import { usePathname } from 'next/navigation';
+import { PxiLoadingLanding } from '@/components/loading/PxiLoading';
 
 export default function PublicLayout({ children }) {
   const pathname = usePathname();
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setHydrated(true);
-  }, []);
+    if (pathname === '/' || pathname === '/home') {
+      const timer = setTimeout(() => setHydrated(true), 1800);
+      return () => clearTimeout(timer);
+    } else {
+      setHydrated(true);
+    }
+  }, [pathname]);
 
   const isLanding = pathname === '/' || pathname === '/home';
   const showNavbar =
@@ -25,7 +30,8 @@ export default function PublicLayout({ children }) {
     pathname === '/organizers' ||
     pathname?.startsWith('/events') ||
     pathname?.startsWith('/u/') ||
-    pathname?.startsWith('/p/');
+    pathname?.startsWith('/p/') ||
+    pathname?.startsWith('/album/');
   const isPublicProfile = pathname?.startsWith('/u/');
   const isPublicPost = pathname?.startsWith('/p/');
   const isPublicAlbum = pathname?.startsWith('/album/');
@@ -41,19 +47,19 @@ export default function PublicLayout({ children }) {
           isPublicAlbum ? 'h-dvh max-h-dvh overflow-hidden' : 'min-h-screen'
         }`}
       >
-      {showNavbar ? <Navbar /> : null}
-      <main
-        className={
-          isPublicAlbum
-            ? 'flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-black'
-            : 'flex-1'
-        }
-      >
-        {children}
-      </main>
-      {!isPublicProfile && !isPublicPost && !isPublicAlbum && !isPublicEventFlow ? (
-        <Footer />
-      ) : null}
+        {showNavbar ? <Navbar /> : null}
+        <main
+          className={
+            isPublicAlbum
+              ? 'flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-black'
+              : 'flex-1'
+          }
+        >
+          {children}
+        </main>
+        {!isLanding && !isPublicProfile && !isPublicPost && !isPublicAlbum && !isPublicEventFlow ? (
+          <Footer />
+        ) : null}
       </div>
     </>
   );

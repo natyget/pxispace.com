@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getPublicPost } from '@/lib/publicPost';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { resolveDisplayImageUrl } from '@/lib/mediaUrl';
-import { buildShareMetadata, resolveShareOgImage } from '@/lib/shareMetadata';
+import { toOpenGraphImageUrl } from '@/lib/ogImageUrl';
 import PublicPostBottomBar from '@/views/public/PublicPostBottomBar';
 
 export const dynamic = 'force-dynamic';
@@ -15,15 +15,11 @@ export async function generateMetadata({ params }) {
   const post = await getPublicPost(postId);
 
   if (!post) {
-    return buildShareMetadata({
-      site,
-      canonical,
-      title: 'Post',
+    return {
+      title: 'Post | PXI',
       description: 'This post could not be found.',
-      ogImage: resolveShareOgImage(site),
-      ogAlt: 'PXI',
       robots: { index: false, follow: false },
-    });
+    };
   }
 
   const titleBase = post.isPrivateAccount ? 'Private post' : post.posterName || 'Post';
@@ -33,22 +29,49 @@ export async function generateMetadata({ params }) {
       ? String(post.caption).trim().slice(0, 200)
       : `Photo by ${post.posterName} on PXI`;
 
-  const ogImage = post.isPrivateAccount
-    ? resolveShareOgImage(site)
-    : resolveShareOgImage(site, post.ogImageUrl, post.imageUrl);
+  const ogImageRaw = post.isPrivateAccount ? null : post.ogImageUrl || post.imageUrl;
+  const ogImageResolved = toOpenGraphImageUrl(site, ogImageRaw);
+  const ogImage = ogImageResolved || `${site}/favicon.svg`;
 
-  return buildShareMetadata({
-    site,
-    canonical,
-    title: titleBase,
+  const ogAlt = post.isPrivateAccount ? 'PXI' : titleBase;
+
+  /** Match real aspect ratio for og:image — a fixed 1200×630 meta hint stretches Discord embeds. */
+  const ow = post.ogImageWidth;
+  const oh = post.ogImageHeight;
+  const hasOgDims =
+    typeof ow === 'number' &&
+    typeof oh === 'number' &&
+    ow > 0 &&
+    oh > 0 &&
+    Number.isFinite(ow) &&
+    Number.isFinite(oh);
+
+  const ogImageDescriptor = {
+    url: ogImage,
+    alt: ogAlt,
+    ...(hasOgDims ? { width: Math.round(ow), height: Math.round(oh) } : {}),
+  };
+
+  return {
+    title: `${titleBase} — PXI`,
     description: desc,
-    ogImage,
-    ogAlt: post.isPrivateAccount ? 'PXI' : titleBase,
-    ogWidth: post.ogImageWidth,
-    ogHeight: post.ogImageHeight,
-    type: 'article',
-    privatePreview: Boolean(post.isPrivateAccount),
-  });
+    metadataBase: new URL(site),
+    alternates: { canonical },
+    openGraph: {
+      type: 'article',
+      url: canonical,
+      siteName: 'PXI',
+      title: `${titleBase} — PXI`,
+      description: desc,
+      images: [ogImageDescriptor],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${titleBase} — PXI`,
+      description: desc,
+      images: [ogImage],
+    },
+  };
 }
 
 export default async function PublicPostPage({ params }) {
@@ -73,6 +96,7 @@ export default async function PublicPostPage({ params }) {
   return (
     <div className="relative min-h-screen bg-[#0a0a0a] pb-32 pt-18 text-white md:pb-24 md:pt-24">
       <div className="mx-auto flex max-w-lg flex-col px-4">
+        {/* Image first in DOM for fast LCP — no lazy loading */}
         {post.isPrivateAccount ? (
           <div className="relative aspect-[3/4] w-full max-h-[85vh] overflow-hidden rounded-2xl border border-white/10 bg-zinc-900">
             <div

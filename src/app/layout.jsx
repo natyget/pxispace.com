@@ -3,14 +3,12 @@ import Script from 'next/script';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import GlobalCursorLayer from '@/components/layout/GlobalCursorLayer';
-import { getSiteUrl } from '@/lib/siteUrl';
 import './globals.css';
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
-const site = getSiteUrl();
 
 export const metadata = {
-  metadataBase: new URL(site),
+  metadataBase: new URL('https://pxispace.com'),
   title: {
     default: 'PXI | Premier Event Operating System & Digital Scrapbook',
     template: '%s | PXI',
@@ -24,7 +22,7 @@ export const metadata = {
     type: 'website',
     siteName: 'PXI',
     locale: 'en_US',
-    images: [{ url: '/favicon.png', width: 512, height: 512, alt: 'PXI' }],
+    images: [{ url: '/favicon.svg', width: 512, height: 512, alt: 'PXI' }],
   },
   twitter: {
     card: 'summary_large_image',

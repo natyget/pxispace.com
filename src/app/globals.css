@@ -161,6 +161,18 @@
 
   html {
     scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
+  body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  body::-webkit-scrollbar {
+    display: none;
   }
 
   /* Landing: framer scroll timelines need native scroll steps; smooth + wheel feels like a speed-run */
@@ -711,13 +723,59 @@
   }
 }
 
-/* ── Hashtag marquee ── */
-@keyframes landing-hashtag-marquee {
-  0% { transform: translateX(0); }
+/* ── Hashtag marquee & Float animations ── */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
 }
-.landing-hashtag-marquee {
-  animation: landing-hashtag-marquee 50s linear infinite;
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+  width: max-content;
+}
+
+.animate-marquee-slow {
+  animation: marquee 100s linear infinite;
+  width: max-content;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px) rotate(var(--tw-rotate, 0deg)) scale(var(--tw-scale-x, 1)); }
+  100% { transform: translateY(-15px) rotate(var(--tw-rotate, 0deg)) scale(var(--tw-scale-x, 1)); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite alternate;
+}
+
+.animate-float-slow {
+  animation: float 8s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes fade-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+}
+
+@keyframes glitch {
+  0%, 100% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); }
+  5% { opacity: 0.8; transform: scale(1.01) translate(-1px, 1px); filter: drop-shadow(0 0 25px rgba(216,74,255,0.5)); }
+  10% { opacity: 1; transform: scale(1) translate(0); filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); }
+  35% { opacity: 1; transform: scale(1); }
+  36% { opacity: 0.4; }
+  38% { opacity: 1; transform: scale(1.02); }
+  40% { opacity: 1; transform: scale(1); }
+  60% { opacity: 1; filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); }
+  62% { filter: drop-shadow(0 0 30px rgba(176,38,255,0.8)); opacity: 0.9; }
+  64% { filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); opacity: 1; }
+}
+
+.animate-glitch {
+  animation: glitch 4s infinite linear;
 }
 
 /* ── Hero chaos element drift + tilt (CSS-only, GPU-composited) ── */

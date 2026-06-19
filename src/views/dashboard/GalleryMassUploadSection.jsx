@@ -6,7 +6,7 @@ import { Loading02Icon, ImageAdd02Icon } from '@hugeicons/core-free-icons';
 import { requestPresignedUpload } from '../../services/media';
 import { createFeedItem } from '../../services/feed';
 
-const MAX_FILES = 100;
+const MAX_FILES = 40;
 const CONCURRENCY = 2;
 
 /** Gallery standard (match mobile cover / OG): portrait 3:4, landscape 4:3 */
