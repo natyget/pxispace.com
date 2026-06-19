@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Menu01Icon, Cancel01Icon, Logout01Icon, DashboardSquare01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from "../../contexts/AuthContext";
+import { PxiLoadingIcon } from '@/components/loading/PxiLoading';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 const Navbar = () => {
     const [mounted, setMounted] = useState(false);
@@ -56,7 +58,6 @@ const Navbar = () => {
         { name: "About", path: "/about" },
     ];
 
-    const avatarFallback = user?.name?.charAt(0)?.toUpperCase() || "?";
 
     const linkClass = (path) =>
         pathname === path
@@ -100,8 +101,11 @@ const Navbar = () => {
                 {/* Right: Actions */}
                 <div className="flex h-[30px] items-center justify-end gap-3 md:h-10 md:gap-3">
                     {!mounted ? (
-                        /* Skeleton while auth state loads */
-                        <div className="hidden h-9 w-28 shrink-0 rounded-full bg-zinc-800/60 animate-pulse md:block" />
+                        isLanding ? null : (
+                            <div className="hidden h-10 w-10 shrink-0 items-center justify-center md:flex" aria-hidden>
+                                <PxiLoadingIcon />
+                            </div>
+                        )
                     ) : isAuthenticated ? (
                         <div className="relative hidden md:block" ref={userMenuRef}>
                             <button
@@ -109,17 +113,7 @@ const Navbar = () => {
                                 onClick={() => setUserMenuOpen((v) => !v)}
                                 className="flex h-10 items-center gap-2 rounded-full border border-white/8 bg-zinc-900/60 px-3 hover:border-white/15 transition-all"
                             >
-                                {user?.avatarUrl ? (
-                                    <img
-                                        src={user.avatarUrl}
-                                        alt={user?.name ?? ''}
-                                        className="w-6 h-6 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-6 h-6 rounded-full bg-pxi-purple/30 border border-pxi-purple/40 flex items-center justify-center text-pxi-purple text-xs font-bold">
-                                        {avatarFallback}
-                                    </div>
-                                )}
+                                <UserAvatar user={user} size={24} alt={user?.name ?? ''} />
                                 <span className="text-white text-xs font-semibold max-w-[100px] truncate">
                                     {user?.name?.split(" ")[0] || "Account"}
                                 </span>

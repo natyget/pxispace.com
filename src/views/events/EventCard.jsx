@@ -27,10 +27,18 @@ const EventCard = ({ event, favorited, onToggleFavorite, onQuickView, detailBase
             e.stopPropagation();
             onToggleFavorite?.(event.id);
           }}
-          className="absolute top-6 right-6 p-3 rounded-full bg-black/40 border border-white/10 text-white hover:bg-black/60 transition-colors backdrop-blur-md"
+          className={`absolute top-6 right-6 p-3 rounded-full border text-white backdrop-blur-md transition-colors ${
+            favorited
+              ? 'bg-newpurple-base/20 border-newpurple-base/30 text-newpurple-base hover:bg-newpurple-base/30'
+              : 'bg-black/40 border-white/10 hover:bg-black/60'
+          }`}
           aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
         >
-          <HugeiconsIcon icon={FavouriteIcon} size={20} className={favorited ? 'fill-pink-500 text-pink-500' : ''} />
+          <HugeiconsIcon
+            icon={FavouriteIcon}
+            size={20}
+            className={favorited ? 'fill-newpurple text-newpurple-base' : ''}
+          />
         </button>
 
         <div className="absolute top-8 left-8 px-4 py-1.5 glass rounded-full border-white/10 backdrop-blur-xl">

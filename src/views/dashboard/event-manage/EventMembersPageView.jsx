@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Image from 'next/image';
+import UserAvatar from '@/components/ui/UserAvatar';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Shield01Icon, HelpCircleIcon, UserRemove01Icon, UserGroupIcon } from '@hugeicons/core-free-icons';
@@ -104,15 +104,12 @@ export default function EventMembersPageView() {
                   className="rounded-xl border border-white/10 bg-zinc-900/40 p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    {member.avatarUrl ? (
-                      <div className="w-10 h-10 rounded-full overflow-hidden border border-white/15 shrink-0">
-                        <Image src={member.avatarUrl} alt={handle || ''} width={40} height={40} unoptimized className="w-full h-full object-cover" />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-zinc-700 border border-white/10 shrink-0 flex items-center justify-center text-xs font-bold text-zinc-300">
-                        {(handle || member.userId || '?')[0].toUpperCase()}
-                      </div>
-                    )}
+                    <UserAvatar
+                      user={{ avatarUrl: member.avatarUrl }}
+                      size={40}
+                      alt={handle || ''}
+                      className="shrink-0 border border-white/15"
+                    />
                     <div className="min-w-0">
                       <p className="text-sm text-white truncate">
                         {handle ? `@${handle}` : member.userId}

@@ -53,6 +53,9 @@ export const eventsService = {
   /** Direct-user invites for an album (pending / accepted / declined). Staff or event creator. */
   getAlbumDirectInvites: (albumId) => api.get(`/api/albums/${albumId}/direct-invites`),
 
+  cancelAlbumDirectInvite: (albumId, inviteId) =>
+    api.delete(`/api/albums/${albumId}/direct-invites/${inviteId}`),
+
   getFeaturedPeople: (albumId) => api.get(`/api/albums/${albumId}/featured-people`),
 
   upsertFeaturedPerson: (albumId, username, role) =>
@@ -82,6 +85,17 @@ export async function getEventsForWallet(limit = 100, offset = 0) {
 export async function getMyEventXp() {
   try {
     const data = await api.get('/api/users/me/event-xp');
+    return data.xpByEventId ?? {};
+  } catch {
+    return {};
+  }
+}
+
+/** Per-event XP for any user (used for public passport stamp display). GET /api/users/:id/event-xp */
+export async function getUserEventXp(userId) {
+  if (!userId) return {};
+  try {
+    const data = await api.get(`/api/users/${encodeURIComponent(userId)}/event-xp`);
     return data.xpByEventId ?? {};
   } catch {
     return {};

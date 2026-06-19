@@ -8,19 +8,33 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
-import AuthParticles from '../../components/auth/AuthParticles';
+import VerificationCodeInput from '../../components/auth/VerificationCodeInput';
+import { defaultPostLoginPath } from '../../lib/dashboardPaths';
+import { toast } from 'sonner';
 
 const PENDING_SIGNUP_KEY = 'pxi_pending_signup';
+const RESEND_COOLDOWN_SEC = 60;
+
+function pillButtonClass(enabled) {
+    return `relative z-[2] h-14 w-full rounded-full border border-white/15 font-black uppercase text-[13px] tracking-[0.15em] transition-all ${
+        enabled
+            ? 'cursor-pointer bg-pxi-purple text-white shadow-[0_0_20px_rgba(216,74,255,0.4)] hover:brightness-110'
+            : 'cursor-not-allowed bg-pxi-purple/30 text-white/30'
+    }`;
+}
 
 export default function VerifyPhonePage() {
     const router = useRouter();
-    const { user, saveAuth, logout } = useAuth();
+    const { user, saveAuth } = useAuth();
     const [pendingSignup, setPendingSignup] = useState(null);
     const [phoneValue, setPhoneValue] = useState('');
     const [step, setStep] = useState('phone');
     const [code, setCode] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isSendingCode, setIsSendingCode] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
     const [error, setError] = useState('');
+    const [resendSuccess, setResendSuccess] = useState('');
 
     const fullPhone = phoneValue || '';
     const phoneDigits = (phoneValue || '').replace(/\D/g, '');
@@ -38,6 +52,16 @@ export default function VerifyPhonePage() {
         }
     }, []);
 
+    useEffect(() => {
+        if (resendCooldown <= 0) return;
+        const timer = setTimeout(() => {
+            setResendCooldown((prev) => Math.max(0, prev - 1));
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, [resendCooldown]);
+
+    const startResendCooldown = () => setResendCooldown(RESEND_COOLDOWN_SEC);
+
     const handleSendCode = async (e) => {
         e.preventDefault();
         if (!phoneValid) {
@@ -45,14 +69,35 @@ export default function VerifyPhonePage() {
             return;
         }
         setError('');
-        setLoading(true);
+        setIsSendingCode(true);
         try {
             await authService.sendVerification(fullPhone);
             setStep('code');
+            setCode('');
+            startResendCooldown();
         } catch (err) {
             setError(err.data?.error || err.message || 'Could not send code');
         } finally {
-            setLoading(false);
+            setIsSendingCode(false);
+        }
+    };
+
+    const handleResendCode = async () => {
+        if (!phoneValid || isSendingCode || isVerifying || resendCooldown > 0) return;
+        setError('');
+        setResendSuccess('');
+        setIsSendingCode(true);
+        try {
+            await authService.sendVerification(fullPhone);
+            setCode('');
+            startResendCooldown();
+            const message = 'A new verification code was sent to your phone.';
+            setResendSuccess(message);
+            toast.success(message);
+        } catch (err) {
+            setError(err.data?.error || err.message || 'Could not resend code');
+        } finally {
+            setIsSendingCode(false);
         }
     };
 
@@ -64,19 +109,43 @@ export default function VerifyPhonePage() {
             return;
         }
         setError('');
-        setLoading(true);
+        setResendSuccess('');
+        setIsVerifying(true);
         try {
             if (pendingSignup) {
+                const [emailCheck, usernameCheck] = await Promise.all([
+                    authService.checkEmail(pendingSignup.email),
+                    authService.checkUsername(pendingSignup.username),
+                ]);
+
+                if (emailCheck === 'taken') {
+                    sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+                    setError('An account with this email already exists. Try logging in instead.');
+                    router.replace('/login');
+                    return;
+                }
+                if (usernameCheck?.available === false) {
+                    sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+                    setError('That username is already taken. Please sign up again.');
+                    router.replace('/login');
+                    return;
+                }
+                if (emailCheck !== 'available' || usernameCheck?.available !== true) {
+                    setError('Could not verify your sign-up details. Please check your connection and try again.');
+                    return;
+                }
+
                 await authService.verifyOtp(fullPhone, trimmedCode);
-                // Backend saves phone to user profile only when OTP verification succeeds; register persists it
-                await authService.register(
+                const registerResult = await authService.register(
                     pendingSignup.email,
                     pendingSignup.password,
                     pendingSignup.username,
                     fullPhone
                 );
                 sessionStorage.removeItem(PENDING_SIGNUP_KEY);
-                await logout();
+                const { token, user: newUser } = registerResult;
+                await saveAuth({ token, user: newUser });
+
                 const postCheckout =
                     typeof window !== 'undefined'
                         ? sessionStorage.getItem('pxi_after_register_login_redirect')
@@ -84,28 +153,36 @@ export default function VerifyPhonePage() {
                 if (postCheckout && typeof window !== 'undefined') {
                     sessionStorage.removeItem('pxi_after_register_login_redirect');
                 }
-                router.replace(
-                    postCheckout
-                        ? `/login?verified=1&redirect=${encodeURIComponent(postCheckout)}`
-                        : '/login?verified=1'
-                );
+
+                if (postCheckout) {
+                    router.replace(postCheckout);
+                } else {
+                    router.replace(defaultPostLoginPath(newUser));
+                }
             } else if (user) {
-                // Backend saves phoneNumber to profile only when OTP verification succeeds
                 const result = await authService.verifyPhone(fullPhone, trimmedCode);
                 saveAuth({ token: result.token, user: result.user });
-                if (!result.user.isPassportIssued) {
-                    router.replace('/passport-required');
-                } else {
-                    router.replace('/dashboard');
-                }
+                router.replace(defaultPostLoginPath(result.user));
             } else {
                 setError('Session expired. Please sign in again.');
                 router.replace('/login');
             }
         } catch (err) {
+            if (err.code === 'EMAIL_EXISTS') {
+                sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+                setError('An account with this email already exists. Try logging in instead.');
+                router.replace('/login');
+                return;
+            }
+            if (err.code === 'USERNAME_EXISTS') {
+                sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+                setError('That username is already taken. Please sign up again.');
+                router.replace('/login');
+                return;
+            }
             setError(err.data?.error || err.message || 'Invalid or expired code');
         } finally {
-            setLoading(false);
+            setIsVerifying(false);
         }
     };
 
@@ -113,6 +190,7 @@ export default function VerifyPhonePage() {
         if (step === 'code') {
             setStep('phone');
             setCode('');
+            setResendCooldown(0);
             setError('');
         } else if (pendingSignup) {
             router.replace('/login');
@@ -123,7 +201,6 @@ export default function VerifyPhonePage() {
 
     return (
         <div className="min-h-screen bg-black flex flex-col relative overflow-hidden">
-            <AuthParticles />
             <button
                 type="button"
                 onClick={handleBack}
@@ -162,6 +239,19 @@ export default function VerifyPhonePage() {
                         </div>
                     )}
 
+                    {resendSuccess && !error && (
+                        <div
+                            className="mb-6 px-4 py-3 text-sm rounded-xl"
+                            style={{
+                                background: 'rgba(34,197,94,0.1)',
+                                border: '1px solid rgba(34,197,94,0.25)',
+                                color: '#4ade80',
+                            }}
+                        >
+                            {resendSuccess}
+                        </div>
+                    )}
+
                     {step === 'phone' && (
                         <form onSubmit={handleSendCode} className="flex flex-col gap-4">
                             <div className="verify-phone-input-wrapper">
@@ -171,57 +261,79 @@ export default function VerifyPhonePage() {
                                     placeholder="Enter phone number"
                                     value={phoneValue}
                                     onChange={setPhoneValue}
-                                    disabled={loading}
+                                    disabled={isSendingCode}
                                 />
                             </div>
                             <button
                                 type="submit"
-                                disabled={!phoneValid || loading}
-                                className="w-full h-14 rounded-2xl font-black uppercase text-white disabled:opacity-50 transition-opacity"
-                                style={{
-                                    background: phoneValid && !loading
-                                        ? 'linear-gradient(90deg, #B026FF 0%, #7A00CC 100%)'
-                                        : 'linear-gradient(90deg, rgba(176,38,255,0.3) 0%, rgba(122,0,204,0.3) 100%)',
-                                    letterSpacing: '0.12em',
-                                }}
+                                disabled={!phoneValid || isSendingCode}
+                                className={pillButtonClass(phoneValid && !isSendingCode)}
                             >
-                                {loading ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin inline" /> : 'SEND CODE'}
+                                {isSendingCode ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
+                                        SENDING...
+                                    </span>
+                                ) : (
+                                    'SEND CODE'
+                                )}
                             </button>
                         </form>
                     )}
 
                     {step === 'code' && (
                         <form onSubmit={handleVerify} className="flex flex-col gap-4">
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                autoComplete="one-time-code"
-                                value={code}
-                                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                placeholder="000000"
-                                maxLength={6}
-                                className="w-full h-14 rounded-xl px-5 bg-white/5 border border-white/10 text-white font-semibold text-center text-xl tracking-widest outline-none focus:border-[#B026FF]"
-                            />
-                            <button
-                                type="submit"
-                                disabled={code.trim().replace(/\s/g, '').length < 6 || loading}
-                                className="w-full h-14 rounded-2xl font-black uppercase text-white disabled:opacity-50"
-                                style={{
-                                    background: (code.trim().replace(/\s/g, '').length >= 6 && !loading)
-                                        ? 'linear-gradient(90deg, #B026FF 0%, #7A00CC 100%)'
-                                        : 'linear-gradient(90deg, rgba(176,38,255,0.3) 0%, rgba(122,0,204,0.3) 100%)',
-                                    letterSpacing: '0.12em',
-                                }}
-                            >
-                                {loading ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin inline" /> : 'VERIFY'}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => { setStep('phone'); setCode(''); setError(''); }}
-                                className="text-sm text-white/50 font-semibold"
-                            >
-                                ← Use a different number
-                            </button>
+                            <div>
+                                <p
+                                    className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-white/50 mb-2.5 ml-1"
+                                >
+                                    Verification code
+                                </p>
+                                <VerificationCodeInput
+                                    value={code}
+                                    onChange={setCode}
+                                    disabled={isVerifying}
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="flex flex-col gap-8 mt-3">
+                                <button
+                                    type="submit"
+                                    disabled={code.trim().replace(/\s/g, '').length < 6 || isVerifying}
+                                    className={pillButtonClass(
+                                        code.trim().replace(/\s/g, '').length >= 6 && !isVerifying,
+                                    )}
+                                >
+                                    {isVerifying ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
+                                            VERIFYING...
+                                        </span>
+                                    ) : (
+                                        'VERIFY'
+                                    )}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => void handleResendCode()}
+                                    disabled={isSendingCode || isVerifying || resendCooldown > 0}
+                                    className="text-sm font-bold disabled:opacity-40"
+                                    style={{ color: 'var(--color-pxi-purple)' }}
+                                >
+                                    {isSendingCode
+                                        ? 'Sending...'
+                                        : resendCooldown > 0
+                                          ? `Resend code in ${resendCooldown}s`
+                                          : 'Resend code'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => { setStep('phone'); setCode(''); setResendCooldown(0); setError(''); setResendSuccess(''); }}
+                                    className="text-sm text-white/50 font-semibold"
+                                >
+                                    ← Use a different number
+                                </button>
+                            </div>
                         </form>
                     )}
                 </div>

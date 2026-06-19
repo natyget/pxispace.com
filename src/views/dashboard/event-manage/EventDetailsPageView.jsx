@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import UserAvatar from '@/components/ui/UserAvatar';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowLeft01Icon, UserGroupIcon, Share01Icon, ClockIcon, Location01Icon } from '@hugeicons/core-free-icons';
+import { UserGroupIcon, Share01Icon, ClockIcon, Location01Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventManage } from './EventManageContext';
 import {
@@ -15,6 +16,8 @@ import {
   hostFromEvent,
   publicEventPageUrl,
 } from './eventDetailHelpers';
+import { eventShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
+import { formatTicketPrice, parseEventTicketTiers } from '@/lib/ticketTiers';
 
 function formatDate(d) {
   return d ? new Date(d).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '—';
@@ -58,6 +61,7 @@ export default function EventDetailsPageView() {
   const host = hostFromEvent(event);
   const isPublic = event.visibility === 'PUBLIC';
   const showPaidBadge = String(event.ticketType || '').toUpperCase() === 'PAID';
+  const ticketTiers = useMemo(() => parseEventTicketTiers(event), [event]);
   const memberCount =
     typeof event._count?.members === 'number' ? event._count.members : participants.length;
 
@@ -72,25 +76,27 @@ export default function EventDetailsPageView() {
   const handleShareEvent = async () => {
     const url = publicEventPageUrl(String(eventId));
     const title = event?.name || 'Event';
+    const text = eventShareLead(title);
+    const message = shareMessageWithUrl(text, url);
     try {
       if (navigator.share) {
         await navigator.share({
           title,
-          text: `Join "${title}" on PXI`,
+          text,
           url,
         });
         return;
       }
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(message);
       setShareHint('Link copied');
       setTimeout(() => setShareHint(null), 2500);
     } catch {
       try {
-        await navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText(message);
         setShareHint('Link copied');
         setTimeout(() => setShareHint(null), 2500);
       } catch {
-        window.prompt('Copy event link:', url);
+        window.prompt('Copy event link:', message);
       }
     }
   };
@@ -114,16 +120,6 @@ export default function EventDetailsPageView() {
           )}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-[#050505]" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#050505] to-transparent" />
-
-          <div className="absolute left-3 top-3 z-10">
-            <Link
-              href="/dashboard/events"
-              className="inline-flex items-center gap-1 rounded-full bg-black/45 px-2.5 py-2 text-white border border-white/15 hover:bg-black/65"
-              aria-label="Back to my events"
-            >
-              <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
-            </Link>
-          </div>
 
           <div className="absolute right-3 top-3 z-10">
             <button
@@ -163,20 +159,11 @@ export default function EventDetailsPageView() {
             </div>
 
             <div className="flex items-center gap-3">
-              {host?.avatarUrl ? (
-                <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-white/15">
-                  <Image
-                    src={host.avatarUrl}
-                    alt=""
-                    width={40}
-                    height={40}
-                    unoptimized
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-zinc-700 border border-white/10 shrink-0" />
-              )}
+              <UserAvatar
+                user={{ avatarUrl: host?.avatarUrl }}
+                size={40}
+                className="shrink-0 border border-white/15"
+              />
               <p className="text-sm text-zinc-300">
                 Hosted by{' '}
                 <span className="font-semibold text-white">{host?.name || 'Unknown host'}</span>
@@ -226,6 +213,32 @@ export default function EventDetailsPageView() {
             </p>
           </section>
 
+          {ticketTiers.length > 0 ? (
+            <section>
+              <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                Ticket tiers
+              </h2>
+              <ul className="space-y-2">
+                {ticketTiers.map((tier) => (
+                  <li
+                    key={tier.id || tier.label}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-zinc-900/40 px-3 py-2.5"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white">{tier.label}</p>
+                      {tier.capacity != null ? (
+                        <p className="mt-0.5 text-xs text-zinc-500">Capacity {tier.capacity}</p>
+                      ) : null}
+                    </div>
+                    <span className="shrink-0 text-sm font-bold text-amber-200">
+                      {formatTicketPrice(tier.priceUsd, event.currency || 'USD')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           <section>
             <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">
               Line up
@@ -241,20 +254,11 @@ export default function EventDetailsPageView() {
                     className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-zinc-900/40 px-3 py-2.5"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      {person.avatarUrl ? (
-                        <Image
-                          src={person.avatarUrl}
-                          alt=""
-                          width={40}
-                          height={40}
-                          unoptimized
-                          className="rounded-full object-cover border border-white/10 shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-300 shrink-0">
-                          {(person.name || person.username || '?')[0]?.toUpperCase()}
-                        </div>
-                      )}
+                      <UserAvatar
+                        user={{ avatarUrl: person.avatarUrl }}
+                        size={40}
+                        className="shrink-0 border border-white/10"
+                      />
                       <div className="min-w-0">
                         <p className="text-sm text-white truncate font-medium">
                           {person.name?.trim() || `@${person.username || 'unknown'}`}

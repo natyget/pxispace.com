@@ -145,6 +145,86 @@ async function resizeImageForGalleryUpload(file) {
   }
 }
 
+/**
+ * Capture a JPEG poster from a video file (first second) for notification / grid thumbnails.
+ * @returns {Promise<{ file: File; width: number; height: number }>}
+ */
+function captureVideoThumbnail(file) {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') {
+      reject(new Error('Video thumbnail requires browser'));
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'auto';
+
+    const cleanup = () => {
+      URL.revokeObjectURL(url);
+      video.removeAttribute('src');
+      video.load();
+    };
+
+    video.onloadeddata = () => {
+      const seekTo = Number.isFinite(video.duration) && video.duration > 0
+        ? Math.min(1, video.duration * 0.1)
+        : 0;
+      video.currentTime = seekTo;
+    };
+
+    video.onseeked = () => {
+      try {
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+        if (!w || !h) {
+          cleanup();
+          reject(new Error('Invalid video dimensions'));
+          return;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          cleanup();
+          reject(new Error('Canvas not supported'));
+          return;
+        }
+        ctx.drawImage(video, 0, 0, w, h);
+        canvas.toBlob(
+          (blob) => {
+            cleanup();
+            if (!blob) {
+              reject(new Error('JPEG export failed'));
+              return;
+            }
+            const base = (file.name || 'video').replace(/\.[^.]+$/i, '') || 'video';
+            const thumbFile = new File([blob], `${base}_thumb.jpg`, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            resolve({ file: thumbFile, width: w, height: h });
+          },
+          'image/jpeg',
+          0.85,
+        );
+      } catch (err) {
+        cleanup();
+        reject(err);
+      }
+    };
+
+    video.onerror = () => {
+      cleanup();
+      reject(new Error('Could not decode video'));
+    };
+
+    video.src = url;
+  });
+}
+
 async function putToPresigned(uploadUrl, file, contentType) {
   const res = await fetch(uploadUrl, {
     method: 'PUT',
@@ -188,6 +268,8 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
         let safeName = (file.name || `upload_${Date.now()}`).replace(/[^\w.-]+/g, '_');
         let dims = {};
 
+        let thumbnailUrl;
+
         if (kind === 'IMAGE') {
           try {
             const resized = await resizeImageForGalleryUpload(file);
@@ -197,6 +279,21 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
             dims = { width: resized.width, height: resized.height };
           } catch {
             dims = await loadImageDimensions(file);
+          }
+        } else {
+          try {
+            const thumb = await captureVideoThumbnail(file);
+            dims = { width: thumb.width, height: thumb.height };
+            const thumbName = thumb.file.name.replace(/[^\w.-]+/g, '_');
+            const thumbPresign = await requestPresignedUpload({
+              filename: thumbName,
+              contentType: 'image/jpeg',
+              albumId,
+            });
+            await putToPresigned(thumbPresign.uploadUrl, thumb.file, 'image/jpeg');
+            thumbnailUrl = thumbPresign.publicUrl;
+          } catch {
+            /* poster optional — notification may lack thumb until re-upload */
           }
         }
 
@@ -218,6 +315,7 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
           linkedAlbumId: albumId,
           linkedEventId: eventId,
           capturedAt,
+          ...(thumbnailUrl ? { thumbnailUrl } : {}),
           ...(typeof dims.width === 'number' && dims.width > 0 ? { width: dims.width } : {}),
           ...(typeof dims.height === 'number' && dims.height > 0 ? { height: dims.height } : {}),
         });

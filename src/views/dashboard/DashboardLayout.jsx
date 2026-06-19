@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -25,6 +26,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { getNotifications } from '../../services/notifications';
+import { NOTIFICATIONS_REFRESH_EVENT } from '@/lib/notificationEvents';
 import { getDashboardCapabilities } from '@/lib/dashboardCapabilities';
 import { canAccessAdminDashboard } from '@/lib/adminAccess';
 const LogoSVG = "/images/logo.svg";
@@ -136,14 +138,26 @@ export default function DashboardLayout({ children }) {
         return () => window.removeEventListener('pxi:capabilities-refresh', handleRefresh);
     }, [mounted, refreshCapabilities]);
 
+    const refreshNotificationCount = useCallback(() => {
+        if (!user?.id) return;
+        getNotifications(user.id, 50)
+            .then((res) => setNotificationCount(res.unreadCount ?? 0))
+            .catch(() => setNotificationCount(0));
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (!mounted || !user?.id) return undefined;
+        const onInboxRefresh = () => refreshNotificationCount();
+        window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, onInboxRefresh);
+        return () => window.removeEventListener(NOTIFICATIONS_REFRESH_EVENT, onInboxRefresh);
+    }, [mounted, user?.id, refreshNotificationCount]);
+
     useEffect(() => {
         if (!mounted || !user?.id) return;
         // Skip phone verification when user came from mobile app (e.g. "Go to Web" for vendor setup)
         if (user.phoneNumber || fromMobile) {
             setPhoneCheckDone(true);
-            getNotifications(user.id, 50)
-                .then((res) => setNotificationCount(res.unreadCount ?? res.notifications?.length ?? 0))
-                .catch(() => setNotificationCount(0));
+            refreshNotificationCount();
             return;
         }
         // Refetch user once to avoid stale cache (e.g. user added phone on mobile)
@@ -224,14 +238,12 @@ export default function DashboardLayout({ children }) {
         router.replace('/');
     };
 
-    // Use stable placeholder until mounted to avoid hydration mismatch (server has no user, client has name initial)
-    const avatarFallback = mounted ? (user?.name?.charAt(0)?.toUpperCase() || 'P') : 'P';
     const hasOrganizerAccess = hasLiveOpsAccess;
     const showDevCaps = searchParams.get('debugCaps') === '1';
     const memberNavItems = [
         ...baseNavItems,
-        ...(hasLiveOpsAccess ? bouncerNavItems : []),
-        ...(hasOrganizerAccess ? organizerMockNavItems : []),
+        ...(mounted && hasLiveOpsAccess ? bouncerNavItems : []),
+        ...(mounted && hasOrganizerAccess ? organizerMockNavItems : []),
         ...footerNavItems,
     ];
 
@@ -310,8 +322,8 @@ export default function DashboardLayout({ children }) {
                             ).map(({ label, path, icon: Icon, end, vendorOnly, nonVendorOnly, bouncerOnly, organizerOnly }) => {
                                 if (vendorOnly && mounted && !user?.isVendor) return null;
                                 if (nonVendorOnly && mounted && user?.isVendor) return null;
-                                if (bouncerOnly && !hasLiveOpsAccess) return null;
-                                if (organizerOnly && !hasOrganizerAccess) return null;
+                                if (bouncerOnly && mounted && !hasLiveOpsAccess) return null;
+                                if (organizerOnly && mounted && !hasOrganizerAccess) return null;
                                 const isActive = end ? pathname === path : pathname.startsWith(path + '/') || pathname === path;
                                 const showPassportAlert = mounted && path === '/dashboard/passport' && !user?.isPassportIssued;
                                 const showNotificationBadge = path === '/dashboard/notifications' && notificationCount > 0;
@@ -366,19 +378,10 @@ export default function DashboardLayout({ children }) {
                             className={`${sidebarCollapsed ? 'inline-flex h-11 w-11 mx-auto items-center justify-center rounded-full transition-all duration-300' : `${SIDEBAR_BTN_BASE} justify-center md:justify-start`} bg-transparent border border-transparent text-white/80`}
                             title={sidebarCollapsed ? 'Profile' : undefined}
                         >
-                            {mounted && user?.avatarUrl ? (
-                                <Image
-                                    src={user.avatarUrl}
-                                    alt={user?.name ?? ''}
-                                    width={36}
-                                    height={36}
-                                    unoptimized
-                                    className="w-10 h-10 rounded-full overflow-hidden"
-                                />
+                            {mounted ? (
+                                <UserAvatar user={user} size={40} alt={user?.name ?? ''} />
                             ) : (
-                                <div className="w-10 h-10 rounded-full bg-pxi-purple/20 flex items-center justify-center text-pxi-purple font-bold text-sm">
-                                    {avatarFallback}
-                                </div>
+                                <UserAvatar size={40} />
                             )}
                             {!sidebarCollapsed && (
                                 <>

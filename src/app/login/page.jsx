@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import LoginPage from '@/views/auth/LoginPage';
+import EmailAuthPage from '@/views/auth/EmailAuthPage';
 
 function LoginFallback() {
   return (
@@ -12,7 +12,7 @@ function LoginFallback() {
 export default function Page() {
   return (
     <Suspense fallback={<LoginFallback />}>
-      <LoginPage />
+      <EmailAuthPage />
     </Suspense>
   );
 }
