@@ -50,6 +50,7 @@ const normalizeApiEvent = (e) => {
     latitude: e.latitude ?? null,
     longitude: e.longitude ?? null,
     vendorHint,
+    albumId: e.albumId || e.albums?.[0]?.id || null,
   };
 };
 

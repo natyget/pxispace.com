@@ -423,8 +423,17 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
 
       {/* Right: album details — desktop only; mobile uses three-dot sheet */}
       <div className="album-details-pane">
-        <div className="album-pane-scroll min-h-0 flex-1">
-          <PublicAlbumDetailsPanel album={album} albumId={albumId} />
+        <div className="album-details-shell">
+          <div className="album-details-chrome relative z-[5] w-full shrink-0 bg-black border-b border-white/5">
+            <div className="relative flex h-14 items-center justify-center">
+              <h2 className="truncate px-10 text-center text-xl font-black uppercase tracking-[0.24em] text-white">
+                Event Details
+              </h2>
+            </div>
+          </div>
+          <div className="album-pane-scroll min-h-0 flex-1 overflow-y-auto no-scrollbar">
+            <PublicAlbumDetailsPanel album={album} albumId={albumId} />
+          </div>
         </div>
       </div>
 

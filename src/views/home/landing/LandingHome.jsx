@@ -266,8 +266,8 @@ export default function LandingHome() {
                  transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                  viewport={{ once: false, amount: 0.3 }}
                  className="absolute top-[75%] lg:relative lg:top-auto left-0 right-0 lg:left-auto lg:right-auto lg:mt-0 lg:mb-0 w-full flex justify-center lg:justify-start z-[60]">
-                <Link href="/login" className="relative z-30 px-8 py-3.5 md:py-5 flex items-center w-fit gap-3 justify-center rounded-full bg-white text-black font-bold tracking-[0.05em] uppercase text-xs md:text-sm transition-transform duration-300 hover:scale-105 shadow-[0_0_30px_rgba(255,255,255,0.2)]">
-                  Immortalize Your Nights <ArrowRight className="w-4 h-4 md:w-5 md:h-5"/>
+                <Link href="/events" className="relative z-30 px-8 py-3.5 md:py-5 flex items-center w-fit gap-3 justify-center rounded-full bg-white text-black font-bold tracking-[0.05em] uppercase text-xs md:text-sm transition-transform duration-300 hover:scale-105 shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                  Explore Events <ArrowRight className="w-4 h-4 md:w-5 md:h-5"/>
                 </Link>
               </motion.div>
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { eventsService } from '@/services/events';
 import EventCard from '@/views/events/EventCard';
@@ -36,6 +37,7 @@ function normalizeApiEvent(e) {
     price,
     attendees: e._count?.tickets ?? 0,
     ticketType: e.ticketType || null,
+    albumId: e.albumId || e.albums?.[0]?.id || null,
 
     // Fields used by original EventCard UI
     image: e.coverImage || DEFAULT_IMG,
@@ -98,9 +100,16 @@ export default function PublicEventsPage() {
   const [cityQuery, setCityQuery] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [openMenu, setOpenMenu] = useState(null); // 'trending' | 'time' | 'city' | null
-  const headerBarRef = useRef(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const filterTrayRef = useRef(null);
+  const searchInputRef = useRef(null);
   const bgCoverRef = useRef(null);
   const bgTransitionIdRef = useRef(0);
+  const [portalTarget, setPortalTarget] = useState(null);
+
+  useEffect(() => {
+    setPortalTarget(document.getElementById('navbar-center-portal'));
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -257,8 +266,8 @@ export default function PublicEventsPage() {
 
   useEffect(() => {
     const onDocPointerDown = (event) => {
-      if (!headerBarRef.current) return;
-      if (headerBarRef.current.contains(event.target)) return;
+      if (!filterTrayRef.current) return;
+      if (filterTrayRef.current.contains(event.target)) return;
       setOpenMenu(null);
     };
     document.addEventListener('pointerdown', onDocPointerDown);
@@ -270,75 +279,28 @@ export default function PublicEventsPage() {
   const cityLabel = cityFilter || 'All';
 
   return (
-    <div className="min-h-screen bg-black pt-20 font-sans text-white md:pt-24">
-      <div
-        ref={headerBarRef}
-        className="mt-1 border-b border-white/10 bg-black/80 py-3 backdrop-blur-2xl md:mt-2"
-      >
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-center gap-x-4 gap-y-3 px-4 md:px-6">
-          <div className="flex w-full max-w-full flex-wrap items-center justify-center gap-2 sm:w-auto md:gap-3">
-            <div className="w-full sm:w-[220px] lg:w-[260px]">
-              <input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search..."
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-white/30 focus:border-pxi-purple/50 focus:outline-none"
-              />
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {/* Newest */}
-              <div className="relative" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  onClick={() => setOpenMenu((m) => (m === 'trending' ? null : 'trending'))}
-                  className="rounded-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/10 transition"
-                >
-                  Trending: {trendingLabel} <HugeiconsIcon icon={ArrowDown01Icon} size={14} className="inline-block ml-1 -mt-0.5 opacity-70" />
-                </button>
-                {openMenu === 'trending' ? (
-                  <div className="absolute left-0 top-full mt-2 w-44 rounded-2xl border border-white/10 bg-zinc-950/90 backdrop-blur p-2 z-50">
-                    {TRENDING_OPTIONS.map((o) => (
-                      <button
-                        key={o.id}
-                        type="button"
-                        onClick={() => {
-                          setTrending(o.id);
-                          setOpenMenu(null);
-                        }}
-                        className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold hover:bg-white/5 ${
-                          trending === o.id ? 'text-pxi-purple' : 'text-white'
-                        }`}
-                      >
-                        {o.label}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              {/* This week */}
-              <div className="relative" onClick={(e) => e.stopPropagation()}>
+    <div className="min-h-screen bg-black pt-16 font-sans text-white md:pt-20">
+      {portalTarget
+        ? createPortal(
+            <div ref={filterTrayRef} className="flex flex-wrap items-center justify-center gap-0 rounded-full bg-white/[0.04] px-2 py-1 backdrop-blur-2xl border-0">
+              {/* Time */}
+              <div className="relative flex items-center" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
                   onClick={() => setOpenMenu((m) => (m === 'time' ? null : 'time'))}
-                  className="rounded-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/10 transition"
+                  className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs md:text-sm font-semibold text-white/80 transition-colors hover:text-white"
                 >
-                  Time: {timeLabel} <HugeiconsIcon icon={ArrowDown01Icon} size={14} className="inline-block ml-1 -mt-0.5 opacity-70" />
+                  {timeLabel}
+                  <HugeiconsIcon icon={ArrowDown01Icon} size={11} className="opacity-50" />
                 </button>
                 {openMenu === 'time' ? (
-                  <div className="absolute left-0 top-full mt-2 w-52 rounded-2xl border border-white/10 bg-zinc-950/90 backdrop-blur p-2 z-50">
+                  <div className="absolute left-0 top-full z-50 mt-2 w-52 rounded-2xl border border-white/10 bg-zinc-950/90 p-2 backdrop-blur">
                     {TIME_OPTIONS.map((o) => (
                       <button
                         key={o.id}
                         type="button"
-                        onClick={() => {
-                          setTimeFilter(o.id);
-                          setOpenMenu(null);
-                        }}
-                        className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold hover:bg-white/5 ${
-                          timeFilter === o.id ? 'text-pxi-purple' : 'text-white'
-                        }`}
+                        onClick={() => { setTimeFilter(o.id); setOpenMenu(null); }}
+                        className={`w-full rounded-xl px-3 py-2 text-left text-sm font-semibold hover:bg-white/5 ${timeFilter === o.id ? 'text-[#d946ef]' : 'text-white'}`}
                       >
                         {o.label}
                       </button>
@@ -347,39 +309,35 @@ export default function PublicEventsPage() {
                 ) : null}
               </div>
 
-              {/* Nearby */}
-              <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <span className="text-xs font-semibold text-white/40 px-1 select-none leading-none flex items-center h-full" aria-hidden="true">in</span>
+
+              {/* City */}
+              <div className="relative flex items-center" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
                   onClick={() => setOpenMenu((m) => (m === 'city' ? null : 'city'))}
-                  className="rounded-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/10 transition"
+                  className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs md:text-sm font-semibold text-white/80 transition-colors hover:text-white"
                 >
-                  City: {cityLabel} <HugeiconsIcon icon={ArrowDown01Icon} size={14} className="inline-block ml-1 -mt-0.5 opacity-70" />
+                  {cityLabel === 'All' ? 'City' : cityLabel}
+                  <HugeiconsIcon icon={ArrowDown01Icon} size={11} className="opacity-50" />
                 </button>
                 {openMenu === 'city' ? (
-                  <div className="absolute left-0 top-full mt-2 w-[320px] rounded-2xl border border-white/10 bg-zinc-950/90 backdrop-blur p-2 z-50">
+                  <div className="absolute left-0 top-full z-50 mt-2 w-[320px] rounded-2xl border border-white/10 bg-zinc-950/90 p-2 backdrop-blur">
                     <div className="px-2 pb-2">
                       <input
                         value={cityQuery}
                         onChange={(e) => setCityQuery(e.target.value)}
                         placeholder="Search city..."
-                        className="w-full rounded-xl bg-black/40 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-pxi-purple/50"
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none"
                       />
                     </div>
                     <div className="max-h-64 overflow-auto">
-                      {CITY_PRESETS.filter((c) =>
-                        c.toLowerCase().includes(cityQuery.trim().toLowerCase())
-                      ).map((c) => (
+                      {CITY_PRESETS.filter((c) => c.toLowerCase().includes(cityQuery.trim().toLowerCase())).map((c) => (
                         <button
                           key={c}
                           type="button"
-                          onClick={() => {
-                            setCityFilter(c);
-                            setOpenMenu(null);
-                          }}
-                          className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold hover:bg-white/5 ${
-                            cityFilter === c ? 'text-pxi-purple' : 'text-white'
-                          }`}
+                          onClick={() => { setCityFilter(c); setOpenMenu(null); }}
+                          className={`w-full rounded-xl px-3 py-2 text-left text-sm font-semibold hover:bg-white/5 ${cityFilter === c ? 'text-[#d946ef]' : 'text-white'}`}
                         >
                           {c}
                         </button>
@@ -389,36 +347,51 @@ export default function PublicEventsPage() {
                 ) : null}
               </div>
 
+              <span className="h-4 w-px bg-white/10 mx-1" aria-hidden />
+
+              {/* Favorites heart */}
               <button
                 type="button"
                 onClick={() => setFavoritesOnly((v) => !v)}
-                className={`rounded-full border px-4 py-2.5 text-sm font-bold transition ${
-                  favoritesOnly
-                    ? 'border-pxi-purple bg-pxi-purple/20 text-pxi-purple'
-                    : 'border-white/10 bg-white/5 text-white hover:bg-white/10'
-                }`}
+                className={`rounded-full p-2 transition-colors ${favoritesOnly ? 'text-[#d946ef]' : 'text-white/50 hover:text-white'}`}
+                aria-label="Toggle favorites"
               >
-                <HugeiconsIcon
-                  icon={FavouriteIcon}
-                  size={16}
-                  className={`inline-block mr-1.5 -mt-0.5 ${favoritesOnly ? 'fill-current' : ''}`}
-                />
-                Favorites{favoriteIds.size > 0 ? ` (${favoriteIds.size})` : ''}
+                <HugeiconsIcon icon={FavouriteIcon} size={15} className={favoritesOnly ? 'fill-current' : ''} />
               </button>
-            </div>
-          </div>
 
-          <Link
-            href="/dashboard/events/new"
-            className="inline-flex shrink-0 items-center justify-center self-center rounded-full bg-white px-4 py-2.5 text-sm font-bold text-black transition hover:opacity-90"
-          >
-            Create Event
-          </Link>
-        </div>
-      </div>
+              <span className="h-4 w-px bg-white/10 mx-1" aria-hidden />
+
+              {/* Expandable search */}
+              <div className="flex items-center">
+                {searchOpen ? (
+                  <input
+                    ref={searchInputRef}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
+                    placeholder="Search..."
+                    className="w-[120px] rounded-full bg-transparent px-2.5 py-1 text-xs text-white placeholder-white/30 focus:outline-none"
+                    autoFocus
+                  />
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
+                  className="rounded-full p-2 text-white/50 transition-colors hover:text-white"
+                  aria-label="Search events"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                  </svg>
+                </button>
+              </div>
+            </div>,
+            portalTarget
+          )
+        : null}
 
       {/* Hero */}
-      <section className="relative isolate w-full overflow-hidden bg-black px-6 pb-24 pt-8">
+      <section className="relative w-full overflow-hidden bg-black px-6 pb-16 pt-12 flex items-center" style={{ minHeight: '400px', maxHeight: '65svh' }}>
         {/* Blurred cover image backdrop (full-bleed, crossfades with slide) */}
         {bgCover ? (
           <div className="absolute inset-0 z-0">
@@ -439,7 +412,7 @@ export default function PublicEventsPage() {
           </div>
         ) : null}
         {heroEvents.length > 0 ? (
-          <div className="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center gap-2">
+          <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center gap-2">
             {heroEvents.map((_, i) => (
               <button
                 key={i}
@@ -453,53 +426,54 @@ export default function PublicEventsPage() {
             ))}
           </div>
         ) : null}
-        <div className="relative z-10 mx-auto grid max-w-[1440px] grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center">
-          <div className="relative order-2 lg:order-1 flex justify-center [perspective:1000px]">
+        <div className="relative z-10 mx-auto grid max-w-[1440px] grid-cols-1 gap-12 lg:grid-cols-2 lg:items-start pt-6 md:pt-10">
+          <div className="relative order-2 lg:order-1 flex justify-center">
             {featured ? (
               <img
                 src={featured.coverImage}
-                className="w-full max-w-lg aspect-[4/5] object-cover rounded-2xl shadow-2xl transform [transform:rotateY(-15deg)_rotateX(5deg)_scale(0.96)]"
+                className="w-full max-w-[300px] aspect-[3/4] object-cover rounded-3xl shadow-2xl border border-white/10"
                 alt="Featured"
               />
             ) : (
-              <div className="w-full max-w-lg aspect-[4/5] rounded-2xl border border-white/10 bg-zinc-900/50" />
+              <div className="w-full max-w-[300px] aspect-[3/4] rounded-3xl bg-zinc-900/50 border border-white/10" />
             )}
           </div>
 
           <div className="order-1 lg:order-2 space-y-6">
             <div className="space-y-2">
-              <h1 className="text-3xl md:text-7xl font-bold leading-tight tracking-tight">
+              <h1 className="text-3xl font-black leading-tight tracking-tight md:text-5xl">
                 {featured?.title || (loading ? 'Loading…' : 'No events')}
               </h1>
-              <p className="text-xl text-neutral-400 font-medium">
-                {featured?.venue || '—'} {featured?.startDate ? `· ${formatHeroDate(featured.startDate)}` : ''}
+              <p className="text-base font-medium text-neutral-400">
+                {featured?.venue || '—'}{featured?.startDate ? ` · ${formatHeroDate(featured.startDate)}` : ''}
               </p>
             </div>
             <Link
-              href={featured ? `/events/${featured.id}` : '/events'}
-              className="inline-flex items-center justify-center bg-white text-black font-bold px-10 py-4 rounded-full text-lg hover:scale-105 transition-transform"
+              href={featured ? (featured.ticketType === 'PAID' ? `/events/${featured.id}/checkout` : `/events/${featured.id}`) : '/events'}
+              className="inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md px-7 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:scale-105 border-0"
             >
-              Open event
+              {featured?.ticketType === 'PAID' ? 'Get tickets' : 'Join album'}
             </Link>
           </div>
         </div>
       </section>
 
       {/* Grid */}
-      <main className="max-w-[1440px] mx-auto px-4 md:px-6 pb-20">
-        <h2 className="text-2xl font-bold mb-6">Upcoming Events</h2>
+      <main className="mx-auto max-w-[1440px] px-4 pb-20 md:px-6">
+        <h2 className="mb-6 text-xl font-black uppercase tracking-widest text-white/60">Upcoming Events</h2>
         {loading && events.length === 0 ? (
           <div className="text-neutral-400">Loading…</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-4">
+          <div className="grid gap-6 w-full justify-center" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
             {rest.map((ev) => (
-              <EventCard
-                key={ev.id}
-                event={ev}
-                detailBasePath="/events"
-                favorited={favoriteIds.has(String(ev.id))}
-                onToggleFavorite={handleToggleFavorite}
-              />
+              <div key={ev.id} className="w-full max-w-[420px] mx-auto">
+                <EventCard
+                  event={ev}
+                  favorited={favoriteIds.has(String(ev.id))}
+                  onToggleFavorite={handleToggleFavorite}
+                  detailBasePath="/events"
+                />
+              </div>
             ))}
           </div>
         )}

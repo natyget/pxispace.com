@@ -19,6 +19,7 @@ const Navbar = () => {
     const pathname = usePathname();
     const router = useRouter();
     const isLanding = pathname === "/";
+    const showEventsLink = pathname === "/" || pathname === "/about" || pathname === "/platform";
 
     useEffect(() => setMounted(true), []);
     useEffect(() => {
@@ -54,7 +55,7 @@ const Navbar = () => {
 
     const navLinks = [
         { name: "Home", path: "/" },
-        { name: "Events", path: "/events" },
+        { name: "Platform", path: "/platform" },
         { name: "About", path: "/about" },
     ];
 
@@ -85,18 +86,22 @@ const Navbar = () => {
                 </Link>
 
                 {/* Center: Toggle Menu */}
-                <div className="hidden absolute left-1/2 -translate-x-1/2 items-center justify-center z-10 bg-[#131313] p-1 md:p-1.5 rounded-full md:flex">
-                    {navLinks.map((link) => (
-                        <Link
-                            key={link.path}
-                            href={link.path}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`flex items-center justify-center h-[34px] px-8 rounded-full text-[10px] font-bold uppercase tracking-widest leading-none transition-colors ${linkClass(link.path)}`}
-                        >
-                            {link.name}
-                        </Link>
-                    ))}
-                </div>
+                {pathname === "/events" ? (
+                    <div id="navbar-center-portal" className="absolute left-1/2 -translate-x-1/2 items-center justify-center z-10 flex" />
+                ) : (
+                    <div className="hidden absolute left-1/2 -translate-x-1/2 items-center justify-center z-10 bg-[#131313] p-1 md:p-1.5 rounded-full md:flex">
+                        {navLinks.map((link) => (
+                            <Link
+                                key={link.path}
+                                href={link.path}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={`flex items-center justify-center h-[34px] px-8 rounded-full text-[10px] font-bold uppercase tracking-widest leading-none transition-colors ${linkClass(link.path)}`}
+                            >
+                                {link.name}
+                            </Link>
+                        ))}
+                    </div>
+                )}
 
                 {/* Right: Actions */}
                 <div className="flex h-[30px] items-center justify-end gap-3 md:h-10 md:gap-3">
@@ -106,12 +111,19 @@ const Navbar = () => {
                                 <PxiLoadingIcon />
                             </div>
                         )
+                    ) : showEventsLink ? (
+                        <Link
+                            href="/events"
+                            className="hidden items-center justify-center text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors md:flex h-[34px] px-6"
+                        >
+                            Events
+                        </Link>
                     ) : isAuthenticated ? (
                         <div className="relative hidden md:block" ref={userMenuRef}>
                             <button
                                 type="button"
                                 onClick={() => setUserMenuOpen((v) => !v)}
-                                className="flex h-10 items-center gap-2 rounded-full border border-white/8 bg-zinc-900/60 px-3 hover:border-white/15 transition-all"
+                                className="flex h-10 items-center gap-2 rounded-full bg-zinc-900/60 px-3 hover:bg-zinc-900/80 transition-all border-0 outline-none"
                             >
                                 <UserAvatar user={user} size={24} alt={user?.name ?? ''} />
                                 <span className="text-white text-xs font-semibold max-w-[100px] truncate">
@@ -150,7 +162,7 @@ const Navbar = () => {
                     ) : (
                         <Link
                             href="/login"
-                            className="hidden h-[34px] px-6 items-center justify-center rounded-full bg-pxi-purple text-white shadow-[0_0_20px_rgba(216,74,255,0.4)] text-[10px] sm:text-xs font-bold uppercase tracking-[0.05em] leading-none hover:scale-105 hover:brightness-110 transition-all duration-300 md:flex"
+                            className="bg-gradient-to-r from-[#d946ef] to-[#c026d3] text-white shadow-[0_0_20px_rgba(217,70,239,0.4)] hidden h-[34px] px-6 items-center justify-center rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-[0.05em] leading-none hover:scale-105 transition-all duration-300 md:flex"
                         >
                             Sign Up
                         </Link>
@@ -190,7 +202,15 @@ const Navbar = () => {
                             </Link>
                         ))}
 
-                        {mounted && isAuthenticated ? (
+                        {showEventsLink ? (
+                            <Link
+                                href="/events"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-zinc-400"
+                            >
+                                Events
+                            </Link>
+                        ) : mounted && isAuthenticated ? (
                             <>
                                 <Link
                                     href="/dashboard"
@@ -210,7 +230,7 @@ const Navbar = () => {
                             <Link
                                 href="/login"
                                 onClick={() => setMobileMenuOpen(false)}
-                                className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-white"
+                                className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-[var(--pxi-orange)]"
                             >
                                 Sign Up
                             </Link>

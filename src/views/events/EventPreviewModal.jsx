@@ -86,7 +86,7 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
           {event.description ? (
             <p className="text-zinc-500 text-sm leading-relaxed line-clamp-4">{event.description}</p>
           ) : null}
-          <div className="pt-2">
+          <div className="pt-2 flex flex-col sm:flex-row gap-3">
             <Button
               variant="neon"
               className="w-full uppercase tracking-widest"
@@ -95,6 +95,16 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
             >
               RSVP
             </Button>
+            {event.albumId ? (
+              <Link
+                href={`/album/${event.albumId}`}
+                onClick={onClose}
+                className="w-full flex items-center justify-center gap-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md px-6 py-3 text-[11px] font-black uppercase tracking-widest text-white transition hover:scale-105"
+              >
+                <HugeiconsIcon icon={Calendar01Icon} size={16} />
+                Open Album
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>

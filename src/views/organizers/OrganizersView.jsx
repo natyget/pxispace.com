@@ -8,8 +8,8 @@ import { ZapIcon, CreditCardIcon, UserGroupIcon, HelpCircleIcon, ArrowRight02Ico
 
 import { CheckmarkCircle02Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 
-const DiscoverJPG = '/images/discover.jpg';
-const CreateJPG = '/images/create.jpg';
+const DiscoverJPG = '/images/screenshots/Event.PNG';
+const CreateJPG = '/images/screenshots/Gallery.png';
 const SLIDES = [DiscoverJPG, CreateJPG];
 const SLIDE_INTERVAL = 3500;
 

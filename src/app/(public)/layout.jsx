@@ -28,6 +28,7 @@ export default function PublicLayout({ children }) {
     pathname?.startsWith('/features') ||
     pathname?.startsWith('/competitors') ||
     pathname === '/organizers' ||
+    pathname === '/platform' ||
     pathname?.startsWith('/events') ||
     pathname?.startsWith('/u/') ||
     pathname?.startsWith('/p/') ||

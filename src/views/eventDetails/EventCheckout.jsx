@@ -18,16 +18,6 @@ import { buildTicketEmailPreviewInput } from '@/lib/ticketEmailPreview';
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
 
-const PUBLIC_EULA_COPY = (
-  <>
-    By getting a ticket you acknowledge this is a public event. Content you post may be visible to others and may be used in
-    marketing by the host and PXI. See also the{' '}
-    <Link href="/terms_of_service" className="text-pxi-purple underline hover:text-white">
-      Terms of Service
-    </Link>
-    . Paid purchases are subject to the fee and refund rules shown at checkout.
-  </>
-);
 
 function parseTicketTiers(event) {
   if (!event || event.ticketType !== 'PAID') return [];
@@ -75,7 +65,6 @@ export default function EventCheckout({ basePath = '/events' }) {
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState(null);
   const [joinSuccess, setJoinSuccess] = useState(false);
-  const [eulaAccepted, setEulaAccepted] = useState(false);
   const [selectedTierId, setSelectedTierId] = useState(null);
   const [walletSecret, setWalletSecret] = useState(null);
   const [walletOpen, setWalletOpen] = useState(false);
@@ -126,9 +115,6 @@ export default function EventCheckout({ basePath = '/events' }) {
 
   const isPaidEvent = apiEvent?.ticketType === 'PAID' && tiers.length > 0;
   const isFreeEvent = apiEvent && apiEvent.ticketType !== 'PAID';
-  const isPublic = apiEvent?.visibility === 'PUBLIC';
-  const requireEula = isPublic && (isPaidEvent || isFreeEvent);
-  const canPurchase = !requireEula || eulaAccepted;
 
   const refreshQuote = useCallback(() => {
     if (!apiEvent?.id || !isPaidEvent) {
@@ -155,10 +141,6 @@ export default function EventCheckout({ basePath = '/events' }) {
 
   const startWalletCheckout = async () => {
     if (!apiEvent || !isPaidEvent || !isAuthenticated || !user?.id) return;
-    if (!canPurchase) {
-      setJoinError('Please accept the EULA to continue.');
-      return;
-    }
     setJoining(true);
     setJoinError(null);
     try {
@@ -174,10 +156,6 @@ export default function EventCheckout({ basePath = '/events' }) {
 
   const startHostedCheckout = async () => {
     if (!apiEvent || !isPaidEvent || !isAuthenticated || !user?.id) return;
-    if (!canPurchase) {
-      setJoinError('Please accept the EULA to continue.');
-      return;
-    }
     setJoining(true);
     setJoinError(null);
     try {
@@ -206,10 +184,6 @@ export default function EventCheckout({ basePath = '/events' }) {
 
   const handleFreeTicket = async () => {
     if (!apiEvent || !isFreeEvent || !isAuthenticated || !user?.id) return;
-    if (!canPurchase) {
-      setJoinError('Please accept the EULA to continue.');
-      return;
-    }
     setJoining(true);
     setJoinError(null);
     try {
@@ -254,189 +228,212 @@ export default function EventCheckout({ basePath = '/events' }) {
         Event not found.
       </div>
     );
-  }
-
-  return (
+  }  return (
     <>
-      <div className="bg-black text-white min-h-screen">
-        <div className="border-b border-white/10 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-30">
-          <div className="container mx-auto px-6 py-4">
-            <Link
-              href={`${basePath}/${apiEvent.id}`}
-              className="inline-flex items-center gap-2 text-sm font-bold text-zinc-400 hover:text-white transition-colors"
-            >
-              <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
-              Back to event
-            </Link>
-          </div>
-        </div>
-
-        <div className="container mx-auto px-6 py-12 max-w-lg">
-          <div className="flex gap-4 mb-8">
+      <div className="relative text-white min-h-screen bg-[#050505] overflow-x-hidden font-sans">
+        {/* Blurred album cover background */}
+        <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+          {apiEvent?.coverImage ? (
             <img
               src={displayImageSrc(apiEvent.coverImage, DEFAULT_IMG)}
               alt=""
-              className="w-24 h-24 rounded-2xl object-cover border border-white/10 shrink-0"
-              onError={onImageErrorToDefault}
-              referrerPolicy="no-referrer-when-downgrade"
+              className="absolute inset-0 h-full w-full object-cover scale-150 blur-[60px] opacity-[0.35]"
             />
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-widest text-pxi-purple mb-1">Checkout</p>
-              <h1 className="text-xl font-black uppercase tracking-tight leading-tight">{apiEvent.name}</h1>
-              <p className="text-zinc-500 text-sm mt-1">
-                {apiEvent.startDate
-                  ? new Date(apiEvent.startDate).toLocaleDateString(undefined, { dateStyle: 'medium' })
-                  : 'Date TBA'}
-                {' · '}
-                {apiEvent.location || 'Location TBA'}
-              </p>
-            </div>
+          ) : null}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/45 to-black" />
+        </div>
+
+        <div className="relative z-10">
+          {/* Floating Back Navigation */}
+          <div className="absolute top-24 left-6 z-30 md:left-8">
+            <Link
+              href={`${basePath}/${apiEvent.id}`}
+              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors"
+            >
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={15} />
+              Back to event
+            </Link>
           </div>
 
-          <div className="glass-dark p-8 rounded-3xl border border-white/10 space-y-6">
-            <h2 className="text-3xl font-black">{priceDisplay}</h2>
-            <p className="text-zinc-500 text-xs leading-relaxed">
-              Total for paid tickets includes service and processing fees — see quote when you select a tier.
-            </p>
+          {/* Main Split Container */}
+          <div className="flex min-h-screen items-center justify-center py-20 px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-4xl w-full mx-auto">
+              
+              {/* Left column: Checkout Card */}
+              <div className="order-2 lg:order-1 w-full">
+                <div className="bg-white/[0.04] backdrop-blur-2xl p-8 rounded-[2rem] space-y-6 shadow-2xl border-0">
+                  <h2 className="text-3xl font-black">{priceDisplay}</h2>
+                  <p className="text-zinc-400 text-xs leading-relaxed">
+                    Total for paid tickets includes service and processing fees — see quote when you select a tier.
+                  </p>
 
-            {isPaidEvent && tiers.length > 0 ? (
-              <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Ticket tier</p>
-                {tiers.map((t) => (
-                  <label
-                    key={t.id ?? 'base'}
-                    className={`flex items-center justify-between gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${
-                      selectedTierId === t.id
-                        ? 'border-pxi-purple bg-pxi-purple/10'
-                        : 'border-white/10 hover:border-white/20'
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="tier"
-                        className="accent-pxi-purple"
-                        checked={selectedTierId === t.id}
-                        onChange={() => setSelectedTierId(t.id)}
-                      />
-                      <span className="font-bold">{t.label}</span>
-                    </span>
-                    <span className="text-sm font-black">{formatPrice(t.priceUsd, apiEvent.currency)}</span>
-                  </label>
-                ))}
-              </div>
-            ) : null}
+                  {isPaidEvent && tiers.length > 0 ? (
+                    <div className="space-y-3">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Ticket tier</p>
+                      {tiers.map((t) => (
+                        <label
+                          key={t.id ?? 'base'}
+                          className={`flex items-center justify-between gap-3 p-4 rounded-xl cursor-pointer transition-colors border-0 ${
+                            selectedTierId === t.id
+                              ? 'bg-[#d946ef]/20 text-white'
+                              : 'bg-white/[0.03] hover:bg-white/[0.06] text-white/80'
+                          }`}
+                        >
+                          <span className="flex items-center gap-3">
+                            <div className={`h-4 w-4 rounded-full border flex items-center justify-center transition-all ${
+                              selectedTierId === t.id ? 'border-[#d946ef] bg-[#d946ef]/20' : 'border-white/30 bg-transparent'
+                            }`}>
+                              {selectedTierId === t.id && (
+                                <div className="h-2 w-2 rounded-full bg-[#d946ef]" />
+                              )}
+                            </div>
+                            <span className="font-bold text-white text-sm">{t.label}</span>
+                          </span>
+                          <span className="text-sm font-black text-amber-200">{formatPrice(t.priceUsd, apiEvent.currency)}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
 
-            {requireEula ? (
-              <div className="rounded-xl border border-white/10 bg-black/30 p-4 space-y-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-pxi-purple">EULA — public event</p>
-                <p className="text-zinc-400 text-xs leading-relaxed [&_a]:inline">{PUBLIC_EULA_COPY}</p>
-                <label className="flex items-start gap-3 text-sm text-zinc-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="mt-1 accent-pxi-purple"
-                    checked={eulaAccepted}
-                    onChange={(e) => setEulaAccepted(e.target.checked)}
-                  />
-                  <span>I have read and agree to this agreement before purchasing or claiming a ticket.</span>
-                </label>
-              </div>
-            ) : null}
+                  {joinSuccess ? (
+                    <div className="space-y-6">
+                      <div className="space-y-4 rounded-2xl bg-white/[0.03] p-5">
+                        <div className="text-center space-y-1">
+                           <p className="text-lg font-black uppercase tracking-widest text-white">You’re in!</p>
+                           <p className="text-sm text-zinc-400">Your spot is confirmed.</p>
+                        </div>
+                        {eventAlbumId ? (
+                          <Link
+                            href={`/album/${eventAlbumId}`}
+                            className="inline-flex w-full items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md py-3 text-xs font-black uppercase tracking-widest text-white transition hover:scale-105 border-0"
+                          >
+                            Open album
+                          </Link>
+                        ) : null}
+                        {successDeepLinkUrl ? (
+                          <a
+                            href={successDeepLinkUrl}
+                            className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/5 py-3 text-center text-xs font-black uppercase tracking-widest text-white transition hover:bg-white/10"
+                          >
+                            Open in PXI app
+                          </a>
+                        ) : null}
+                        {issuedTicketId ? (
+                          <>
+                            {issuedPreview ? (
+                              <TicketEmailPreview preview={issuedPreview} className="mt-2" compact />
+                            ) : null}
+                            <TicketDeliveryActions ticketId={issuedTicketId} />
+                          </>
+                        ) : (
+                          <p className="text-zinc-400 text-xs text-center">Preparing your delivery options…</p>
+                        )}
+                      </div>
 
-            {!isAuthenticated ? (
-              <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-6 space-y-4">
-                <p className="text-sm font-bold text-white">Sign in or create an account to continue</p>
-                <p className="text-zinc-500 text-xs leading-relaxed">
-                  We need your PXI account to issue your ticket. After you log in, you can pay with Apple Pay, Google Pay, Link,
-                  or card (hosted checkout).
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Link
-                    href={loginHref}
-                    className="flex-1 text-center py-3 rounded-xl bg-pxi-purple text-white text-xs font-black uppercase tracking-widest hover:opacity-90 transition-opacity"
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    href={signupHref}
-                    className="flex-1 text-center py-3 rounded-xl border border-white/20 text-white text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-colors"
-                  >
-                    Sign up
-                  </Link>
+                      {/* Browse More Events button once checked out */}
+                      <Link
+                        href="/events"
+                        className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#d946ef] to-[#c026d3] py-4 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_20px_rgba(217,70,239,0.4)] transition hover:scale-105 border-0"
+                      >
+                        Browse More Events
+                      </Link>
+                    </div>
+                  ) : (
+                    <>
+                      {!isAuthenticated ? (
+                        <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-6 space-y-4">
+                          <p className="text-sm font-bold text-white">Sign in or create an account to continue</p>
+                          <p className="text-zinc-500 text-xs leading-relaxed">
+                            We need your PXI account to issue your ticket. After you log in, you can pay with Apple Pay, Google Pay, Link,
+                            or card.
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <Link
+                              href={loginHref}
+                              className="flex-1 text-center py-3 rounded-xl bg-pxi-purple text-white text-xs font-black uppercase tracking-widest hover:opacity-90 transition-opacity border-0"
+                            >
+                              Log in
+                            </Link>
+                            <Link
+                              href={signupHref}
+                              className="flex-1 text-center py-3 rounded-xl border border-white/25 hover:bg-white/5 text-white text-xs font-black uppercase tracking-widest transition-colors"
+                            >
+                              Sign up
+                            </Link>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {joinError && <p className="text-red-400 text-sm">{joinError}</p>}
+
+                      {isAuthenticated && isPaidEvent ? (
+                        <div className="space-y-3">
+                          <Button
+                            variant="neon"
+                            className="w-full uppercase tracking-widest py-4"
+                            onClick={startWalletCheckout}
+                            disabled={joining}
+                          >
+                            {joining && !walletOpen ? (
+                              <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" />
+                            ) : (
+                              'Apple Pay / Google Pay / Link'
+                            )}
+                          </Button>
+                        </div>
+                      ) : null}
+
+                      {isAuthenticated && isFreeEvent ? (
+                        <Button
+                          variant="neonOrange"
+                          className="w-full uppercase tracking-widest py-4"
+                          onClick={handleFreeTicket}
+                          disabled={joining}
+                        >
+                          {joining ? <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" /> : 'Join Event'}
+                        </Button>
+                      ) : null}
+
+                      <p className="text-center text-[10px] text-zinc-500">
+                        By joining, you agree to our{' '}
+                        <Link href="/terms_of_service" className="underline hover:text-zinc-400">Terms of Service</Link>.
+                      </p>
+
+                      <div className="flex items-start gap-2 px-1">
+                        <HugeiconsIcon icon={Alert01Icon} size={13} className="text-zinc-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-zinc-600 text-xs leading-relaxed">
+                          The vendor flat fee and consumer fee structure apply to paid tickets as described at checkout. Face-value
+                          refunds depend on the organizer.
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
-            ) : null}
 
-            {joinSuccess && (
-              <div className="space-y-4 rounded-2xl border border-green-500/30 bg-green-500/10 p-4">
-                <p className="text-green-300 text-sm font-semibold">You’re in!</p>
-                {successDeepLinkUrl ? (
-                  <a
-                    href={successDeepLinkUrl}
-                    className="block w-full rounded-xl bg-white py-3 text-center text-xs font-black uppercase tracking-widest text-black transition hover:bg-zinc-200"
-                  >
-                    Open in PXI app
-                  </a>
-                ) : null}
-                {issuedTicketId ? (
-                  <>
-                    {issuedPreview ? (
-                      <TicketEmailPreview preview={issuedPreview} className="mt-2" compact />
-                    ) : null}
-                    <TicketDeliveryActions ticketId={issuedTicketId} />
-                  </>
-                ) : (
-                  <p className="text-zinc-400 text-xs">Preparing your delivery options…</p>
-                )}
+              {/* Right side: Cover Card */}
+              <div className="order-1 lg:order-2 w-full flex justify-center">
+                <div className="w-full max-w-[340px] aspect-[3/4] overflow-hidden rounded-[2rem] border-0 shadow-2xl relative">
+                  <img
+                    src={displayImageSrc(apiEvent.coverImage, DEFAULT_IMG)}
+                    alt={apiEvent.name}
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-pxi-purple mb-1">Event Cover</p>
+                    <h1 className="text-2xl font-black uppercase tracking-tight text-white leading-tight">{apiEvent.name}</h1>
+                    <p className="text-zinc-300 text-xs mt-1">
+                      {apiEvent.startDate
+                        ? new Date(apiEvent.startDate).toLocaleDateString(undefined, { dateStyle: 'medium' })
+                        : 'Date TBA'}
+                      {' · '}
+                      {apiEvent.location || 'Location TBA'}
+                    </p>
+                  </div>
+                </div>
               </div>
-            )}
-            {joinError && <p className="text-red-400 text-sm">{joinError}</p>}
 
-            {isAuthenticated && isPaidEvent ? (
-              <div className="space-y-3">
-                <Button
-                  variant="primary"
-                  className="w-full uppercase tracking-widest py-4 !bg-pxi-purple hover:!bg-pxi-purple shadow-[0_0_20px_rgba(216,74,255,0.4)]"
-                  onClick={startWalletCheckout}
-                  disabled={joining || joinSuccess || !canPurchase}
-                >
-                  {joining && !walletOpen ? (
-                    <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" />
-                  ) : (
-                    'Apple Pay / Google Pay / Link'
-                  )}
-                </Button>
-                <p className="text-[10px] text-zinc-600 text-center leading-relaxed">
-                  Opens secure Stripe payment (wallets when your browser supports them). Or use hosted checkout below.
-                </p>
-                <Button
-                  variant="glass"
-                  className="w-full uppercase tracking-widest py-4 border-white/10"
-                  onClick={startHostedCheckout}
-                  disabled={joining || joinSuccess || !canPurchase}
-                >
-                  Continue with card (hosted checkout)
-                </Button>
-              </div>
-            ) : null}
-
-            {isAuthenticated && isFreeEvent ? (
-              <Button
-                variant="primary"
-                className="w-full uppercase tracking-widest py-4 !bg-pxi-purple hover:!bg-pxi-purple shadow-[0_0_20px_rgba(216,74,255,0.4)]"
-                onClick={handleFreeTicket}
-                disabled={joining || joinSuccess || !canPurchase}
-              >
-                {joining ? <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" /> : 'Join Event'}
-              </Button>
-            ) : null}
-
-            <div className="flex items-start gap-2 px-1">
-              <HugeiconsIcon icon={Alert01Icon} size={13} className="text-zinc-600 flex-shrink-0 mt-0.5" />
-              <p className="text-zinc-600 text-xs leading-relaxed">
-                The vendor flat fee and consumer fee structure apply to paid tickets as described at checkout. Face-value
-                refunds depend on the organizer.
-              </p>
             </div>
           </div>
         </div>
