@@ -19,7 +19,6 @@ const PaymentForm = ({ onSuccess, onCancel, returnUrl }) => {
     if (!stripe || !elements) return;
     setLoading(true);
     setError(null);
-    // Payment Element: validate + collect wallet / Link state before confirm (required for Apple Pay, Google Pay, Link).
     const { error: submitError } = await elements.submit();
     if (submitError) {
       setLoading(false);
@@ -40,7 +39,6 @@ const PaymentForm = ({ onSuccess, onCancel, returnUrl }) => {
       setError(confirmError.message || 'Payment failed');
       return;
     }
-    // Succeeded immediately, or processing (webhook will fulfill). Redirect flows leave the page.
     const status = paymentIntent?.status;
     if (status && status !== 'succeeded' && status !== 'processing') {
       setError('Payment could not be completed. Please try again.');
@@ -50,26 +48,26 @@ const PaymentForm = ({ onSuccess, onCancel, returnUrl }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <PaymentElement
         options={{
           layout: 'tabs',
-          wallets: { applePay: 'auto', googlePay: 'auto' },
+          wallets: { applePay: 'never', googlePay: 'never' },
         }}
       />
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-red-400 font-bold">{error}</p>}
       <div className="flex gap-3 pt-2">
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 py-3 rounded-xl border border-white/10 text-zinc-400 text-sm font-medium hover:bg-white/5 transition-all"
+          className="flex-1 py-3.5 rounded-full border-0 bg-white/5 text-white/80 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all hover:scale-105"
         >
           Cancel
         </button>
         <Button
           type="submit"
           variant="primary"
-          className="flex-1 uppercase tracking-widest py-3 !bg-pxi-purple hover:!bg-pxi-purple shadow-[0_0_20px_rgba(216,74,255,0.4)]"
+          className="flex-1 uppercase tracking-widest py-3.5 rounded-full !bg-gradient-to-r from-[#d946ef] to-[#c026d3] text-white font-black text-xs shadow-[0_0_22px_rgba(217,70,239,0.5),0_0_8px_rgba(217,70,239,0.3)] hover:scale-105 transition-all border-0"
           disabled={!stripe || loading}
         >
           {loading ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin mx-auto" /> : 'Pay now'}
@@ -93,39 +91,82 @@ export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open, re
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center sm:py-6">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onCancel} aria-hidden />
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-[16px]" onClick={onCancel} aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="pxi-stripe-modal-title"
-        className="relative z-[1] w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl"
+        className="relative z-[1] w-full max-w-md overflow-hidden rounded-[2.5rem] bg-zinc-950/70 backdrop-blur-[36px] shadow-2xl border-0"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-5 py-4">
-          <h3 id="pxi-stripe-modal-title" className="text-white text-xl font-black">
+        <div className="flex shrink-0 items-center justify-between px-6 pt-6 pb-2">
+          <h3 id="pxi-stripe-modal-title" className="text-white text-xl font-black uppercase tracking-tight">
             Complete payment
           </h3>
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg p-1 text-zinc-500 hover:bg-white/5 hover:text-white transition-colors"
+            className="rounded-full p-1.5 text-zinc-500 hover:bg-white/5 hover:text-white transition-colors"
             aria-label="Close"
           >
             <HugeiconsIcon icon={Cancel01Icon} size={20} />
           </button>
         </div>
-        {/* Explicit max-height so Link/card/phone fields can scroll on short viewports */}
-        <div className="max-h-[min(78dvh,calc(100vh-7rem))] overflow-y-auto overscroll-y-contain px-5 py-5 touch-pan-y [scrollbar-gutter:stable]">
+        <div className="max-h-[min(78dvh,calc(100vh-7rem))] overflow-y-auto overscroll-y-contain px-6 pb-6 pt-4 touch-pan-y [scrollbar-gutter:stable]">
           {stripePromise ? (
             <Elements
               stripe={stripePromise}
               options={{
                 clientSecret,
+                features: {
+                  link: 'never',
+                },
                 appearance: {
                   theme: 'night',
                   variables: {
-                    colorPrimary: '#d84aff',
-                    borderRadius: '12px',
+                    colorPrimary: '#d946ef',
+                    colorBackground: 'rgba(255, 255, 255, 0.03)',
+                    colorText: '#ffffff',
+                    colorTextSecondary: '#a1a1aa',
+                    colorDanger: '#f87171',
+                    borderRadius: '16px',
+                    fontFamily: 'Inter, system-ui, sans-serif',
                   },
+                  rules: {
+                    '.Tabs': {
+                      flexWrap: 'nowrap',
+                      overflowX: 'auto',
+                    },
+                    '.Tab': {
+                      border: 'none',
+                      boxShadow: 'none',
+                      backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                      borderRadius: '16px',
+                      flex: '0 0 auto',
+                      minWidth: '95px',
+                    },
+                    '.Tab--selected': {
+                      backgroundColor: 'rgba(217, 70, 239, 0.15)',
+                      color: '#ffffff',
+                    },
+                    '.Input': {
+                      border: 'none',
+                      boxShadow: 'none',
+                      backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                      padding: '12px 20px',
+                      borderRadius: '9999px',
+                    },
+                    '.Input:focus': {
+                      boxShadow: '0 0 0 2px rgba(217, 70, 239, 0.4)',
+                    },
+                    '.Label': {
+                      color: '#e4e4e7',
+                      fontWeight: '700',
+                      fontSize: '12px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      marginBottom: '6px',
+                    }
+                  }
                 },
               }}
             >
