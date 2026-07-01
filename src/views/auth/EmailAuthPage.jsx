@@ -544,11 +544,11 @@ export default function EmailAuthPage() {
                             }}
                         >
                             {isLogin ? 'By signing in, you agree to our ' : 'By signing up, you agree to our '}
-                            <Link href="/terms_of_service" className="text-pxi-purple underline">
+                            <Link href="/legal#terms" className="text-pxi-purple underline">
                                 Terms of Service
                             </Link>
                             {', '}
-                            <Link href="/privacy_policy" className="text-pxi-purple underline">
+                            <Link href="/legal#privacy" className="text-pxi-purple underline">
                                 Privacy Policy
                             </Link>
                             {', and '}

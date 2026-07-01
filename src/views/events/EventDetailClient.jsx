@@ -21,7 +21,7 @@ import { getSiteUrl } from '@/lib/siteUrl';
 
 const NAVBAR_TOP = 'top-[var(--public-navbar-height)]';
 /** Mobile: edge-to-edge under navbar; desktop: offset below fixed header */
-const DESKTOP_NAVBAR_OFFSET = 'md:pt-[var(--public-navbar-height)]';
+const DESKTOP_NAVBAR_OFFSET = 'pt-0 md:pt-[var(--public-navbar-height)]';
 const SECTION_EMPTY = 'Empty yet';
 const SECTION_NONE = 'None';
 
@@ -292,13 +292,13 @@ export default function EventDetailClient() {
   return (
     <div className={`min-h-screen bg-[#0a0a0a] font-sans text-white antialiased ${DESKTOP_NAVBAR_OFFSET}`}>
       {isPublicEvent ? <JsonLd data={buildEventJsonLd(apiEvent, getSiteUrl())} /> : null}
-      <div className={`fixed left-3 z-50 ${NAVBAR_TOP}`}>
+      <div className="fixed left-4 z-50 top-20 md:top-24 md:left-8">
         <Link
           href="/events"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-300 hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-full border-0 bg-black/45 hover:bg-black/65 backdrop-blur-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white transition-all shadow-lg"
         >
           <HugeiconsIcon icon={ArrowLeftIcon} className="size-3.5" />
-          Events
+          event
         </Link>
       </div>
 
@@ -325,9 +325,9 @@ export default function EventDetailClient() {
         </div>
 
         <div className="relative z-10">
-          <main className="mx-auto flex w-full max-w-5xl flex-col px-3 pb-40 sm:px-6 md:mt-4 md:grid md:pb-32 md:grid-cols-[minmax(0,1fr)_auto] md:gap-8 2xl:max-w-6xl 2xl:gap-12">
+          <main className="mx-auto flex w-full max-w-5xl flex-col px-3 pb-40 sm:px-6 md:mt-4 md:grid md:pb-32 md:grid-cols-[minmax(0,1fr)_auto] md:gap-8 md:pt-16 2xl:max-w-6xl 2xl:gap-12">
             <div className="order-1 flex flex-col md:order-2 md:w-[330px] lg:w-[375px] 2xl:w-[400px]">
-              <div className={`relative top-0 mx-auto h-auto w-full md:sticky ${NAVBAR_TOP} md:max-w-[400px]`}>
+              <div className="relative top-0 mx-auto h-auto w-full md:sticky md:top-28 md:max-w-[400px]">
                 <div className="relative -mx-3 w-[calc(100%+1.5rem)] sm:-mx-6 sm:w-[calc(100%+3rem)] md:mx-0 md:w-full">
                   <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-900 md:rounded-xl">
                     {heroImage ? (
@@ -357,8 +357,8 @@ export default function EventDetailClient() {
               </div>
             </div>
 
-            <div className="order-2 mb-0 mt-4 flex flex-col gap-4 border-t border-white/15 pt-2 md:order-1 md:mt-2 md:pt-0">
-              <div className="flex flex-col gap-3 pt-12 md:pt-0">
+            <div className="order-2 mb-0 mt-2 flex flex-col gap-4 border-t border-white/15 pt-4 md:order-1 md:mt-2 md:pt-0">
+              <div className="flex flex-col gap-3">
                 <h2 className="text-base font-semibold tracking-tight text-white">Organizer</h2>
                 {hasHost ? (
                   <div className="flex items-start justify-between gap-3">
@@ -380,7 +380,7 @@ export default function EventDetailClient() {
                     {albumId ? (
                       <Link
                         href={`/album/${albumId}`}
-                        className="pxi-orange-pill inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-black uppercase tracking-widest text-white"
+                        className="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[var(--pxi-orange)]/15 px-3.5 text-xs font-black uppercase tracking-widest text-[var(--pxi-orange)] transition hover:bg-[var(--pxi-orange)]/25"
                       >
                         Open album
                       </Link>

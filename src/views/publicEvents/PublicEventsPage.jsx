@@ -53,6 +53,8 @@ function normalizeApiEvent(e) {
           ? 'Public'
           : String(e.visibility || 'Event'),
     vendorHint,
+    organizerAvatar: e.host?.avatarUrl || e.user?.avatarUrl || null,
+    organizerName: e.host?.name || e.host?.username || e.user?.name || e.user?.username || 'Host',
   };
 }
 
@@ -93,6 +95,7 @@ export default function PublicEventsPage() {
   const [bgCover, setBgCover] = useState(null);
   const [bgPrevCover, setBgPrevCover] = useState(null);
   const [bgFadeIn, setBgFadeIn] = useState(true);
+  const [activeTab, setActiveTab] = useState('featured');
 
   const [trending, setTrending] = useState(TRENDING_OPTIONS[0].id); // All | Nearest | Largest
   const [timeFilter, setTimeFilter] = useState(TIME_OPTIONS[0].id); // All | Today | This week | This month
@@ -201,16 +204,24 @@ export default function PublicEventsPage() {
     return list;
   }, [events, trending, timeFilter, cityFilter, searchQuery, favoritesOnly, favoriteIds]);
 
-  const heroEvents = useMemo(() => filteredSortedEvents.slice(0, 8), [filteredSortedEvents]);
+  const heroEvents = useMemo(() => {
+    let list = [...events];
+    list.sort((a, b) => (b.createdAt?.getTime?.() ?? 0) - (a.createdAt?.getTime?.() ?? 0));
+    return list.slice(0, 8);
+  }, [events]);
+
   const featured = useMemo(
     () => (heroEvents.length ? heroEvents[Math.min(heroIndex, heroEvents.length - 1)] : null),
     [heroEvents, heroIndex]
   );
-  const rest = useMemo(() => (filteredSortedEvents.length > 1 ? filteredSortedEvents.slice(1) : []), [filteredSortedEvents]);
 
-  useEffect(() => {
-    setHeroIndex(0);
-  }, [trending, timeFilter, cityFilter, searchQuery]);
+  const rest = useMemo(() => {
+    const isFiltered = searchQuery || timeFilter !== 'all' || cityFilter !== 'All' || favoritesOnly || trending !== 'all';
+    if (!isFiltered) {
+      return filteredSortedEvents.length > 1 ? filteredSortedEvents.slice(1) : [];
+    }
+    return filteredSortedEvents;
+  }, [filteredSortedEvents, searchQuery, timeFilter, cityFilter, favoritesOnly, trending]);
 
   // Auto-advance carousel
   useEffect(() => {
@@ -282,16 +293,16 @@ export default function PublicEventsPage() {
     <div className="min-h-screen bg-black pt-16 font-sans text-white md:pt-20">
       {portalTarget
         ? createPortal(
-            <div ref={filterTrayRef} className="flex flex-wrap items-center justify-center gap-0 rounded-full bg-white/[0.04] px-2 py-1 backdrop-blur-2xl border-0">
+            <div ref={filterTrayRef} className="flex flex-nowrap items-center justify-center gap-0 rounded-full bg-white/[0.04] px-2.5 py-1 md:px-3.5 md:py-1.5 backdrop-blur-2xl border-0 shadow-lg max-w-[92vw]">
               {/* Time */}
               <div className="relative flex items-center" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
                   onClick={() => setOpenMenu((m) => (m === 'time' ? null : 'time'))}
-                  className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs md:text-sm font-semibold text-white/80 transition-colors hover:text-white"
+                  className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm md:text-base font-semibold text-white/80 transition-colors hover:text-white"
                 >
                   {timeLabel}
-                  <HugeiconsIcon icon={ArrowDown01Icon} size={11} className="opacity-50" />
+                  <HugeiconsIcon icon={ArrowDown01Icon} size={13} className="opacity-50" />
                 </button>
                 {openMenu === 'time' ? (
                   <div className="absolute left-0 top-full z-50 mt-2 w-52 rounded-2xl border border-white/10 bg-zinc-950/90 p-2 backdrop-blur">
@@ -309,17 +320,17 @@ export default function PublicEventsPage() {
                 ) : null}
               </div>
 
-              <span className="text-xs font-semibold text-white/40 px-1 select-none leading-none flex items-center h-full" aria-hidden="true">in</span>
+              <span className="text-sm md:text-base font-semibold text-white/40 px-1.5 select-none leading-none flex items-center h-full" aria-hidden="true">in</span>
 
               {/* City */}
               <div className="relative flex items-center" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
                   onClick={() => setOpenMenu((m) => (m === 'city' ? null : 'city'))}
-                  className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs md:text-sm font-semibold text-white/80 transition-colors hover:text-white"
+                  className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm md:text-base font-semibold text-white/80 transition-colors hover:text-white"
                 >
                   {cityLabel === 'All' ? 'City' : cityLabel}
-                  <HugeiconsIcon icon={ArrowDown01Icon} size={11} className="opacity-50" />
+                  <HugeiconsIcon icon={ArrowDown01Icon} size={13} className="opacity-50" />
                 </button>
                 {openMenu === 'city' ? (
                   <div className="absolute left-0 top-full z-50 mt-2 w-[320px] rounded-2xl border border-white/10 bg-zinc-950/90 p-2 backdrop-blur">
@@ -347,19 +358,22 @@ export default function PublicEventsPage() {
                 ) : null}
               </div>
 
-              <span className="h-4 w-px bg-white/10 mx-1" aria-hidden />
+              {!!user?.id ? (
+                <>
+                  <span className="h-5 w-px bg-white/10 mx-2" aria-hidden />
+                  {/* Favorites heart */}
+                  <button
+                    type="button"
+                    onClick={() => setFavoritesOnly((v) => !v)}
+                    className={`rounded-full p-2.5 transition-colors ${favoritesOnly ? 'text-[#d946ef]' : 'text-white/50 hover:text-white'}`}
+                    aria-label="Toggle favorites"
+                  >
+                    <HugeiconsIcon icon={FavouriteIcon} size={18} className={favoritesOnly ? 'fill-current' : ''} />
+                  </button>
+                </>
+              ) : null}
 
-              {/* Favorites heart */}
-              <button
-                type="button"
-                onClick={() => setFavoritesOnly((v) => !v)}
-                className={`rounded-full p-2 transition-colors ${favoritesOnly ? 'text-[#d946ef]' : 'text-white/50 hover:text-white'}`}
-                aria-label="Toggle favorites"
-              >
-                <HugeiconsIcon icon={FavouriteIcon} size={15} className={favoritesOnly ? 'fill-current' : ''} />
-              </button>
-
-              <span className="h-4 w-px bg-white/10 mx-1" aria-hidden />
+              <span className="h-5 w-px bg-white/10 mx-2" aria-hidden />
 
               {/* Expandable search */}
               <div className="flex items-center">
@@ -370,17 +384,17 @@ export default function PublicEventsPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
                     placeholder="Search..."
-                    className="w-[120px] rounded-full bg-transparent px-2.5 py-1 text-xs text-white placeholder-white/30 focus:outline-none"
+                    className="w-[85px] sm:w-[120px] rounded-full bg-transparent px-2 py-1 text-xs text-white placeholder-white/30 focus:outline-none"
                     autoFocus
                   />
                 ) : null}
                 <button
                   type="button"
                   onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
-                  className="rounded-full p-2 text-white/50 transition-colors hover:text-white"
+                  className="rounded-full p-2.5 text-white/50 transition-colors hover:text-white"
                   aria-label="Search events"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
                   </svg>
                 </button>
@@ -390,8 +404,8 @@ export default function PublicEventsPage() {
           )
         : null}
 
-      {/* Hero */}
-      <section className="relative w-full overflow-hidden bg-black px-6 pb-16 pt-12 flex items-center" style={{ minHeight: '400px', maxHeight: '65svh' }}>
+      {/* Hero (Desktop only) */}
+      <section className="hidden md:flex relative w-full overflow-hidden bg-black px-6 pb-16 pt-12 items-center" style={{ minHeight: '400px', maxHeight: '65svh' }}>
         {/* Blurred cover image backdrop (full-bleed, crossfades with slide) */}
         {bgCover ? (
           <div className="absolute inset-0 z-0">
@@ -399,16 +413,16 @@ export default function PublicEventsPage() {
               <img
                 src={bgPrevCover}
                 alt=""
-                className="absolute inset-0 h-full w-full scale-110 object-cover blur-[48px] opacity-[0.52]"
+                className="absolute inset-0 h-full w-full scale-110 object-cover blur-[60px] opacity-[0.65]"
               />
             ) : null}
             <img
               src={bgCover}
               alt=""
-              className="absolute inset-0 h-full w-full scale-110 object-cover blur-[48px] transition-opacity duration-700 ease-out"
-              style={{ opacity: bgFadeIn ? 0.52 : 0 }}
+              className="absolute inset-0 h-full w-full scale-110 object-cover blur-[60px] transition-opacity duration-700 ease-out"
+              style={{ opacity: bgFadeIn ? 0.65 : 0 }}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/45 to-black" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/15 to-black/75" />
           </div>
         ) : null}
         {heroEvents.length > 0 ? (
@@ -431,11 +445,11 @@ export default function PublicEventsPage() {
             {featured ? (
               <img
                 src={featured.coverImage}
-                className="w-full max-w-[300px] aspect-[3/4] object-cover rounded-3xl shadow-2xl border border-white/10"
+                className="w-full max-w-[300px] aspect-[3/4] object-cover rounded-3xl shadow-2xl border-0"
                 alt="Featured"
               />
             ) : (
-              <div className="w-full max-w-[300px] aspect-[3/4] rounded-3xl bg-zinc-900/50 border border-white/10" />
+              <div className="w-full max-w-[300px] aspect-[3/4] rounded-3xl bg-zinc-900/50 border-0" />
             )}
           </div>
 
@@ -458,25 +472,88 @@ export default function PublicEventsPage() {
         </div>
       </section>
 
+      {/* Mobile Tab Selector */}
+      <div className="flex border-b border-white/5 md:hidden justify-center bg-black pt-4">
+        <div className="flex gap-8 px-6">
+          <button
+            type="button"
+            onClick={() => setActiveTab('featured')}
+            className={`pb-3 text-sm font-black uppercase tracking-widest transition-all ${
+              activeTab === 'featured'
+                ? 'text-white border-b-2 border-white'
+                : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            Featured
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('browse')}
+            className={`pb-3 text-sm font-black uppercase tracking-widest transition-all ${
+              activeTab === 'browse'
+                ? 'text-white border-b-2 border-white'
+                : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            Browse
+          </button>
+        </div>
+      </div>
+
       {/* Grid */}
       <main className="mx-auto max-w-[1440px] px-4 pb-20 md:px-6">
-        <h2 className="mb-6 text-xl font-black uppercase tracking-widest text-white/60">Upcoming Events</h2>
-        {loading && events.length === 0 ? (
-          <div className="text-neutral-400">Loading…</div>
-        ) : (
-          <div className="grid gap-6 w-full justify-center" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
-            {rest.map((ev) => (
-              <div key={ev.id} className="w-full max-w-[420px] mx-auto">
-                <EventCard
-                  event={ev}
-                  favorited={favoriteIds.has(String(ev.id))}
-                  onToggleFavorite={handleToggleFavorite}
-                  detailBasePath="/events"
-                />
-              </div>
-            ))}
-          </div>
-        )}
+        <h2 className="hidden md:block mb-6 text-xl font-black uppercase tracking-widest text-white/60">Upcoming Events</h2>
+
+        {/* Mobile Tab Views */}
+        <div className="md:hidden">
+          {activeTab === 'featured' ? (
+            <div className="grid gap-6 w-full justify-center py-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
+              {heroEvents.map((ev) => (
+                <div key={ev.id} className="w-full max-w-[420px] mx-auto">
+                  <EventCard
+                    event={ev}
+                    favorited={favoriteIds.has(String(ev.id))}
+                    onToggleFavorite={handleToggleFavorite}
+                    detailBasePath="/events"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-6 w-full justify-center py-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
+              {rest.map((ev) => (
+                <div key={ev.id} className="w-full max-w-[420px] mx-auto">
+                  <EventCard
+                    event={ev}
+                    favorited={favoriteIds.has(String(ev.id))}
+                    onToggleFavorite={handleToggleFavorite}
+                    detailBasePath="/events"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Grid View */}
+        <div className="hidden md:block">
+          {loading && events.length === 0 ? (
+            <div className="text-neutral-400">Loading…</div>
+          ) : (
+            <div className="grid gap-6 w-full justify-center" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
+              {rest.map((ev) => (
+                <div key={ev.id} className="w-full max-w-[420px] mx-auto">
+                  <EventCard
+                    event={ev}
+                    favorited={favoriteIds.has(String(ev.id))}
+                    onToggleFavorite={handleToggleFavorite}
+                    detailBasePath="/events"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

@@ -37,7 +37,7 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[8vh] md:pt-[10vh] p-4 md:p-8 overflow-y-auto"
       onClick={onClose}
     >
       {/* Backdrop — click anywhere to close */}
@@ -47,7 +47,7 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
       <div
         role="dialog"
         aria-modal="true"
-        className="relative w-full max-w-lg bg-zinc-950 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        className="relative w-full max-w-xl bg-zinc-950 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative h-56 md:h-64">
@@ -57,7 +57,7 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
             fill
             unoptimized
             className="object-cover"
-            sizes="(max-width: 640px) 100vw, 32rem"
+            sizes="(max-width: 640px) 100vw, 36rem"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent" />
           <button
@@ -93,18 +93,16 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
               onClick={goFull}
               icon={<HugeiconsIcon icon={Ticket01Icon} size={16} />}
             >
-              RSVP
+              {event.ticketType === 'PAID' || (event.price && event.price !== 'Free') ? 'Get Ticket' : 'RSVP'}
             </Button>
-            {event.albumId ? (
-              <Link
-                href={`/album/${event.albumId}`}
-                onClick={onClose}
-                className="w-full flex items-center justify-center gap-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md px-6 py-3 text-[11px] font-black uppercase tracking-widest text-white transition hover:scale-105"
-              >
-                <HugeiconsIcon icon={Calendar01Icon} size={16} />
-                Open Album
-              </Link>
-            ) : null}
+            <Link
+              href={`/album/${event.albumId || event.id}`}
+              onClick={onClose}
+              className="w-full flex items-center justify-center gap-2 rounded-full bg-[var(--pxi-orange)]/15 hover:bg-[var(--pxi-orange)]/25 px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[var(--pxi-orange)] transition hover:scale-105 border-0 shadow-md"
+            >
+              <HugeiconsIcon icon={Calendar01Icon} size={16} className="text-[var(--pxi-orange)]" />
+              Open Album
+            </Link>
           </div>
         </div>
       </div>

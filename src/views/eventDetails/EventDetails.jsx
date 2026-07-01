@@ -73,7 +73,7 @@ const PUBLIC_EULA_COPY = (
   <>
     By getting a ticket you acknowledge this is a public event. Content you post may be visible to others and may be used in
     marketing by the host and PXI. See also the{' '}
-    <Link href="/terms_of_service" className="text-pxi-purple underline hover:text-white">
+    <Link href="/legal#terms" className="text-pxi-purple underline hover:text-white">
       Terms of Service
     </Link>
     . Paid purchases are subject to the fee and refund rules shown at checkout.

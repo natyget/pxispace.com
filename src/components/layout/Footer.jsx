@@ -15,7 +15,7 @@ const linkClass = 'text-gray-500 hover:text-pxi-purple transition-colors';
 
 const Footer = () => {
   return (
-    <footer className="bg-black pt-24 pb-12 border-t border-gray-900">
+    <footer className="bg-black pt-24 pb-12">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-2 gap-y-12 gap-x-8 pt-12 border-t border-gray-800 text-left md:grid-cols-5">
           {/* Brand */}

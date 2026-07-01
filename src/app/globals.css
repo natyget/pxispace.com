@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "@geoapify/geocoder-autocomplete/styles/minimal-dark.css";
 
+html, body {
+  overscroll-behavior-y: none;
+}
+
 /* Geoapify autocomplete — PXI dark theme overrides */
 .geoapify-geocoder-autocomplete-container {
   width: 100%;

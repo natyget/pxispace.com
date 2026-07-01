@@ -62,7 +62,7 @@ const Navbar = () => {
 
     const linkClass = (path) =>
         pathname === path
-            ? "bg-gradient-to-r from-[#d946ef] to-[#c026d3] text-white shadow-[0_0_20px_rgba(217,70,239,0.4)]"
+            ? "bg-gradient-to-r from-[#d946ef] to-[#c026d3] text-white shadow-[0_0_22px_rgba(217,70,239,0.5),0_0_8px_rgba(217,70,239,0.3)]"
             : "text-white/50 hover:text-white";
 
     return (
@@ -114,7 +114,7 @@ const Navbar = () => {
                     ) : showEventsLink ? (
                         <Link
                             href="/events"
-                            className="hidden items-center justify-center text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors md:flex h-[34px] px-6"
+                            className="hidden items-center justify-center text-xs font-black uppercase tracking-widest text-white hover:opacity-85 transition-opacity md:flex h-[34px] px-6"
                         >
                             Events
                         </Link>
@@ -160,12 +160,20 @@ const Navbar = () => {
                             )}
                         </div>
                     ) : (
-                        <Link
-                            href="/login"
-                            className="bg-gradient-to-r from-[#d946ef] to-[#c026d3] text-white shadow-[0_0_20px_rgba(217,70,239,0.4)] hidden h-[34px] px-6 items-center justify-center rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-[0.05em] leading-none hover:scale-105 transition-all duration-300 md:flex"
-                        >
-                            Sign Up
-                        </Link>
+                        <div className="hidden items-center gap-6 md:flex">
+                            <Link
+                                href={`/login?redirect=${encodeURIComponent(pathname)}`}
+                                className="text-xs font-black uppercase tracking-widest text-white hover:opacity-85 transition-opacity"
+                            >
+                                Log In
+                            </Link>
+                            <Link
+                                href="/login?redirect=/dashboard/events/new"
+                                className="inline-flex h-[34px] px-6 items-center justify-center rounded-full bg-white text-black hover:bg-neutral-200 text-xs font-black uppercase tracking-widest transition-all hover:scale-105 duration-300 shadow-md"
+                            >
+                                Create an event
+                            </Link>
+                        </div>
                     )}
                     <button
                         type="button"
@@ -203,13 +211,13 @@ const Navbar = () => {
                         ))}
 
                         {showEventsLink ? (
-                            <Link
-                                href="/events"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-zinc-400"
-                            >
-                                Events
-                            </Link>
+                             <Link
+                                 href="/events"
+                                 onClick={() => setMobileMenuOpen(false)}
+                                 className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-white"
+                             >
+                                 Events
+                             </Link>
                         ) : mounted && isAuthenticated ? (
                             <>
                                 <Link
@@ -227,13 +235,22 @@ const Navbar = () => {
                                 </button>
                             </>
                         ) : (
-                            <Link
-                                href="/login"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-[var(--pxi-orange)]"
-                            >
-                                Sign Up
-                            </Link>
+                            <>
+                                <Link
+                                    href={`/login?redirect=${encodeURIComponent(pathname)}`}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-white hover:text-white/80 transition-colors"
+                                >
+                                    Log In
+                                </Link>
+                                <Link
+                                    href="/login?redirect=/dashboard/events/new"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex h-12 w-full items-center justify-center rounded-full bg-white text-black hover:bg-neutral-200 text-sm font-black uppercase tracking-widest transition-all hover:scale-105 shadow-md mt-4"
+                                >
+                                    Create an event
+                                </Link>
+                            </>
                         )}
                     </div>
                 </>
@@ -247,7 +264,7 @@ const Navbar = () => {
                 onClick={() => setShowLogoutModal(false)}
             >
                 <div
-                    className="bg-zinc-950 border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl"
+                    className="bg-zinc-950/65 backdrop-blur-[36px] border-0 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <h2 className="text-white font-black text-lg mb-2 tracking-tight">Sign out?</h2>
@@ -255,13 +272,13 @@ const Navbar = () => {
                     <div className="flex gap-3">
                         <button
                             onClick={handleLogout}
-                            className="flex-1 px-4 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm hover:bg-pxi-purple/90 transition-all"
+                            className="flex-1 px-5 py-3 rounded-full bg-pxi-purple text-white font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all border-0"
                         >
                             Sign Out
                         </button>
                         <button
                             onClick={() => setShowLogoutModal(false)}
-                            className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-zinc-400 font-medium text-sm hover:bg-white/5 transition-all"
+                            className="flex-1 px-5 py-3 rounded-full bg-white/5 text-zinc-400 hover:text-white font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all border-0"
                         >
                             Cancel
                         </button>

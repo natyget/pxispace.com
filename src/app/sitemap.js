@@ -15,7 +15,5 @@ export default function sitemap() {
     { url: `${base}/support`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/legal`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
     { url: `${base}/child-safety`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
-    { url: `${base}/privacy_policy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
-    { url: `${base}/terms_of_service`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
   ];
 }

@@ -110,7 +110,7 @@ export default function TicketDeliveryActions({ ticketId, className = '' }) {
         type="button"
         onClick={handleEmail}
         disabled={loadingEmail}
-        className="w-full rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 px-4 py-3 text-sm font-bold text-white transition-colors disabled:opacity-50 flex items-center justify-between gap-3"
+        className="w-full rounded-full bg-white/5 border border-white/10 hover:bg-white/10 px-5 py-3.5 text-xs font-black uppercase tracking-widest text-white transition-all duration-500 disabled:opacity-60 disabled:scale-95 disabled:cursor-wait flex items-center justify-between gap-3 shadow-lg"
       >
         <span className="flex items-center gap-3">
           <span aria-hidden className="text-base">✉️</span>
@@ -126,7 +126,7 @@ export default function TicketDeliveryActions({ ticketId, className = '' }) {
           type="button"
           onClick={handleApple}
           disabled={loadingApple}
-          className="w-full rounded-xl bg-black text-white border border-white/15 hover:bg-zinc-900 px-4 py-3 text-sm font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-3"
+          className="w-full rounded-full bg-black text-white border border-white/15 hover:bg-zinc-900 px-5 py-3.5 text-xs font-black uppercase tracking-widest transition-all duration-500 disabled:opacity-60 disabled:scale-95 disabled:cursor-wait flex items-center justify-center gap-3 shadow-lg"
         >
           <span aria-hidden className="text-base"></span>
           {loadingApple ? 'Building…' : 'Add to Apple Wallet'}
@@ -138,7 +138,7 @@ export default function TicketDeliveryActions({ ticketId, className = '' }) {
           type="button"
           onClick={handleGoogle}
           disabled={loadingGoogle}
-          className="w-full rounded-xl bg-white text-black hover:bg-zinc-100 px-4 py-3 text-sm font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-3"
+          className="w-full rounded-full bg-white text-black hover:bg-zinc-100 px-5 py-3.5 text-xs font-black uppercase tracking-widest transition-all duration-500 disabled:opacity-60 disabled:scale-95 disabled:cursor-wait flex items-center justify-center gap-3 shadow-lg"
         >
           <span aria-hidden className="text-base">G</span>
           {loadingGoogle ? 'Opening…' : 'Add to Google Wallet'}

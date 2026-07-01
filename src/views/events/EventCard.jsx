@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { FavouriteIcon } from '@hugeicons/core-free-icons';
+import { displayImageSrc } from '@/lib/mediaUrl';
 
 const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/events' }) => {
   const router = useRouter();
@@ -35,9 +36,9 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
 
         {/* Organizer avatar top-left */}
         <div className="absolute left-4 top-4">
-          {event.organizerAvatar ? (
+          {displayImageSrc(event.organizerAvatar) ? (
             <img
-              src={event.organizerAvatar}
+              src={displayImageSrc(event.organizerAvatar)}
               alt=""
               className="h-9 w-9 rounded-full object-cover border-0"
             />
