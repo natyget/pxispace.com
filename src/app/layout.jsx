@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+import { env } from 'node:process';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Script from 'next/script';
 import { Toaster } from 'sonner';
@@ -57,7 +59,7 @@ export default function RootLayout({ children }) {
           `}
         </Script>
       </head>
-      <body>
+      <body className="theme-matte density-compact">
         <GoogleOAuthProvider clientId={googleClientId} locale="en">
           <AuthProvider>
             <GlobalCursorLayer>{children}</GlobalCursorLayer>

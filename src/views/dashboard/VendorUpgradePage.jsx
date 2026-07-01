@@ -53,7 +53,7 @@ function formatRequirement(key) {
 
 function StatusRow({ label, enabled, description }) {
     return (
-        <div className="flex items-start gap-3 py-3 border-b border-white/5 last:border-0">
+        <div className="flex items-start gap-3 py-3 shadow-[inset_0_-1px_0_rgba(255,255,255,0.035)] last:shadow-none">
             <div className="mt-0.5 flex-shrink-0">
                 {enabled
                     ? <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="text-emerald-400" />
@@ -191,7 +191,7 @@ export default function VendorUpgradePage() {
     if (step === 'done' || user?.isVendor) {
         return (
             <div className="max-w-xl mx-auto py-12 text-center">
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                <div className="glass-panel mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-500/10">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={34} className="text-amber-400" />
                 </div>
                 <h1 className="text-3xl font-black text-white mb-3 tracking-tight">
@@ -204,7 +204,7 @@ export default function VendorUpgradePage() {
                 {fromMobile ? (
                     <a
                         href="pxi://vendor-onboarding-complete"
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
+                        className="pill-solid inline-flex items-center gap-2 px-6 py-3 text-sm uppercase tracking-widest"
                     >
                         <HugeiconsIcon icon={SmartPhone01Icon} size={14} />
                         Return to PXI App
@@ -212,7 +212,7 @@ export default function VendorUpgradePage() {
                 ) : (
                     <button
                         onClick={() => router.push('/dashboard')}
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
+                        className="pill-solid inline-flex items-center gap-2 px-6 py-3 text-sm uppercase tracking-widest"
                     >
                         Go to Dashboard
                         <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
@@ -244,8 +244,8 @@ export default function VendorUpgradePage() {
             {/* Benefits */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {BENEFITS.map(({ icon: Icon, title, desc }) => (
-                    <div key={title} className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5">
-                        <div className="w-10 h-10 rounded-xl bg-pxi-purple/10 border border-pxi-purple/20 flex items-center justify-center mb-4">
+                    <div key={title} className="glass-panel rounded-2xl p-5">
+                        <div className="glass-field mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-pxi-purple/10">
                             <HugeiconsIcon icon={Icon} size={18} className="text-pxi-purple" />
                         </div>
                         <h3 className="text-white font-bold text-sm mb-1">{title}</h3>
@@ -256,7 +256,7 @@ export default function VendorUpgradePage() {
 
             {/* Error banner */}
             {step === 'error' && errorMsg && (
-                <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                <div className="glass-panel flex items-start gap-3 rounded-2xl px-4 py-3 text-sm text-red-300">
                     <HugeiconsIcon icon={Alert02Icon} size={16} className="mt-0.5 flex-shrink-0" />
                     {errorMsg}
                 </div>
@@ -264,7 +264,7 @@ export default function VendorUpgradePage() {
 
             {/* Stripe status breakdown — shown after a Check Status call returns PENDING */}
             {stripeStatus && (
-                <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5 space-y-1">
+                <div className="glass-panel rounded-2xl p-5 space-y-1">
                     <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Stripe Account Status</p>
 
                     <StatusRow
@@ -300,7 +300,7 @@ export default function VendorUpgradePage() {
             )}
 
             {/* CTA Card */}
-            <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6">
+            <div className="glass-panel rounded-2xl p-6">
                 <h2 className="text-white font-bold text-base mb-1">Connect with Stripe</h2>
                 <p className="text-zinc-500 text-sm mb-5 leading-relaxed">
                     You'll be redirected to Stripe to complete identity and banking
@@ -319,7 +319,7 @@ export default function VendorUpgradePage() {
                             <button
                                 onClick={handleResubmitOnboarding}
                                 disabled={step === 'loading'}
-                                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="pill-solid inline-flex items-center gap-2 px-6 py-3 text-sm uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {step === 'loading' ? (
                                     <><HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />Reopening…</>
@@ -333,10 +333,10 @@ export default function VendorUpgradePage() {
                             onClick={handleStartOnboarding}
                             disabled={step === 'loading' || hasSubmittedVerification}
                             title={hasSubmittedVerification ? 'Submitted the vendor verification already' : undefined}
-                            className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                            className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                                 hasSubmittedVerification && hasOutstandingRequirements
-                                    ? 'bg-zinc-800 border border-white/10 text-zinc-500 shadow-none'
-                                    : 'bg-pxi-purple text-white shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110'
+                                    ? 'pill-ghost text-zinc-500'
+                                    : 'pill-solid'
                             }`}
                         >
                             {step === 'loading' ? (
@@ -350,7 +350,7 @@ export default function VendorUpgradePage() {
                             <button
                                 onClick={handleResubmitOnboarding}
                                 disabled={step === 'loading'}
-                                className="inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-pxi-purple/35 text-pxi-purple font-bold text-xs uppercase tracking-widest hover:bg-pxi-purple/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="pill-ghost inline-flex items-center gap-2 px-4 py-3 text-xs uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 Resubmit Verification
                                 <HugeiconsIcon icon={ArrowRight02Icon} size={13} />
@@ -366,14 +366,14 @@ export default function VendorUpgradePage() {
             </div>
 
             {/* Check Status */}
-            <div className="bg-zinc-900/30 border border-white/5 rounded-2xl p-5">
+            <div className="glass-panel rounded-2xl p-5">
                 <p className="text-zinc-500 text-sm mb-3">
                     Already completed Stripe verification? Check if your account has been approved.
                 </p>
                 <button
                     onClick={handleCheckStatus}
                     disabled={checkingStatus}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-zinc-300 text-sm font-medium hover:bg-white/5 transition-all disabled:opacity-50"
+                    className="pill-ghost inline-flex items-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-50"
                 >
                     {checkingStatus ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" /> : <HugeiconsIcon icon={RefreshIcon} size={14} />}
                     Check Status

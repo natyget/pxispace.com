@@ -24,7 +24,7 @@ export default function ConfirmModal({
         aria-label="Close"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-sm bg-zinc-900 border border-white/10 rounded-2xl p-6 shadow-xl">
+      <div className="glass-panel-strong relative w-full max-w-sm rounded-2xl p-6">
         <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
         {description ? <p className="text-zinc-400 text-sm mb-6">{description}</p> : <div className="mb-6" />}
         <div className="flex gap-3 justify-end">
@@ -32,7 +32,7 @@ export default function ConfirmModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 rounded-xl border border-white/10 text-zinc-400 text-sm font-medium hover:bg-white/5 disabled:opacity-50"
+            className="pill-ghost px-4 py-2 text-sm font-medium disabled:opacity-50"
           >
             {cancelLabel}
           </button>
@@ -40,7 +40,7 @@ export default function ConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className={`px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-50 ${confirmClassName}`}
+            className={`px-4 py-2 rounded-full text-sm font-medium disabled:opacity-50 ${confirmClassName}`}
           >
             {confirmLabel}
           </button>

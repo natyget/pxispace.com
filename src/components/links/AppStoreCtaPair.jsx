@@ -6,7 +6,7 @@ import IosDownloadLink from '@/components/links/IosDownloadLink';
 import { APPLE_MARK } from '@/lib/landingAssets';
 
 const BTN_CLASS =
-  'flex w-full max-w-[320px] sm:w-auto sm:max-w-none items-center justify-center gap-3 px-6 py-4 md:px-10 md:py-5 rounded-full bg-white/10 border-0 backdrop-blur-[60px] hover:bg-white/20 transition-all cursor-pointer';
+  'flex w-full max-w-[320px] sm:w-auto sm:max-w-none items-center justify-center gap-3 px-6 py-4 md:px-10 md:py-5 rounded-full bg-white/10 border-0 backdrop-blur-[60px] hover:bg-white/20 transition-all cursor-pointer -translate-y-full md:translate-y-0';
 
 /** Compact side-by-side row (e.g. bottom of a blurred public preview on mobile). */
 const BTN_ROW_CLASS =

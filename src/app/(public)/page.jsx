@@ -24,6 +24,10 @@ export default function Page() {
       <h1 className="hidden">
         PXI — Premier Event Operating System & Digital Scrapbook
       </h1>
+      <p className="sr-only">
+        Not just ticketing — your shared memory app, camera, and event passport.
+        Plan the party, share the camera roll, relive the nostalgia.
+      </p>
       <Home />
       <JsonLd data={HOMEPAGE_JSONLD} />
     </>

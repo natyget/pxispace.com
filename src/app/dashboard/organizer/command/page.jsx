@@ -1,5 +1,5 @@
-import OrganizerCommandCenterPage from '@/views/dashboard/organizer/OrganizerCommandCenterPage';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-    return <OrganizerCommandCenterPage />;
+    redirect('/dashboard');
 }

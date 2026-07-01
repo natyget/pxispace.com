@@ -1,5 +1,5 @@
-import { PxiLoadingLanding } from '@/components/loading/PxiLoading';
+import { PxiLoadingMain } from '@/components/loading/PxiLoading';
 
-export default function Loading() {
-  return <PxiLoadingLanding />;
+export default function PublicLoading() {
+  return <PxiLoadingMain />;
 }

@@ -1,312 +1,688 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
     Alert02Icon,
-    Cancel01Icon,
-    Calendar01Icon,
     CheckmarkCircle02Icon,
     Megaphone01Icon,
-    Notification03Icon,
     QrCodeIcon,
     Search01Icon,
     UserGroupIcon,
 } from '@hugeicons/core-free-icons';
-import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
-import SectionCard from '@/components/dashboard/SectionCard';
+import Modal from '@/components/ui/Modal';
+import { useDashboardShellStore } from '@/lib/dashboardShellStore';
+import { listTeamRosters } from '@/services/teamRosters';
 
-const queueCards = [
-    { label: 'Pending scans', value: 17, tone: 'text-amber-300' },
-    { label: 'Cleared entries', value: 94, tone: 'text-emerald-300' },
-    { label: 'Flagged tickets', value: 3, tone: 'text-red-300' },
+const GATES_STORAGE_KEY = 'pxi.live_ops.gates.v1';
+
+const recentScans = [
+    { id: 'scan-1', ticket: 'PXI-4218', name: '@_julesx', state: 'Accepted', gate: 'North Entry', at: '8:09 PM' },
+    { id: 'scan-2', ticket: 'PXI-4217', name: '@mariacole', state: 'Accepted', gate: 'North Entry', at: '8:08 PM' },
+    { id: 'scan-3', ticket: 'PXI-4216', name: '@davidx', state: 'Flagged', gate: 'VIP Desk', at: '8:07 PM' },
+    { id: 'scan-4', ticket: 'PXI-4215', name: '@avryj', state: 'Accepted', gate: 'Main Gate', at: '8:06 PM' },
+    { id: 'scan-5', ticket: 'PXI-4214', name: '@rennorth', state: 'Manual Check', gate: 'Main Gate', at: '8:05 PM' },
+    { id: 'scan-6', ticket: 'PXI-4213', name: '@kims', state: 'Accepted', gate: 'VIP Desk', at: '8:04 PM' },
 ];
 
-const scanFeed = [
-    { id: 'scan-1', name: '@_julesx', state: 'Accepted', gate: 'North Entry', at: '8:09 PM' },
-    { id: 'scan-2', name: '@mariacole', state: 'Accepted', gate: 'North Entry', at: '8:08 PM' },
-    { id: 'scan-3', name: '@davidx', state: 'Flagged', gate: 'VIP Desk', at: '8:07 PM' },
-    { id: 'scan-4', name: '@avryj', state: 'Accepted', gate: 'Main Gate', at: '8:06 PM' },
+const initialGates = [
+    {
+        id: 'north-entry',
+        name: 'North Entry',
+        velocity: '42 scans/min',
+        paused: false,
+        issue: false,
+        scans: recentScans.filter((scan) => scan.gate === 'North Entry'),
+        incidentLog: ['Crowd flow normal', 'Two staff active'],
+    },
+    {
+        id: 'main-gate',
+        name: 'Main Gate',
+        velocity: '36 scans/min',
+        paused: false,
+        issue: true,
+        scans: recentScans.filter((scan) => scan.gate === 'Main Gate'),
+        incidentLog: ['Manual ID check queued', 'Lane two rerouted for three minutes'],
+    },
+    {
+        id: 'vip-desk',
+        name: 'VIP Desk',
+        velocity: '18 scans/min',
+        paused: true,
+        issue: true,
+        scans: recentScans.filter((scan) => scan.gate === 'VIP Desk'),
+        incidentLog: ['Duplicate ticket flagged', 'Supervisor review requested'],
+    },
 ];
 
-const incidents = [
-    { id: 'issue-1', title: 'Duplicate Scan Ring Detected', detail: 'Multiple rapid scans from identical forged QR payloads.', priority: 'critical', state: 'open' },
-    { id: 'issue-2', title: 'Oversold Capacity Warning', detail: 'At current velocity, floor cap is expected in 4 minutes.', priority: 'warning', state: 'open' },
-    { id: 'issue-3', title: 'Gate B bottleneck', detail: 'Resolved by rerouting crowd to North Entry.', priority: 'resolved', state: 'resolved' },
+const teamMessages = [
+    { id: 'team-1', author: 'Floor Lead', body: 'Keep Main Gate open but slow manual checks.', at: '8:06 PM' },
+    { id: 'team-2', author: 'Security', body: 'VIP Desk has one duplicate scan under review.', at: '8:07 PM' },
+    { id: 'team-3', author: 'Ops', body: 'Capacity pacing looks stable.', at: '8:08 PM' },
 ];
 
-const gateControls = [
-    { id: 'gate-a', name: 'Gate A', velocity: '42 scans/min', status: 'online' },
-    { id: 'gate-b', name: 'Gate B', velocity: '36 scans/min', status: 'online' },
-    { id: 'gate-c', name: 'VIP Desk', velocity: '18 scans/min', status: 'paused' },
-];
-
-function StateChip({ state }) {
-    if (state === 'Accepted') {
-        return <span className="inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">Accepted</span>;
-    }
-    if (state === 'Flagged') {
-        return <span className="inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-red-500/10 text-red-300 border border-red-500/30">Flagged</span>;
-    }
-    return <span className="inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-white/5 text-zinc-400 border border-white/10">{state}</span>;
+function cx(...classes) {
+    return classes.filter(Boolean).join(' ');
 }
 
-export default function LiveScanDashboard({ initialTab = 'scanner' }) {
-    const [broadcastOpen, setBroadcastOpen] = useState(false);
-    const [messageType, setMessageType] = useState('emergency');
-    const [messageBody, setMessageBody] = useState('');
-    const activeTab = useMemo(() => (initialTab === 'activity' ? 'incidents' : 'feed'), [initialTab]);
+function StateChip({ state, muted = false }) {
+    if (state === 'Accepted') {
+        return (
+            <span className={cx('inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest', muted ? 'border-white/10 bg-white/5 text-zinc-500' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300')}>
+                Accepted
+            </span>
+        );
+    }
+
+    if (state === 'Flagged') {
+        return (
+            <span className={cx('inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest', muted ? 'border-white/10 bg-white/5 text-zinc-500' : 'border-red-500/30 bg-red-500/10 text-red-300')}>
+                Flagged
+            </span>
+        );
+    }
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8">
-            <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+            {state}
+        </span>
+    );
+}
+
+function GlassPanel({ children, className = '', muted = false }) {
+    return (
+        <section className={cx('glass-panel rounded-2xl p-5', muted && 'grayscale opacity-65', className)}>
+            {children}
+        </section>
+    );
+}
+
+function DormantMessage() {
+    return (
+        <div className="dashboard-surface-b rounded-2xl px-4 py-3 text-sm font-semibold text-zinc-300">
+            Goes live during active events.
+        </div>
+    );
+}
+
+function CapacityIndicator({ isLive }) {
+    const venueCapacity = 1200;
+    const currentAttendance = isLive ? 894 : 0;
+    const capacityPercent = Math.round((currentAttendance / venueCapacity) * 100);
+
+    return (
+        <GlassPanel muted={!isLive}>
+            <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Capacity</p>
+            <div className="mt-3 flex items-end justify-between gap-4">
+                <p className="text-3xl font-black tracking-tight text-white">
+                    {currentAttendance.toLocaleString()}
+                    <span className="text-base text-zinc-500"> / {venueCapacity.toLocaleString()}</span>
+                </p>
+                <p className="text-sm font-bold text-zinc-400">{capacityPercent}% full</p>
+            </div>
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+                <div
+                    className={cx('h-full rounded-full transition-all', isLive ? 'bg-emerald-300' : 'bg-zinc-600')}
+                    style={{ width: `${capacityPercent}%` }}
+                />
+            </div>
+            {!isLive ? <p className="mt-3 text-xs font-semibold text-zinc-500">Goes live during active events.</p> : null}
+        </GlassPanel>
+    );
+}
+
+function TeamMessagePanel({ isLive, onOpenChat }) {
+    return (
+        <GlassPanel muted={!isLive} className="flex flex-col justify-between gap-4">
+            <div>
+                <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Team Message</p>
+                <p className="mt-2 text-sm text-zinc-300">Open the shared staff thread for floor, security, and gate leads.</p>
+            </div>
+            <button
+                type="button"
+                onClick={onOpenChat}
+                disabled={!isLive}
+                className={cx(
+                    'inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition',
+                    isLive ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed border border-white/10 bg-white/5 text-zinc-500'
+                )}
+            >
+                <HugeiconsIcon icon={UserGroupIcon} size={15} />
+                Team Message
+            </button>
+        </GlassPanel>
+    );
+}
+
+function ScanActionPanel({ isLive }) {
+    return (
+        <GlassPanel muted={!isLive}>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                <button
+                    type="button"
+                    disabled={!isLive}
+                    className={cx(
+                        'inline-flex w-fit items-center justify-center gap-2 rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition',
+                        isLive ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed border border-white/10 bg-white/5 text-zinc-500'
+                    )}
+                >
+                    <HugeiconsIcon icon={QrCodeIcon} size={15} />
+                    Scan Ticket
+                </button>
+                <div className={cx('flex min-w-0 flex-1 items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-2', !isLive && 'opacity-60')}>
+                    <HugeiconsIcon icon={Search01Icon} size={15} className="text-zinc-500" />
+                    <input
+                        type="text"
+                        placeholder={isLive ? 'Search handle or ticket ID' : 'Goes live during active events'}
+                        disabled={!isLive}
+                        readOnly
+                        className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500 disabled:cursor-not-allowed"
+                    />
+                </div>
+            </div>
+        </GlassPanel>
+    );
+}
+
+function RecentScansSection({ isLive }) {
+    return (
+        <GlassPanel muted={!isLive}>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <p className="text-xs font-bold tracking-widest uppercase text-pxi-purple">Live Operations</p>
-                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mt-1">Scanner Command Deck</h1>
-                    <p className="text-zinc-500 text-sm mt-1">Realtime feed, gate controls, and incident response for event staff.</p>
+                    <h2 className="text-lg font-black tracking-tight text-white">Recent Scans</h2>
+                    <p className="mt-1 text-sm text-zinc-500">{isLive ? 'Latest tickets moving through every active gate.' : 'Goes live during active events.'}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <DataSourceBadge source="Mock" />
-                    <button
-                        type="button"
-                        onClick={() => setBroadcastOpen(true)}
-                        className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-white/10"
-                    >
-                        <HugeiconsIcon icon={Megaphone01Icon} size={14} />
-                        Broadcast
-                    </button>
-                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-emerald-300">
-                        <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
-                        Queue online
-                    </span>
-                </div>
-            </header>
-
-            <nav className="flex rounded-full bg-zinc-900/80 border border-white/10 p-1 w-full md:w-fit">
-                <Link
-                    href="/dashboard/live-scan"
-                    className={`px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-colors ${activeTab === 'feed' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}`}
-                >
-                    Realtime Feed
-                </Link>
-                <Link
-                    href="/dashboard/live-scan/activity"
-                    className={`px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-colors ${activeTab === 'incidents' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}`}
-                >
-                    Incidents
-                </Link>
-            </nav>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {queueCards.map((card) => (
-                    <div key={card.label} className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
-                        <p className="text-[11px] font-bold uppercase tracking-widest text-white/40">{card.label}</p>
-                        <p className={`text-3xl font-black tracking-tight mt-2 ${card.tone}`}>{card.value}</p>
-                        <p className="text-zinc-500 text-xs mt-2">Mock snapshot from scanner queue model.</p>
+            </div>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
+                {recentScans.map((scan) => (
+                    <div key={scan.id} className="grid gap-3 border-b border-white/10 bg-black/20 px-4 py-3 last:border-b-0 md:grid-cols-[1.2fr_0.9fr_0.7fr_auto] md:items-center">
+                        <div>
+                            <p className="text-sm font-bold text-white">{scan.name}</p>
+                            <p className="mt-0.5 text-xs text-zinc-500">{scan.ticket}</p>
+                        </div>
+                        <p className="text-sm font-semibold text-zinc-300">{scan.gate}</p>
+                        <div className="flex items-center gap-3">
+                            <StateChip state={scan.state} muted={!isLive} />
+                            <span className="text-xs text-zinc-500">{scan.at}</span>
+                        </div>
+                        <button
+                            type="button"
+                            disabled={!isLive}
+                            className={cx(
+                                'rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition',
+                                isLive ? 'border border-red-400/30 bg-red-500/10 text-red-200 hover:bg-red-500/20' : 'cursor-not-allowed border border-white/10 bg-white/5 text-zinc-500'
+                            )}
+                        >
+                            Incident Report
+                        </button>
                     </div>
                 ))}
             </div>
+        </GlassPanel>
+    );
+}
 
-            {activeTab === 'feed' ? (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <SectionCard
-                        title="Scan Console"
-                        subtitle="Mock QR check-in, fraud interception, and manual search."
-                        source="Mock"
-                    >
-                        <div className="space-y-4">
-                            <button className="w-full rounded-2xl bg-white text-black py-3 text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2">
-                                <HugeiconsIcon icon={QrCodeIcon} size={16} />
-                                Start QR Scan
-                            </button>
-                            <div className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 flex items-center gap-2">
-                                <HugeiconsIcon icon={Search01Icon} size={15} className="text-zinc-500" />
-                                <input
-                                    type="text"
-                                    placeholder="Search handle or ticket ID"
-                                    className="w-full bg-transparent outline-none text-sm text-white placeholder:text-zinc-500"
-                                    readOnly
-                                />
-                            </div>
-                            <p className="text-xs text-zinc-500">
-                                Use this panel for manual ticket checks and false-positive overrides.
-                            </p>
-                        </div>
-                    </SectionCard>
+function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onToggleMenu, onDelete }) {
+    const issueScans = gate.scans.filter((scan) => scan.state === 'Flagged' || scan.state === 'Manual Check');
 
-                    <SectionCard
-                        title="Recent Scans"
-                        subtitle="Last validated entries from the queue stream."
-                        source="Mock"
-                    >
-                        <ul className="space-y-3">
-                            {scanFeed.map((item) => (
-                                <li key={item.id} className="rounded-xl border border-white/10 bg-black/30 px-3 py-3 flex items-center justify-between gap-2">
-                                    <div>
-                                        <p className="text-sm font-semibold text-white">{item.name}</p>
-                                        <p className="text-xs text-zinc-500">{item.gate} · {item.at}</p>
-                                        {item.state === 'Flagged' && (
-                                            <div className="mt-2 flex items-center gap-2">
-                                                <button className="rounded-lg border border-white/15 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-white/10">
-                                                    ID Check
-                                                </button>
-                                                <button className="rounded-lg border border-red-400/30 bg-red-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-red-200 hover:bg-red-500/20">
-                                                    Override
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <StateChip state={item.state} />
-                                </li>
-                            ))}
-                        </ul>
-                    </SectionCard>
-
-                    <SectionCard
-                        title="Gate Controls"
-                        subtitle="Door velocity and scanner control toggles."
-                        source="Mock"
-                    >
-                        <ul className="space-y-3">
-                            {gateControls.map((gate) => (
-                                <li key={gate.id} className="rounded-xl border border-white/10 bg-black/30 px-3 py-3">
-                                    <p className="text-sm font-semibold text-white flex items-center justify-between gap-2">
-                                        <span>{gate.name}</span>
-                                        <span className="text-xs text-zinc-500">{gate.velocity}</span>
-                                    </p>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <button className="rounded-lg border border-red-400/30 bg-red-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-red-200 hover:bg-red-500/20">
-                                            Halt Scans
-                                        </button>
-                                        <button className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-200 hover:bg-emerald-500/20">
-                                            Resume Ops
-                                        </button>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    </SectionCard>
+    return (
+        <article
+            role="button"
+            tabIndex={0}
+            onClick={() => onOpen(gate.id)}
+            onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') onOpen(gate.id);
+            }}
+            className={cx(
+                'glass-panel relative min-h-[260px] cursor-pointer rounded-2xl p-5 transition hover:bg-white/[0.07]',
+                !isLive && 'grayscale opacity-65'
+            )}
+        >
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <div className="flex items-center gap-2">
+                        <span className={cx('h-3 w-3 rounded-full', gate.issue ? 'bg-red-400 shadow-[0_0_16px_rgba(248,113,113,0.65)]' : 'bg-emerald-300 shadow-[0_0_16px_rgba(110,231,183,0.55)]')} />
+                        <h3 className="text-xl font-black tracking-tight text-white">{gate.name}</h3>
+                    </div>
+                    <p className="mt-1 text-xs font-bold uppercase tracking-widest text-zinc-500">
+                        {isLive ? gate.velocity : 'Goes live during active events'}
+                    </p>
                 </div>
-            ) : (
-                <SectionCard
-                    title="Active Incidents"
-                    subtitle="Security and operations triage queue."
-                    source="Mock"
-                >
-                    <ul className="space-y-3">
-                        {incidents.map((item) => (
-                            <li key={`incident-${item.id}`} className={`rounded-xl border px-4 py-3 flex items-center justify-between gap-3 ${
-                                item.priority === 'critical'
-                                    ? 'border-red-500/40 bg-red-500/10'
-                                    : item.priority === 'warning'
-                                        ? 'border-amber-500/40 bg-amber-500/10'
-                                        : 'border-white/10 bg-black/30 opacity-70'
-                            }`}>
-                                <div className="flex items-center gap-3">
-                                    <span className="w-9 h-9 rounded-full bg-black/40 flex items-center justify-center">
-                                        <HugeiconsIcon
-                                            icon={item.priority === 'resolved' ? CheckmarkCircle02Icon : Alert02Icon}
-                                            size={16}
-                                            className={item.priority === 'resolved' ? 'text-emerald-300' : 'text-red-300'}
-                                        />
-                                    </span>
-                                    <div>
-                                        <p className="text-sm font-semibold text-white">{item.title}</p>
-                                        <p className="text-xs text-zinc-400">{item.detail}</p>
-                                    </div>
+                <div className="relative">
+                    <button
+                        type="button"
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            onToggleMenu(gate.id);
+                        }}
+                        className="pill-ghost px-3 py-1 text-sm font-black"
+                        aria-label={`${gate.name} options`}
+                    >
+                        ...
+                    </button>
+                    {menuOpen ? (
+                        <div
+                            className="glass-panel absolute right-0 top-9 z-20 w-44 rounded-xl p-2"
+                            onClick={(event) => event.stopPropagation()}
+                        >
+                            <button
+                                type="button"
+                                onClick={() => onEdit(gate)}
+                                className="w-full rounded-lg px-3 py-2 text-left text-xs font-bold text-zinc-300 hover:bg-white/10"
+                            >
+                                Edit gate
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onDelete(gate.id)}
+                                className="w-full rounded-lg px-3 py-2 text-left text-xs font-bold text-red-200 hover:bg-red-500/10"
+                            >
+                                Delete gate
+                            </button>
+                        </div>
+                    ) : null}
+                </div>
+            </div>
+
+            <button
+                type="button"
+                disabled={!isLive}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    onTogglePause(gate.id);
+                }}
+                className={cx(
+                    'mt-5 rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition',
+                    !isLive
+                        ? 'cursor-not-allowed border border-white/10 bg-white/5 text-zinc-500'
+                        : gate.paused
+                            ? 'border border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20'
+                            : 'border border-red-400/30 bg-red-500/10 text-red-200 hover:bg-red-500/20'
+                )}
+            >
+                {gate.paused ? 'Resume Scan' : 'Halt Scan'}
+            </button>
+
+            <div className="mt-5 max-h-32 space-y-2 overflow-y-auto pr-1">
+                {gate.scans.map((scan) => (
+                    <div key={`${gate.id}-${scan.id}`} className="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
+                        <div className="flex items-center justify-between gap-2">
+                            <p className="truncate text-sm font-bold text-white">{scan.ticket}</p>
+                            <StateChip state={scan.state} muted={!isLive} />
+                        </div>
+                        <p className="mt-1 text-xs text-zinc-500">{scan.name} / {scan.at}</p>
+                    </div>
+                ))}
+                {!gate.scans.length ? (
+                    <div className="rounded-xl border border-dashed border-white/10 px-3 py-4 text-sm text-zinc-500">
+                        No scans yet.
+                    </div>
+                ) : null}
+            </div>
+
+            <p className="mt-4 text-xs font-semibold text-zinc-500">
+                {issueScans.length ? `${issueScans.length} issue${issueScans.length > 1 ? 's' : ''} flagged` : 'No active issues'}
+            </p>
+            {gate.assignedPeople?.length ? (
+                <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-white/35">
+                    {gate.assignedPeople.length} assigned
+                </p>
+            ) : null}
+        </article>
+    );
+}
+
+function GateEditModal({ open, gate, rosterMembers, onClose, onSave }) {
+    const [name, setName] = useState('');
+    const [assignedPeople, setAssignedPeople] = useState([]);
+
+    useEffect(() => {
+        if (!open) return;
+        setName(gate?.name || '');
+        setAssignedPeople(gate?.assignedPeople || []);
+    }, [gate, open]);
+
+    const togglePerson = (member) => {
+        const id = member.id;
+        setAssignedPeople((current) => (
+            current.some((person) => person.id === id)
+                ? current.filter((person) => person.id !== id)
+                : [...current, member]
+        ));
+    };
+
+    return (
+        <Modal
+            open={open}
+            onClose={onClose}
+            title={gate?.id ? 'Edit gate' : 'Create gate'}
+            description="Name the gate and assign the people who should run it."
+            maxWidth="max-w-2xl"
+        >
+            <div className="space-y-5">
+                <label className="block">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Gate name</span>
+                    <input
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        className="glass-field mt-2 min-h-[46px] w-full rounded-2xl px-4 text-sm text-white"
+                        placeholder="North Entry"
+                    />
+                </label>
+                <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Assign people</p>
+                    <div className="mt-3 flex max-h-64 flex-wrap gap-2 overflow-y-auto">
+                        {rosterMembers.length ? rosterMembers.map((member) => {
+                            const active = assignedPeople.some((person) => person.id === member.id);
+                            return (
+                                <button
+                                    key={member.id}
+                                    type="button"
+                                    onClick={() => togglePerson(member)}
+                                    className={`px-3 py-2 text-xs font-bold ${active ? 'pill-solid' : 'pill-ghost'}`}
+                                >
+                                    {member.label}
+                                </button>
+                            );
+                        }) : <p className="text-sm text-zinc-500">Create a team first to assign staff here.</p>}
+                    </div>
+                </div>
+                <div className="flex justify-end gap-3">
+                    <button type="button" onClick={onClose} className="pill-ghost px-4 py-2 text-sm font-bold">Cancel</button>
+                    <button
+                        type="button"
+                        disabled={!name.trim()}
+                        onClick={() => onSave({ ...gate, name: name.trim(), assignedPeople })}
+                        className="pill-solid px-4 py-2 text-sm disabled:opacity-40"
+                    >
+                        Save gate
+                    </button>
+                </div>
+            </div>
+        </Modal>
+    );
+}
+
+function GateDetailsModal({ gate, open, onClose }) {
+    if (!gate) return null;
+    const flaggedIssues = gate.scans.filter((scan) => scan.state === 'Flagged' || scan.state === 'Manual Check');
+
+    return (
+        <Modal
+            open={open}
+            title={gate.name}
+            description="All scanned tickets, flagged issues, and incident log for this gate."
+            onClose={onClose}
+            maxWidth="max-w-4xl"
+        >
+            <div className="grid gap-4 lg:grid-cols-[1.35fr_0.85fr]">
+                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400">All Tickets Scanned</h3>
+                    <div className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
+                        {gate.scans.map((scan) => (
+                            <div key={`modal-${scan.id}`} className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.055] px-3 py-3">
+                                <div>
+                                    <p className="text-sm font-bold text-white">{scan.ticket}</p>
+                                    <p className="text-xs text-zinc-500">{scan.name} / {scan.at}</p>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    {item.priority !== 'resolved' && (
-                                        <>
-                                            <button className="rounded-lg border border-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-white/10">
-                                                Assign
-                                            </button>
-                                            <button className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-200 hover:bg-emerald-500/20">
-                                                Resolve
-                                            </button>
-                                        </>
-                                    )}
-                                    {item.priority === 'resolved' && (
-                                        <span className="inline-flex rounded-full border border-white/15 bg-white/5 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-300">
-                                            Resolved
-                                        </span>
-                                    )}
-                                </div>
-                            </li>
+                                <StateChip state={scan.state} />
+                            </div>
                         ))}
-                    </ul>
-                    <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-                            <p className="text-[11px] uppercase tracking-widest text-zinc-500 font-bold">Guard lane</p>
-                            <p className="text-white text-sm mt-1 flex items-center gap-2"><HugeiconsIcon icon={UserGroupIcon} size={14} /> North Entry</p>
-                        </div>
-                        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-                            <p className="text-[11px] uppercase tracking-widest text-zinc-500 font-bold">Active event</p>
-                            <p className="text-white text-sm mt-1 flex items-center gap-2"><HugeiconsIcon icon={Calendar01Icon} size={14} /> Tonight Launch</p>
-                        </div>
-                        <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-                            <p className="text-[11px] uppercase tracking-widest text-zinc-500 font-bold">Alerts</p>
-                            <p className="text-white text-sm mt-1 flex items-center gap-2"><HugeiconsIcon icon={Notification03Icon} size={14} /> 3 unresolved</p>
+                        {!gate.scans.length ? <p className="text-sm text-zinc-500">No tickets scanned yet.</p> : null}
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400">Flagged Issues</h3>
+                        <div className="mt-3 space-y-2">
+                            {flaggedIssues.map((scan) => (
+                                <div key={`flag-${scan.id}`} className="rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-3">
+                                    <p className="text-sm font-bold text-red-100">{scan.ticket}</p>
+                                    <p className="mt-1 text-xs text-red-200/70">{scan.state} at {scan.at}</p>
+                                </div>
+                            ))}
+                            {!flaggedIssues.length ? <p className="text-sm text-zinc-500">No flagged issues.</p> : null}
                         </div>
                     </div>
-                </SectionCard>
-            )}
 
-            {broadcastOpen && (
-                <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/70">
-                    <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-zinc-950 p-6">
-                        <div className="flex items-start justify-between gap-3">
-                            <div>
-                                <h3 className="text-white font-bold text-lg">Broadcast to Attendees</h3>
-                                <p className="text-zinc-400 text-sm mt-1">Mock payload builder for emergency and set-time notifications.</p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setBroadcastOpen(false)}
-                                className="rounded-full border border-white/10 p-2 text-zinc-400 hover:text-white hover:bg-white/5"
-                            >
-                                <HugeiconsIcon icon={Cancel01Icon} size={14} />
-                            </button>
-                        </div>
-
-                        <div className="space-y-3 mt-5">
-                            <select
-                                value={messageType}
-                                onChange={(event) => setMessageType(event.target.value)}
-                                className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white"
-                            >
-                                <option value="emergency">Emergency</option>
-                                <option value="set-change">Set Time Change</option>
-                                <option value="info">General Info</option>
-                            </select>
-                            <textarea
-                                value={messageBody}
-                                onChange={(event) => setMessageBody(event.target.value)}
-                                placeholder="Type broadcast payload..."
-                                className="w-full h-28 rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-zinc-500"
-                            />
-                        </div>
-
-                        <div className="flex justify-end gap-2 mt-5">
-                            <button
-                                type="button"
-                                onClick={() => setBroadcastOpen(false)}
-                                className="rounded-xl border border-white/10 px-4 py-2 text-sm text-zinc-300 hover:bg-white/5"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setBroadcastOpen(false)}
-                                className="rounded-xl bg-pxi-purple px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-                            >
-                                Send Broadcast
-                            </button>
+                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400">Incident Log</h3>
+                        <div className="mt-3 space-y-2">
+                            {gate.incidentLog.map((entry) => (
+                                <div key={entry} className="flex gap-2 rounded-xl bg-white/[0.055] px-3 py-2 text-sm text-zinc-300">
+                                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-pxi-purple" />
+                                    <span>{entry}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
-            )}
+            </div>
+        </Modal>
+    );
+}
+
+function TeamChatModal({ open, onClose }) {
+    const [draft, setDraft] = useState('');
+
+    return (
+        <Modal
+            open={open}
+            title="Team Message"
+            description="Group chat for live event staff."
+            onClose={onClose}
+            maxWidth="max-w-2xl"
+        >
+            <div className="space-y-3">
+                {teamMessages.map((message) => (
+                    <div key={message.id} className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm font-black text-white">{message.author}</p>
+                            <p className="text-xs text-zinc-500">{message.at}</p>
+                        </div>
+                        <p className="mt-2 text-sm text-zinc-300">{message.body}</p>
+                    </div>
+                ))}
+            </div>
+            <div className="mt-4 flex gap-2">
+                <textarea
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    placeholder="Message the operations team..."
+                    className="min-h-20 flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500"
+                />
+                <button
+                    type="button"
+                    onClick={() => setDraft('')}
+                    className="self-end rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-black hover:bg-zinc-200"
+                >
+                    Send
+                </button>
+            </div>
+        </Modal>
+    );
+}
+
+export default function LiveScanDashboard({ isLiveEvent }) {
+    const shellLiveEvent = useDashboardShellStore((store) => store.isLiveEvent);
+    const eventIsLive = isLiveEvent ?? shellLiveEvent;
+    const [gates, setGates] = useState(initialGates);
+    const [teamRosters, setTeamRosters] = useState([]);
+    const [selectedGateId, setSelectedGateId] = useState(null);
+    const [menuGateId, setMenuGateId] = useState(null);
+    const [chatOpen, setChatOpen] = useState(false);
+    const [editingGate, setEditingGate] = useState(null);
+
+    const selectedGate = gates.find((gate) => gate.id === selectedGateId);
+    const rosterMembers = useMemo(() => teamRosters.flatMap((roster) => (
+        (roster.members || []).map((member) => ({
+            id: `${roster.id}:${member.id}`,
+            label: member.name || member.handle || member.contact || member.id,
+            rosterId: roster.id,
+            memberId: member.id,
+            role: member.role,
+        }))
+    )), [teamRosters]);
+
+    useEffect(() => {
+        try {
+            const stored = JSON.parse(window.localStorage.getItem(GATES_STORAGE_KEY) || 'null');
+            if (Array.isArray(stored)) setGates(stored);
+        } catch {
+            setGates(initialGates);
+        }
+        listTeamRosters().then(setTeamRosters).catch(() => setTeamRosters([]));
+    }, []);
+
+    const persistGates = (updater) => {
+        setGates((current) => {
+            const next = typeof updater === 'function' ? updater(current) : updater;
+            try {
+                window.localStorage.setItem(GATES_STORAGE_KEY, JSON.stringify(next));
+            } catch {
+                /* local persistence only */
+            }
+            return next;
+        });
+    };
+
+    const addGate = () => {
+        if (!eventIsLive) return;
+        setEditingGate({
+            id: '',
+            name: `Gate ${gates.length + 1}`,
+            velocity: '0 scans/min',
+            paused: false,
+            issue: false,
+            scans: [],
+            incidentLog: ['Gate added to operations board'],
+            assignedPeople: [],
+        });
+    };
+
+    const toggleGatePause = (gateId) => {
+        if (!eventIsLive) return;
+        persistGates((current) => current.map((gate) => (gate.id === gateId ? { ...gate, paused: !gate.paused } : gate)));
+    };
+
+    const deleteGate = (gateId) => {
+        persistGates((current) => current.filter((gate) => gate.id !== gateId));
+        setMenuGateId(null);
+        if (selectedGateId === gateId) setSelectedGateId(null);
+    };
+
+    const saveGate = (gate) => {
+        const savedGate = {
+            ...gate,
+            id: gate.id || `gate-${Date.now()}`,
+            scans: gate.scans || [],
+            incidentLog: gate.incidentLog?.length ? gate.incidentLog : ['Gate added to operations board'],
+        };
+        persistGates((current) => {
+            if (gate.id) return current.map((item) => (item.id === gate.id ? savedGate : item));
+            return [...current, savedGate];
+        });
+        setEditingGate(null);
+        setMenuGateId(null);
+    };
+
+    return (
+        <div className="mx-auto max-w-6xl space-y-6">
+            <header>
+                <h1 className="text-2xl font-black tracking-tight text-white md:text-3xl">Operations</h1>
+                <p className="mt-2 max-w-2xl text-sm text-zinc-500">Live event controls for gates, scans, and incident response.</p>
+            </header>
+
+            {!eventIsLive ? <DormantMessage /> : null}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-[1.1fr_0.9fr]">
+                <CapacityIndicator isLive={eventIsLive} />
+                <TeamMessagePanel isLive={eventIsLive} onOpenChat={() => setChatOpen(true)} />
+            </div>
+
+            <ScanActionPanel isLive={eventIsLive} />
+
+            <GlassPanel muted={!eventIsLive}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 className="text-lg font-black tracking-tight text-white">Gate Control</h2>
+                        <p className="mt-1 text-sm text-zinc-500">{eventIsLive ? 'Tap a gate for scanned tickets, issues, and incident history.' : 'Goes live during active events.'}</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={addGate}
+                        disabled={!eventIsLive}
+                        className={cx(
+                            'flex h-10 w-10 items-center justify-center rounded-full text-2xl font-black transition',
+                            eventIsLive ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed border border-white/10 bg-white/5 text-zinc-500'
+                        )}
+                        aria-label="Add gate"
+                    >
+                        +
+                    </button>
+                </div>
+
+                <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    {gates.map((gate) => (
+                        <GateCard
+                            key={gate.id}
+                            gate={gate}
+                            isLive={eventIsLive}
+                            menuOpen={menuGateId === gate.id}
+                            onOpen={setSelectedGateId}
+                            onEdit={setEditingGate}
+                            onTogglePause={toggleGatePause}
+                            onToggleMenu={(gateId) => setMenuGateId((current) => (current === gateId ? null : gateId))}
+                            onDelete={deleteGate}
+                        />
+                    ))}
+                    {!gates.length ? (
+                        <div className="glass-panel rounded-2xl p-8 text-center text-sm font-semibold text-zinc-500 lg:col-span-3">
+                            Add a gate when Operations is live.
+                        </div>
+                    ) : null}
+                </div>
+            </GlassPanel>
+
+            <RecentScansSection isLive={eventIsLive} />
+
+            <GlassPanel muted={!eventIsLive}>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 className="text-lg font-black tracking-tight text-white">Incident Response</h2>
+                        <p className="mt-1 text-sm text-zinc-500">{eventIsLive ? 'Active flags and resolved floor issues.' : 'Goes live during active events.'}</p>
+                    </div>
+                    <HugeiconsIcon icon={Megaphone01Icon} size={20} className="text-zinc-500" />
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                    <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4">
+                        <HugeiconsIcon icon={Alert02Icon} size={18} className={eventIsLive ? 'text-red-300' : 'text-zinc-500'} />
+                        <p className="mt-3 text-sm font-black text-white">Duplicate ticket watch</p>
+                        <p className="mt-1 text-xs text-zinc-500">VIP Desk flagged one ticket.</p>
+                    </div>
+                    <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4">
+                        <HugeiconsIcon icon={Alert02Icon} size={18} className={eventIsLive ? 'text-amber-300' : 'text-zinc-500'} />
+                        <p className="mt-3 text-sm font-black text-white">Manual check lane</p>
+                        <p className="mt-1 text-xs text-zinc-500">Main Gate review queue is open.</p>
+                    </div>
+                    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+                        <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} className={eventIsLive ? 'text-emerald-300' : 'text-zinc-500'} />
+                        <p className="mt-3 text-sm font-black text-white">Crowd flow stable</p>
+                        <p className="mt-1 text-xs text-zinc-500">North Entry is clear.</p>
+                    </div>
+                </div>
+            </GlassPanel>
+
+            <GateDetailsModal gate={selectedGate} open={!!selectedGate} onClose={() => setSelectedGateId(null)} />
+            <GateEditModal
+                open={!!editingGate}
+                gate={editingGate}
+                rosterMembers={rosterMembers}
+                onClose={() => setEditingGate(null)}
+                onSave={saveGate}
+            />
+            <TeamChatModal open={chatOpen} onClose={() => setChatOpen(false)} />
         </div>
     );
 }

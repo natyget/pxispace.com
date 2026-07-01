@@ -320,7 +320,7 @@ export default function EmailAuthPage() {
 
                     {/* Auth card — panel chrome on md+ only (mobile matches app: no card wrapper) */}
                     <div
-                        className="flex flex-col p-0 md:rounded-2xl md:border md:border-white/12 md:bg-white/[0.03] md:p-6 md:shadow-[0_0_40px_rgba(216,74,255,0.08)]"
+                        className="flex flex-col p-0 md:rounded-3xl md:bg-white/[0.05] md:backdrop-blur-3xl border-0 md:p-8 md:shadow-2xl"
                     >
                     {/* Mode toggle */}
                     <div className="flex mb-6 border-b border-white/10">
@@ -366,12 +366,13 @@ export default function EmailAuthPage() {
 
                         {/* Email */}
                         <AuthField>
+                            <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2 pl-4">Email Address</label>
                             <div className="relative">
                                 <AuthInput
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="EMAIL ADDRESS"
+                                    placeholder="e.g. hello@example.com"
                                     required
                                     style={!isLogin ? { paddingRight: 48 } : undefined}
                                 />
@@ -402,6 +403,7 @@ export default function EmailAuthPage() {
                         {/* Username (signup only) */}
                         {!isLogin && (
                             <AuthField>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2 pl-4">Username</label>
                                 <div className="relative">
                                     <AuthInput
                                         type="text"
@@ -409,7 +411,7 @@ export default function EmailAuthPage() {
                                         onChange={(e) =>
                                             setUsername(sanitizeUsernameInput(e.target.value))
                                         }
-                                        placeholder="USERNAME"
+                                        placeholder="e.g. nightowl99"
                                         maxLength={PROFILE_USERNAME_MAX_LENGTH}
                                     />
                                     <div className="absolute right-6 top-1/2 -translate-y-1/2">
@@ -426,12 +428,13 @@ export default function EmailAuthPage() {
 
                         {/* Password */}
                         <AuthField>
+                            <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2 pl-4">Password</label>
                             <div className="relative">
                                 <AuthInput
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="PASSWORD"
+                                    placeholder="e.g. •••••••••••"
                                     required
                                     style={{ paddingRight: 48 }}
                                 />
@@ -470,11 +473,12 @@ export default function EmailAuthPage() {
                         {/* Confirm password — signup only */}
                         {!isLogin && (
                             <AuthField>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2 pl-4">Confirm Password</label>
                                 <AuthInput
                                     type={showPassword ? 'text' : 'password'}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="CONFIRM PASSWORD"
+                                    placeholder="e.g. •••••••••••"
                                     required
                                     focusColor={
                                         confirmPassword

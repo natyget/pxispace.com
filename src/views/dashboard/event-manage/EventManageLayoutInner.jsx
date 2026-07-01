@@ -8,10 +8,8 @@ import { useEventManage } from './EventManageContext';
 
 const TABS = [
   { label: 'Details',  segment: null },
-  { label: 'Invite',   segment: 'invite' },
   { label: 'Members',  segment: 'members' },
-  { label: 'Upload',   segment: 'upload' },
-  { label: 'Edit',     segment: 'edit' },
+  { label: 'Gallery',  segment: 'upload' },
 ];
 
 export default function EventManageLayoutInner({ children }) {
@@ -44,20 +42,7 @@ export default function EventManageLayoutInner({ children }) {
     return pathname === `${base}/${segment}`;
   };
 
-  const isPast = (() => {
-    const status = String(event?.status || '').toLowerCase();
-    if (status === 'ended' || status === 'past' || status === 'completed') return true;
-    const end = event?.endDate ? new Date(event.endDate).getTime() : null;
-    if (end) return end < Date.now();
-    const start = event?.startDate ? new Date(event.startDate).getTime() : null;
-    if (start) return start < Date.now();
-    return false;
-  })();
-
-  const tabs = TABS.filter(({ segment }) => {
-    if (!isPast) return true;
-    return segment !== 'invite' && segment !== 'edit';
-  });
+  const tabs = TABS;
 
   return (
     <>
@@ -65,7 +50,7 @@ export default function EventManageLayoutInner({ children }) {
         <div className="flex items-center gap-3 mb-4">
           <Link
             href="/dashboard/events"
-            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 shrink-0"
+            className="pill-ghost shrink-0 p-2 text-zinc-400 hover:text-white"
             aria-label="Back to events"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} size={22} />
@@ -78,7 +63,7 @@ export default function EventManageLayoutInner({ children }) {
           </div>
         </div>
         <div className="flex justify-center py-6">
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none bg-white/5 rounded-full p-2 w-full">
+          <div className="dashboard-segmented-toggle w-full">
             {tabs.map(({ label, segment }) => {
               const href = segment ? `${base}/${segment}` : base;
               const active = isActive(segment);
@@ -86,11 +71,8 @@ export default function EventManageLayoutInner({ children }) {
                 <Link
                   key={label}
                   href={href}
-                  className={`flex-1 text-center px-4 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-colors ${
-                    active
-                      ? 'bg-white text-black'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
+                  className="dashboard-segmented-toggle__item flex-1"
+                  data-active={active}
                 >
                   {label}
                 </Link>
