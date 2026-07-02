@@ -1,18 +1,27 @@
 import { JsonLd } from '@/components/seo/JsonLd';
 import OrganizersView from '@/views/organizers/OrganizersView';
 
+const TITLE = 'Event Ticketing Platform — White-Label, Your Brand, Your Revenue';
+const DESCRIPTION =
+  'Run your events on PXI: white-label ticketing with revenue paid straight to you, live door scanning, real-time analytics, and audience tools. Your brand, your room.';
+
 export const metadata = {
-  title: 'Platform — Event Command Center',
-  description:
-    'Run your events on PXI. White-label ticketing, real-time analytics, promoter link attribution, and full lifecycle control. The operating system built for modern nightlife promoters.',
+  title: TITLE,
+  description: DESCRIPTION,
   alternates: {
     canonical: 'https://pxispace.com/platform',
   },
   openGraph: {
-    title: 'PXI Platform | Event Command Center',
-    description:
-      'White-label ticketing, real-time analytics, and full event lifecycle control. Built for modern promoters.',
+    title: TITLE,
+    description: DESCRIPTION,
     url: 'https://pxispace.com/platform',
+    images: [{ url: '/og?title=Your%20event.%20Your%20revenue.&eyebrow=The%20Platform', width: 1200, height: 630, alt: 'PXI Platform' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ['/og?title=Your%20event.%20Your%20revenue.&eyebrow=The%20Platform'],
   },
 };
 
@@ -43,9 +52,11 @@ const PAGE_JSONLD = {
 export default function PlatformPage() {
   return (
     <>
-      <h1 className="sr-only">
-        PXI Platform — Event Command Center for Organizers & Promoters
-      </h1>
+      {/* Visible H1 lives in OrganizersView */}
+      <p className="sr-only">
+        PXI is the event platform for organizers and promoters: white-label ticketing with revenue
+        paid straight to you, live door scanning, real-time analytics, and audience tools.
+      </p>
       <OrganizersView />
       <JsonLd data={PAGE_JSONLD} />
     </>

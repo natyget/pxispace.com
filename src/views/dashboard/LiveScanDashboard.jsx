@@ -91,7 +91,7 @@ function StateChip({ state, muted = false }) {
 
 function GlassPanel({ children, className = '', muted = false }) {
     return (
-        <section className={cx('glass-panel rounded-2xl p-5', muted && 'grayscale opacity-65', className)}>
+        <section className={cx('glass-panel rounded-[2rem] p-5', muted && 'grayscale opacity-65', className)}>
             {children}
         </section>
     );
@@ -99,7 +99,7 @@ function GlassPanel({ children, className = '', muted = false }) {
 
 function DormantMessage() {
     return (
-        <div className="dashboard-surface-b rounded-2xl px-4 py-3 text-sm font-semibold text-zinc-300">
+        <div className="dashboard-surface-b rounded-[2rem] px-4 py-3 text-sm font-semibold text-zinc-300">
             Goes live during active events.
         </div>
     );
@@ -169,7 +169,7 @@ function ScanActionPanel({ isLive }) {
                     <HugeiconsIcon icon={QrCodeIcon} size={15} />
                     Scan Ticket
                 </button>
-                <div className={cx('flex min-w-0 flex-1 items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-2', !isLive && 'opacity-60')}>
+                <div className={cx('flex min-w-0 flex-1 items-center gap-2 rounded-full glass-field px-4 py-2', !isLive && 'opacity-60')}>
                     <HugeiconsIcon icon={Search01Icon} size={15} className="text-zinc-500" />
                     <input
                         type="text"
@@ -234,7 +234,7 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
                 if (event.key === 'Enter' || event.key === ' ') onOpen(gate.id);
             }}
             className={cx(
-                'glass-panel relative min-h-[260px] cursor-pointer rounded-2xl p-5 transition hover:bg-white/[0.07]',
+                'glass-panel relative min-h-[260px] cursor-pointer rounded-[2rem] p-5 transition hover:bg-white/[0.07]',
                 !isLive && 'grayscale opacity-65'
             )}
         >
@@ -305,7 +305,7 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
 
             <div className="mt-5 max-h-32 space-y-2 overflow-y-auto pr-1">
                 {gate.scans.map((scan) => (
-                    <div key={`${gate.id}-${scan.id}`} className="rounded-xl border border-white/10 bg-black/25 px-3 py-2">
+                    <div key={`${gate.id}-${scan.id}`} className="rounded-xl glass-field px-3 py-2">
                         <div className="flex items-center justify-between gap-2">
                             <p className="truncate text-sm font-bold text-white">{scan.ticket}</p>
                             <StateChip state={scan.state} muted={!isLive} />
@@ -416,11 +416,11 @@ function GateDetailsModal({ gate, open, onClose }) {
             maxWidth="max-w-4xl"
         >
             <div className="grid gap-4 lg:grid-cols-[1.35fr_0.85fr]">
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                <div className="rounded-2xl glass-field p-4">
                     <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400">All Tickets Scanned</h3>
                     <div className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
                         {gate.scans.map((scan) => (
-                            <div key={`modal-${scan.id}`} className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.055] px-3 py-3">
+                            <div key={`modal-${scan.id}`} className="flex items-center justify-between gap-3 rounded-xl glass-field px-3 py-3">
                                 <div>
                                     <p className="text-sm font-bold text-white">{scan.ticket}</p>
                                     <p className="text-xs text-zinc-500">{scan.name} / {scan.at}</p>
@@ -433,7 +433,7 @@ function GateDetailsModal({ gate, open, onClose }) {
                 </div>
 
                 <div className="space-y-4">
-                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                    <div className="rounded-2xl glass-field p-4">
                         <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400">Flagged Issues</h3>
                         <div className="mt-3 space-y-2">
                             {flaggedIssues.map((scan) => (
@@ -446,11 +446,11 @@ function GateDetailsModal({ gate, open, onClose }) {
                         </div>
                     </div>
 
-                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                    <div className="rounded-2xl glass-field p-4">
                         <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400">Incident Log</h3>
                         <div className="mt-3 space-y-2">
                             {gate.incidentLog.map((entry) => (
-                                <div key={entry} className="flex gap-2 rounded-xl bg-white/[0.055] px-3 py-2 text-sm text-zinc-300">
+                                <div key={entry} className="flex gap-2 rounded-xl glass-field px-3 py-2 text-sm text-zinc-300">
                                     <span className="mt-2 h-1.5 w-1.5 rounded-full bg-pxi-purple" />
                                     <span>{entry}</span>
                                 </div>
@@ -476,7 +476,7 @@ function TeamChatModal({ open, onClose }) {
         >
             <div className="space-y-3">
                 {teamMessages.map((message) => (
-                    <div key={message.id} className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
+                    <div key={message.id} className="rounded-2xl glass-field px-4 py-3">
                         <div className="flex items-center justify-between gap-3">
                             <p className="text-sm font-black text-white">{message.author}</p>
                             <p className="text-xs text-zinc-500">{message.at}</p>
@@ -490,7 +490,7 @@ function TeamChatModal({ open, onClose }) {
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
                     placeholder="Message the operations team..."
-                    className="min-h-20 flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500"
+                    className="min-h-20 flex-1 rounded-2xl glass-field px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500"
                 />
                 <button
                     type="button"

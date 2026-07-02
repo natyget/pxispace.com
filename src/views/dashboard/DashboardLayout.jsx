@@ -25,6 +25,7 @@ import {
     adminNavItems,
     buildMemberNavItems,
     isNavItemActive,
+    dashboardNavConfig,
 } from '@/lib/dashboardNavConfig';
 
 function shouldClearAuth(error) {
@@ -323,21 +324,23 @@ export default function DashboardLayout({ children }) {
         }),
     };
 
-    const memberNavItems = useMemo(
-        () => buildMemberNavItems({
+    const isAdminNav = mounted && canAccessAdminDashboard(user) && adminSidebarMode === 'admin';
+
+    const navItems = useMemo(() => {
+        if (!mounted) {
+            return dashboardNavConfig.filter((item) => !item.vendorOnly && !item.organizerOnly && !item.bouncerOnly);
+        }
+        if (isAdminNav) {
+            return adminNavItems;
+        }
+        return buildMemberNavItems({
             hasOrganizerAccess,
             hasLiveOpsAccess,
             isLiveEvent: hasLiveEvent,
             mounted,
             user,
-        }),
-        [hasOrganizerAccess, hasLiveOpsAccess, hasLiveEvent, mounted, user]
-    );
-
-    const navItems = mounted && canAccessAdminDashboard(user) && adminSidebarMode === 'admin'
-        ? adminNavItems
-        : memberNavItems;
-    const isAdminNav = mounted && canAccessAdminDashboard(user) && adminSidebarMode === 'admin';
+        });
+    }, [isAdminNav, mounted, hasOrganizerAccess, hasLiveOpsAccess, hasLiveEvent, user]);
     const navEntries = useMemo(() => {
         if (isAdminNav || sidebarCollapsed) {
             return navItems.map((item) => ({ type: 'item', key: item.key, item }));
@@ -372,25 +375,22 @@ export default function DashboardLayout({ children }) {
             >
                 <div className="flex h-full flex-col justify-between">
                     <div className="flex min-h-0 flex-col">
-                        <div className={`flex items-center px-4 py-4 ${sidebarCollapsed ? 'justify-center' : 'justify-center md:justify-start'}`}>
+                        <div className={`flex items-center px-4 py-4 ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+                            <Link href="/" className={`flex items-center ${sidebarCollapsed ? 'hidden' : 'block'} md:block ${sidebarCollapsed ? 'md:hidden' : ''} min-w-0 transition-opacity hover:opacity-80`}>
+                                <img src="/favicon.png" alt="PXI" className="h-[38px] md:h-[44px] w-auto translate-y-[3px] object-contain" />
+                            </Link>
+
                             <button
                                 onClick={() => dashboardShellActions.toggleSidebar()}
-                                className={`group relative hidden items-center justify-center overflow-hidden rounded-full transition md:flex ${sidebarCollapsed ? 'h-11 w-11' : 'h-12 w-[94px]'}`}
+                                className={`group relative hidden items-center justify-center overflow-hidden rounded-full transition md:flex bg-white/[0.04] hover:bg-white/[0.08] text-white/70 hover:text-white ${sidebarCollapsed ? 'h-11 w-11' : 'h-9 w-9 shrink-0'}`}
                                 aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                                 type="button"
                             >
-                                <img
-                                    src="/favicon.png"
-                                    alt="PXI"
-                                    className={`${sidebarCollapsed ? 'h-[38px]' : 'h-[44px]'} w-auto translate-y-[3px] object-contain transition duration-200 group-hover:scale-75 group-hover:opacity-0`}
-                                />
-                                <span className="pill-ghost absolute inset-0 flex items-center justify-center opacity-0 transition duration-200 group-hover:opacity-100">
-                                    <HugeiconsIcon icon={sidebarCollapsed ? PanelLeftOpenIcon : PanelLeftCloseIcon} size={26} />
-                                </span>
+                                {sidebarCollapsed ? (
+                                    <img src="/favicon.png" alt="PXI" className="absolute inset-0 m-auto h-[38px] w-auto translate-y-[3px] object-contain transition duration-200 group-hover:scale-75 group-hover:opacity-0" />
+                                ) : null}
+                                <HugeiconsIcon icon={sidebarCollapsed ? PanelLeftOpenIcon : PanelLeftCloseIcon} size={sidebarCollapsed ? 26 : 18} className={sidebarCollapsed ? 'opacity-0 transition duration-200 group-hover:opacity-100' : ''} />
                             </button>
-                            <Link href="/" className="flex min-w-0 items-center md:hidden">
-                                <img src="/favicon.png" alt="PXI" className="h-[38px] w-auto translate-y-[4px] object-contain" />
-                            </Link>
                             <button
                                 className="ml-auto text-zinc-600 hover:text-zinc-400 md:hidden"
                                 onClick={closeMobileSidebar}

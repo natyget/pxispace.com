@@ -101,7 +101,7 @@ html, body {
 
 /* Tailwind v4 @theme: custom colors for utilities (bg-pxi-purple, text-pxi-dark, etc.) */
 @theme {
-  --color-pxi-purple: #d84aff;
+  --color-pxi-purple: #f01fff;
   --color-newpurple-base: #f01fff;
   /** `#f01fff` at 80% opacity */
   --color-newpurple: rgb(240 31 255 / 0.8);
@@ -149,7 +149,7 @@ html, body {
     --glow-pink: rgba(236, 72, 153, 0.4);
     --glow-purple: rgba(168, 85, 247, 0.4);
     --glow-cyan: rgba(6, 182, 212, 0.4);
-    --pxi-purple: #d84aff;
+    --pxi-purple: #f01fff;
     --newpurple-base: #f01fff;
     --newpurple: rgb(240 31 255 / 0.8);
     --pxi-dark: #050505;
@@ -164,7 +164,7 @@ html, body {
     --dashboard-surface-a-soft: rgba(18, 18, 24, 0.86);
     --dashboard-surface-b-bg: rgba(12, 12, 17, 0.72);
     --dashboard-surface-b-strong: rgba(10, 10, 14, 0.84);
-    --dashboard-surface-b-blur: 18px;
+    --dashboard-surface-b-blur: 32px;
     --dashboard-surface-matte: var(--dashboard-surface-a-soft);
     --dashboard-surface-frosted: var(--dashboard-surface-b-bg);
     --dashboard-surface-popover: var(--dashboard-surface-b-strong);
@@ -175,11 +175,11 @@ html, body {
     --dashboard-text-primary: #f2f2f4;
     --dashboard-text-secondary: #bbbcc3;
     --dashboard-text-muted: #8b8d98;
-    --dashboard-accent: #d84aff;
-    --dashboard-accent-soft: rgba(216, 74, 255, 0.2);
-    --dashboard-brand-neon: #d84aff;
-    --dashboard-brand-glow: 0 0 10px rgba(216, 74, 255, 0.75), 0 0 24px rgba(216, 74, 255, 0.42);
-    --dashboard-blur-gradient: radial-gradient(circle at 20% 0%, rgba(216, 74, 255, 0.12), transparent 48%),
+    --dashboard-accent: #f01fff;
+    --dashboard-accent-soft: rgba(240, 31, 255, 0.2);
+    --dashboard-brand-neon: #f01fff;
+    --dashboard-brand-glow: 0 0 10px rgba(240, 31, 255, 0.75), 0 0 24px rgba(240, 31, 255, 0.42);
+    --dashboard-blur-gradient: radial-gradient(circle at 20% 0%, rgba(240, 31, 255, 0.12), transparent 48%),
       radial-gradient(circle at 85% 18%, rgba(115, 119, 255, 0.1), transparent 42%);
     --dashboard-space-1: 0.25rem;
     --dashboard-space-2: 0.5rem;
@@ -238,7 +238,7 @@ html, body {
 
   body.theme-matte {
     background:
-      radial-gradient(circle at 20% 0%, rgba(216, 74, 255, 0.045), transparent 28rem),
+      radial-gradient(circle at 20% 0%, rgba(240, 31, 255, 0.045), transparent 28rem),
       linear-gradient(180deg, var(--dashboard-bg-base), #07070a 48%, var(--dashboard-bg-elev-1));
     color: var(--dashboard-text-primary);
   }
@@ -266,13 +266,11 @@ html, body {
   .dashboard-surface-a,
   .matte-surface,
   .dashboard-surface {
-    background: rgba(255, 255, 255, 0.038);
-    border: 0;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.06),
-      0 14px 42px rgba(0, 0, 0, 0.34);
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: none;
   }
 
   .dashboard-page-surface {
@@ -284,57 +282,45 @@ html, body {
   .dashboard-surface-b,
   .dashboard-glass-surface,
   .dashboard-surface-frosted {
-    background: rgba(255, 255, 255, 0.052);
-    border: 0;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(var(--dashboard-surface-b-blur));
     -webkit-backdrop-filter: blur(var(--dashboard-surface-b-blur));
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.075),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.025),
-      0 18px 48px rgba(0, 0, 0, 0.42);
+    box-shadow: none;
   }
 
   .dashboard-popover-surface {
-    background: rgba(14, 14, 18, 0.86);
-    border: 0;
+    background: rgba(14, 14, 18, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(var(--dashboard-surface-b-blur));
     -webkit-backdrop-filter: blur(var(--dashboard-surface-b-blur));
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.075),
-      0 18px 46px rgba(0, 0, 0, 0.52);
+    box-shadow: none;
   }
 
   .glass-panel {
-    background: rgba(255, 255, 255, 0.045);
-    border: 0;
-    backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.075),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.025),
-      0 16px 44px rgba(0, 0, 0, 0.45);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    box-shadow: none;
   }
 
   .glass-panel-strong {
-    background: rgba(255, 255, 255, 0.065);
+    background: rgba(255, 255, 255, 0.045);
     border: 0;
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.03),
-      0 22px 58px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    box-shadow: none;
   }
 
   .glass-field {
-    background: rgba(255, 255, 255, 0.062);
-    border: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     color: var(--dashboard-text-primary);
     outline: none;
-    box-shadow:
-      inset 0 2px 8px rgba(0, 0, 0, 0.58),
-      inset 0 1px 0 rgba(255, 255, 255, 0.045),
-      0 1px 0 rgba(255, 255, 255, 0.025);
+    box-shadow: none;
   }
 
   .glass-field::placeholder {
@@ -342,11 +328,8 @@ html, body {
   }
 
   .glass-field:focus {
-    box-shadow:
-      inset 0 2px 8px rgba(0, 0, 0, 0.52),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.16),
-      0 0 0 1px rgba(255, 255, 255, 0.04),
-      0 12px 26px rgba(0, 0, 0, 0.26);
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.08);
   }
 
   .pill-solid {
@@ -357,18 +340,12 @@ html, body {
     background: #fff;
     color: #050506;
     font-weight: 900;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.6),
-      0 12px 26px rgba(255, 255, 255, 0.08),
-      0 14px 34px rgba(0, 0, 0, 0.34);
-    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+    box-shadow: none;
+    transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
   }
 
   .pill-solid:hover {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.8),
-      0 14px 32px rgba(255, 255, 255, 0.12),
-      0 16px 38px rgba(0, 0, 0, 0.38);
+    background: #f0f0f0;
   }
 
   .pill-ghost {
@@ -380,10 +357,7 @@ html, body {
     color: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.07),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.02),
-      0 10px 28px rgba(0, 0, 0, 0.3);
+    box-shadow: none;
     transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
   }
 
@@ -397,14 +371,15 @@ html, body {
   }
 
   .dashboard-input {
-    background: rgba(255, 255, 255, 0.062);
-    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9999px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     color: var(--dashboard-text-primary);
     outline: none;
-    box-shadow:
-      inset 0 2px 8px rgba(0, 0, 0, 0.58),
-      inset 0 1px 0 rgba(255, 255, 255, 0.045),
-      0 1px 0 rgba(255, 255, 255, 0.025);
+    box-shadow: none;
+    padding: 0.75rem 1.25rem;
   }
 
   .dashboard-input::placeholder {
@@ -412,21 +387,24 @@ html, body {
   }
 
   .dashboard-input:focus {
-    box-shadow:
-      inset 0 2px 8px rgba(0, 0, 0, 0.52),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.16),
-      0 0 0 1px rgba(255, 255, 255, 0.04),
-      0 12px 26px rgba(0, 0, 0, 0.26);
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.08);
   }
 
   .dashboard-modal-panel :is(input, textarea, select) {
-    background: rgba(255, 255, 255, 0.062);
-    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9999px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     color: var(--dashboard-text-primary);
     outline: none;
-    box-shadow:
-      inset 0 2px 8px rgba(0, 0, 0, 0.58),
-      inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    box-shadow: none;
+    padding: 0.75rem 1.25rem;
+  }
+
+  .dashboard-modal-panel textarea {
+    border-radius: 1.25rem;
   }
 
   .dashboard-modal-panel :is(input, textarea, select)::placeholder {
@@ -444,9 +422,8 @@ html, body {
     background: rgba(255, 255, 255, 0.045);
     padding: 0.25rem;
     scrollbar-width: none;
-    box-shadow:
-      inset 0 2px 8px rgba(0, 0, 0, 0.46),
-      inset 0 1px 0 rgba(255, 255, 255, 0.055);
+    box-shadow: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .dashboard-segmented-toggle::-webkit-scrollbar {
@@ -478,10 +455,8 @@ html, body {
   .dashboard-segmented-toggle__item[data-active='true'] {
     background: #fff;
     color: #050506;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.7),
-      0 8px 18px rgba(255, 255, 255, 0.08),
-      0 10px 24px rgba(0, 0, 0, 0.34);
+    box-shadow: none;
+    border: 0;
   }
 
   .hairline-border {
@@ -541,7 +516,7 @@ html, body {
 
   .text-neon {
     color: var(--pxi-purple);
-    text-shadow: 0 0 10px rgba(216, 74, 255, 0.6), 0 0 25px rgba(216, 74, 255, 0.4);
+    text-shadow: 0 0 10px rgba(240, 31, 255, 0.6), 0 0 25px rgba(240, 31, 255, 0.4);
   }
 
   .text-neon-orange {
@@ -556,7 +531,7 @@ html, body {
   }
 
   .bloom-purple {
-    box-shadow: 0 0 25px 2px rgba(216, 74, 255, 0.12);
+    box-shadow: 0 0 25px 2px rgba(240, 31, 255, 0.12);
   }
 
   .glass {
@@ -613,7 +588,7 @@ html, body {
   .pxi-home-purple {
     background-color: var(--color-pxi-purple);
     color: #fff;
-    box-shadow: 0 0 20px rgba(216, 74, 255, 0.4);
+    box-shadow: 0 0 20px rgba(240, 31, 255, 0.4);
   }
 
   /* Legal hub page — neon TL;DR / CTA cards (from pxi-legal-hub) */
@@ -663,24 +638,27 @@ html, body {
   }
 
   .glow-surface-soft {
-    background: rgba(255, 255, 255, 0.045);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.055),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: none;
   }
 
   .glow-chip {
     background: rgba(255, 255, 255, 0.05);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.055),
-      0 8px 20px rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: none;
   }
 
   .glow-active {
     background: rgba(255, 255, 255, 0.12);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      0 12px 28px rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: none;
   }
 
   .glow-interactive {
@@ -1287,8 +1265,148 @@ html, body {
   .hero-drift-0,
   .hero-drift-1,
   .hero-drift-2,
-  .landing-hashtag-marquee {
+  .landing-hashtag-marquee,
+  .mkt-marquee-track {
     animation: none !important;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Marketing editorial system (v2) — posh-style type + restraint
+   Used across /, /platform, /about, /pricing, /features, /editorial.
+   Inter for editorial display; neon reserved for CTAs + thin rules.
+   ────────────────────────────────────────────────────────────── */
+.display-1,
+.display-2,
+.display-3 {
+  font-family: var(--font-heading);
+  text-transform: none;
+  color: #ffffff;
+  text-wrap: balance;
+}
+
+.display-1 {
+  font-weight: 900;
+  font-size: clamp(3.25rem, 9vw, 8.5rem);
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+}
+
+.display-2 {
+  font-weight: 800;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+
+.display-3 {
+  font-weight: 800;
+  font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.body-lead {
+  font-family: var(--font-inter);
+  font-weight: 500;
+  font-size: clamp(1.125rem, 1.8vw, 1.5rem);
+  line-height: 1.5;
+  color: #a1a1aa; /* zinc-400 */
+  text-wrap: pretty;
+}
+
+.body-lead strong,
+.body-lead b {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-inter);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: #71717a; /* zinc-500 */
+}
+
+.eyebrow::before {
+  content: '';
+  width: 24px;
+  height: 1px;
+  background: var(--pxi-purple);
+  flex-shrink: 0;
+}
+
+.eyebrow--center {
+  justify-content: center;
+}
+
+.hairline-neon {
+  height: 1px;
+  width: 100%;
+  border: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(240, 31, 255, 0.5),
+    rgba(255, 90, 31, 0.35),
+    transparent
+  );
+}
+
+.glow-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #050505;
+  font-weight: 700;
+  box-shadow: 0 0 24px rgba(240, 31, 255, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.glow-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 34px rgba(240, 31, 255, 0.45);
+  background: #f4f4f5;
+}
+
+/* Full-bleed auto-scrolling marquee track (poster/photo strips) */
+.mkt-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 80s linear infinite;
+}
+
+.mkt-marquee-track--fast {
+  animation-duration: 55s;
+}
+
+.mkt-marquee:hover .mkt-marquee-track {
+  animation-play-state: paused;
+}
+
+/* Tiny animated equalizer bars for the music-match teaser */
+@keyframes eq-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+
+.eq-bar {
+  transform-origin: bottom;
+  animation: eq-bar 900ms ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eq-bar {
+    animation: none !important;
+    transform: scaleY(0.6);
   }
 }
 

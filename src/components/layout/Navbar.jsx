@@ -19,7 +19,9 @@ const Navbar = () => {
     const pathname = usePathname();
     const router = useRouter();
     const isLanding = pathname === "/";
-    const showEventsLink = pathname === "/" || pathname === "/about" || pathname === "/platform";
+    /* The Events pill is the product gateway; hide it only on /events itself
+       (that page owns its own center controls via the portal below). */
+    const showEventsButton = pathname !== "/events";
 
     useEffect(() => setMounted(true), []);
     useEffect(() => {
@@ -59,11 +61,10 @@ const Navbar = () => {
         { name: "About", path: "/about" },
     ];
 
-
     const linkClass = (path) =>
         pathname === path
-            ? "bg-gradient-to-r from-[#d946ef] to-[#c026d3] text-white shadow-[0_0_22px_rgba(217,70,239,0.5),0_0_8px_rgba(217,70,239,0.3)]"
-            : "text-white/50 hover:text-white";
+            ? "text-white after:scale-x-100"
+            : "text-white/50 hover:text-white after:scale-x-0";
 
     return (
         <>
@@ -85,17 +86,17 @@ const Navbar = () => {
                     <img src="/favicon.png" alt="PXI" className="h-[38px] md:h-[44px] translate-y-[4px] w-auto object-contain" />
                 </Link>
 
-                {/* Center: Toggle Menu */}
+                {/* Center: Marketing nav (plain editorial links) */}
                 {pathname === "/events" ? (
                     <div id="navbar-center-portal" className="absolute left-1/2 -translate-x-1/2 items-center justify-center z-10 flex" />
                 ) : (
-                    <div className="hidden absolute left-1/2 -translate-x-1/2 items-center justify-center z-10 bg-[#131313] p-1 md:p-1.5 rounded-full md:flex">
+                    <div className="hidden absolute left-1/2 -translate-x-1/2 items-center justify-center gap-9 z-10 md:flex">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.path}
                                 href={link.path}
                                 onClick={() => setMobileMenuOpen(false)}
-                                className={`flex items-center justify-center h-[34px] px-8 rounded-full text-[10px] font-bold uppercase tracking-widest leading-none transition-colors ${linkClass(link.path)}`}
+                                className={`relative text-[11px] font-bold uppercase tracking-[0.2em] leading-none transition-colors after:absolute after:-bottom-2 after:left-0 after:h-px after:w-full after:origin-left after:bg-pxi-purple after:transition-transform after:duration-300 ${linkClass(link.path)}`}
                             >
                                 {link.name}
                             </Link>
@@ -103,77 +104,85 @@ const Navbar = () => {
                     </div>
                 )}
 
-                {/* Right: Actions */}
-                <div className="flex h-[30px] items-center justify-end gap-3 md:h-10 md:gap-3">
+                {/* Right: Product gateway + account */}
+                <div className="flex h-[30px] items-center justify-end gap-3 md:h-10 md:gap-4">
                     {!mounted ? (
                         isLanding ? null : (
                             <div className="hidden h-10 w-10 shrink-0 items-center justify-center md:flex" aria-hidden>
                                 <PxiLoadingIcon />
                             </div>
                         )
-                    ) : showEventsLink ? (
-                        <Link
-                            href="/events"
-                            className="hidden items-center justify-center text-xs font-black uppercase tracking-widest text-white hover:opacity-85 transition-opacity md:flex h-[34px] px-6"
-                        >
-                            Events
-                        </Link>
-                    ) : isAuthenticated ? (
-                        <div className="relative hidden md:block" ref={userMenuRef}>
-                            <button
-                                type="button"
-                                onClick={() => setUserMenuOpen((v) => !v)}
-                                className="flex h-10 items-center gap-2 rounded-full bg-zinc-900/60 px-3 hover:bg-zinc-900/80 transition-all border-0 outline-none"
-                            >
-                                <UserAvatar user={user} size={24} alt={user?.name ?? ''} />
-                                <span className="text-white text-xs font-semibold max-w-[100px] truncate">
-                                    {user?.name?.split(" ")[0] || "Account"}
-                                </span>
-                                <HugeiconsIcon icon={ArrowDown01Icon}
-                                    size={12}
-                                    className={`text-zinc-500 transition-transform ${userMenuOpen ? "rotate-180" : ""}`}
-                                />
-                            </button>
-
-                            {userMenuOpen && (
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-950 border border-white/8 rounded-xl shadow-2xl overflow-hidden z-50">
-                                    <div className="px-4 py-3 border-b border-white/5">
-                                        <p className="text-white text-xs font-semibold truncate">{user?.name}</p>
-                                        <p className="text-zinc-500 text-xs truncate">@{user?.username}</p>
-                                    </div>
-                                    <Link
-                                        href="/dashboard"
-                                        onClick={() => setUserMenuOpen(false)}
-                                        className="flex items-center gap-2.5 px-4 py-2.5 text-zinc-300 hover:text-white hover:bg-white/5 text-xs font-medium transition-all"
-                                    >
-                                        <HugeiconsIcon icon={DashboardSquare01Icon} size={13} />
-                                        Dashboard
-                                    </Link>
-                                    <button
-                                        onClick={() => { setUserMenuOpen(false); setShowLogoutModal(true); }}
-                                        className="flex items-center gap-2.5 w-full px-4 py-2.5 text-zinc-500 hover:text-pxi-purple hover:bg-pxi-purple/10 text-xs font-medium transition-all"
-                                    >
-                                        <HugeiconsIcon icon={Logout01Icon} size={13} />
-                                        Sign Out
-                                    </button>
-                                </div>
-                            )}
-                        </div>
                     ) : (
-                        <div className="hidden items-center gap-6 md:flex">
-                            <Link
-                                href={`/login?redirect=${encodeURIComponent(pathname)}`}
-                                className="text-xs font-black uppercase tracking-widest text-white hover:opacity-85 transition-opacity"
-                            >
-                                Log In
-                            </Link>
-                            <Link
-                                href="/login?redirect=/dashboard/events/new"
-                                className="inline-flex h-[34px] px-6 items-center justify-center rounded-full bg-white text-black hover:bg-neutral-200 text-xs font-black uppercase tracking-widest transition-all hover:scale-105 duration-300 shadow-md"
-                            >
-                                Create an event
-                            </Link>
-                        </div>
+                        <>
+                            {mounted && isAuthenticated ? (
+                                <div className="relative hidden md:block" ref={userMenuRef}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setUserMenuOpen((v) => !v)}
+                                        className="flex h-10 items-center gap-2 rounded-full bg-zinc-900/60 px-3 hover:bg-zinc-900/80 transition-all border-0 outline-none"
+                                    >
+                                        <UserAvatar user={user} size={24} alt={user?.name ?? ''} />
+                                        <span className="text-white text-xs font-semibold max-w-[100px] truncate">
+                                            {user?.name?.split(" ")[0] || "Account"}
+                                        </span>
+                                        <HugeiconsIcon icon={ArrowDown01Icon}
+                                            size={12}
+                                            className={`text-zinc-500 transition-transform ${userMenuOpen ? "rotate-180" : ""}`}
+                                        />
+                                    </button>
+
+                                    {userMenuOpen && (
+                                        <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-950 border border-white/8 rounded-xl shadow-2xl overflow-hidden z-50">
+                                            <div className="px-4 py-3 border-b border-white/5">
+                                                <p className="text-white text-xs font-semibold truncate">{user?.name}</p>
+                                                <p className="text-zinc-500 text-xs truncate">@{user?.username}</p>
+                                            </div>
+                                            <Link
+                                                href="/dashboard"
+                                                onClick={() => setUserMenuOpen(false)}
+                                                className="flex items-center gap-2.5 px-4 py-2.5 text-zinc-300 hover:text-white hover:bg-white/5 text-xs font-medium transition-all"
+                                            >
+                                                <HugeiconsIcon icon={DashboardSquare01Icon} size={13} />
+                                                Dashboard
+                                            </Link>
+                                            <button
+                                                onClick={() => { setUserMenuOpen(false); setShowLogoutModal(true); }}
+                                                className="flex items-center gap-2.5 w-full px-4 py-2.5 text-zinc-500 hover:text-pxi-purple hover:bg-pxi-purple/10 text-xs font-medium transition-all"
+                                            >
+                                                <HugeiconsIcon icon={Logout01Icon} size={13} />
+                                                Sign Out
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : null}
+
+                            {mounted && !isAuthenticated && pathname === '/events' ? (
+                                <div className="hidden items-center gap-5 md:flex">
+                                    <Link
+                                        href={`/login?redirect=${encodeURIComponent(pathname)}`}
+                                        className="text-xs font-bold text-zinc-300 transition-colors hover:text-white"
+                                    >
+                                        Log in
+                                    </Link>
+                                    <Link
+                                        href="/login?mode=signup&redirect=/dashboard/events/new"
+                                        className="inline-flex h-[34px] items-center rounded-full bg-white px-5 text-[11px] font-bold uppercase tracking-[0.1em] text-black transition-colors hover:bg-zinc-200"
+                                    >
+                                        Create Event
+                                    </Link>
+                                </div>
+                            ) : null}
+
+                            {showEventsButton ? (
+                                <Link
+                                    href="/events"
+                                    className="glow-cta hidden h-[34px] items-center px-6 text-[11px] font-bold uppercase tracking-[0.2em] md:inline-flex"
+                                >
+                                    Events
+                                </Link>
+                            ) : null}
+                        </>
                     )}
                     <button
                         type="button"
@@ -210,15 +219,7 @@ const Navbar = () => {
                             </Link>
                         ))}
 
-                        {showEventsLink ? (
-                             <Link
-                                 href="/events"
-                                 onClick={() => setMobileMenuOpen(false)}
-                                 className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-white"
-                             >
-                                 Events
-                             </Link>
-                        ) : mounted && isAuthenticated ? (
+                        {mounted && isAuthenticated ? (
                             <>
                                 <Link
                                     href="/dashboard"
@@ -234,24 +235,15 @@ const Navbar = () => {
                                     Sign Out
                                 </button>
                             </>
-                        ) : (
-                            <>
-                                <Link
-                                    href={`/login?redirect=${encodeURIComponent(pathname)}`}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-white hover:text-white/80 transition-colors"
-                                >
-                                    Log In
-                                </Link>
-                                <Link
-                                    href="/login?redirect=/dashboard/events/new"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="flex h-12 w-full items-center justify-center rounded-full bg-white text-black hover:bg-neutral-200 text-sm font-black uppercase tracking-widest transition-all hover:scale-105 shadow-md mt-4"
-                                >
-                                    Create an event
-                                </Link>
-                            </>
-                        )}
+                        ) : null}
+
+                        <Link
+                            href="/events"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="glow-cta mt-4 flex h-12 w-full items-center justify-center text-sm font-black uppercase tracking-widest"
+                        >
+                            Events
+                        </Link>
                     </div>
                 </>
             )}

@@ -192,9 +192,7 @@ function buildFinanceModel(data, timeframe, eventCosts) {
         netAfterCosts,
         revenueTimeline: revenueTimelineChart,
         breakdownData,
-        eventComparisonData,
         roasData,
-        netAfterCostsData,
         totalEventCost: totalEventCostCents
     };
 }
@@ -416,9 +414,7 @@ export default function EarningsPage() {
         netAfterCosts,
         revenueTimeline,
         breakdownData,
-        eventComparisonData,
         roasData,
-        netAfterCostsData,
     } = financeModel;
     const netMoney = splitMoney(netAfterCosts);
     const costTotal = totalFees + adSpend;

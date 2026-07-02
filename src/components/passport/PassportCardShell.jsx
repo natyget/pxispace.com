@@ -26,7 +26,7 @@ export function PassportCardShell({ top, bottom, overlay, className = '' }) {
     return (
         <div
             className={[
-                'relative flex h-[558px] w-[min(95vw,361px)] min-w-0 flex-col overflow-visible rounded-[8px]',
+                'relative flex h-[540px] w-[min(95vw,361px)] min-w-0 flex-col overflow-visible rounded-[8px]',
                 'border border-zinc-500/25',
                 'shadow-[0_10px_36px_rgba(0,0,0,0.72),0_0_32px_rgba(120,120,120,0.14)]',
                 className,

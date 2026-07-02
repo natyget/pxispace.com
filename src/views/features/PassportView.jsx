@@ -1,275 +1,260 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
-import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowRight02Icon } from '@hugeicons/core-free-icons';
+import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
+
+import SectionShell from '@/components/marketing/SectionShell';
+import FeatureRow from '@/components/marketing/FeatureRow';
+import PhoneMockup from '@/components/ui/PhoneMockup';
+import PassportShowcase from '@/components/marketing/PassportShowcase';
+import CameraDemo from '@/components/marketing/CameraDemo';
+import PassportStamp from '@/components/ui/PassportStamp';
+import { HeaderPolygonBadge } from '@/components/passport/passportVisualParts';
+import { PXI_PASSPORT_LEVEL_BADGE_THEMES } from '@/utils/odysseyTier';
+import { FaApple } from 'react-icons/fa';
+import { PXI_IOS_DOWNLOAD_HREF } from '@/lib/appStoreLinks';
+
+const ODYSSEY_BADGES = [
+  { id: 'ODYSSEY', name: 'Odyssey', letter: 'O' },
+  { id: 'LUMINARY', name: 'Luminary', letter: 'L' },
+  { id: 'PATHFINDER', name: 'Pathfinder', letter: 'P' },
+  { id: 'VOYAGER', name: 'Voyager', letter: 'V' },
+  { id: 'SEEKER', name: 'Seeker', letter: 'S' },
+  { id: 'WANDERER', name: 'Wanderer', letter: 'W' },
+];
 
 const TIERS = [
   {
     name: 'Bronze',
-    range: '1 – 5 events',
+    range: 'Wanderer',
     color: 'text-orange-400',
-    border: 'border-orange-400/20',
-    desc: 'Your event life begins. First stamps, first memories. You\'re building the foundation of a social identity that\'s actually earned.',
+    desc: 'Low engagement. You attended the event but barely interacted with the camera or the album.',
   },
   {
     name: 'Silver',
-    range: '6 – 15 events',
+    range: 'Pathfinder',
     color: 'text-zinc-400',
-    border: 'border-zinc-400/20',
-    desc: 'You\'re a regular. People recognize you at events. Your scrapbook is filling up with proof that you show up when it counts.',
+    desc: 'Moderate engagement. You shared a few moments and interacted with the gallery, leaving a solid mark.',
   },
   {
     name: 'Gold',
-    range: '16 – 30 events',
+    range: 'Luminary',
     color: 'text-amber-400',
-    border: 'border-amber-400/20',
-    desc: 'You\'re the one people ask about the next event. Your Odyssey score puts you in a league that\'s impossible to fake — because it\'s built entirely on verified attendance.',
+    desc: 'High engagement. You were actively contributing to the night, taking photos, and engaging with others.',
   },
   {
     name: 'Platinum',
-    range: '31+ events',
+    range: 'Odyssey',
     color: 'text-violet-300',
-    border: 'border-violet-400/20',
-    desc: 'The inner circle. You\'ve been everywhere that matters. Your passport is a living record of the nightlife — and organizers notice. Platinum holders get early access, priority RSVPs, and recognition.',
+    desc: 'Maximum engagement. You drove the night’s energy, capturing iconic moments that everyone reacted to.',
   },
 ];
 
-const HOW_IT_WORKS = [
+const PRINCIPLES = [
   {
-    step: '01',
-    title: 'Attend an event on PXI',
-    body: 'Check in through the event thread, use the camera, react to photos, or simply show up on the attendee list. That\'s it — no manual action required.',
+    title: 'Not a loyalty card.',
+    body: 'Every stamp is verified by the organizer’s check-in data. It cannot be faked, bought, or inflated.',
   },
   {
-    step: '02',
-    title: 'Earn a stamp',
-    body: 'Every verified attendance earns you a stamp on your passport. The stamp tier matches the event size and your engagement level during the night.',
+    title: 'Your identity, not your data.',
+    body: 'PXI does not sell your attendance history, location, or social graph. Zero tracking, zero surveillance.',
   },
   {
-    step: '03',
-    title: 'Build your Odyssey score',
-    body: 'Your Odyssey score is the sum of all your stamps. It\'s a running tally of your entire social calendar — every party, every rooftop, every underground show. It goes up. It never goes down.',
-  },
-  {
-    step: '04',
-    title: 'Unlock your tier',
-    body: 'As your stamp count grows, you progress through Bronze, Silver, Gold, and Platinum. Each tier is visible on your profile and verifiable by anyone — organizers, other attendees, and venues.',
+    title: 'Shareable, verifiable, permanent.',
+    body: 'Each stamp links back to a real event with a real scrapbook. Proof of presence, not a screenshot of a ticket.',
   },
 ];
-
-const WHY = [
-  {
-    title: 'Not a loyalty card',
-    body: 'This isn\'t a punch card at a coffee shop. Your passport is a cryptographic record of your social vitality. Every stamp is verified by the event organizer\'s check-in data — it can\'t be faked, bought, or inflated.',
-  },
-  {
-    title: 'Your identity, not your data',
-    body: 'Your passport is yours. PXI doesn\'t sell your attendance data, location history, or social graph. Zero tracking, zero surveillance. Your score reflects where you\'ve been — not where we think you should go.',
-  },
-  {
-    title: 'Organizers see your tier',
-    body: 'When you RSVP to an event, organizers can see your Odyssey tier. Platinum holders signal reliability, engagement, and community investment. That means priority access and early invites.',
-  },
-  {
-    title: 'Shareable, verifiable, permanent',
-    body: 'Share your passport to your story, your bio, or anywhere else. Each stamp links back to a real event with a real scrapbook. It\'s proof of presence — not a screenshot of a ticket.',
-  },
-];
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  visible: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: [0.2, 0.65, 0.3, 0.9], delay: i * 0.1 },
-  }),
-};
 
 export default function PassportView() {
   return (
-    <div className="landing-v2 bg-[var(--color-bg-primary)] text-[var(--color-text-body)]">
-
+    <div className="landing-v2 bg-black text-white">
       {/* ── Hero ── */}
-      <section className="relative pt-32 pb-16 md:pt-44 md:pb-24 overflow-hidden">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-pink-500/8 rounded-full blur-[200px] pointer-events-none" />
-        <div className="container mx-auto px-6 max-w-5xl relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="flex items-center justify-center gap-2 mb-8"
-          >
-            <span className="text-[10px] font-black text-zinc-600 tracking-[0.2em] uppercase">
-              For attendees
-            </span>
-          </motion.div>
-
-          <motion.h2
+      <section className="relative overflow-hidden pt-32 md:pt-40">
+        <div
+          className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[55vh] w-[80vw] max-w-[900px] -translate-x-1/2 rounded-full bg-pxi-purple/[0.08] blur-[160px]"
+          aria-hidden
+        />
+        <div className="mx-auto max-w-[1200px] px-6">
+          <span className="eyebrow">The digital passport</span>
+          <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.2, 0.65, 0.3, 0.9], delay: 0.1 }}
-            className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-[0.9] mb-8"
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="display-2 mt-6 max-w-4xl"
           >
-            Your Event Life,{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-pxi-purple">
-              Wrapped.
-            </span>
-          </motion.h2>
-
+            Proof you were <span className="text-white">there.</span>
+          </motion.h1>
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-zinc-400 text-base md:text-lg font-medium max-w-2xl mx-auto leading-relaxed mb-12"
+            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="body-lead mt-8 max-w-2xl"
           >
-            Every event you attend earns a stamp. Your Odyssey score is a living record of every show, every party, every rooftop. It's not faked, not bought — earned by showing up.
+            Every event you attend earns a stamp. Your Odyssey score is a living record of every
+            show, every party, every rooftop. Not bought, not faked. Earned by showing up.
           </motion.p>
-
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-10 flex flex-wrap items-center gap-4"
           >
-            <AppStoreCtaPair dataCursorHover />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── How it works ── */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <motion.h3
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-2xl md:text-4xl font-black uppercase tracking-tighter mb-14 text-center"
-          >
-            How it <span className="text-pxi-purple">works</span>
-          </motion.h3>
-
-          <div className="flex flex-col gap-0">
-            {HOW_IT_WORKS.map((item, i) => (
-              <motion.div
-                key={item.step}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-40px' }}
-                variants={fadeUp}
-                className={`flex gap-6 md:gap-8 py-8 ${i < HOW_IT_WORKS.length - 1 ? 'border-b border-white/[0.06]' : ''}`}
-              >
-                <span className="text-2xl md:text-3xl font-black text-white/10 shrink-0 w-10 md:w-12">{item.step}</span>
-                <div>
-                  <h4 className="text-base md:text-lg font-black text-white uppercase tracking-tight mb-2">{item.title}</h4>
-                  <p className="text-sm text-zinc-500 font-medium leading-relaxed">{item.body}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Stamp Tiers ── */}
-      <section className="py-16 md:py-24 bg-zinc-950/50">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <motion.h3
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-2xl md:text-4xl font-black uppercase tracking-tighter mb-14 text-center"
-          >
-            Stamp <span className="text-pxi-purple">tiers</span>
-          </motion.h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-            {TIERS.map((tier, i) => (
-              <motion.div
-                key={tier.name}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-40px' }}
-                variants={fadeUp}
-                className={`p-6 md:p-8 rounded-2xl border ${tier.border} bg-white/[0.015]`}
-              >
-                <div className="flex items-baseline justify-between mb-4">
-                  <h4 className={`text-lg md:text-xl font-black uppercase tracking-tight ${tier.color}`}>{tier.name}</h4>
-                  <span className="text-[10px] font-bold text-zinc-600 tracking-wider uppercase">{tier.range}</span>
-                </div>
-                <p className="text-xs md:text-sm text-zinc-500 font-medium leading-relaxed">{tier.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Why it matters ── */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <motion.h3
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-2xl md:text-4xl font-black uppercase tracking-tighter mb-14 text-center"
-          >
-            Why it <span className="text-pxi-purple">matters</span>
-          </motion.h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {WHY.map((item, i) => (
-              <motion.div
-                key={item.title}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-40px' }}
-                variants={fadeUp}
-                className="p-6 md:p-8 rounded-2xl border border-white/[0.06] bg-white/[0.015]"
-              >
-                <h4 className="text-sm font-black text-white uppercase tracking-wider mb-3">{item.title}</h4>
-                <p className="text-xs md:text-sm text-zinc-500 font-medium leading-relaxed">{item.body}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section className="py-20 md:py-28">
-        <div className="container mx-auto px-6 max-w-3xl text-center">
-          <motion.h3
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-6"
-          >
-            Start <span className="text-pxi-purple">earning.</span>
-          </motion.h3>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="flex flex-col items-center gap-6"
-          >
-            <AppStoreCtaPair dataCursorHover />
-            <Link
-              href="/features/shared-event-photo-gallery"
-              className="inline-flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-white transition-colors"
-            >
-              Explore Shared Gallery <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
+            <a href={PXI_IOS_DOWNLOAD_HREF} target="_blank" rel="noopener noreferrer" className="glow-cta px-8 py-4 text-sm">
+              <FaApple className="h-5 w-5" />
+              Get the app
+            </a>
+            <Link href="/platform" className="pill-ghost px-8 py-4 text-sm font-semibold">
+              See the platform
             </Link>
           </motion.div>
+
+          {/* the real passport card */}
+          <div className="mt-16 md:mt-20">
+            <PassportShowcase />
+          </div>
         </div>
       </section>
+
+      {/* ── How stamps work ── */}
+      <SectionShell eyebrow="How stamps work" pad="default">
+        <h2 className="display-2 mt-5 max-w-2xl">Show up. Get stamped.</h2>
+        <p className="body-lead mt-6 max-w-xl">
+          No manual action required. Being in the room is the whole mechanic.
+        </p>
+
+        <div className="mt-12 mb-16 flex flex-wrap items-center justify-center gap-4 max-w-4xl">
+          <PassportStamp eventName="Afrodisiac" date="DEC 12" tier="Platinum" size="lg" className="-rotate-6" />
+          <PassportStamp eventName="Boiler Room" date="JAN 05" tier="Gold" size="lg" className="rotate-3" />
+          <PassportStamp eventName="Summer Fest" date="JUN 21" tier="Silver" size="lg" className="-rotate-2" />
+          <PassportStamp eventName="Local Gig" date="FEB 14" tier="Bronze" size="lg" className="rotate-6" />
+        </div>
+
+        <div className="mt-14 flex flex-col gap-16">
+          <FeatureRow
+            title="Every night earns a stamp"
+            body="Check in through the event thread, shoot on the shared camera, or simply be on the attendee list. Every verified attendance stamps your passport, matched to the event size and your engagement that night."
+            phone={
+              <div className="w-full flex justify-center py-6">
+                <CameraDemo />
+              </div>
+            }
+          />
+          <FeatureRow
+            reverse
+            title="A score that only goes up"
+            body="Your Odyssey score is the running tally of all your stamps, and each one links back to a real event with a real scrapbook. Share it to your story or your bio. It goes up. It never goes down."
+            phone={
+              <div className="flex flex-col items-center justify-center gap-6 p-8 w-full sm:w-auto h-full">
+                {ODYSSEY_BADGES.map((tier) => {
+                  const theme = PXI_PASSPORT_LEVEL_BADGE_THEMES[tier.id];
+                  return (
+                    <div key={tier.name} className="flex items-center gap-6 w-full max-w-[200px]">
+                      <div className="scale-125">
+                        <HeaderPolygonBadge
+                          letter={tier.letter}
+                          progress={1}
+                          hexFill={theme.fill}
+                          hexStroke={theme.stroke}
+                          ringMuted={theme.progressTrack}
+                          ringBright={theme.progressFill}
+                        />
+                      </div>
+                      <span className="text-lg font-black uppercase tracking-widest text-white">
+                        {tier.name}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            }
+            href="/features/shared-event-photo-gallery"
+            linkLabel="Where the memories come from"
+          />
+        </div>
+      </SectionShell>
+
+      {/* ── Tiers ── */}
+      <SectionShell eyebrow="The tiers" pad="default">
+        <h2 className="display-2 mt-5 max-w-2xl">From first stamp to inner circle.</h2>
+        <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
+          {TIERS.map((tier, i) => (
+            <motion.div
+              key={tier.name}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.7, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+              className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-7 md:p-8"
+            >
+              <div className="flex items-baseline justify-between">
+                <h3 className={`text-xl font-semibold tracking-tight ${tier.color}`}>{tier.name}</h3>
+                <span className="text-xs uppercase tracking-[0.18em] text-zinc-600">{tier.range}</span>
+              </div>
+              <p className="mt-4 text-base leading-relaxed text-zinc-400">{tier.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </SectionShell>
+
+      {/* ── Why it matters ── */}
+      <SectionShell eyebrow="Why it matters" pad="default">
+        <div className="mt-4">
+          <FeatureRow
+            title="Organizers see your tier"
+            body="When you RSVP, organizers can see your Odyssey tier. Platinum signals reliability and community investment, which means early invites and priority access."
+            phone={
+              <div className="flex flex-col items-center justify-center p-8 bg-white/5 rounded-3xl border border-white/10 h-full">
+                <div className="relative">
+                  <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-black">
+                    <img src="/landing/assets/maya_profile_new.jpg" alt="Maya avatar" className="h-full w-full object-cover" />
+                  </div>
+                  <div className="absolute -bottom-2 -right-4 rotate-6 px-4 py-1.5 rounded-full bg-violet-600 border border-violet-400 shadow-xl">
+                    <span className="text-xs font-bold text-white uppercase tracking-widest">Odyssey</span>
+                  </div>
+                </div>
+                <h3 className="mt-6 text-xl font-black text-white">Maya J.</h3>
+                <span className="mt-1 text-sm text-zinc-400">@mayaj</span>
+              </div>
+            }
+          />
+        </div>
+        <div className="mt-16 divide-y divide-white/[0.08] border-y border-white/[0.08]">
+          {PRINCIPLES.map((p) => (
+            <motion.div
+              key={p.title}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="grid grid-cols-1 gap-3 py-7 md:grid-cols-[1fr_1.3fr] md:gap-12"
+            >
+              <h3 className="text-lg font-semibold tracking-tight text-white md:text-xl">{p.title}</h3>
+              <p className="self-center text-base leading-relaxed text-zinc-400">{p.body}</p>
+            </motion.div>
+          ))}
+        </div>
+      </SectionShell>
+
+      {/* ── CTA ── */}
+      <SectionShell pad="loose">
+        <div className="flex flex-col items-center text-center">
+          <h2 className="display-2 max-w-2xl">Start earning stamps.</h2>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            <a href={PXI_IOS_DOWNLOAD_HREF} target="_blank" rel="noopener noreferrer" className="glow-cta px-8 py-4 text-sm">
+              <FaApple className="h-5 w-5" />
+              Get the app
+            </a>
+            <Link
+              href="/features/shared-event-photo-gallery"
+              className="pill-ghost px-8 py-4 text-sm font-semibold"
+            >
+              The shared gallery
+            </Link>
+          </div>
+        </div>
+      </SectionShell>
     </div>
   );
 }

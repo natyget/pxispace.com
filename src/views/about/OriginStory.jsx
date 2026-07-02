@@ -82,10 +82,13 @@ const OriginStory = () => {
 
                     <div className="order-1 md:order-2 flex justify-center md:justify-end">
                         <div className="w-full max-w-md rounded-xl overflow-hidden shadow-xl">
-                            <img
-                                src={team2}
-                                alt="origin story"
-                                className="w-full max-h-132 object-cover rounded-xl"
+                            <video
+                                src="/landing/assets/movie.mp4"
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                className="w-full aspect-square object-cover rounded-xl"
                             />
                         </div>
                     </div>

@@ -379,7 +379,7 @@ function ParticipantEventModal({ event, requests, onClose, onSubmitHelp }) {
             <button type="button" onClick={() => openHelp('contact-organizer', 'Contact organizer')} className="pill-ghost inline-flex min-h-[46px] items-center justify-center gap-2 whitespace-nowrap px-4 text-sm font-bold"><HugeiconsIcon icon={Message01Icon} size={17} />Contact organizer</button>
             <button type="button" onClick={() => openHelp('other', 'Help request')} className="pill-ghost inline-flex min-h-[46px] items-center justify-center gap-2 whitespace-nowrap px-4 text-sm font-bold"><HugeiconsIcon icon={HelpCircleIcon} size={17} />Help request</button>
           </div>
-          <div className="glass-panel rounded-2xl p-5">
+          <div className="glass-panel rounded-[2rem] p-5">
             <h3 className="text-sm font-black uppercase tracking-widest text-white/60">Your help requests</h3>
             {requests.length ? (
               <div className="mt-4 space-y-3">
@@ -387,7 +387,7 @@ function ParticipantEventModal({ event, requests, onClose, onSubmitHelp }) {
                   <div key={request.id} className="glass-field rounded-2xl p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div><p className="text-sm font-bold text-white">{request.subject}</p><p className="mt-1 text-xs text-zinc-500">{TYPE_LABELS[request.type] || request.type} • {formatDateTime(request.createdAt)}</p></div>
-                      <span className="rounded-full bg-white/[0.08] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white/70">{STATUS_LABELS[request.status] || request.status}</span>
+                      <span className="rounded-full glow-chip px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white/70">{STATUS_LABELS[request.status] || request.status}</span>
                     </div>
                     {request.message ? <p className="mt-3 text-sm leading-relaxed text-zinc-400">{request.message}</p> : null}
                   </div>
@@ -554,7 +554,7 @@ export default function EventsListPage() {
           <div className="space-y-8">
             <EventControls query={hostedQuery} onQueryChange={setHostedQuery} status={hostedFilter} onStatusChange={setHostedFilter} sort={hostedSort} onSortChange={setHostedSort} />
             {hostedEvents.length === 0 ? (
-              <EmptyState icon={Calendar01Icon} title="No hosted events yet" body="Create your first event." action={<button type="button" onClick={() => setCreateOpen(true)} className="mt-6 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.08] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.07)] transition-colors hover:bg-white/[0.12]" aria-label="Create event"><HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={2.5} /></button>} />
+              <EmptyState icon={Calendar01Icon} title="No hosted events yet" body="Create your first event." action={<button type="button" onClick={() => setCreateOpen(true)} className="mt-6 inline-flex h-11 w-11 items-center justify-center rounded-full glow-chip text-white transition-colors hover:bg-white/[0.12]" aria-label="Create event"><HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={2.5} /></button>} />
             ) : filteredHostedEvents.length === 0 ? (
               <EmptyState icon={Search01Icon} title="No hosted events match your filters" body="Try clearing the search or changing the event status filter." />
             ) : (
@@ -580,7 +580,7 @@ export default function EventsListPage() {
             <EventControls query={attendedQuery} onQueryChange={setAttendedQuery} status={attendedFilter} onStatusChange={setAttendedFilter} sort={attendedSort} onSortChange={setAttendedSort} />
             {attendedError ? <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-400">{attendedError.message || 'Failed to load attended events'}</div>
               : attendedLoading ? <GlowCard className="p-10 text-center"><div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-transparent" /><p className="mt-4 text-sm text-zinc-500">Loading attended events...</p></GlowCard>
-                : attendedEvents.length === 0 ? <EmptyState icon={Ticket01Icon} title="No attended events yet" body="Your tickets will appear here." action={<button type="button" onClick={() => invalidateAttended()} className="mt-6 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-white/[0.08] px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-[0_0_0_1px_rgba(255,255,255,0.07)] transition-colors hover:bg-white/[0.12]"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />Refresh</button>} />
+                : attendedEvents.length === 0 ? <EmptyState icon={Ticket01Icon} title="No attended events yet" body="Your tickets will appear here." action={<button type="button" onClick={() => invalidateAttended()} className="mt-6 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl glow-chip px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-white/[0.12]"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />Refresh</button>} />
                   : filteredAttendedEvents.length === 0 ? <EmptyState icon={Search01Icon} title="No attended events match your filters" body="Try clearing the search or changing the event status filter." />
                     : <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">{filteredAttendedEvents.map((event) => <EventCard key={`${event.id}-${event.ticketId || 'ticket'}`} event={event} relation="attended" now={now} requestCount={myRequestCountByEventId[String(event.id)] || 0} onOpen={setSelectedAttendedEvent} onNavigate={(href) => router.push(href)} />)}</div>}
           </div>

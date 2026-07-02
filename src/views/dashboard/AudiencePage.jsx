@@ -603,8 +603,8 @@ export default function AudiencePage() {
                                             placeholder="Segment name"
                                         />
                                     </div>
-                                    <div className={`rounded-3xl px-4 py-3 text-sm ${
-                                        segmentIsActive ? 'bg-white/[0.09] text-white' : 'bg-white/[0.04] text-zinc-400'
+                                    <div className={`rounded-3xl px-4 py-3 text-sm glass-field ${
+                                        segmentIsActive ? 'bg-white/[0.09] text-white border-white/20' : 'text-zinc-400'
                                     }`}>
                                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
                                             {segmentIsActive ? 'Selection active' : 'Selection standby'}
@@ -616,28 +616,28 @@ export default function AudiencePage() {
                                 </div>
 
                                 <div className="grid gap-3 md:grid-cols-3">
-                                    <div className="rounded-2xl bg-white/[0.04] px-5 py-4">
+                                    <div className="rounded-2xl glass-field px-5 py-4">
                                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
                                             {segmentIsActive ? 'Selected rows' : 'Filtered rows'}
                                         </p>
                                         <p className="mt-2 text-3xl font-black tracking-tight text-white">{rowsForSegment.length}</p>
                                     </div>
-                                    <div className="rounded-2xl bg-white/[0.04] px-5 py-4">
+                                    <div className="rounded-2xl glass-field px-5 py-4">
                                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Avg. price paid</p>
                                         <p className="mt-2 text-3xl font-black tracking-tight text-white">{formatMoney(segmentStats.averagePrice)}</p>
                                     </div>
-                                    <div className="rounded-2xl bg-white/[0.04] px-5 py-4">
+                                    <div className="rounded-2xl glass-field px-5 py-4">
                                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Avg. Odyssey</p>
                                         <p className="mt-2 text-3xl font-black tracking-tight text-white">{segmentStats.averageOdyssey.toLocaleString()}</p>
                                     </div>
                                 </div>
 
-                                <div className="rounded-2xl bg-white/[0.035] px-5 py-5">
+                                <div className="rounded-2xl glass-field px-5 py-5">
                                     <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">In this segment</p>
                                     <div className="mt-3 flex flex-wrap gap-2.5">
                                         {segmentStats.topStamps.length ? (
                                             segmentStats.topStamps.map((stamp) => (
-                                                <span key={stamp} className="rounded-full bg-white/[0.07] px-3.5 py-1.5 text-xs font-bold text-zinc-300">
+                                                <span key={stamp} className="rounded-full glow-chip px-3.5 py-1.5 text-xs font-bold text-zinc-300">
                                                     {stamp}
                                                 </span>
                                             ))
@@ -684,7 +684,7 @@ export default function AudiencePage() {
                                                 <div
                                                     key={segment.id}
                                                     className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3 ${
-                                                        selectedSegmentId === segment.id ? 'bg-white/[0.08]' : 'bg-white/[0.035]'
+                                                        selectedSegmentId === segment.id ? 'glow-active' : 'glow-surface-soft'
                                                     }`}
                                                 >
                                                     <div className="min-w-0 text-left">
@@ -708,7 +708,7 @@ export default function AudiencePage() {
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="rounded-2xl bg-white/[0.035] px-4 py-3 text-sm leading-6 text-zinc-500">No segments saved.</p>
+                                        <p className="rounded-2xl glass-field px-4 py-3 text-sm leading-6 text-zinc-500">No segments saved.</p>
                                     )}
                                 </div>
                             </div>
@@ -735,7 +735,7 @@ export default function AudiencePage() {
                                     </div>
 
                                     <div className="mt-5 grid gap-3 lg:grid-cols-[1.3fr_1fr_1fr_0.9fr]">
-                                        <label className="space-y-2 rounded-2xl bg-white/[0.035] p-3">
+                                        <label className="space-y-2 rounded-2xl glass-field p-3">
                                             <span className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Find</span>
                                             <input
                                                 type="search"
@@ -746,7 +746,7 @@ export default function AudiencePage() {
                                             />
                                         </label>
 
-                                        <div className="space-y-2 rounded-2xl bg-white/[0.035] p-3">
+                                        <div className="space-y-2 rounded-2xl glass-field p-3">
                                             <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Spend</p>
                                             <select
                                                 value={audienceFilters.pricePaid}
@@ -757,7 +757,7 @@ export default function AudiencePage() {
                                             </select>
                                         </div>
 
-                                        <div className="space-y-2 rounded-2xl bg-white/[0.035] p-3">
+                                        <div className="space-y-2 rounded-2xl glass-field p-3">
                                             <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Odyssey</p>
                                             <select
                                                 value={audienceFilters.odysseyScore}
@@ -768,7 +768,7 @@ export default function AudiencePage() {
                                             </select>
                                         </div>
 
-                                        <div className="space-y-2 rounded-2xl bg-white/[0.035] p-3">
+                                        <div className="space-y-2 rounded-2xl glass-field p-3">
                                             <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Events attended</p>
                                             <div className="grid grid-cols-[1fr_88px] gap-2">
                                                 <select
@@ -800,7 +800,7 @@ export default function AudiencePage() {
                                                         <button
                                                             type="button"
                                                             onClick={toggleVisibleAudienceRows}
-                                                            className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold text-zinc-300 transition hover:bg-white/[0.1]"
+                                                            className="rounded-full glow-chip px-3 py-1.5 text-[10px] font-bold text-zinc-300 transition hover:bg-white/[0.1]"
                                                         >
                                                             All
                                                         </button>
@@ -815,7 +815,7 @@ export default function AudiencePage() {
                                             <tbody>
                                                 {filteredAudienceRows.map((row) => {
                                                     const selected = selectedAudienceRows.includes(row.id);
-                                                    const rowSurface = selected ? 'bg-white/[0.09]' : 'bg-white/[0.035] group-hover:bg-white/[0.055]';
+                                                    const rowSurface = selected ? 'bg-white/[0.09]' : 'bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.055]';
                                                     return (
                                                         <tr key={row.id} className="group">
                                                             <td className={`rounded-l-2xl px-4 py-5 align-top transition-colors ${rowSurface}`}>
@@ -948,7 +948,7 @@ export default function AudiencePage() {
                                         {selectedDraft.insights?.length ? (
                                             <div className="mt-3 space-y-2">
                                                 {selectedDraft.insights.slice(0, 2).map((insight) => (
-                                                    <p key={insight} className="rounded-xl bg-white/[0.03] px-3 py-2 text-xs text-zinc-400">
+                                                    <p key={insight} className="rounded-xl glass-field px-3 py-2 text-xs text-zinc-400">
                                                         {insight}
                                                     </p>
                                                 ))}
@@ -972,7 +972,7 @@ export default function AudiencePage() {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="flex flex-col gap-3 rounded-2xl bg-white/[0.03] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex flex-col gap-3 rounded-2xl glass-field px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <p className="text-sm font-bold text-white">AI suggestion</p>
                                         <p className="mt-1 text-xs text-zinc-500">Generate a campaign draft from the current audience and tool mix.</p>
@@ -1001,7 +1001,7 @@ export default function AudiencePage() {
                             type="button"
                             onClick={() => handleActiveCampaignStatus('paused')}
                             disabled={activeCampaignModal?.status === 'paused' || activeCampaignModal?.status === 'cancelled'}
-                            className="flex-1 rounded-xl bg-white/[0.08] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/12 disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap"
+                            className="flex-1 rounded-xl glass-field px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/12 disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap"
                         >
                             Pause
                         </button>
@@ -1025,22 +1025,22 @@ export default function AudiencePage() {
                 )}
             >
                 <div className="space-y-4">
-                    <div className="rounded-2xl bg-white/[0.04] px-4 py-4">
+                    <div className="rounded-2xl glass-field px-4 py-4">
                         <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Status</p>
                         <p className="mt-2 text-sm font-bold text-white">{activeCampaignModal?.statusLabel || 'Active'}</p>
                         <p className="mt-1 text-xs text-zinc-500">{activeCampaignModal?.audience}</p>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="rounded-2xl bg-white/[0.04] px-4 py-4">
+                        <div className="rounded-2xl glass-field px-4 py-4">
                             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Tools</p>
                             <p className="mt-2 text-sm font-bold text-white">{activeCampaignModal?.channels}</p>
                         </div>
-                        <div className="rounded-2xl bg-white/[0.04] px-4 py-4">
+                        <div className="rounded-2xl glass-field px-4 py-4">
                             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Budget</p>
                             <p className="mt-2 text-sm font-bold text-white">${activeCampaignModal?.budget || 0}</p>
                         </div>
                     </div>
-                    <div className="rounded-2xl bg-white/[0.04] px-4 py-4">
+                    <div className="rounded-2xl glass-field px-4 py-4">
                         <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Schedule</p>
                         <p className="mt-2 text-sm font-bold text-white">{activeCampaignModal?.schedule}</p>
                     </div>

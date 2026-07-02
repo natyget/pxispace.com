@@ -12,7 +12,7 @@ function trendIconFor(trend) {
 export function StatRow({ items = [], className = '' }) {
     return (
         <div
-            className={`glass-panel grid gap-3 rounded-2xl p-4 ${className}`.trim()}
+            className={`glass-panel grid gap-3 rounded-[2rem] p-4 ${className}`.trim()}
             style={{ gridTemplateColumns: `repeat(${Math.min(Math.max(items.length, 1), 3)}, minmax(0, 1fr))` }}
         >
             {items.map((item) => (
@@ -89,7 +89,7 @@ export default function MetricCard({
     const TrendIcon = trendIconFor(trend);
 
     return (
-        <div className={`glass-panel relative flex min-h-[132px] flex-col justify-between rounded-2xl ${dense ? 'p-4 md:p-5' : 'p-5 md:p-6'}`}>
+        <div className={`glass-panel relative flex min-h-[132px] flex-col justify-between rounded-[2rem] ${dense ? 'p-4 md:p-5' : 'p-5 md:p-6'}`}>
             <div className="mb-4 flex items-center justify-between gap-3">
                 <span className="text-[11px] md:text-[12px] font-bold tracking-widest text-white/40 uppercase">{title}</span>
                 {actions ? (

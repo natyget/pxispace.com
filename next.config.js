@@ -9,6 +9,12 @@ const nextConfig = {
         destination: '/login',
         permanent: false,
       },
+      {
+        // /platform is canonical; /organizers is a permanent alias
+        source: '/organizers',
+        destination: '/platform',
+        permanent: true,
+      },
     ];
   },
   images: {

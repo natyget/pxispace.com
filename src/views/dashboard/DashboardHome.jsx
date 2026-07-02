@@ -42,10 +42,10 @@ function eventState(event, now = DASHBOARD_RENDER_NOW) {
 }
 
 function stateClassName(status) {
-    if (status === 'Active') return 'bg-emerald-400/10 text-emerald-300';
-    if (status === 'Scheduled') return 'bg-white/[0.08] text-zinc-200';
-    if (status === 'Draft') return 'bg-amber-400/10 text-amber-200';
-    return 'bg-white/[0.04] text-zinc-400';
+    if (status === 'Active') return 'bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md text-emerald-300';
+    if (status === 'Scheduled') return 'bg-white/5 border border-white/10 backdrop-blur-md text-zinc-200';
+    if (status === 'Draft') return 'bg-amber-500/10 border border-amber-500/20 backdrop-blur-md text-amber-200';
+    return 'bg-white/5 border border-white/10 backdrop-blur-md text-zinc-400';
 }
 
 function buildSparkline(seed = 0, lift = 0) {
@@ -242,7 +242,7 @@ export default function DashboardHome() {
             </div>
 
             {mounted && !user?.isVendor && (
-                <div className="dashboard-surface-frosted rounded-2xl p-5">
+                <div className="dashboard-surface-frosted rounded-[2rem] p-5">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <p className="text-xs font-bold uppercase tracking-widest text-white/40">Organizer access</p>
@@ -279,7 +279,7 @@ export default function DashboardHome() {
                             ))}
                         </div>
                     ) : upcomingAndLiveEvents.length === 0 ? (
-                        <div className="dashboard-surface-frosted rounded-2xl px-4 py-6 text-center">
+                        <div className="dashboard-surface-frosted rounded-[2rem] px-4 py-6 text-center">
                             <p className="text-sm font-semibold text-white">No live or upcoming events yet.</p>
                             <Link href="/dashboard/events" className="pill-ghost mt-3 px-4 py-2 text-xs font-bold uppercase tracking-widest whitespace-nowrap">
                                 Open events
@@ -287,7 +287,7 @@ export default function DashboardHome() {
                         </div>
                     ) : (
                         upcomingAndLiveEvents.map((event) => (
-                            <article key={event.id} className="dashboard-surface-frosted rounded-2xl p-4">
+                            <article key={event.id} className="dashboard-surface-frosted rounded-[2rem] p-4">
                                 <div className="flex min-w-0 items-start justify-between gap-3">
                                     <div className="min-w-0">
                                         <h2 className="truncate text-sm font-black text-white">{event.name}</h2>
@@ -306,7 +306,7 @@ export default function DashboardHome() {
                                             { label: 'Hype Index', value: event.hype },
                                         ]}
                                     />
-                                    <div className="rounded-xl bg-white/[0.035] p-3">
+                                    <div className="rounded-xl glass-field p-3">
                                         <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Momentum</p>
                                         <MicroChart points={event.chartPoints} color={BASE_CHART_COLOR} className="mt-2" />
                                     </div>
@@ -327,9 +327,7 @@ export default function DashboardHome() {
                             <Link
                                 key={notice.id}
                                 href={notice.href}
-                                className={`block rounded-2xl p-4 transition hover:bg-white/[0.075] ${
-                                    notice.severity === 'high' ? 'bg-white/[0.075] shadow-[inset_0_1px_0_rgba(255,255,255,0.09)]' : 'bg-white/[0.04]'
-                                }`}
+                                className={`block rounded-[2rem] p-4 transition hover:bg-white/[0.075] glass-field`}
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
@@ -337,8 +335,8 @@ export default function DashboardHome() {
                                         <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-white/35">{notice.event}</p>
                                         <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-white/50">{notice.detail}</p>
                                     </div>
-                                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
-                                        notice.severity === 'high' ? 'bg-red-400/14 text-red-100' : 'bg-white/[0.08] text-white/60'
+                                    <span className={`shrink-0 glow-chip rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                                        notice.severity === 'high' ? 'border-red-400/20 text-red-100 bg-red-500/10' : 'text-white/60'
                                     }`}>
                                         {notice.severity}
                                     </span>
@@ -358,22 +356,22 @@ export default function DashboardHome() {
                             ]}
                         />
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="rounded-xl bg-white/[0.035] p-3">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Sales</p>
-                                <MicroChart points={summary.salesTrend} color={BASE_CHART_COLOR} className="mt-2" />
+                                <div className="rounded-xl glass-field p-3">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Sales</p>
+                                    <MicroChart points={summary.salesTrend} color={BASE_CHART_COLOR} className="mt-2" />
+                                </div>
+                                <div className="rounded-xl glass-field p-3">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Hype</p>
+                                    <MicroChart points={summary.hypeTrend} color={BASE_CHART_COLOR} className="mt-2" />
+                                </div>
                             </div>
-                            <div className="rounded-xl bg-white/[0.035] p-3">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Hype</p>
-                                <MicroChart points={summary.hypeTrend} color={BASE_CHART_COLOR} className="mt-2" />
-                            </div>
-                        </div>
                         <div className="grid grid-cols-3 gap-2">
                             {[
                                 ['Active', summary.activeCount],
                                 ['Scheduled', summary.scheduledCount],
                                 ['Draft', summary.draftCount],
                             ].map(([label, value]) => (
-                                <div key={label} className="rounded-xl bg-white/[0.035] px-3 py-2">
+                                <div key={label} className="rounded-xl glass-field px-3 py-2">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">{label}</p>
                                     <p className="mt-1 text-lg font-black text-white">{metricsLoading ? '—' : value}</p>
                                 </div>
@@ -405,7 +403,7 @@ function UpdateLink({ update }) {
     return (
         <Link
             href={update.href}
-            className="block rounded-2xl bg-white/[0.04] p-4 transition hover:bg-white/[0.075]"
+            className="block rounded-[2rem] glass-field p-4 transition hover:bg-white/[0.075]"
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

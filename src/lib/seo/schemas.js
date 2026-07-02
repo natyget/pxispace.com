@@ -1,6 +1,6 @@
 /** Centralised JSON-LD schema definitions for PXI pages. */
 
-const SITE_URL = 'https://pxispace.com';
+export const SITE_URL = 'https://pxispace.com';
 
 export const ORGANIZATION_JSONLD = {
   '@context': 'https://schema.org',
@@ -48,12 +48,12 @@ export const HOMEPAGE_JSONLD = {
         'PXI is a dual-sided event operating system for organizers and attendees, combining white-label ticketing infrastructure with privacy-first social scrapbooks.',
       featureList: [
         'White-Label Event Ticketing',
-        'Real-Time Predictive Analytics',
-        'Tactile Native Camera Streaming',
-        'DBSCAN Clustered Digital Scrapbook',
-        'Event Passport with Odyssey Scoring',
-        'Wilson-Scored Engagement Graph',
-        'PASETO Verified Claims',
+        'Real-Time Analytics',
+        'Live Shared Event Camera',
+        'Morning-After Digital Scrapbook',
+        'Event Passport with Attendance Stamps',
+        'One-Tap Instagram Sharing',
+        'Signed, Forgery-Proof Tickets',
         'Zero Location Tracking',
       ],
       offers: {
@@ -61,14 +61,74 @@ export const HOMEPAGE_JSONLD = {
         price: '0',
         priceCurrency: 'USD',
       },
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: '4.9',
-        ratingCount: '342',
-      },
     },
   ],
 };
+
+/** AboutPage node referencing the organization. */
+export function buildAboutJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: 'About PXI',
+    url: `${SITE_URL}/about`,
+    description:
+      'PXI is an event platform built by operators, where the night compiles itself, the organizer keeps the money, and the memory is the point.',
+    mainEntity: ORGANIZATION_JSONLD,
+  };
+}
+
+/**
+ * BreadcrumbList from an ordered array of {name, path} (path relative to site).
+ * @param {{name:string, path:string}[]} items
+ */
+export function buildBreadcrumbJsonLd(items = []) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((it, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: it.name,
+      item: `${SITE_URL}${it.path}`,
+    })),
+  };
+}
+
+/**
+ * FAQPage from an array of {q, a}.
+ * @param {{q:string, a:string}[]} faqs
+ */
+export function buildFaqJsonLd(faqs = []) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  };
+}
+
+/**
+ * ItemList for a collection page (events discovery, city pages).
+ * @param {{name:string, url:string}[]} items — absolute or relative urls
+ * @param {string} name — list name
+ */
+export function buildItemListJsonLd(items = [], name = 'Events') {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name,
+    itemListElement: items.map((it, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: it.name,
+      url: it.url.startsWith('http') ? it.url : `${SITE_URL}${it.url}`,
+    })),
+  };
+}
 
 /**
  * Build Event JSON-LD for a public event detail page.
@@ -78,12 +138,25 @@ export const HOMEPAGE_JSONLD = {
 export function buildEventJsonLd(event, siteUrl) {
   if (!event) return null;
 
+  // Treat events with a lineup/performers as MusicEvent for richer results.
+  const lineup = Array.isArray(event.lineup) ? event.lineup : [];
+  const hasLineup = lineup.length > 0;
+
   const schema = {
     '@context': 'https://schema.org',
-    '@type': 'Event',
+    '@type': hasLineup ? 'MusicEvent' : 'Event',
     name: event.name || 'Event',
     url: `${siteUrl}/events/${event.id}`,
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
   };
+
+  if (hasLineup) {
+    schema.performer = lineup
+      .map((p) => (typeof p === 'string' ? p : p?.name || p?.username))
+      .filter(Boolean)
+      .map((name) => ({ '@type': 'PerformingGroup', name }));
+  }
 
   if (event.startDate) {
     schema.startDate = new Date(event.startDate).toISOString();
