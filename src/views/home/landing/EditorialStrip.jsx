@@ -40,7 +40,8 @@ export default function EditorialStrip() {
                   alt=""
                   aria-hidden
                   loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-700"
+                  className={`h-full w-full object-cover transition-transform duration-700 ${story.imageClass || ''}`}
+                  style={story.imageStyle}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 <span className="absolute left-4 top-4 rounded-full border border-white/20 bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md">

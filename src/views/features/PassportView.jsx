@@ -27,28 +27,40 @@ const ODYSSEY_BADGES = [
 
 const TIERS = [
   {
-    name: 'Bronze',
-    range: 'Wanderer',
-    color: 'text-orange-400',
-    desc: 'Low engagement. You attended the event but barely interacted with the camera or the album.',
+    name: 'Wanderer',
+    range: '0 – 500 XP',
+    color: 'text-[#B026FF]',
+    desc: 'The start of the journey. You showed up, got your stamp, and began your record of the night.',
   },
   {
-    name: 'Silver',
-    range: 'Pathfinder',
-    color: 'text-zinc-400',
-    desc: 'Moderate engagement. You shared a few moments and interacted with the gallery, leaving a solid mark.',
+    name: 'Seeker',
+    range: '501 – 2.5K XP',
+    color: 'text-indigo-400',
+    desc: 'Building momentum. You’re actively attending and starting to interact with the event thread.',
   },
   {
-    name: 'Gold',
-    range: 'Luminary',
+    name: 'Voyager',
+    range: '2.5K – 7K XP',
+    color: 'text-emerald-500',
+    desc: 'A regular. You’re consistently engaging, shooting photos, and adding to the collective memory.',
+  },
+  {
+    name: 'Pathfinder',
+    range: '7K – 15K XP',
+    color: 'text-orange-500',
+    desc: 'High engagement. You drive the energy, capturing and sharing iconic moments everyone reacts to.',
+  },
+  {
+    name: 'Luminary',
+    range: '15K – 30K XP',
     color: 'text-amber-400',
-    desc: 'High engagement. You were actively contributing to the night, taking photos, and engaging with others.',
+    desc: 'A pillar of the scene. Your presence is known and your contributions shape the night’s story.',
   },
   {
-    name: 'Platinum',
-    range: 'Odyssey',
-    color: 'text-violet-300',
-    desc: 'Maximum engagement. You drove the night’s energy, capturing iconic moments that everyone reacted to.',
+    name: 'Odyssey',
+    range: '30K+ XP',
+    color: 'text-zinc-300',
+    desc: 'The inner circle. Maximum engagement across countless events. You are part of the core community.',
   },
 ];
 
@@ -124,11 +136,13 @@ export default function PassportView() {
           No manual action required. Being in the room is the whole mechanic.
         </p>
 
-        <div className="mt-12 mb-16 flex flex-wrap items-center justify-center gap-4 max-w-4xl">
-          <PassportStamp eventName="Afrodisiac" date="DEC 12" tier="Platinum" size="lg" className="-rotate-6" />
-          <PassportStamp eventName="Boiler Room" date="JAN 05" tier="Gold" size="lg" className="rotate-3" />
-          <PassportStamp eventName="Summer Fest" date="JUN 21" tier="Silver" size="lg" className="-rotate-2" />
-          <PassportStamp eventName="Local Gig" date="FEB 14" tier="Bronze" size="lg" className="rotate-6" />
+        <div className="mt-12 mb-16 flex flex-wrap items-center justify-center gap-6 max-w-5xl">
+          <PassportStamp eventName="Afrodisiac" date="DEC 12" city="NYC" role="MEMBER" shape="star-burst" color="#c4b5fd" size="lg" className="-rotate-6" />
+          <PassportStamp eventName="Boiler Room" date="JAN 05" city="LA" role="OWNER" shape="hologram-ticket" color="#FCD34D" size="lg" className="rotate-3" />
+          <PassportStamp eventName="Summer Fest" date="JUN 21" city="MIA" role="STAFF" shape="arch-gate" color="#34D399" size="lg" className="-rotate-2 mt-4" />
+          <PassportStamp eventName="Local Gig" date="FEB 14" city="CHI" role="MEMBER" shape="wax-seal" color="#FB923C" size="lg" className="rotate-6" />
+          <PassportStamp eventName="Warehouse" date="MAR 02" city="LDN" role="MEMBER" shape="hexagon-pass" color="#60A5FA" size="lg" className="-rotate-12" />
+          <PassportStamp eventName="Rooftop" date="AUG 30" city="BK" role="MEMBER" shape="visa-sticker" color="#E5E7EB" size="lg" className="rotate-12 mt-2" />
         </div>
 
         <div className="mt-14 flex flex-col gap-16">
@@ -146,7 +160,7 @@ export default function PassportView() {
             title="A score that only goes up"
             body="Your Odyssey score is the running tally of all your stamps, and each one links back to a real event with a real scrapbook. Share it to your story or your bio. It goes up. It never goes down."
             phone={
-              <div className="flex flex-col items-center justify-center gap-6 p-8 w-full sm:w-auto h-full">
+              <div className="flex flex-col items-center justify-center gap-14 p-8 w-full sm:w-auto h-full">
                 {ODYSSEY_BADGES.map((tier) => {
                   const theme = PXI_PASSPORT_LEVEL_BADGE_THEMES[tier.id];
                   return (
@@ -178,24 +192,41 @@ export default function PassportView() {
       {/* ── Tiers ── */}
       <SectionShell eyebrow="The tiers" pad="default">
         <h2 className="display-2 mt-5 max-w-2xl">From first stamp to inner circle.</h2>
-        <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-          {TIERS.map((tier, i) => (
-            <motion.div
-              key={tier.name}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.7, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-7 md:p-8"
-            >
-              <div className="flex items-baseline justify-between">
-                <h3 className={`text-xl font-semibold tracking-tight ${tier.color}`}>{tier.name}</h3>
-                <span className="text-xs uppercase tracking-[0.18em] text-zinc-600">{tier.range}</span>
-              </div>
-              <p className="mt-4 text-base leading-relaxed text-zinc-400">{tier.desc}</p>
-            </motion.div>
-          ))}
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-12 overflow-hidden relative rounded-[2rem] border border-white/[0.08] bg-black p-8 md:p-14"
+        >
+          {/* Background Ambient Glow */}
+          <div className="absolute inset-x-0 bottom-0 top-1/2 -z-10 bg-gradient-to-r from-[#B026FF]/20 via-[#34D399]/20 to-[#E5E7EB]/20 blur-[100px] pointer-events-none" />
+          
+          <div className="relative z-10 w-full">
+            <h3 className="text-2xl md:text-3xl font-semibold tracking-tight text-white mb-5">
+              A visual spectrum of engagement
+            </h3>
+            <p className="text-lg leading-relaxed text-zinc-400 mb-12 max-w-3xl">
+              Your stamp's color isn't random. It’s a direct reflection of your energy in the room. From the moment you arrive, to how much you shoot, share, and interact—the stamp evolves. Organizers can glance at a passport and instantly know exactly who came for the vibe, and who got really turnt.
+            </p>
+            
+            <div className="space-y-5">
+               <div className="flex w-full h-5 rounded-full overflow-hidden">
+                 <div className="h-full bg-[#B026FF] flex-1" title="Wanderer" />
+                 <div className="h-full bg-[#60A5FA] flex-1" title="Seeker" />
+                 <div className="h-full bg-[#34D399] flex-1" title="Voyager" />
+                 <div className="h-full bg-[#FB923C] flex-1" title="Pathfinder" />
+                 <div className="h-full bg-[#FCD34D] flex-1" title="Luminary" />
+                 <div className="h-full bg-[#E5E7EB] flex-1" title="Odyssey" />
+               </div>
+               <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-zinc-500 px-1">
+                 <span>Just showed up</span>
+                 <span className="hidden sm:inline">Locked in</span>
+                 <span>Ran the night</span>
+               </div>
+            </div>
+          </div>
+        </motion.div>
       </SectionShell>
 
       {/* ── Why it matters ── */}

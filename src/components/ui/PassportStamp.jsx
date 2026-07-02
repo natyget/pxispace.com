@@ -2,15 +2,20 @@ import React from 'react';
 import { StampShapeGraphic } from '@/components/passport/StampShapeGraphic';
 
 const TIER_CONFIG = {
-  Platinum: { color: '#c4b5fd', shape: 'star-burst' },
-  Gold: { color: '#fbbf24', shape: 'diamond-pass' },
-  Silver: { color: '#a1a1aa', shape: 'hexagon-pass' },
-  Bronze: { color: '#fb923c', shape: 'square-border' },
+  Wanderer: { color: '#B026FF', shape: 'square-border' },
+  Seeker: { color: '#60A5FA', shape: 'circle-exit' },
+  Voyager: { color: '#34D399', shape: 'diamond-pass' },
+  Pathfinder: { color: '#FB923C', shape: 'hexagon-pass' },
+  Luminary: { color: '#FCD34D', shape: 'star-burst' },
+  Odyssey: { color: '#E5E7EB', shape: 'shield-crest' },
 };
 
-export default function PassportStamp({ eventName, date, tier, size = 'md', className = '' }) {
-  const config = TIER_CONFIG[tier] || TIER_CONFIG.Bronze;
+export default function PassportStamp({ eventName, date, tier, shape, color, city = "", role = "", size = 'md', className = '' }) {
+  const config = tier ? (TIER_CONFIG[tier] || TIER_CONFIG.Wanderer) : { shape: 'square-border', color: '#B026FF' };
   
+  const finalShape = shape || config.shape;
+  const finalColor = color || config.color;
+
   const sizeClasses = {
     sm: 'w-16 h-16',
     md: 'w-24 h-24',
@@ -19,14 +24,14 @@ export default function PassportStamp({ eventName, date, tier, size = 'md', clas
   };
 
   return (
-    <div className={`${sizeClasses[size] || sizeClasses.md} ${className}`}>
+    <div className={`${sizeClasses[size] || sizeClasses.md} flex-shrink-0 ${className}`}>
       <StampShapeGraphic
-        shape={config.shape}
-        color={config.color}
+        shape={finalShape}
+        color={finalColor}
         name={eventName}
         date={date}
-        city=""
-        role=""
+        city={city}
+        role={role}
       />
     </div>
   );

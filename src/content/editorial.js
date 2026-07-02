@@ -50,6 +50,8 @@ export const EDITORIAL_STORIES = [
     title: 'Proof you were there',
     dek: 'Verified attendance stamps, an Odyssey score, and a passport that is actually yours.',
     cover: '/landing/editorial/culture-proof.jpg',
+    imageClass: 'scale-[1.06] -translate-y-2',
+    imageStyle: {},
     articleCover: '/landing/scattered/birthday.jpg',
     date: '2026-03-11',
     readMinutes: 3,
