@@ -96,7 +96,7 @@ export default function CompetitorComparisonView() {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="display-2 mt-6 max-w-4xl"
           >
-            Invite apps end at the <span className="text-pxi-purple">door.</span>
+            Invite apps end at the <span className="text-white">door.</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 24 }}

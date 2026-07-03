@@ -16,6 +16,7 @@ import EarningsMock from '@/components/marketing/DashboardMockup/EarningsMock';
 import AnalyticsMock from '@/components/marketing/DashboardMockup/AnalyticsMock';
 import VenueMapMock from '@/components/marketing/DashboardMockup/VenueMapMock';
 import CreateEventMock from '@/components/marketing/DashboardMockup/CreateEventMock';
+import SanaaTicketShowcase from '@/components/marketing/SanaaTicketShowcase';
 import PlatformComparison from './PlatformComparison';
 
 const CREATE_HREF = '/login?redirect=/dashboard/events/new';
@@ -46,8 +47,9 @@ export default function OrganizersView() {
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="body-lead mt-8 max-w-2xl"
           >
-            White label ticketing, live door control, and a behavioral layer on your crowd that
-            other platforms keep for themselves. One command center runs the whole night.
+            Ticketing that wears your brand, live door control, and a behavioral layer on your
+            crowd that other platforms keep for themselves. One command center runs the whole
+            night.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -81,15 +83,21 @@ export default function OrganizersView() {
 
       {/* ── Chapter: Launch ── */}
       <SectionShell eyebrow="Launch" pad="default">
-        <h2 className="display-2 mt-5 max-w-2xl">Sell out under your own name.</h2>
-        <p className="body-lead mt-6 max-w-xl">
-          White label checkout, ticket tiers and guest lists, and a live event thread from ticket
-          number one. Zero third party logos.
-        </p>
+        <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
+          <div>
+            <h2 className="display-2 mt-5 max-w-2xl">Sell out under your own name.</h2>
+            <p className="body-lead mt-6 max-w-xl">
+              Checkout, tickets, tiers and guest lists, and a live event thread from ticket number
+              one — all wearing your brand. Your covers, your colors, your own stamps when you
+              choose to customize.
+            </p>
+          </div>
+          <SanaaTicketShowcase />
+        </div>
         <div className="mt-14 flex flex-col gap-16">
           <FeatureRow
-            title="White label checkout & Secure PASETO"
-            body="Your brand, your rules. We use the safest industry standard PASETO system that competitors don't. Safe Stripe payment with only a $0.99 platform fee."
+            title="Your branding, secured by PASETO"
+            body="Every ticket carries your cover art, your colors, and your own stamps when you customize it — and it's signed with the industry-standard PASETO system competitors don't use. Safe Stripe payment with only a $0.99 platform fee."
             chip={<div className="p-5"><EarningsMock /></div>}
             href="/pricing"
             linkLabel="View Pricing"
@@ -119,7 +127,7 @@ export default function OrganizersView() {
           <FeatureRow
             reverse
             title="Spatial intel on the venue"
-            body="See density by zone, bar queue times, and VIP dwell while the night is live. Move staff before the bottleneck forms, not after."
+            body="Know which rooms perform, which installations actually pull people in, and how the crowd read every DJ set — each engagement spike is time-stamped to the lineup. Density, bar queues, and VIP dwell update live, so you move staff before the bottleneck forms, not after."
             chip={<div className="p-5"><VenueMapMock /></div>}
             href="/features/event-promoter-analytics"
             linkLabel="Analytics in depth"

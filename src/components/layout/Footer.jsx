@@ -18,7 +18,7 @@ const ATTENDEE_LINKS = [
 ];
 
 const ORGANIZER_LINKS = [
-  { label: 'White-Label Ticketing', href: '/features/white-label-event-ticketing' },
+  { label: 'Ticketing in Your Brand', href: '/features/branded-event-ticketing' },
   { label: 'Promoter Analytics', href: '/features/event-promoter-analytics' },
   { label: 'PXI vs Everyone', href: '/competitors/partiful-luma-alternative' },
   { label: 'Pricing', href: '/pricing' },

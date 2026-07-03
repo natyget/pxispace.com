@@ -31,7 +31,7 @@ export const HOMEPAGE_JSONLD = {
       name: 'PXI',
       url: SITE_URL,
       description:
-        'PXI is a privacy-first event operating system spanning white-label ticketing, shared event photo galleries, and digital scrapbooks.',
+        'PXI is a privacy-first event operating system spanning ticketing in the organizer\'s own brand, shared event photo galleries, and digital scrapbooks.',
       potentialAction: {
         '@type': 'SearchAction',
         target: `${SITE_URL}/events?q={search_term_string}`,
@@ -45,7 +45,7 @@ export const HOMEPAGE_JSONLD = {
       applicationCategory: ['BusinessApplication', 'EntertainmentApplication'],
       url: SITE_URL,
       description:
-        'PXI is a dual-sided event operating system for organizers and attendees, combining white-label ticketing infrastructure with privacy-first social scrapbooks.',
+        'PXI is a dual-sided event operating system for organizers and attendees, combining ticketing in the organizer\'s own brand with privacy-first social scrapbooks.',
       featureList: [
         'White-Label Event Ticketing',
         'Real-Time Analytics',

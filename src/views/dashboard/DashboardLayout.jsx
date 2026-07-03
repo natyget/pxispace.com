@@ -53,20 +53,20 @@ function NavLink({
     const isActive = isNavItemActive(pathname, item, searchParams);
     const isLiveOperations = item.key === 'operations' && isLiveEvent;
     const activeClasses = isLiveOperations
-        ? 'bg-emerald-400/[0.12] text-emerald-200 shadow-[0_0_18px_rgba(52,211,153,0.12)]'
-        : 'bg-white/[0.10] text-white';
+        ? 'bg-emerald-500/[0.06] text-emerald-200 shadow-[inset_0_1px_1px_rgba(52,211,153,0.08)]'
+        : 'bg-white/[0.04] text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]';
     const inactiveClasses = isLiveOperations
-        ? 'bg-transparent text-emerald-300/85 hover:bg-emerald-400/[0.08] hover:text-emerald-200'
-        : 'bg-transparent text-white/45 hover:bg-white/[0.06] hover:text-white/80';
+        ? 'bg-transparent text-emerald-300/60 hover:bg-emerald-500/[0.04] hover:text-emerald-200/80'
+        : 'bg-transparent text-white/40 hover:bg-white/[0.02] hover:text-white/70';
     const iconClasses = isLiveOperations
-        ? 'text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.65)] transition-colors duration-300'
+        ? 'text-emerald-300/80 transition-colors duration-300'
         : isActive
-            ? 'text-white'
-            : 'text-white/50 transition-colors duration-300';
+            ? 'text-white/80'
+            : 'text-white/40 transition-colors duration-300';
     const labelClasses = isLiveOperations
-        ? 'text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.45)]'
+        ? 'text-emerald-300/80'
         : isActive
-            ? 'text-white'
+            ? 'text-white/90'
             : 'text-white/50';
 
     const linkClasses = sidebarCollapsed
@@ -412,8 +412,8 @@ export default function DashboardLayout({ children }) {
                                         onClick={() => setAdminSidebarModeAndNavigate('admin')}
                                         className={`${sidebarCollapsed ? 'py-2 text-[10px]' : 'flex-1 py-2 text-xs'} rounded-full font-bold tracking-wide transition-colors ${
                                             adminSidebarMode === 'admin'
-                                                ? 'bg-white/[0.10] text-white'
-                                                : 'text-white/45 hover:text-white/80'
+                                                ? 'bg-white/[0.04] text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]'
+                                                : 'text-white/40 hover:text-white/70'
                                         }`}
                                         title="Platform admin"
                                     >
@@ -424,8 +424,8 @@ export default function DashboardLayout({ children }) {
                                         onClick={() => setAdminSidebarModeAndNavigate('user')}
                                         className={`${sidebarCollapsed ? 'py-2 text-[10px]' : 'flex-1 py-2 text-xs'} rounded-full font-bold tracking-wide transition-colors ${
                                             adminSidebarMode === 'user'
-                                                ? 'bg-white/[0.10] text-white'
-                                                : 'text-white/45 hover:text-white/80'
+                                                ? 'bg-white/[0.04] text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]'
+                                                : 'text-white/40 hover:text-white/70'
                                         }`}
                                         title="Member dashboard"
                                     >

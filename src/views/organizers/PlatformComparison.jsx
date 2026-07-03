@@ -12,7 +12,7 @@ const ROWS = [
   //                                 SWSH   Partiful Luma   Posh   DICE   EB     Lapse
   { feature: 'Invites / RSVP', checks: [false, true, true, false, false, true, false] },
   { feature: 'Paid Ticketing', checks: [false, false, true, true, true, true, false] },
-  { feature: 'White-Label Branding', checks: [false, false, false, false, false, false, false] },
+  { feature: 'Your Brand on Tickets', checks: [false, false, false, false, false, false, false] },
   { feature: 'Event Discovery', checks: [false, false, true, true, true, true, false] },
   { feature: 'Shared Photo Gallery', checks: [true, false, false, false, false, false, false] },
   { feature: 'Live Event Camera', checks: [false, false, false, false, false, false, true] },

@@ -15,6 +15,16 @@ const nextConfig = {
         destination: '/platform',
         permanent: true,
       },
+      {
+        source: '/features/white-label-event-ticketing',
+        destination: '/features/branded-event-ticketing',
+        permanent: true,
+      },
+      {
+        source: '/story/afrodisiac-boston',
+        destination: '/story/sanaa-groove-boston',
+        permanent: true,
+      },
     ];
   },
   images: {

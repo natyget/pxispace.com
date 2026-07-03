@@ -90,17 +90,37 @@ export default function SharedEventPhotoGalleryView() {
 
       {/* ── How it works ── */}
       <SectionShell eyebrow="How it works" pad="default">
-        <h2 className="display-2 mt-5 max-w-2xl">The night compiles itself.</h2>
-        <p className="body-lead mt-6 max-w-xl">
-          From the first flash to the morning-after scrapbook, nobody has to collect, upload, or
-          chase a single photo.
-        </p>
+        <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <h2 className="display-2 mt-5">The night compiles itself.</h2>
+            <p className="body-lead mt-6 max-w-xl">
+              From the first flash to the morning-after scrapbook, nobody has to collect, upload,
+              or chase a single photo.
+            </p>
+            <h3 className="mt-10 text-xl font-semibold tracking-tight text-white md:text-2xl">
+              A camera built for every moment
+            </h3>
+            <p className="mt-3 max-w-md text-base leading-relaxed text-zinc-400">
+              A tactile native camera engineered for the energy of the night. It captures the raw,
+              unfiltered atmosphere without pulling you out of the moment. No filters, no staging.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <CameraDemo onFilterChange={() => {}} />
+          </motion.div>
+        </div>
         <div className="mt-14 flex flex-col gap-16">
-          <FeatureRow
-            title="A camera built for every moment"
-            body="A tactile native camera engineered for the energy of the night. It captures the raw, unfiltered atmosphere without pulling you out of the moment. No filters, no staging."
-            phone={<div className="-mx-8 md:mx-0"><CameraDemo onFilterChange={() => {}} /></div>}
-          />
           <FeatureRow
             reverse
             title="Every shot lands in the thread"

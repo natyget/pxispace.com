@@ -39,6 +39,7 @@ coverage/
 # Misc
 .DS_Store
 *.pem
+*.p8
 .idea/
 .vscode/
 *.log

@@ -6,18 +6,23 @@
 
 export const EDITORIAL_STORIES = [
   {
-    slug: 'afrodisiac-boston',
-    title: 'AFRODISIAC: one shared camera roll, one night in Boston',
-    dek: 'How a sold-out night became a scrapbook nobody had to assemble, every phone feeding one living thread.',
+    slug: 'sanaa-groove-boston',
+    title: 'SANAA GROOVE: the in-between space Boston nightlife needed',
+    dek: 'A community-first music collective building rooms where open-minded young professionals discover new sounds, new people, and new experiences.',
     cover: '/landing/editorial/afrodisiac-boston.png',
     articleCover: '/landing/album/gallery/afrodisiac/DSC02918.jpg',
     date: '2026-05-18',
     readMinutes: 4,
     tag: 'Field notes',
     body: [
-      'By midnight the room was full and every phone was a camera. Nobody was tagging, nobody was chasing a group chat for photos the next day. On PXI the shots landed in one shared thread as they happened.',
-      'The morning after, the whole night was already compiled: hundreds of frames from dozens of people, ranked so the best rose to the top. No one had to build the album. It built itself.',
-      'That is the point of PXI. The ticket gets you in; the camera roll is what you keep. The scrapbook is the memory, and it is the thing you actually share.',
+      'Sanaa Groove is not a party brand and it is not a promo company. It is a community-first music collective, a platform built around a simple idea: Boston needed a space that lived before the night, not just during it.',
+      'That idea started as a "pregame ecosystem," a lower-pressure alternative to the city\'s rigid 10PM–2AM club model. No performance culture, no section parties, no pretense. Just speakers, a room, and people who came to dance freely, network naturally, and trade ideas before the rest of the night even started. Turn a room into something real, and the rest follows.',
+      'The sound is DJ-led and experimental by design. The DJs set the tone, and the "Groovists," Sanaa\'s community, follow wherever it goes. The palette leans Afrocentric and diasporic: Afrohouse, Amapiano, Gqom, Afrobeats, Dancehall, Kompa, R&B and Soul, Hip Hop, and the wider spread of global Black electronic sound. Discovery over repetition. Sanaa is part of what is pushing newer genres into Boston in the first place.',
+      'For the Groovists, it is a place to belong before you even go out. An entry point for young Black professionals, artists, and creatives in a city with few cultural markers of its own. A bridge between Black-owned spaces and the people looking for them, and a room where connections, professional, personal, creative, happen because the room is actually built for it.',
+      'For DJs, Sanaa is a safe stage to experiment outside the standard club formula. Real creative direction, visibility in front of an intentional crowd, and a home base rather than a one-off booking. For emerging DJs especially, it is a launch pad.',
+      'The track record backs it up: an AFCON watch party, Brooklyn Fashion Week, The Ramen Room (a late-night Boiler Room feel built from scratch), Mzuri Sanaa, a panel at Harvard, and a collaboration with Zakes Bantwini. Every activation is a prototype, by design, a test of what the next room could be.',
+      'The vision reaches past Boston. Sanaa Groove wants to become a recognizable cultural force, not just at home but on the road: NYC, LA, Chicago, Atlanta, Paris, London, Cape Town, Johannesburg, Nairobi, Lagos, Accra, Rio, and beyond. If you are part of the Afrodiaspora and you find yourself in Boston wanting to dance, vibe, and meet cool people, Sanaa Groove is the answer. The goal is to grow from living rooms to cultural landmarks and festivals, and to become the cultural stamp: when people see Sanaa, they trust the room.',
+      'Their nights run on PXI: tickets in their own colors, one shared camera roll instead of a dozen scattered group chats, and stamps that prove the room was real. Invisible infrastructure, so the only thing anyone sees is Sanaa.',
     ],
     gallery: [
       '/landing/album/gallery/afrodisiac/DSC02929.jpg',

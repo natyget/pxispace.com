@@ -19,6 +19,24 @@ const GUESTS = [
     line: '5 nights · $180 lifetime · House, Disco',
     chips: ['Bar spender'],
   },
+  {
+    avatar: '/landing/album/thread/profiles/baba.jpg',
+    name: 'Baba K.',
+    line: '11 nights · $560 lifetime · Amapiano, Gqom',
+    chips: ['VIP regular', 'High engagement'],
+  },
+  {
+    avatar: '/landing/album/thread/profiles/gift.jpg',
+    name: 'Gift A.',
+    line: '4 nights · $145 lifetime · Afrobeats, R&B',
+    chips: ['Early buyer'],
+  },
+];
+
+const INTEL = [
+  { label: 'Repeat rate', value: '62%' },
+  { label: 'Top genre', value: 'Amapiano' },
+  { label: 'Avg spend', value: '$41/night' },
 ];
 
 export default function AudienceMock() {
@@ -28,10 +46,10 @@ export default function AudienceMock() {
         Audience · behavioral profiles
       </p>
 
-      <div className="mt-3 space-y-2.5">
+      <div className="mt-2.5 space-y-1.5">
         {GUESTS.map((g) => (
-          <div key={g.name} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-            <img src={g.avatar} alt="" aria-hidden className="h-10 w-10 rounded-full object-cover" />
+          <div key={g.name} className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-2.5">
+            <img src={g.avatar} alt="" aria-hidden className="h-9 w-9 rounded-full object-cover" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">{g.name}</p>
               <p className="truncate text-[11px] text-zinc-500">{g.line}</p>
@@ -47,7 +65,16 @@ export default function AudienceMock() {
         ))}
       </div>
 
-      <div className="mt-3 flex items-center justify-between rounded-xl border border-pxi-purple/20 bg-pxi-purple/[0.06] px-3 py-2.5">
+      <div className="mt-2.5 grid grid-cols-3 gap-2">
+        {INTEL.map((r) => (
+          <div key={r.label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-2.5 py-2">
+            <p className="text-[9px] uppercase tracking-wider text-zinc-500">{r.label}</p>
+            <p className="text-sm font-black text-white">{r.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-2.5 flex items-center justify-between rounded-xl border border-pxi-purple/20 bg-pxi-purple/[0.06] px-3 py-2.5">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-pxi-purple">Segment · Warm crowd</p>
           <p className="text-[11px] text-zinc-400">234 people · showed up 2+ times this season</p>

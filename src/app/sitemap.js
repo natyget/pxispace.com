@@ -11,7 +11,7 @@ export default function sitemap() {
     { url: `${base}/events`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/platform`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${base}/pricing`, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${base}/features/white-label-event-ticketing`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/features/branded-event-ticketing`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/features/event-promoter-analytics`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/features/shared-event-photo-gallery`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/features/digital-event-passport`, changeFrequency: 'monthly', priority: 0.8 },

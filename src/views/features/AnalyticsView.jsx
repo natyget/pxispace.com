@@ -109,7 +109,7 @@ export default function AnalyticsView() {
             title="Spatial intel on the venue"
             body="Density by zone, bar queue times, and VIP dwell while the night is live. Move staff before the bottleneck forms, not after."
             chip={<div className="p-5"><VenueMapMock /></div>}
-            href="/features/white-label-event-ticketing"
+            href="/features/branded-event-ticketing"
             linkLabel="The ticketing behind it"
           />
         </div>
@@ -147,10 +147,10 @@ export default function AnalyticsView() {
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/features/white-label-event-ticketing"
+              href="/features/branded-event-ticketing"
               className="pill-ghost px-8 py-4 text-sm font-semibold"
             >
-              White label ticketing
+              Ticketing in your brand
             </Link>
           </div>
         </div>

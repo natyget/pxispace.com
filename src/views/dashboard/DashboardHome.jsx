@@ -42,10 +42,10 @@ function eventState(event, now = DASHBOARD_RENDER_NOW) {
 }
 
 function stateClassName(status) {
-    if (status === 'Active') return 'bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md text-emerald-300';
-    if (status === 'Scheduled') return 'bg-white/5 border border-white/10 backdrop-blur-md text-zinc-200';
-    if (status === 'Draft') return 'bg-amber-500/10 border border-amber-500/20 backdrop-blur-md text-amber-200';
-    return 'bg-white/5 border border-white/10 backdrop-blur-md text-zinc-400';
+    if (status === 'Active') return 'bg-emerald-500/[0.08] text-emerald-400/80 backdrop-blur-md';
+    if (status === 'Scheduled') return 'bg-white/[0.04] text-white/70 backdrop-blur-md';
+    if (status === 'Draft') return 'bg-amber-500/[0.08] text-amber-400/80 backdrop-blur-md';
+    return 'bg-white/[0.04] text-zinc-500 backdrop-blur-md';
 }
 
 function buildSparkline(seed = 0, lift = 0) {
@@ -335,8 +335,8 @@ export default function DashboardHome() {
                                         <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-white/35">{notice.event}</p>
                                         <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-white/50">{notice.detail}</p>
                                     </div>
-                                    <span className={`shrink-0 glow-chip rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
-                                        notice.severity === 'high' ? 'border-red-400/20 text-red-100 bg-red-500/10' : 'text-white/60'
+                                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                                        notice.severity === 'high' ? 'bg-red-500/[0.08] text-red-400/80' : 'bg-white/[0.04] text-white/50'
                                     }`}>
                                         {notice.severity}
                                     </span>

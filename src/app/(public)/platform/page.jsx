@@ -1,9 +1,9 @@
 import { JsonLd } from '@/components/seo/JsonLd';
 import OrganizersView from '@/views/organizers/OrganizersView';
 
-const TITLE = 'Event Ticketing Platform — White-Label, Your Brand, Your Revenue';
+const TITLE = 'Event Ticketing Platform — Your Brand, Your Tickets, Your Revenue';
 const DESCRIPTION =
-  'Run your events on PXI: white-label ticketing with revenue paid straight to you, live door scanning, real-time analytics, and audience tools. Your brand, your room.';
+  'Run your events on PXI: ticketing in your own brand with revenue paid straight to you, live door scanning, real-time analytics, and audience tools. Your brand, your room.';
 
 export const metadata = {
   title: TITLE,
@@ -33,9 +33,9 @@ const PAGE_JSONLD = {
   applicationCategory: 'BusinessApplication',
   url: 'https://pxispace.com/platform',
   description:
-    'A comprehensive event operating system for organizers and promoters. White-label ticketing, predictive analytics, promoter ROI attribution, and full event lifecycle management.',
+    'A comprehensive event operating system for organizers and promoters. Tickets in the organizer’s own brand, predictive analytics, promoter ROI attribution, and full event lifecycle management.',
   featureList: [
-    'White-Label Event Ticketing',
+    'Branded Event Ticketing',
     'Stripe Destination Charges',
     'Real-Time Predictive Analytics',
     'Promoter Link Attribution',
@@ -54,8 +54,8 @@ export default function PlatformPage() {
     <>
       {/* Visible H1 lives in OrganizersView */}
       <p className="sr-only">
-        PXI is the event platform for organizers and promoters: white-label ticketing with revenue
-        paid straight to you, live door scanning, real-time analytics, and audience tools.
+        PXI is the event platform for organizers and promoters: ticketing in your own brand with
+        revenue paid straight to you, live door scanning, real-time analytics, and audience tools.
       </p>
       <OrganizersView />
       <JsonLd data={PAGE_JSONLD} />
