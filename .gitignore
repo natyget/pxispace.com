@@ -44,3 +44,4 @@ coverage/
 .vscode/
 *.log
 package-lock.json
+.claude/
