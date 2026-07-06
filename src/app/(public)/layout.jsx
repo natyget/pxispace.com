@@ -33,6 +33,7 @@ export default function PublicLayout({ children }) {
     pathname?.startsWith('/discover') ||
     pathname === '/organizers' ||
     pathname === '/platform' ||
+    pathname === '/book' ||
     pathname?.startsWith('/events') ||
     pathname?.startsWith('/u/') ||
     pathname?.startsWith('/p/') ||

@@ -1,3 +1,5 @@
+import { api } from './api';
+
 const STORAGE_KEY = 'pxi_help_requests_v1';
 
 export const HELP_REQUEST_TYPES = [
@@ -67,22 +69,78 @@ function eventIdsFrom(events = []) {
   return new Set(events.map((event) => String(event.id)).filter(Boolean));
 }
 
+/** Backend SupportTicketStatus → local three-state model. */
+function ticketStatusToLocal(status) {
+  if (status === 'RESOLVED' || status === 'CLOSED') return 'resolved';
+  if (status === 'WAITING_ON_USER' || status === 'IN_PROGRESS') return 'reviewing';
+  return 'open';
+}
+
+/** Map a backend SupportTicket into the local help-request shape the UI renders. */
+function ticketToRequest(ticket) {
+  const firstMessage = Array.isArray(ticket.messages) && ticket.messages.length > 0
+    ? ticket.messages[ticket.messages.length - 1]
+    : null;
+  return normalizeRequest({
+    id: ticket.id,
+    eventId: ticket.eventId || '',
+    requesterId: ticket.userId,
+    type: ticket.category,
+    subject: ticket.subject,
+    message: firstMessage?.body || '',
+    status: ticketStatusToLocal(ticket.status),
+    createdAt: ticket.createdAt,
+    updatedAt: ticket.lastMessageAt || ticket.updatedAt,
+  });
+}
+
 export const helpRequestsService = {
+  /**
+   * The caller's tickets — real backend (/api/support), falling back to the
+   * legacy localStorage records if the API is unreachable.
+   */
   async listMyHelpRequests({ userId, eventId } = {}) {
-    const uid = userId ? String(userId) : '';
     const eid = eventId ? String(eventId) : '';
-    return readStoredRequests()
-      .filter((request) => (!uid || request.requesterId === uid) && (!eid || request.eventId === eid))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    try {
+      const data = await api.get('/api/support/tickets');
+      const tickets = (data.tickets || []).map(ticketToRequest);
+      return eid ? tickets.filter((t) => t.eventId === eid) : tickets;
+    } catch {
+      const uid = userId ? String(userId) : '';
+      return readStoredRequests()
+        .filter((request) => (!uid || request.requesterId === uid) && (!eid || request.eventId === eid))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
   },
 
+  /**
+   * Files a real support ticket. Local copy is kept so the organizer inbox
+   * (still local-only) and offline sessions keep working.
+   */
   async createHelpRequest(payload = {}) {
-    const requests = readStoredRequests();
     const request = normalizeRequest(payload);
-    writeStoredRequests([request, ...requests]);
+    try {
+      const data = await api.post('/api/support/tickets', {
+        subject: request.subject,
+        body: request.message || request.subject,
+        category: request.type,
+        eventId: request.eventId || undefined,
+      });
+      if (data?.ticket?.id) {
+        request.id = data.ticket.id;
+        request.createdAt = data.ticket.createdAt || request.createdAt;
+      }
+    } catch {
+      /* offline / guest — keep the local record so the request isn't lost */
+    }
+    writeStoredRequests([request, ...readStoredRequests()]);
     return request;
   },
 
+  /**
+   * Organizer view of attendee requests. Still local-only: support tickets go
+   * to PXI staff, organizer-directed requests await an organizer inbox API.
+   */
   async listOrganizerHelpRequests({ events = [], eventId, status } = {}) {
     const eventIds = eventIdsFrom(events);
     const eid = eventId ? String(eventId) : '';

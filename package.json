@@ -19,6 +19,7 @@
     "@stripe/react-stripe-js": "^2.8.0",
     "@stripe/stripe-js": "^4.8.0",
     "@tailwindcss/postcss": "^4.2.1",
+    "@vladmandic/human": "^3.3.6",
     "antd": "^5.28.1",
     "framer-motion": "^12.23.24",
     "gsap": "^3.13.0",

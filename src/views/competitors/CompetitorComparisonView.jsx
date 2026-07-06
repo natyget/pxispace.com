@@ -24,8 +24,8 @@ const ADVANTAGES = [
     them: "No competitor offers a built-in camera. You're using your native camera app and manually adding photos to group chats afterward.",
   },
   {
-    title: 'White-Label Ticketing',
-    pxi: 'Zero platform branding. Your event, your brand. Web-based sign-ups bypass app store friction entirely.',
+    title: 'Branded Ticketing',
+    pxi: 'Your brand front and center on beautifully branded tickets. Web-based sign-ups bypass app store friction entirely.',
     them: "Eventbrite plasters their logo everywhere. Partiful doesn't even offer paid ticketing. Luma's branding is baked into every page.",
   },
   {
@@ -60,7 +60,7 @@ const COMPARISON = [
   //                          Partiful  Luma  DICE  Eventbrite  SWSH  Lapse
   { f: 'Invites / RSVP',     c: [true,  true,  false, true,  false, false] },
   { f: 'Paid Ticketing',     c: [false, true,  true,  true,  false, false] },
-  { f: 'White-Label',        c: [false, false, false, false, false, false] },
+  { f: 'Branded Tickets',    c: [false, false, false, false, false, false] },
   { f: 'Event Discovery',    c: [false, true,  true,  true,  false, false] },
   { f: 'Shared Gallery',     c: [false, false, false, false, true,  false] },
   { f: 'Live Camera',        c: [false, false, false, false, false, true ] },

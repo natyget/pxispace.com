@@ -2,6 +2,24 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  // Face scanning runs client-side only; always bundle Human's browser ESM
+  // build. The package's default "node" entry hard-requires
+  // @tensorflow/tfjs-node, and its exports map lacks "./"-prefixed subpaths,
+  // so we alias the bare specifier straight to the file.
+  turbopack: {
+    resolveAlias: {
+      '@vladmandic/human': './node_modules/@vladmandic/human/dist/human.esm.js',
+    },
+  },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@vladmandic/human': './node_modules/@vladmandic/human/dist/human.esm.js',
+    };
+    return config;
+  },
+
+
   async redirects() {
     return [
       {

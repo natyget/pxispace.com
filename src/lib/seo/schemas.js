@@ -47,7 +47,7 @@ export const HOMEPAGE_JSONLD = {
       description:
         'PXI is a dual-sided event operating system for organizers and attendees, combining ticketing in the organizer\'s own brand with privacy-first social scrapbooks.',
       featureList: [
-        'White-Label Event Ticketing',
+        'Branded Event Ticketing',
         'Real-Time Analytics',
         'Live Shared Event Camera',
         'Morning-After Digital Scrapbook',

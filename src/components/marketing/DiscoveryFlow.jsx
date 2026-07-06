@@ -1,22 +1,21 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Calendar01Icon,
   Cancel01Icon,
-  FavouriteIcon,
   Location01Icon,
   QrCodeIcon,
   Tick02Icon,
   Ticket01Icon,
   Comment01Icon,
   Camera01Icon,
-  Gif01Icon,
   Search01Icon,
 } from '@hugeicons/core-free-icons';
-import Button from '@/components/ui/Button';
+
+const MotionDiv = motion.div;
 
 /**
  * Animated three-beat demo of getting into a night: discover the event,
@@ -74,7 +73,7 @@ function GuestRow() {
 /* Stage 1 — the discovery card, mirroring EventCard.jsx class for class. */
 function StageSpot() {
   return (
-    <div className="h-[530px] w-full relative overflow-hidden bg-zinc-900">
+    <div className="h-full w-full relative overflow-hidden bg-zinc-900">
       <img
         src={COVER}
         alt=""
@@ -84,8 +83,8 @@ function StageSpot() {
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
       {/* Taste match top-right */}
-      <div className="absolute right-4 top-4 z-20 flex items-center rounded-full bg-black/40 px-3 py-1.5 backdrop-blur-sm">
-        <span className="text-[10px] font-black uppercase tracking-widest text-white">92% Match</span>
+      <div className="absolute right-4 top-4 z-20 flex items-center rounded-full bg-black/40 px-2.5 py-1.5 backdrop-blur-sm">
+        <span className="text-[9px] font-black uppercase tracking-[0.14em] text-white">92% Match</span>
       </div>
 
       {/* Bottom overlay: time / title / location */}
@@ -105,7 +104,7 @@ function StageSpot() {
    title, purple-icon meta rows, guest list, lineup line, CTA pair. */
 function StageJoin() {
   return (
-    <div className="h-[530px] w-full flex flex-col bg-zinc-950">
+    <div className="h-full w-full flex flex-col bg-zinc-950">
       <div className="relative h-[270px] w-full shrink-0">
         <img src={COVER} alt="" aria-hidden className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent" />
@@ -164,77 +163,55 @@ function StageJoin() {
 }
 
 function StageTicket() {
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05, delayChildren: 0 }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, scale: 0.8, y: 15 },
-    show: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 350, damping: 25 } }
-  };
-
   return (
-    <div className="h-[530px] w-full p-6 flex flex-col bg-zinc-950 relative overflow-hidden">
-      
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="pt-8 pb-2 text-center">
-        <h2 className="text-3xl font-black uppercase tracking-tighter text-white">You're in.</h2>
-        <p className="text-base font-medium text-zinc-400 mt-2">The night is yours. Do it all.</p>
-      </motion.div>
-
-      {/* Clean Actions Dock */}
-      <motion.div 
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="flex-1 flex flex-col items-center justify-center space-y-6 mt-4"
-      >
-        <div className="flex flex-row justify-center gap-10">
-          <motion.div variants={item} className="flex flex-col items-center gap-2">
-            <span className="flex size-[56px] items-center justify-center rounded-full bg-[rgba(42,42,42,0.8)] text-white shadow-lg">
-              <HugeiconsIcon icon={FavouriteIcon} size={28} />
-            </span>
-            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">React</span>
-          </motion.div>
-          <motion.div variants={item} className="flex flex-col items-center gap-2">
-            <span className="flex size-[56px] items-center justify-center rounded-full bg-[rgba(42,42,42,0.8)] text-white shadow-lg">
-              <HugeiconsIcon icon={Comment01Icon} size={28} />
-            </span>
-            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Comment</span>
-          </motion.div>
+    <div className="h-full w-full flex flex-col bg-zinc-950">
+      <div className="relative h-[148px] w-full shrink-0 overflow-hidden">
+        <img src={COVER} alt="" aria-hidden className="h-full w-full object-cover object-[75%_center]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/35 to-transparent" />
+        <div className="absolute left-5 bottom-5 flex items-center gap-2 rounded-full bg-emerald-400/15 px-3 py-1.5 text-emerald-200 ring-1 ring-emerald-300/20">
+          <HugeiconsIcon icon={Tick02Icon} size={15} />
+          <span className="text-[10px] font-black uppercase tracking-[0.16em]">Ticket secured</span>
         </div>
-        
-        <div className="flex flex-row justify-center gap-10">
-          <motion.div variants={item} className="flex flex-col items-center gap-2">
-            <span className="flex size-[56px] items-center justify-center rounded-full bg-[rgba(42,42,42,0.8)] text-white shadow-lg">
-              <HugeiconsIcon icon={Camera01Icon} size={28} />
-            </span>
-            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Upload</span>
-          </motion.div>
-          <motion.div variants={item} className="flex flex-col items-center gap-2">
-            <span className="flex size-[56px] items-center justify-center rounded-full bg-[rgba(42,42,42,0.8)] text-white shadow-lg">
-              <HugeiconsIcon icon={Gif01Icon} size={28} />
-            </span>
-            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Chat & Gif</span>
-          </motion.div>
+      </div>
+
+      <div className="flex flex-1 flex-col px-5 pt-3 pb-4">
+        <MotionDiv initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
+          <h2 className="text-3xl font-black uppercase tracking-tighter text-white">You're in.</h2>
+          <p className="mt-1 text-sm font-medium text-zinc-400">Your pass, thread, and memory tools are ready.</p>
+        </MotionDiv>
+
+        <div className="mt-3 space-y-2">
+          {[
+            { icon: QrCodeIcon, label: 'Entry pass', value: 'Ready at the door' },
+            { icon: Camera01Icon, label: 'Shared camera', value: 'Shoot into one thread' },
+            { icon: Search01Icon, label: 'Find yourself', value: 'Face scan after the night' },
+          ].map((row, index) => (
+            <MotionDiv
+              key={row.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 + index * 0.05, duration: 0.18 }}
+              className="flex items-center gap-3 rounded-2xl bg-white/[0.045] px-4 py-2 ring-1 ring-white/[0.06]"
+            >
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-white">
+                <HugeiconsIcon icon={row.icon} size={19} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-black uppercase tracking-[0.16em] text-white">{row.label}</span>
+                <span className="mt-0.5 block truncate text-xs font-medium text-zinc-500">{row.value}</span>
+              </span>
+              <HugeiconsIcon icon={Tick02Icon} size={16} className="text-emerald-300" />
+            </MotionDiv>
+          ))}
         </div>
 
-        <motion.div variants={item} className="flex flex-row items-center justify-center gap-2 rounded-full bg-[rgba(42,42,42,0.8)] px-6 py-3 mt-4 shadow-lg">
-          <HugeiconsIcon icon={Search01Icon} size={20} className="text-white" />
-          <span className="text-[11px] font-black text-white uppercase tracking-widest">Find yourself</span>
-        </motion.div>
-      </motion.div>
-
-      {/* Button */}
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.2 }} className="mt-auto pt-6 pb-2">
-        <div className="flex w-full items-center justify-center gap-2 rounded-full bg-[var(--pxi-orange)] px-4 py-4 text-[15px] font-black uppercase tracking-widest text-white shadow-[0_0_15px_var(--pxi-orange)]">
-          Open Thread
-        </div>
-      </motion.div>
+        <MotionDiv initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24, duration: 0.2 }} className="mt-auto pt-3">
+          <div className="flex w-full items-center justify-center gap-2 rounded-full bg-[var(--pxi-orange)] px-4 py-3 text-[15px] font-black uppercase tracking-widest text-white shadow-[0_0_15px_var(--pxi-orange)]">
+            Open Thread
+            <HugeiconsIcon icon={Comment01Icon} size={17} />
+          </div>
+        </MotionDiv>
+      </div>
     </div>
   );
 }
@@ -243,10 +220,34 @@ const STAGE_VIEWS = [StageSpot, StageJoin, StageTicket];
 
 export default function DiscoveryFlow() {
   const [stage, setStage] = useState(0);
+  const [swipeDir, setSwipeDir] = useState(1); // 1 = forward, -1 = back
+  const touchRef = useRef(null);
 
   useEffect(() => {
-    const id = setTimeout(() => setStage((s) => (s + 1) % STAGES.length), STAGE_MS[stage]);
+    const id = setTimeout(() => {
+      setSwipeDir(1);
+      setStage((s) => (s + 1) % STAGES.length);
+    }, STAGE_MS[stage]);
     return () => clearTimeout(id);
+  }, [stage]);
+
+  const handleTouchStart = useCallback((e) => {
+    touchRef.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (touchRef.current === null) return;
+    const diff = touchRef.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && stage < STAGES.length - 1) {
+        setSwipeDir(1);
+        setStage((s) => s + 1);
+      } else if (diff < 0 && stage > 0) {
+        setSwipeDir(-1);
+        setStage((s) => s - 1);
+      }
+    }
+    touchRef.current = null;
   }, [stage]);
 
   const View = STAGE_VIEWS[stage];
@@ -254,17 +255,22 @@ export default function DiscoveryFlow() {
   return (
     <div className="mx-auto w-full max-w-[380px]">
       {/* Floating card frame, mirroring EventPreviewModal's dialog shell */}
-      <div className="h-[530px] overflow-hidden rounded-[2rem] bg-zinc-950 shadow-2xl">
+      <div
+        className="h-[540px] overflow-hidden rounded-[2rem] bg-zinc-950 shadow-2xl touch-pan-y"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <AnimatePresence mode="wait">
-          <motion.div
+          <MotionDiv
             key={stage}
-            initial={{ opacity: 0, x: 24 }}
+            initial={{ opacity: 0, x: swipeDir * 24 }}
             animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: swipeDir * -24 }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             className="h-full w-full"
           >
             <View />
-          </motion.div>
+          </MotionDiv>
         </AnimatePresence>
       </div>
 
@@ -274,7 +280,10 @@ export default function DiscoveryFlow() {
           <button
             key={label}
             type="button"
-            onClick={() => setStage(i)}
+            onClick={() => {
+              setSwipeDir(i > stage ? 1 : -1);
+              setStage(i);
+            }}
             className={`text-[10px] font-bold uppercase tracking-[0.18em] transition-colors ${
               i === stage ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'
             }`}

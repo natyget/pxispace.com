@@ -10,6 +10,7 @@ import { displayImageSrc } from '@/lib/mediaUrl';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { albumShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
 import { formatAlbumSchedule } from './publicAlbumDate';
+import AlbumPlaylistSection from './AlbumPlaylistSection';
 import { formatTicketPrice, parseEventTicketTiers } from '@/lib/ticketTiers';
 
 function eventRequiresPaidTicket(event) {
@@ -248,6 +249,8 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
               <p className="text-xs italic text-white/45">No one on the line up yet.</p>
             )}
           </section>
+
+          <AlbumPlaylistSection eventId={album?.event?.id} />
 
           {/* Who's going */}
           <section className="space-y-2 w-full max-w-sm flex flex-col items-center">

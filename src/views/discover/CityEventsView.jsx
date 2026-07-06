@@ -30,8 +30,7 @@ function normalize(e) {
     members: e._count?.tickets ?? 0,
     attendees: e._count?.tickets ?? 0,
     status: (e._count?.tickets ?? 0) > 200 ? 'Hot' : 'Public',
-    organizerName: e.host?.name || e.host?.username || 'Host',
-    organizerAvatar: e.host?.avatarUrl || null,
+    organizer: e.organizer || (e.host ? { name: e.host.name, username: e.host.username, avatarUrl: e.host.avatarUrl } : null),
     albumId: e.albumId || e.albums?.[0]?.id || null,
   };
 }

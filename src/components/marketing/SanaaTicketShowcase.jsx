@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { QRCode } from 'antd';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { QrCodeIcon } from '@hugeicons/core-free-icons';
 
@@ -9,8 +10,7 @@ import { QrCodeIcon } from '@hugeicons/core-free-icons';
  * dressed as a real client night — Sanaa Groove's "Groove n' find Love"
  * (Feb 13 2026, Revere MA) — using the collective's actual flyer and palette.
  *
- * `SanaaCheckoutCard` mirrors the web checkout's cover column
- * (EventCheckout.jsx: blurred cover backdrop + 3/4 cover card + info text).
+ * `SanaaCheckoutCard` mirrors the Apple Wallet pass generated after checkout.
  * `SanaaAppTicket` mirrors the app's Studio ticket stub — zigzag edges,
  * dashed inner frame, perforated QR stub — re-themed from PXI magenta to
  * Sanaa's rose-and-cream.
@@ -43,30 +43,68 @@ export function SanaaCheckoutCard({ className = '' }) {
   return (
     <div
       aria-hidden
-      className={`relative overflow-hidden rounded-[2rem] border border-white/10 p-6 md:p-8 ${className}`}
+      className={`relative overflow-hidden rounded-[2rem] border border-white/10 bg-black p-4 shadow-[0_24px_80px_rgba(0,0,0,0.55)] ${className}`}
     >
-      {/* Blurred flyer backdrop — same treatment as the live checkout page */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <img
           src={SANAA_COVER}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover scale-150 blur-[60px] opacity-[0.25]"
+          className="absolute inset-0 h-full w-full scale-125 object-cover blur-[28px] opacity-70"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-[#0a0a0a]/80 to-black/90" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.16),transparent_36%),linear-gradient(180deg,rgba(18,4,9,0.48),rgba(18,4,9,0.92)_52%,rgba(0,0,0,0.98))]" />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-[260px] flex-col gap-4">
-        <div className="w-full aspect-[3/4] overflow-hidden rounded-[1.6rem] shadow-2xl bg-zinc-900/50">
-          <img src={SANAA_COVER} alt="Sanaa Groove — Groove n' find Love event cover" className="h-full w-full object-cover" />
+      <div className="relative mx-auto flex aspect-[3/4] w-full max-w-[300px] flex-col justify-between overflow-hidden rounded-[1.55rem] border border-white/15 bg-black/35 p-4 backdrop-blur-md">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/80">
+              Sanaa Groove
+            </p>
+            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.18em]" style={{ color: CREAM }}>
+              PXI Wallet Pass
+            </p>
+          </div>
+          <p className="text-right text-[10px] font-black uppercase tracking-[0.16em] text-white">
+            Feb 13, 2026
+          </p>
         </div>
-        <div className="px-1 space-y-1">
-          <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: ROSE }}>
-            Their cover · their colors
+
+        <div className="space-y-3">
+          <div>
+            <p className="text-[8px] font-black uppercase tracking-[0.22em] text-white/50">
+              Event
+            </p>
+            <h3 className="mt-1 text-[27px] font-black uppercase leading-[0.95] tracking-tight text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]">
+              Groove n&rsquo;<br />find Love
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/45">Location</p>
+              <p className="mt-1 text-sm font-bold leading-tight text-white">Revere, MA</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/45">Tier</p>
+              <p className="mt-1 text-sm font-bold leading-tight text-white">Groovist</p>
+              <p className="mt-0.5 text-[10px] font-bold" style={{ color: ROSE }}>Public</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center">
+          <div className="rounded-[1.2rem] bg-white p-2 shadow-[0_0_28px_rgba(255,255,255,0.35)]">
+            <QRCode
+              value="pxi://ticket/sanaa-groove-love-demo"
+              size={118}
+              color="#000000"
+              bgColor="#ffffff"
+              bordered={false}
+            />
+          </div>
+          <p className="mt-2 text-[9px] font-black uppercase tracking-[0.24em] text-white/55">
+            #PXI-SANAA-0213
           </p>
-          <p className="text-xl font-black uppercase tracking-tight text-white leading-tight">
-            Groove n&rsquo; find Love
-          </p>
-          <p className="text-sm text-zinc-400">Feb 13, 2026 · Revere, MA</p>
         </div>
       </div>
     </div>

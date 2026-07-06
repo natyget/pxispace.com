@@ -23,6 +23,11 @@ import {
   listTeamRosters,
   setCreateEventTeamAssignments,
 } from '@/services/teamRosters';
+import {
+  buildTicketPricingPayload,
+  createEmptyTier,
+  validatePaidPricing,
+} from '@/lib/ticketTiers';
 
 async function getCroppedBlob(imageSrc, croppedAreaPixels) {
   const image = await new Promise((resolve, reject) => {
@@ -102,6 +107,8 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
 
   const [isPaid, setIsPaid] = useState(false);
   const [price, setPrice] = useState('');
+  const [useTierList, setUseTierList] = useState(false);
+  const [ticketTiers, setTicketTiers] = useState([]);
   const [paidGate, setPaidGate] = useState(null);
 
   const [graceTimeHours, setGraceTimeHours] = useState('0');
@@ -299,6 +306,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
     setPaidGate(null);
     if (!checked) {
       setIsPaid(false);
+      setUseTierList(false);
       return;
     }
     if (user?.isVendor) {
@@ -374,12 +382,10 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
       setFormError('End time must be after start time.');
       return;
     }
-    if (isPaid) {
-      const p = parseInt(price, 10);
-      if (!price.trim() || Number.isNaN(p) || p <= 0) {
-        setFormError('Paid events need a ticket price greater than 0.');
-        return;
-      }
+    const pricingCheck = validatePaidPricing({ isPaid, useTierList, price, tiers: ticketTiers });
+    if (!pricingCheck.ok) {
+      setFormError(pricingCheck.error);
+      return;
     }
 
     setIsSubmitting(true);
@@ -389,7 +395,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         : await tryGetGeo();
       const graceTime =
         (parseInt(graceTimeHours, 10) || 0) * 60 + (parseInt(graceTimeMinutes, 10) || 0);
-      const ticketPrice = isPaid ? parseInt(price, 10) : 0;
+      const pricing = buildTicketPricingPayload({ isPaid, useTierList, price, tiers: ticketTiers });
 
       const lineupOnly = pendingInvites
         .filter((p) => p.kind === 'lineup')
@@ -405,8 +411,8 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         endDate: endDate.toISOString(),
         coverImage: coverImage.trim(),
         visibility: isPrivate ? 'PRIVATE' : 'PUBLIC',
-        ticketType: isPaid ? 'PAID' : 'FREE',
-        ticketPrice,
+        ticketType: pricing.ticketType,
+        ticketPrice: pricing.ticketPrice,
         currency: 'USD',
         graceTime,
         maxImages: parseInt(maxImages, 10) || 100,
@@ -426,14 +432,31 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         return;
       }
 
+      // Ticket tiers aren't accepted by POST /api/events; persist them with an
+      // immediate follow-up PUT (same shape EventEditPageView uses). Non-fatal:
+      // the event itself is already created with the correct base ticketPrice.
+      if (pricing.ticketTiersJson) {
+        try {
+          await eventsService.updateEvent(eventId, { ticketTiersJson: pricing.ticketTiersJson });
+        } catch {
+          /* non-fatal; organizer can retry tier setup from Edit event */
+        }
+      }
+
       if (teamAssignments.length > 0) {
+        let staffInvited = 0;
+        let staffFailed = 0;
         for (const assignment of teamAssignments) {
           try {
-            await assignRosterToEvent(assignment.rosterId, eventId, { memberIds: assignment.memberIds });
+            const result = await assignRosterToEvent(assignment.rosterId, eventId, { memberIds: assignment.memberIds });
+            staffInvited += result?.staffInvites?.invited.length || 0;
+            staffFailed += result?.staffInvites?.failed.length || 0;
           } catch {
             /* non-fatal; teams can be adjusted from Teams & Security */
           }
         }
+        if (staffInvited) toast.success(`Invited ${staffInvited} team member${staffInvited === 1 ? '' : 's'} as event staff.`);
+        if (staffFailed) toast.error(`${staffFailed} team member${staffFailed === 1 ? '' : 's'} couldn't be invited — check their PXI username in Teams & Security.`);
         await clearCreateEventTeamAssignments();
         setTeamAssignments([]);
       }
@@ -682,19 +705,127 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           </div>
 
           {isPaid && (
-            <div>
-              <label className={labelClass}>Price in USD</label>
-              <div className="glass-field flex items-center gap-2 rounded-2xl px-3 py-2">
-                <HugeiconsIcon icon={HelpCircleIcon} size={18} className="shrink-0 text-zinc-500" />
-                <input
-                  aria-label="Price in USD"
-                  className="flex-1 bg-transparent text-sm text-white outline-none"
-                  inputMode="numeric"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ''))}
-                />
+            <>
+              <div className="glass-field flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
+                <div>
+                  <p className="text-sm font-bold text-white">Ticket tiers</p>
+                  <p className="text-xs text-zinc-500">VVIP, VIP, general admission, and more.</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={useTierList}
+                  onClick={() => {
+                    const next = !useTierList;
+                    setUseTierList(next);
+                    if (next && ticketTiers.length === 0) {
+                      setTicketTiers([createEmptyTier()]);
+                    }
+                  }}
+                  className={`relative h-7 w-12 rounded-full transition-colors ${useTierList ? 'bg-white/25' : 'bg-white/10'}`}
+                >
+                  <span
+                    className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${useTierList ? 'left-6' : 'left-1'}`}
+                  />
+                </button>
               </div>
-            </div>
+
+              {useTierList ? (
+                <div className="space-y-3">
+                  {ticketTiers.map((tier, index) => (
+                    <div
+                      key={tier.id}
+                      className="glass-field rounded-xl p-4 space-y-3"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                          Tier {index + 1}
+                        </span>
+                        {ticketTiers.length > 1 ? (
+                          <button
+                            type="button"
+                            onClick={() => setTicketTiers((prev) => prev.filter((t) => t.id !== tier.id))}
+                            className="text-[11px] font-semibold text-zinc-400 hover:text-white"
+                          >
+                            Remove
+                          </button>
+                        ) : null}
+                      </div>
+                      <div>
+                        <label className={labelClass}>Tier name</label>
+                        <input
+                          className={inputClass}
+                          value={tier.name}
+                          onChange={(e) =>
+                            setTicketTiers((prev) =>
+                              prev.map((t) => (t.id === tier.id ? { ...t, name: e.target.value } : t))
+                            )
+                          }
+                          placeholder="e.g. VIP"
+                        />
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className={labelClass}>Capacity</label>
+                          <input
+                            className={inputClass}
+                            value={tier.capacity}
+                            onChange={(e) =>
+                              setTicketTiers((prev) =>
+                                prev.map((t) =>
+                                  t.id === tier.id
+                                    ? { ...t, capacity: e.target.value.replace(/[^\d]/g, '') }
+                                    : t
+                                )
+                              )
+                            }
+                            placeholder="Unlimited"
+                            inputMode="numeric"
+                          />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Price (USD)</label>
+                          <input
+                            className={inputClass}
+                            value={tier.price}
+                            onChange={(e) =>
+                              setTicketTiers((prev) =>
+                                prev.map((t) =>
+                                  t.id === tier.id ? { ...t, price: e.target.value.replace(/[^\d]/g, '') } : t
+                                )
+                              )
+                            }
+                            placeholder="50"
+                            inputMode="numeric"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setTicketTiers((prev) => [...prev, createEmptyTier()])}
+                    className="w-full rounded-xl border border-dashed border-white/15 py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white hover:border-white/25 transition-colors"
+                  >
+                    + Add tier
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <label className={labelClass}>Price in USD</label>
+                  <div className="glass-field flex items-center gap-2 rounded-2xl px-3 py-2">
+                    <HugeiconsIcon icon={HelpCircleIcon} size={18} className="shrink-0 text-zinc-500" />
+                    <input
+                      aria-label="Price in USD"
+                      className="flex-1 bg-transparent text-sm text-white outline-none"
+                      inputMode="numeric"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ''))}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           <div className="grid sm:grid-cols-2 gap-4">

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import EventsHero from './EventsHero';
 import EventsFilters from './EventsFilters';
 import EventsGrid from './EventsGrid';
@@ -10,11 +11,25 @@ import EventsCTA from './EventsCTA';
 import EventsDiscoverMap from './EventsDiscoverMap';
 import EventPreviewModal from './EventPreviewModal';
 import { eventsService } from '../../services/events';
+import { musicService } from '../../services/music';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
+const DISCOVER_CACHE_TTL = 45_000;
+const discoverEventsCache = new Map();
+
+function discoverCacheKey({ sortMode, nearMe, coords, radiusKm, isLoggedIn }) {
+  return JSON.stringify({
+    sortMode,
+    nearMe: !!nearMe,
+    lat: coords?.lat ? Number(coords.lat).toFixed(3) : null,
+    lng: coords?.lng ? Number(coords.lng).toFixed(3) : null,
+    radiusKm,
+    includeMatch: !!isLoggedIn,
+  });
+}
 
 const normalizeApiEvent = (e) => {
   const paid = e.ticketType === 'PAID';
@@ -51,6 +66,9 @@ const normalizeApiEvent = (e) => {
     longitude: e.longitude ?? null,
     vendorHint,
     albumId: e.albumId || e.albums?.[0]?.id || null,
+    distanceKm: e.distanceKm ?? null,
+    musicMatchScore: e.musicMatchScore ?? null,
+    organizer: e.organizer ?? null,
   };
 };
 
@@ -66,27 +84,116 @@ const Events = ({ detailBasePath = '/events' }) => {
   const [favoriteIds, setFavoriteIds] = useState(() => new Set());
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [previewEvent, setPreviewEvent] = useState(null);
+  const [nearMe, setNearMeRaw] = useState(false);
+  const [radiusKm, setRadiusKm] = useState(80);
+  const [coords, setCoords] = useState(null);
+  const [geoError, setGeoError] = useState(null);
+  const [musicConnected, setMusicConnected] = useState(null);
 
   const loadFavorites = useCallback(() => {
     loadFavoriteEventIds(isLoggedIn).then(setFavoriteIds).catch(() => setFavoriteIds(new Set()));
   }, [isLoggedIn]);
 
   useEffect(() => {
-    loadFavorites();
+    const timer = setTimeout(loadFavorites, 0);
+    return () => clearTimeout(timer);
   }, [loadFavorites]);
 
+  const requestGeolocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setGeoError('Location is not supported in this browser.');
+      setNearMeRaw(false);
+      toast.error('Location is not supported in this browser.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoError(null);
+      },
+      () => {
+        setGeoError('Could not get your location. Check your browser permissions.');
+        setNearMeRaw(false);
+        toast.error('Could not get your location. Check your browser permissions.');
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 5 * 60 * 1000 }
+    );
+  }, []);
+
+  const setNearMe = useCallback(
+    (next) => {
+      setNearMeRaw(next);
+      if (next) {
+        setGeoError(null);
+        requestGeolocation();
+      }
+    },
+    [requestGeolocation]
+  );
+
+  // 'distance' sort needs coords — auto-enable "near me" when it's picked
+  useEffect(() => {
+    if (sortMode === 'distance' && !nearMe && !geoError) {
+      const timer = setTimeout(() => setNearMe(true), 0);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [sortMode, nearMe, geoError, setNearMe]);
+
   const loadDiscoverEvents = useCallback(() => {
-    setEventsLoading(true);
+    const cacheKey = discoverCacheKey({ sortMode, nearMe, coords, radiusKm, isLoggedIn });
+    const cached = discoverEventsCache.get(cacheKey);
+    const hasFreshCache = cached && Date.now() - cached.ts < DISCOVER_CACHE_TTL;
+
+    if (hasFreshCache) {
+      setApiEvents(cached.events);
+      setMusicConnected(cached.musicConnected);
+      setEventsLoading(false);
+    } else {
+      setEventsLoading(true);
+    }
+
+    const opts = {};
+    if (nearMe && coords) {
+      opts.lat = coords.lat;
+      opts.lng = coords.lng;
+      opts.radiusKm = radiusKm;
+    }
+    if (isLoggedIn) {
+      opts.includeMatch = true;
+    }
     return eventsService
-      .getDiscoverEvents(48, 0, sortMode)
-      .then((res) => setApiEvents((res.events || []).map(normalizeApiEvent)))
-      .catch(() => setApiEvents([]))
+      .getDiscoverEvents(48, 0, sortMode, opts)
+      .then((res) => {
+        const events = (res.events || []).map(normalizeApiEvent);
+        const musicConnectedValue = typeof res.musicProfileConnected === 'boolean' ? res.musicProfileConnected : null;
+        discoverEventsCache.set(cacheKey, {
+          events,
+          musicConnected: musicConnectedValue,
+          ts: Date.now(),
+        });
+        setApiEvents(events);
+        setMusicConnected(musicConnectedValue);
+      })
+      .catch(() => {
+        if (!hasFreshCache) setApiEvents([]);
+      })
       .finally(() => setEventsLoading(false));
-  }, [sortMode]);
+  }, [sortMode, nearMe, coords, radiusKm, isLoggedIn]);
 
   useEffect(() => {
-    loadDiscoverEvents();
+    const timer = setTimeout(loadDiscoverEvents, 0);
+    return () => clearTimeout(timer);
   }, [loadDiscoverEvents]);
+
+  const handleConnectSpotify = useCallback(() => {
+    musicService
+      .startSpotifyConnect()
+      .then((res) => {
+        if (res?.authorizeUrl) window.location.assign(res.authorizeUrl);
+      })
+      .catch(() => toast.error('Could not start the Spotify connect flow. Try again.'));
+  }, []);
 
   const filteredEvents = useMemo(() => {
     return apiEvents.filter((event) => {
@@ -139,7 +246,33 @@ const Events = ({ detailBasePath = '/events' }) => {
           favoritesOnly={favoritesOnly}
           setFavoritesOnly={setFavoritesOnly}
           favoriteCount={favoriteIds.size}
+          nearMe={nearMe}
+          setNearMe={setNearMe}
+          radiusKm={radiusKm}
+          setRadiusKm={setRadiusKm}
         />
+
+        {sortMode === 'match' && !isLoggedIn ? (
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-10 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4 text-sm text-zinc-400">
+            <p>Log in and connect Spotify to rank events by your taste.</p>
+            <Link href="/login" className="text-pxi-purple hover:text-white font-bold uppercase text-xs tracking-widest shrink-0">
+              Log in →
+            </Link>
+          </div>
+        ) : null}
+
+        {sortMode === 'match' && isLoggedIn && musicConnected === false ? (
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-10 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4 text-sm text-zinc-400">
+            <p>Connect Spotify to rank events by your taste.</p>
+            <button
+              type="button"
+              onClick={handleConnectSpotify}
+              className="shrink-0 rounded-full bg-[#1DB954] px-5 py-2 text-xs font-black uppercase tracking-widest text-black"
+            >
+              Connect Spotify
+            </button>
+          </div>
+        ) : null}
 
         <div className="flex flex-wrap gap-4 items-center justify-between mb-10 text-sm text-zinc-500">
           <p>

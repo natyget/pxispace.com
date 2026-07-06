@@ -84,9 +84,22 @@ export default function InstaShareShowcase({ compact = false }) {
       >
         <h2 className="display-2">Your night, ready to post.</h2>
         <p className="body-lead mt-6 max-w-md">
-          One tap turns any shot from your scrapbook into a framed post card, captioned and
-          located. No screenshots, no cropping.
+          One tap turns any scrapbook shot into a framed postcard.
         </p>
+        <ul className="mt-4 max-w-md space-y-2.5 text-sm leading-relaxed text-zinc-400">
+          <li className="flex items-start gap-2.5">
+            <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+            <span>No screenshots, no cropping.</span>
+          </li>
+          <li className="flex items-start gap-2.5">
+            <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-pxi-orange shadow-[0_0_8px_rgba(255,90,31,0.8)]" />
+            <span>Captioned and located — the where and when baked in.</span>
+          </li>
+          <li className="flex items-start gap-2.5">
+            <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-pxi-purple shadow-[0_0_8px_rgba(240,31,255,0.8)]" />
+            <span>Authentic reactions and comments pinned right on, showing the real moment.</span>
+          </li>
+        </ul>
 
         <div className="mt-10 grid grid-cols-4 gap-3">
           {PHOTOS.map((p, i) => (

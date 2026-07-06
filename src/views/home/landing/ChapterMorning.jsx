@@ -21,8 +21,8 @@ export default function ChapterMorning() {
             The scrapbook builds itself while you sleep. Best shots rise to the top, and the
             keepers go in your vault.
           </p>
-          <p className="mt-6 text-sm text-zinc-500">
-            No chasing the group chat. No begging for pics. It's all already there.
+          <p className="mt-8 text-lg font-bold leading-snug text-white max-w-md sm:text-xl" style={{ textShadow: '0 0 20px rgba(255,255,255,0.15)' }}>
+            No chasing the group chat. No begging for pics. It&apos;s all already there.
           </p>
         </motion.div>
 

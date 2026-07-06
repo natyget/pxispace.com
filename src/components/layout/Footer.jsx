@@ -34,7 +34,7 @@ const EXPLORE_LINKS = [
 const CONNECT_LINKS = [
   { label: 'FAQ & Support', href: '/faq' },
   { label: 'Contact', href: 'mailto:support@pxispace.com', external: true },
-  { label: 'Book a meeting', href: 'https://calendar.app.google/K9ZbdBemhS4c9f3b8', external: true },
+  { label: 'Book a meeting', href: '/book' },
   { label: 'Legal', href: '/legal' },
 ];
 

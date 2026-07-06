@@ -52,7 +52,7 @@ const PaymentForm = ({ onSuccess, onCancel, returnUrl }) => {
       <PaymentElement
         options={{
           layout: 'tabs',
-          wallets: { applePay: 'never', googlePay: 'never' },
+          wallets: { applePay: 'auto', googlePay: 'auto' },
         }}
       />
       {error && <p className="text-sm text-red-400 font-bold">{error}</p>}

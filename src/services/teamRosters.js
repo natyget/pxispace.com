@@ -1,3 +1,5 @@
+import { eventsService } from './events';
+
 const STORAGE_KEY = 'pxi.dashboard.teamRosters.v1';
 const CREATE_EVENT_ASSIGNMENT_KEY = 'pxi.dashboard.createEventTeamAssignments.v1';
 
@@ -409,6 +411,12 @@ export async function removeRosterMember(rosterId, memberId) {
   return clone(updated);
 }
 
+/** Roster roles -> real backend staff-invite roles (event.routes.ts only knows co-host/bouncer/featured_talent). */
+function staffInviteRoleForRosterRole(role) {
+  if (role === 'Co-host') return 'co-host';
+  return 'bouncer'; // Bouncer, Door Host, General Staff, VIP Host, Media all map to floor/door staff today.
+}
+
 export async function assignRosterToEvent(rosterId, eventId, options = {}) {
   const safeEventId = String(eventId || '').trim();
   if (!safeEventId) {
@@ -446,10 +454,31 @@ export async function assignRosterToEvent(rosterId, eventId, options = {}) {
   });
 
   const assignment = updated?.eventAssignments.find((current) => current.eventId === safeEventId) || null;
+
+  // Roster assignment itself is local (this address book spans events and isn't backend-tracked),
+  // but assigning members to a *specific* event is a real staff decision — attempt a real
+  // POST /api/events/:id/staff invite for each assigned member with a PXI @username. Best-effort:
+  // members without a linked username (e.g. added by name/email only) are skipped, not faked.
+  const assignedMembers = updated
+    ? updated.members.filter((member) => member.eventAssignmentIds.includes(safeEventId) && member.handle)
+    : [];
+  const invited = [];
+  const failed = [];
+  for (const member of assignedMembers) {
+    const username = member.handle.replace(/^@/, '');
+    try {
+      await eventsService.inviteStaff(safeEventId, username, staffInviteRoleForRosterRole(member.role));
+      invited.push(username);
+    } catch (err) {
+      failed.push({ username, error: err?.message || 'Invite failed' });
+    }
+  }
+
   return {
     roster: clone(updated),
     assignment: clone(assignment),
     message: 'Assignment saved.',
+    staffInvites: { invited, failed },
   };
 }
 

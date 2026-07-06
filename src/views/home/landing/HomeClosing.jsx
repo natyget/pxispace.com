@@ -24,9 +24,18 @@ export default function HomeClosing() {
           src="/images/header-logo.png"
           alt=""
           aria-hidden
-          className="absolute inset-0 h-full w-full object-contain p-20 opacity-25 blur-xl mix-blend-screen"
+          className="absolute inset-0 h-full w-full object-contain p-20 opacity-20 blur-2xl mix-blend-screen pointer-events-none"
         />
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/55" />
+        {/* Sharp logo watermark — visible behind text */}
+        <img
+          src="/images/header-logo.png"
+          alt=""
+          aria-hidden
+          className="absolute inset-0 m-auto h-[40%] w-auto object-contain opacity-[0.15] pointer-events-none"
+        />
+        {/* Dark film over logo so text stays readable */}
+        <div className="absolute inset-0 bg-black/30" />
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-pxi-purple/60 to-transparent" />
 
         <div className="relative z-10 flex flex-col items-center px-6 py-20 text-center md:py-28">

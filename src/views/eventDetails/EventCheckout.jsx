@@ -7,12 +7,12 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Loading02Icon, Alert01Icon, ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import Button from '../../components/ui/Button';
 import { eventsService } from '../../services/events';
-import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket, getUserTickets } from '../../services/tickets';
+import { getTicketQuote, generateTicket, purchaseTicket, getUserTickets } from '../../services/tickets';
 import { useAuth } from '@/contexts/AuthContext';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { StripePaymentModal } from '@/components/checkout/StripePaymentModal';
-import TicketDeliveryActions from '@/components/tickets/TicketDeliveryActions';
 import TicketEmailPreview from '@/components/tickets/TicketEmailPreview';
+import TicketDeliveryActions from '@/components/tickets/TicketDeliveryActions';
 import { buildTicketEmailPreviewInput } from '@/lib/ticketEmailPreview';
 
 const DEFAULT_IMG =
@@ -41,13 +41,6 @@ function formatPrice(usd, currency = 'USD') {
   if (usd == null) return null;
   const sym = currency === 'EUR' ? '€' : '$';
   return `${sym}${Number(usd).toFixed(2)}`;
-}
-
-function onImageErrorToDefault(e) {
-  const el = e?.currentTarget;
-  if (!el || el.dataset.fallbackApplied === '1') return;
-  el.dataset.fallbackApplied = '1';
-  el.src = DEFAULT_IMG;
 }
 
 /**
@@ -154,26 +147,6 @@ export default function EventCheckout({ basePath = '/events' }) {
     }
   };
 
-  const startHostedCheckout = async () => {
-    if (!apiEvent || !isPaidEvent || !isAuthenticated || !user?.id) return;
-    setJoining(true);
-    setJoinError(null);
-    try {
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      const { url } = await createCheckoutSession(
-        apiEvent.id,
-        `${origin}${basePath}?payment=success`,
-        `${origin}${basePath}?payment=cancelled`,
-        apiTierId
-      );
-      if (url) window.location.href = url;
-    } catch (err) {
-      setJoinError(err.message || err.data?.error || 'Checkout failed.');
-    } finally {
-      setJoining(false);
-    }
-  };
-
   /** After successful free ticket issue, fire the album/event deep link so the native app opens to it. */
   const eventAlbumId = apiEvent?.albumId || apiEvent?.albums?.[0]?.id || null;
   const successDeepLinkUrl = eventAlbumId
@@ -201,7 +174,9 @@ export default function EventCheckout({ basePath = '/events' }) {
       if (successDeepLinkUrl && typeof window !== 'undefined') {
         try {
           window.localStorage.setItem('pxi_pending_deeplink', successDeepLinkUrl);
-        } catch {}
+        } catch {
+          /* private browsing / storage disabled; deep link still attempted below */
+        }
         const ua = navigator.userAgent || '';
         if (/iPhone|iPad|iPod|Android/i.test(ua)) {
           window.location.href = successDeepLinkUrl;
@@ -272,7 +247,9 @@ export default function EventCheckout({ basePath = '/events' }) {
                 <div className="bg-zinc-950/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] space-y-6 shadow-2xl border border-white/5">
                   <h2 className="text-3xl font-black">{priceDisplay}</h2>
                   <p className="text-zinc-400 text-xs leading-relaxed">
-                    Total for paid tickets includes service and processing fees — see quote when you select a tier.
+                    {isPaidEvent
+                      ? 'Total includes a 4.59% service fee plus Stripe processing costs, on top of the ticket price.'
+                      : 'This event is free to join.'}
                   </p>
 
                   {isPaidEvent && tiers.length > 0 ? (
@@ -326,15 +303,13 @@ export default function EventCheckout({ basePath = '/events' }) {
                             Open in PXI app
                           </a>
                         ) : null}
-                        {issuedTicketId ? (
+                        {issuedTicketId && issuedPreview ? (
                           <>
-                            {issuedPreview ? (
-                              <TicketEmailPreview preview={issuedPreview} className="mt-2" compact />
-                            ) : null}
-                            <TicketDeliveryActions ticketId={issuedTicketId} />
+                            <TicketEmailPreview preview={issuedPreview} className="mt-2" compact />
+                            <TicketDeliveryActions ticketId={issuedTicketId} className="mt-3" />
                           </>
                         ) : (
-                          <p className="text-zinc-400 text-xs text-center">Preparing your delivery options…</p>
+                          <p className="text-zinc-400 text-xs text-center">Preparing your ticket…</p>
                         )}
                       </div>
 
@@ -375,47 +350,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                       {joinError && <p className="text-red-400 text-sm">{joinError}</p>}
 
                       {isAuthenticated && isPaidEvent ? (
-                        <div className="space-y-3 pt-2">
-                          {/* Apple Pay Button */}
-                          <button
-                            type="button"
-                            onClick={startWalletCheckout}
-                            disabled={joining}
-                            className="w-full flex items-center justify-center gap-2 rounded-full bg-black text-white py-3.5 text-xs font-black uppercase tracking-widest transition-all duration-300 hover:bg-zinc-900 border border-white/10 shadow-lg hover:scale-[1.02] disabled:opacity-60 disabled:scale-95 disabled:cursor-wait"
-                          >
-                            {joining && !walletOpen ? (
-                              <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" />
-                            ) : (
-                              <>
-                                <img src="/apple-logo-white.svg" alt="Apple" className="h-[18px] w-auto -mt-1" />
-                                <span>Pay</span>
-                              </>
-                            )}
-                          </button>
-
-                          {/* Google Pay Button */}
-                          <button
-                            type="button"
-                            onClick={startWalletCheckout}
-                            disabled={joining}
-                            className="w-full flex items-center justify-center gap-2 rounded-full bg-white text-black py-3.5 text-xs font-black uppercase tracking-widest transition-all duration-300 hover:bg-zinc-200 border-0 shadow-lg hover:scale-[1.02] disabled:opacity-60 disabled:scale-95 disabled:cursor-wait"
-                          >
-                            {joining && !walletOpen ? (
-                              <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto text-black" />
-                            ) : (
-                              <>
-                                <svg width="18" height="18" viewBox="0 0 48 48" className="flex-shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path fill="#4285F4" d="M47.53 24.45c0-1.68-.15-3.31-.44-4.89H24.5v9.26h12.92c-.56 2.99-2.27 5.53-4.88 7.27v6.02h7.89c4.63-4.26 7.3-10.53 7.3-17.66z"/>
-                                  <path fill="#34A853" d="M24.5 48c6.48 0 11.92-2.14 15.89-5.81l-7.89-6.02c-2.15 1.44-4.9 2.29-8 2.29-6.14 0-11.34-4.14-13.19-9.71h-8.15v6.3A23.95 23.95 0 0024.5 48z"/>
-                                  <path fill="#FBBC05" d="M11.31 28.75c-.47-1.44-.74-2.97-.74-4.55 0-1.58.27-3.11.74-4.55v-6.3h-8.15C1.15 17.3 0 20.78 0 24.2c0 3.42 1.15 6.9 3.16 10.05l8.15-6.3z"/>
-                                  <path fill="#EA4335" d="M24.5 9.55c3.52 0 6.69 1.21 9.17 3.59l6.89-6.89C36.41 2.45 30.97 0 24.5 0 14.93 0 6.74 5.48 2.65 13.55l8.15 6.3c1.85-5.57 7.05-10.3 13.7-10.3z"/>
-                                </svg>
-                                <span>Pay</span>
-                              </>
-                            )}
-                          </button>
-
-                          {/* Standard Pay Button */}
+                        <div className="space-y-2 pt-2">
                           <Button
                             variant="neon"
                             className="w-full uppercase tracking-widest py-3.5 rounded-full shadow-lg transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:scale-95 disabled:cursor-wait"
@@ -425,15 +360,12 @@ export default function EventCheckout({ basePath = '/events' }) {
                             {joining && !walletOpen ? (
                               <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" />
                             ) : (
-                              <span className="inline-flex items-center gap-2">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                  <rect width="20" height="14" x="2" y="5" rx="2" />
-                                  <line x1="2" x2="22" y1="10" y2="10" />
-                                </svg>
-                                <span>Pay</span>
-                              </span>
+                              'Continue to payment'
                             )}
                           </Button>
+                          <p className="text-center text-[10px] text-zinc-500">
+                            Apple Pay, Google Pay, and card accepted via Stripe on the next step.
+                          </p>
                         </div>
                       ) : null}
 
@@ -456,8 +388,8 @@ export default function EventCheckout({ basePath = '/events' }) {
                       <div className="flex items-start gap-2 px-1">
                         <HugeiconsIcon icon={Alert01Icon} size={13} className="text-zinc-600 flex-shrink-0 mt-0.5" />
                         <p className="text-zinc-600 text-xs leading-relaxed">
-                          The vendor flat fee and consumer fee structure apply to paid tickets as described at checkout. Face-value
-                          refunds depend on the organizer.
+                          Paid tickets are processed by Stripe — PXI never sees or stores your card details. Refunds are
+                          issued at the organizer&apos;s discretion.
                         </p>
                       </div>
                     </>

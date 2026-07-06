@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import GalleryMassUploadSection from '../GalleryMassUploadSection';
 import { useEventManage } from './EventManageContext';
 import CreateUploadLinkModal from '@/components/upload/CreateUploadLinkModal';
+import LineupPlaylistCard from '@/components/dashboard/LineupPlaylistCard';
 
 export default function EventMassUploadPageView() {
   const { user } = useAuth();
@@ -108,6 +109,9 @@ export default function EventMassUploadPageView() {
               onClose={() => setShowLinkModal(false)}
             />
           )}
+
+          {/* Lineup playlist */}
+          <LineupPlaylistCard eventId={String(eventId)} />
         </>
       ) : (
         <div className="glass-panel rounded-2xl p-6 text-sm text-zinc-400">

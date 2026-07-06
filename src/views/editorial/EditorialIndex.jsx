@@ -7,6 +7,52 @@ import { ArrowRight } from 'lucide-react';
 import SectionShell from '@/components/marketing/SectionShell';
 import { EDITORIAL_STORIES } from '@/content/editorial';
 
+const MotionDiv = motion.div;
+
+function StoryCardMedia({ story, className = '' }) {
+  if (story.preserveCardFrame) {
+    return (
+      <div className={`relative overflow-hidden ${className}`}>
+        <img
+          src={story.cover}
+          alt=""
+          aria-hidden
+          loading="lazy"
+          className="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-xl"
+        />
+        <img
+          src={story.cover}
+          alt=""
+          aria-hidden
+          loading="lazy"
+          className="relative z-10 h-full w-full object-contain transition-transform duration-700"
+        />
+        <div className={`absolute inset-0 z-20 ${story.cardOverlayClass || 'bg-gradient-to-t from-black/70 to-transparent'}`} />
+        <span className="absolute left-4 top-4 z-30 rounded-full border border-white/20 bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md">
+          {story.tag}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <img
+        src={story.cover}
+        alt=""
+        aria-hidden
+        loading="lazy"
+        className={`h-full w-full object-cover transition-transform duration-700 ${story.imageClass || ''}`}
+        style={story.imageStyle}
+      />
+      <div className={`absolute inset-0 ${story.cardOverlayClass || 'bg-gradient-to-t from-black/70 to-transparent'}`} />
+      <span className="absolute left-4 top-4 rounded-full border border-white/20 bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md">
+        {story.tag}
+      </span>
+    </div>
+  );
+}
+
 export default function EditorialIndex() {
   const [lead, ...rest] = EDITORIAL_STORIES;
 
@@ -27,7 +73,7 @@ export default function EditorialIndex() {
       {lead ? (
         <SectionShell pad="default" border={false}>
           <Link href={`/story/${lead.slug}`} className="group grid grid-cols-1 gap-8 md:grid-cols-2 md:items-center">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-white/10">
+            <div className="relative aspect-square overflow-hidden rounded-3xl border border-white/10">
               <img
                 src={lead.cover}
                 alt=""
@@ -49,33 +95,25 @@ export default function EditorialIndex() {
 
       {/* Rest */}
       <SectionShell pad="loose">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="flex flex-wrap justify-center gap-6">
           {rest.map((story, i) => (
-            <motion.div
+            <MotionDiv
               key={story.slug}
+              className="w-full md:w-[calc((100%_-_3rem)/3)]"
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
             >
               <Link href={`/story/${story.slug}`} className="group block">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/10">
-                  <img
-                    src={story.cover}
-                    alt=""
-                    aria-hidden
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                  <span className="absolute left-4 top-4 rounded-full border border-white/20 bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md">
-                    {story.tag}
-                  </span>
-                </div>
+                <StoryCardMedia
+                  story={story}
+                  className={`${story.storyIndexCardAspectClass || story.cardAspectClass || 'aspect-square'} rounded-2xl border border-white/10`}
+                />
                 <h3 className="mt-4 text-lg font-semibold leading-snug text-white">{story.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-500">{story.dek}</p>
               </Link>
-            </motion.div>
+            </MotionDiv>
           ))}
         </div>
       </SectionShell>

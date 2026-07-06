@@ -154,27 +154,28 @@ function TeamMessagePanel({ isLive, onOpenChat }) {
     );
 }
 
-function ScanActionPanel({ isLive }) {
+function ScanActionPanel() {
+    // In-browser QR scanning isn't built yet — ticket scanning (POST /api/tickets/validate)
+    // happens in the PXI mobile app today. Keep this visible but honestly disabled rather
+    // than pretending a tap here scans anything.
     return (
-        <GlassPanel muted={!isLive}>
+        <GlassPanel muted>
             <div className="flex flex-col gap-3 md:flex-row md:items-center">
                 <button
                     type="button"
-                    disabled={!isLive}
-                    className={cx(
-                        'inline-flex w-fit items-center justify-center gap-2 rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition',
-                        isLive ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed border border-white/10 bg-white/5 text-zinc-500'
-                    )}
+                    disabled
+                    title="Coming soon — scan tickets from the PXI mobile app"
+                    className="inline-flex w-fit cursor-not-allowed items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-500"
                 >
                     <HugeiconsIcon icon={QrCodeIcon} size={15} />
                     Scan Ticket
                 </button>
-                <div className={cx('flex min-w-0 flex-1 items-center gap-2 rounded-full glass-field px-4 py-2', !isLive && 'opacity-60')}>
+                <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full glass-field px-4 py-2 opacity-60">
                     <HugeiconsIcon icon={Search01Icon} size={15} className="text-zinc-500" />
                     <input
                         type="text"
-                        placeholder={isLive ? 'Search handle or ticket ID' : 'Goes live during active events'}
-                        disabled={!isLive}
+                        placeholder="Coming soon — scan tickets in the PXI mobile app"
+                        disabled
                         readOnly
                         className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500 disabled:cursor-not-allowed"
                     />
@@ -494,12 +495,14 @@ function TeamChatModal({ open, onClose }) {
                 />
                 <button
                     type="button"
-                    onClick={() => setDraft('')}
-                    className="self-end rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-black hover:bg-zinc-200"
+                    disabled
+                    title="Coming soon — staff messaging isn't wired to a live chat backend yet"
+                    className="cursor-not-allowed self-end rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-500"
                 >
                     Send
                 </button>
             </div>
+            <p className="mt-2 text-[11px] text-zinc-500">Coming soon — this draft isn&apos;t sent to your team yet.</p>
         </Modal>
     );
 }
@@ -594,6 +597,11 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                 <p className="mt-2 max-w-2xl text-sm text-zinc-500">Live event controls for gates, scans, and incident response.</p>
             </header>
 
+            <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
+                Sample data — gates, scans, and messages below are a planning preview, not a live feed. Ticket scanning
+                itself happens in the PXI mobile app; live sync to this dashboard is coming soon.
+            </div>
+
             {!eventIsLive ? <DormantMessage /> : null}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-[1.1fr_0.9fr]">
@@ -601,7 +609,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                 <TeamMessagePanel isLive={eventIsLive} onOpenChat={() => setChatOpen(true)} />
             </div>
 
-            <ScanActionPanel isLive={eventIsLive} />
+            <ScanActionPanel />
 
             <GlassPanel muted={!eventIsLive}>
                 <div className="flex flex-wrap items-center justify-between gap-3">

@@ -582,6 +582,10 @@ export default function AudiencePage() {
             {view === 'crm' ? (
                 <>
                     <div className="space-y-7">
+                        <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
+                            Sample data — rows below model likely audience segments from your real ticket and invite
+                            counts. They are not a literal roster of individual attendees.
+                        </div>
                         <SectionCard
                             title={segmentIsActive ? 'Segment Draft Active' : 'Segment Draft'}
                             className={`${AUDIENCE_SECTION_CLASS} ${
@@ -860,6 +864,10 @@ export default function AudiencePage() {
                 </>
             ) : (
                 <>
+                    <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
+                        Coming soon — PXI doesn&apos;t send SMS, email, or feed campaigns yet. Use this space to plan
+                        your mix and save drafts; nothing here is delivered to guests.
+                    </div>
                     <SectionCard
                         title="Campaign Management"
                         className={AUDIENCE_SECTION_CLASS}

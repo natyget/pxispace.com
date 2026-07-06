@@ -20,7 +20,7 @@ import SanaaTicketShowcase from '@/components/marketing/SanaaTicketShowcase';
 import PlatformComparison from './PlatformComparison';
 
 const CREATE_HREF = '/login?redirect=/dashboard/events/new';
-const DEMO_HREF = 'https://calendar.app.google/K9ZbdBemhS4c9f3b8';
+const DEMO_HREF = '/book';
 
 export default function OrganizersView() {
   return (
@@ -61,9 +61,9 @@ export default function OrganizersView() {
               Start selling tickets
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <a href={DEMO_HREF} target="_blank" rel="noopener noreferrer" className="pill-ghost px-8 py-4 text-sm font-semibold">
+            <Link href={DEMO_HREF} className="pill-ghost px-8 py-4 text-sm font-semibold">
               Book a demo
-            </a>
+            </Link>
           </motion.div>
 
           {/* command center on display */}

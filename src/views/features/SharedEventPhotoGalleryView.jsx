@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { FaApple } from 'react-icons/fa';
 import { PXI_IOS_DOWNLOAD_HREF } from '@/lib/appStoreLinks';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 import SectionShell from '@/components/marketing/SectionShell';
@@ -13,10 +13,10 @@ import PhoneMockup from '@/components/ui/PhoneMockup';
 import CameraDemo from '@/components/marketing/CameraDemo';
 
 const STRIP = [
-  '/landing/album/gallery/afrodisiac/DSC02918.jpg',
-  '/landing/album/gallery/afrodisiac/DSC02954.jpg',
-  '/landing/album/gallery/afrodisiac/DSC03010.jpg',
-  '/landing/album/gallery/afrodisiac/DSC03036.jpg',
+  '/landing/shared-event-gallery/gallery-01.jpeg',
+  '/landing/shared-event-gallery/gallery-02.jpg',
+  '/landing/shared-event-gallery/gallery-03.jpg',
+  '/landing/shared-event-gallery/gallery-04.jpg',
 ];
 
 export default function SharedEventPhotoGalleryView() {
@@ -30,15 +30,15 @@ export default function SharedEventPhotoGalleryView() {
         />
         <div className="mx-auto max-w-[1200px] px-6">
           <span className="eyebrow">The shared gallery</span>
-          <motion.h1
+          <Motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="display-2 mt-6 max-w-4xl"
           >
             One camera. The whole <span className="text-white">room.</span>
-          </motion.h1>
-          <motion.p
+          </Motion.h1>
+          <Motion.p
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
@@ -47,8 +47,8 @@ export default function SharedEventPhotoGalleryView() {
             Every attendee is a creator. PXI's native camera streams photos into the event's
             shared thread in real time. No uploads, no group texts, no algorithms. Just the night,
             preserved exactly as it happened.
-          </motion.p>
-          <motion.div
+          </Motion.p>
+          <Motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
@@ -61,7 +61,7 @@ export default function SharedEventPhotoGalleryView() {
             <Link href="/platform" className="pill-ghost px-8 py-4 text-sm font-semibold">
               See the platform
             </Link>
-          </motion.div>
+          </Motion.div>
         </div>
       </section>
 
@@ -69,7 +69,7 @@ export default function SharedEventPhotoGalleryView() {
       <SectionShell pad="default" border={false}>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           {STRIP.map((src, i) => (
-            <motion.img
+            <Motion.img
               key={src}
               src={src}
               alt="Photo from a PXI shared event gallery"
@@ -91,7 +91,7 @@ export default function SharedEventPhotoGalleryView() {
       {/* ── How it works ── */}
       <SectionShell eyebrow="How it works" pad="default">
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }}
@@ -109,16 +109,16 @@ export default function SharedEventPhotoGalleryView() {
               A tactile native camera engineered for the energy of the night. It captures the raw,
               unfiltered atmosphere without pulling you out of the moment. No filters, no staging.
             </p>
-          </motion.div>
+          </Motion.div>
 
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             <CameraDemo onFilterChange={() => {}} />
-          </motion.div>
+          </Motion.div>
         </div>
         <div className="mt-14 flex flex-col gap-16">
           <FeatureRow

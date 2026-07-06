@@ -8,6 +8,8 @@ const SORT_OPTIONS = [
   { value: 'vendor', label: 'Vendor rank' },
   { value: 'date', label: 'Soonest' },
   { value: 'tickets', label: 'Most tickets' },
+  { value: 'distance', label: 'Nearest' },
+  { value: 'match', label: 'Best match' },
 ];
 
 const EventsHero = ({ searchQuery, setSearchQuery, sortMode, setSortMode }) => {

@@ -1,151 +1,129 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+// Post-purchase ticket delivery: Apple / Google Wallet buttons + email-resend.
+// The ticket email itself is sent automatically when the ticket is issued —
+// this surface only offers wallet saves and a resend affordance.
+// Wallet buttons appear only when the backend reports them configured.
+
+import React, { useEffect, useState } from 'react';
 import {
   getTicketDeliveryOptions,
-  sendTicketEmail,
-  downloadAppleWalletPass,
+  resendTicketEmail,
   getGoogleWalletSaveUrl,
+  downloadApplePass,
 } from '@/services/tickets';
 
-/**
- * Shows the three delivery options after a ticket is issued.
- *   • Email me a copy   — always available (account email)
- *   • Add to Apple Wallet — visible on iOS / macOS Safari when backend configured
- *   • Add to Google Wallet — visible on Android / desktop browsers when backend configured
- *
- * The component is intentionally self-contained: pass a `ticketId` and it
- * fetches its own delivery-options to know which buttons to show.
- */
 export default function TicketDeliveryActions({ ticketId, className = '' }) {
   const [options, setOptions] = useState(null);
-  const [loadingEmail, setLoadingEmail] = useState(false);
-  const [loadingApple, setLoadingApple] = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
-  const [emailMsg, setEmailMsg] = useState(null);
-  const [errMsg, setErrMsg] = useState(null);
+  const [busy, setBusy] = useState(null); // 'apple' | 'google' | 'email' | null
+  const [note, setNote] = useState(null); // { kind: 'ok' | 'err', text }
 
   useEffect(() => {
+    if (!ticketId) return;
     let cancelled = false;
-    if (!ticketId) return undefined;
-    (async () => {
-      try {
-        const data = await getTicketDeliveryOptions(ticketId);
-        if (!cancelled) setOptions(data);
-      } catch {
+    getTicketDeliveryOptions(ticketId)
+      .then((res) => {
+        if (!cancelled) setOptions(res);
+      })
+      .catch(() => {
         if (!cancelled) setOptions(null);
-      }
-    })();
+      });
     return () => {
       cancelled = true;
     };
   }, [ticketId]);
 
-  // Platform sniff: hide buttons that wouldn't work on the current OS to avoid
-  // dead-end clicks. The endpoint itself still works for cross-device "send to my phone"
-  // flows, but the post-issuance UX should match the user's device.
-  const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
-  const isAppleDevice = /iPhone|iPad|iPod|Macintosh/i.test(ua);
-  const isAndroid = /Android/i.test(ua);
-  // Show Google Wallet button on Android (native), or any non-Apple desktop browser.
-  const showAppleButton = options?.appleWallet?.available && (isAppleDevice || (!isAndroid && !isAppleDevice));
-  const showGoogleButton = options?.googleWallet?.available && (isAndroid || (!isAppleDevice && !isAndroid));
+  if (!ticketId || !options) return null;
 
-  const handleEmail = useCallback(async () => {
-    setLoadingEmail(true);
-    setErrMsg(null);
-    setEmailMsg(null);
+  const handleApple = async () => {
+    setBusy('apple');
+    setNote(null);
     try {
-      const res = await sendTicketEmail(ticketId);
-      setEmailMsg(res?.emailedAt ? 'Sent ✓' : 'Email sent');
-      setOptions((prev) => (prev ? { ...prev, email: { ...prev.email, sentAt: res?.emailedAt ?? new Date().toISOString() } } : prev));
-    } catch (err) {
-      setErrMsg(err.message || 'Failed to send email');
-    } finally {
-      setLoadingEmail(false);
-    }
-  }, [ticketId]);
-
-  const handleApple = useCallback(async () => {
-    setLoadingApple(true);
-    setErrMsg(null);
-    try {
-      const blob = await downloadAppleWalletPass(ticketId);
+      const blob = await downloadApplePass(ticketId);
       const url = URL.createObjectURL(blob);
-      // Triggers Wallet on iOS / opens the pass viewer on macOS.
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'ticket.pkpass';
+      a.download = `pxi-ticket-${ticketId}.pkpass`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (err) {
-      setErrMsg(err.message || 'Failed to build Apple Wallet pass');
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch {
+      setNote({ kind: 'err', text: 'Could not generate the Apple Wallet pass. Try again in a moment.' });
     } finally {
-      setLoadingApple(false);
+      setBusy(null);
     }
-  }, [ticketId]);
+  };
 
-  const handleGoogle = useCallback(async () => {
-    setLoadingGoogle(true);
-    setErrMsg(null);
+  const handleGoogle = async () => {
+    setBusy('google');
+    setNote(null);
     try {
-      const { saveUrl } = await getGoogleWalletSaveUrl(ticketId);
-      if (!saveUrl) throw new Error('No save URL returned');
-      window.location.href = saveUrl;
-    } catch (err) {
-      setErrMsg(err.message || 'Failed to build Google Wallet save URL');
-      setLoadingGoogle(false);
+      const res = await getGoogleWalletSaveUrl(ticketId);
+      if (res?.saveUrl) window.open(res.saveUrl, '_blank', 'noopener');
+    } catch {
+      setNote({ kind: 'err', text: 'Could not open Google Wallet. Try again in a moment.' });
+    } finally {
+      setBusy(null);
     }
-  }, [ticketId]);
+  };
 
-  if (!ticketId) return null;
+  const handleResend = async () => {
+    setBusy('email');
+    setNote(null);
+    try {
+      await resendTicketEmail(ticketId);
+      setNote({ kind: 'ok', text: 'Ticket email sent again — check your inbox.' });
+    } catch {
+      setNote({ kind: 'err', text: 'Could not resend the email right now.' });
+    } finally {
+      setBusy(null);
+    }
+  };
 
-  const alreadyEmailed = !!options?.email?.sentAt;
+  const walletBtn =
+    'inline-flex w-full items-center justify-center gap-2 rounded-full py-3 text-xs font-black uppercase tracking-widest transition hover:scale-[1.02] disabled:opacity-50';
 
   return (
-    <div className={`space-y-3 ${className}`}>
-      <button
-        type="button"
-        onClick={handleEmail}
-        disabled={loadingEmail}
-        className="w-full rounded-full bg-white/5 border border-white/10 hover:bg-white/10 px-5 py-3.5 text-xs font-black uppercase tracking-widest text-white transition-all duration-500 disabled:opacity-60 disabled:scale-95 disabled:cursor-wait flex items-center justify-between gap-3 shadow-lg"
-      >
-        <span className="flex items-center gap-3">
-          <span aria-hidden className="text-base">✉️</span>
-          <span>{alreadyEmailed ? 'Resend email' : 'Email me a copy'}</span>
-        </span>
-        <span className="text-xs text-zinc-500">
-          {loadingEmail ? '…' : emailMsg ?? (alreadyEmailed ? 'Sent ✓' : null)}
-        </span>
-      </button>
-
-      {showAppleButton ? (
+    <div className={`space-y-2 ${className}`}>
+      {options.appleWallet?.available ? (
         <button
           type="button"
           onClick={handleApple}
-          disabled={loadingApple}
-          className="w-full rounded-full bg-black text-white border border-white/15 hover:bg-zinc-900 px-5 py-3.5 text-xs font-black uppercase tracking-widest transition-all duration-500 disabled:opacity-60 disabled:scale-95 disabled:cursor-wait flex items-center justify-center gap-3 shadow-lg"
+          disabled={busy !== null}
+          className={`${walletBtn} bg-black text-white border border-white/25`}
         >
-          <span aria-hidden className="text-base"></span>
-          {loadingApple ? 'Building…' : 'Add to Apple Wallet'}
+          {busy === 'apple' ? 'Preparing pass…' : ' Add to Apple Wallet'}
         </button>
       ) : null}
-
-      {showGoogleButton ? (
+      {options.googleWallet?.available ? (
         <button
           type="button"
           onClick={handleGoogle}
-          disabled={loadingGoogle}
-          className="w-full rounded-full bg-white text-black hover:bg-zinc-100 px-5 py-3.5 text-xs font-black uppercase tracking-widest transition-all duration-500 disabled:opacity-60 disabled:scale-95 disabled:cursor-wait flex items-center justify-center gap-3 shadow-lg"
+          disabled={busy !== null}
+          className={`${walletBtn} bg-white text-black`}
         >
-          <span aria-hidden className="text-base">G</span>
-          {loadingGoogle ? 'Opening…' : 'Add to Google Wallet'}
+          {busy === 'google' ? 'Opening…' : 'Add to Google Wallet'}
         </button>
       ) : null}
-
-      {errMsg ? <p className="text-red-400 text-xs">{errMsg}</p> : null}
+      {options.email?.available ? (
+        <p className="text-center text-[11px] text-zinc-500">
+          A copy was emailed to you automatically.{' '}
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={busy !== null}
+            className="font-semibold text-pxi-purple hover:text-white disabled:opacity-50"
+          >
+            {busy === 'email' ? 'Sending…' : 'Resend'}
+          </button>
+        </p>
+      ) : null}
+      {note ? (
+        <p className={`text-center text-[11px] ${note.kind === 'ok' ? 'text-emerald-400' : 'text-red-400'}`}>
+          {note.text}
+        </p>
+      ) : null}
     </div>
   );
 }

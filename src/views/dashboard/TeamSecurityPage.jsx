@@ -6,31 +6,42 @@ import { listTeamRosters, addRosterMember, removeRosterMember, createTeamRoster,
 
 export default function TeamSecurityPage() {
     const [roster, setRoster] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [role, setRole] = useState('Event Staff');
 
     useEffect(() => {
         let alive = true;
-        listTeamRosters().then(rosters => {
-            if (!alive) return;
-            if (rosters.length > 0) {
-                setRoster(rosters[0]);
-            } else {
-                createTeamRoster({ name: 'Default Team', defaultRole: 'Event Staff' }).then(newRoster => {
+        listTeamRosters()
+            .then((rosters) => {
+                if (!alive) return null;
+                if (rosters.length > 0) {
+                    setRoster(rosters[0]);
+                    return null;
+                }
+                return createTeamRoster({ name: 'Default Team', defaultRole: 'Event Staff' }).then((newRoster) => {
                     if (alive) setRoster(newRoster);
                 });
-            }
-        });
+            })
+            .catch(() => {
+                if (alive) setError('Could not load your team roster. Please try again.');
+            })
+            .finally(() => {
+                if (alive) setLoading(false);
+            });
         return () => { alive = false; };
     }, []);
 
     const handleAdd = async () => {
         if (!name || !email || !roster) return;
-        const updatedRoster = await addRosterMember(roster.id, { name, contact: email, role });
+        const updatedRoster = await addRosterMember(roster.id, { name, contact: email, handle: username, role });
         setRoster(updatedRoster);
         setName('');
         setEmail('');
+        setUsername('');
         setRole('Event Staff');
     };
 
@@ -39,6 +50,32 @@ export default function TeamSecurityPage() {
         const updatedRoster = await removeRosterMember(roster.id, id);
         setRoster(updatedRoster);
     };
+
+    if (loading) {
+        return (
+            <div className="mx-auto max-w-4xl space-y-8">
+                <div className="space-y-3">
+                    <div className="h-8 w-56 animate-pulse rounded-lg bg-white/10" />
+                    <div className="h-4 w-80 max-w-full animate-pulse rounded bg-white/5" />
+                </div>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <div className="glow-surface h-72 animate-pulse rounded-2xl" />
+                    <div className="glow-surface h-72 animate-pulse rounded-2xl md:col-span-2" />
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="mx-auto max-w-4xl space-y-6">
+                <h1 className="text-2xl font-black tracking-tight text-white md:text-3xl">Teams & Security</h1>
+                <SectionCard title="Roster unavailable">
+                    <p className="px-4 py-2 text-sm text-zinc-400">{error}</p>
+                </SectionCard>
+            </div>
+        );
+    }
 
     if (!roster) return null;
 
@@ -57,6 +94,13 @@ export default function TeamSecurityPage() {
                             <div>
                                 <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Email</label>
                                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" className="dashboard-input w-full mt-2" />
+                            </div>
+                            <div>
+                                <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">PXI username (optional)</label>
+                                <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="@handle" className="dashboard-input w-full mt-2" />
+                                <p className="mt-1.5 text-[11px] text-zinc-500">
+                                    Add their PXI @username so assigning them to an event can send a real staff invite.
+                                </p>
                             </div>
                             <div>
                                 <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Role</label>
@@ -78,7 +122,11 @@ export default function TeamSecurityPage() {
                                 <div key={member.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl glass-panel">
                                     <div>
                                         <p className="text-sm font-bold text-white">{member.name}</p>
-                                        <p className="text-xs text-zinc-500">{member.contact || member.handle}</p>
+                                        <p className="text-xs text-zinc-500">
+                                            {member.contact}
+                                            {member.contact && member.handle ? ' · ' : ''}
+                                            {member.handle}
+                                        </p>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <span className="glow-chip px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-zinc-300">

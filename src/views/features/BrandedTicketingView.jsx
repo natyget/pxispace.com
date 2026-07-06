@@ -39,9 +39,9 @@ export default function BrandedTicketingView() {
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="body-lead mt-8 max-w-2xl"
           >
-            PXI is the invisible infrastructure behind your events. Attendees see your covers,
-            your colors, and your stamps from checkout to scrapbook, and revenue routes straight
-            to your Stripe account.
+            Your branding leads at every touchpoint. Attendees see your covers, your colors, and
+            your stamps from checkout to scrapbook, with a subtle PXI mark that powers
+            verification, and revenue routes straight to your Stripe account.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 24 }}

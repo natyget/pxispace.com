@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 import SectionShell from '@/components/marketing/SectionShell';
@@ -90,15 +90,15 @@ export default function PassportView() {
         />
         <div className="mx-auto max-w-[1200px] px-6">
           <span className="eyebrow">The digital passport</span>
-          <motion.h1
+          <Motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="display-2 mt-6 max-w-4xl"
           >
             Proof you were <span className="text-white">there.</span>
-          </motion.h1>
-          <motion.p
+          </Motion.h1>
+          <Motion.p
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
@@ -106,8 +106,8 @@ export default function PassportView() {
           >
             Every event you attend earns a stamp. Your Odyssey score is a living record of every
             show, every party, every rooftop. Not bought, not faked. Earned by showing up.
-          </motion.p>
-          <motion.div
+          </Motion.p>
+          <Motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
@@ -120,7 +120,7 @@ export default function PassportView() {
             <Link href="/platform" className="pill-ghost px-8 py-4 text-sm font-semibold">
               See the platform
             </Link>
-          </motion.div>
+          </Motion.div>
 
           {/* the real passport card */}
           <div className="mt-16 md:mt-20">
@@ -138,11 +138,11 @@ export default function PassportView() {
 
         <div className="mt-12 mb-16 flex flex-wrap items-center justify-center gap-6 max-w-5xl">
           <PassportStamp eventName="Afrodisiac" date="DEC 12" city="NYC" role="MEMBER" shape="star-burst" color="#c4b5fd" size="lg" className="-rotate-6" />
-          <PassportStamp eventName="Boiler Room" date="JAN 05" city="LA" role="OWNER" shape="hologram-ticket" color="#FCD34D" size="lg" className="rotate-3" />
+          <PassportStamp eventName="Boiler Room" date="JAN 05" city="LA" role="OWNER" shape="hologram-ticket" color="#FCD34D" textColor="#271600" size="lg" className="rotate-3" />
           <PassportStamp eventName="Summer Fest" date="JUN 21" city="MIA" role="STAFF" shape="arch-gate" color="#34D399" size="lg" className="-rotate-2 mt-4" />
           <PassportStamp eventName="Local Gig" date="FEB 14" city="CHI" role="MEMBER" shape="wax-seal" color="#FB923C" size="lg" className="rotate-6" />
           <PassportStamp eventName="Warehouse" date="MAR 02" city="LDN" role="MEMBER" shape="hexagon-pass" color="#60A5FA" size="lg" className="-rotate-12" />
-          <PassportStamp eventName="Rooftop" date="AUG 30" city="BK" role="MEMBER" shape="visa-sticker" color="#E5E7EB" size="lg" className="rotate-12 mt-2" />
+          <PassportStamp eventName="Rooftop" date="AUG 30" city="BK" role="MEMBER" shape="visa-sticker" color="#E5E7EB" textColor="#111827" size="lg" className="rotate-12 mt-2" />
         </div>
 
         <div className="mt-14 flex flex-col gap-16">
@@ -183,8 +183,8 @@ export default function PassportView() {
                 })}
               </div>
             }
-            href="/features/shared-event-photo-gallery"
-            linkLabel="Where the memories come from"
+            href="/features/instagram-event-sharing"
+            linkLabel="Share your memories"
           />
         </div>
       </SectionShell>
@@ -192,7 +192,7 @@ export default function PassportView() {
       {/* ── Tiers ── */}
       <SectionShell eyebrow="The tiers" pad="default">
         <h2 className="display-2 mt-5 max-w-2xl">From first stamp to inner circle.</h2>
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
@@ -226,7 +226,7 @@ export default function PassportView() {
                </div>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
       </SectionShell>
 
       {/* ── Why it matters ── */}
@@ -253,7 +253,7 @@ export default function PassportView() {
         </div>
         <div className="mt-16 divide-y divide-white/[0.08] border-y border-white/[0.08]">
           {PRINCIPLES.map((p) => (
-            <motion.div
+            <Motion.div
               key={p.title}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -263,7 +263,7 @@ export default function PassportView() {
             >
               <h3 className="text-lg font-semibold tracking-tight text-white md:text-xl">{p.title}</h3>
               <p className="self-center text-base leading-relaxed text-zinc-400">{p.body}</p>
-            </motion.div>
+            </Motion.div>
           ))}
         </div>
       </SectionShell>

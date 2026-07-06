@@ -10,7 +10,7 @@ const TIER_CONFIG = {
   Odyssey: { color: '#E5E7EB', shape: 'shield-crest' },
 };
 
-export default function PassportStamp({ eventName, date, tier, shape, color, city = "", role = "", size = 'md', className = '' }) {
+export default function PassportStamp({ eventName, date, tier, shape, color, textColor, city = "", role = "", size = 'md', className = '' }) {
   const config = tier ? (TIER_CONFIG[tier] || TIER_CONFIG.Wanderer) : { shape: 'square-border', color: '#B026FF' };
   
   const finalShape = shape || config.shape;
@@ -28,6 +28,7 @@ export default function PassportStamp({ eventName, date, tier, shape, color, cit
       <StampShapeGraphic
         shape={finalShape}
         color={finalColor}
+        textColor={textColor}
         name={eventName}
         date={date}
         city={city}

@@ -13,6 +13,7 @@ import { MicroChart, StatRow } from '@/components/dashboard/MetricCard';
 import { useNotifications } from '@/lib/dashboardStore';
 import { buildCommandCenterUpdates, listSupportQueue } from '@/services/commandCenter';
 import { helpRequestsService } from '@/services/helpRequests';
+import { organizerAnalyticsService } from '@/services/organizerAnalytics';
 
 const DASHBOARD_RENDER_NOW = Date.now();
 const BASE_CHART_COLOR = '#d4d4d8';
@@ -48,13 +49,6 @@ function stateClassName(status) {
     return 'bg-white/[0.04] text-zinc-500 backdrop-blur-md';
 }
 
-function buildSparkline(seed = 0, lift = 0) {
-    return Array.from({ length: 9 }, (_, index) => {
-        const wave = ((index + 1) * (seed + 3)) % 17;
-        return Math.max(6, Math.round(18 + wave + lift + index * 2));
-    });
-}
-
 export default function DashboardHome() {
     const { user } = useAuth();
     const [mounted, setMounted] = useState(false);
@@ -63,6 +57,8 @@ export default function DashboardHome() {
     const [events, setEvents] = useState([]);
     const [eventsLoading, setEventsLoading] = useState(false);
     const [helpRequests, setHelpRequests] = useState([]);
+    const [overview, setOverview] = useState(null);
+    const [overviewLoading, setOverviewLoading] = useState(false);
     const { notifications, unreadCount: notificationCount } = useNotifications(50);
 
     useEffect(() => {
@@ -122,9 +118,32 @@ export default function DashboardHome() {
             .catch(() => setHelpRequests([]));
     }, [events, mounted]);
 
+    useEffect(() => {
+        if (!mounted) return;
+        let cancelled = false;
+        const timer = setTimeout(() => {
+            setOverviewLoading(true);
+            organizerAnalyticsService
+                .getOverview()
+                .then((next) => {
+                    if (!cancelled) setOverview(next);
+                })
+                .catch(() => {
+                    if (!cancelled) setOverview(null);
+                })
+                .finally(() => {
+                    if (!cancelled) setOverviewLoading(false);
+                });
+        }, 0);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [mounted]);
+
     const { eventRows, summary } = useMemo(() => {
         const now = DASHBOARD_RENDER_NOW;
-        const totalEarnings = vendorData?.aggregates?.netPayout ?? 0;
+        const totalEarnings = overview?.totals?.netCents ?? vendorData?.aggregates?.netPayout ?? 0;
         const totalTickets = events.reduce((sum, e) => sum + soldTicketsExcludingOrganizer(e?._count?.tickets), 0);
         const revenueByKey = new Map();
 
@@ -145,15 +164,13 @@ export default function DashboardHome() {
                     - (b.startDate ? new Date(b.startDate).getTime() : Number.MAX_SAFE_INTEGER);
             })
             .slice(0, 5)
-            .map((e, index) => {
+            .map((e) => {
                 const status = eventState(e, now);
                 const ticketsSold = soldTicketsExcludingOrganizer(e?._count?.tickets ?? 0);
                 const directRevenue = revenueByKey.get(e.id) ?? revenueByKey.get(e.name);
                 const ticketPriceRevenue = Number.isFinite(Number(e.ticketPrice)) ? Number(e.ticketPrice) * ticketsSold : null;
                 const proportionalRevenue = totalTickets > 0 ? Math.round(totalEarnings * (ticketsSold / totalTickets)) : 0;
                 const revenue = directRevenue ?? ticketPriceRevenue ?? proportionalRevenue;
-                const statusLift = status === 'Active' ? 16 : status === 'Scheduled' ? 8 : 0;
-                const hype = Math.max(0, Math.min(98, Math.round(ticketsSold * 7 + (revenue / 6000) + statusLift)));
 
                 return {
                     id: e.id,
@@ -164,15 +181,11 @@ export default function DashboardHome() {
                     ticketsSold,
                     revenue,
                     revenueLabel: formatMoney(revenue),
-                    hype,
                     href: e.id ? `/dashboard/events/${e.id}` : '/dashboard/events',
-                    chartPoints: buildSparkline(index, Math.min(28, hype / 4)),
                 };
             });
-        const sales = events.reduce((sum, e) => sum + soldTicketsExcludingOrganizer(e?._count?.tickets ?? 0), 0);
-        const hypeAvg = rows.length
-            ? Math.round(rows.reduce((sum, e) => sum + (e.hype ?? 0), 0) / rows.length)
-            : 0;
+        const sales = overview?.totals?.ticketsSold ?? events.reduce((sum, e) => sum + soldTicketsExcludingOrganizer(e?._count?.tickets ?? 0), 0);
+        const attendees = overview?.totals?.attendees ?? 0;
         const activeCount = events.filter((event) => eventState(event, now) === 'Active').length;
         const scheduledCount = events.filter((event) => eventState(event, now) === 'Scheduled').length;
         const draftCount = events.filter((event) => eventState(event, now) === 'Draft').length;
@@ -182,15 +195,15 @@ export default function DashboardHome() {
             summary: {
                 revenue: formatMoney(totalEarnings),
                 sales,
-                hype: hypeAvg,
+                attendees,
                 activeCount,
                 scheduledCount,
                 draftCount,
-                salesTrend: buildSparkline(2, Math.min(26, sales / 3)),
-                hypeTrend: buildSparkline(5, hypeAvg / 4),
+                salesTrend: (overview?.last30d?.ticketsByDay || []).map((d) => d.count),
+                mediaTrend: (overview?.last30d?.mediaByDay || []).map((d) => d.count),
             },
         };
-    }, [events, vendorData]);
+    }, [events, vendorData, overview]);
     const updates = useMemo(
         () => buildCommandCenterUpdates({ events, unreadCount: notificationCount, vendorDashboard: vendorData }),
         [events, notificationCount, vendorData]
@@ -199,7 +212,7 @@ export default function DashboardHome() {
         () => eventRows.filter((event) => event.status === 'Active' || event.status === 'Scheduled').slice(0, 4),
         [eventRows]
     );
-    const urgentQueue = useMemo(() => {
+    const { queue: urgentQueue, isSampleQueue } = useMemo(() => {
         const localRequests = helpRequests
             .filter((request) => request.status !== 'resolved')
             .slice(0, 3)
@@ -212,12 +225,12 @@ export default function DashboardHome() {
                 action: request.status === 'reviewing' ? 'Continue review' : 'Review ticket',
                 href: request.eventId ? `/dashboard/events/${request.eventId}/members` : '/dashboard/events',
             }));
-        if (localRequests.length) return localRequests;
-        return listSupportQueue({ events, notifications }).requests.slice(0, 3);
+        if (localRequests.length) return { queue: localRequests, isSampleQueue: false };
+        return { queue: listSupportQueue({ events, notifications }).requests.slice(0, 3), isSampleQueue: true };
     }, [events, helpRequests, notifications]);
     const reminderUpdates = updates.filter((update) => update.group !== 'product');
     const productUpdates = updates.filter((update) => update.group === 'product');
-    const metricsLoading = vendorLoading || eventsLoading;
+    const metricsLoading = vendorLoading || eventsLoading || overviewLoading;
 
     if (!mounted) {
         return <div className="max-w-6xl mx-auto space-y-8" />;
@@ -297,19 +310,14 @@ export default function DashboardHome() {
                                         {event.status}
                                     </span>
                                 </div>
-                                <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_132px] lg:items-center">
+                                <div className="mt-3">
                                     <StatRow
                                         className="!rounded-xl !p-3"
                                         items={[
                                             { label: 'Revenue', value: event.revenueLabel },
                                             { label: 'Tickets', value: event.ticketsSold.toLocaleString() },
-                                            { label: 'Hype Index', value: event.hype },
                                         ]}
                                     />
-                                    <div className="rounded-xl glass-field p-3">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Momentum</p>
-                                        <MicroChart points={event.chartPoints} color={BASE_CHART_COLOR} className="mt-2" />
-                                    </div>
                                 </div>
                                 <div className="mt-3 flex justify-end">
                                     <Link href={event.href} className="text-[11px] font-bold uppercase tracking-widest text-white/55 transition hover:text-white whitespace-nowrap">
@@ -322,7 +330,22 @@ export default function DashboardHome() {
                 </SectionCard>
 
                 <div className="space-y-4">
-                    <SectionCard title="Urgent notices" dense bodyClassName="space-y-3">
+                    <SectionCard
+                        title="Urgent notices"
+                        dense
+                        bodyClassName="space-y-3"
+                        actions={isSampleQueue ? (
+                            <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-amber-300">
+                                Sample
+                            </span>
+                        ) : null}
+                    >
+                        {isSampleQueue ? (
+                            <p className="-mt-1 mb-1 text-[11px] leading-relaxed text-white/40">
+                                Showing example items. Help requests are stored on this device only and don&apos;t yet
+                                sync from attendees&apos; devices — this isn&apos;t a live support inbox.
+                            </p>
+                        ) : null}
                         {urgentQueue.map((notice) => (
                             <Link
                                 key={notice.id}
@@ -352,17 +375,17 @@ export default function DashboardHome() {
                             items={[
                                 { label: 'Revenue', value: metricsLoading ? '—' : summary.revenue },
                                 { label: 'Tickets', value: metricsLoading ? '—' : summary.sales.toLocaleString() },
-                                { label: 'Hype Index', value: metricsLoading ? '—' : summary.hype },
+                                { label: 'Attendees', value: metricsLoading ? '—' : summary.attendees.toLocaleString() },
                             ]}
                         />
                         <div className="grid grid-cols-2 gap-3">
                                 <div className="rounded-xl glass-field p-3">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Sales</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Sales (30d)</p>
                                     <MicroChart points={summary.salesTrend} color={BASE_CHART_COLOR} className="mt-2" />
                                 </div>
                                 <div className="rounded-xl glass-field p-3">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Hype</p>
-                                    <MicroChart points={summary.hypeTrend} color={BASE_CHART_COLOR} className="mt-2" />
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Media (30d)</p>
+                                    <MicroChart points={summary.mediaTrend} color={BASE_CHART_COLOR} className="mt-2" />
                                 </div>
                             </div>
                         <div className="grid grid-cols-3 gap-2">

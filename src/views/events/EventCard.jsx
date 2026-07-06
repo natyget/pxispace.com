@@ -15,7 +15,10 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
       ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
       : null);
 
-  const organizerInitial = (event.organizerName || event.title || '?').charAt(0).toUpperCase();
+  const organizer = event.organizer || null;
+  const organizerAvatarUrl = organizer?.avatarUrl || event.organizerAvatar || null;
+  const organizerDisplayName = organizer?.name || organizer?.username || event.organizerName || null;
+  const organizerInitial = (organizerDisplayName || event.title || '?').charAt(0).toUpperCase();
 
   return (
     <div
@@ -35,15 +38,15 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
 
         {/* Organizer avatar top-left */}
-        <div className="absolute left-4 top-4">
-          {displayImageSrc(event.organizerAvatar) ? (
+        <div className="absolute left-4 top-4" title={organizerDisplayName || undefined}>
+          {displayImageSrc(organizerAvatarUrl) ? (
             <img
-              src={displayImageSrc(event.organizerAvatar)}
-              alt=""
-              className="h-9 w-9 rounded-full object-cover border-0"
+              src={displayImageSrc(organizerAvatarUrl)}
+              alt={organizerDisplayName || 'Organizer'}
+              className="h-10 w-10 rounded-full object-cover ring-1 ring-white/20 shadow-lg shadow-black/40"
             />
           ) : (
-            <div className="h-9 w-9 rounded-full border-0 bg-white/10 backdrop-blur-sm grid place-items-center text-xs font-black text-white">
+            <div className="h-10 w-10 rounded-full ring-1 ring-white/20 shadow-lg shadow-black/40 bg-zinc-800 grid place-items-center text-xs font-black text-white">
               {organizerInitial}
             </div>
           )}
@@ -74,7 +77,22 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
           <h3 className="text-white mb-1 text-2xl font-black uppercase leading-none tracking-tighter">
             {event.title}
           </h3>
-          <p className="text-sm font-bold text-zinc-300">{event.location || event.venue}</p>
+          <p className="text-sm font-bold text-zinc-300 mb-2">{event.location || event.venue}</p>
+
+          {(event.musicMatchScore != null && event.musicMatchScore > 0) || event.distanceKm != null ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {event.musicMatchScore != null && event.musicMatchScore > 0 ? (
+                <span className="inline-flex items-center rounded-full border border-pxi-purple/40 bg-pxi-purple/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-pxi-purple">
+                  ★ {event.musicMatchScore}% match
+                </span>
+              ) : null}
+              {event.distanceKm != null ? (
+                <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-zinc-300">
+                  {Math.round(event.distanceKm * 10) / 10} km
+                </span>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

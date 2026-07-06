@@ -84,6 +84,101 @@ const CITY_PRESETS = [
   'Atlanta',
 ];
 
+const CITY_ALIASES = {
+  'new york city': ['new york city', 'new york', 'nyc', 'manhattan', 'brooklyn', 'queens'],
+  miami: ['miami', 'miami fl'],
+  'los angeles': ['los angeles', 'los angeles ca', 'la', 'l a'],
+  'washington dc': [
+    'washington dc',
+    'washington d c',
+    'washington district columbia',
+    'washington district of columbia',
+    'district of columbia',
+    'district columbia',
+    'dc',
+    'd c',
+  ],
+  boston: ['boston', 'boston ma', 'cambridge', 'cambridge ma'],
+  atlanta: ['atlanta', 'atlanta ga'],
+};
+
+function normalizeCityText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function compactCityText(value) {
+  return normalizeCityText(value).replace(/\s+/g, '');
+}
+
+function cityAliases(city) {
+  const normalized = normalizeCityText(city);
+  return CITY_ALIASES[normalized] || [normalized];
+}
+
+function locationMatchesCity(location, city) {
+  if (!city || city === 'All') return true;
+
+  const normalizedLocation = normalizeCityText(location);
+  if (!normalizedLocation) return false;
+
+  const compactLocation = compactCityText(location);
+  const locationTokens = new Set(normalizedLocation.split(' ').filter(Boolean));
+
+  return cityAliases(city).some((alias) => {
+    const normalizedAlias = normalizeCityText(alias);
+    if (!normalizedAlias) return false;
+    if (normalizedLocation.includes(normalizedAlias)) return true;
+
+    const compactAlias = compactCityText(alias);
+    if (compactAlias.length > 2 && compactLocation.includes(compactAlias)) return true;
+
+    return compactAlias.length <= 2 && locationTokens.has(compactAlias);
+  });
+}
+
+function cityOptionMatchesQuery(city, query) {
+  const normalizedQuery = normalizeCityText(query);
+  if (!normalizedQuery) return true;
+  return cityAliases(city).some((alias) => normalizeCityText(alias).includes(normalizedQuery));
+}
+
+function EventCardSkeleton() {
+  return (
+    <div className="w-full max-w-[420px] mx-auto">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-zinc-900/80">
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-transparent" />
+        <div className="absolute left-4 top-4 h-9 w-9 rounded-full bg-white/10" />
+        <div className="absolute right-4 top-4 h-9 w-9 rounded-full bg-white/10" />
+        <div className="absolute inset-x-5 bottom-5 space-y-3">
+          <div className="h-3 w-20 rounded-full bg-white/15" />
+          <div className="h-8 w-4/5 rounded-xl bg-white/15" />
+          <div className="h-4 w-1/2 rounded-full bg-white/10" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EventsGridSkeleton({ count = 6 }) {
+  return (
+    <div
+      className="grid w-full justify-center gap-6 py-6 md:py-0"
+      style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}
+      aria-hidden="true"
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <EventCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
 export default function PublicEventsPage() {
   const { user } = useAuth();
   const isLoggedIn = !!user?.id;
@@ -97,7 +192,7 @@ export default function PublicEventsPage() {
   const [bgFadeIn, setBgFadeIn] = useState(true);
   const [activeTab, setActiveTab] = useState('featured');
 
-  const [trending, setTrending] = useState(TRENDING_OPTIONS[0].id); // All | Nearest | Largest
+  const [trending] = useState(TRENDING_OPTIONS[0].id); // All | Nearest | Largest
   const [timeFilter, setTimeFilter] = useState(TIME_OPTIONS[0].id); // All | Today | This week | This month
   const [cityFilter, setCityFilter] = useState(CITY_PRESETS[0]);
   const [cityQuery, setCityQuery] = useState('');
@@ -144,10 +239,10 @@ export default function PublicEventsPage() {
   const filteredSortedEvents = useMemo(() => {
     let list = [...events];
 
-    const q = searchQuery.trim().toLowerCase();
+    const q = normalizeCityText(searchQuery);
     if (q) {
       list = list.filter((e) => {
-        const hay = `${e.title ?? ''} ${e.venue ?? ''}`.toLowerCase();
+        const hay = normalizeCityText(`${e.title ?? ''} ${e.venue ?? ''} ${e.location ?? ''}`);
         return hay.includes(q);
       });
     }
@@ -193,8 +288,7 @@ export default function PublicEventsPage() {
     }
 
     if (cityFilter && cityFilter !== 'All') {
-      const cq = cityFilter.toLowerCase();
-      list = list.filter((e) => String(e.venue || '').toLowerCase().includes(cq));
+      list = list.filter((e) => locationMatchesCity(`${e.venue ?? ''} ${e.location ?? ''}`, cityFilter));
     }
 
     if (favoritesOnly) {
@@ -285,7 +379,6 @@ export default function PublicEventsPage() {
     return () => document.removeEventListener('pointerdown', onDocPointerDown);
   }, []);
 
-  const trendingLabel = TRENDING_OPTIONS.find((o) => o.id === trending)?.label ?? 'All';
   const timeLabel = TIME_OPTIONS.find((o) => o.id === timeFilter)?.label ?? 'All';
   const cityLabel = cityFilter || 'All';
 
@@ -343,7 +436,7 @@ export default function PublicEventsPage() {
                       />
                     </div>
                     <div className="max-h-64 overflow-auto">
-                      {CITY_PRESETS.filter((c) => c.toLowerCase().includes(cityQuery.trim().toLowerCase())).map((c) => (
+                      {CITY_PRESETS.filter((c) => cityOptionMatchesQuery(c, cityQuery)).map((c) => (
                         <button
                           key={c}
                           type="button"
@@ -358,7 +451,7 @@ export default function PublicEventsPage() {
                 ) : null}
               </div>
 
-              {!!user?.id ? (
+              {user?.id ? (
                 <>
                   <span className="h-5 w-px bg-white/10 mx-2" aria-hidden />
                   {/* Favorites heart */}
@@ -449,25 +542,40 @@ export default function PublicEventsPage() {
                 alt="Featured"
               />
             ) : (
-              <div className="w-full max-w-[300px] aspect-[3/4] rounded-3xl bg-zinc-900/50 border-0" />
+              <div className="relative w-full max-w-[300px] aspect-[3/4] overflow-hidden rounded-3xl bg-zinc-900/70 border-0">
+                <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-transparent" />
+              </div>
             )}
           </div>
 
           <div className="order-1 lg:order-2 space-y-6">
             <div className="space-y-2">
-              <h1 className="text-3xl font-black leading-tight tracking-tight md:text-5xl">
-                {featured?.title || (loading ? 'Loading…' : 'No events')}
-              </h1>
-              <p className="text-base font-medium text-neutral-400">
-                {featured?.venue || '—'}{featured?.startDate ? ` · ${formatHeroDate(featured.startDate)}` : ''}
-              </p>
+              {featured ? (
+                <>
+                  <h1 className="text-3xl font-black leading-tight tracking-tight md:text-5xl">
+                    {featured.title}
+                  </h1>
+                  <p className="text-base font-medium text-neutral-400">
+                    {featured.venue}{featured.startDate ? ` · ${formatHeroDate(featured.startDate)}` : ''}
+                  </p>
+                </>
+              ) : (
+                <div className="space-y-4" aria-hidden="true">
+                  <div className="h-12 w-[min(100%,520px)] animate-pulse rounded-2xl bg-white/10" />
+                  <div className="h-5 w-64 animate-pulse rounded-full bg-white/10" />
+                </div>
+              )}
             </div>
-            <Link
-              href={featured ? (featured.ticketType === 'PAID' ? `/events/${featured.id}/checkout` : `/events/${featured.id}`) : '/events'}
-              className="inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md px-7 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:scale-105 border-0"
-            >
-              {featured?.ticketType === 'PAID' ? 'Get tickets' : 'Join album'}
-            </Link>
+            {featured ? (
+              <Link
+                href={featured.ticketType === 'PAID' ? `/events/${featured.id}/checkout` : `/events/${featured.id}`}
+                className="inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md px-7 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:scale-105 border-0"
+              >
+                {featured.ticketType === 'PAID' ? 'Get tickets' : 'Join album'}
+              </Link>
+            ) : (
+              <div className="h-10 w-32 animate-pulse rounded-full bg-white/10" aria-hidden="true" />
+            )}
           </div>
         </div>
       </section>
@@ -506,7 +614,9 @@ export default function PublicEventsPage() {
 
         {/* Mobile Tab Views */}
         <div className="md:hidden">
-          {activeTab === 'featured' ? (
+          {loading && events.length === 0 ? (
+            <EventsGridSkeleton count={4} />
+          ) : activeTab === 'featured' ? (
             <div className="grid gap-6 w-full justify-center py-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
               {heroEvents.map((ev) => (
                 <div key={ev.id} className="w-full max-w-[420px] mx-auto">
@@ -538,7 +648,7 @@ export default function PublicEventsPage() {
         {/* Desktop Grid View */}
         <div className="hidden md:block">
           {loading && events.length === 0 ? (
-            <div className="text-neutral-400">Loading…</div>
+            <EventsGridSkeleton />
           ) : (
             <div className="grid gap-6 w-full justify-center" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
               {rest.map((ev) => (
@@ -558,4 +668,3 @@ export default function PublicEventsPage() {
     </div>
   );
 }
-

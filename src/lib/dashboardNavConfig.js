@@ -17,10 +17,13 @@ export const ADMIN_SIDEBAR_MODE_KEY = 'pxi_dashboard_admin_ui_mode';
 
 export const adminNavItems = [
   { key: 'admin-overview', label: 'Overview', path: '/dashboard/admin', icon: DashboardSquare01Icon, end: true },
+  { key: 'admin-analytics', label: 'Platform Analytics', path: '/dashboard/admin/analytics', icon: Activity01Icon, end: true },
+  { key: 'admin-support', label: 'Support Tickets', path: '/dashboard/admin/support', icon: Shield01Icon, end: true },
   { key: 'admin-users', label: 'User Management', path: '/dashboard/admin/users', icon: UserGroupIcon, end: true },
   { key: 'admin-events', label: 'Event Management', path: '/dashboard/admin/events', icon: Calendar01Icon, end: true },
   { key: 'admin-reports', label: 'Report Management', path: '/dashboard/admin/reports', icon: FlagIcon, end: true },
   { key: 'admin-ugc', label: 'UGC Moderation', path: '/dashboard/admin/ugc', icon: Notification03Icon, end: true },
+  { key: 'admin-promos', label: 'Promos & Credits', path: '/dashboard/admin/promos', icon: StarIcon, end: true },
 ];
 
 /**

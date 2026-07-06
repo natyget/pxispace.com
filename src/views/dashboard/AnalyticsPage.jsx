@@ -7,375 +7,255 @@ import {
     Area,
     AreaChart,
     CartesianGrid,
-    Cell,
-    Legend,
-    Pie,
-    PieChart,
     ResponsiveContainer,
     Tooltip,
     XAxis,
     YAxis,
 } from 'recharts';
 import SectionCard from '@/components/dashboard/SectionCard';
-import { TimeSeriesChartShell } from '@/components/dashboard/ChartFrame';
-import SpatialHeatMap from '@/components/dashboard/SpatialHeatMap';
+import { TimeSeriesChartShell, ChartSkeleton } from '@/components/dashboard/ChartFrame';
+import MetricCard, { StatRow } from '@/components/dashboard/MetricCard';
 import FunnelChart from '@/components/dashboard/FunnelChart';
-import { getSingleShadeDonutCellProps, getTimeSeriesProps } from '@/components/dashboard/chartStyles';
-import { buildAnalyticsMock, normalizeAnalyticsEvents } from '@/services/analyticsMock';
+import { getDashboardChartShade } from '@/components/dashboard/chartStyles';
 import { eventsService } from '@/services/events';
+import { organizerAnalyticsService } from '@/services/organizerAnalytics';
 import { useDashboardShellStore } from '@/lib/dashboardShellStore';
 import LiveScanDashboard from '@/views/dashboard/LiveScanDashboard';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-const FILTER_SHORTCUTS = [
-    { id: 'all', label: 'All' },
-    { id: 'week', label: 'Past week', days: 7 },
-    { id: 'month', label: 'Past month', days: 30 },
-    { id: 'year', label: 'Past year', days: 365 },
-];
 
 function formatNumber(value) {
     return Number(value || 0).toLocaleString('en-US');
 }
 
-function sameIdSet(left = [], right = []) {
-    if (left.length !== right.length) return false;
-    const rightSet = new Set(right);
-    return left.every((id) => rightSet.has(id));
+function formatMoney(cents = 0) {
+    return `$${(Math.max(0, Number(cents) || 0) / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 }
 
-function idsForShortcut(events, shortcut) {
-    if (shortcut.id === 'all') return events.map((event) => event.id);
-    const now = Date.now();
-    const minDate = now - shortcut.days * DAY_MS;
-    return events
-        .filter((event) => typeof event.dateMs === 'number' && event.dateMs >= minDate && event.dateMs <= now)
-        .map((event) => event.id);
+function formatEventDate(value) {
+    if (!value) return 'Date TBD';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Date TBD';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function HypeTooltip({ active, payload, label }) {
+/** 'YYYY-MM-DD' -> 'Jun 7' (parsed as UTC so day boundaries match the backend's UTC buckets). */
+function formatDayTick(value) {
+    if (!value) return '';
+    const [y, m, d] = String(value).split('-').map(Number);
+    if (!y || !m || !d) return '';
+    const date = new Date(Date.UTC(y, m - 1, d));
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+function tickInterval(length, maxTicks = 8) {
+    if (length <= maxTicks) return 0;
+    return Math.ceil(length / maxTicks) - 1;
+}
+
+function round1(value) {
+    return Math.round((Number(value) || 0) * 10) / 10;
+}
+
+function avgLast7(series = [], key = 'count') {
+    const last7 = series.slice(-7);
+    if (!last7.length) return 0;
+    return last7.reduce((sum, point) => sum + (Number(point[key]) || 0), 0) / last7.length;
+}
+
+function SalesTooltip({ active, payload, label }) {
     if (!active || !payload?.length) return null;
-    const point = payload[0].payload || {};
+    const point = payload[0]?.payload || {};
     return (
-        <div className="dashboard-glow-popover min-w-[220px] rounded-2xl bg-zinc-950 p-3.5 shadow-2xl">
-            <p className="text-[11px] font-semibold tracking-wide text-zinc-300">{label}</p>
-            <p className="mt-1 text-base font-black text-white">Hype {point.current}</p>
-            <p className="mt-1 text-xs font-semibold text-zinc-400">Previous period {point.previous}</p>
-            <p className="mt-1.5 text-xs text-zinc-200">
-                {formatNumber(point.reactions)} reactions · {formatNumber(point.scans)} scans · {formatNumber(point.posts)} posts
-            </p>
+        <div className="dashboard-glow-popover min-w-[180px] rounded-2xl bg-zinc-950 p-3.5 shadow-2xl">
+            <p className="text-[11px] font-semibold tracking-wide text-zinc-300">{formatDayTick(label)}</p>
+            <p className="mt-1 text-base font-black text-white">{formatNumber(point.count)} tickets</p>
+            {point.cumulative != null ? (
+                <p className="mt-1 text-xs font-semibold text-zinc-400">{formatNumber(point.cumulative)} cumulative</p>
+            ) : null}
         </div>
     );
 }
 
-function HypeActivityLayer({ points = [] }) {
-    const maxHype = Math.max(...points.map((point) => point.current || point.hype || 0), 1);
-    const pulses = points.flatMap((point, pointIndex) => {
-        const hype = point.current || point.hype || 0;
-        const density = hype >= maxHype - 3 ? 4 : hype >= 84 ? 3 : hype >= 72 ? 2 : 1;
-        const left = points.length > 1 ? 4 + (pointIndex / (points.length - 1)) * 92 : 50;
-        const top = 78 - (hype / 100) * 58;
-        return Array.from({ length: density }).map((_, pulseIndex) => {
-            const type = ['msg', 'flash', 'rxn', 'scan'][(pointIndex + pulseIndex) % 4];
-            return {
-                id: `${point.time}-${pulseIndex}`,
-                type,
-                left: Math.min(96, Math.max(4, left + (pulseIndex - density / 2) * 2.8)),
-                top: Math.min(86, Math.max(12, top + ((pulseIndex % 2) ? 5 : -4))),
-                delay: `${(pointIndex * 0.18 + pulseIndex * 0.34).toFixed(2)}s`,
-                duration: `${2.8 + (pulseIndex % 3) * 0.45}s`,
-                emphasis: hype >= maxHype - 3,
-            };
-        });
-    });
-
-    return (
-        <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-2xl">
-            {pulses.map((pulse) => (
-                <span
-                    key={pulse.id}
-                    className={`absolute inline-flex items-center justify-center rounded-full border text-[8px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(216,74,255,0.28)] animate-pulse ${
-                        pulse.type === 'flash'
-                            ? 'h-5 w-5 border-white/40 bg-white/10 text-white'
-                            : pulse.type === 'scan'
-                                ? 'h-7 w-7 border-cyan-300/35 bg-cyan-300/10 text-cyan-100'
-                                : pulse.type === 'rxn'
-                                    ? 'h-6 w-6 border-fuchsia-300/35 bg-fuchsia-400/10 text-fuchsia-100'
-                                    : 'h-7 min-w-9 border-pxi-purple/35 bg-pxi-purple/12 px-2 text-purple-100'
-                    }`}
-                    style={{
-                        left: `${pulse.left}%`,
-                        top: `${pulse.top}%`,
-                        animationDelay: pulse.delay,
-                        animationDuration: pulse.duration,
-                        opacity: pulse.emphasis ? 0.82 : 0.48,
-                    }}
-                >
-                    {pulse.type}
-                </span>
-            ))}
-        </div>
-    );
-}
-
-function HypeIndexChart({ series, isMobile, hasSelection, currentLabel, previousLabel }) {
-    const latest = series[series.length - 1] || { current: 0, previous: 0 };
-    const delta = latest.previous ? Math.round(((latest.current - latest.previous) / latest.previous) * 100) : 0;
-    const change = {
-        label: hasSelection ? `${delta >= 0 ? '+' : ''}${delta}%` : '-',
-        tone: delta >= 0 ? 'positive' : 'negative',
-    };
+/**
+ * Sales velocity: daily tickets sold (hero area chart, its own axis) with a compact
+ * cumulative-total strip beneath (its own axis) — two single-axis charts sharing an
+ * x-domain rather than one dual-axis chart, since cumulative and daily magnitudes
+ * differ by orders of magnitude.
+ */
+function SalesVelocityChart({ byDay, velocityPerDay7d, totalSold, isMobile }) {
+    const heroShade = getDashboardChartShade(0);
+    const cumulativeShade = getDashboardChartShade(3);
+    const interval = tickInterval(byDay.length, isMobile ? 5 : 9);
 
     return (
         <TimeSeriesChartShell
-            title="Hype Index"
-            subheading="Selected event energy compared across albums."
-            liveValue={hasSelection ? latest.current : '-'}
-            unit="index"
-            change={change}
-            chartClassName="relative h-[320px] md:h-[390px]"
+            title="Sales Velocity"
+            subheading="Tickets sold per day, with the running total tracked beneath."
+            liveValue={formatNumber(round1(velocityPerDay7d))}
+            unit="tickets/day (7d avg)"
+            change={{ label: `${formatNumber(totalSold)} sold total`, tone: 'neutral' }}
+            chartClassName="relative h-[300px] md:h-[360px]"
         >
-            <div className="relative h-full">
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={series} margin={{ top: 18, right: 14, left: isMobile ? -14 : 4, bottom: 8 }}>
-                        <defs>
-                            <linearGradient id="analyticsHypeGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#f4f4f5" stopOpacity={0.32} />
-                                <stop offset="100%" stopColor="#18181b" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 8" vertical={false} />
-                        <XAxis
-                            dataKey="time"
-                            stroke="rgba(255,255,255,0.24)"
-                            tick={{ fill: 'rgba(255,255,255,0.72)', fontSize: isMobile ? 10 : 11 }}
-                            interval={isMobile ? 2 : 0}
-                            label={{ value: 'Time', position: 'insideBottom', offset: -4, fill: 'rgba(255,255,255,0.48)', fontSize: 11 }}
-                        />
-                        <YAxis
-                            domain={[0, 100]}
-                            stroke="rgba(255,255,255,0.24)"
-                            tick={{ fill: 'rgba(255,255,255,0.68)', fontSize: isMobile ? 10 : 11 }}
-                            width={isMobile ? 34 : 48}
-                            label={{ value: 'Hype index', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
-                        />
-                        <Tooltip content={<HypeTooltip />} />
-                        <Legend
-                            verticalAlign="top"
-                            align="right"
-                            iconType="circle"
-                            wrapperStyle={{ fontSize: 11, color: '#d4d4d8', paddingBottom: 8 }}
-                        />
-                        <Area
-                            type="monotone"
-                            {...getTimeSeriesProps('previous')}
-                            name={previousLabel}
-                            strokeWidth={1.8}
-                            dot={false}
-                            activeDot={false}
-                            isAnimationActive={false}
-                        />
-                        <Area
-                            type="monotone"
-                            {...getTimeSeriesProps('current')}
-                            name={currentLabel}
-                            fill="url(#analyticsHypeGradient)"
-                            strokeWidth={2.6}
-                            dot={false}
-                            activeDot={{ r: 5, fill: '#ffffff', stroke: '#09090b' }}
-                            isAnimationActive={false}
-                        />
-                        <Area
-                            type="monotone"
-                            dataKey="scanIndex"
-                            name="Scan activity"
-                            stroke="rgba(255,255,255,0.36)"
-                            fill="rgba(255,255,255,0.055)"
-                            strokeWidth={1.4}
-                            dot={false}
-                            activeDot={false}
-                            isAnimationActive={false}
-                        />
-                    </AreaChart>
-                </ResponsiveContainer>
+            <div className="flex h-full flex-col gap-2">
+                <div className="min-h-0 flex-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={byDay} margin={{ top: 14, right: 12, left: isMobile ? -18 : 0, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="salesVelocityGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor={heroShade} stopOpacity={0.34} />
+                                    <stop offset="100%" stopColor={heroShade} stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 8" vertical={false} />
+                            <XAxis
+                                dataKey="date"
+                                stroke="rgba(255,255,255,0.24)"
+                                tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 9 : 10 }}
+                                tickFormatter={formatDayTick}
+                                interval={interval}
+                            />
+                            <YAxis
+                                stroke="rgba(255,255,255,0.24)"
+                                tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 10 }}
+                                width={isMobile ? 28 : 36}
+                                allowDecimals={false}
+                            />
+                            <Tooltip content={<SalesTooltip />} />
+                            <Area
+                                type="monotone"
+                                dataKey="count"
+                                name="Tickets/day"
+                                stroke={heroShade}
+                                fill="url(#salesVelocityGradient)"
+                                strokeWidth={2.2}
+                                dot={false}
+                                activeDot={{ r: 4, fill: '#ffffff', stroke: '#09090b' }}
+                                isAnimationActive={false}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+                <div className="h-16 shrink-0 border-t border-white/[0.06] pt-2">
+                    <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-white/35">Cumulative</p>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={byDay} margin={{ top: 0, right: 12, left: isMobile ? -18 : 0, bottom: 0 }}>
+                            <Tooltip content={<SalesTooltip />} />
+                            <Area
+                                type="monotone"
+                                dataKey="cumulative"
+                                name="Cumulative tickets"
+                                stroke={cumulativeShade}
+                                fill={cumulativeShade}
+                                fillOpacity={0.14}
+                                strokeWidth={1.6}
+                                dot={false}
+                                isAnimationActive={false}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
         </TimeSeriesChartShell>
     );
 }
 
-function EventFilterBar({ events, selectedEventIds, onChange, loading, spatialNote }) {
-    const allIds = events.map((event) => event.id);
-    const allSelected = selectedEventIds.length > 0 && selectedEventIds.length === allIds.length;
-    const activeShortcutId = [...FILTER_SHORTCUTS]
-        .reverse()
-        .find((shortcut) => selectedEventIds.length > 0 && sameIdSet(idsForShortcut(events, shortcut), selectedEventIds))?.id;
-
-    const toggleEvent = (eventId) => {
-        onChange((current) => {
-            if (current.includes(eventId)) {
-                return current.filter((id) => id !== eventId);
-            }
-            return [...current, eventId];
-        });
-    };
-
-    const applyShortcut = (shortcut) => {
-        const nextIds = idsForShortcut(events, shortcut);
-        if (nextIds.length) onChange(nextIds);
-    };
-
+function EventPicker({ events, selectedEventId, onSelect, loading }) {
     return (
         <div className="glass-panel rounded-2xl p-4">
-            <div className="flex flex-wrap items-center gap-2 pb-3 shadow-[inset_0_-1px_0_rgba(255,255,255,0.035)]">
-                {FILTER_SHORTCUTS.map((shortcut) => {
-                    const ids = idsForShortcut(events, shortcut);
-                    const disabled = !ids.length;
-                    const active = shortcut.id === 'all' ? allSelected : activeShortcutId === shortcut.id;
-                    return (
-                        <button
-                            key={shortcut.id}
-                            type="button"
-                            onClick={() => applyShortcut(shortcut)}
-                            disabled={disabled}
-                            aria-pressed={active}
-                            className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition ${
-                                active ? 'bg-white text-black' : 'glow-chip text-zinc-300 hover:text-white'
-                            } ${disabled ? 'cursor-not-allowed opacity-35' : ''}`}
-                            title={disabled ? 'No events in this range' : undefined}
-                        >
-                            {shortcut.label}
-                        </button>
-                    );
-                })}
-                {loading ? <span className="px-2 text-xs font-semibold text-zinc-500">Syncing events</span> : null}
-                <button
-                    type="button"
-                    onClick={() => onChange([])}
-                    className="pill-ghost px-4 py-2 text-xs font-black uppercase tracking-widest"
-                >
-                    Clear
-                </button>
+            <div className="flex items-center justify-between gap-2 pb-3">
+                <p className="text-xs font-bold uppercase tracking-widest text-white/40">Drill into an event</p>
+                {loading ? <span className="text-xs font-semibold text-zinc-500">Syncing events</span> : null}
             </div>
-
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-                {events.map((event) => {
-                    const selected = selectedEventIds.includes(event.id);
-                    return (
-                        <button
-                            key={event.id}
-                            type="button"
-                            onClick={() => toggleEvent(event.id)}
-                            aria-pressed={selected}
-                            className={`rounded-2xl px-4 py-3 text-left text-xs font-bold transition ${
-                                selected ? 'pill-solid' : 'pill-ghost text-zinc-400 hover:text-white'
-                            }`}
-                        >
-                            <span className="block">{event.name}</span>
-                            <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500">
-                                <span>{event.dateLabel}</span>
-                                <span className="rounded-full bg-white/[0.07] px-2 py-0.5 text-zinc-300">{event.venue}</span>
-                            </span>
-                        </button>
-                    );
-                })}
-            </div>
-
-            <p className="mt-3 text-xs font-semibold text-zinc-500">
-                {selectedEventIds.length === 0 ? '- selected.' : selectedEventIds.length === 1 ? 'Single-event mode.' : `${selectedEventIds.length} events selected.`}
-                {spatialNote ? ` ${spatialNote}` : ''}
-            </p>
-        </div>
-    );
-}
-
-function AudienceComposition({ composition, insights, isMobile }) {
-    const [activeIndex, setActiveIndex] = useState(null);
-    const total = composition.reduce((sum, segment) => sum + segment.value, 0);
-
-    return (
-        <div className="space-y-5">
-            <div className="glow-surface-soft rounded-2xl p-4">
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(260px,0.9fr)_minmax(220px,0.65fr)] lg:items-center">
-                    <div className="h-[320px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={composition}
-                                    dataKey="value"
-                                    nameKey="name"
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={isMobile ? 66 : 88}
-                                    outerRadius={isMobile ? 112 : 138}
-                                    cornerRadius={12}
-                                    paddingAngle={2}
-                                    isAnimationActive={false}
-                                    onMouseEnter={(_, index) => setActiveIndex(index)}
-                                    onMouseLeave={() => setActiveIndex(null)}
-                                >
-                                    {composition.map((segment, index) => (
-                                        <Cell key={segment.name} {...getSingleShadeDonutCellProps(index)} />
-                                    ))}
-                                </Pie>
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                    <div className="space-y-3" onMouseLeave={() => setActiveIndex(null)}>
-                        {composition.map((segment, index) => {
-                            const active = activeIndex === index;
-                            const percent = total ? Math.round((segment.value / total) * 100) : 0;
-                            return (
-                                <button
-                                    key={segment.name}
-                                    type="button"
-                                    onMouseEnter={() => setActiveIndex(index)}
-                                    onFocus={() => setActiveIndex(index)}
-                                    className="flex w-full items-center justify-between gap-4 rounded-xl px-1 py-2 text-left"
-                                >
-                                    <span className={`text-sm font-black transition ${active ? 'text-white' : 'text-zinc-300'}`}>{segment.name}</span>
-                                    <span className={`text-xs font-bold transition ${active ? 'text-white' : 'text-zinc-500'}`}>
-                                        {formatNumber(segment.value)} · {percent}%
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </div>
+            {events.length === 0 && !loading ? (
+                <p className="text-sm text-zinc-400">Create an event to see its analytics here.</p>
+            ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                    {events.map((event) => {
+                        const selected = event.id === selectedEventId;
+                        return (
+                            <button
+                                key={event.id}
+                                type="button"
+                                onClick={() => onSelect(event.id)}
+                                aria-pressed={selected}
+                                className={`rounded-2xl px-4 py-3 text-left text-xs font-bold transition ${
+                                    selected ? 'pill-solid' : 'pill-ghost text-zinc-400 hover:text-white'
+                                }`}
+                            >
+                                <span className="block">{event.name}</span>
+                                <span className="mt-1 block text-[10px] uppercase tracking-widest text-zinc-500">{event.dateLabel}</span>
+                            </button>
+                        );
+                    })}
                 </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-                {insights.map((insight) => (
-                    <div key={insight.name} className="glow-surface-soft rounded-2xl p-4">
-                        <p className="text-sm font-black text-white">{insight.name}</p>
-                        <p className="mt-2 min-h-12 text-sm leading-5 text-zinc-400">{insight.insight}</p>
-                        <Link href={insight.href} className="mt-4 inline-flex rounded-full bg-white/[0.08] px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white hover:text-black">
-                            {insight.cta}
-                        </Link>
-                    </div>
-                ))}
-            </div>
+            )}
         </div>
     );
 }
 
-function TopMoments({ moments }) {
+function TopUploadersList({ uploaders = [] }) {
+    if (!uploaders.length) {
+        return <div className="glow-surface-soft rounded-2xl p-4 text-sm text-zinc-400">No uploads yet.</div>;
+    }
     return (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {moments.map((moment) => (
-                <a key={moment.id} href={moment.href} className="glow-interactive glow-surface-soft block overflow-hidden rounded-2xl" aria-label={`Open ${moment.title} moment`}>
-                    <img src={moment.image} alt="" className="aspect-square w-full object-cover" />
-                    <div className="p-4">
-                        <p className="text-base font-black text-white">{moment.title}</p>
-                        <p className="mt-1 text-sm text-zinc-400">{moment.cluster}</p>
-                        <div className="mt-4 flex items-center justify-between gap-3">
-                            <span className="text-xs font-bold text-zinc-500">{moment.eventName}</span>
-                            <span className="rounded-full bg-white/[0.08] px-3 py-1 text-xs font-black text-white">
-                                {formatNumber(moment.reactions)} reactions
-                            </span>
-                        </div>
+        <div className="space-y-2">
+            <p className="px-1 text-[10px] font-black uppercase tracking-widest text-white/35">Top uploaders</p>
+            {uploaders.map((uploader) => (
+                <div key={uploader.userId} className="glass-field flex items-center gap-3 rounded-2xl p-3">
+                    {uploader.avatarUrl ? (
+                        <img src={uploader.avatarUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+                    ) : (
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-xs font-black text-white">
+                            {(uploader.name || uploader.username || '?').slice(0, 1).toUpperCase()}
+                        </span>
+                    )}
+                    <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-white">{uploader.name || uploader.username || 'Guest'}</p>
+                        {uploader.username ? <p className="truncate text-xs text-zinc-500">@{uploader.username}</p> : null}
                     </div>
-                </a>
+                    <span className="shrink-0 text-xs font-black text-zinc-300">{formatNumber(uploader.count)}</span>
+                </div>
             ))}
+        </div>
+    );
+}
+
+/** Non-map list rendering of the per-event DBSCAN photo-location clusters. */
+function LocationClustersCard({ clusters = [], noise = 0, totalGeotagged = 0 }) {
+    if (!totalGeotagged) {
+        return (
+            <div className="glow-surface-soft rounded-2xl p-6 text-sm text-zinc-400">
+                No geotagged photos yet for this event.
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-3">
+            {clusters.length === 0 ? (
+                <div className="glow-surface-soft rounded-2xl p-4 text-sm text-zinc-400">
+                    No hotspots detected yet — photos are too spread out to cluster.
+                </div>
+            ) : (
+                clusters.map((cluster, index) => (
+                    <div
+                        key={`${cluster.centroidLat}-${cluster.centroidLng}-${index}`}
+                        className="glass-field flex items-center justify-between gap-4 rounded-2xl p-4"
+                    >
+                        <div className="min-w-0">
+                            <p className="text-sm font-black text-white">Cluster of {formatNumber(cluster.count)} photos</p>
+                            <p className="mt-1 text-xs font-semibold text-zinc-500">~{formatNumber(cluster.radiusM)} m radius</p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-white/[0.07] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-zinc-300">
+                            Hotspot {index + 1}
+                        </span>
+                    </div>
+                ))
+            )}
+            {noise > 0 ? (
+                <p className="px-1 text-xs font-semibold text-zinc-500">
+                    {formatNumber(noise)} photo{noise === 1 ? '' : 's'} outside hotspots
+                </p>
+            ) : null}
         </div>
     );
 }
@@ -386,21 +266,27 @@ function AnalyticsPageContent() {
     const isLiveEvent = useDashboardShellStore((store) => store.isLiveEvent);
 
     const [events, setEvents] = useState([]);
-    const [selectedEventIds, setSelectedEventIds] = useState([]);
+    const [eventsLoading, setEventsLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
-    const [loading, setLoading] = useState(true);
+
+    const [overview, setOverview] = useState(null);
+    const [overviewLoading, setOverviewLoading] = useState(true);
+
+    const [selectedEventId, setSelectedEventId] = useState(null);
+    const [eventDetail, setEventDetail] = useState(null);
+    const [eventDetailLoading, setEventDetailLoading] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
         (async () => {
-            setLoading(true);
+            setEventsLoading(true);
             try {
                 const res = await eventsService.getMyEvents({ limit: 100, offset: 0 });
                 if (!cancelled) setEvents(res?.events || []);
             } catch {
                 if (!cancelled) setEvents([]);
             } finally {
-                if (!cancelled) setLoading(false);
+                if (!cancelled) setEventsLoading(false);
             }
         })();
         return () => { cancelled = true; };
@@ -415,40 +301,77 @@ function AnalyticsPageContent() {
         return () => mq.removeEventListener('change', onChange);
     }, []);
 
-    const eventOptions = useMemo(() => normalizeAnalyticsEvents(events), [events]);
+    useEffect(() => {
+        let cancelled = false;
+        setOverviewLoading(true);
+        organizerAnalyticsService
+            .getOverview()
+            .then((res) => { if (!cancelled) setOverview(res); })
+            .catch(() => { if (!cancelled) setOverview(null); })
+            .finally(() => { if (!cancelled) setOverviewLoading(false); });
+        return () => { cancelled = true; };
+    }, []);
+
+    const eventOptions = useMemo(
+        () => events.map((event) => ({
+            id: event.id,
+            name: event.name || 'Untitled event',
+            dateLabel: formatEventDate(event.startDate),
+        })),
+        [events]
+    );
 
     useEffect(() => {
-        if (!eventOptions.length) return;
-        setSelectedEventIds((current) => {
-            const validIds = new Set(eventOptions.map((event) => event.id));
-            return current.filter((id) => validIds.has(id));
-        });
-    }, [eventOptions]);
+        if (eventsLoading || selectedEventId || !eventOptions.length) return;
+        setSelectedEventId(eventOptions[0].id);
+    }, [eventOptions, eventsLoading, selectedEventId]);
 
-    const analytics = useMemo(
-        () => buildAnalyticsMock(eventOptions, selectedEventIds),
-        [eventOptions, selectedEventIds]
-    );
-    const hasSelection = selectedEventIds.length > 0;
-    const currentLabel = analytics.selectedEvents.length === 1
-        ? analytics.selectedEvents[0].name
-        : analytics.selectedEvents.length > 1
-            ? `${analytics.selectedEvents[0].name} + ${analytics.selectedEvents.length - 1}`
-            : 'Selected albums';
-    const previousLabel = analytics.selectedEvents.length === 1 ? 'Prior album' : 'Comparison baseline';
+    useEffect(() => {
+        if (!selectedEventId) {
+            setEventDetail(null);
+            return undefined;
+        }
+        let cancelled = false;
+        setEventDetailLoading(true);
+        organizerAnalyticsService
+            .getEventAnalytics(selectedEventId)
+            .then((res) => { if (!cancelled) setEventDetail(res); })
+            .catch(() => { if (!cancelled) setEventDetail(null); })
+            .finally(() => { if (!cancelled) setEventDetailLoading(false); });
+        return () => { cancelled = true; };
+    }, [selectedEventId]);
 
-    const spatialVenues = useMemo(
-        () => Array.from(new Set(analytics.selectedEvents.map((event) => event.venue).filter(Boolean))),
-        [analytics.selectedEvents]
-    );
-    const spatialDisabledReason = spatialVenues.length > 1
-        ? `Mixed venue selection: ${spatialVenues.join(', ')}. Spatial intelligence is enabled only when every selected event shares the same venue.`
-        : '';
-    const spatialNote = spatialDisabledReason
-        ? 'Spatial intel disabled for mixed venues.'
-        : analytics.selectedEvents.length > 1
-            ? `Spatial intel compares ${analytics.selectedEvents.length} same-venue events.`
-            : 'Spatial intel in single-event mode.';
+    const totals = overview?.totals;
+    const last30d = overview?.last30d;
+    const overviewVelocity7d = useMemo(() => avgLast7(last30d?.ticketsByDay || [], 'count'), [last30d]);
+
+    const funnelData = useMemo(() => {
+        if (!eventDetail) return [];
+        const id = eventDetail.event.id;
+        return [
+            {
+                stage: 'Sold',
+                value: eventDetail.funnel.sold,
+                cta: 'View event',
+                href: `/dashboard/events/${id}`,
+                suggestions: ['Every ticket sold for this event, paid and free.'],
+            },
+            {
+                stage: 'Scanned',
+                value: eventDetail.funnel.scanned,
+                cta: 'View attendees',
+                href: `/dashboard/events/${id}/members`,
+                suggestions: ['Attendees whose ticket was scanned at the door.'],
+            },
+            {
+                stage: 'Posted media',
+                value: eventDetail.funnel.postedMedia,
+                cta: 'View gallery',
+                href: `/dashboard/events/${id}/upload`,
+                suggestions: ['Distinct attendees who posted at least one photo or video.'],
+            },
+        ];
+    }, [eventDetail]);
 
     if (viewMode === 'live-ops') {
         return <LiveScanDashboard isLiveEvent={isLiveEvent} />;
@@ -469,46 +392,108 @@ function AnalyticsPageContent() {
                 ) : null}
             </header>
 
-            <EventFilterBar
-                events={eventOptions}
-                selectedEventIds={selectedEventIds}
-                onChange={setSelectedEventIds}
-                loading={loading}
-                spatialNote={spatialNote}
-            />
-
-            <HypeIndexChart
-                series={analytics.hypeSeries}
-                isMobile={isMobile}
-                hasSelection={hasSelection}
-                currentLabel={currentLabel}
-                previousLabel={previousLabel}
-            />
-
-            <SectionCard title="Spatial Intelligence">
-                <SpatialHeatMap
-                    rooms={analytics.spatial.rooms}
-                    timeSlices={analytics.spatial.timeSlices}
-                    eventComparisons={analytics.spatial.eventComparisons}
-                    disabledReason={spatialDisabledReason}
-                />
+            <SectionCard title="Organizer Overview">
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    <MetricCard title="Events" value={formatNumber(totals?.events)} loading={overviewLoading} description="Owned events" />
+                    <MetricCard
+                        title="Tickets sold"
+                        value={formatNumber(totals?.ticketsSold)}
+                        loading={overviewLoading}
+                        description="Last 30 days"
+                        sparkline={{ points: (last30d?.ticketsByDay || []).map((d) => d.count) }}
+                    />
+                    <MetricCard title="Tickets scanned" value={formatNumber(totals?.ticketsScanned)} loading={overviewLoading} description="Checked in at the door" />
+                    <MetricCard title="Attendees" value={formatNumber(totals?.attendees)} loading={overviewLoading} description="Distinct ticket holders" />
+                    <MetricCard
+                        title="Gross revenue"
+                        value={formatMoney(totals?.grossCents)}
+                        loading={overviewLoading}
+                        description="Last 30 days"
+                        sparkline={{ points: (last30d?.revenueByDay || []).map((d) => d.grossCents) }}
+                    />
+                    <MetricCard title="Net revenue" value={formatMoney(totals?.netCents)} loading={overviewLoading} description="After platform fees" />
+                    <MetricCard
+                        title="Media uploads"
+                        value={formatNumber(totals?.mediaCount)}
+                        loading={overviewLoading}
+                        description="Last 30 days"
+                        sparkline={{ points: (last30d?.mediaByDay || []).map((d) => d.count) }}
+                    />
+                    <MetricCard
+                        title="Sales velocity"
+                        value={`${formatNumber(round1(overviewVelocity7d))}/day`}
+                        loading={overviewLoading}
+                        description="7-day avg, all events"
+                    />
+                </div>
             </SectionCard>
 
-            <SectionCard title="Audience Composition">
-                <AudienceComposition
-                    composition={analytics.audience.composition}
-                    insights={analytics.audience.insights}
-                    isMobile={isMobile}
-                />
-            </SectionCard>
+            <EventPicker events={eventOptions} selectedEventId={selectedEventId} onSelect={setSelectedEventId} loading={eventsLoading} />
 
-            <SectionCard title="Attendee Lifecycle">
-                <FunnelChart data={analytics.funnel} singleSelection={analytics.selectedEvents.length <= 1} />
-            </SectionCard>
+            {!selectedEventId ? (
+                <div className="glow-surface-soft rounded-2xl p-6 text-sm text-zinc-400">Select an event above to see its full analytics.</div>
+            ) : eventDetailLoading || !eventDetail ? (
+                <div className="space-y-4">
+                    <ChartSkeleton className="h-[300px] md:h-[360px]" />
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        {[0, 1, 2].map((item) => (
+                            <div key={item} className="h-28 rounded-2xl bg-white/[0.035] animate-pulse" />
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <>
+                    <SalesVelocityChart
+                        byDay={eventDetail.sales.byDay}
+                        velocityPerDay7d={eventDetail.sales.velocityPerDay7d}
+                        totalSold={eventDetail.sales.total}
+                        isMobile={isMobile}
+                    />
 
-            <SectionCard title="Top Moments">
-                <TopMoments moments={analytics.moments} />
-            </SectionCard>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <MetricCard
+                            title="Gross revenue"
+                            value={formatMoney(eventDetail.sales.revenue.grossCents)}
+                            sparkline={{ points: eventDetail.sales.revenue.byDay.map((d) => d.grossCents) }}
+                        />
+                        <MetricCard title="Net revenue" value={formatMoney(eventDetail.sales.revenue.netCents)} description="After platform fees" />
+                        <MetricCard
+                            title="Scan rate"
+                            value={`${Math.round((eventDetail.attendance.scanRate || 0) * 100)}%`}
+                            description={`${formatNumber(eventDetail.attendance.scanned)} of ${formatNumber(eventDetail.attendance.sold)} scanned`}
+                            sparkline={{ points: eventDetail.attendance.scansByHour.map((d) => d.count) }}
+                        />
+                    </div>
+
+                    <SectionCard title="Media">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="space-y-4">
+                                <MetricCard
+                                    title="Media uploads"
+                                    value={formatNumber(eventDetail.media.count)}
+                                    sparkline={{ points: eventDetail.media.byHour.map((d) => d.count) }}
+                                />
+                                <StatRow
+                                    items={[
+                                        { label: 'Reactions', value: formatNumber(eventDetail.media.reactions) },
+                                        { label: 'Comments', value: formatNumber(eventDetail.media.comments) },
+                                        { label: 'Face tags', value: formatNumber(eventDetail.media.faceTags) },
+                                    ]}
+                                />
+                            </div>
+                            <TopUploadersList uploaders={eventDetail.media.topUploaders} />
+                        </div>
+                    </SectionCard>
+
+                    <SectionCard title="Attendee Funnel">
+                        <FunnelChart data={funnelData} singleSelection />
+                    </SectionCard>
+
+                    <SectionCard title="Where the night happened">
+                        <LocationClustersCard {...eventDetail.locationClusters} />
+                    </SectionCard>
+                </>
+            )}
         </div>
     );
 }

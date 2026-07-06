@@ -127,7 +127,9 @@ function BarcodeSignatureIcon({ color, x, y }) {
 }
 
 /** Passport stamp artwork — 12 level-based templates (passport-stamp-studio). */
-export function StampShapeGraphic({ shape, color, name, date, city, role }) {
+export function StampShapeGraphic({ shape, color, textColor, name, date, city, role }) {
+    const ink = textColor || color;
+
     switch (shape) {
         case 'square-border': {
             const lines = buildStampFieldLines(date, name, city, role);
@@ -137,7 +139,7 @@ export function StampShapeGraphic({ shape, color, name, date, city, role }) {
                 <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none">
                     <g>
                         <rect x={x} y={y} width={w} height={h} stroke={color} strokeWidth={SQUARE_BORDER_STROKE} fill="none" />
-                        <StampFieldLines cx={50} lines={lines} color={color} yStart={32} lineGap={gap} />
+                        <StampFieldLines cx={50} lines={lines} color={ink} yStart={32} lineGap={gap} />
                     </g>
                 </svg>
             );
@@ -152,7 +154,7 @@ export function StampShapeGraphic({ shape, color, name, date, city, role }) {
                     <g>
                         <circle cx={cx} cy={cy} r={rOuter} stroke={color} strokeWidth="3" fill="none" />
                         <circle cx={cx} cy={cy} r={rInner} stroke={color} strokeWidth="1" strokeDasharray="3 2" />
-                        <StampFieldLines cx={cx} lines={lines} color={color} yStart={CIRCLE_MEMBER_TEXT_START} lineGap={gap} />
+                        <StampFieldLines cx={cx} lines={lines} color={ink} yStart={CIRCLE_MEMBER_TEXT_START} lineGap={gap} />
                     </g>
                 </svg>
             );
@@ -165,7 +167,7 @@ export function StampShapeGraphic({ shape, color, name, date, city, role }) {
                     <g>
                         <path d="M50 5 L95 50 L50 95 L5 50 Z" stroke={color} strokeWidth="3" fill="none" />
                         <path d="M50 12 L88 50 L50 88 L12 50 Z" stroke={color} strokeWidth="1" />
-                        <StampFieldAt cx={50} lines={lines} color={color} />
+                        <StampFieldAt cx={50} lines={lines} color={ink} />
                     </g>
                 </svg>
             );
@@ -179,7 +181,7 @@ export function StampShapeGraphic({ shape, color, name, date, city, role }) {
                     <g>
                         <path d="M50 5 L89 27.5 V72.5 L50 95 L11 72.5 V27.5 L50 5Z" stroke={color} strokeWidth="2.5" fill="none" />
                         <path d="M50 12 L83 30 V70 L50 88 L17 70 V30 L50 12Z" stroke={color} strokeWidth="1" strokeDasharray="2 2" />
-                        <StampFieldLines cx={50} lines={lines} color={color} yStart={36} lineGap={gap} />
+                        <StampFieldLines cx={50} lines={lines} color={ink} yStart={36} lineGap={gap} />
                     </g>
                 </svg>
             );
@@ -192,7 +194,7 @@ export function StampShapeGraphic({ shape, color, name, date, city, role }) {
                     <g>
                         <ellipse cx="50" cy="30" rx="48" ry="28" stroke={color} strokeWidth="3" fill="none" />
                         <ellipse cx="50" cy="30" rx="44" ry="24" stroke={color} strokeWidth="1" />
-                        <StampFieldAt cx={50} lines={lines} color={color} />
+                        <StampFieldAt cx={50} lines={lines} color={ink} />
                     </g>
                 </svg>
             );
@@ -206,7 +208,7 @@ export function StampShapeGraphic({ shape, color, name, date, city, role }) {
                     <g>
                         <path d={ARCH_GATE_OUTER_PATH} stroke={color} strokeWidth="3" fill="none" />
                         <path d={ARCH_GATE_INNER_PATH} stroke={color} strokeWidth="1" fill="none" />
-                        <StampFieldLines cx={50} lines={lines} color={color} yStart={58} lineGap={gap} />
+                        <StampFieldLines cx={50} lines={lines} color={ink} yStart={58} lineGap={gap} />
                     </g>
                 </svg>
             );
@@ -221,7 +223,7 @@ export function StampShapeGraphic({ shape, color, name, date, city, role }) {
                     <g>
                         <path d={STAR_BURST_PATH} stroke={color} strokeWidth="2" fill="none" strokeLinejoin="round" />
                         <circle cx={cx} cy={cy} r={r} stroke={color} strokeWidth="1" strokeDasharray="2 2" />
-                        <StampFieldLines cx={50} lines={lines} color={color} yStart={36} lineGap={gap} />
+                        <StampFieldLines cx={50} lines={lines} color={ink} yStart={36} lineGap={gap} />
                     </g>
                 </svg>
             );
@@ -235,7 +237,7 @@ export function StampShapeGraphic({ shape, color, name, date, city, role }) {
                     <g>
                         <path d="M10 8 H90 V58 C90 88 50 112 50 112 C50 112 10 88 10 58 Z" stroke={color} strokeWidth="3" fill="none" />
                         <path d="M16 14 H84 V56 C84 82 50 102 50 102 C50 102 16 82 16 56 Z" stroke={color} strokeWidth="1" />
-                        <StampFieldLines cx={50} lines={lines} color={color} yStart={48} lineGap={gap} />
+                        <StampFieldLines cx={50} lines={lines} color={ink} yStart={48} lineGap={gap} />
                     </g>
                 </svg>
             );
@@ -250,11 +252,11 @@ export function StampShapeGraphic({ shape, color, name, date, city, role }) {
                         <StampFieldLinesLeft
                             x={VISA_STICKER_PAD_X}
                             lines={lines}
-                            color={color}
+                            color={ink}
                             yStart={14}
                             lineGap={VISA_STICKER_LINE_GAP}
                         />
-                        <VisaQrIcon color={color} />
+                        <VisaQrIcon color={ink} />
                     </g>
                 </svg>
             );
@@ -276,12 +278,12 @@ export function StampShapeGraphic({ shape, color, name, date, city, role }) {
                             stroke={color}
                             strokeWidth="1.5"
                         />
-                        <BarcodeSignatureIcon color={color} x={topLeft.x} y={topLeft.y} />
-                        <BarcodeSignatureIcon color={color} x={bottomRight.x} y={bottomRight.y} />
+                        <BarcodeSignatureIcon color={ink} x={topLeft.x} y={topLeft.y} />
+                        <BarcodeSignatureIcon color={ink} x={bottomRight.x} y={bottomRight.y} />
                         <StampFieldLines
                             cx={50}
                             lines={lines}
-                            color={color}
+                            color={ink}
                             yStart={BARCODE_LABEL_TEXT_START}
                             lineGap={BARCODE_LABEL_LINE_GAP}
                         />
@@ -319,7 +321,7 @@ export function StampShapeGraphic({ shape, color, name, date, city, role }) {
                     <g>
                         <rect x="1" y="1" width="98" height="54" rx="3" fill="url(#holoGrad)" stroke={color} strokeWidth="1.5" />
                         <rect x="4" y="4" width="92" height="48" rx="2" fill="rgba(255,255,255,0.55)" stroke={color} strokeWidth="0.5" opacity="0.6" />
-                        <StampFieldLines cx={50} lines={lines} color={color} yStart={12} lineGap={HOLOGRAM_TICKET_LINE_GAP} />
+                        <StampFieldLines cx={50} lines={lines} color={ink} yStart={12} lineGap={HOLOGRAM_TICKET_LINE_GAP} />
                     </g>
                 </svg>
             );

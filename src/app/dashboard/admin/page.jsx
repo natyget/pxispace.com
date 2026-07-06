@@ -108,6 +108,15 @@ export default function AdminOverviewPage() {
                             { label: 'Accepted (resolved)', value: resolvedStats.reports.accepted },
                         ]}
                     />
+                    {resolvedStats.support || resolvedStats.promos ? (
+                        <StatBlock
+                            title="Operations"
+                            rows={[
+                                { label: 'Open support tickets', value: resolvedStats.support?.open ?? 0 },
+                                { label: 'Active promo codes', value: resolvedStats.promos?.active ?? 0 },
+                            ]}
+                        />
+                    ) : null}
                 </div>
             )}
         </div>

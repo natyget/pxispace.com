@@ -85,7 +85,7 @@ export default function HeroEditorial() {
           transition={{ duration: 0.8, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
           className="display-1 mt-6"
         >
-          Never lose<br className="hidden sm:block" /> the night.
+          Never lose<br className="hidden sm:block" /> the moment.
         </motion.h1>
 
         <motion.p
@@ -94,7 +94,7 @@ export default function HeroEditorial() {
           transition={{ duration: 0.8, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
           className="body-lead mt-7 max-w-md"
         >
-          The ticket gets you in. <strong>The camera keeps the moment.</strong>
+          Ticket gets you in. <strong>Shared camera, live threads, and scrapbooks keep you.</strong>
         </motion.p>
 
         <motion.div

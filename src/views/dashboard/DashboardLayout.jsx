@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -12,14 +12,13 @@ import {
 } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
-import { eventsService } from '../../services/events';
-import { getDashboardCapabilities } from '@/lib/dashboardCapabilities';
 import { canAccessAdminDashboard } from '@/lib/adminAccess';
 import AccountCardPopover from '@/components/dashboard/AccountCardPopover';
 import SidebarIconTooltip from '@/components/dashboard/SidebarIconTooltip';
 import DashboardModalHost from '@/components/dashboard/DashboardModalHost';
 import { dashboardShellActions, useDashboardShellStore } from '@/lib/dashboardShellStore';
 import { prefetchDashboardRoutes } from '@/lib/dashboardPerformance';
+import { useCapabilities, useEvents } from '@/lib/dashboardStore';
 import {
     ADMIN_SIDEBAR_MODE_KEY,
     adminNavItems,
@@ -117,13 +116,9 @@ export default function DashboardLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [phoneCheckDone, setPhoneCheckDone] = useState(false);
-    const [hasLiveEvent, setHasLiveEvent] = useState(false);
-    const [capabilities, setCapabilities] = useState({
-        hasBouncerAccess: false,
-        loading: true,
-        determined: false,
-        source: {},
-    });
+    const [liveNow, setLiveNow] = useState(0);
+    const { capabilities, refresh: refreshCapabilities } = useCapabilities();
+    const { events: shellEvents } = useEvents({ limit: 100, offset: 0 });
 
     useEffect(() => {
         const frame = requestAnimationFrame(() => setMounted(true));
@@ -146,31 +141,15 @@ export default function DashboardLayout({ children }) {
         prefetchDashboardRoutes(router);
     }, [mounted, router]);
 
-    const refreshCapabilities = useCallback(async () => {
-        if (!mounted || !user?.id) {
-            setCapabilities({ hasBouncerAccess: false, loading: false, determined: false, source: {} });
-            return;
-        }
-        setCapabilities((prev) => ({ ...prev, loading: true }));
-        try {
-            const next = await getDashboardCapabilities(user);
-            setCapabilities({
-                hasBouncerAccess: !!next.hasBouncerAccess,
-                loading: false,
-                determined: !!next.determined,
-                source: next.source || {},
-            });
-            if (next?.freshUser) {
-                updateUser(next.freshUser);
-            }
-        } catch {
-            setCapabilities((prev) => ({ ...prev, loading: false, determined: false, source: {} }));
-        }
-    }, [mounted, updateUser, user]);
-
     useEffect(() => {
-        deferDashboardState(refreshCapabilities);
-    }, [refreshCapabilities]);
+        if (!mounted) return undefined;
+        const initialTimer = setTimeout(() => setLiveNow(Date.now()), 0);
+        const intervalTimer = setInterval(() => setLiveNow(Date.now()), 60_000);
+        return () => {
+            clearTimeout(initialTimer);
+            clearInterval(intervalTimer);
+        };
+    }, [mounted]);
 
     useEffect(() => {
         if (!mounted || typeof window === 'undefined') return undefined;
@@ -204,33 +183,20 @@ export default function DashboardLayout({ children }) {
         }
     }, [mounted, user?.id, user?.phoneNumber, fromMobile, phoneCheckDone, router, updateUser, logout]);
 
+    const hasLiveEvent = useMemo(() => {
+        if (!mounted || !user?.id) return false;
+        return (shellEvents || []).some((event) => {
+            const status = String(event?.status || '').toUpperCase();
+            if (status === 'LIVE' || status === 'ACTIVE') return true;
+            const startMs = event.startDate ? new Date(event.startDate).getTime() : 0;
+            const endMs = event.endDate ? new Date(event.endDate).getTime() : 0;
+            return startMs && startMs <= liveNow && (!endMs || endMs >= liveNow);
+        });
+    }, [liveNow, mounted, shellEvents, user?.id]);
+
     useEffect(() => {
-        if (!mounted || !user?.id) return;
-        let cancelled = false;
-        eventsService.getMyEvents({ limit: 50, offset: 0 })
-            .then((res) => {
-                if (cancelled) return;
-                const now = Date.now();
-                const live = (res?.events || []).some((event) => {
-                    const status = String(event?.status || '').toUpperCase();
-                    if (status === 'LIVE' || status === 'ACTIVE') return true;
-                    const startMs = event.startDate ? new Date(event.startDate).getTime() : 0;
-                    const endMs = event.endDate ? new Date(event.endDate).getTime() : 0;
-                    return startMs && startMs <= now && (!endMs || endMs >= now);
-                });
-                setHasLiveEvent(live);
-                dashboardShellActions.setIsLiveEvent(live);
-            })
-            .catch(() => {
-                if (!cancelled) {
-                    setHasLiveEvent(false);
-                    dashboardShellActions.setIsLiveEvent(false);
-                }
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [mounted, user?.id, pathname]);
+        dashboardShellActions.setIsLiveEvent(hasLiveEvent);
+    }, [hasLiveEvent]);
 
     const hasLiveOpsAccess = capabilities.hasBouncerAccess || !!user?.isVendor;
     const hasOrganizerAccess = hasLiveOpsAccess;

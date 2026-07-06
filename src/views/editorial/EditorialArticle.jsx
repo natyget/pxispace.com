@@ -8,6 +8,7 @@ import SectionShell from '@/components/marketing/SectionShell';
 export default function EditorialArticle({ story }) {
   if (!story) return null;
   const date = new Date(story.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const isVideo = (src) => /\.(mp4|webm|mov)$/i.test(src);
 
   return (
     <article className="landing-v2 bg-black text-white">
@@ -16,7 +17,7 @@ export default function EditorialArticle({ story }) {
           <Link href="/story" className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-white">
             <ArrowLeft className="h-4 w-4" /> Story
           </Link>
-          <p className="eyebrow mt-8">{story.tag}</p>
+          <p className="mt-8 block text-[11px] font-bold uppercase tracking-[0.25em] text-zinc-500">{story.tag}</p>
           <h1 className="display-2 mt-5">{story.title}</h1>
           <p className="body-lead mt-6">{story.dek}</p>
           <p className="mt-6 text-xs uppercase tracking-[0.18em] text-zinc-600">
@@ -25,9 +26,17 @@ export default function EditorialArticle({ story }) {
         </div>
       </section>
 
-      <div className="mx-auto mt-12 max-w-[980px] px-6">
-        <div className="relative aspect-[16/9] overflow-hidden rounded-3xl border border-white/10">
-          <img src={story.articleCover || story.cover} alt={story.title} className="h-full w-full object-cover" />
+      <div className={`mx-auto mt-12 px-6 ${story.articleMaxWidthClass || 'max-w-[980px]'}`}>
+        <div className={`relative ${story.articleImageAspectClass || 'aspect-[16/9]'} overflow-hidden rounded-3xl border border-white/10`}>
+          <img
+            src={story.articleCover || story.cover}
+            alt={story.title}
+            className={`h-full w-full object-cover ${story.articleImageClass || ''}`}
+            style={story.articleImageStyle}
+          />
+          {story.articleVignette && (
+            <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] pointer-events-none" />
+          )}
         </div>
       </div>
 
@@ -44,7 +53,19 @@ export default function EditorialArticle({ story }) {
           <div className="mx-auto mt-14 grid max-w-[720px] grid-cols-3 gap-3">
             {story.gallery.map((src) => (
               <div key={src} className="relative aspect-square overflow-hidden rounded-xl border border-white/10">
-                <img src={src} alt="" aria-hidden loading="lazy" className="h-full w-full object-cover" />
+                {isVideo(src) ? (
+                  <video
+                    src={src}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    aria-label={`${story.title} scrapbook clip`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <img src={src} alt="" aria-hidden loading="lazy" className="h-full w-full object-cover" />
+                )}
               </div>
             ))}
           </div>
