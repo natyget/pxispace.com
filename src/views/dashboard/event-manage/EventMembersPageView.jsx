@@ -72,10 +72,10 @@ export default function EventMembersPageView() {
 
   if (!albumId) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-6 text-sm text-zinc-400">
+      <div className="rounded-2xl bg-white/[0.04] p-6 text-sm text-zinc-400">
         <p>No album linked to this event.</p>
-        <Link href={`/dashboard/events/${eventId}`} className="inline-block mt-4 text-pxi-purple font-bold uppercase text-xs">
-          ← Details
+        <Link href={`/dashboard/events/${eventId}`} className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white">
+          Details
         </Link>
       </div>
     );
@@ -106,7 +106,7 @@ export default function EventMembersPageView() {
 
       {activeTab === 'attending' ? (
       <section className="glass-panel overflow-hidden rounded-2xl">
-        <div className="flex items-center justify-between gap-3 p-5 shadow-[inset_0_-1px_0_rgba(255,255,255,0.035)]">
+        <div className="flex items-center justify-between gap-3 p-5">
           <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
             {event?.name || 'Event'} · {participants.length} members
           </p>

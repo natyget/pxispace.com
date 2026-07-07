@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion as Motion } from 'framer-motion';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Notification03Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { eventsService } from '../../services/events';
@@ -231,19 +229,31 @@ export default function DashboardHome() {
     const reminderUpdates = updates.filter((update) => update.group !== 'product');
     const productUpdates = updates.filter((update) => update.group === 'product');
     const metricsLoading = vendorLoading || eventsLoading || overviewLoading;
-    const showVendorSetupPrompt = mounted && authReady && !authRefreshing && typeof user?.isVendor === 'boolean' && !user.isVendor;
     const isVendorDashboard = mounted && authReady && !authRefreshing && !!user?.isVendor;
     const dashboardHero = isVendorDashboard
         ? {
-              eyebrow: 'Dashboard',
-              title: 'Command Center',
-              copy: 'Run the next event, catch urgent notices, and keep the business pulse in view.',
+              eyebrow: 'Command center',
+              title: 'Run the room.',
+              copy: 'A focused read on live work, upcoming events, revenue, and anything that needs attention.',
           }
         : {
-              eyebrow: 'PXI',
-              title: 'Your PXI',
-              copy: 'Keep your nights, tickets, notifications, and hosting tools in one clean place.',
+              eyebrow: 'Workspace',
+              title: 'Your PXI.',
+              copy: 'Tickets, notifications, hosted events, and account tools in one clean place.',
           };
+    const commandMetrics = isVendorDashboard
+        ? [
+              { label: 'Revenue', value: metricsLoading ? '-' : summary.revenue },
+              { label: 'Tickets', value: metricsLoading ? '-' : summary.sales.toLocaleString() },
+              { label: 'Attendees', value: metricsLoading ? '-' : summary.attendees.toLocaleString() },
+              { label: 'Live', value: metricsLoading ? '-' : summary.activeCount },
+          ]
+        : [
+              { label: 'Hosted', value: metricsLoading ? '-' : events.length.toLocaleString() },
+              { label: 'Unread', value: notificationCount > 99 ? '99+' : notificationCount.toLocaleString() },
+              { label: 'Scheduled', value: metricsLoading ? '-' : summary.scheduledCount },
+              { label: 'Drafts', value: metricsLoading ? '-' : summary.draftCount },
+          ];
 
     if (!mounted) {
         return <div className="mx-auto max-w-7xl space-y-8" />;
@@ -251,116 +261,137 @@ export default function DashboardHome() {
 
     return (
         <div className="mx-auto max-w-7xl space-y-6">
-            <section className="relative overflow-hidden rounded-[2rem] bg-[#050505] px-5 py-6 shadow-[0_24px_90px_rgba(0,0,0,0.42)] md:px-7">
-                <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                    <div>
+            <section className="relative overflow-hidden rounded-[1.75rem] bg-black px-5 py-6 shadow-[0_24px_80px_rgba(0,0,0,0.42)] md:px-7 md:py-7">
+                <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,440px)] lg:items-end">
+                    <div className="min-w-0">
                         <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">{dashboardHero.eyebrow}</p>
-                        <h1 className="mt-2 text-3xl font-black leading-none tracking-normal text-white normal-case md:text-5xl">{dashboardHero.title}</h1>
+                        <h1 className="mt-2 text-4xl font-black leading-[0.9] text-white md:text-6xl">{dashboardHero.title}</h1>
                         <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400">
                             {dashboardHero.copy}
                         </p>
+                        <div className="mt-5 flex flex-wrap items-center gap-2">
+                            <Link
+                                href={isVendorDashboard ? '/dashboard/events' : '/dashboard/vendor-upgrade'}
+                                className="pill-solid px-4 py-2.5 text-xs uppercase tracking-widest"
+                            >
+                                {isVendorDashboard ? 'Manage events' : 'Start hosting'}
+                            </Link>
+                            <Link
+                                href="/dashboard/notifications"
+                                className="pill-ghost relative px-4 py-2.5 text-xs font-black uppercase tracking-widest"
+                            >
+                                Notifications
+                                {notificationCount > 0 ? (
+                                    <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-[10px] font-black text-black">
+                                        {notificationCount > 99 ? '99+' : notificationCount}
+                                    </span>
+                                ) : null}
+                            </Link>
+                        </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        {[
-                            ['Active', summary.activeCount],
-                            ['Scheduled', summary.scheduledCount],
-                            ['Draft', summary.draftCount],
-                        ].map(([label, value]) => (
-                            <div key={label} className="min-w-[96px] rounded-2xl bg-white/[0.06] px-4 py-3">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-white/40">{label}</p>
-                                <p className="mt-1 text-xl font-black text-white">{metricsLoading ? '—' : value}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                        {commandMetrics.map((metric) => (
+                            <div key={metric.label} className="min-h-[96px] rounded-2xl bg-white/[0.055] p-4">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{metric.label}</p>
+                                <p className="mt-3 truncate text-2xl font-black text-white">{metric.value}</p>
                             </div>
                         ))}
                     </div>
                 </div>
-                <Link
-                    href="/dashboard/notifications"
-                    aria-label="Open notifications"
-                    className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-white/70 transition hover:bg-white/10 hover:text-white md:right-7"
-                >
-                    <HugeiconsIcon icon={Notification03Icon} size={16} />
-                    {notificationCount > 0 ? (
-                        <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-black text-black">
-                            {notificationCount > 99 ? '99+' : notificationCount}
-                        </span>
-                    ) : null}
-                </Link>
             </section>
-
-            {showVendorSetupPrompt && (
-                <div className="dashboard-surface-frosted rounded-[2rem] p-5">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <p className="text-xs font-bold uppercase tracking-widest text-white/40">Hosting access</p>
-                            <h2 className="mt-1 text-lg font-black text-white">Create events, sell tickets, and manage your room</h2>
-                        </div>
-                        <Link
-                            href="/dashboard/vendor-upgrade"
-                            className="inline-flex shrink-0 items-center justify-center rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-black transition hover:bg-zinc-200 whitespace-nowrap"
-                        >
-                            Start hosting
-                        </Link>
-                    </div>
-                </div>
-            )}
 
             <Motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(340px,0.75fr)]"
+                className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_380px]"
             >
-                <SectionCard
-                    title="Upcoming + Live"
-                    actions={(
-                        <Link href="/dashboard/events" className="text-[12px] font-bold tracking-wide text-white/60 hover:text-white transition-colors uppercase whitespace-nowrap">
-                            View all
-                        </Link>
-                    )}
-                    bodyClassName="space-y-3"
-                >
-                    {metricsLoading ? (
-                        <div className="space-y-3">
-                            {[0, 1, 2].map((item) => (
-                                <div key={item} className="h-28 rounded-2xl bg-white/[0.035] animate-pulse" />
+                <div className="space-y-4">
+                    <SectionCard
+                        title="Upcoming + Live"
+                        actions={(
+                            <Link href="/dashboard/events" className="text-[12px] font-bold tracking-wide text-white/60 hover:text-white transition-colors uppercase whitespace-nowrap">
+                                View all
+                            </Link>
+                        )}
+                        bodyClassName="grid gap-3 md:grid-cols-2"
+                    >
+                        {metricsLoading ? (
+                            <div className="grid gap-3 md:col-span-2 md:grid-cols-2">
+                                {[0, 1, 2].map((item) => (
+                                    <div key={item} className="h-28 rounded-2xl bg-white/[0.035] animate-pulse" />
+                                ))}
+                            </div>
+                        ) : upcomingAndLiveEvents.length === 0 ? (
+                            <div className="dashboard-surface-frosted rounded-[1.25rem] px-4 py-6 text-center md:col-span-2">
+                                <p className="text-sm font-semibold text-white">No live or upcoming events yet.</p>
+                                <Link href="/dashboard/events" className="pill-ghost mt-3 px-4 py-2 text-xs font-bold uppercase tracking-widest whitespace-nowrap">
+                                    Open events
+                                </Link>
+                            </div>
+                        ) : (
+                            upcomingAndLiveEvents.map((event) => (
+                                <article key={event.id} className="dashboard-surface-frosted rounded-[1.25rem] p-4">
+                                    <div className="flex min-w-0 items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <h2 className="truncate text-sm font-black text-white">{event.name}</h2>
+                                            <p className="mt-1 text-xs font-medium text-zinc-500">{event.dateLabel}</p>
+                                        </div>
+                                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${event.statusClassName}`}>
+                                            {event.status}
+                                        </span>
+                                    </div>
+                                    <div className="mt-3">
+                                        <StatRow
+                                            className="!rounded-xl !p-3"
+                                            items={[
+                                                { label: 'Revenue', value: event.revenueLabel },
+                                                { label: 'Tickets', value: event.ticketsSold.toLocaleString() },
+                                            ]}
+                                        />
+                                    </div>
+                                    <div className="mt-3 flex justify-end">
+                                        <Link href={event.href} className="text-[11px] font-bold uppercase tracking-widest text-white/55 transition hover:text-white whitespace-nowrap">
+                                            Open event
+                                        </Link>
+                                    </div>
+                                </article>
+                            ))
+                        )}
+                    </SectionCard>
+
+                    <SectionCard title="Snapshot" dense bodyClassName="space-y-4">
+                        <StatRow
+                            className="!rounded-xl !p-3"
+                            items={[
+                                { label: 'Revenue', value: metricsLoading ? '-' : summary.revenue },
+                                { label: 'Tickets', value: metricsLoading ? '-' : summary.sales.toLocaleString() },
+                                { label: 'Attendees', value: metricsLoading ? '-' : summary.attendees.toLocaleString() },
+                            ]}
+                        />
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-xl glass-field p-3">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Sales (30d)</p>
+                                <MicroChart points={summary.salesTrend} color={BASE_CHART_COLOR} className="mt-2" />
+                            </div>
+                            <div className="rounded-xl glass-field p-3">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Media (30d)</p>
+                                <MicroChart points={summary.mediaTrend} color={BASE_CHART_COLOR} className="mt-2" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            {[
+                                ['Active', summary.activeCount],
+                                ['Scheduled', summary.scheduledCount],
+                                ['Draft', summary.draftCount],
+                            ].map(([label, value]) => (
+                                <div key={label} className="rounded-xl glass-field px-3 py-2">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">{label}</p>
+                                    <p className="mt-1 text-lg font-black text-white">{metricsLoading ? '-' : value}</p>
+                                </div>
                             ))}
                         </div>
-                    ) : upcomingAndLiveEvents.length === 0 ? (
-                        <div className="dashboard-surface-frosted rounded-[2rem] px-4 py-6 text-center">
-                            <p className="text-sm font-semibold text-white">No live or upcoming events yet.</p>
-                            <Link href="/dashboard/events" className="pill-ghost mt-3 px-4 py-2 text-xs font-bold uppercase tracking-widest whitespace-nowrap">
-                                Open events
-                            </Link>
-                        </div>
-                    ) : (
-                        upcomingAndLiveEvents.map((event) => (
-                            <article key={event.id} className="dashboard-surface-frosted rounded-[2rem] p-4">
-                                <div className="flex min-w-0 items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <h2 className="truncate text-sm font-black text-white">{event.name}</h2>
-                                        <p className="mt-1 text-xs font-medium text-zinc-500">{event.dateLabel}</p>
-                                    </div>
-                                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${event.statusClassName}`}>
-                                        {event.status}
-                                    </span>
-                                </div>
-                                <div className="mt-3">
-                                    <StatRow
-                                        className="!rounded-xl !p-3"
-                                        items={[
-                                            { label: 'Revenue', value: event.revenueLabel },
-                                            { label: 'Tickets', value: event.ticketsSold.toLocaleString() },
-                                        ]}
-                                    />
-                                </div>
-                                <div className="mt-3 flex justify-end">
-                                    <Link href={event.href} className="text-[11px] font-bold uppercase tracking-widest text-white/55 transition hover:text-white whitespace-nowrap">
-                                        Open event
-                                    </Link>
-                                </div>
-                            </article>
-                        ))
-                    )}
-                </SectionCard>
+                    </SectionCard>
+                </div>
 
                 <div className="space-y-4">
                     <SectionCard
@@ -383,7 +414,7 @@ export default function DashboardHome() {
                             <Link
                                 key={notice.id}
                                 href={notice.href}
-                                className={`block rounded-[2rem] p-4 transition hover:bg-white/[0.075] glass-field`}
+                                className="block rounded-[1.25rem] p-4 transition hover:bg-white/[0.075] glass-field"
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
@@ -400,39 +431,6 @@ export default function DashboardHome() {
                                 <p className="mt-3 text-[10px] font-black uppercase tracking-widest text-white/55">{notice.action}</p>
                             </Link>
                         ))}
-                    </SectionCard>
-
-                    <SectionCard title="Snapshot" dense bodyClassName="space-y-4">
-                        <StatRow
-                            className="!rounded-xl !p-3"
-                            items={[
-                                { label: 'Revenue', value: metricsLoading ? '—' : summary.revenue },
-                                { label: 'Tickets', value: metricsLoading ? '—' : summary.sales.toLocaleString() },
-                                { label: 'Attendees', value: metricsLoading ? '—' : summary.attendees.toLocaleString() },
-                            ]}
-                        />
-                        <div className="grid grid-cols-2 gap-3">
-                                <div className="rounded-xl glass-field p-3">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Sales (30d)</p>
-                                    <MicroChart points={summary.salesTrend} color={BASE_CHART_COLOR} className="mt-2" />
-                                </div>
-                                <div className="rounded-xl glass-field p-3">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Media (30d)</p>
-                                    <MicroChart points={summary.mediaTrend} color={BASE_CHART_COLOR} className="mt-2" />
-                                </div>
-                            </div>
-                        <div className="grid grid-cols-3 gap-2">
-                            {[
-                                ['Active', summary.activeCount],
-                                ['Scheduled', summary.scheduledCount],
-                                ['Draft', summary.draftCount],
-                            ].map(([label, value]) => (
-                                <div key={label} className="rounded-xl glass-field px-3 py-2">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">{label}</p>
-                                    <p className="mt-1 text-lg font-black text-white">{metricsLoading ? '—' : value}</p>
-                                </div>
-                            ))}
-                        </div>
                     </SectionCard>
 
                     <SectionCard title="PXI Updates" dense bodyClassName="flex min-h-[420px] flex-col gap-5">
@@ -459,7 +457,7 @@ function UpdateLink({ update }) {
     return (
         <Link
             href={update.href}
-            className="block rounded-[2rem] glass-field p-4 transition hover:bg-white/[0.075]"
+            className="block rounded-[1.25rem] glass-field p-4 transition hover:bg-white/[0.075]"
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

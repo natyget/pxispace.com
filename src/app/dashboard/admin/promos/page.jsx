@@ -18,6 +18,7 @@ import {
     adminTdClass,
     adminThClass,
 } from '@/components/admin/AdminPageShell';
+import { adminErrorMessage } from '@/components/admin/adminFormat';
 
 function formatDate(iso) {
     if (!iso) return '—';
@@ -191,7 +192,7 @@ export default function AdminPromosPage() {
             setRows(data.promos || []);
             setTotalPages(data.totalPages || 1);
         } catch (err) {
-            setError(err.message || 'Failed to load promo codes');
+            setError(adminErrorMessage(err, 'Failed to load promo codes'));
             setRows([]);
         } finally {
             setLoading(false);
@@ -262,10 +263,10 @@ export default function AdminPromosPage() {
                                     </td>
                                     <td className={adminTdClass}>{formatDate(p.expiresAt)}</td>
                                     <td className="px-6 py-4">
-                                        <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
                                             p.isActive
-                                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                : 'bg-white/5 text-white/55 border-white/10'
+                                                ? 'bg-emerald-500/10 text-emerald-300'
+                                                : 'bg-white/[0.055] text-white/55'
                                         }`}>
                                             {p.isActive ? 'Active' : 'Inactive'}
                                         </span>

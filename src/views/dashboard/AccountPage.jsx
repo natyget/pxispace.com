@@ -15,7 +15,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { musicService } from '@/services/music';
 import SectionCard from '@/components/dashboard/SectionCard';
-import GlowCard from '@/components/dashboard/GlowCard';
 import { getSingleShadeDonutCellProps } from '@/components/dashboard/chartStyles';
 
 const DELETION_ITEMS = [
@@ -54,7 +53,7 @@ function UsageTooltip({ active, payload }) {
 
 function DonutPanel({ title, data, centerLabel, centerValue }) {
     return (
-        <GlowCard className="p-5">
+        <div className="glass-panel rounded-[1.25rem] p-5">
             <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">{title}</p>
             <div className="relative mt-4 h-[180px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -72,12 +71,12 @@ function DonutPanel({ title, data, centerLabel, centerValue }) {
                     <span className="text-xl font-black text-white">{centerValue}</span>
                 </div>
             </div>
-        </GlowCard>
+        </div>
     );
 }
 
 const profileInputCls =
-    'mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm font-semibold text-white placeholder:text-zinc-600 outline-none focus:border-white/25';
+    'mt-2 w-full rounded-2xl bg-white/[0.045] px-3 py-2 text-sm font-semibold text-white placeholder:text-zinc-600 outline-none focus:bg-white/[0.065] focus:ring-1 focus:ring-white/10';
 
 function SettingsHero({ user, activeTab }) {
     const activeLabel = TABS.find((tab) => tab.id === activeTab)?.label || 'Profile';
@@ -138,37 +137,37 @@ function ProfileEditor({ user, updateUser }) {
     };
 
     return (
-        <SectionCard title="Profile" dense className="!rounded-[1.75rem]">
+        <SectionCard title="Profile" dense className="!rounded-[1.5rem]">
             <div className="grid gap-4 sm:grid-cols-2">
-                <label className="glow-surface-soft rounded-xl px-4 py-3">
+                <label className="glass-field rounded-[1.25rem] px-4 py-3">
                     <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Name</span>
                     <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={profileInputCls} />
                 </label>
-                <div className="glow-surface-soft rounded-xl px-4 py-3">
+                <div className="glass-field rounded-[1.25rem] px-4 py-3">
                     <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Username</p>
                     <p className="mt-2 text-sm font-semibold text-white">@{user?.username || 'account'}</p>
                 </div>
-                <label className="glow-surface-soft rounded-xl px-4 py-3 sm:col-span-2">
+                <label className="glass-field rounded-[1.25rem] px-4 py-3 sm:col-span-2">
                     <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Bio</span>
                     <textarea
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
                         rows={3}
                         maxLength={280}
-                        placeholder="Tell people what you're about…"
+                        placeholder="Tell people what you're about..."
                         className={`${profileInputCls} resize-y`}
                     />
                     <span className="mt-1 block text-right text-[10px] text-zinc-600">{bio.length}/280</span>
                 </label>
-                <label className="glow-surface-soft rounded-xl px-4 py-3">
+                <label className="glass-field rounded-[1.25rem] px-4 py-3">
                     <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">City</span>
                     <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Where you're based" className={profileInputCls} />
                 </label>
-                <label className="glow-surface-soft rounded-xl px-4 py-3">
+                <label className="glass-field rounded-[1.25rem] px-4 py-3">
                     <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Instagram</span>
                     <input value={instagramHandle} onChange={(e) => setInstagramHandle(e.target.value)} placeholder="@handle" className={profileInputCls} />
                 </label>
-                <div className="glow-surface-soft rounded-xl px-4 py-3 sm:col-span-2">
+                <div className="glass-field rounded-[1.25rem] px-4 py-3 sm:col-span-2">
                     <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Email</p>
                     <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-white">
                         <HugeiconsIcon icon={Mail01Icon} size={14} className="text-zinc-500" />
@@ -235,8 +234,8 @@ function MusicConnectionsCard() {
     const connected = Boolean(profile?.connected);
 
     return (
-        <SectionCard title="Music" dense className="!rounded-[1.75rem]">
-            <div className="glow-surface-soft flex flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-4">
+        <SectionCard title="Music" dense className="!rounded-[1.5rem]">
+            <div className="glass-field flex flex-wrap items-center justify-between gap-3 rounded-[1.25rem] px-4 py-4">
                 <div>
                     <p className="text-sm font-semibold text-white">Spotify</p>
                     <p className="mt-0.5 text-xs text-zinc-500">
@@ -252,7 +251,7 @@ function MusicConnectionsCard() {
                         type="button"
                         onClick={disconnect}
                         disabled={busy}
-                        className="glow-chip rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest text-zinc-300 disabled:opacity-50"
+                        className="pill-ghost px-4 py-2 text-xs font-bold uppercase tracking-widest disabled:opacity-50"
                     >
                         Disconnect
                     </button>
@@ -280,9 +279,15 @@ function AccountPageContent() {
         ? searchParams.get('tab')
         : 'profile';
 
+    const [mounted, setMounted] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        const frame = requestAnimationFrame(() => setMounted(true));
+        return () => cancelAnimationFrame(frame);
+    }, []);
 
     const usageTotal = useMemo(
         () => USAGE_BREAKDOWN.reduce((sum, item) => sum + item.value, 0),
@@ -316,11 +321,15 @@ function AccountPageContent() {
         }
     };
 
+    if (!mounted) {
+        return <div className="mx-auto max-w-6xl space-y-6 md:space-y-8" />;
+    }
+
     return (
         <div className="mx-auto max-w-6xl space-y-6 md:space-y-8">
             <SettingsHero user={user} activeTab={activeTab} />
 
-            <div className="dashboard-segmented-toggle w-full sm:w-auto" role="tablist" aria-label="Account settings sections">
+            <div className="grid w-full grid-cols-2 gap-1 rounded-[1.5rem] bg-white/[0.045] p-1 sm:flex sm:w-auto sm:rounded-full" role="tablist" aria-label="Account settings sections">
                 {TABS.map((tab) => (
                     <a
                         key={tab.id}
@@ -344,14 +353,14 @@ function AccountPageContent() {
                     )}
 
                     {activeTab === 'billing' && (
-                        <SectionCard title="Billing & Payouts" dense className="!rounded-[1.75rem]">
+                        <SectionCard title="Billing & Payouts" dense className="!rounded-[1.5rem]">
                             <div className="grid gap-4 sm:grid-cols-2">
-                                <div className="glow-surface-soft rounded-xl px-4 py-4">
+                                <div className="glass-field rounded-[1.25rem] px-4 py-4">
                                     <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Next payout</p>
                                     <p className="mt-2 text-2xl font-black text-white">$1,240.00</p>
                                     <p className="mt-1 text-xs text-zinc-500">Est. arrival in 2 business days</p>
                                 </div>
-                                <div className="glow-surface-soft rounded-xl px-4 py-4">
+                                <div className="glass-field rounded-[1.25rem] px-4 py-4">
                                     <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Pending balance</p>
                                     <p className="mt-2 text-2xl font-black text-white">$386.50</p>
                                     <p className="mt-1 text-xs text-zinc-500">From recent ticket sales</p>
@@ -361,7 +370,7 @@ function AccountPageContent() {
                     )}
 
                     {activeTab === 'usage' && (
-                        <SectionCard title="Usage & Costs" dense className="!rounded-[1.75rem]">
+                        <SectionCard title="Usage & Costs" dense className="!rounded-[1.5rem]">
                             <p className="text-sm text-zinc-400">
                                 Total spend <span className="font-bold text-white">${usageTotal}</span>. Itemized in the chart panel.
                             </p>
@@ -369,8 +378,8 @@ function AccountPageContent() {
                     )}
 
                     {activeTab === 'payments' && (
-                        <SectionCard title="Payment Methods" dense className="!rounded-[1.75rem]">
-                            <div className="glow-surface-soft flex items-center justify-between rounded-xl px-4 py-4">
+                        <SectionCard title="Payment Methods" dense className="!rounded-[1.5rem]">
+                            <div className="glass-field flex items-center justify-between rounded-[1.25rem] px-4 py-4">
                                 <div className="flex items-center gap-3">
                                     <HugeiconsIcon icon={CreditCardIcon} size={20} className="text-white/70" />
                                     <div>
@@ -378,14 +387,14 @@ function AccountPageContent() {
                                         <p className="text-xs text-zinc-500">Expires 09/28 · Default</p>
                                     </div>
                                 </div>
-                                <button type="button" className="glow-chip rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-zinc-300">
+                                <button type="button" className="pill-ghost px-3 py-1.5 text-xs font-bold uppercase tracking-widest">
                                     Manage
                                 </button>
                             </div>
                         </SectionCard>
                     )}
 
-                    <SectionCard title="Danger Zone" dense className="!rounded-[1.75rem]">
+                    <SectionCard title="Account controls" dense className="!rounded-[1.5rem]">
                         {!showConfirm ? (
                             <>
                                 <p className="text-sm leading-relaxed text-zinc-400">
@@ -433,7 +442,7 @@ function AccountPageContent() {
                                         type="button"
                                         onClick={() => { setShowConfirm(false); setError(''); }}
                                         disabled={deleting}
-                                        className="glow-chip rounded-xl px-4 py-2.5 text-sm font-medium text-zinc-400"
+                                        className="pill-ghost px-4 py-2.5 text-sm font-medium"
                                     >
                                         Cancel
                                     </button>
@@ -454,7 +463,7 @@ function AccountPageContent() {
                             />
                         )}
                         {(activeTab === 'billing' || activeTab === 'payments') && (
-                            <GlowCard className="p-5">
+                            <div className="glass-panel rounded-[1.25rem] p-5">
                                 <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Payout rail</p>
                                 <div className="mt-3 flex items-center gap-3">
                                     <HugeiconsIcon icon={Wallet01Icon} size={20} className="text-emerald-400" />
@@ -463,7 +472,7 @@ function AccountPageContent() {
                                         <p className="text-xs text-zinc-500">{user?.isVendor ? 'Connected' : 'Complete hosting setup'}</p>
                                     </div>
                                 </div>
-                            </GlowCard>
+                            </div>
                         )}
                     </aside>
                 )}

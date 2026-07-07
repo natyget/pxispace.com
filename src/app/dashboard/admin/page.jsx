@@ -5,6 +5,7 @@ import { fetchAdminStats } from '@/services/admin';
 import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { adminMockStats } from '@/lib/adminMockData';
+import { adminErrorMessage } from '@/components/admin/adminFormat';
 
 function formatInteger(value) {
     return Number(value || 0).toLocaleString();
@@ -98,7 +99,7 @@ export default function AdminOverviewPage() {
                     }
                 })
                 .catch((err) => {
-                    if (!cancelled) setError(err.message || 'Failed to load stats');
+                    if (!cancelled) setError(adminErrorMessage(err, 'Failed to load stats'));
                 })
                 .finally(() => {
                     if (!cancelled) setLoading(false);

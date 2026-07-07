@@ -253,7 +253,7 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
       setBusy(true);
       setLastError(null);
       setLastOk(null);
-      setProgress({ done: 0, total: files.length, label: 'Starting…' });
+      setProgress({ done: 0, total: files.length, label: 'Starting...' });
 
       let completed = 0;
       const errors = [];

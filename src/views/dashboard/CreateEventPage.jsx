@@ -82,7 +82,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   const router = useRouter();
   const { user, updateUser } = useAuth();
   const { invalidate } = useEvents({ limit: 100, offset: 0 });
-  const defaults = useRef(defaultStartEnd());
+  const defaults = useMemo(() => defaultStartEnd(), []);
   const searchTimerRef = useRef(null);
 
   const [name, setName] = useState('');
@@ -94,8 +94,8 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   const [isStampUploading, setIsStampUploading] = useState(false);
   const [geoLat, setGeoLat] = useState(null);
   const [geoLon, setGeoLon] = useState(null);
-  const [startLocal, setStartLocal] = useState(defaults.current.start);
-  const [endLocal, setEndLocal] = useState(defaults.current.end);
+  const [startLocal, setStartLocal] = useState(() => defaults.start);
+  const [endLocal, setEndLocal] = useState(() => defaults.end);
 
   const [coverImage, setCoverImage] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
@@ -166,8 +166,8 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   useEffect(() => {
     const q = featuredQuery.trim();
     if (q.length < 2) {
-      setFeaturedResults([]);
-      return;
+      const timer = setTimeout(() => setFeaturedResults([]), 0);
+      return () => clearTimeout(timer);
     }
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(() => {
@@ -535,7 +535,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               step={0.01}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
-              className="flex-1 accent-pxi-purple"
+              className="flex-1 accent-white"
             />
           </div>
           <button
@@ -558,7 +558,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
           </Link>
           <div>
-            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Create event</h1>
+            <h1 className="text-2xl md:text-3xl font-black text-white">Create event</h1>
           </div>
         </div>
       )}
@@ -593,7 +593,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               {isCoverUploading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 rounded-2xl">
                   <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin text-white" />
-                  <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover…</span>
+                  <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover...</span>
                 </div>
               )}
             </div>
@@ -673,11 +673,10 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               </p>
               <div className="flex items-center gap-3">
                 {stampImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={stampImage} alt="Custom stamp" className="h-16 w-16 rounded-xl border border-white/15 object-cover" />
                 ) : null}
                 <label className="cursor-pointer rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white/70 hover:text-white">
-                  {isStampUploading ? 'Uploading…' : stampImage ? 'Replace stamp' : 'Upload stamp'}
+                  {isStampUploading ? 'Uploading...' : stampImage ? 'Replace stamp' : 'Upload stamp'}
                   <input
                     type="file"
                     accept="image/*"
@@ -1030,7 +1029,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             ) : (
               <p>Stripe is still verifying your account. You can create a free event now or check status from hosting setup.</p>
             )}
-            <Link href="/dashboard/vendor-upgrade" className="inline-block text-pxi-purple font-bold hover:underline">
+            <Link href="/dashboard/vendor-upgrade" className="inline-block font-bold text-white hover:text-zinc-200">
               Hosting setup
             </Link>
           </div>
@@ -1060,7 +1059,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               className="pill-solid flex-1 inline-flex min-h-[48px] items-center justify-center gap-2 px-6 text-sm font-bold uppercase tracking-widest disabled:opacity-45"
             >
               {isSubmitting ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin" /> : null}
-              {isSubmitting ? 'Creating…' : isCoverUploading ? 'Uploading cover…' : 'Create event'}
+              {isSubmitting ? 'Creating...' : isCoverUploading ? 'Uploading cover...' : 'Create event'}
             </button>
           </div>
         </div>

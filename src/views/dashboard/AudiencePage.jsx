@@ -40,7 +40,7 @@ function RealAudienceOverview() {
     return (
         <SectionCard title="Your real audience" dense>
             {!data ? (
-                <p className="px-2 py-3 text-sm text-zinc-500">Loading live demographics…</p>
+                <p className="px-2 py-3 text-sm text-zinc-500">Loading live demographics...</p>
             ) : (
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -518,7 +518,7 @@ export default function AudiencePage() {
 
     async function handleGenerateCampaignDraft() {
         const draft = await createCampaignDraftFromInsights({
-            title: upcomingEvents[0]?.name ? `${upcomingEvents[0].name} campaign mix` : 'AI campaign draft',
+            title: upcomingEvents[0]?.name ? `${upcomingEvents[0].name} campaign mix` : 'Campaign draft',
             audience: campaignAudience,
             schedule: upcomingEvents[0] ? eventTimeLabel(upcomingEvents[0]) : 'Next best send window',
             mix: campaignMix,
@@ -629,7 +629,7 @@ export default function AudiencePage() {
             <div className="mx-auto max-w-2xl space-y-3 text-center">
                 <h1 className="text-3xl font-black tracking-[-0.02em] text-white md:text-4xl">Audience</h1>
                 <p className="text-sm leading-6 text-zinc-400">
-                    Shape CRM segments and campaign handoffs from one frosted workspace.
+                    Shape CRM segments and campaign handoffs from one focused workspace.
                 </p>
             </div>
 
@@ -691,15 +691,15 @@ export default function AudiencePage() {
                                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
                                             {segmentIsActive ? 'Selected rows' : 'Filtered rows'}
                                         </p>
-                                        <p className="mt-2 text-3xl font-black tracking-tight text-white">{rowsForSegment.length}</p>
+                                        <p className="mt-2 text-3xl font-black text-white">{rowsForSegment.length}</p>
                                     </div>
                                     <div className="rounded-2xl glass-field px-5 py-4">
                                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Avg. price paid</p>
-                                        <p className="mt-2 text-3xl font-black tracking-tight text-white">{formatMoney(segmentStats.averagePrice)}</p>
+                                        <p className="mt-2 text-3xl font-black text-white">{formatMoney(segmentStats.averagePrice)}</p>
                                     </div>
                                     <div className="rounded-2xl glass-field px-5 py-4">
                                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Avg. Odyssey</p>
-                                        <p className="mt-2 text-3xl font-black tracking-tight text-white">{segmentStats.averageOdyssey.toLocaleString()}</p>
+                                        <p className="mt-2 text-3xl font-black text-white">{segmentStats.averageOdyssey.toLocaleString()}</p>
                                     </div>
                                 </div>
 
@@ -998,7 +998,7 @@ export default function AudiencePage() {
                                             <p className="text-sm font-bold text-white">Budget Allocation</p>
                                             <p className="mt-1 text-xs text-zinc-500">Set how much this campaign can spend across selected tools.</p>
                                         </div>
-                                        <p className="text-2xl font-black tracking-tight text-white">${campaignMix.budget}</p>
+                                        <p className="text-2xl font-black text-white">${campaignMix.budget}</p>
                                     </div>
                                     <input
                                         type="range"
@@ -1050,7 +1050,7 @@ export default function AudiencePage() {
                                 </div>
                                 <div className="flex flex-col gap-3 rounded-2xl glass-field px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <p className="text-sm font-bold text-white">AI suggestion</p>
+                                        <p className="text-sm font-bold text-white">Recommendation</p>
                                         <p className="mt-1 text-xs text-zinc-500">Generate a campaign draft from the current audience and tool mix.</p>
                                     </div>
                                     <button
@@ -1085,7 +1085,7 @@ export default function AudiencePage() {
                             type="button"
                             onClick={() => handleActiveCampaignStatus('active')}
                             disabled={activeCampaignModal?.status === 'active' || activeCampaignModal?.status === 'cancelled'}
-                            className="flex-1 rounded-xl bg-pxi-purple px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap"
+                            className="flex-1 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap"
                         >
                             Resume
                         </button>

@@ -15,6 +15,7 @@ import {
     adminTdClass,
     adminThClass,
 } from '@/components/admin/AdminPageShell';
+import { adminErrorMessage } from '@/components/admin/adminFormat';
 
 function formatDate(iso) {
     if (!iso) return '—';
@@ -99,7 +100,7 @@ function UserActions({ user: row, canManageRoles, onDone }) {
                         type="button"
                         disabled={busy}
                         onClick={() => act(() => unsuspendUser(row.id))}
-                        className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-[12px] text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-40"
+                            className="rounded-full bg-emerald-500/10 px-4 py-1.5 text-[12px] text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-40"
                     >
                         Unsuspend
                     </button>
@@ -115,7 +116,7 @@ function UserActions({ user: row, canManageRoles, onDone }) {
                             type="button"
                             disabled={busy || !suspendReason.trim()}
                             onClick={() => act(() => suspendUser(row.id, suspendReason.trim()))}
-                            className="rounded-full border border-red-500/30 bg-red-500/10 px-4 py-1.5 text-[12px] text-red-300 hover:bg-red-500/20 disabled:opacity-40"
+                            className="rounded-full bg-red-500/10 px-4 py-1.5 text-[12px] text-red-300 hover:bg-red-500/20 disabled:opacity-40"
                         >
                             Suspend
                         </button>
@@ -174,7 +175,7 @@ export default function AdminUsersPage() {
             setTotalPages(data.totalPages || 1);
             setTotal(data.total ?? 0);
         } catch (err) {
-            setError(err.message || 'Failed to load users');
+            setError(adminErrorMessage(err, 'Failed to load users'));
             setRows([]);
         } finally {
             setLoading(false);
@@ -233,11 +234,11 @@ export default function AdminUsersPage() {
                                         <td className="px-6 py-4 text-[14px] text-white/90 break-all max-w-[200px]">{u.email}</td>
                                         <td className={`${adminTdClass} text-[14px]`}>{u.username || '—'}</td>
                                         <td className="px-6 py-4">
-                                            <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/5 text-white/70 border border-white/10">
+                                            <span className="inline-flex rounded-full bg-white/[0.055] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/70">
                                                 {u.accountTier}
                                             </span>
                                             {u.adminRole && u.adminRole !== 'NONE' ? (
-                                                <span className="inline-flex ml-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/10 text-sky-300 border border-sky-500/20">
+                                                <span className="ml-1.5 inline-flex rounded-full bg-sky-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-300">
                                                     {u.adminRole.replaceAll('_', ' ')}
                                                 </span>
                                             ) : null}
@@ -245,7 +246,7 @@ export default function AdminUsersPage() {
                                         <td className={`${adminTdClass} text-[14px]`}>{u.isVendor ? 'Yes' : 'No'}</td>
                                         <td className="px-6 py-4">
                                             {u.suspendedAt ? (
-                                                <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-500/10 text-red-300 border border-red-500/20">
+                                                <span className="inline-flex rounded-full bg-red-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-red-300">
                                                     Suspended
                                                 </span>
                                             ) : (

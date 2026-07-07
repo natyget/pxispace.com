@@ -10,7 +10,7 @@ import {
 
 export function ChartSkeleton({ className = '' }) {
     return (
-        <div className={`glow-surface-soft flex h-full min-h-[220px] w-full items-center justify-center rounded-2xl ${className}`.trim()}>
+        <div className={`flex h-full min-h-[220px] w-full items-center justify-center rounded-2xl bg-white/[0.035] ${className}`.trim()}>
             <div className="w-2/3 max-w-sm space-y-3">
                 <div className="h-3 w-1/3 animate-pulse rounded-full bg-white/10" />
                 <div className="h-24 animate-pulse rounded-2xl bg-white/[0.04]" />

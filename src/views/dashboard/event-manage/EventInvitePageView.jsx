@@ -1,5 +1,7 @@
 'use client';
 
+/* global process */
+
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -126,12 +128,15 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
   }, [albumId]);
 
   useEffect(() => {
-    if (!albumId) return;
-    loadDirectInvites();
+    if (!albumId) return undefined;
+    const timer = setTimeout(() => loadDirectInvites(), 0);
+    return () => clearTimeout(timer);
   }, [albumId, loadDirectInvites]);
 
   useEffect(() => {
-    if (invitePageTab === 'status' && albumId) loadDirectInvites();
+    if (invitePageTab !== 'status' || !albumId) return undefined;
+    const timer = setTimeout(() => loadDirectInvites(), 0);
+    return () => clearTimeout(timer);
   }, [invitePageTab, albumId, loadDirectInvites]);
 
   const statusCounts = useMemo(() => {
@@ -156,7 +161,10 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
   // ── Search debounce ────────────────────────────────────────────────────────
   useEffect(() => {
     const q = inviteQuery.trim();
-    if (q.length < 2) { setInviteResults([]); return; }
+    if (q.length < 2) {
+      const timer = setTimeout(() => setInviteResults([]), 0);
+      return () => clearTimeout(timer);
+    }
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => {
       setInviteSearching(true);
@@ -379,10 +387,10 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
 
   if (!albumId) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-6 text-sm text-zinc-400">
+      <div className="rounded-2xl bg-white/[0.04] p-6 text-sm text-zinc-400">
         <p>No album linked to this event.</p>
-        <Link href={`/dashboard/events/${eventId}`} className="inline-block mt-4 text-pxi-purple font-bold uppercase text-xs">
-          ← Details
+        <Link href={`/dashboard/events/${eventId}`} className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white">
+          Details
         </Link>
       </div>
     );
@@ -421,8 +429,8 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
 
           {/* Event hero */}
           {event && (
-            <div className="px-5 pt-5 pb-4 border-b border-white/[0.07]">
-              <h2 className="text-3xl font-black italic text-white leading-tight mb-2">
+            <div className="px-5 pt-5 pb-4">
+              <h2 className="mb-2 text-3xl font-black leading-tight text-white">
                 {event.name}
               </h2>
               <div className="flex flex-wrap gap-4">
@@ -444,7 +452,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
 
           {/* Share row */}
           {eventId && (
-            <div className="flex gap-2 px-4 py-3 border-b border-white/[0.07]">
+            <div className="flex gap-2 px-4 py-3">
               {/* Share link */}
               <button
                 type="button"
@@ -495,10 +503,10 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                   key={key}
                   type="button"
                   onClick={() => setInviteRoleKind(key)}
-                  className={`flex-1 py-2 rounded-full text-xs font-bold border transition-colors ${
+                  className={`flex-1 py-2 rounded-full text-xs font-bold transition-colors ${
                     inviteRoleKind === key
-                      ? 'border-pxi-purple bg-pxi-purple/20 text-white'
-                      : 'border-white/15 bg-white/5 text-zinc-400 hover:text-zinc-200 hover:bg-white/8'
+                      ? 'bg-white text-black'
+                      : 'bg-white/[0.055] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.08]'
                   }`}
                 >
                   {label}
@@ -512,8 +520,8 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 type="text"
                 value={lineupSubDraft}
                 onChange={(e) => setLineupSubDraft(e.target.value.slice(0, LINEUP_ROLE_MAX_LEN))}
-                placeholder="Line-up label (e.g. DJ, MC…)"
-                className="w-full rounded-full bg-transparent border border-white/25 text-white text-sm px-4 py-2.5 placeholder-white/35 focus:border-pxi-purple/60 focus:outline-none"
+                placeholder="Line-up label (e.g. DJ, MC...)"
+                className="glass-field w-full rounded-full px-4 py-2.5 text-sm text-white placeholder-white/35"
                 autoComplete="off"
               />
             )}
@@ -525,8 +533,8 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 type="text"
                 value={inviteQuery}
                 onChange={(e) => setInviteQuery(e.target.value)}
-                placeholder="Search username…"
-                className="w-full pl-10 pr-4 py-2.5 rounded-full bg-transparent border border-white/25 text-white placeholder-white/35 focus:border-pxi-purple/60 focus:outline-none text-sm"
+                placeholder="Search username..."
+                className="glass-field w-full rounded-full py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/35"
                 autoComplete="off"
               />
               {inviteSearching && (
@@ -546,10 +554,10 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                   key={f.id}
                   type="button"
                   onClick={() => setListFilter(listFilter === f.id ? 'all' : f.id)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
                     listFilter === f.id
-                      ? 'border-pxi-purple/60 bg-pxi-purple/20 text-white'
-                      : 'border-white/15 text-zinc-400 hover:text-zinc-200'
+                      ? 'bg-white text-black'
+                      : 'bg-white/[0.055] text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   {f.label}
@@ -584,13 +592,13 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
               </div>
             ) : filteredCandidates.length === 0 ? (
               <p className="py-8 text-center text-sm text-zinc-500">
-                {inviteSearching ? 'Searching…'
+                {inviteSearching ? 'Searching...'
                   : listFilter === 'attendees' ? 'No past attendees found.'
                   : listFilter === 'friends' ? 'No friends found.'
                   : 'No users found.'}
               </p>
             ) : (
-              <div className="space-y-0 divide-y divide-white/[0.06]">
+              <div className="space-y-1">
                 {filteredCandidates.slice(0, 20).map((c) => {
                   const selected = selectedIds.has(c.id);
                   const rsvpState = resolveInviteRsvpState(c.id, memberUserIds, inviteByUserId);
@@ -623,7 +631,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                                 : 'border-white/25 bg-white/8 text-zinc-200'
                           } disabled:opacity-50`}
                         >
-                          {busy ? '…' : `${tagLabel} · ${actionLabel}`}
+                          {busy ? '...' : `${tagLabel} · ${actionLabel}`}
                         </button>
                       </div>
                     );
@@ -660,7 +668,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
 
           {/* Floating send bar — appears when ≥1 user selected */}
           {selectedIds.size > 0 && (
-            <div className="sticky bottom-0 left-0 right-0 p-4 bg-zinc-900/95 border-t border-white/[0.08] backdrop-blur">
+            <div className="sticky bottom-0 left-0 right-0 bg-zinc-950/95 p-4 backdrop-blur">
               <button
                 type="button"
                 disabled={sending}
@@ -668,7 +676,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-white text-black text-sm font-black uppercase tracking-wide disabled:opacity-50 hover:brightness-95 transition-all"
               >
                 {sending
-                  ? <><HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin" /> Sending…</>
+                  ? <><HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin" /> Sending...</>
                   : `Send Invite${selectedIds.size > 1 ? 's' : ''} · ${selectedIds.size}`
                 }
               </button>
@@ -680,7 +688,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
       {/* ── Status tab ───────────────────────────────────────────────────── */}
       {invitePageTab === 'status' && (
         <section role="tabpanel" className="glass-panel overflow-hidden rounded-2xl">
-          <div className="p-5 border-b border-white/5 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-5">
             <h2 className="font-bold text-white uppercase tracking-widest text-sm">Direct invites</h2>
             <button
               type="button"
@@ -692,7 +700,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
             </button>
           </div>
 
-          <div className="p-5 border-b border-white/5 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 px-5 pb-5">
             {[
               { id: 'pending', label: 'Pending', count: statusCounts.pending },
               { id: 'accepted', label: 'Accepted', count: statusCounts.accepted },
@@ -702,10 +710,10 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 key={seg.id}
                 type="button"
                 onClick={() => setInviteStatusSegment(seg.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border transition-colors ${
+                className={`rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest transition-colors ${
                   inviteStatusSegment === seg.id
-                    ? 'border-violet-500/60 bg-violet-950/40 text-white'
-                    : 'border-white/10 text-zinc-400 hover:bg-white/5'
+                    ? 'bg-white text-black'
+                    : 'bg-white/[0.055] text-zinc-400 hover:bg-white/[0.08]'
                 }`}
               >
                 {seg.label} <span className="tabular-nums text-zinc-500">({seg.count})</span>
@@ -729,7 +737,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 {filteredByStatusSegment.map((inv) => {
                   const handle = String(inv.user?.username || '').trim();
                   return (
-                    <li key={inv.id} className="rounded-xl border border-white/10 bg-zinc-900/40 px-4 py-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <li key={inv.id} className="flex flex-col gap-2 rounded-xl bg-white/[0.04] px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex items-center gap-3 min-w-0">
                         <UserAvatar user={inv.user} size={34} />
                         <div className="min-w-0">
@@ -737,7 +745,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                             {handle ? `@${handle}` : inv.user?.id}
                             {inv.user?.name && <span className="text-zinc-500 font-normal"> · {inv.user.name}</span>}
                           </p>
-                          <p className="text-xs text-violet-300/80 mt-0.5">
+                          <p className="mt-0.5 text-xs text-zinc-400">
                             {formatStoredInviteRole(inv.inviteRole, inv.lineupSubrole)}
                           </p>
                         </div>
@@ -781,8 +789,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
           >
             <p className="text-2xl font-black text-white text-center leading-tight">{event?.name}</p>
             <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-500">Scan to RSVP</p>
-            <div className="bg-white p-5 rounded-3xl shadow-[0_0_60px_rgba(255,255,255,0.12)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+            <div className="rounded-3xl bg-white p-5">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(publicUrl)}&bgcolor=ffffff&color=000000&margin=0`}
                 alt="QR code"
@@ -812,7 +819,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
       {/* ── Confirm modal ────────────────────────────────────────────────── */}
       {confirmOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-white/12 bg-zinc-900 p-5 space-y-4">
+          <div className="w-full max-w-sm space-y-4 rounded-2xl bg-zinc-900 p-5">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-black text-white uppercase tracking-widest">Send Invitations</h3>
               <button
@@ -825,7 +832,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
             </div>
 
             <p className="text-sm text-zinc-300">
-              Send <span className="text-pxi-purple font-bold">{currentRoleLabel}</span> invite{selectedUsers.length > 1 ? 's' : ''} to {selectedUsers.length} {selectedUsers.length === 1 ? 'person' : 'people'}?
+              Send <span className="font-bold text-white">{currentRoleLabel}</span> invite{selectedUsers.length > 1 ? 's' : ''} to {selectedUsers.length} {selectedUsers.length === 1 ? 'person' : 'people'}?
             </p>
 
             {/* Avatar stack */}
@@ -856,7 +863,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 onClick={handleSend}
                 className="flex-1 py-3.5 rounded-xl bg-white text-black text-sm font-black disabled:opacity-50 hover:brightness-95 transition-all"
               >
-                {sending ? 'Sending…' : 'Send'}
+                {sending ? 'Sending...' : 'Send'}
               </button>
             </div>
           </div>

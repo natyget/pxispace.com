@@ -38,8 +38,6 @@ function ShareProfileLinkButton({ userId }) {
     );
 }
 
-// ─── main page ────────────────────────────────────────────────────────────────
-
 export default function PassportPage() {
     const { user, authReady, authRefreshing } = useAuth();
     const [mounted, setMounted] = useState(false);
@@ -95,8 +93,6 @@ function PassportIssued({ user, rolesReady }) {
     );
 }
 
-// ─── PXI Passport not issued ──────────────────────────────────────────────────────
-
 function PassportNotIssued({ user, rolesReady }) {
     const { updateUser } = useAuth();
     const [checkingVendor, setCheckingVendor] = useState(false);
@@ -129,55 +125,68 @@ function PassportNotIssued({ user, rolesReady }) {
     };
 
     return (
-        <div className="mx-auto max-w-4xl space-y-6 md:space-y-8">
-            <section className="relative overflow-hidden rounded-[2rem] bg-black px-5 py-7 text-center shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:px-8 md:py-10">
-                <div className="relative mx-auto max-w-xl">
-                    <div className="mb-4 flex items-center justify-center gap-2">
-                        <HugeiconsIcon icon={Shield01Icon} size={14} className="text-zinc-500" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">PXI Passport</span>
-                    </div>
-                    <h1 className="text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">Claim your identity.</h1>
-                    <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-zinc-400">
+        <div className="mx-auto max-w-5xl space-y-6 md:space-y-8">
+            <section className="relative overflow-hidden rounded-[1.75rem] bg-black px-5 py-7 shadow-[0_24px_80px_rgba(0,0,0,0.42)] md:px-8">
+                <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+                    <div className="max-w-2xl">
+                        <div className="mb-4 flex items-center gap-2">
+                            <HugeiconsIcon icon={Shield01Icon} size={14} className="text-zinc-500" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">PXI Passport</span>
+                        </div>
+                        <h1 className="text-4xl font-black leading-[0.92] text-white md:text-6xl">Claim your identity.</h1>
+                        <p className="mt-4 max-w-md text-sm leading-6 text-zinc-400">
                         Your Passport is the profile layer for PXI events, stamps, friends, and public identity.
-                    </p>
-                    <div className="mt-5 flex justify-center">
+                        </p>
+                        <div className="mt-5 flex flex-wrap items-center gap-2">
+                            <IosDownloadLink href={PXI_APP_STORE_URL}
+                                className="pill-solid inline-flex items-center gap-2 px-4 py-2.5 text-xs uppercase tracking-widest">
+                                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-black"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                                App Store
+                            </IosDownloadLink>
                         {rolesReady && user?.isVendor ? (
-                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+                                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
                                 <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="shrink-0" />
                                 Vendor
                             </span>
                         ) : rolesReady ? (
-                            <Link href="/dashboard/vendor-upgrade" className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-black hover:bg-zinc-200">
+                                <Link href="/dashboard/vendor-upgrade" className="pill-ghost inline-flex items-center px-4 py-2.5 text-xs font-black uppercase tracking-widest">
                                 Start hosting
                             </Link>
                         ) : null}
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 lg:grid-cols-1">
+                        {[
+                            ['Identity', 'Profile'],
+                            ['Events', 'Stamps'],
+                            ['Social', 'Friends'],
+                        ].map(([label, value]) => (
+                            <div key={label} className="rounded-2xl bg-white/[0.055] p-4">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{label}</p>
+                                <p className="mt-2 text-lg font-black text-white">{value}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
 
-            <div className="rounded-[2rem] bg-white/[0.04] p-6 text-center md:p-8">
-                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.055]">
-                    <HugeiconsIcon icon={SmartPhone01Icon} size={26} className="text-white/75" />
-                </div>
-                <h2 className="mb-2 text-lg font-black tracking-normal text-white">Use the PXI mobile app</h2>
-                <p className="mx-auto mb-8 max-w-sm text-sm leading-relaxed text-zinc-400">
-                    Issue your Passport from the app. It only takes a minute.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                    <IosDownloadLink href={PXI_APP_STORE_URL}
-                        className="flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-sm bg-white text-black hover:bg-zinc-200 transition-all w-full sm:w-auto justify-center">
-                        <svg viewBox="0 0 24 24" className="w-5 h-5 fill-black"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-                        App Store
-                    </IosDownloadLink>
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+                <div className="rounded-[1.5rem] bg-white/[0.04] p-6">
+                    <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.055]">
+                        <HugeiconsIcon icon={SmartPhone01Icon} size={24} className="text-white/75" />
+                    </div>
+                    <h2 className="text-lg font-black text-white">Use the PXI mobile app</h2>
+                    <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+                        Issue your Passport from the app. It only takes a minute and unlocks your event identity.
+                    </p>
                     <a href="https://play.google.com/store/apps/pxi" target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-sm bg-white text-black hover:bg-zinc-200 transition-all w-full sm:w-auto justify-center">
-                        <svg viewBox="0 0 24 24" className="w-5 h-5 fill-black"><path d="M3.18 23.76c.3.17.64.22.98.14l13.12-7.57L14 13l-10.82 10.76zM.54 1.27C.2 1.6 0 2.14 0 2.87v18.27c0 .73.2 1.27.54 1.6L1.63 21.6 12.35 12 1.63 2.41.54 1.27zM20.46 10.37l-2.98-1.72-3.85 3.35 3.85 3.34 3-1.73c.85-.49.85-1.26-.02-1.74zM4.16.1L17.28 7.67l-3.28 2.87L3.18.24A1.2 1.2 0 0 1 4.16.1z"/></svg>
+                        className="pill-ghost mt-5 inline-flex items-center gap-2.5 px-5 py-3 text-sm font-black uppercase tracking-widest">
+                        <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white"><path d="M3.18 23.76c.3.17.64.22.98.14l13.12-7.57L14 13l-10.82 10.76zM.54 1.27C.2 1.6 0 2.14 0 2.87v18.27c0 .73.2 1.27.54 1.6L1.63 21.6 12.35 12 1.63 2.41.54 1.27zM20.46 10.37l-2.98-1.72-3.85 3.35 3.85 3.34 3-1.73c.85-.49.85-1.26-.02-1.74zM4.16.1L17.28 7.67l-3.28 2.87L3.18.24A1.2 1.2 0 0 1 4.16.1z"/></svg>
                         Google Play
                     </a>
                 </div>
 
-                {/* Vendor verification integration */}
-                <div className="mt-8 rounded-2xl bg-black/20 p-4 text-left">
+                <div className="rounded-[1.5rem] bg-white/[0.04] p-5">
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <p className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Hosting verification</p>
@@ -213,12 +222,12 @@ function PassportNotIssued({ user, rolesReady }) {
                         </div>
                     )}
 
-                    <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                    <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                         <button
                             type="button"
                             onClick={handleCheckVendorVerification}
                             disabled={checkingVendor}
-                            className="inline-flex items-center justify-center gap-2 rounded-full bg-white/[0.06] px-3 py-2 text-xs font-semibold text-zinc-200 hover:bg-white/10 disabled:opacity-50"
+                            className="pill-ghost inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold disabled:opacity-50"
                         >
                             {checkingVendor ? <HugeiconsIcon icon={Loading02Icon} size={13} className="animate-spin" /> : <HugeiconsIcon icon={RefreshIcon} size={13} />}
                             Check verification

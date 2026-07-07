@@ -53,7 +53,7 @@ function formatRequirement(key) {
 
 function StatusRow({ label, enabled, description }) {
     return (
-        <div className="flex items-start gap-3 rounded-2xl bg-black/20 px-4 py-3">
+        <div className="flex items-start gap-3 rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
             <div className="mt-0.5 flex-shrink-0">
                 {enabled
                     ? <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="text-emerald-400" />
@@ -118,6 +118,14 @@ export default function VendorUpgradePage() {
             try {
                 const result = await authService.checkVendorStatus();
                 if (cancelled) return;
+                if (result?.isVendor) {
+                    if (result.token) {
+                        await authStorage.save({ token: result.token, user: { ...user, isVendor: true } });
+                    }
+                    updateUser({ isVendor: true });
+                    setStep('done');
+                    return;
+                }
                 const hasAccount = result?.code !== 'NO_STRIPE_ACCOUNT';
                 setHasSubmittedVerification(!!hasAccount);
                 if (result?.code === 'PENDING_VERIFICATION') {
@@ -131,7 +139,7 @@ export default function VendorUpgradePage() {
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [ready, user?.id, user?.isVendor]);
+    }, [ready, updateUser, user]);
 
     const handleStartOnboarding = async () => {
         setStep('loading');
@@ -234,12 +242,11 @@ export default function VendorUpgradePage() {
 
     return (
         <div className="mx-auto max-w-5xl space-y-6 md:space-y-8">
-            {/* Header */}
-            <section className="rounded-[2rem] bg-black px-5 py-7 shadow-[0_24px_90px_rgba(0,0,0,0.42)] md:px-8">
+            <section className="rounded-[1.75rem] bg-black px-5 py-7 shadow-[0_24px_80px_rgba(0,0,0,0.42)] md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Hosting access</p>
-                        <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Hosting access</p>
+                        <h1 className="mt-3 text-4xl font-black leading-[0.92] text-white md:text-6xl">
                             Start hosting on PXI.
                         </h1>
                         <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 md:text-base">
@@ -262,7 +269,7 @@ export default function VendorUpgradePage() {
             {/* Benefits */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {BENEFITS.map(({ icon: Icon, title, desc }) => (
-                    <div key={title} className="glass-panel rounded-2xl p-5">
+                    <div key={title} className="glass-panel rounded-[1.25rem] p-5">
                         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.055]">
                             <HugeiconsIcon icon={Icon} size={18} className="text-white/75" />
                         </div>
@@ -274,7 +281,7 @@ export default function VendorUpgradePage() {
 
             {/* Error banner */}
             {step === 'error' && errorMsg && (
-                <div className="glass-panel flex items-start gap-3 rounded-2xl px-4 py-3 text-sm text-red-300">
+                <div className="glass-panel flex items-start gap-3 rounded-[1.25rem] px-4 py-3 text-sm text-red-300">
                     <HugeiconsIcon icon={Alert02Icon} size={16} className="mt-0.5 flex-shrink-0" />
                     {errorMsg}
                 </div>
@@ -282,7 +289,7 @@ export default function VendorUpgradePage() {
 
             {/* Stripe status breakdown — shown after a Check Status call returns PENDING */}
             {stripeStatus && (
-                <div className="glass-panel rounded-2xl p-5 space-y-3">
+                <div className="glass-panel space-y-3 rounded-[1.25rem] p-5">
                     <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Stripe Account Status</p>
 
                     <StatusRow
@@ -318,7 +325,7 @@ export default function VendorUpgradePage() {
             )}
 
             {/* CTA Card */}
-            <div className="glass-panel rounded-2xl p-6">
+            <div className="glass-panel rounded-[1.25rem] p-6">
                 <h2 className="text-white font-bold text-base mb-1">Connect with Stripe</h2>
                 <p className="text-zinc-500 text-sm mb-5 leading-relaxed">
                     You'll be redirected to Stripe to complete identity and banking
@@ -384,7 +391,7 @@ export default function VendorUpgradePage() {
             </div>
 
             {/* Check Status */}
-            <div className="glass-panel rounded-2xl p-5">
+            <div className="glass-panel rounded-[1.25rem] p-5">
                 <p className="text-zinc-500 text-sm mb-3">
                     Already completed Stripe verification? Check if your account has been approved.
                 </p>

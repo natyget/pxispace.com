@@ -220,8 +220,8 @@ function EventCard({ event, relation, now, pinned, requestCount = 0, onOpen, onN
   const keyDetail = isHosted ? (attendees || event.location || event.venue || 'Organizer view') : (event.attendeeStatus || 'Ticketed');
   const base = isLive
     ? pinned
-      ? 'shadow-[0_0_0_1px_rgba(74,222,128,0.28),0_0_34px_rgba(74,222,128,0.12)]'
-      : 'shadow-[0_0_0_1px_rgba(74,222,128,0.28),0_0_34px_rgba(74,222,128,0.12)]'
+      ? 'shadow-[0_24px_70px_rgba(0,0,0,0.65)]'
+      : 'shadow-[0_18px_54px_rgba(0,0,0,0.56)]'
     : isPast
       ? 'opacity-85 grayscale-[28%] shadow-[0_18px_54px_rgba(0,0,0,0.58)] transition-all duration-500 hover:opacity-100'
       : pinned
@@ -256,7 +256,7 @@ function EventCard({ event, relation, now, pinned, requestCount = 0, onOpen, onN
           }}
         />
         <div className="absolute left-4 top-4 flex max-w-[calc(100%-5.5rem)] flex-wrap items-start gap-2">
-          <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${isLive ? 'bg-emerald-400/18 text-emerald-200 shadow-[0_0_18px_rgba(74,222,128,0.22)]' : isPast ? 'bg-black/40 text-white/65' : 'bg-black/40 text-white/80'}`}>
+          <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${isLive ? 'bg-emerald-400/18 text-emerald-200' : isPast ? 'bg-black/40 text-white/65' : 'bg-black/40 text-white/80'}`}>
             {isLive ? 'Live' : isPast ? 'Past' : startsIn(event.startDate, now)}
           </span>
           {isLive ? <span className="rounded-full bg-white/[0.14] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white">Live Pin</span> : null}
@@ -293,7 +293,7 @@ function HostedEventModal({ event, now, pinned, onClose, onNavigate, onTogglePin
   return (
     <Modal open={!!event} onClose={onClose} title={event.name || 'Hosted event'} description="Organizer detail view" maxWidth="max-w-2xl">
       <div className="grid gap-5 md:grid-cols-[180px_1fr]">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-zinc-900 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-zinc-900">
           {cover ? (
             <Image src={cover} alt={event.name || 'Event cover'} fill unoptimized className="object-cover" />
           ) : (
@@ -587,7 +587,7 @@ export default function EventsListPage() {
               <div><h3 className="text-lg font-bold text-white">Delete event?</h3><p className="mt-1.5 text-sm leading-relaxed text-zinc-400"><span className="font-semibold text-white">"{deleteTarget.name || 'This event'}"</span> will be permanently deleted. This action cannot be undone.</p></div>
             </div>
             <div className="mt-2 flex gap-3 px-6 pb-6">
-              <button type="button" onClick={() => setDeleteTarget(null)} className="min-h-[44px] flex-1 rounded-xl text-sm font-semibold text-zinc-200 shadow-[0_0_0_1px_rgba(255,255,255,0.05)] transition-colors hover:bg-white/5">Cancel</button>
+              <button type="button" onClick={() => setDeleteTarget(null)} className="min-h-[44px] flex-1 rounded-xl bg-white/[0.055] text-sm font-semibold text-zinc-200 transition-colors hover:bg-white/10">Cancel</button>
               <button type="button" onClick={confirmDelete} disabled={!!deletingEventId} className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-red-500/90 text-sm font-bold text-white transition-colors hover:bg-red-500 disabled:opacity-50">{deletingEventId ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : null}Delete</button>
             </div>
           </GlowCard>

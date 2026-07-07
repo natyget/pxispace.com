@@ -13,6 +13,7 @@ import {
     adminTdClass,
     adminThClass,
 } from '@/components/admin/AdminPageShell';
+import { adminErrorMessage } from '@/components/admin/adminFormat';
 
 function formatDate(iso) {
     if (!iso) return '—';
@@ -56,7 +57,7 @@ export default function AdminEventsPage() {
             setTotalPages(data.totalPages || 1);
             setTotal(data.total ?? 0);
         } catch (err) {
-            setError(err.message || 'Failed to load events');
+            setError(adminErrorMessage(err, 'Failed to load events'));
             setRows([]);
         } finally {
             setLoading(false);
@@ -104,7 +105,7 @@ export default function AdminEventsPage() {
                                     <td className={`${adminTdClass} whitespace-nowrap`}>{formatDate(ev.startDate)}</td>
                                     <td className={`${adminTdClass} whitespace-nowrap`}>{formatDate(ev.endDate)}</td>
                                     <td className="px-6 py-4">
-                                        <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                        <span className="inline-flex rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
                                             {ev.status}
                                         </span>
                                     </td>

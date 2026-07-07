@@ -215,7 +215,7 @@ function ReturnTooltip({ active, payload, label }) {
 
 function RevenueTableRow({ title, value, unit, subheading, fluctuation, isPositive }) {
     return (
-        <div className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
+        <div className="flex items-center justify-between rounded-2xl bg-white/[0.03] px-3 py-3">
             <div>
                 <p className="text-sm font-bold text-white">{title}</p>
                 <p className="text-xs text-zinc-500">{subheading}</p>
@@ -638,14 +638,14 @@ export default function EarningsPage() {
                     ) : (
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="border-b border-white/5">
+                                <tr>
                                     <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Date</th>
                                     <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Amount</th>
                                     <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Destination</th>
                                     <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase text-right">Status</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/5">
+                            <tbody>
                                 {payouts.map((p) => (
                                     <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
                                         <td className="px-6 py-5 text-[14px] font-mono font-medium text-white/50 flex items-center">
