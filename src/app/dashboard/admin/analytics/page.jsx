@@ -5,9 +5,8 @@ import { fetchPlatformAnalytics } from '@/services/admin';
 import { useAuth } from '@/contexts/AuthContext';
 import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 
-// Series colors validated for the dark surface (CVD-safe pair, ≥3:1 contrast).
-const BLUE = '#3987e5';
-const AQUA = '#199e70';
+const CHART_PRIMARY = '#ffffff';
+const CHART_ACCENT = '#a1a1aa';
 
 const RANGES = [
     { days: 7, label: '7d' },
@@ -30,6 +29,18 @@ function shortDate(key) {
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
+function formatInteger(value) {
+    return Number(value || 0).toLocaleString();
+}
+
+function sumValues(rows = [], key = 'value') {
+    return rows.reduce((sum, row) => sum + (Number(row?.[key]) || 0), 0);
+}
+
+function activeDays(rows = [], key = 'value') {
+    return rows.filter((row) => Number(row?.[key]) > 0).length;
+}
+
 /** Fill the [now-days, now] range so every day has a point even with no rows. */
 function fillDays(days, rows, pick) {
     const byKey = new Map((rows || []).map((r) => [dayKey(r.day), r]));
@@ -45,11 +56,68 @@ function fillDays(days, rows, pick) {
 
 function StatTile({ label, value, hint }) {
     return (
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
-            <p className="text-[11px] font-bold tracking-widest text-white/40 uppercase">{label}</p>
-            <p className="text-[26px] font-black text-white tabular-nums mt-1.5 leading-none">{value}</p>
-            {hint ? <p className="text-[12px] text-white/45 mt-1.5">{hint}</p> : null}
+        <div className="rounded-2xl bg-white/[0.04] p-5 backdrop-blur-md">
+            <p className="text-[10px] font-black tracking-widest text-white/40 uppercase">{label}</p>
+            <p className="mt-3 text-[28px] font-black leading-none tracking-normal text-white tabular-nums">{value}</p>
+            {hint ? <p className="mt-2 text-[12px] font-semibold leading-5 text-white/45">{hint}</p> : null}
         </div>
+    );
+}
+
+function AdminAnalyticsHero({ days, setDays, isLiveAdmin, loading, signups, tickets, revenue }) {
+    const rangeGross = sumValues(revenue, 'gross');
+    const rangeTake = sumValues(revenue, 'take');
+    const rangeSignups = sumValues(signups);
+    const rangeTickets = sumValues(tickets);
+    const metrics = [
+        { label: 'Range gross', value: formatUsd(rangeGross), detail: `${days}-day window` },
+        { label: 'PXI take', value: formatUsd(rangeTake), detail: 'Platform fee capture' },
+        { label: 'New users', value: formatInteger(rangeSignups), detail: `${activeDays(signups)} active signup days` },
+        { label: 'Tickets issued', value: formatInteger(rangeTickets), detail: `${activeDays(tickets)} active ticket days` },
+    ];
+
+    return (
+        <section className="relative overflow-hidden rounded-[2rem] bg-black px-5 py-7 shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:px-8 md:py-8">
+            <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+                <div className="max-w-2xl">
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">PXI Admin</span>
+                        <span className="text-zinc-700">/</span>
+                        <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
+                    </div>
+                    <h1 className="max-w-xl text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">
+                        Platform analytics
+                    </h1>
+                    <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-300 md:text-base">
+                        Growth, ticketing, revenue, and PXI take across the whole platform.
+                    </p>
+                    <div className="dashboard-segmented-toggle mt-5 w-full sm:w-auto" role="tablist" aria-label="Analytics range">
+                        {RANGES.map((range) => (
+                            <button
+                                key={range.days}
+                                type="button"
+                                onClick={() => setDays(range.days)}
+                                className="dashboard-segmented-toggle__item flex-1 sm:flex-none"
+                                data-active={days === range.days}
+                                aria-pressed={days === range.days}
+                            >
+                                {range.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 xl:w-[520px]">
+                    {metrics.map((metric) => (
+                        <StatTile
+                            key={metric.label}
+                            label={metric.label}
+                            value={loading ? '...' : metric.value}
+                            hint={metric.detail}
+                        />
+                    ))}
+                </div>
+            </div>
+        </section>
     );
 }
 
@@ -69,61 +137,70 @@ function DailyBars({ title, data, color, format = (v) => String(v) }) {
     const barW = Math.max(2, step - 2);
 
     const gridYs = [0.5, 1].map((f) => PAD.top + innerH * (1 - f));
+    const total = sumValues(data);
+    const daysWithActivity = activeDays(data);
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
-            <div className="flex items-baseline justify-between gap-3 mb-3">
-                <h2 className="text-[13px] font-bold text-white/80">{title}</h2>
-                <span className="text-[12px] text-white/45 tabular-nums">
+        <div className="glass-panel overflow-hidden rounded-[1.75rem] p-5">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Daily flow</p>
+                    <h2 className="mt-2 text-lg font-black tracking-normal text-white">{title}</h2>
+                    <p className="mt-1 text-xs font-semibold text-white/40">
+                        {daysWithActivity} active days · {format(total)} total
+                    </p>
+                </div>
+                <span className="w-fit rounded-full bg-white/[0.065] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-white/55 tabular-nums">
                     {hover != null
-                        ? `${shortDate(data[hover].key)} — ${format(data[hover].value)}`
-                        : `peak ${format(max)}`}
+                        ? `${shortDate(data[hover].key)} · ${format(data[hover].value)}`
+                        : `Peak ${format(max)}`}
                 </span>
             </div>
-            <svg
-                viewBox={`0 0 ${W} ${H}`}
-                className="w-full h-auto block"
-                role="img"
-                aria-label={title}
-                onMouseLeave={() => setHover(null)}
-            >
-                {gridYs.map((y) => (
-                    <line key={y} x1={PAD.left} x2={W - PAD.right} y1={y} y2={y} stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
-                ))}
-                <line x1={PAD.left} x2={W - PAD.right} y1={PAD.top + innerH} y2={PAD.top + innerH} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-                {data.map((d, i) => {
-                    const h = Math.round((d.value / max) * innerH);
-                    const x = PAD.left + i * step + (step - barW) / 2;
-                    const y = PAD.top + innerH - h;
-                    return (
-                        <g key={d.key}>
-                            {/* hit target wider than the mark */}
-                            <rect
-                                x={PAD.left + i * step}
-                                y={PAD.top}
-                                width={step}
-                                height={innerH}
-                                fill="transparent"
-                                onMouseEnter={() => setHover(i)}
-                            />
-                            {d.value > 0 && (
+            <div className="rounded-2xl bg-black/20 p-3">
+                <svg
+                    viewBox={`0 0 ${W} ${H}`}
+                    className="block h-auto w-full"
+                    role="img"
+                    aria-label={title}
+                    onMouseLeave={() => setHover(null)}
+                >
+                    {gridYs.map((y) => (
+                        <line key={y} x1={PAD.left} x2={W - PAD.right} y1={y} y2={y} stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
+                    ))}
+                    <line x1={PAD.left} x2={W - PAD.right} y1={PAD.top + innerH} y2={PAD.top + innerH} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                    {data.map((d, i) => {
+                        const h = Math.round((d.value / max) * innerH);
+                        const x = PAD.left + i * step + (step - barW) / 2;
+                        const y = PAD.top + innerH - h;
+                        return (
+                            <g key={d.key}>
                                 <rect
-                                    x={x}
-                                    y={y}
-                                    width={barW}
-                                    height={Math.max(2, h)}
-                                    rx={Math.min(3, barW / 2)}
-                                    fill={color}
-                                    opacity={hover === null || hover === i ? 1 : 0.45}
-                                    pointerEvents="none"
+                                    x={PAD.left + i * step}
+                                    y={PAD.top}
+                                    width={step}
+                                    height={innerH}
+                                    fill="transparent"
+                                    onMouseEnter={() => setHover(i)}
                                 />
-                            )}
-                        </g>
-                    );
-                })}
-                <text x={PAD.left} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10">{shortDate(data[0]?.key)}</text>
-                <text x={W - PAD.right} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10" textAnchor="end">{shortDate(data[data.length - 1]?.key)}</text>
-            </svg>
+                                {d.value > 0 && (
+                                    <rect
+                                        x={x}
+                                        y={y}
+                                        width={barW}
+                                        height={Math.max(2, h)}
+                                        rx={Math.min(3, barW / 2)}
+                                        fill={color}
+                                        opacity={hover === null || hover === i ? 1 : 0.45}
+                                        pointerEvents="none"
+                                    />
+                                )}
+                            </g>
+                        );
+                    })}
+                    <text x={PAD.left} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10">{shortDate(data[0]?.key)}</text>
+                    <text x={W - PAD.right} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10" textAnchor="end">{shortDate(data[data.length - 1]?.key)}</text>
+                </svg>
+            </div>
         </div>
     );
 }
@@ -141,6 +218,9 @@ function RevenueLines({ data }) {
     const y = (v) => PAD.top + innerH * (1 - v / max);
 
     const path = (pick) => data.map((d, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(pick(d)).toFixed(1)}`).join(' ');
+    const grossTotal = sumValues(data, 'gross');
+    const takeTotal = sumValues(data, 'take');
+    const takeRate = grossTotal > 0 ? `${Math.round((takeTotal / grossTotal) * 1000) / 10}%` : '0%';
 
     const onMove = (e) => {
         const svg = e.currentTarget;
@@ -151,47 +231,71 @@ function RevenueLines({ data }) {
     };
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-3 mb-3">
-                <h2 className="text-[13px] font-bold text-white/80">Revenue per day</h2>
-                <div className="flex items-center gap-4 text-[12px] text-white/60">
-                    <span className="inline-flex items-center gap-1.5">
-                        <span className="w-3 h-[2px] rounded" style={{ background: BLUE }} /> Gross
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                        <span className="w-3 h-[2px] rounded" style={{ background: AQUA }} /> PXI take
-                    </span>
-                    {hover != null && (
-                        <span className="tabular-nums text-white/80">
-                            {shortDate(data[hover].key)} — gross {formatUsd(data[hover].gross)} · take {formatUsd(data[hover].take)}
-                        </span>
-                    )}
+        <div className="glass-panel overflow-hidden rounded-[1.75rem] p-5">
+            <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Money movement</p>
+                    <h2 className="mt-2 text-xl font-black tracking-normal text-white">Revenue per day</h2>
+                    <p className="mt-1 text-sm leading-6 text-white/45">
+                        Gross sales compared with captured PXI take.
+                    </p>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-left">
+                    <div className="rounded-2xl bg-white/[0.045] px-3 py-2">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-white/35">Gross</p>
+                        <p className="mt-1 text-sm font-black text-white">{formatUsd(grossTotal)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/[0.045] px-3 py-2">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-white/35">Take</p>
+                        <p className="mt-1 text-sm font-black text-white">{formatUsd(takeTotal)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/[0.045] px-3 py-2">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-white/35">Rate</p>
+                        <p className="mt-1 text-sm font-black text-white">{takeRate}</p>
+                    </div>
                 </div>
             </div>
-            <svg
-                viewBox={`0 0 ${W} ${H}`}
-                className="w-full h-auto block"
-                role="img"
-                aria-label="Daily gross revenue and PXI take"
-                onMouseMove={onMove}
-                onMouseLeave={() => setHover(null)}
-            >
-                {[0.5, 1].map((f) => (
-                    <line key={f} x1={PAD.left} x2={W - PAD.right} y1={PAD.top + innerH * (1 - f)} y2={PAD.top + innerH * (1 - f)} stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
-                ))}
-                <line x1={PAD.left} x2={W - PAD.right} y1={PAD.top + innerH} y2={PAD.top + innerH} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-                <path d={path((d) => d.gross)} fill="none" stroke={BLUE} strokeWidth="2" strokeLinejoin="round" />
-                <path d={path((d) => d.take)} fill="none" stroke={AQUA} strokeWidth="2" strokeLinejoin="round" />
-                {hover != null && (
-                    <g pointerEvents="none">
-                        <line x1={x(hover)} x2={x(hover)} y1={PAD.top} y2={PAD.top + innerH} stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
-                        <circle cx={x(hover)} cy={y(data[hover].gross)} r="4" fill={BLUE} stroke="#18181b" strokeWidth="2" />
-                        <circle cx={x(hover)} cy={y(data[hover].take)} r="4" fill={AQUA} stroke="#18181b" strokeWidth="2" />
-                    </g>
-                )}
-                <text x={PAD.left} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10">{shortDate(data[0]?.key)}</text>
-                <text x={W - PAD.right} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10" textAnchor="end">{shortDate(data[data.length - 1]?.key)}</text>
-            </svg>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-[12px] text-white/60">
+                <div className="flex items-center gap-4">
+                    <span className="inline-flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: CHART_PRIMARY }} /> Gross
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: CHART_ACCENT }} /> PXI take
+                    </span>
+                </div>
+                {hover != null ? (
+                    <span className="rounded-full bg-white/[0.065] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-white/70 tabular-nums">
+                        {shortDate(data[hover].key)} · gross {formatUsd(data[hover].gross)} · take {formatUsd(data[hover].take)}
+                    </span>
+                ) : null}
+            </div>
+            <div className="rounded-2xl bg-black/20 p-3">
+                <svg
+                    viewBox={`0 0 ${W} ${H}`}
+                    className="block h-auto w-full"
+                    role="img"
+                    aria-label="Daily gross revenue and PXI take"
+                    onMouseMove={onMove}
+                    onMouseLeave={() => setHover(null)}
+                >
+                    {[0.5, 1].map((f) => (
+                        <line key={f} x1={PAD.left} x2={W - PAD.right} y1={PAD.top + innerH * (1 - f)} y2={PAD.top + innerH * (1 - f)} stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
+                    ))}
+                    <line x1={PAD.left} x2={W - PAD.right} y1={PAD.top + innerH} y2={PAD.top + innerH} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                    <path d={path((d) => d.gross)} fill="none" stroke={CHART_PRIMARY} strokeWidth="2.4" strokeLinejoin="round" />
+                    <path d={path((d) => d.take)} fill="none" stroke={CHART_ACCENT} strokeWidth="2.4" strokeLinejoin="round" />
+                    {hover != null && (
+                        <g pointerEvents="none">
+                            <line x1={x(hover)} x2={x(hover)} y1={PAD.top} y2={PAD.top + innerH} stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
+                            <circle cx={x(hover)} cy={y(data[hover].gross)} r="4" fill={CHART_PRIMARY} stroke="#18181b" strokeWidth="2" />
+                            <circle cx={x(hover)} cy={y(data[hover].take)} r="4" fill={CHART_ACCENT} stroke="#18181b" strokeWidth="2" />
+                        </g>
+                    )}
+                    <text x={PAD.left} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10">{shortDate(data[0]?.key)}</text>
+                    <text x={W - PAD.right} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10" textAnchor="end">{shortDate(data[data.length - 1]?.key)}</text>
+                </svg>
+            </div>
         </div>
     );
 }
@@ -222,7 +326,8 @@ export default function AdminAnalyticsPage() {
     }, [isLiveAdmin, days]);
 
     useEffect(() => {
-        load();
+        const timer = setTimeout(() => load(), 0);
+        return () => clearTimeout(timer);
     }, [load]);
 
     const signups = useMemo(
@@ -245,67 +350,42 @@ export default function AdminAnalyticsPage() {
     );
 
     return (
-        <div className="max-w-6xl space-y-6">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <h1 className="text-xl font-bold text-white mb-2">Platform analytics</h1>
-                    <p className="text-white/60 text-sm leading-relaxed">
-                        Growth, ticketing, and revenue across all of PXI. PXI take = service fee + platform flat fee.
-                    </p>
-                </div>
-                <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
-            </div>
-
-            <div className="flex gap-2">
-                {RANGES.map((r) => (
-                    <button
-                        key={r.days}
-                        type="button"
-                        onClick={() => setDays(r.days)}
-                        className={`rounded-full px-4 py-1.5 text-[12px] font-semibold border transition-colors ${
-                            days === r.days
-                                ? 'bg-white text-black border-white'
-                                : 'border-white/10 text-white/60 hover:text-white hover:border-white/25'
-                        }`}
-                    >
-                        {r.label}
-                    </button>
-                ))}
-            </div>
+        <div className="max-w-7xl space-y-6 md:space-y-8">
+            <AdminAnalyticsHero
+                days={days}
+                setDays={setDays}
+                isLiveAdmin={isLiveAdmin}
+                loading={loading}
+                signups={signups}
+                tickets={tickets}
+                revenue={revenue}
+            />
 
             {!isLiveAdmin && (
-                <div className="rounded-2xl border border-white/10 bg-zinc-900/40 px-6 py-12 text-center text-white/50 text-sm">
+                <div className="rounded-2xl bg-white/[0.04] px-6 py-12 text-center text-sm text-white/50">
                     Live platform analytics requires a backend ADMIN account.
                 </div>
             )}
             {error && (
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-4 text-red-300 text-sm">{error}</div>
+                <div className="rounded-2xl bg-red-500/5 px-6 py-4 text-sm text-red-300">{error}</div>
             )}
             {isLiveAdmin && loading && (
-                <div className="rounded-2xl border border-white/10 bg-zinc-900/40 px-6 py-12 text-center text-white/45 text-sm">Loading…</div>
+                <div className="rounded-2xl bg-white/[0.04] px-6 py-12 text-center text-sm text-white/45">Loading...</div>
             )}
 
             {isLiveAdmin && !loading && data && (
                 <>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <StatTile label="Total users" value={data.totals.users.toLocaleString()} />
-                        <StatTile label="Tickets issued" value={data.totals.tickets.toLocaleString()} hint={`${data.totals.events.toLocaleString()} events`} />
-                        <StatTile
-                            label="Lifetime gross"
-                            value={formatUsd(data.totals.lifetimeGrossCents)}
-                            hint={`${data.totals.lifetimePayments.toLocaleString()} payments`}
-                        />
-                        <StatTile
-                            label="Lifetime PXI take"
-                            value={formatUsd(data.totals.lifetimePxiCents)}
-                            hint={`${data.totals.openSupportTickets} open tickets · ${data.totals.pendingReports} pending reports`}
-                        />
-                    </div>
+                    <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Lifetime totals">
+                        <StatTile label="Total users" value={formatInteger(data.totals.users)} />
+                        <StatTile label="Tickets issued" value={formatInteger(data.totals.tickets)} hint={`${formatInteger(data.totals.events)} events`} />
+                        <StatTile label="Lifetime gross" value={formatUsd(data.totals.lifetimeGrossCents)} hint={`${formatInteger(data.totals.lifetimePayments)} payments`} />
+                        <StatTile label="Lifetime PXI take" value={formatUsd(data.totals.lifetimePxiCents)} hint={`${data.totals.openSupportTickets} open tickets · ${data.totals.pendingReports} pending reports`} />
+                    </section>
 
                     <RevenueLines data={revenue} />
                     <div className="grid gap-6 lg:grid-cols-2">
-                        <DailyBars title="Signups per day" data={signups} color={BLUE} />
-                        <DailyBars title="Event tickets issued per day" data={tickets} color={AQUA} />
+                        <DailyBars title="Signups per day" data={signups} color={CHART_PRIMARY} />
+                        <DailyBars title="Event tickets issued per day" data={tickets} color={CHART_ACCENT} />
                     </div>
                 </>
             )}

@@ -88,6 +88,10 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [venueName, setVenueName] = useState('');
+  const [recurrence, setRecurrence] = useState('');
+  const [stampImage, setStampImage] = useState(null);
+  const [isStampUploading, setIsStampUploading] = useState(false);
   const [geoLat, setGeoLat] = useState(null);
   const [geoLon, setGeoLon] = useState(null);
   const [startLocal, setStartLocal] = useState(defaults.current.start);
@@ -419,6 +423,9 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         capacity: capacity.trim() !== '' && parseInt(capacity, 10) > 0 ? parseInt(capacity, 10) : undefined,
         createdBy: user.id,
         featuredPeople: lineupOnly,
+        venueName: venueName.trim() || undefined,
+        recurrenceRule: recurrence || undefined,
+        stampImageUrl: stampImage || undefined,
       });
 
       if (created.token && user) {
@@ -638,6 +645,71 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               </GeoapifyContext>
             </div>
           </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Venue name</label>
+              <input
+                className={inputClass}
+                value={venueName}
+                onChange={(e) => setVenueName(e.target.value)}
+                placeholder="e.g. The Grand Hall"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Repeats</label>
+              <select className={inputClass} value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
+                <option value="">One-off event</option>
+                <option value="WEEKLY">Weekly</option>
+                <option value="BIWEEKLY">Every two weeks</option>
+                <option value="MONTHLY">Monthly</option>
+              </select>
+            </div>
+          </div>
+          {recurrence ? (
+            <div>
+              <label className={labelClass}>Custom passport stamp (recurring series)</label>
+              <p className="mb-2 text-xs text-white/40">
+                Optional square artwork attendees collect as this event&apos;s stamp — shared by every recurrence.
+              </p>
+              <div className="flex items-center gap-3">
+                {stampImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={stampImage} alt="Custom stamp" className="h-16 w-16 rounded-xl border border-white/15 object-cover" />
+                ) : null}
+                <label className="cursor-pointer rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white/70 hover:text-white">
+                  {isStampUploading ? 'Uploading…' : stampImage ? 'Replace stamp' : 'Upload stamp'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isStampUploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setIsStampUploading(true);
+                      try {
+                        const url = await uploadImageToR2(file);
+                        setStampImage(url);
+                      } catch {
+                        setFormError('Stamp upload failed — try another image.');
+                      } finally {
+                        setIsStampUploading(false);
+                      }
+                    }}
+                  />
+                </label>
+                {stampImage ? (
+                  <button
+                    type="button"
+                    onClick={() => setStampImage(null)}
+                    className="text-xs font-semibold uppercase tracking-widest text-white/40 hover:text-white"
+                  >
+                    Remove
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Start *</label>
@@ -954,12 +1026,12 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         {paidGate && (
           <div className="glass-panel rounded-2xl px-4 py-3 text-sm text-amber-200 space-y-2">
             {paidGate === 'no-account' ? (
-              <p>To sell tickets, complete vendor setup with Stripe.</p>
+              <p>To sell tickets, complete hosting setup with Stripe.</p>
             ) : (
-              <p>Stripe is still verifying your account. You can create a free event now or check status from vendor setup.</p>
+              <p>Stripe is still verifying your account. You can create a free event now or check status from hosting setup.</p>
             )}
             <Link href="/dashboard/vendor-upgrade" className="inline-block text-pxi-purple font-bold hover:underline">
-              Vendor setup →
+              Hosting setup
             </Link>
           </div>
         )}

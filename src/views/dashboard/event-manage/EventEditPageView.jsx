@@ -62,6 +62,10 @@ export default function EventEditPageView() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [venueName, setVenueName] = useState('');
+  const [recurrence, setRecurrence] = useState('');
+  const [stampImage, setStampImage] = useState(null);
+  const [isStampUploading, setIsStampUploading] = useState(false);
   const [geoLat, setGeoLat] = useState(null);
   const [geoLon, setGeoLon] = useState(null);
   const [startLocal, setStartLocal] = useState('');
@@ -99,61 +103,68 @@ export default function EventEditPageView() {
   }, [eventId]);
 
   useEffect(() => {
-    if (!event || loading || !eventId) return;
+    if (!event || loading || !eventId) return undefined;
     if (lastHydratedEventId.current === eventId) return;
     lastHydratedEventId.current = eventId;
 
-    setFormError(null);
-    setPaidGate(null);
-    setName(event.name || '');
-    setDescription(event.description || '');
-    setLocation(event.location || '');
-    setGeoLat(typeof event.latitude === 'number' ? event.latitude : null);
-    setGeoLon(typeof event.longitude === 'number' ? event.longitude : null);
-    const start = event.startDate ? new Date(event.startDate) : new Date();
-    const end = event.endDate ? new Date(event.endDate) : new Date(start.getTime() + 2 * 60 * 60 * 1000);
-    setStartLocal(toDatetimeLocalValue(start));
-    setEndLocal(toDatetimeLocalValue(end));
+    const timer = setTimeout(() => {
+      setFormError(null);
+      setPaidGate(null);
+      setName(event.name || '');
+      setDescription(event.description || '');
+      setLocation(event.location || '');
+      setGeoLat(typeof event.latitude === 'number' ? event.latitude : null);
+      setGeoLon(typeof event.longitude === 'number' ? event.longitude : null);
+      const start = event.startDate ? new Date(event.startDate) : new Date();
+      const end = event.endDate ? new Date(event.endDate) : new Date(start.getTime() + 2 * 60 * 60 * 1000);
+      setStartLocal(toDatetimeLocalValue(start));
+      setEndLocal(toDatetimeLocalValue(end));
 
-    const vis = String(event.visibility || '').trim().toUpperCase();
-    setIsPrivate(vis !== 'PUBLIC');
+      const vis = String(event.visibility || '').trim().toUpperCase();
+      setIsPrivate(vis !== 'PUBLIC');
 
-    const ticketType = String(event.ticketType || '').trim().toUpperCase();
-    setIsPaid(ticketType === 'PAID');
-    const rawTiers = Array.isArray(event.ticketTiersJson) ? event.ticketTiersJson : [];
-    const hydratedTiers = rawTiers
-      .filter((t) => t && (t.id || t.label || t.name))
-      .map((t, idx) => ({
-        id: t.id || `tier_${eventId}_${idx}`,
-        name: String(t.label || t.name || '').trim(),
-        capacity: t.capacity != null ? String(t.capacity) : '',
-        price: t.priceUsd != null ? String(Math.round(Number(t.priceUsd))) : '',
-      }))
-      .filter((t) => t.name || t.price);
-    if (ticketType === 'PAID' && hydratedTiers.length > 0) {
-      setUseTierList(true);
-      setTicketTiers(hydratedTiers);
-      setPrice('');
-    } else {
-      setUseTierList(false);
-      setTicketTiers([]);
-      const tp = event.ticketPrice;
-      setPrice(tp != null && tp > 0 ? String(Math.round(Number(tp))) : '');
-    }
+      const ticketType = String(event.ticketType || '').trim().toUpperCase();
+      setIsPaid(ticketType === 'PAID');
+      const rawTiers = Array.isArray(event.ticketTiersJson) ? event.ticketTiersJson : [];
+      const hydratedTiers = rawTiers
+        .filter((t) => t && (t.id || t.label || t.name))
+        .map((t, idx) => ({
+          id: t.id || `tier_${eventId}_${idx}`,
+          name: String(t.label || t.name || '').trim(),
+          capacity: t.capacity != null ? String(t.capacity) : '',
+          price: t.priceUsd != null ? String(Math.round(Number(t.priceUsd))) : '',
+        }))
+        .filter((t) => t.name || t.price);
+      if (ticketType === 'PAID' && hydratedTiers.length > 0) {
+        setUseTierList(true);
+        setTicketTiers(hydratedTiers);
+        setPrice('');
+      } else {
+        setUseTierList(false);
+        setTicketTiers([]);
+        const tp = event.ticketPrice;
+        setPrice(tp != null && tp > 0 ? String(Math.round(Number(tp))) : '');
+      }
 
-    const grace = event.graceTime != null ? Number(event.graceTime) : 15;
-    const safeGrace = Number.isFinite(grace) ? grace : 15;
-    setGraceTimeHours(String(Math.floor(safeGrace / 60)));
-    setGraceTimeMinutes(String(safeGrace % 60));
+      const grace = event.graceTime != null ? Number(event.graceTime) : 15;
+      const safeGrace = Number.isFinite(grace) ? grace : 15;
+      setGraceTimeHours(String(Math.floor(safeGrace / 60)));
+      setGraceTimeMinutes(String(safeGrace % 60));
 
-    const cap = event.maxImagesPerUser ?? event.maxImages ?? 100;
-    setMaxImages(String(cap && cap > 0 ? cap : 100));
+      const cap = event.maxImagesPerUser ?? event.maxImages ?? 100;
+      setMaxImages(String(cap && cap > 0 ? cap : 100));
 
-    setCapacity(event.capacity != null && event.capacity > 0 ? String(event.capacity) : '');
+      setCapacity(event.capacity != null && event.capacity > 0 ? String(event.capacity) : '');
 
-    const cover = typeof event.coverImage === 'string' ? event.coverImage.trim() : '';
-    setCoverImage(cover || '');
-    setCoverPreview(cover ? cover : null);
+      const cover = typeof event.coverImage === 'string' ? event.coverImage.trim() : '';
+      setCoverImage(cover || '');
+      setCoverPreview(cover ? cover : null);
+
+      setVenueName(typeof event.venueName === 'string' ? event.venueName : '');
+      setRecurrence(typeof event.recurrenceRule === 'string' ? event.recurrenceRule : '');
+      setStampImage(typeof event.stampImageUrl === 'string' && event.stampImageUrl ? event.stampImageUrl : null);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [event, loading, eventId]);
 
   const onCoverFile = (e) => {
@@ -298,6 +309,9 @@ export default function EventEditPageView() {
         graceTime,
         maxImagesPerUser: parseInt(maxImages, 10) || 100,
         capacity: capacity.trim() !== '' && parseInt(capacity, 10) > 0 ? parseInt(capacity, 10) : null,
+        venueName: venueName.trim() || null,
+        recurrenceRule: recurrence || null,
+        stampImageUrl: stampImage || null,
       });
       await reloadEvent?.();
       toast.success('Event saved.');
@@ -311,8 +325,8 @@ export default function EventEditPageView() {
   };
 
   const inputClass =
-    'w-full rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 px-3 py-2.5 text-sm focus:border-pxi-purple/50 focus:outline-none';
-  const labelClass = 'block text-[11px] font-bold text-pxi-purple uppercase tracking-widest mb-1.5';
+    'w-full rounded-xl bg-white/[0.045] text-white placeholder-zinc-500 px-3 py-2.5 text-sm outline-none focus:bg-white/[0.07]';
+  const labelClass = 'block text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5';
 
   if (loading && !event) {
     return (
@@ -341,7 +355,7 @@ export default function EventEditPageView() {
             onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
           />
         </div>
-        <div className="flex items-center justify-between px-5 py-4 bg-zinc-900 border-t border-white/10">
+        <div className="flex items-center justify-between bg-zinc-950 px-5 py-4">
           <button
             type="button"
             onClick={() => setCropSrc(null)}
@@ -358,13 +372,13 @@ export default function EventEditPageView() {
               step={0.01}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
-              className="flex-1 accent-pxi-purple"
+              className="flex-1 accent-white"
             />
           </div>
           <button
             type="button"
             onClick={handleCropConfirm}
-            className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-pxi-purple hover:bg-pxi-purple/80 transition-colors"
+            className="rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black transition hover:bg-zinc-200"
           >
             Use photo
           </button>
@@ -379,7 +393,7 @@ export default function EventEditPageView() {
           </div>
         )}
         <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
-          <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest flex items-center gap-2">
+          <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-zinc-500">
             <HugeiconsIcon icon={ImageIcon} size={16} />
             Cover image
           </h2>
@@ -397,7 +411,7 @@ export default function EventEditPageView() {
               {isCoverUploading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 rounded-2xl">
                   <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin text-white" />
-                  <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover…</span>
+                  <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover...</span>
                 </div>
               )}
             </div>
@@ -419,7 +433,7 @@ export default function EventEditPageView() {
         </section>
 
         <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
-          <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest">Basics</h2>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Basics</h2>
           <div>
             <label className={labelClass}>Event name *</label>
             <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />
@@ -456,6 +470,67 @@ export default function EventEditPageView() {
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
+              <label className={labelClass}>Venue name</label>
+              <input
+                className={inputClass}
+                value={venueName}
+                onChange={(e) => setVenueName(e.target.value)}
+                placeholder="e.g. The Grand Hall"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Repeats</label>
+              <select className={inputClass} value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
+                <option value="">One-off event</option>
+                <option value="WEEKLY">Weekly</option>
+                <option value="BIWEEKLY">Every two weeks</option>
+                <option value="MONTHLY">Monthly</option>
+              </select>
+            </div>
+          </div>
+          {recurrence ? (
+            <div>
+              <label className={labelClass}>Custom passport stamp (recurring series)</label>
+              <div className="flex items-center gap-3">
+                {stampImage ? (
+                  <img src={stampImage} alt="Custom stamp" className="h-16 w-16 rounded-xl border border-white/15 object-cover" />
+                ) : null}
+                <label className="cursor-pointer rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white/70 hover:text-white">
+                  {isStampUploading ? 'Uploading...' : stampImage ? 'Replace stamp' : 'Upload stamp'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isStampUploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setIsStampUploading(true);
+                      try {
+                        const url = await uploadImageToR2(file);
+                        setStampImage(url);
+                      } catch {
+                        setFormError('Stamp upload failed. Try another image.');
+                      } finally {
+                        setIsStampUploading(false);
+                      }
+                    }}
+                  />
+                </label>
+                {stampImage ? (
+                  <button
+                    type="button"
+                    onClick={() => setStampImage(null)}
+                    className="text-xs font-semibold uppercase tracking-widest text-white/40 hover:text-white"
+                  >
+                    Remove
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
               <label className={labelClass}>Start *</label>
               <input
                 type="datetime-local"
@@ -479,7 +554,7 @@ export default function EventEditPageView() {
         </section>
 
         <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-5">
-          <h2 className="text-xs font-bold text-pxi-purple uppercase tracking-widest">Configuration</h2>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Configuration</h2>
 
           <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
             <div>
@@ -494,10 +569,10 @@ export default function EventEditPageView() {
                 if (isPrivate) setShowPublicConsent(true);
                 else setIsPrivate(true);
               }}
-              className={`relative w-12 h-7 rounded-full transition-colors ${!isPrivate ? 'bg-pxi-purple' : 'bg-zinc-600'}`}
+              className={`relative w-12 h-7 rounded-full transition-colors ${!isPrivate ? 'bg-white' : 'bg-zinc-600'}`}
             >
               <span
-                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${!isPrivate ? 'left-6' : 'left-1'}`}
+                className={`absolute top-1 w-5 h-5 rounded-full transition-all ${!isPrivate ? 'left-6 bg-black' : 'left-1 bg-white'}`}
               />
             </button>
           </div>
@@ -512,10 +587,10 @@ export default function EventEditPageView() {
               role="switch"
               aria-checked={isPaid}
               onClick={() => handlePaidToggle(!isPaid)}
-              className={`relative w-12 h-7 rounded-full transition-colors ${isPaid ? 'bg-pxi-purple' : 'bg-zinc-600'}`}
+              className={`relative w-12 h-7 rounded-full transition-colors ${isPaid ? 'bg-white' : 'bg-zinc-600'}`}
             >
               <span
-                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${isPaid ? 'left-6' : 'left-1'}`}
+                className={`absolute top-1 w-5 h-5 rounded-full transition-all ${isPaid ? 'left-6 bg-black' : 'left-1 bg-white'}`}
               />
             </button>
           </div>
@@ -538,10 +613,10 @@ export default function EventEditPageView() {
                       setTicketTiers([createEmptyTier()]);
                     }
                   }}
-                  className={`relative w-12 h-7 rounded-full transition-colors ${useTierList ? 'bg-pxi-purple' : 'bg-zinc-600'}`}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${useTierList ? 'bg-white' : 'bg-zinc-600'}`}
                 >
                   <span
-                    className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${useTierList ? 'left-6' : 'left-1'}`}
+                    className={`absolute top-1 w-5 h-5 rounded-full transition-all ${useTierList ? 'left-6 bg-black' : 'left-1 bg-white'}`}
                   />
                 </button>
               </div>
@@ -688,12 +763,12 @@ export default function EventEditPageView() {
         {paidGate && (
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 space-y-2">
             {paidGate === 'no-account' ? (
-              <p>To sell tickets, complete vendor setup with Stripe.</p>
+              <p>To sell tickets, complete hosting setup with Stripe.</p>
             ) : (
-              <p>Stripe is still verifying your account. You can save as a free event or check status from vendor setup.</p>
+              <p>Stripe is still verifying your account. You can save as a free event or check status from hosting setup.</p>
             )}
-            <Link href="/dashboard/vendor-upgrade" className="inline-block text-pxi-purple font-bold hover:underline">
-              Vendor setup →
+            <Link href="/dashboard/vendor-upgrade" className="inline-block font-bold text-white underline decoration-white/30 underline-offset-4 hover:text-zinc-200">
+              Hosting setup
             </Link>
           </div>
         )}
@@ -708,16 +783,16 @@ export default function EventEditPageView() {
           <button
             type="submit"
             disabled={isSaving || isCoverUploading}
-            className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] px-6 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-45 hover:brightness-110 transition-all"
+            className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] rounded-full bg-white px-6 text-sm font-bold uppercase tracking-widest text-black transition hover:bg-zinc-200 disabled:opacity-45"
           >
             {isSaving ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin" /> : null}
-            {isSaving ? 'Saving…' : 'Save'}
+            {isSaving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </form>
 
       <section className="rounded-2xl border border-red-500/20 bg-red-500/5 overflow-hidden">
-        <div className="p-5 border-b border-red-500/10">
+        <div className="p-5">
           <h2 className="text-xs font-bold text-red-400 uppercase tracking-widest">Danger zone</h2>
         </div>
         <div className="p-5">
@@ -728,7 +803,7 @@ export default function EventEditPageView() {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-red-500/40 bg-red-500/10 text-red-300 text-xs font-bold uppercase tracking-widest hover:bg-red-500/20 transition-all disabled:opacity-50"
           >
             <HugeiconsIcon icon={Delete02Icon} size={14} />
-            {isDeleting ? 'Deleting…' : 'Delete event'}
+            {isDeleting ? 'Deleting...' : 'Delete event'}
           </button>
           <p className="mt-2 text-xs text-zinc-500">This action is permanent and cannot be undone.</p>
         </div>
@@ -756,7 +831,7 @@ export default function EventEditPageView() {
                   setIsPrivate(false);
                   setShowPublicConsent(false);
                 }}
-                className="px-4 py-2.5 rounded-xl bg-pxi-purple text-sm font-bold text-white"
+                className="rounded-full bg-white px-4 py-2.5 text-sm font-bold text-black"
               >
                 I understand, make public
               </button>

@@ -46,13 +46,26 @@ export default function LineupPlaylistCard({ eventId }) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (!eventId) return;
-    setLoading(true);
-    musicService
-      .getEventPlaylist(eventId)
-      .then((res) => setPlaylist(res?.playlist || null))
-      .catch(() => setPlaylist(null))
-      .finally(() => setLoading(false));
+    if (!eventId) return undefined;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      setLoading(true);
+      musicService
+        .getEventPlaylist(eventId)
+        .then((res) => {
+          if (!cancelled) setPlaylist(res?.playlist || null);
+        })
+        .catch(() => {
+          if (!cancelled) setPlaylist(null);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    }, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [eventId]);
 
   const handleSave = async () => {
@@ -98,8 +111,8 @@ export default function LineupPlaylistCard({ eventId }) {
 
   return (
     <div className="glass-panel overflow-hidden rounded-2xl">
-      <div className="flex items-center gap-2 p-5 shadow-[inset_0_-1px_0_rgba(255,255,255,0.035)]">
-        <HugeiconsIcon icon={MusicNote01Icon} size={18} className="text-pxi-purple" />
+      <div className="flex items-center gap-2 px-5 pb-2 pt-5">
+        <HugeiconsIcon icon={MusicNote01Icon} size={18} className="text-white/70" />
         <h2 className="font-bold text-white uppercase tracking-widest text-sm">Lineup Playlist</h2>
       </div>
 
@@ -107,7 +120,7 @@ export default function LineupPlaylistCard({ eventId }) {
         {loading ? (
           <div className="flex items-center gap-2 text-xs text-zinc-500">
             <HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin" />
-            Loading playlist…
+            Loading playlist...
           </div>
         ) : playlist ? (
           <div className="rounded-xl border border-white/10 bg-zinc-800/40 p-4 space-y-2">
@@ -138,12 +151,12 @@ export default function LineupPlaylistCard({ eventId }) {
         )}
 
         <div className="space-y-2">
-          <label className="block text-[11px] font-bold text-pxi-purple uppercase tracking-widest">
+          <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
             Spotify or Apple Music URL
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
-              className="flex-1 rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 px-3 py-2.5 text-sm focus:border-pxi-purple/50 focus:outline-none"
+              className="flex-1 rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 px-3 py-2.5 text-sm focus:border-white/25 focus:outline-none"
               placeholder="https://open.spotify.com/playlist/..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -153,16 +166,16 @@ export default function LineupPlaylistCard({ eventId }) {
               type="button"
               onClick={handleSave}
               disabled={saving || !url.trim()}
-              className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-pxi-purple text-white text-xs font-bold uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-opacity"
+              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-black transition hover:bg-zinc-200 disabled:opacity-50"
             >
               {saving ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" /> : null}
-              {saving ? 'Reading playlist…' : 'Save playlist'}
+              {saving ? 'Reading playlist...' : 'Save playlist'}
             </button>
           </div>
           {saveError && <p className="text-xs text-red-400">{saveError}</p>}
         </div>
 
-        <div className="pt-3 border-t border-white/5 space-y-3">
+        <div className="space-y-3 pt-2">
           {!linkInfo ? (
             <button
               type="button"
@@ -175,7 +188,7 @@ export default function LineupPlaylistCard({ eventId }) {
               ) : (
                 <HugeiconsIcon icon={Link01Icon} size={14} />
               )}
-              {linkLoading ? 'Creating…' : 'Send to your DJ'}
+              {linkLoading ? 'Creating...' : 'Send to your DJ'}
             </button>
           ) : (
             <div className="space-y-2">

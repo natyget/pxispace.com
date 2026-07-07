@@ -17,10 +17,12 @@ export async function getTicketQuote(eventId, albumId, tierId) {
  * Create a PaymentIntent for a paid ticket. Returns clientSecret for Stripe.
  * POST /api/tickets/purchase (auth required)
  */
-export async function purchaseTicket(eventId, tierId) {
+export async function purchaseTicket(eventId, tierId, opts = {}) {
   return api.post('/api/tickets/purchase', {
     eventId,
     ...(tierId ? { tierId } : {}),
+    ...(opts.applyCredits ? { applyCredits: true } : {}),
+    ...(opts.promoCode ? { promoCode: opts.promoCode } : {}),
   });
 }
 
@@ -31,13 +33,20 @@ export async function purchaseTicket(eventId, tierId) {
  * @param {string} successUrl - e.g. `${origin}/events?payment=success`
  * @param {string} cancelUrl - e.g. `${origin}/events?payment=cancelled`
  */
-export async function createCheckoutSession(eventId, successUrl, cancelUrl, tierId) {
+export async function createCheckoutSession(eventId, successUrl, cancelUrl, tierId, opts = {}) {
   return api.post('/api/tickets/checkout-session', {
     eventId,
     successUrl,
     cancelUrl,
     ...(tierId ? { tierId } : {}),
+    ...(opts.applyCredits ? { applyCredits: true } : {}),
+    ...(opts.promoCode ? { promoCode: opts.promoCode } : {}),
   });
+}
+
+/** GET /api/promos/credits — the caller's credit balance + recent ledger. */
+export async function getMyCredits() {
+  return api.get('/api/promos/credits');
 }
 
 /**

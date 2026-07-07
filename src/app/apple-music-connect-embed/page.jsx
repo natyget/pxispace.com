@@ -42,6 +42,40 @@ export default function AppleMusicConnectEmbedPage() {
   useEffect(() => {
     // Script may already be cached/loaded before the effect runs
     if (window.MusicKit) void configure();
+    // MusicKit's documented load signal — more reliable than script onLoad in WebViews
+    const onKitLoaded = () => void configure();
+    document.addEventListener('musickitloaded', onKitLoaded);
+    return () => document.removeEventListener('musickitloaded', onKitLoaded);
+  }, [configure]);
+
+  useEffect(() => {
+    // Watchdog: if neither MusicKit nor an error surfaced, stop spinning and say so.
+    if (state !== 'loading') return undefined;
+    const t = setTimeout(() => {
+      setErrorMsg('Apple Music took too long to load. Check your connection and try again.');
+      setState('error');
+    }, 12000);
+    return () => clearTimeout(t);
+  }, [state]);
+
+  const handleRetry = useCallback(() => {
+    setErrorMsg('');
+    if (window.MusicKit) {
+      setState('loading');
+      void configure();
+      return;
+    }
+    // Re-inject the CDN script (next/script won't re-run after an onError)
+    setState('loading');
+    const s = document.createElement('script');
+    s.src = 'https://js-cdn.music.apple.com/musickit/v3/musickit.js';
+    s.async = true;
+    s.onload = () => void configure();
+    s.onerror = () => {
+      setErrorMsg('Could not load Apple Music.');
+      setState('error');
+    };
+    document.body.appendChild(s);
   }, [configure]);
 
   const handleConnect = useCallback(async () => {
@@ -115,8 +149,15 @@ export default function AppleMusicConnectEmbedPage() {
             <p className="mt-4 text-sm text-red-400">{errorMsg}</p>
             <button
               type="button"
+              onClick={handleRetry}
+              className="mt-6 w-full rounded-full bg-[#fa2d48] px-8 py-3.5 text-sm font-black uppercase tracking-widest text-white"
+            >
+              Try again
+            </button>
+            <button
+              type="button"
               onClick={handleCancel}
-              className="mt-6 text-xs font-semibold uppercase tracking-widest text-zinc-500 hover:text-white"
+              className="mt-3 text-xs font-semibold uppercase tracking-widest text-zinc-500 hover:text-white"
             >
               Back to the app
             </button>

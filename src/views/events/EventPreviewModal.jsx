@@ -2,10 +2,12 @@
 
 import React, { useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, Calendar01Icon, Location01Icon, Ticket01Icon } from '@hugeicons/core-free-icons';
 import Button from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
+import { spotifyEmbedSrc } from '@/lib/spotify';
 
 const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' }) => {
   const router = useRouter();
@@ -86,6 +88,29 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
           {event.description ? (
             <p className="text-zinc-500 text-sm leading-relaxed line-clamp-4">{event.description}</p>
           ) : null}
+          {(() => {
+            const embed = event.spotifyPlaylistUrl
+              ? spotifyEmbedSrc(event.spotifyPlaylistUrl)
+              : event.spotifyTopTrackUrl
+                ? spotifyEmbedSrc(event.spotifyTopTrackUrl)
+                : null;
+            if (!embed) return null;
+            return (
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Event Playlist</p>
+                <iframe
+                  title="Event playlist"
+                  src={embed}
+                  width="100%"
+                  height="152"
+                  frameBorder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  className="rounded-2xl"
+                />
+              </div>
+            );
+          })()}
           <div className="pt-2 flex flex-col sm:flex-row gap-3">
             <Button
               variant="neon"

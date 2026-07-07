@@ -50,7 +50,7 @@ function stateClassName(status) {
 }
 
 export default function DashboardHome() {
-    const { user } = useAuth();
+    const { user, authReady, authRefreshing } = useAuth();
     const [mounted, setMounted] = useState(false);
     const [vendorData, setVendorData] = useState(null);
     const [vendorLoading, setVendorLoading] = useState(false);
@@ -231,41 +231,74 @@ export default function DashboardHome() {
     const reminderUpdates = updates.filter((update) => update.group !== 'product');
     const productUpdates = updates.filter((update) => update.group === 'product');
     const metricsLoading = vendorLoading || eventsLoading || overviewLoading;
+    const showVendorSetupPrompt = mounted && authReady && !authRefreshing && typeof user?.isVendor === 'boolean' && !user.isVendor;
+    const isVendorDashboard = mounted && authReady && !authRefreshing && !!user?.isVendor;
+    const dashboardHero = isVendorDashboard
+        ? {
+              eyebrow: 'Dashboard',
+              title: 'Command Center',
+              copy: 'Run the next event, catch urgent notices, and keep the business pulse in view.',
+          }
+        : {
+              eyebrow: 'PXI',
+              title: 'Your PXI',
+              copy: 'Keep your nights, tickets, notifications, and hosting tools in one clean place.',
+          };
 
     if (!mounted) {
-        return <div className="max-w-6xl mx-auto space-y-8" />;
+        return <div className="mx-auto max-w-7xl space-y-8" />;
     }
 
     return (
-        <div className="max-w-6xl mx-auto space-y-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Command Center</h1>
+        <div className="mx-auto max-w-7xl space-y-6">
+            <section className="relative overflow-hidden rounded-[2rem] bg-[#050505] px-5 py-6 shadow-[0_24px_90px_rgba(0,0,0,0.42)] md:px-7">
+                <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">{dashboardHero.eyebrow}</p>
+                        <h1 className="mt-2 text-3xl font-black leading-none tracking-normal text-white normal-case md:text-5xl">{dashboardHero.title}</h1>
+                        <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400">
+                            {dashboardHero.copy}
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        {[
+                            ['Active', summary.activeCount],
+                            ['Scheduled', summary.scheduledCount],
+                            ['Draft', summary.draftCount],
+                        ].map(([label, value]) => (
+                            <div key={label} className="min-w-[96px] rounded-2xl bg-white/[0.06] px-4 py-3">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/40">{label}</p>
+                                <p className="mt-1 text-xl font-black text-white">{metricsLoading ? '—' : value}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
                 <Link
                     href="/dashboard/notifications"
                     aria-label="Open notifications"
-                    className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-white/70 transition hover:bg-white/10 hover:text-white"
+                    className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-white/70 transition hover:bg-white/10 hover:text-white md:right-7"
                 >
                     <HugeiconsIcon icon={Notification03Icon} size={16} />
                     {notificationCount > 0 ? (
-                        <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-pxi-purple px-1 text-[10px] font-black text-white">
+                        <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-black text-black">
                             {notificationCount > 99 ? '99+' : notificationCount}
                         </span>
                     ) : null}
                 </Link>
-            </div>
+            </section>
 
-            {mounted && !user?.isVendor && (
+            {showVendorSetupPrompt && (
                 <div className="dashboard-surface-frosted rounded-[2rem] p-5">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <p className="text-xs font-bold uppercase tracking-widest text-white/40">Organizer access</p>
-                            <h2 className="mt-1 text-lg font-black text-white">Unlock your PXI Passport</h2>
+                            <p className="text-xs font-bold uppercase tracking-widest text-white/40">Hosting access</p>
+                            <h2 className="mt-1 text-lg font-black text-white">Create events, sell tickets, and manage your room</h2>
                         </div>
                         <Link
                             href="/dashboard/vendor-upgrade"
-                            className="inline-flex shrink-0 items-center justify-center rounded-full bg-pxi-purple px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:brightness-110 whitespace-nowrap"
+                            className="inline-flex shrink-0 items-center justify-center rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-black transition hover:bg-zinc-200 whitespace-nowrap"
                         >
-                            Vendor Setup
+                            Start hosting
                         </Link>
                     </div>
                 </div>

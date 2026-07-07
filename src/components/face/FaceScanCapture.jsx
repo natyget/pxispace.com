@@ -13,6 +13,7 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
   const [cameraState, setCameraState] = useState('starting'); // starting | ready | denied | error
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState(null);
+  const [startAttempt, setStartAttempt] = useState(0);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -23,9 +24,19 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
 
   useEffect(() => {
     let cancelled = false;
+    setCameraState('starting');
     warmupFaceEngine();
+    // Watchdog: some WebViews leave getUserMedia pending forever instead of
+    // rejecting — surface an actionable error instead of spinning.
+    const watchdog = setTimeout(() => {
+      if (!cancelled && !streamRef.current) setCameraState('error');
+    }, 8000);
     (async () => {
       try {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setCameraState('error');
+          return;
+        }
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 640 } },
           audio: false,
@@ -39,16 +50,19 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
           videoRef.current.srcObject = stream;
           await videoRef.current.play().catch(() => {});
         }
+        clearTimeout(watchdog);
         setCameraState('ready');
       } catch (err) {
+        clearTimeout(watchdog);
         setCameraState(err?.name === 'NotAllowedError' ? 'denied' : 'error');
       }
     })();
     return () => {
       cancelled = true;
+      clearTimeout(watchdog);
       stopCamera();
     };
-  }, [stopCamera]);
+  }, [stopCamera, startAttempt]);
 
   const handleScan = useCallback(async () => {
     if (!videoRef.current || scanning) return;
@@ -76,7 +90,8 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative size-56 overflow-hidden rounded-full border-2 border-pxi-purple/50 bg-zinc-900 shadow-[0_0_40px_rgba(216,74,255,0.25)]">
+      {/* Face-ID-style portrait oval, sized to dominate the screen */}
+      <div className="relative h-[26rem] w-[19rem] max-h-[55dvh] overflow-hidden rounded-[50%] border-2 border-pxi-purple/50 bg-zinc-900 shadow-[0_0_40px_rgba(216,74,255,0.25)]">
         <video
           ref={videoRef}
           playsInline
@@ -89,10 +104,19 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
           </div>
         ) : null}
         {cameraState === 'denied' || cameraState === 'error' ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/80 px-6 text-center text-xs text-zinc-400">
-            {cameraState === 'denied'
-              ? 'Camera access was blocked. Allow camera permission in your browser to scan.'
-              : 'Could not start the camera on this device.'}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/80 px-8 text-center text-xs text-zinc-400">
+            <span>
+              {cameraState === 'denied'
+                ? 'Camera access was blocked. Allow camera permission to scan.'
+                : 'Could not start the camera on this device.'}
+            </span>
+            <button
+              type="button"
+              onClick={() => setStartAttempt((n) => n + 1)}
+              className="rounded-full border border-white/25 px-5 py-2 text-[11px] font-bold uppercase tracking-widest text-white"
+            >
+              Try again
+            </button>
           </div>
         ) : null}
       </div>

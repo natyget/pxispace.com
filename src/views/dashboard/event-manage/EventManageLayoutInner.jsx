@@ -19,7 +19,7 @@ export default function EventManageLayoutInner({ children }) {
   if (loading && !event) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="w-8 h-8 border-2 border-pxi-purple border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-white/30 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -28,8 +28,8 @@ export default function EventManageLayoutInner({ children }) {
     return (
       <div>
         <p className="text-red-400">{error || 'Event not found'}</p>
-        <Link href="/dashboard/events" className="text-pxi-purple mt-4 inline-block">
-          ← Back to events
+        <Link href="/dashboard/events" className="mt-4 inline-block text-sm font-semibold text-white/60 hover:text-white">
+          Back to events
         </Link>
       </div>
     );
@@ -57,7 +57,7 @@ export default function EventManageLayoutInner({ children }) {
           </Link>
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-0.5">Event</p>
-            <h1 className="text-xl md:text-2xl font-black text-white tracking-tight leading-tight truncate">
+            <h1 className="text-xl md:text-2xl font-black text-white tracking-normal leading-tight truncate">
               {event.name?.trim() || 'Untitled event'}
             </h1>
           </div>

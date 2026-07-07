@@ -125,6 +125,10 @@ export const authService = {
     getMe: (userId) =>
         api.get(`/api/auth/user/${userId}`),
 
+    /** Update own profile fields (name, bio, city, instagramHandle, …). Returns { user }. */
+    updateProfile: (userId, fields) =>
+        api.put(`/api/auth/user/${userId}`, fields),
+
     vendorOnboard: (opts = {}) => {
         const base = `${window.location.origin}/dashboard/vendor-upgrade`;
         const fromMobile = opts.fromMobile ? '&from=mobile' : '';

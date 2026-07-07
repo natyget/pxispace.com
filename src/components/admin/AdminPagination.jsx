@@ -3,7 +3,7 @@
 export default function AdminPagination({ page, totalPages, onPageChange, disabled }) {
     if (totalPages <= 1) return null;
     return (
-        <div className="flex items-center justify-between gap-4 pt-4 border-t border-white/10">
+        <div className="flex items-center justify-between gap-4 pt-2">
             <p className="text-[13px] text-white/45">
                 Page {page} of {totalPages}
             </p>

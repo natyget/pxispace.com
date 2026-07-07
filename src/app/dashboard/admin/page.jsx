@@ -6,19 +6,74 @@ import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { adminMockStats } from '@/lib/adminMockData';
 
+function formatInteger(value) {
+    return Number(value || 0).toLocaleString();
+}
+
+function totalUsers(users = {}) {
+    return Number(users.partial || 0) + Number(users.citizen || 0) + Number(users.vendor || 0) + Number(users.admin || 0);
+}
+
+function totalEvents(events = {}) {
+    return Number(events.pending || 0) + Number(events.upcoming || 0) + Number(events.ended || 0);
+}
+
+function SummaryTile({ label, value, hint }) {
+    return (
+        <div className="rounded-2xl bg-white/[0.04] p-5">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/40">{label}</p>
+            <p className="mt-3 text-[28px] font-black leading-none tracking-normal text-white tabular-nums">{value}</p>
+            {hint ? <p className="mt-2 text-xs font-semibold leading-5 text-white/45">{hint}</p> : null}
+        </div>
+    );
+}
+
 function StatBlock({ title, rows }) {
     return (
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
-            <h2 className="text-[11px] font-bold tracking-widest text-white/40 uppercase mb-4">{title}</h2>
-            <dl className="space-y-3">
+        <div className="rounded-[1.75rem] bg-white/[0.04] p-5">
+            <h2 className="mb-4 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">{title}</h2>
+            <dl className="space-y-2">
                 {rows.map(({ label, value }) => (
-                    <div key={label} className="flex items-center justify-between gap-4">
-                        <dt className="text-[14px] text-white/55">{label}</dt>
-                        <dd className="text-[18px] font-bold tabular-nums text-white">{value}</dd>
+                    <div key={label} className="flex items-center justify-between gap-4 rounded-2xl bg-black/20 px-4 py-3">
+                        <dt className="min-w-0 truncate text-sm font-semibold text-white/55">{label}</dt>
+                        <dd className="shrink-0 text-lg font-black tabular-nums text-white">{formatInteger(value)}</dd>
                     </div>
                 ))}
             </dl>
         </div>
+    );
+}
+
+function AdminOverviewHero({ stats, isLiveAdmin }) {
+    const userTotal = totalUsers(stats?.users);
+    const eventTotal = totalEvents(stats?.events);
+    const pendingReports = Number(stats?.reports?.pending || 0);
+    const openSupport = Number(stats?.support?.open || 0);
+
+    return (
+        <section className="relative overflow-hidden rounded-[2rem] bg-black px-5 py-7 shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:px-8 md:py-8">
+            <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+                <div className="max-w-2xl">
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">PXI Admin</span>
+                        <span className="text-zinc-700">/</span>
+                        <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
+                    </div>
+                    <h1 className="max-w-xl text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">
+                        Admin overview
+                    </h1>
+                    <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-300 md:text-base">
+                        Users, events, reports, and operating queues at platform level.
+                    </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 xl:w-[520px]">
+                    <SummaryTile label="Users" value={formatInteger(userTotal)} hint={`${formatInteger(stats?.users?.vendor)} vendors`} />
+                    <SummaryTile label="Events" value={formatInteger(eventTotal)} hint={`${formatInteger(stats?.events?.upcoming)} upcoming`} />
+                    <SummaryTile label="Reports" value={formatInteger(pendingReports)} hint="Pending review" />
+                    <SummaryTile label="Support" value={formatInteger(openSupport)} hint="Open tickets" />
+                </div>
+            </div>
+        </section>
     );
 }
 
@@ -34,55 +89,51 @@ export default function AdminOverviewPage() {
     useEffect(() => {
         let cancelled = false;
         if (!isLiveAdmin) return () => { cancelled = true; };
-        fetchAdminStats()
-            .then((data) => {
-                if (!cancelled) {
-                    setStats(data);
-                    setError(null);
-                }
-            })
-            .catch((err) => {
-                if (!cancelled) setError(err.message || 'Failed to load stats');
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false);
-            });
+        const timer = setTimeout(() => {
+            fetchAdminStats()
+                .then((data) => {
+                    if (!cancelled) {
+                        setStats(data);
+                        setError(null);
+                    }
+                })
+                .catch((err) => {
+                    if (!cancelled) setError(err.message || 'Failed to load stats');
+                })
+                .finally(() => {
+                    if (!cancelled) setLoading(false);
+                });
+        }, 0);
         return () => {
             cancelled = true;
+            clearTimeout(timer);
         };
     }, [isLiveAdmin]);
 
     return (
-        <div className="max-w-6xl space-y-8">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-black text-white mb-2 tracking-tight">PXI Admin Overview</h1>
-                    <p className="text-white/60 text-sm leading-relaxed">
-                        Platform snapshot — users by tier, events by lifecycle, and moderation queue.
-                    </p>
-                </div>
-                <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
-                <p className="text-[11px] font-bold tracking-widest text-white/40 uppercase">Admin Workspace</p>
-                <p className="text-white/60 text-sm leading-relaxed">
-                    {isLiveAdmin
-                        ? 'Live admin data is enabled for this account. Use the sidebar to manage users, events, and safety reports.'
-                        : 'Preview mode is enabled for PXI employee accounts without backend ADMIN tier. Use this safely for UI review.'}
-                </p>
-            </div>
+        <div className="max-w-7xl space-y-6 md:space-y-8">
+            <AdminOverviewHero stats={resolvedStats} isLiveAdmin={isLiveAdmin} />
 
             {resolvedLoading && (
-                <div className="rounded-2xl border border-white/10 bg-zinc-900/40 px-6 py-12 text-center text-white/50 text-sm">
-                    Loading statistics…
+                <div className="rounded-2xl bg-white/[0.04] px-6 py-12 text-center text-sm text-white/50">
+                    Loading statistics...
                 </div>
             )}
             {error && (
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-4 text-red-300 text-sm">{error}</div>
+                <div className="rounded-2xl bg-red-500/5 px-6 py-4 text-sm text-red-300">{error}</div>
             )}
             {!resolvedLoading && !error && resolvedStats && (
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <>
+                <div className="rounded-[1.75rem] bg-white/[0.04] p-5">
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Workspace</p>
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+                        {isLiveAdmin
+                            ? 'Live admin data is enabled for this account. Use the sidebar to manage users, events, safety, support, promos, and moderation.'
+                            : 'Preview mode is enabled for PXI employee accounts without backend ADMIN tier. The data below is mock data for safe UI review.'}
+                    </p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <StatBlock
                         title="Users"
                         rows={[
@@ -118,6 +169,7 @@ export default function AdminOverviewPage() {
                         />
                     ) : null}
                 </div>
+                </>
             )}
         </div>
     );

@@ -54,10 +54,10 @@ export function TimeSeriesChartHeader({
     return (
         <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
-                {title ? <h2 className="text-lg font-black tracking-tight text-white">{title}</h2> : null}
+                {title ? <h2 className="text-lg font-black tracking-normal text-white">{title}</h2> : null}
                 {subheading ? <p className="mt-1 text-sm leading-5 text-zinc-400">{subheading}</p> : null}
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <span className="text-2xl font-black tracking-tight text-white">
+                    <span className="text-2xl font-black tracking-normal text-white">
                         {liveValue ?? '—'}{unit ? <span className="ml-1 text-sm font-bold text-zinc-400">{unit}</span> : null}
                     </span>
                     {changeLabel ? (

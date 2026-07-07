@@ -237,9 +237,7 @@ html, body {
   }
 
   body.theme-matte {
-    background:
-      radial-gradient(circle at 20% 0%, rgba(240, 31, 255, 0.045), transparent 28rem),
-      linear-gradient(180deg, var(--dashboard-bg-base), #07070a 48%, var(--dashboard-bg-elev-1));
+    background: #050506;
     color: var(--dashboard-text-primary);
   }
 
@@ -266,11 +264,11 @@ html, body {
   .dashboard-surface-a,
   .matte-surface,
   .dashboard-surface {
-    background: linear-gradient(145deg, rgba(20, 20, 25, 0.4) 0%, rgba(10, 10, 14, 0.6) 100%);
+    background: rgba(15, 15, 18, 0.82);
     border: none;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.04), 0 8px 32px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 18px 54px rgba(0, 0, 0, 0.28);
   }
 
   .dashboard-page-surface {
@@ -278,49 +276,54 @@ html, body {
     color: var(--dashboard-text-primary);
   }
 
+  .dashboard-page-surface :is(h1, h2, h3, h4, h5, h6) {
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
   .surface-b,
   .dashboard-surface-b,
   .dashboard-glass-surface,
   .dashboard-surface-frosted {
-    background: linear-gradient(145deg, rgba(25, 25, 30, 0.3) 0%, rgba(12, 12, 16, 0.5) 100%);
+    background: rgba(16, 16, 18, 0.78);
     border: none;
-    backdrop-filter: blur(var(--dashboard-surface-b-blur));
-    -webkit-backdrop-filter: blur(var(--dashboard-surface-b-blur));
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 18px 46px rgba(0, 0, 0, 0.26);
   }
 
   .dashboard-popover-surface {
-    background: linear-gradient(145deg, rgba(20, 20, 26, 0.8) 0%, rgba(10, 10, 14, 0.95) 100%);
+    background: rgba(10, 10, 12, 0.94);
     border: none;
     backdrop-filter: blur(var(--dashboard-surface-b-blur));
     -webkit-backdrop-filter: blur(var(--dashboard-surface-b-blur));
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.04), 0 12px 48px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
   }
 
   .glass-panel {
-    background: linear-gradient(145deg, rgba(22, 22, 28, 0.25) 0%, rgba(10, 10, 14, 0.45) 100%);
+    background: rgba(14, 14, 16, 0.82);
     border: none;
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.04), 0 8px 32px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
   }
 
   .glass-panel-strong {
-    background: linear-gradient(145deg, rgba(28, 28, 34, 0.35) 0%, rgba(12, 12, 18, 0.55) 100%);
+    background: rgba(20, 20, 22, 0.9);
     border: none;
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 12px 40px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 20px 52px rgba(0, 0, 0, 0.34);
   }
 
   .glass-field {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.035);
     border: none;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     color: var(--dashboard-text-primary);
     outline: none;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+    box-shadow: none;
   }
 
   .glass-field::placeholder {
@@ -328,8 +331,8 @@ html, body {
   }
 
   .glass-field:focus {
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.11);
+    background: rgba(255, 255, 255, 0.055);
   }
 
   .pill-solid {
@@ -371,14 +374,14 @@ html, body {
   }
 
   .dashboard-input {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.04);
     border: none;
     border-radius: 9999px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     color: var(--dashboard-text-primary);
     outline: none;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+    box-shadow: none;
     padding: 0.75rem 1.25rem;
   }
 
@@ -387,8 +390,8 @@ html, body {
   }
 
   .dashboard-input:focus {
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.055);
   }
 
   .dashboard-modal-panel :is(input, textarea, select) {
@@ -423,7 +426,7 @@ html, body {
     padding: 0.25rem;
     scrollbar-width: none;
     box-shadow: none;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 0;
   }
 
   .dashboard-segmented-toggle::-webkit-scrollbar {
@@ -628,37 +631,35 @@ html, body {
 
   /* Dashboard borderless glow surfaces */
   .glow-surface {
-    background: rgba(255, 255, 255, 0.045);
+    background: rgba(255, 255, 255, 0.04);
     border: 0;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.06),
-      0 14px 36px rgba(0, 0, 0, 0.34);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
   }
 
   .glow-surface-soft {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.035);
     border: none;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.05);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
   }
 
   .glow-chip {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.055);
     border: none;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
   }
 
   .glow-active {
     background: rgba(255, 255, 255, 0.08);
     border: none;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
   }
 
   .glow-interactive {
@@ -667,15 +668,12 @@ html, body {
 
   .glow-interactive:hover {
     background: rgba(255, 255, 255, 0.075);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      0 16px 36px rgba(0, 0, 0, 0.34);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
   }
 
   .dashboard-glow-popover {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.075),
-      0 18px 46px rgba(0, 0, 0, 0.52);
+    background: rgba(10, 10, 12, 0.96);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.48);
   }
 }
 

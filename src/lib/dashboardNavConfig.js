@@ -50,9 +50,10 @@ export const dashboardNavConfig = [
   { key: 'analytics', label: 'Analytics', path: '/dashboard/analytics', icon: Activity01Icon, section: 'Intelligence', end: true, organizerOnly: true },
   { key: 'operations', label: 'Operations', path: '/dashboard/analytics?view=live-ops', icon: QrCodeIcon, section: 'Intelligence', end: true, organizerOnly: true },
   { key: 'audience', label: 'Audience & Campaigns', path: '/dashboard/audience', icon: UserGroupIcon, section: 'People', end: true, organizerOnly: true },
+  { key: 'campaigns', label: 'Email Campaigns', path: '/dashboard/campaigns', icon: Megaphone01Icon, section: 'People', end: true, organizerOnly: true },
   { key: 'earnings', label: 'Earnings', path: '/dashboard/earnings', icon: Wallet01Icon, section: 'Business', end: true, vendorOnly: true },
   { key: 'team', label: 'Teams & Security', path: '/dashboard/team', icon: Shield01Icon, section: 'Business', end: true, organizerOnly: true },
-  { key: 'vendor-setup', label: 'Vendor Setup', path: '/dashboard/vendor-upgrade', icon: StarIcon, section: 'Business', nonVendorOnly: true },
+  { key: 'vendor-setup', label: 'Start Hosting', path: '/dashboard/vendor-upgrade', icon: StarIcon, section: 'Business', nonVendorOnly: true },
 ];
 
 /**
@@ -67,10 +68,14 @@ export const dashboardNavConfig = [
  */
 export function buildMemberNavItems({ hasOrganizerAccess, hasLiveOpsAccess, isLiveEvent, mounted, user }) {
   const items = [...dashboardNavConfig];
+  const hasResolvedUser = mounted && !!user;
+  const hasResolvedVendorStatus = typeof user?.isVendor === 'boolean';
 
   return items.filter((item) => {
-    if (item.vendorOnly && mounted && !user?.isVendor) return false;
-    if (item.nonVendorOnly && mounted && user?.isVendor) return false;
+    const isRoleSensitive = item.vendorOnly || item.nonVendorOnly || item.organizerOnly || item.bouncerOnly || item.liveOnly;
+    if (!hasResolvedUser && isRoleSensitive) return false;
+    if (item.vendorOnly && !user?.isVendor) return false;
+    if (item.nonVendorOnly && (!hasResolvedVendorStatus || user.isVendor)) return false;
     if (item.bouncerOnly && !hasLiveOpsAccess) return false;
     if (item.organizerOnly && !hasOrganizerAccess) return false;
     if (item.liveOnly && !isLiveEvent) return false;

@@ -137,7 +137,7 @@ function SelectControl({ ariaLabel, value, onChange, options }) {
 
 function EventControls({ query, onQueryChange, status, onStatusChange, sort, onSortChange }) {
   return (
-    <GlowCard className="p-3">
+    <div className="rounded-[1.75rem] bg-white/[0.035] p-3">
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
         <SearchBox value={query} onChange={onQueryChange} placeholder="Search events" />
         <div className="flex flex-nowrap gap-2 overflow-x-auto dashboard-scrollbar-none">
@@ -145,7 +145,7 @@ function EventControls({ query, onQueryChange, status, onStatusChange, sort, onS
           <SelectControl ariaLabel="Sort events" value={sort} onChange={onSortChange} options={SORT_OPTIONS} />
         </div>
       </div>
-    </GlowCard>
+    </div>
   );
 }
 
@@ -157,6 +157,51 @@ function EmptyState({ icon, title, body, action }) {
       <p className="mx-auto mt-1 max-w-md text-sm text-zinc-500">{body}</p>
       {action}
     </GlowCard>
+  );
+}
+
+function EventsHero({ mode, onModeChange, hostedCount, attendedCount, liveCount, onCreate }) {
+  return (
+    <section className="rounded-[2rem] bg-black px-5 py-6 shadow-[0_24px_90px_rgba(0,0,0,0.42)] md:px-7">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Events</p>
+          <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">
+            Your nights.
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 md:text-base">
+            Host, attend, manage, and revisit every event tied to your PXI account.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <SegmentedToggle
+              value={mode}
+              onChange={onModeChange}
+              ariaLabel="Switch event list"
+              items={[
+                { value: 'hosted', label: 'Hosted' },
+                { value: 'attended', label: 'Attended' },
+              ]}
+            />
+            <button type="button" onClick={onCreate} className="pill-solid inline-flex w-fit items-center gap-2 px-5 py-2.5 text-xs uppercase tracking-widest">
+              <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2.5} />
+              Create
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            ['Hosted', hostedCount],
+            ['Attended', attendedCount],
+            ['Live', liveCount],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-2xl bg-white/[0.045] p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{label}</p>
+              <p className="mt-2 text-2xl font-black text-white tabular-nums">{value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -178,10 +223,10 @@ function EventCard({ event, relation, now, pinned, requestCount = 0, onOpen, onN
       ? 'shadow-[0_0_0_1px_rgba(74,222,128,0.28),0_0_34px_rgba(74,222,128,0.12)]'
       : 'shadow-[0_0_0_1px_rgba(74,222,128,0.28),0_0_34px_rgba(74,222,128,0.12)]'
     : isPast
-      ? 'opacity-85 grayscale-[28%] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_54px_rgba(0,0,0,0.58)] transition-all duration-500 hover:opacity-100'
+      ? 'opacity-85 grayscale-[28%] shadow-[0_18px_54px_rgba(0,0,0,0.58)] transition-all duration-500 hover:opacity-100'
       : pinned
-        ? 'shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_24px_70px_rgba(0,0,0,0.65)]'
-        : 'shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_45px_rgba(0,0,0,0.52)] transition-all duration-500 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_18px_54px_rgba(0,0,0,0.6)]';
+        ? 'shadow-[0_24px_70px_rgba(0,0,0,0.65)]'
+        : 'shadow-[0_14px_45px_rgba(0,0,0,0.52)] transition-all duration-500 hover:shadow-[0_18px_54px_rgba(0,0,0,0.6)]';
   const menuItems = isHosted
     ? [
         !isLive && { id: 'pin', label: pinned ? 'Unpin' : 'Pin', onSelect: () => onTogglePin(eventId), icon: menuIcon(CheckmarkCircle02Icon) },
@@ -219,7 +264,7 @@ function EventCard({ event, relation, now, pinned, requestCount = 0, onOpen, onN
           {requestCount > 0 ? <span className="rounded-full bg-white/[0.14] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white">{requestCount} request{requestCount === 1 ? '' : 's'}</span> : null}
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
-          <h3 className="mb-3 line-clamp-2 text-[26px] font-[900] leading-none tracking-tighter text-white md:text-[28px]">{event.name || 'Untitled event'}</h3>
+          <h3 className="mb-3 line-clamp-2 text-[26px] font-[900] leading-none tracking-normal text-white md:text-[28px]">{event.name || 'Untitled event'}</h3>
           <div className="space-y-2 text-[13px] font-medium text-white/72">
             <div className="flex min-w-0 items-center"><HugeiconsIcon icon={ClockIcon} className="mr-2.5 h-4 w-4 shrink-0 opacity-55" /> <span className="truncate">{formatDate(event.startDate)}</span></div>
             <div className="flex min-w-0 items-center capitalize"><HugeiconsIcon icon={isHosted && attendees ? UserGroupIcon : Location01Icon} className="mr-2.5 h-4 w-4 shrink-0 opacity-55" /> <span className="truncate">{keyDetail}</span></div>
@@ -405,6 +450,7 @@ function ParticipantEventModal({ event, requests, onClose, onSubmitHelp }) {
 export default function EventsListPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const { events: cachedEvents, loading, error: loadError, invalidate } = useEvents({ limit: 100, offset: 0 });
   const { events: attendedEvents, loading: attendedLoading, error: attendedError, invalidate: invalidateAttended } = useAttendedEvents({ limit: 100, offset: 0 });
   const [mode, setMode] = useState('hosted');
@@ -436,13 +482,13 @@ export default function EventsListPage() {
   }, []);
 
   const refreshHelpRequests = useCallback(async () => {
-    if (!user?.id) {
+    if (!userId) {
       setMyHelpRequests([]);
       return;
     }
-    const mine = await helpRequestsService.listMyHelpRequests({ userId: user.id });
+    const mine = await helpRequestsService.listMyHelpRequests({ userId });
     setMyHelpRequests(mine);
-  }, [user?.id]);
+  }, [userId]);
 
   useEffect(() => {
     refreshHelpRequests();
@@ -501,6 +547,10 @@ export default function EventsListPage() {
     return acc;
   }, {}), [myHelpRequests]);
   const selectedEventRequests = useMemo(() => selectedAttendedEvent ? myHelpRequests.filter((request) => request.eventId === String(selectedAttendedEvent.id)) : [], [myHelpRequests, selectedAttendedEvent]);
+  const liveEventCount = useMemo(
+    () => hostedEvents.filter((event) => classifyEvent(event, now) === 'live').length,
+    [hostedEvents, now]
+  );
 
   const submitHelpRequest = async (payload) => {
     await helpRequestsService.createHelpRequest(payload);
@@ -509,10 +559,22 @@ export default function EventsListPage() {
   };
 
   if (loading && hostedEvents.length === 0) {
-    return <div className="mx-auto max-w-6xl"><h1 className="mb-6 text-2xl font-black tracking-tight text-white">My Events</h1><div className="flex items-center justify-center py-16"><div className="h-8 w-8 animate-spin rounded-full border-2 border-pxi-purple border-t-transparent" /></div></div>;
+    return (
+      <div className="mx-auto max-w-6xl space-y-6">
+        <div className="rounded-[2rem] bg-black px-5 py-10 text-center shadow-[0_24px_90px_rgba(0,0,0,0.42)]">
+          <p className="text-sm font-semibold text-zinc-500">Loading events...</p>
+        </div>
+      </div>
+    );
   }
   if (loadError) {
-    return <div className="mx-auto max-w-6xl"><h1 className="mb-6 text-2xl font-black tracking-tight text-white">My Events</h1><div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-400">{loadError.message || 'Failed to load events'}</div></div>;
+    return (
+      <div className="mx-auto max-w-6xl">
+        <div className="rounded-[2rem] bg-red-500/10 p-6 text-sm font-semibold text-red-200">
+          {loadError.message || 'Failed to load events'}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -533,22 +595,14 @@ export default function EventsListPage() {
       ) : null}
 
       <div className="mx-auto max-w-6xl space-y-8">
-        <div className="flex items-center justify-between gap-4">
-          <div><h1 className="text-2xl font-black tracking-tight text-white md:text-3xl">My Events</h1></div>
-          <button type="button" onClick={() => setCreateOpen(true)} aria-label="Create event" className="pill-solid inline-flex h-11 w-11 shrink-0 items-center justify-center"><HugeiconsIcon icon={Add01Icon} size={20} strokeWidth={2.5} /></button>
-        </div>
-
-        <div className="flex justify-center">
-          <SegmentedToggle
-            value={mode}
-            onChange={setMode}
-            ariaLabel="Switch event list"
-            items={[
-              { value: 'hosted', label: 'Hosted' },
-              { value: 'attended', label: 'Attended' },
-            ]}
-          />
-        </div>
+        <EventsHero
+          mode={mode}
+          onModeChange={setMode}
+          hostedCount={hostedEvents.length}
+          attendedCount={attendedEvents.length}
+          liveCount={liveEventCount}
+          onCreate={() => setCreateOpen(true)}
+        />
 
         {mode === 'hosted' ? (
           <div className="space-y-8">

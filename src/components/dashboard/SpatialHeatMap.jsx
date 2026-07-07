@@ -223,7 +223,7 @@ export default function SpatialHeatMap({ rooms = [], timeSlices = [], eventCompa
                             <div
                                 key={room.id}
                                 className={`glow-surface-soft rounded-2xl p-4 transition duration-200 ${
-                                    hoveredRoomId === room.id ? 'bg-white/[0.095] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_18px_36px_rgba(0,0,0,0.34)]' : faded ? 'opacity-35' : 'opacity-100'
+                                    hoveredRoomId === room.id ? 'bg-white/[0.095] shadow-[0_18px_36px_rgba(0,0,0,0.34)]' : faded ? 'opacity-35' : 'opacity-100'
                                 }`}
                             >
                                 <p className="text-sm font-black text-white">{room.label}</p>

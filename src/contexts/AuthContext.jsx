@@ -1,4 +1,6 @@
 'use client';
+/* eslint-disable react-refresh/only-export-components */
+
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { authStorage, authService } from '../services/auth';
 
@@ -11,37 +13,68 @@ function shouldClearAuth(error) {
 }
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(() => authStorage.getUser());
-    const [token, setToken] = useState(() => authStorage.getToken());
+    const [user, setUser] = useState(null);
+    const [token, setToken] = useState(null);
+    const [authReady, setAuthReady] = useState(false);
+    const [authRefreshing, setAuthRefreshing] = useState(true);
 
-    // Refresh user data on mount so isVendor / accountTier are always fresh
+    // Hydrate from localStorage and immediately refresh role-sensitive fields.
     useEffect(() => {
-        const storedToken = authStorage.getToken();
-        const storedUser = authStorage.getUser();
-        if (!storedToken || !storedUser?.id) return;
-        authService.getMe(storedUser.id)
-            .then(({ user: fresh }) => {
-                const merged = { ...storedUser, ...fresh };
-                localStorage.setItem('pxi_user', JSON.stringify(merged));
-                setUser(merged);
-            })
-            .catch(async (error) => {
-                if (shouldClearAuth(error)) {
-                    await authStorage.clear();
-                    setToken(null);
-                    setUser(null);
-                }
-            });
+        let cancelled = false;
+        const frame = requestAnimationFrame(() => {
+            const storedToken = authStorage.getToken();
+            const storedUser = authStorage.getUser();
+            if (cancelled) return;
+
+            setUser(storedUser);
+            setToken(storedToken);
+
+            if (!storedToken || !storedUser?.id) {
+                setAuthReady(true);
+                setAuthRefreshing(false);
+                return;
+            }
+
+            setAuthRefreshing(true);
+            authService.getMe(storedUser.id)
+                .then(({ user: fresh }) => {
+                    if (cancelled) return;
+                    const merged = { ...storedUser, ...fresh };
+                    localStorage.setItem('pxi_user', JSON.stringify(merged));
+                    setUser(merged);
+                })
+                .catch(async (error) => {
+                    if (cancelled) return;
+                    if (shouldClearAuth(error)) {
+                        await authStorage.clear();
+                        if (cancelled) return;
+                        setToken(null);
+                        setUser(null);
+                    }
+                })
+                .finally(() => {
+                    if (!cancelled) {
+                        setAuthReady(true);
+                        setAuthRefreshing(false);
+                    }
+                });
+        });
+        return () => {
+            cancelled = true;
+            cancelAnimationFrame(frame);
+        };
     }, []);
 
     const saveAuth = useCallback(async ({ token: newToken, user: newUser }) => {
         await authStorage.save({ token: newToken, user: newUser });
         setToken(newToken);
         setUser(newUser);
+        setAuthReady(true);
+        setAuthRefreshing(false);
     }, []);
 
     const updateUser = useCallback((updatedUser) => {
-        const merged = { ...user, ...updatedUser };
+        const merged = { ...(user || {}), ...updatedUser };
         localStorage.setItem('pxi_user', JSON.stringify(merged));
         setUser(merged);
     }, [user]);
@@ -50,12 +83,14 @@ export function AuthProvider({ children }) {
         await authStorage.clear();
         setToken(null);
         setUser(null);
+        setAuthReady(true);
+        setAuthRefreshing(false);
     }, []);
 
     const isAuthenticated = !!token && !!user;
 
     return (
-        <AuthContext.Provider value={{ user, token, isAuthenticated, saveAuth, updateUser, logout }}>
+        <AuthContext.Provider value={{ user, token, isAuthenticated, authReady, authRefreshing, saveAuth, updateUser, logout }}>
             {children}
         </AuthContext.Provider>
     );

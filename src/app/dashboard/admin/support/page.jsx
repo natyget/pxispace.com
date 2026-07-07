@@ -9,7 +9,15 @@ import {
 } from '@/services/admin';
 import AdminPagination from '@/components/admin/AdminPagination';
 import { useAuth } from '@/contexts/AuthContext';
-import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
+import {
+    AdminError,
+    AdminPageShell,
+    AdminPanel,
+    AdminTableShell,
+    adminTableClass,
+    adminTdClass,
+    adminThClass,
+} from '@/components/admin/AdminPageShell';
 
 const STATUS_FILTERS = [
     { value: '', label: 'All' },
@@ -74,7 +82,8 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
     }, [ticketId]);
 
     useEffect(() => {
-        load();
+        const timer = setTimeout(() => load(), 0);
+        return () => clearTimeout(timer);
     }, [load]);
 
     const act = async (fn) => {
@@ -101,7 +110,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
     };
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/60 p-6 space-y-5">
+        <div className="rounded-[1.75rem] bg-white/[0.035] p-6 space-y-5">
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-lg font-bold text-white">{ticket?.subject || 'Ticket'}</h2>
@@ -110,20 +119,20 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                             <>
                                 {ticket.user?.email} · {ticket.category} · opened {formatDate(ticket.createdAt)}
                             </>
-                        ) : 'Loading…'}
+                        ) : 'Loading...'}
                     </p>
                 </div>
                 <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-full border border-white/10 px-4 py-1.5 text-[12px] text-white/70 hover:text-white hover:border-white/25"
+                    className="rounded-full bg-white/[0.065] px-4 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
                 >
                     Close
                 </button>
             </div>
 
             {error && (
-                <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-red-300 text-[13px]">{error}</div>
+                <div className="rounded-xl bg-red-500/10 px-4 py-3 text-red-200 text-[13px]">{error}</div>
             )}
 
             {ticket && (
@@ -134,7 +143,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                             value={ticket.status}
                             disabled={busy}
                             onChange={(e) => act(() => updateSupportTicket(ticketId, { status: e.target.value }))}
-                            className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1.5 text-[12px] text-white/80 outline-none"
+                            className="rounded-full bg-white/[0.065] px-3 py-1.5 text-[12px] text-white/80 outline-none"
                         >
                             {STATUS_FILTERS.filter((s) => s.value).map((s) => (
                                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -144,7 +153,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                             value={ticket.priority}
                             disabled={busy}
                             onChange={(e) => act(() => updateSupportTicket(ticketId, { priority: e.target.value }))}
-                            className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1.5 text-[12px] text-white/80 outline-none"
+                            className="rounded-full bg-white/[0.065] px-3 py-1.5 text-[12px] text-white/80 outline-none"
                         >
                             {['LOW', 'NORMAL', 'HIGH', 'URGENT'].map((p) => (
                                 <option key={p} value={p}>{p}</option>
@@ -163,8 +172,8 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                                 key={m.id}
                                 className={`rounded-xl border px-4 py-3 ${
                                     m.isStaff
-                                        ? 'border-sky-500/20 bg-sky-500/5 ml-8'
-                                        : 'border-white/10 bg-zinc-900/60 mr-8'
+                                        ? 'border-transparent bg-white/[0.075] ml-8'
+                                        : 'border-transparent bg-black/25 mr-8'
                                 }`}
                             >
                                 <div className="flex items-center justify-between gap-3 mb-1.5">
@@ -183,8 +192,8 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                             value={reply}
                             onChange={(e) => setReply(e.target.value)}
                             rows={3}
-                            placeholder="Reply as PXI staff…"
-                            className="w-full rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 text-[14px] text-white placeholder:text-white/35 outline-none focus:border-white/25 resize-y"
+                            placeholder="Reply as PXI staff..."
+                            className="w-full rounded-xl bg-black/25 px-4 py-3 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-black/35 resize-y"
                         />
                         <div className="flex justify-end">
                             <button
@@ -239,26 +248,26 @@ export default function AdminSupportPage() {
     }, [isLiveAdmin, status]);
 
     useEffect(() => {
-        load(page);
+        const timer = setTimeout(() => load(page), 0);
+        return () => clearTimeout(timer);
     }, [load, page]);
 
     useEffect(() => {
-        setPage(1);
+        const timer = setTimeout(() => setPage(1), 0);
+        return () => clearTimeout(timer);
     }, [status]);
 
     return (
-        <div className="max-w-6xl space-y-6">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <h1 className="text-xl font-bold text-white mb-2">Support tickets</h1>
-                    <p className="text-white/60 text-sm leading-relaxed">
-                        User-filed tickets from the app and web. {total > 0 ? `${total} match.` : null}
-                    </p>
-                </div>
-                <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
-            </div>
-
-            <div className="flex flex-wrap gap-2">
+        <AdminPageShell
+            title="Support tickets"
+            copy="User-filed tickets from the app and web, with priority, status, replies, and ownership in one queue."
+            source={isLiveAdmin ? 'Live' : 'Mock'}
+            metrics={[
+                { label: 'Matches', value: total.toLocaleString(), hint: status || 'All statuses' },
+                { label: 'Rows', value: rows.length.toLocaleString(), hint: `Page ${page}` },
+            ]}
+        >
+            <AdminPanel className="flex flex-wrap gap-2">
                 {STATUS_FILTERS.map((f) => (
                     <button
                         key={f.value || 'all'}
@@ -267,17 +276,15 @@ export default function AdminSupportPage() {
                         className={`rounded-full px-4 py-1.5 text-[12px] font-semibold border transition-colors ${
                             status === f.value
                                 ? 'bg-white text-black border-white'
-                                : 'border-white/10 text-white/60 hover:text-white hover:border-white/25'
+                                : 'border-transparent bg-white/[0.045] text-white/60 hover:bg-white/[0.075] hover:text-white'
                         }`}
                     >
                         {f.label}
                     </button>
                 ))}
-            </div>
+            </AdminPanel>
 
-            {error && (
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-4 text-red-300 text-sm">{error}</div>
-            )}
+            <AdminError>{error}</AdminError>
 
             {openTicketId && (
                 <TicketDetail
@@ -287,26 +294,22 @@ export default function AdminSupportPage() {
                 />
             )}
 
-            <div className="rounded-2xl border border-white/10 bg-zinc-900/40 overflow-x-auto">
-                {loading ? (
-                    <div className="px-6 py-12 text-center text-white/45 text-sm">Loading…</div>
-                ) : rows.length === 0 ? (
-                    <div className="px-6 py-12 text-center text-white/45 text-sm">
-                        {isLiveAdmin ? 'No tickets in this view.' : 'Live support queue requires a backend ADMIN account.'}
-                    </div>
-                ) : (
-                    <table className="w-full text-left border-collapse min-w-[880px]">
+            <AdminTableShell
+                loading={loading}
+                emptyMessage={rows.length === 0 ? (isLiveAdmin ? 'No tickets in this view.' : 'Live support queue requires a backend ADMIN account.') : null}
+            >
+                    <table className={`${adminTableClass} min-w-[880px]`}>
                         <thead>
-                            <tr className="border-b border-white/5">
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Status</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Priority</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Subject</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">User</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Category</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Last activity</th>
+                            <tr>
+                                <th className={adminThClass}>Status</th>
+                                <th className={adminThClass}>Priority</th>
+                                <th className={adminThClass}>Subject</th>
+                                <th className={adminThClass}>User</th>
+                                <th className={adminThClass}>Category</th>
+                                <th className={adminThClass}>Last activity</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody>
                             {rows.map((t) => (
                                 <tr
                                     key={t.id}
@@ -326,16 +329,15 @@ export default function AdminSupportPage() {
                                     <td className="px-6 py-4 text-[13px] text-white/60 break-all max-w-[180px]">
                                         {t.user?.email || t.userId}
                                     </td>
-                                    <td className="px-6 py-4 text-[12px] text-white/55">{t.category}</td>
-                                    <td className="px-6 py-4 text-[13px] text-white/50 whitespace-nowrap">{formatDate(t.lastMessageAt)}</td>
+                                    <td className={`${adminTdClass} text-[12px]`}>{t.category}</td>
+                                    <td className={`${adminTdClass} whitespace-nowrap`}>{formatDate(t.lastMessageAt)}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                )}
-            </div>
+            </AdminTableShell>
 
             <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={loading} />
-        </div>
+        </AdminPageShell>
     );
 }

@@ -69,6 +69,9 @@ const normalizeApiEvent = (e) => {
     distanceKm: e.distanceKm ?? null,
     musicMatchScore: e.musicMatchScore ?? null,
     organizer: e.organizer ?? null,
+    ticketType: e.ticketType ?? null,
+    spotifyPlaylistUrl: e.spotifyPlaylistUrl ?? null,
+    spotifyTopTrackUrl: e.spotifyTopTrackUrl ?? null,
   };
 };
 

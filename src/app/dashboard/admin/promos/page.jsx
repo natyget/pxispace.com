@@ -9,7 +9,15 @@ import {
 } from '@/services/admin';
 import AdminPagination from '@/components/admin/AdminPagination';
 import { useAuth } from '@/contexts/AuthContext';
-import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
+import {
+    AdminError,
+    AdminPageShell,
+    AdminPanel,
+    AdminTableShell,
+    adminTableClass,
+    adminTdClass,
+    adminThClass,
+} from '@/components/admin/AdminPageShell';
 
 function formatDate(iso) {
     if (!iso) return '—';
@@ -25,7 +33,7 @@ function formatUsd(cents) {
 }
 
 const inputCls =
-    'w-full rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-2.5 text-[14px] text-white placeholder:text-white/35 outline-none focus:border-white/25';
+    'w-full rounded-xl bg-black/25 px-4 py-2.5 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-black/35';
 
 function CreatePromoCard({ onCreated }) {
     const [kind, setKind] = useState('CREDIT');
@@ -73,7 +81,7 @@ function CreatePromoCard({ onCreated }) {
     };
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6 space-y-4">
+        <AdminPanel className="space-y-4">
             <h2 className="text-[11px] font-bold tracking-widest text-white/40 uppercase">Create promo code</h2>
             <div className="grid gap-3 sm:grid-cols-2">
                 <select value={kind} onChange={(e) => setKind(e.target.value)} className={inputCls}>
@@ -104,9 +112,9 @@ function CreatePromoCard({ onCreated }) {
                 disabled={busy}
                 className="rounded-full bg-white text-black px-5 py-2 text-[13px] font-bold disabled:opacity-40"
             >
-                {busy ? 'Creating…' : 'Create code'}
+                {busy ? 'Creating...' : 'Create code'}
             </button>
-        </div>
+        </AdminPanel>
     );
 }
 
@@ -140,7 +148,7 @@ function GrantCreditsCard() {
     };
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6 space-y-4">
+        <AdminPanel className="space-y-4">
             <h2 className="text-[11px] font-bold tracking-widest text-white/40 uppercase">Grant credits directly</h2>
             <div className="grid gap-3 sm:grid-cols-3">
                 <input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="User ID" className={inputCls} />
@@ -148,16 +156,16 @@ function GrantCreditsCard() {
                 <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason (required, audited)" className={inputCls} />
             </div>
             {error && <p className="text-red-300 text-[13px]">{error}</p>}
-            {done != null && <p className="text-emerald-400 text-[13px]">Done — new balance {formatUsd(done)}</p>}
+            {done != null && <p className="text-emerald-400 text-[13px]">Done. New balance {formatUsd(done)}</p>}
             <button
                 type="button"
                 onClick={submit}
                 disabled={busy || !userId.trim() || !amountUsd || !note.trim()}
                 className="rounded-full bg-white text-black px-5 py-2 text-[13px] font-bold disabled:opacity-40"
             >
-                {busy ? 'Granting…' : 'Grant'}
+                {busy ? 'Granting...' : 'Grant'}
             </button>
-        </div>
+        </AdminPanel>
     );
 }
 
@@ -191,7 +199,8 @@ export default function AdminPromosPage() {
     }, [isLiveAdmin]);
 
     useEffect(() => {
-        load(page);
+        const timer = setTimeout(() => load(page), 0);
+        return () => clearTimeout(timer);
     }, [load, page]);
 
     const toggleActive = async (promo) => {
@@ -204,46 +213,39 @@ export default function AdminPromosPage() {
     };
 
     return (
-        <div className="max-w-6xl space-y-6">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <h1 className="text-xl font-bold text-white mb-2">Promos &amp; credits</h1>
-                    <p className="text-white/60 text-sm leading-relaxed">
-                        Credit drops, ambassador codes with commission, and direct credit grants. Every grant is audited.
-                    </p>
-                </div>
-                <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
-            </div>
+        <AdminPageShell
+            title="Promos & credits"
+            copy="Credit drops, ambassador codes with commission, and direct account credits. Every grant is audit-ready."
+            source={isLiveAdmin ? 'Live' : 'Mock'}
+            metrics={[
+                { label: 'Codes', value: rows.length.toLocaleString(), hint: 'Loaded rows' },
+                { label: 'Mode', value: isLiveAdmin ? 'Live' : 'Mock', hint: 'Data source' },
+            ]}
+        >
 
             <CreatePromoCard onCreated={() => load(1)} />
             <GrantCreditsCard />
 
-            {error && (
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-4 text-red-300 text-sm">{error}</div>
-            )}
+            <AdminError>{error}</AdminError>
 
-            <div className="rounded-2xl border border-white/10 bg-zinc-900/40 overflow-x-auto">
-                {loading ? (
-                    <div className="px-6 py-12 text-center text-white/45 text-sm">Loading…</div>
-                ) : rows.length === 0 ? (
-                    <div className="px-6 py-12 text-center text-white/45 text-sm">
-                        {isLiveAdmin ? 'No promo codes yet.' : 'Live promo data requires a backend ADMIN account.'}
-                    </div>
-                ) : (
-                    <table className="w-full text-left border-collapse min-w-[880px]">
+            <AdminTableShell
+                loading={loading}
+                emptyMessage={rows.length === 0 ? (isLiveAdmin ? 'No promo codes yet.' : 'Live promo data requires a backend ADMIN account.') : null}
+            >
+                    <table className={`${adminTableClass} min-w-[880px]`}>
                         <thead>
-                            <tr className="border-b border-white/5">
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Code</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Kind</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Credit</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Commission</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Redemptions</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Expires</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Status</th>
+                            <tr>
+                                <th className={adminThClass}>Code</th>
+                                <th className={adminThClass}>Kind</th>
+                                <th className={adminThClass}>Credit</th>
+                                <th className={adminThClass}>Commission</th>
+                                <th className={adminThClass}>Redemptions</th>
+                                <th className={adminThClass}>Expires</th>
+                                <th className={adminThClass}>Status</th>
                                 <th className="px-6 py-4" />
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody>
                             {rows.map((p) => (
                                 <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
                                     <td className="px-6 py-4">
@@ -252,13 +254,13 @@ export default function AdminPromosPage() {
                                             <p className="text-[11px] text-white/40 mt-0.5">→ {p.owner.username || p.owner.email}</p>
                                         ) : null}
                                     </td>
-                                    <td className="px-6 py-4 text-[12px] text-white/60">{p.kind}</td>
-                                    <td className="px-6 py-4 text-[13px] text-white/80 tabular-nums">{p.creditCents ? formatUsd(p.creditCents) : '—'}</td>
-                                    <td className="px-6 py-4 text-[13px] text-white/80 tabular-nums">{p.commissionBps ? `${(p.commissionBps / 100).toFixed(1)}%` : '—'}</td>
-                                    <td className="px-6 py-4 text-[13px] text-white/70 tabular-nums">
+                                    <td className={`${adminTdClass} text-[12px]`}>{p.kind}</td>
+                                    <td className={`${adminTdClass} text-white/80 tabular-nums`}>{p.creditCents ? formatUsd(p.creditCents) : '—'}</td>
+                                    <td className={`${adminTdClass} text-white/80 tabular-nums`}>{p.commissionBps ? `${(p.commissionBps / 100).toFixed(1)}%` : '—'}</td>
+                                    <td className={`${adminTdClass} text-white/70 tabular-nums`}>
                                         {p.redemptionCount}{p.maxRedemptions ? ` / ${p.maxRedemptions}` : ''}
                                     </td>
-                                    <td className="px-6 py-4 text-[13px] text-white/50">{formatDate(p.expiresAt)}</td>
+                                    <td className={adminTdClass}>{formatDate(p.expiresAt)}</td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                                             p.isActive
@@ -272,7 +274,7 @@ export default function AdminPromosPage() {
                                         <button
                                             type="button"
                                             onClick={() => toggleActive(p)}
-                                            className="rounded-full border border-white/10 px-3.5 py-1.5 text-[12px] text-white/70 hover:text-white hover:border-white/25"
+                                            className="rounded-full bg-white/[0.065] px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
                                         >
                                             {p.isActive ? 'Deactivate' : 'Reactivate'}
                                         </button>
@@ -281,10 +283,9 @@ export default function AdminPromosPage() {
                             ))}
                         </tbody>
                     </table>
-                )}
-            </div>
+            </AdminTableShell>
 
             <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={loading} />
-        </div>
+        </AdminPageShell>
     );
 }

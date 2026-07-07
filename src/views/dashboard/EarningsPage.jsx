@@ -150,14 +150,9 @@ function buildFinanceModel(data, timeframe, eventCosts) {
     const net = aggregates.netPayout ?? modeledEvents.reduce((sum, event) => sum + event.net, 0);
     const adSpend = modeledEvents.reduce((sum, event) => sum + event.adSpend, 0);
     const otherRevenue = modeledEvents.reduce((sum, event) => sum + event.otherRevenue, 0);
-    const paidPayouts = payouts.reduce((sum, payout) => {
-        if (payout.status && payout.status !== 'paid') return sum;
-        return sum + (payout.amount ?? 0);
-    }, 0) || Math.round(net * 0.62);
-    const adDrivenRevenue = Math.round(adSpend * 2.65);
     const netAfterCosts = net + otherRevenue - adSpend;
 
-        const totalEventCostCents = eventCosts.reduce((sum, c) => sum + (c.amount || 0), 0);
+    const totalEventCostCents = eventCosts.reduce((sum, c) => sum + (c.amount || 0), 0);
 
     const breakdownData = [
         { name: 'Platform fee', value: dollars(totalFees) },
@@ -166,13 +161,6 @@ function buildFinanceModel(data, timeframe, eventCosts) {
         { name: 'Marketing (In-app)', value: dollars(adSpend * 0.4) },
         { name: 'Marketing (Discovery)', value: dollars(adSpend * 0.1) },
         { name: 'Data', value: dollars(gross * 0.02) }
-    ];
-
-    const roasData = [
-        { channel: 'SMS', return: 3.2 },
-        { channel: 'Email', return: 2.8 },
-        { channel: 'Feed', return: 2.1 },
-        { channel: 'Discovery', return: 3.6 },
     ];
 
     const revenueTimelineChart = buildRevenueTimeline(payments, gross).map(item => ({
@@ -184,7 +172,6 @@ function buildFinanceModel(data, timeframe, eventCosts) {
     return {
         payments,
         payouts,
-        modeledEvents,
         gross,
         totalFees,
         adSpend,
@@ -192,7 +179,6 @@ function buildFinanceModel(data, timeframe, eventCosts) {
         netAfterCosts,
         revenueTimeline: revenueTimelineChart,
         breakdownData,
-        roasData,
         totalEventCost: totalEventCostCents
     };
 }
@@ -244,6 +230,67 @@ function RevenueTableRow({ title, value, unit, subheading, fluctuation, isPositi
     );
 }
 
+function EarningsHero({ netAfterCosts, gross, retainedPct, timeframe, setTimeframe, sseStatus, loading, onRefresh }) {
+    const netMoney = splitMoney(netAfterCosts);
+    const statusLabel = sseStatus === 'connected' ? 'Connected' : sseStatus === 'connecting' ? 'Connecting' : 'Offline';
+
+    return (
+        <section className="relative overflow-hidden rounded-[2rem] bg-black px-5 py-7 shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:px-8">
+            <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+                <div className="max-w-2xl">
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Business</p>
+                    <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">Earnings</h1>
+                    <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-400">
+                        Gross sales, platform fees, event costs, payouts, and profit in one clean read.
+                    </p>
+                    <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <SegmentedToggle
+                            value={timeframe}
+                            onChange={setTimeframe}
+                            items={[
+                                { id: '1d', label: '1D' },
+                                { id: '1w', label: '1W' },
+                                { id: '1m', label: '1M' },
+                                { id: '1y', label: '1Y' },
+                                { id: 'all', label: 'All' },
+                            ]}
+                        />
+                        <button
+                            type="button"
+                            onClick={onRefresh}
+                            disabled={loading}
+                            className="inline-flex items-center justify-center gap-2 rounded-full bg-white/[0.06] px-4 py-2 text-xs font-bold uppercase tracking-widest text-zinc-300 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-40"
+                        >
+                            {loading ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" /> : <HugeiconsIcon icon={RefreshIcon} size={14} />}
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 xl:w-[520px]">
+                    <div className="col-span-2 rounded-2xl bg-white/[0.04] p-5">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Net after costs</p>
+                        <p className="mt-3 text-5xl font-black leading-none tracking-normal text-white">
+                            ${netMoney.whole}<span className="text-2xl text-white/45">.{netMoney.dec}</span>
+                        </p>
+                    </div>
+                    <div className="rounded-2xl bg-white/[0.04] p-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Gross</p>
+                        <p className="mt-2 text-2xl font-black text-white">{fmtCompact(gross)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/[0.04] p-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Retained</p>
+                        <p className="mt-2 text-2xl font-black text-white">{retainedPct.toFixed(0)}%</p>
+                    </div>
+                    <div className="col-span-2 rounded-2xl bg-white/[0.035] px-4 py-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Live payout stream</p>
+                        <p className="mt-1 text-sm font-bold text-white/70">{statusLabel}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
+
 // ─── main page ───────────────────────────────────────────────────────────────
 
 export default function EarningsPage() {
@@ -257,8 +304,11 @@ export default function EarningsPage() {
     const [includeEventCost, setIncludeEventCost] = useState(true);
     const [eventCosts, setEventCosts] = useState([]);
     useEffect(() => {
-        const saved = localStorage.getItem('pxi_event_costs_v1');
-        if (saved) setEventCosts(JSON.parse(saved));
+        const timer = setTimeout(() => {
+            const saved = localStorage.getItem('pxi_event_costs_v1');
+            if (saved) setEventCosts(JSON.parse(saved));
+        }, 0);
+        return () => clearTimeout(timer);
     }, []);
     const saveEventCosts = (newCosts) => {
         setEventCosts(newCosts);
@@ -383,22 +433,27 @@ export default function EarningsPage() {
 
     if (!user?.isVendor) {
         return (
-            <div className="max-w-xl mx-auto py-16 text-center">
-                <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-pxi-purple/10 border border-pxi-purple/20 flex items-center justify-center">
-                    <HugeiconsIcon icon={HelpCircleIcon} size={28} className="text-pxi-purple" />
-                </div>
-                <h1 className="text-2xl font-black text-white mb-3 tracking-tight">Earnings</h1>
-                <p className="text-zinc-400 mb-6 leading-relaxed">
-                    Your earnings dashboard will appear here once you become a verified vendor.
-                </p>
-                <Link
-                    href="/dashboard/vendor-upgrade"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
-                >
-                    <HugeiconsIcon icon={StarIcon} size={14} />
-                    Set Up Vendor Account
-                    <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
-                </Link>
+            <div className="mx-auto max-w-4xl space-y-6 md:space-y-8">
+                <section className="relative overflow-hidden rounded-[2rem] bg-black px-5 py-10 text-center shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:px-8">
+                    <div className="relative mx-auto max-w-xl">
+                        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.055]">
+                            <HugeiconsIcon icon={HelpCircleIcon} size={28} className="text-white/75" />
+                        </div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Business</p>
+                        <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">Earnings</h1>
+                        <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-zinc-400">
+                            Your finance dashboard appears here once hosting and payouts are enabled.
+                        </p>
+                        <Link
+                            href="/dashboard/vendor-upgrade"
+                            className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-black uppercase tracking-widest text-black transition hover:bg-zinc-200"
+                        >
+                            <HugeiconsIcon icon={StarIcon} size={14} />
+                            Start hosting
+                            <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
+                        </Link>
+                    </div>
+                </section>
             </div>
         );
     }
@@ -406,7 +461,6 @@ export default function EarningsPage() {
     // ─── derived numbers ──────────────────────────────────────────────────
     const {
         payouts,
-        modeledEvents,
         gross,
         totalFees,
         adSpend,
@@ -414,9 +468,7 @@ export default function EarningsPage() {
         netAfterCosts,
         revenueTimeline,
         breakdownData,
-        roasData,
     } = financeModel;
-    const netMoney = splitMoney(netAfterCosts);
     const costTotal = totalFees + adSpend;
     const retainedPct = gross + otherRevenue > 0
         ? Math.max(0, Math.min(100, (netAfterCosts / (gross + otherRevenue)) * 100))
@@ -424,40 +476,17 @@ export default function EarningsPage() {
 
     // ─── render ───────────────────────────────────────────────────────────
     return (
-        <div className="max-w-6xl mx-auto space-y-8">
-
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Earnings</h1>
-                </div>
-                <div className="flex items-center gap-3">
-                    <SegmentedToggle
-                        value={timeframe}
-                        onChange={setTimeframe}
-                        items={[
-                            { id: '1d', label: '1D' },
-                            { id: '1w', label: '1W' },
-                            { id: '1m', label: '1M' },
-                            { id: '1y', label: '1Y' },
-                            { id: 'all', label: 'All' },
-                        ]}
-                    />
-                    <div className="flex items-center space-x-2 rounded-full border border-white/10 bg-white/[0.055] px-4 py-2 hidden md:flex">
-                        <div className="h-2.5 w-2.5 rounded-full bg-white/60" />
-                        <span className="text-[12px] font-bold uppercase tracking-widest text-white/60">
-                            {sseStatus === 'connected' ? 'Connected' : sseStatus === 'connecting' ? 'Connecting' : 'Offline'}
-                        </span>
-                    </div>
-                    <button
-                        onClick={load}
-                        disabled={loading}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 text-zinc-400 text-sm hover:bg-white/5 transition-all disabled:opacity-40"
-                    >
-                        {loading ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" /> : <HugeiconsIcon icon={RefreshIcon} size={14} />}
-                        <span className="hidden md:inline">Refresh</span>
-                    </button>
-                </div>
-            </div>
+        <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
+            <EarningsHero
+                netAfterCosts={netAfterCosts}
+                gross={gross}
+                retainedPct={retainedPct}
+                timeframe={timeframe}
+                setTimeframe={setTimeframe}
+                sseStatus={sseStatus}
+                loading={loading}
+                onRefresh={load}
+            />
 
             {error && (
                 <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
@@ -563,7 +592,7 @@ export default function EarningsPage() {
                             }} className="rounded-xl bg-white text-black px-4 py-2 font-bold text-sm hover:bg-zinc-200 transition">Add</button>
                         </div>
                         
-                        <div className="flex justify-between items-center py-2 border-t border-white/5">
+                        <div className="flex justify-between items-center py-2">
                             <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Or Import CSV</p>
                             <label className="flex items-center gap-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] px-4 py-2 text-xs font-bold text-white cursor-pointer transition">
                                 <HugeiconsIcon icon={Upload01Icon} size={14} />

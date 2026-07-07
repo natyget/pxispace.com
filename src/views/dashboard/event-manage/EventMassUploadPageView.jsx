@@ -83,13 +83,13 @@ export default function EventMassUploadPageView() {
 
           {/* Photographer share link */}
           <div className="glass-panel overflow-hidden rounded-2xl">
-            <div className="flex items-center gap-2 p-5 shadow-[inset_0_-1px_0_rgba(255,255,255,0.035)]">
-              <HugeiconsIcon icon={Link01Icon} size={18} className="text-pxi-purple" />
+            <div className="flex items-center gap-2 px-5 pb-2 pt-5">
+              <HugeiconsIcon icon={Link01Icon} size={18} className="text-white/70" />
               <h2 className="font-bold text-white uppercase tracking-widest text-sm">Photographer Upload Link</h2>
             </div>
             <div className="p-5 space-y-3">
               <p className="text-xs text-zinc-500 leading-relaxed">
-                Generate a shareable link that lets photographers upload directly to this album — no account or organizer access required. You can set upload capacity, photographer limit, and an expiry time.
+                Generate a shareable link that lets photographers upload directly to this album. No account or organizer access required. You can set upload capacity, photographer limit, and an expiry time.
               </p>
               <button
                 type="button"
@@ -118,9 +118,9 @@ export default function EventMassUploadPageView() {
           <p>You don&apos;t have permission to mass upload for this album. Only the event creator or album admins can use this tool.</p>
           <Link
             href={`/dashboard/events/${eventId}`}
-            className="inline-block mt-4 text-pxi-purple text-xs font-bold uppercase tracking-widest hover:underline"
+            className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white"
           >
-            ← Back to details
+            Back to details
           </Link>
         </div>
       )}

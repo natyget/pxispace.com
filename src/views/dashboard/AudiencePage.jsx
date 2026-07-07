@@ -20,6 +20,71 @@ import {
     listCampaignDrafts,
     resumeCampaignDraft,
 } from '@/services/campaignDrafts';
+import { api } from '@/services/api';
+
+/** Real attendee demographics from GET /api/analytics/audience (not sample data). */
+function RealAudienceOverview() {
+    const [data, setData] = useState(null);
+    const [failed, setFailed] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        api.get('/api/analytics/audience')
+            .then((res) => { if (!cancelled) setData(res); })
+            .catch(() => { if (!cancelled) setFailed(true); });
+        return () => { cancelled = true; };
+    }, []);
+
+    if (failed || (data && data.totalAttendees === 0)) return null;
+
+    return (
+        <SectionCard title="Your real audience" dense>
+            {!data ? (
+                <p className="px-2 py-3 text-sm text-zinc-500">Loading live demographics…</p>
+            ) : (
+                <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        {[
+                            { label: 'Attendees', value: data.totalAttendees },
+                            { label: 'Passport holders', value: data.tiers.citizen },
+                            { label: 'Email reachable', value: data.marketing.emailOptIn },
+                            { label: 'Repeat guests', value: `${Math.round((data.repeat.repeatRate || 0) * 100)}%` },
+                        ].map((t) => (
+                            <div key={t.label} className="glow-surface-soft rounded-xl px-4 py-3">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t.label}</p>
+                                <p className="mt-1 text-xl font-black tabular-nums text-white">{t.value}</p>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {data.topCities.length > 0 && (
+                            <div className="glow-surface-soft rounded-xl px-4 py-3">
+                                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Top cities</p>
+                                {data.topCities.slice(0, 5).map((c) => (
+                                    <div key={c.city} className="flex items-center justify-between py-0.5 text-sm">
+                                        <span className="text-zinc-300">{c.city}</span>
+                                        <span className="font-bold tabular-nums text-white">{c.count}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {data.ageBrackets.some((b) => b.count > 0) && (
+                            <div className="glow-surface-soft rounded-xl px-4 py-3">
+                                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Age brackets (opted-in ages)</p>
+                                {data.ageBrackets.map((b) => (
+                                    <div key={b.label} className="flex items-center justify-between py-0.5 text-sm">
+                                        <span className="text-zinc-300">{b.label}</span>
+                                        <span className="font-bold tabular-nums text-white">{b.count}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </SectionCard>
+    );
+}
 
 const INVITE_TYPES = ['ALBUM_INVITE', 'STAFF_INVITE', 'LINEUP_INVITE'];
 const ACTIVE_CAMPAIGN_STORAGE_KEY = 'pxi_active_campaign_status_v1';
@@ -582,9 +647,11 @@ export default function AudiencePage() {
             {view === 'crm' ? (
                 <>
                     <div className="space-y-7">
+                        <RealAudienceOverview />
                         <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
                             Sample data — rows below model likely audience segments from your real ticket and invite
-                            counts. They are not a literal roster of individual attendees.
+                            counts. They are not a literal roster of individual attendees. Live totals are in the
+                            &quot;Your real audience&quot; panel above.
                         </div>
                         <SectionCard
                             title={segmentIsActive ? 'Segment Draft Active' : 'Segment Draft'}
@@ -864,9 +931,10 @@ export default function AudiencePage() {
                 </>
             ) : (
                 <>
-                    <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
-                        Coming soon — PXI doesn&apos;t send SMS, email, or feed campaigns yet. Use this space to plan
-                        your mix and save drafts; nothing here is delivered to guests.
+                    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-xs font-semibold text-emerald-200">
+                        Email campaigns are LIVE — send real emails to your opted-in attendees from{' '}
+                        <a href="/dashboard/campaigns" className="underline">Email Campaigns</a>. The planner below is
+                        for drafting your mix; SMS and feed placements are still coming.
                     </div>
                     <SectionCard
                         title="Campaign Management"

@@ -52,8 +52,8 @@ function NavLink({
     const isActive = isNavItemActive(pathname, item, searchParams);
     const isLiveOperations = item.key === 'operations' && isLiveEvent;
     const activeClasses = isLiveOperations
-        ? 'bg-emerald-500/[0.06] text-emerald-200 shadow-[inset_0_1px_1px_rgba(52,211,153,0.08)]'
-        : 'bg-white/[0.04] text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]';
+        ? 'bg-emerald-500/[0.06] text-emerald-200'
+        : 'bg-white/[0.04] text-white/90';
     const inactiveClasses = isLiveOperations
         ? 'bg-transparent text-emerald-300/60 hover:bg-emerald-500/[0.04] hover:text-emerald-200/80'
         : 'bg-transparent text-white/40 hover:bg-white/[0.02] hover:text-white/70';
@@ -108,7 +108,7 @@ function NavLink({
 }
 
 export default function DashboardLayout({ children }) {
-    const { user, logout, updateUser } = useAuth();
+    const { user, authReady, authRefreshing, logout, updateUser } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -136,6 +136,20 @@ export default function DashboardLayout({ children }) {
         return () => mq.removeEventListener('change', syncMobileSidebar);
     }, []);
 
+    // Tablet tier (768–1023px): default to the 72px rail so content keeps room —
+    // the collapse toggle still lets the user expand; widening to desktop restores it.
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const mq = window.matchMedia('(min-width: 768px) and (max-width: 1023px)');
+        const syncTabletSidebar = (e) => {
+            if (e.matches) dashboardShellActions.setSidebarCollapsed(true);
+            else if (window.innerWidth >= 1024) dashboardShellActions.setSidebarCollapsed(false);
+        };
+        syncTabletSidebar(mq);
+        mq.addEventListener('change', syncTabletSidebar);
+        return () => mq.removeEventListener('change', syncTabletSidebar);
+    }, []);
+
     useEffect(() => {
         if (!mounted) return;
         prefetchDashboardRoutes(router);
@@ -158,8 +172,10 @@ export default function DashboardLayout({ children }) {
         return () => window.removeEventListener('pxi:capabilities-refresh', handleRefresh);
     }, [mounted, refreshCapabilities]);
 
+    const rolesReady = mounted && authReady && !authRefreshing;
+
     useEffect(() => {
-        if (!mounted || !user?.id) return;
+        if (!mounted || !authReady || !user?.id) return;
         if (user.phoneNumber || fromMobile) {
             deferDashboardState(() => setPhoneCheckDone(true));
             return;
@@ -181,7 +197,7 @@ export default function DashboardLayout({ children }) {
                     }
                 });
         }
-    }, [mounted, user?.id, user?.phoneNumber, fromMobile, phoneCheckDone, router, updateUser, logout]);
+    }, [mounted, authReady, user?.id, user?.phoneNumber, fromMobile, phoneCheckDone, router, updateUser, logout]);
 
     const hasLiveEvent = useMemo(() => {
         if (!mounted || !user?.id) return false;
@@ -198,15 +214,15 @@ export default function DashboardLayout({ children }) {
         dashboardShellActions.setIsLiveEvent(hasLiveEvent);
     }, [hasLiveEvent]);
 
-    const hasLiveOpsAccess = capabilities.hasBouncerAccess || !!user?.isVendor;
+    const hasLiveOpsAccess = capabilities.hasBouncerAccess || (rolesReady && !!user?.isVendor);
     const hasOrganizerAccess = hasLiveOpsAccess;
 
     useEffect(() => {
-        if (!mounted || capabilities.loading || !capabilities.determined) return;
+        if (!rolesReady || capabilities.loading || !capabilities.determined) return;
         if (pathname.startsWith('/dashboard/live-scan') && !hasLiveOpsAccess) {
             router.replace('/dashboard');
         }
-    }, [mounted, pathname, capabilities.loading, capabilities.determined, hasLiveOpsAccess, router]);
+    }, [rolesReady, pathname, capabilities.loading, capabilities.determined, hasLiveOpsAccess, router]);
 
     useEffect(() => {
         dashboardShellActions.setAccountPopoverOpen(false);
@@ -218,14 +234,14 @@ export default function DashboardLayout({ children }) {
     const [adminSidebarMode, setAdminSidebarMode] = useState('user');
 
     useEffect(() => {
-        if (!mounted || typeof window === 'undefined') return;
+        if (!rolesReady || typeof window === 'undefined') return;
         if (!canAccessAdminDashboard(user)) return;
         const saved = window.localStorage.getItem(ADMIN_SIDEBAR_MODE_KEY);
         deferDashboardState(() => setAdminSidebarMode(saved === 'admin' || saved === 'user' ? saved : 'admin'));
-    }, [mounted, user]);
+    }, [rolesReady, user]);
 
     useEffect(() => {
-        if (!mounted || !canAccessAdminDashboard(user)) return;
+        if (!rolesReady || !canAccessAdminDashboard(user)) return;
         if (pathname.startsWith('/dashboard/admin')) {
             deferDashboardState(() => setAdminSidebarMode('admin'));
             try {
@@ -234,7 +250,7 @@ export default function DashboardLayout({ children }) {
                 /* ignore */
             }
         }
-    }, [mounted, pathname, user]);
+    }, [rolesReady, pathname, user]);
 
     const setAdminSidebarModeAndNavigate = (mode) => {
         setAdminSidebarMode(mode);
@@ -290,11 +306,17 @@ export default function DashboardLayout({ children }) {
         }),
     };
 
-    const isAdminNav = mounted && canAccessAdminDashboard(user) && adminSidebarMode === 'admin';
+    const isAdminNav = rolesReady && canAccessAdminDashboard(user) && adminSidebarMode === 'admin';
 
     const navItems = useMemo(() => {
-        if (!mounted) {
-            return dashboardNavConfig.filter((item) => !item.vendorOnly && !item.organizerOnly && !item.bouncerOnly);
+        if (!rolesReady) {
+            return dashboardNavConfig.filter((item) => (
+                !item.vendorOnly &&
+                !item.nonVendorOnly &&
+                !item.organizerOnly &&
+                !item.bouncerOnly &&
+                !item.liveOnly
+            ));
         }
         if (isAdminNav) {
             return adminNavItems;
@@ -303,10 +325,10 @@ export default function DashboardLayout({ children }) {
             hasOrganizerAccess,
             hasLiveOpsAccess,
             isLiveEvent: hasLiveEvent,
-            mounted,
+            mounted: rolesReady,
             user,
         });
-    }, [isAdminNav, mounted, hasOrganizerAccess, hasLiveOpsAccess, hasLiveEvent, user]);
+    }, [isAdminNav, rolesReady, hasOrganizerAccess, hasLiveOpsAccess, hasLiveEvent, user]);
     const navEntries = useMemo(() => {
         if (isAdminNav || sidebarCollapsed) {
             return navItems.map((item) => ({ type: 'item', key: item.key, item }));
@@ -366,7 +388,7 @@ export default function DashboardLayout({ children }) {
                             </button>
                         </div>
 
-                        {mounted && canAccessAdminDashboard(user) && (
+                        {rolesReady && canAccessAdminDashboard(user) && (
                             <div className={`mb-2 px-3 md:px-4 ${sidebarCollapsed ? 'flex flex-col items-center' : ''}`}>
                                 <div
                                     className={`flex rounded-full bg-white/[0.045] p-0.5 ${sidebarCollapsed ? 'w-11 flex-col gap-0.5 py-1' : 'w-full'}`}
@@ -378,7 +400,7 @@ export default function DashboardLayout({ children }) {
                                         onClick={() => setAdminSidebarModeAndNavigate('admin')}
                                         className={`${sidebarCollapsed ? 'py-2 text-[10px]' : 'flex-1 py-2 text-xs'} rounded-full font-bold tracking-wide transition-colors ${
                                             adminSidebarMode === 'admin'
-                                                ? 'bg-white/[0.04] text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]'
+                                                ? 'bg-white/[0.04] text-white/90'
                                                 : 'text-white/40 hover:text-white/70'
                                         }`}
                                         title="Platform admin"
@@ -390,12 +412,12 @@ export default function DashboardLayout({ children }) {
                                         onClick={() => setAdminSidebarModeAndNavigate('user')}
                                         className={`${sidebarCollapsed ? 'py-2 text-[10px]' : 'flex-1 py-2 text-xs'} rounded-full font-bold tracking-wide transition-colors ${
                                             adminSidebarMode === 'user'
-                                                ? 'bg-white/[0.04] text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]'
+                                                ? 'bg-white/[0.04] text-white/90'
                                                 : 'text-white/40 hover:text-white/70'
                                         }`}
                                         title="Member dashboard"
                                     >
-                                        {sidebarCollapsed ? 'U' : 'USER'}
+                                        {sidebarCollapsed ? 'M' : 'MEMBER'}
                                     </button>
                                 </div>
                             </div>
@@ -423,9 +445,9 @@ export default function DashboardLayout({ children }) {
                         </nav>
                     </div>
 
-                    <div className={`relative shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${sidebarCollapsed ? 'flex justify-center px-0 py-5' : 'p-4'}`}>
+                    <div className={`relative ${sidebarCollapsed ? 'flex justify-center px-0 py-5' : 'p-4'}`}>
                         <AccountCardPopover
-                            user={mounted ? user : null}
+                            user={rolesReady ? user : null}
                             collapsed={sidebarCollapsed}
                             isOpen={accountPopoverOpen}
                             onOpenChange={dashboardShellActions.setAccountPopoverOpen}

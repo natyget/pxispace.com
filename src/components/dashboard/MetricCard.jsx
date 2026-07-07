@@ -12,13 +12,13 @@ function trendIconFor(trend) {
 export function StatRow({ items = [], className = '' }) {
     return (
         <div
-            className={`glass-panel grid gap-3 rounded-[2rem] p-4 ${className}`.trim()}
+            className={`glass-field grid gap-3 rounded-[1.25rem] p-4 ${className}`.trim()}
             style={{ gridTemplateColumns: `repeat(${Math.min(Math.max(items.length, 1), 3)}, minmax(0, 1fr))` }}
         >
             {items.map((item) => (
                 <div key={item.label} className="min-w-0">
                     <p className="truncate text-[10px] font-bold uppercase tracking-widest text-white/40">{item.label}</p>
-                    <p className="mt-1 truncate text-xl font-black tracking-tight text-white">{item.value}</p>
+                    <p className="mt-1 truncate text-xl font-black tracking-normal text-white">{item.value}</p>
                     {item.detail ? <p className="mt-0.5 truncate text-xs text-zinc-500">{item.detail}</p> : null}
                 </div>
             ))}
@@ -89,7 +89,7 @@ export default function MetricCard({
     const TrendIcon = trendIconFor(trend);
 
     return (
-        <div className={`glass-panel relative flex min-h-[132px] flex-col justify-between rounded-[2rem] ${dense ? 'p-4 md:p-5' : 'p-5 md:p-6'}`}>
+        <div className={`glass-panel relative flex min-h-[132px] flex-col justify-between rounded-[1.5rem] ${dense ? 'p-4 md:p-5' : 'p-5 md:p-6'}`}>
             <div className="mb-4 flex items-center justify-between gap-3">
                 <span className="text-[11px] md:text-[12px] font-bold tracking-widest text-white/40 uppercase">{title}</span>
                 {actions ? (
@@ -104,9 +104,9 @@ export default function MetricCard({
                 <div className="h-10 w-24 bg-white/5 rounded animate-pulse" />
             ) : (
                 <div className="mt-auto flex flex-col items-start gap-3">
-                    <div className="max-w-full truncate text-2xl font-[900] leading-none tracking-tight text-white">{value}</div>
+                    <div className="max-w-full truncate text-2xl font-[900] leading-none tracking-normal text-white">{value}</div>
                     {sparkline ? (
-                        <div className="h-8 w-full overflow-hidden rounded-md bg-white/[0.035] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+                        <div className="h-8 w-full overflow-hidden rounded-md bg-white/[0.035]">
                             {Array.isArray(sparkline?.points) ? (
                                 <MicroChart points={sparkline.points} color={sparkline.color || '#d84aff'} />
                             ) : (

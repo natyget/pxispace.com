@@ -23,7 +23,10 @@ const Navbar = () => {
        (that page owns its own center controls via the portal below). */
     const showEventsButton = pathname !== "/events";
 
-    useEffect(() => setMounted(true), []);
+    useEffect(() => {
+        const frame = requestAnimationFrame(() => setMounted(true));
+        return () => cancelAnimationFrame(frame);
+    }, []);
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
@@ -237,13 +240,32 @@ const Navbar = () => {
                             </>
                         ) : null}
 
-                        <Link
-                            href="/events"
-                            onClick={() => setMobileMenuOpen(false)}
-                            className="glow-cta mt-4 flex h-12 w-full items-center justify-center text-sm font-black uppercase tracking-widest"
-                        >
-                            Events
-                        </Link>
+                        {mounted && !isAuthenticated && pathname === "/events" ? (
+                            <div className="mt-4 grid grid-cols-2 gap-3">
+                                <Link
+                                    href="/login?redirect=/dashboard/analytics"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex h-12 w-full items-center justify-center rounded-full bg-white/8 text-sm font-black uppercase tracking-widest text-white transition-colors hover:bg-white/12"
+                                >
+                                    Log in
+                                </Link>
+                                <Link
+                                    href="/login?mode=signup&redirect=/dashboard/events/new"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="glow-cta flex h-12 w-full items-center justify-center text-sm font-black uppercase tracking-widest"
+                                >
+                                    Create
+                                </Link>
+                            </div>
+                        ) : showEventsButton ? (
+                            <Link
+                                href="/events"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="glow-cta mt-4 flex h-12 w-full items-center justify-center text-sm font-black uppercase tracking-widest"
+                            >
+                                Events
+                            </Link>
+                        ) : null}
                     </div>
                 </>
             )}

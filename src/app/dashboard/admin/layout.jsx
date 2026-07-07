@@ -6,16 +6,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { canAccessAdminDashboard } from '@/lib/adminAccess';
 
 export default function AdminSectionLayout({ children }) {
-    const { user, isAuthenticated } = useAuth();
+    const { user, isAuthenticated, authReady, authRefreshing } = useAuth();
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
+    const ready = mounted && authReady && !authRefreshing;
 
     useEffect(() => {
-        setMounted(true);
+        const timer = setTimeout(() => setMounted(true), 0);
+        return () => clearTimeout(timer);
     }, []);
 
     useEffect(() => {
-        if (!mounted) return;
+        if (!ready) return;
         if (!isAuthenticated || !user) {
             router.replace('/login');
             return;
@@ -23,12 +25,12 @@ export default function AdminSectionLayout({ children }) {
         if (!canAccessAdminDashboard(user)) {
             router.replace('/dashboard');
         }
-    }, [mounted, isAuthenticated, user, router]);
+    }, [ready, isAuthenticated, user, router]);
 
-    if (!mounted || !isAuthenticated || !canAccessAdminDashboard(user)) {
+    if (!ready || !isAuthenticated || !user || !canAccessAdminDashboard(user)) {
         return (
             <div className="flex min-h-[40vh] items-center justify-center text-white/60 text-sm">
-                Loading…
+                Loading...
             </div>
         );
     }

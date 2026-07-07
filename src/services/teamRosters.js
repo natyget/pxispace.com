@@ -1,3 +1,4 @@
+import { api } from './api';
 import { eventsService } from './events';
 
 const STORAGE_KEY = 'pxi.dashboard.teamRosters.v1';
@@ -280,7 +281,32 @@ function writeRosters(rosters) {
   if (canUseLocalStorage()) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
   }
+  // Write-through to the backend (fire-and-forget; localStorage stays the
+  // offline cache so the UI never blocks on the network).
+  api.put('/api/team/rosters', { rosters: normalized }).catch(() => {
+    /* offline / logged out — server copy syncs on next successful save */
+  });
   return clone(normalized);
+}
+
+/**
+ * Read-through server sync: replaces the local cache with the server's rosters
+ * when available. Falls back to the local cache (and its defaults) offline.
+ */
+async function syncRostersFromServer() {
+  try {
+    const data = await api.get('/api/team/rosters');
+    if (Array.isArray(data?.rosters)) {
+      const normalized = data.rosters.map(normalizeRoster);
+      if (canUseLocalStorage()) {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+      }
+      return clone(normalized);
+    }
+  } catch {
+    /* offline / logged out */
+  }
+  return null;
 }
 
 function updateRosterList(rosterId, updater) {
@@ -312,7 +338,15 @@ function readCreateEventAssignments() {
 }
 
 export async function listTeamRosters() {
+  const fromServer = await syncRostersFromServer();
+  if (fromServer) return fromServer;
   return readRosters();
+}
+
+export async function deleteTeamRoster(rosterId) {
+  const rosters = readRosters().filter((roster) => roster.id !== rosterId);
+  writeRosters(rosters);
+  return clone(rosters);
 }
 
 export async function createTeamRoster(input = {}) {

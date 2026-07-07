@@ -7,7 +7,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Loading02Icon, Alert01Icon, ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import Button from '../../components/ui/Button';
 import { eventsService } from '../../services/events';
-import { getTicketQuote, generateTicket, purchaseTicket, getUserTickets } from '../../services/tickets';
+import { getTicketQuote, generateTicket, purchaseTicket, getUserTickets, getMyCredits } from '../../services/tickets';
 import { useAuth } from '@/contexts/AuthContext';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { StripePaymentModal } from '@/components/checkout/StripePaymentModal';
@@ -63,6 +63,9 @@ export default function EventCheckout({ basePath = '/events' }) {
   const [walletOpen, setWalletOpen] = useState(false);
   const [issuedTicketId, setIssuedTicketId] = useState(null);
   const [issuedPreview, setIssuedPreview] = useState(null);
+  const [creditBalanceCents, setCreditBalanceCents] = useState(0);
+  const [useCredits, setUseCredits] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
 
   const checkoutReturnPath = useMemo(() => {
     if (!id) return basePath;
@@ -132,12 +135,32 @@ export default function EventCheckout({ basePath = '/events' }) {
     return formatPrice(apiEvent.ticketPrice, apiEvent.currency);
   }, [apiEvent, isPaidEvent, quoteTotal, tiers, selectedTierId]);
 
+  // PXI credits: fetch balance once signed in so the "use credits" toggle can render.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setCreditBalanceCents(0);
+      return;
+    }
+    let cancelled = false;
+    getMyCredits()
+      .then((res) => {
+        if (!cancelled) setCreditBalanceCents(res?.balanceCents ?? 0);
+      })
+      .catch(() => {
+        if (!cancelled) setCreditBalanceCents(0);
+      });
+    return () => { cancelled = true; };
+  }, [isAuthenticated]);
+
   const startWalletCheckout = async () => {
     if (!apiEvent || !isPaidEvent || !isAuthenticated || !user?.id) return;
     setJoining(true);
     setJoinError(null);
     try {
-      const { clientSecret } = await purchaseTicket(apiEvent.id, apiTierId);
+      const { clientSecret } = await purchaseTicket(apiEvent.id, apiTierId, {
+        applyCredits: useCredits && creditBalanceCents > 0,
+        promoCode: promoCode.trim() || undefined,
+      });
       setWalletSecret(clientSecret);
       setWalletOpen(true);
     } catch (err) {
@@ -351,6 +374,31 @@ export default function EventCheckout({ basePath = '/events' }) {
 
                       {isAuthenticated && isPaidEvent ? (
                         <div className="space-y-2 pt-2">
+                          {creditBalanceCents > 0 ? (
+                            <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 cursor-pointer">
+                              <span className="text-xs text-zinc-300">
+                                Use my PXI credits
+                                <span className="ml-1.5 font-bold text-white">
+                                  (${(creditBalanceCents / 100).toFixed(2)} available)
+                                </span>
+                                <span className="block text-[10px] text-zinc-500 mt-0.5">
+                                  Credits discount PXI fees on this order; applied at payment.
+                                </span>
+                              </span>
+                              <input
+                                type="checkbox"
+                                checked={useCredits}
+                                onChange={(e) => setUseCredits(e.target.checked)}
+                                className="h-4 w-4 accent-white"
+                              />
+                            </label>
+                          ) : null}
+                          <input
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                            placeholder="Promo / ambassador code (optional)"
+                            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs font-semibold uppercase tracking-widest text-white placeholder:normal-case placeholder:tracking-normal placeholder:text-zinc-500 outline-none focus:border-white/25"
+                          />
                           <Button
                             variant="neon"
                             className="w-full uppercase tracking-widest py-3.5 rounded-full shadow-lg transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:scale-95 disabled:cursor-wait"

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { StarIcon, HelpCircleIcon, Ticket01Icon, ArrowRight02Icon, Loading02Icon, CheckmarkCircle02Icon, CancelCircleIcon, RefreshIcon, Alert02Icon, SmartPhone01Icon, PercentIcon } from '@hugeicons/core-free-icons';
+import { Ticket01Icon, ArrowRight02Icon, Loading02Icon, CheckmarkCircle02Icon, CancelCircleIcon, RefreshIcon, Alert02Icon, SmartPhone01Icon, PercentIcon } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService, authStorage } from '../../services/auth';
 
@@ -21,7 +21,7 @@ const BENEFITS = [
     {
         icon: CheckmarkCircle02Icon,
         title: 'Secure Verification',
-        desc: 'Powered by Stripe — industry-standard identity and payment verification.',
+        desc: 'Powered by Stripe - industry-standard identity and payment verification.',
     },
 ];
 
@@ -48,12 +48,12 @@ const REQUIREMENT_LABELS = {
 };
 
 function formatRequirement(key) {
-    return REQUIREMENT_LABELS[key] || key.replace(/_/g, ' ').replace(/\./g, ' → ');
+    return REQUIREMENT_LABELS[key] || key.replace(/_/g, ' ').replace(/\./g, ' > ');
 }
 
 function StatusRow({ label, enabled, description }) {
     return (
-        <div className="flex items-start gap-3 py-3 shadow-[inset_0_-1px_0_rgba(255,255,255,0.035)] last:shadow-none">
+        <div className="flex items-start gap-3 rounded-2xl bg-black/20 px-4 py-3">
             <div className="mt-0.5 flex-shrink-0">
                 {enabled
                     ? <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="text-emerald-400" />
@@ -69,7 +69,7 @@ function StatusRow({ label, enabled, description }) {
 }
 
 export default function VendorUpgradePage() {
-    const { user, updateUser } = useAuth();
+    const { user, authReady, authRefreshing, updateUser } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -83,31 +83,38 @@ export default function VendorUpgradePage() {
     const [stripeStatus, setStripeStatus] = useState(null); // { chargesEnabled, payoutsEnabled, currentlyDue }
     const [hasSubmittedVerification, setHasSubmittedVerification] = useState(false);
     const hasOutstandingRequirements = (stripeStatus?.currentlyDue?.length ?? 0) > 0;
+    const ready = mounted && authReady && !authRefreshing;
 
     useEffect(() => {
-        setMounted(true);
+        const timer = setTimeout(() => setMounted(true), 0);
+        return () => clearTimeout(timer);
     }, []);
 
     useEffect(() => {
-        if (stripeParam) router.replace('/dashboard/vendor-upgrade', { scroll: false });
-    }, []);
+        if (!stripeParam) return undefined;
+        const timer = setTimeout(() => router.replace('/dashboard/vendor-upgrade', { scroll: false }), 0);
+        return () => clearTimeout(timer);
+    }, [router, stripeParam]);
 
     useEffect(() => {
-        if (!mounted) return;
-        if (user?.isVendor) {
-            setStep('done');
-            return;
-        }
-        if (stripeParam === 'refresh') {
-            setStep('error');
-            setErrorMsg('The Stripe verification link expired. Please start again.');
-        }
-    }, [mounted, user?.isVendor, stripeParam]);
+        if (!ready) return undefined;
+        const timer = setTimeout(() => {
+            if (user?.isVendor) {
+                setStep('done');
+                return;
+            }
+            if (stripeParam === 'refresh') {
+                setStep('error');
+                setErrorMsg('The Stripe verification link expired. Please start again.');
+            }
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [ready, user?.isVendor, stripeParam]);
 
     useEffect(() => {
-        if (!user?.id || user?.isVendor) return;
+        if (!ready || !user?.id || user?.isVendor) return undefined;
         let cancelled = false;
-        (async () => {
+        const timer = setTimeout(async () => {
             try {
                 const result = await authService.checkVendorStatus();
                 if (cancelled) return;
@@ -119,9 +126,12 @@ export default function VendorUpgradePage() {
             } catch {
                 // Keep page usable even if status preflight fails.
             }
-        })();
-        return () => { cancelled = true; };
-    }, [user?.id, user?.isVendor]);
+        }, 0);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [ready, user?.id, user?.isVendor]);
 
     const handleStartOnboarding = async () => {
         setStep('loading');
@@ -168,10 +178,10 @@ export default function VendorUpgradePage() {
                 updateUser({ isVendor: true });
                 setStep('done');
             } else if (result?.code === 'NO_STRIPE_ACCOUNT') {
-                setErrorMsg("You haven't submitted vendor setup yet. Please start now.");
+                setErrorMsg("You haven't submitted hosting setup yet. Please start now.");
                 setStep('error');
             } else {
-                // PENDING_VERIFICATION — show Stripe status breakdown
+                // PENDING_VERIFICATION: show Stripe status breakdown.
                 setStripeStatus(result?.stripeStatus || null);
                 setErrorMsg('Your Stripe verification is still being processed.');
                 setStep('error');
@@ -184,18 +194,18 @@ export default function VendorUpgradePage() {
         }
     };
 
-    if (!mounted) {
+    if (!ready) {
         return <div className="max-w-2xl mx-auto space-y-8" />;
     }
 
     if (step === 'done' || user?.isVendor) {
         return (
-            <div className="max-w-xl mx-auto py-12 text-center">
-                <div className="glass-panel mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-500/10">
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={34} className="text-amber-400" />
+            <div className="mx-auto max-w-xl py-12 text-center">
+                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.055]">
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={34} className="text-white/80" />
                 </div>
-                <h1 className="text-3xl font-black text-white mb-3 tracking-tight">
-                    You're a Vendor!
+                <h1 className="text-3xl font-black text-white mb-3 tracking-normal">
+                    Hosting is active
                 </h1>
                 <p className="text-zinc-400 mb-8">
                     Your PXI Passport has been issued. You can now create paid
@@ -223,30 +233,38 @@ export default function VendorUpgradePage() {
     }
 
     return (
-        <div className="max-w-2xl mx-auto space-y-8">
+        <div className="mx-auto max-w-5xl space-y-6 md:space-y-8">
             {/* Header */}
-            <div>
-                <div className="flex items-center gap-2 mb-2">
-                    <HugeiconsIcon icon={StarIcon} size={14} className="text-pxi-purple" />
-                    <span className="text-pxi-purple text-xs font-bold uppercase tracking-widest">
-                        Vendor Upgrade
-                    </span>
+            <section className="rounded-[2rem] bg-black px-5 py-7 shadow-[0_24px_90px_rgba(0,0,0,0.42)] md:px-8">
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Hosting access</p>
+                        <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">
+                            Start hosting on PXI.
+                        </h1>
+                        <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 md:text-base">
+                            Unlock paid events, ticket sales, payouts, and operating tools. Stripe handles identity and banking verification.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="rounded-2xl bg-white/[0.045] p-4">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Status</p>
+                            <p className="mt-2 text-xl font-black text-white">{hasSubmittedVerification ? 'Submitted' : 'Not started'}</p>
+                        </div>
+                        <div className="rounded-2xl bg-white/[0.045] p-4">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Provider</p>
+                            <p className="mt-2 text-xl font-black text-white">Stripe</p>
+                        </div>
+                    </div>
                 </div>
-                <h1 className="text-3xl font-black text-white tracking-tight">
-                    Get Your PXI Passport
-                </h1>
-                <p className="text-zinc-400 mt-2 leading-relaxed">
-                    Unlock the ability to host paid events, sell tickets, and receive
-                    payouts. Verification is handled securely by Stripe.
-                </p>
-            </div>
+            </section>
 
             {/* Benefits */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {BENEFITS.map(({ icon: Icon, title, desc }) => (
                     <div key={title} className="glass-panel rounded-2xl p-5">
-                        <div className="glass-field mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-pxi-purple/10">
-                            <HugeiconsIcon icon={Icon} size={18} className="text-pxi-purple" />
+                        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.055]">
+                            <HugeiconsIcon icon={Icon} size={18} className="text-white/75" />
                         </div>
                         <h3 className="text-white font-bold text-sm mb-1">{title}</h3>
                         <p className="text-zinc-500 text-xs leading-relaxed">{desc}</p>
@@ -264,7 +282,7 @@ export default function VendorUpgradePage() {
 
             {/* Stripe status breakdown — shown after a Check Status call returns PENDING */}
             {stripeStatus && (
-                <div className="glass-panel rounded-2xl p-5 space-y-1">
+                <div className="glass-panel rounded-2xl p-5 space-y-3">
                     <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Stripe Account Status</p>
 
                     <StatusRow
@@ -279,7 +297,7 @@ export default function VendorUpgradePage() {
                     />
 
                     {stripeStatus.currentlyDue?.length > 0 && (
-                        <div className="pt-3">
+                        <div className="pt-1">
                             <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-2">
                                 Outstanding Requirements
                             </p>
@@ -304,14 +322,14 @@ export default function VendorUpgradePage() {
                 <h2 className="text-white font-bold text-base mb-1">Connect with Stripe</h2>
                 <p className="text-zinc-500 text-sm mb-5 leading-relaxed">
                     You'll be redirected to Stripe to complete identity and banking
-                    verification. This typically takes 2–5 minutes. After finishing,
+                    verification. This typically takes 2-5 minutes. After finishing,
                     return here to check your status.
                 </p>
 
                 {step === 'redirecting' ? (
                     <div className="flex items-center gap-3 text-zinc-400 text-sm">
-                        <HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin text-pxi-purple" />
-                        Redirecting to Stripe…
+                        <HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin text-white/75" />
+                        Redirecting to Stripe...
                     </div>
                 ) : (
                     <div className="flex flex-wrap items-center gap-3">
@@ -322,7 +340,7 @@ export default function VendorUpgradePage() {
                                 className="pill-solid inline-flex items-center gap-2 px-6 py-3 text-sm uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {step === 'loading' ? (
-                                    <><HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />Reopening…</>
+                                    <><HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />Reopening...</>
                                 ) : (
                                     <>Resubmit Verification<HugeiconsIcon icon={ArrowRight02Icon} size={14} /></>
                                 )}
@@ -340,7 +358,7 @@ export default function VendorUpgradePage() {
                             }`}
                         >
                             {step === 'loading' ? (
-                                <><HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />Connecting…</>
+                                <><HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />Connecting...</>
                             ) : (
                                 <>Start Stripe Verification<HugeiconsIcon icon={ArrowRight02Icon} size={14} /></>
                             )}

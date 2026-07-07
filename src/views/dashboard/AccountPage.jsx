@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -13,6 +13,7 @@ import {
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
+import { musicService } from '@/services/music';
 import SectionCard from '@/components/dashboard/SectionCard';
 import GlowCard from '@/components/dashboard/GlowCard';
 import { getSingleShadeDonutCellProps } from '@/components/dashboard/chartStyles';
@@ -75,8 +76,205 @@ function DonutPanel({ title, data, centerLabel, centerValue }) {
     );
 }
 
+const profileInputCls =
+    'mt-1 w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm font-semibold text-white placeholder:text-zinc-600 outline-none focus:border-white/25';
+
+function SettingsHero({ user, activeTab }) {
+    const activeLabel = TABS.find((tab) => tab.id === activeTab)?.label || 'Profile';
+    return (
+        <section className="relative overflow-hidden rounded-[2rem] bg-black px-5 py-7 shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:px-8">
+            <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                <div className="max-w-2xl">
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">PXI Account</p>
+                    <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">Settings</h1>
+                    <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-400">
+                        Your identity, music, billing rails, and account controls.
+                    </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:w-[420px]">
+                    <div className="rounded-2xl bg-white/[0.04] p-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Signed in</p>
+                        <p className="mt-2 truncate text-lg font-black text-white">@{user?.username || 'account'}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/[0.04] p-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Section</p>
+                        <p className="mt-2 truncate text-lg font-black text-white">{activeLabel}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+/** Editable profile fields (bio etc.) + save via PUT /api/auth/user/:id. */
+function ProfileEditor({ user, updateUser }) {
+    const [name, setName] = useState(user?.name || '');
+    const [bio, setBio] = useState(user?.bio || '');
+    const [city, setCity] = useState(user?.city || '');
+    const [instagramHandle, setInstagramHandle] = useState(user?.instagramHandle || '');
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const [error, setError] = useState('');
+
+    const save = async () => {
+        if (!user?.id) return;
+        setSaving(true);
+        setError('');
+        setSaved(false);
+        try {
+            const res = await authService.updateProfile(user.id, {
+                name: name.trim() || null,
+                bio: bio.trim() || null,
+                city: city.trim() || null,
+                instagramHandle: instagramHandle.trim() || null,
+            });
+            if (res?.user) updateUser(res.user);
+            setSaved(true);
+        } catch (err) {
+            setError(err?.data?.error || err?.message || 'Failed to save profile');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <SectionCard title="Profile" dense className="!rounded-[1.75rem]">
+            <div className="grid gap-4 sm:grid-cols-2">
+                <label className="glow-surface-soft rounded-xl px-4 py-3">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Name</span>
+                    <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={profileInputCls} />
+                </label>
+                <div className="glow-surface-soft rounded-xl px-4 py-3">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Username</p>
+                    <p className="mt-2 text-sm font-semibold text-white">@{user?.username || 'account'}</p>
+                </div>
+                <label className="glow-surface-soft rounded-xl px-4 py-3 sm:col-span-2">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Bio</span>
+                    <textarea
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        rows={3}
+                        maxLength={280}
+                        placeholder="Tell people what you're about…"
+                        className={`${profileInputCls} resize-y`}
+                    />
+                    <span className="mt-1 block text-right text-[10px] text-zinc-600">{bio.length}/280</span>
+                </label>
+                <label className="glow-surface-soft rounded-xl px-4 py-3">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">City</span>
+                    <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Where you're based" className={profileInputCls} />
+                </label>
+                <label className="glow-surface-soft rounded-xl px-4 py-3">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Instagram</span>
+                    <input value={instagramHandle} onChange={(e) => setInstagramHandle(e.target.value)} placeholder="@handle" className={profileInputCls} />
+                </label>
+                <div className="glow-surface-soft rounded-xl px-4 py-3 sm:col-span-2">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Email</p>
+                    <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-white">
+                        <HugeiconsIcon icon={Mail01Icon} size={14} className="text-zinc-500" />
+                        {user?.email || 'Add email in mobile app'}
+                    </p>
+                </div>
+            </div>
+            {error ? <p className="mt-3 text-xs text-red-400">{error}</p> : null}
+            {saved ? <p className="mt-3 text-xs text-emerald-400">Profile saved.</p> : null}
+            <button
+                type="button"
+                onClick={save}
+                disabled={saving}
+                className="mt-4 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:opacity-50"
+            >
+                {saving ? 'Saving...' : 'Save profile'}
+            </button>
+        </SectionCard>
+    );
+}
+
+/** Spotify connect/disconnect (Apple Music connects in the mobile app). */
+function MusicConnectionsCard() {
+    const [profile, setProfile] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        let cancelled = false;
+        musicService
+            .getProfile()
+            .then((res) => { if (!cancelled) setProfile(res); })
+            .catch(() => { if (!cancelled) setProfile(null); })
+            .finally(() => { if (!cancelled) setLoading(false); });
+        return () => { cancelled = true; };
+    }, []);
+
+    const connect = async () => {
+        setBusy(true);
+        setError('');
+        try {
+            const { authorizeUrl } = await musicService.startSpotifyConnect();
+            window.location.href = authorizeUrl;
+        } catch (err) {
+            setError(err?.message || 'Could not start Spotify connect');
+            setBusy(false);
+        }
+    };
+
+    const disconnect = async () => {
+        setBusy(true);
+        setError('');
+        try {
+            await musicService.disconnect();
+            setProfile({ connected: false });
+        } catch (err) {
+            setError(err?.message || 'Could not disconnect');
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const connected = Boolean(profile?.connected);
+
+    return (
+        <SectionCard title="Music" dense className="!rounded-[1.75rem]">
+            <div className="glow-surface-soft flex flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-4">
+                <div>
+                    <p className="text-sm font-semibold text-white">Spotify</p>
+                    <p className="mt-0.5 text-xs text-zinc-500">
+                        {loading
+                            ? 'Checking connection...'
+                            : connected
+                                ? `Connected${profile?.topGenres?.length ? ` · ${profile.topGenres.slice(0, 3).join(', ')}` : ''}. Powers your event match scores.`
+                                : 'Connect to get events matched to your music taste.'}
+                    </p>
+                </div>
+                {connected ? (
+                    <button
+                        type="button"
+                        onClick={disconnect}
+                        disabled={busy}
+                        className="glow-chip rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest text-zinc-300 disabled:opacity-50"
+                    >
+                        Disconnect
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={connect}
+                        disabled={busy || loading}
+                        className="rounded-full bg-[#1DB954] px-5 py-2 text-xs font-black uppercase tracking-widest text-black disabled:opacity-50"
+                    >
+                        {busy ? 'Opening...' : 'Connect Spotify'}
+                    </button>
+                )}
+            </div>
+            <p className="mt-3 text-xs text-zinc-600">Apple Music connects from the PXI mobile app (Settings → Music).</p>
+            {error ? <p className="mt-2 text-xs text-red-400">{error}</p> : null}
+        </SectionCard>
+    );
+}
+
 function AccountPageContent() {
-    const { user, logout } = useAuth();
+    const { user, logout, updateUser } = useAuth();
     const searchParams = useSearchParams();
     const activeTab = TABS.some((tab) => tab.id === searchParams.get('tab'))
         ? searchParams.get('tab')
@@ -119,20 +317,17 @@ function AccountPageContent() {
     };
 
     return (
-        <div className="mx-auto max-w-5xl space-y-8">
-            <div>
-                <h1 className="text-2xl font-black tracking-tight text-white md:text-3xl">Account & Settings</h1>
-                <p className="mt-1 text-sm text-zinc-500">Costs, payouts, and account controls.</p>
-            </div>
+        <div className="mx-auto max-w-6xl space-y-6 md:space-y-8">
+            <SettingsHero user={user} activeTab={activeTab} />
 
-            <div className="flex flex-wrap gap-2">
+            <div className="dashboard-segmented-toggle w-full sm:w-auto" role="tablist" aria-label="Account settings sections">
                 {TABS.map((tab) => (
                     <a
                         key={tab.id}
                         href={`/dashboard/account?tab=${tab.id}`}
-                        className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest transition ${
-                            activeTab === tab.id ? 'bg-white/[0.10] text-white' : 'glow-chip text-zinc-400 hover:text-white'
-                        }`}
+                        className="dashboard-segmented-toggle__item flex-1 sm:flex-none"
+                        data-active={activeTab === tab.id}
+                        aria-current={activeTab === tab.id ? 'page' : undefined}
                     >
                         {tab.label}
                     </a>
@@ -142,29 +337,14 @@ function AccountPageContent() {
             <div className={`grid grid-cols-1 gap-6 ${showSettingsAside ? 'lg:grid-cols-[1fr_320px]' : ''}`}>
                 <div className="space-y-6">
                     {activeTab === 'profile' && (
-                        <SectionCard title="Profile" dense>
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div className="glow-surface-soft rounded-xl px-4 py-3">
-                                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Name</p>
-                                    <p className="mt-1 text-sm font-semibold text-white">{user?.name || '—'}</p>
-                                </div>
-                                <div className="glow-surface-soft rounded-xl px-4 py-3">
-                                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Username</p>
-                                    <p className="mt-1 text-sm font-semibold text-white">@{user?.username || 'account'}</p>
-                                </div>
-                                <div className="glow-surface-soft rounded-xl px-4 py-3 sm:col-span-2">
-                                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Email</p>
-                                    <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-white">
-                                        <HugeiconsIcon icon={Mail01Icon} size={14} className="text-zinc-500" />
-                                        {user?.email || 'Add email in mobile app'}
-                                    </p>
-                                </div>
-                            </div>
-                        </SectionCard>
+                        <>
+                            <ProfileEditor user={user} updateUser={updateUser} />
+                            <MusicConnectionsCard />
+                        </>
                     )}
 
                     {activeTab === 'billing' && (
-                        <SectionCard title="Billing & Payouts" dense>
+                        <SectionCard title="Billing & Payouts" dense className="!rounded-[1.75rem]">
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="glow-surface-soft rounded-xl px-4 py-4">
                                     <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Next payout</p>
@@ -181,18 +361,18 @@ function AccountPageContent() {
                     )}
 
                     {activeTab === 'usage' && (
-                        <SectionCard title="Usage & Costs" dense>
+                        <SectionCard title="Usage & Costs" dense className="!rounded-[1.75rem]">
                             <p className="text-sm text-zinc-400">
-                                Total spend <span className="font-bold text-white">${usageTotal}</span> — itemized in the chart panel.
+                                Total spend <span className="font-bold text-white">${usageTotal}</span>. Itemized in the chart panel.
                             </p>
                         </SectionCard>
                     )}
 
                     {activeTab === 'payments' && (
-                        <SectionCard title="Payment Methods" dense>
+                        <SectionCard title="Payment Methods" dense className="!rounded-[1.75rem]">
                             <div className="glow-surface-soft flex items-center justify-between rounded-xl px-4 py-4">
                                 <div className="flex items-center gap-3">
-                                    <HugeiconsIcon icon={CreditCardIcon} size={20} className="text-pxi-purple" />
+                                    <HugeiconsIcon icon={CreditCardIcon} size={20} className="text-white/70" />
                                     <div>
                                         <p className="text-sm font-semibold text-white">Visa ···· 4242</p>
                                         <p className="text-xs text-zinc-500">Expires 09/28 · Default</p>
@@ -205,7 +385,7 @@ function AccountPageContent() {
                         </SectionCard>
                     )}
 
-                    <SectionCard title="Danger Zone" dense>
+                    <SectionCard title="Danger Zone" dense className="!rounded-[1.75rem]">
                         {!showConfirm ? (
                             <>
                                 <p className="text-sm leading-relaxed text-zinc-400">
@@ -243,7 +423,7 @@ function AccountPageContent() {
                                         {deleting ? (
                                             <>
                                                 <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
-                                                Deleting…
+                                                Deleting...
                                             </>
                                         ) : (
                                             'Yes, Permanently Delete'
@@ -280,7 +460,7 @@ function AccountPageContent() {
                                     <HugeiconsIcon icon={Wallet01Icon} size={20} className="text-emerald-400" />
                                     <div>
                                         <p className="text-sm font-semibold text-white">Stripe Connect</p>
-                                        <p className="text-xs text-zinc-500">{user?.isVendor ? 'Connected' : 'Complete vendor setup'}</p>
+                                        <p className="text-xs text-zinc-500">{user?.isVendor ? 'Connected' : 'Complete hosting setup'}</p>
                                     </div>
                                 </div>
                             </GlowCard>
@@ -294,7 +474,7 @@ function AccountPageContent() {
 
 export default function AccountPage() {
     return (
-        <Suspense fallback={<div className="mx-auto max-w-5xl p-8 text-zinc-500">Loading account…</div>}>
+        <Suspense fallback={<div className="mx-auto max-w-5xl p-8 text-zinc-500">Loading account...</div>}>
             <AccountPageContent />
         </Suspense>
     );
