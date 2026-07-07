@@ -15,6 +15,7 @@ import {
     adminTdClass,
     adminThClass,
 } from '@/components/admin/AdminPageShell';
+import { adminErrorMessage } from '@/components/admin/adminFormat';
 
 function formatDate(iso) {
     if (!iso) return '—';
@@ -32,9 +33,9 @@ function formatDate(iso) {
 }
 
 const statusStyle = {
-    PENDING: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    RESOLVED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    CANCELLED: 'bg-white/5 text-white/55 border-white/10',
+    PENDING: 'bg-amber-500/10 text-amber-300',
+    RESOLVED: 'bg-emerald-500/10 text-emerald-300',
+    CANCELLED: 'bg-white/[0.055] text-white/55',
 };
 
 export default function AdminUgcModerationPage() {
@@ -63,7 +64,7 @@ export default function AdminUgcModerationPage() {
             setRows(payload?.reports || []);
         } catch (nextError) {
             setRows([]);
-            setError(nextError?.message || 'Failed to load the UGC queue.');
+            setError(adminErrorMessage(nextError, 'Failed to load the UGC queue.'));
         } finally {
             setLoading(false);
         }
@@ -121,10 +122,10 @@ export default function AdminUgcModerationPage() {
                         key={status}
                         type="button"
                         onClick={() => setStatusFilter(status)}
-                        className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest border ${
+                        className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest ${
                             statusFilter === status
-                                ? 'border-white/25 bg-white text-black'
-                                : 'border-transparent bg-white/[0.045] text-zinc-400 hover:bg-white/[0.075] hover:text-white'
+                                ? 'bg-white text-black'
+                                : 'bg-white/[0.045] text-zinc-400 hover:bg-white/[0.075] hover:text-white'
                         }`}
                     >
                         {status}
@@ -153,7 +154,7 @@ export default function AdminUgcModerationPage() {
                             {rows.map((row) => (
                                 <tr key={row.id} className="hover:bg-white/[0.02] align-top">
                                     <td className="px-6 py-4">
-                                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${statusStyle[row.status] || statusStyle.PENDING}`}>
+                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${statusStyle[row.status] || statusStyle.PENDING}`}>
                                             {row.status || 'PENDING'}
                                         </span>
                                     </td>
@@ -175,7 +176,7 @@ export default function AdminUgcModerationPage() {
                                                     type="button"
                                                     disabled={busyId === row.id}
                                                     onClick={() => act(row, 'TAKEDOWN_MEDIA')}
-                                                    className="rounded-lg border border-red-500/35 bg-red-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-red-200 hover:bg-red-500/20 disabled:opacity-50"
+                                                    className="rounded-lg bg-red-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-red-200 hover:bg-red-500/20 disabled:opacity-50"
                                                 >
                                                     <HugeiconsIcon icon={Delete02Icon} size={12} className="inline mr-1" />
                                                     Take down
@@ -184,7 +185,7 @@ export default function AdminUgcModerationPage() {
                                                     type="button"
                                                     disabled={busyId === row.id}
                                                     onClick={() => act(row, 'NONE')}
-                                                    className="rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-50"
+                                                    className="rounded-lg bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-50"
                                                 >
                                                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="inline mr-1" />
                                                     Dismiss

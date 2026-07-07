@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchPlatformAnalytics } from '@/services/admin';
 import { useAuth } from '@/contexts/AuthContext';
 import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
+import { adminErrorMessage } from '@/components/admin/adminFormat';
 
 const CHART_PRIMARY = '#ffffff';
 const CHART_ACCENT = '#a1a1aa';
@@ -319,7 +320,7 @@ export default function AdminAnalyticsPage() {
             const res = await fetchPlatformAnalytics(days);
             setData(res);
         } catch (err) {
-            setError(err.message || 'Failed to load analytics');
+            setError(adminErrorMessage(err, 'Failed to load analytics'));
         } finally {
             setLoading(false);
         }

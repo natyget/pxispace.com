@@ -13,6 +13,7 @@ import {
     adminTdClass,
     adminThClass,
 } from '@/components/admin/AdminPageShell';
+import { adminErrorMessage } from '@/components/admin/adminFormat';
 
 function formatDate(iso) {
     if (!iso) return '—';
@@ -30,9 +31,9 @@ function formatDate(iso) {
 }
 
 const statusStyle = {
-    PENDING: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    RESOLVED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    CANCELLED: 'bg-white/5 text-white/55 border-white/10',
+    PENDING: 'bg-amber-500/10 text-amber-300',
+    RESOLVED: 'bg-emerald-500/10 text-emerald-300',
+    CANCELLED: 'bg-white/[0.055] text-white/55',
 };
 
 function ActionPanel({ report, onDone, onCancel }) {
@@ -138,7 +139,7 @@ export default function AdminReportsPage() {
             setTotalPages(data.totalPages || 1);
             setTotal(data.total ?? 0);
         } catch (err) {
-            setError(err.message || 'Failed to load reports');
+            setError(adminErrorMessage(err, 'Failed to load reports'));
             setRows([]);
         } finally {
             setLoading(false);
@@ -179,9 +180,7 @@ export default function AdminReportsPage() {
                                 <Fragment key={r.id}>
                                     <tr className="hover:bg-white/[0.02] transition-colors align-top">
                                         <td className="px-6 py-4">
-                                            <span
-                                                className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusStyle[r.status] || statusStyle.PENDING}`}
-                                            >
+                                            <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyle[r.status] || statusStyle.PENDING}`}>
                                                 {r.status}
                                             </span>
                                         </td>

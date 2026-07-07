@@ -18,6 +18,7 @@ import {
     adminTdClass,
     adminThClass,
 } from '@/components/admin/AdminPageShell';
+import { adminErrorMessage } from '@/components/admin/adminFormat';
 
 const STATUS_FILTERS = [
     { value: '', label: 'All' },
@@ -29,11 +30,11 @@ const STATUS_FILTERS = [
 ];
 
 const statusStyle = {
-    OPEN: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    IN_PROGRESS: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
-    WAITING_ON_USER: 'bg-violet-500/10 text-violet-300 border-violet-500/20',
-    RESOLVED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    CLOSED: 'bg-white/5 text-white/55 border-white/10',
+    OPEN: 'bg-amber-500/10 text-amber-300',
+    IN_PROGRESS: 'bg-sky-500/10 text-sky-300',
+    WAITING_ON_USER: 'bg-violet-500/10 text-violet-300',
+    RESOLVED: 'bg-emerald-500/10 text-emerald-300',
+    CLOSED: 'bg-white/[0.055] text-white/55',
 };
 
 const priorityStyle = {
@@ -59,7 +60,7 @@ function formatDate(iso) {
 
 function StatusBadge({ status }) {
     return (
-        <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusStyle[status] || statusStyle.OPEN}`}>
+        <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyle[status] || statusStyle.OPEN}`}>
             {String(status || '').replaceAll('_', ' ')}
         </span>
     );
@@ -77,7 +78,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
             setTicket(data.ticket);
             setError(null);
         } catch (err) {
-            setError(err.message || 'Failed to load ticket');
+            setError(adminErrorMessage(err, 'Failed to load ticket'));
         }
     }, [ticketId]);
 
@@ -170,11 +171,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                         {(ticket.messages || []).map((m) => (
                             <div
                                 key={m.id}
-                                className={`rounded-xl border px-4 py-3 ${
-                                    m.isStaff
-                                        ? 'border-transparent bg-white/[0.075] ml-8'
-                                        : 'border-transparent bg-black/25 mr-8'
-                                }`}
+                                className={`rounded-xl px-4 py-3 ${m.isStaff ? 'ml-8 bg-white/[0.075]' : 'mr-8 bg-black/25'}`}
                             >
                                 <div className="flex items-center justify-between gap-3 mb-1.5">
                                     <span className="text-[11px] font-bold uppercase tracking-wider text-white/45">
@@ -240,7 +237,7 @@ export default function AdminSupportPage() {
             setTotalPages(data.totalPages || 1);
             setTotal(data.total ?? 0);
         } catch (err) {
-            setError(err.message || 'Failed to load support queue');
+            setError(adminErrorMessage(err, 'Failed to load support queue'));
             setRows([]);
         } finally {
             setLoading(false);
@@ -273,10 +270,10 @@ export default function AdminSupportPage() {
                         key={f.value || 'all'}
                         type="button"
                         onClick={() => setStatus(f.value)}
-                        className={`rounded-full px-4 py-1.5 text-[12px] font-semibold border transition-colors ${
+                        className={`rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
                             status === f.value
-                                ? 'bg-white text-black border-white'
-                                : 'border-transparent bg-white/[0.045] text-white/60 hover:bg-white/[0.075] hover:text-white'
+                                ? 'bg-white text-black'
+                                : 'bg-white/[0.045] text-white/60 hover:bg-white/[0.075] hover:text-white'
                         }`}
                     >
                         {f.label}

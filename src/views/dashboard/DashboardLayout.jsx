@@ -231,26 +231,19 @@ export default function DashboardLayout({ children }) {
     const sidebarCollapsed = useDashboardShellStore((store) => store.sidebarCollapsed);
     const accountPopoverOpen = useDashboardShellStore((store) => store.accountPopoverOpen);
     const modalStack = useDashboardShellStore((store) => store.modalStack);
-    const [adminSidebarMode, setAdminSidebarMode] = useState('user');
+    const routeAdminMode = pathname.startsWith('/dashboard/admin') ? 'admin' : 'user';
+    const [adminSidebarMode, setAdminSidebarMode] = useState(routeAdminMode);
 
     useEffect(() => {
         if (!rolesReady || typeof window === 'undefined') return;
         if (!canAccessAdminDashboard(user)) return;
-        const saved = window.localStorage.getItem(ADMIN_SIDEBAR_MODE_KEY);
-        deferDashboardState(() => setAdminSidebarMode(saved === 'admin' || saved === 'user' ? saved : 'admin'));
-    }, [rolesReady, user]);
-
-    useEffect(() => {
-        if (!rolesReady || !canAccessAdminDashboard(user)) return;
-        if (pathname.startsWith('/dashboard/admin')) {
-            deferDashboardState(() => setAdminSidebarMode('admin'));
-            try {
-                window.localStorage.setItem(ADMIN_SIDEBAR_MODE_KEY, 'admin');
-            } catch {
-                /* ignore */
-            }
+        deferDashboardState(() => setAdminSidebarMode(routeAdminMode));
+        try {
+            window.localStorage.setItem(ADMIN_SIDEBAR_MODE_KEY, routeAdminMode);
+        } catch {
+            /* ignore */
         }
-    }, [rolesReady, pathname, user]);
+    }, [rolesReady, routeAdminMode, user]);
 
     const setAdminSidebarModeAndNavigate = (mode) => {
         setAdminSidebarMode(mode);
@@ -321,14 +314,18 @@ export default function DashboardLayout({ children }) {
         if (isAdminNav) {
             return adminNavItems;
         }
-        return buildMemberNavItems({
+        const items = buildMemberNavItems({
             hasOrganizerAccess,
             hasLiveOpsAccess,
             isLiveEvent: hasLiveEvent,
             mounted: rolesReady,
             user,
         });
-    }, [isAdminNav, rolesReady, hasOrganizerAccess, hasLiveOpsAccess, hasLiveEvent, user]);
+        if (pathname.startsWith('/dashboard/vendor-upgrade')) {
+            return items.filter((item) => item.key !== 'vendor-setup');
+        }
+        return items;
+    }, [isAdminNav, rolesReady, hasOrganizerAccess, hasLiveOpsAccess, hasLiveEvent, pathname, user]);
     const navEntries = useMemo(() => {
         if (isAdminNav || sidebarCollapsed) {
             return navItems.map((item) => ({ type: 'item', key: item.key, item }));
@@ -393,7 +390,7 @@ export default function DashboardLayout({ children }) {
                                 <div
                                     className={`flex rounded-full bg-white/[0.045] p-0.5 ${sidebarCollapsed ? 'w-11 flex-col gap-0.5 py-1' : 'w-full'}`}
                                     role="group"
-                                    aria-label="Switch between platform admin and member dashboard"
+                                    aria-label="Switch between platform admin and workspace dashboard"
                                 >
                                     <button
                                         type="button"
@@ -415,9 +412,9 @@ export default function DashboardLayout({ children }) {
                                                 ? 'bg-white/[0.04] text-white/90'
                                                 : 'text-white/40 hover:text-white/70'
                                         }`}
-                                        title="Member dashboard"
+                                        title="Workspace dashboard"
                                     >
-                                        {sidebarCollapsed ? 'M' : 'MEMBER'}
+                                        {sidebarCollapsed ? 'W' : 'WORKSPACE'}
                                     </button>
                                 </div>
                             </div>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Loading02Icon, Notification03Icon, Settings01Icon } from '@hugeicons/core-free-icons';
+import { Loading02Icon, Settings01Icon } from '@hugeicons/core-free-icons';
 import SectionCard from '@/components/dashboard/SectionCard';
 import SegmentedToggle from '@/components/dashboard/SegmentedToggle';
 import NotificationItem from '@/components/notifications/NotificationItem';
@@ -33,6 +33,7 @@ function normalizeNotification(notification) {
 export default function NotificationsPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,19 +42,20 @@ export default function NotificationsPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const loadNotifications = useCallback(() => {
-    if (!user?.id) return;
+    if (!userId) return;
     setLoading(true);
     setError('');
-    getNotifications(user.id, 80)
+    getNotifications(userId, 80)
       .then((res) => {
         setNotifications((res?.notifications || []).map(normalizeNotification));
       })
       .catch((err) => setError(err?.message || 'Failed to load notifications.'))
       .finally(() => setLoading(false));
-  }, [user?.id]);
+  }, [userId]);
 
   useEffect(() => {
-    loadNotifications();
+    const timer = setTimeout(() => loadNotifications(), 0);
+    return () => clearTimeout(timer);
   }, [loadNotifications]);
 
   const visibleNotifications = useMemo(() => {
@@ -170,10 +172,10 @@ export default function NotificationsPage() {
   };
 
   const handleMarkAllRead = async () => {
-    if (!user?.id) return;
+    if (!userId) return;
     setSettingsOpen(false);
     try {
-      await markAllAsRead(user.id);
+      await markAllAsRead(userId);
       setNotifications((current) => current.map((item) => ({ ...item, isRead: true, readAt: item.readAt || new Date().toISOString() })));
       setFilter('all');
     } catch (err) {
@@ -182,49 +184,49 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <span className="glass-panel flex h-11 w-11 items-center justify-center rounded-full text-white">
-            <HugeiconsIcon icon={Notification03Icon} size={20} />
-          </span>
+    <div className="mx-auto max-w-4xl space-y-6">
+      <section className="rounded-[1.75rem] bg-black px-5 py-6 shadow-[0_24px_80px_rgba(0,0,0,0.42)] md:px-7">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-white">Notifications</h1>
-            <p className="mt-1 text-sm text-white/45">{unreadCount} unread update{unreadCount === 1 ? '' : 's'}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Inbox</p>
+            <h1 className="mt-2 text-4xl font-black leading-none text-white md:text-5xl">Notifications</h1>
+            <p className="mt-3 text-sm leading-6 text-zinc-400">
+              {unreadCount} unread update{unreadCount === 1 ? '' : 's'} across invites, albums, friends, and account activity.
+            </p>
+          </div>
+          <div className="relative flex flex-col gap-2 sm:flex-row sm:items-center">
+            <SegmentedToggle
+              value={filter}
+              onChange={setFilter}
+              ariaLabel="Notification filter"
+              items={[
+                { value: 'unread', label: 'Unread' },
+                { value: 'all', label: 'All' },
+                { value: 'read', label: 'Read' },
+              ]}
+            />
+            <button
+              type="button"
+              onClick={() => setSettingsOpen((value) => !value)}
+              className="pill-ghost h-10 w-10"
+              aria-label="Notification settings"
+            >
+              <HugeiconsIcon icon={Settings01Icon} size={17} />
+            </button>
+            {settingsOpen ? (
+              <div className="glass-panel absolute right-0 top-[calc(100%+8px)] z-30 w-44 rounded-2xl p-2">
+                <button
+                  type="button"
+                  onClick={handleMarkAllRead}
+                  className="w-full rounded-xl px-3 py-2 text-left text-sm font-bold text-white/85 hover:bg-white/10"
+                >
+                  Mark all read
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
-        <div className="relative flex items-center gap-2">
-          <SegmentedToggle
-            value={filter}
-            onChange={setFilter}
-            ariaLabel="Notification filter"
-            items={[
-              { value: 'unread', label: 'Unread' },
-              { value: 'all', label: 'All' },
-              { value: 'read', label: 'Read' },
-            ]}
-          />
-          <button
-            type="button"
-            onClick={() => setSettingsOpen((value) => !value)}
-            className="pill-ghost h-10 w-10"
-            aria-label="Notification settings"
-          >
-            <HugeiconsIcon icon={Settings01Icon} size={17} />
-          </button>
-          {settingsOpen ? (
-            <div className="glass-panel absolute right-0 top-[calc(100%+8px)] z-30 w-44 rounded-2xl p-2">
-              <button
-                type="button"
-                onClick={handleMarkAllRead}
-                className="w-full rounded-xl px-3 py-2 text-left text-sm font-bold text-white/85 hover:bg-white/10"
-              >
-                Mark all read
-              </button>
-            </div>
-          ) : null}
-        </div>
-      </div>
+      </section>
 
       {error ? <div className="glass-panel rounded-2xl p-4 text-sm font-semibold text-red-200">{error}</div> : null}
 

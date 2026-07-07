@@ -457,7 +457,7 @@ export default function EventEditPageView() {
               <GeoapifyContext apiKey={GEOAPIFY_KEY}>
                 <GeoapifyGeocoderAutocomplete
                   value={location}
-                  placeholder="Search venue or address…"
+                  placeholder="Search venue or address..."
                   placeSelect={(result) => {
                     const props = result?.properties;
                     setLocation(props?.formatted || '');

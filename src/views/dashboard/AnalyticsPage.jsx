@@ -60,6 +60,11 @@ function percent(value) {
     return `${Math.round((Number(value) || 0) * 100)}%`;
 }
 
+function clampPercent(value, max) {
+    if (!max) return 0;
+    return Math.max(2, Math.min(100, (Number(value) / max) * 100));
+}
+
 /** '2026-07-04T22:00:00.000Z' -> '10 PM' for the hype chart axis. */
 function formatHourTick(value) {
     if (!value) return '';
@@ -81,12 +86,18 @@ const HYPE_SERIES = {
     media: { label: 'Uploads', color: '#71717a' },
 };
 
+const HYPE_MODES = [
+    { id: 'stacked', label: 'Stacked' },
+    { id: 'lines', label: 'Lines' },
+];
+
 /**
  * Hype: engagement-per-attendee composite + chat/reaction/upload velocity.
  * Data comes from `eventDetail.behavior` (real Mongo aggregates, not samples).
  */
 function HypePanel({ behavior, isMobile }) {
     const [channel, setChannel] = useState('all');
+    const [mode, setMode] = useState('stacked');
     if (!behavior) return null;
     const series = (behavior.byHour || []).map((d) => ({
         hourIso: d.hourIso,
@@ -96,24 +107,51 @@ function HypePanel({ behavior, isMobile }) {
     }));
     const activeKeys = channel === 'all' ? ['messages', 'reactions', 'media'] : [channel];
     const hasActivity = series.some((d) => activeKeys.some((key) => Number(d[key]) > 0));
+    const totalsByKey = Object.keys(HYPE_SERIES).map((key) => ({
+        key,
+        ...HYPE_SERIES[key],
+        value: Number(behavior.totals?.[key]) || 0,
+        active: activeKeys.includes(key),
+    }));
+    const activeTotal = totalsByKey
+        .filter((item) => item.active)
+        .reduce((sum, item) => sum + item.value, 0);
+    const maxHypeChannelTotal = Math.max(1, ...totalsByKey.map((entry) => entry.value));
     const peakHour = series.reduce((peak, point) => {
         const pointTotal = activeKeys.reduce((sum, key) => sum + (Number(point[key]) || 0), 0);
         return pointTotal > peak.total ? { hourIso: point.hourIso, total: pointTotal } : peak;
     }, { hourIso: null, total: 0 });
 
     const actions = (
-        <div className="dashboard-segmented-toggle max-w-full">
-            {HYPE_CHANNELS.map((item) => (
-                <button
-                    key={item.id}
-                    type="button"
-                    className="dashboard-segmented-toggle__item"
-                    data-active={channel === item.id}
-                    onClick={() => setChannel(item.id)}
-                >
-                    {item.label}
-                </button>
-            ))}
+        <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
+            <div className="dashboard-segmented-toggle max-w-full" aria-label="Hype activity channel">
+                {HYPE_CHANNELS.map((item) => (
+                    <button
+                        key={item.id}
+                        type="button"
+                        className="dashboard-segmented-toggle__item"
+                        data-active={channel === item.id}
+                        aria-pressed={channel === item.id}
+                        onClick={() => setChannel(item.id)}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+            </div>
+            <div className="dashboard-segmented-toggle max-w-full" aria-label="Hype chart mode">
+                {HYPE_MODES.map((item) => (
+                    <button
+                        key={item.id}
+                        type="button"
+                        className="dashboard-segmented-toggle__item"
+                        data-active={mode === item.id}
+                        aria-pressed={mode === item.id}
+                        onClick={() => setMode(item.id)}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+            </div>
         </div>
     );
 
@@ -125,39 +163,56 @@ function HypePanel({ behavior, isMobile }) {
             bodyClassName="!p-0"
         >
             <div className="relative overflow-hidden px-5 py-5 md:px-6 md:py-6">
-                <div className="relative grid grid-cols-1 gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
-                    <div className="rounded-2xl bg-black/25 p-5">
+                <div className="relative grid grid-cols-1 gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+                    <div className="rounded-[1.5rem] bg-black/25 p-5 md:p-6">
                         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Engagement pulse</p>
-                        <p className="mt-3 text-5xl font-black tracking-normal text-white">{formatNumber(behavior.hypeIndex)}</p>
+                        <p className="mt-3 text-6xl font-black leading-none tracking-normal text-white md:text-7xl">{formatNumber(behavior.hypeIndex)}</p>
                         <p className="mt-1 text-sm font-bold text-zinc-400">out of 100</p>
                         <p className="mt-4 text-sm leading-6 text-zinc-400">
                             A blended signal from chat, reactions, comments, and uploads per attendee.
                         </p>
-                        <div className="mt-5 grid grid-cols-2 gap-2">
+                        <div className="mt-6 grid grid-cols-2 gap-2">
+                            <div className="rounded-2xl bg-white/[0.045] p-3">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Selected volume</p>
+                                <p className="mt-1 text-sm font-black text-white">{formatNumber(activeTotal)}</p>
+                            </div>
                             <div className="rounded-2xl bg-white/[0.045] p-3">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Peak hour</p>
                                 <p className="mt-1 text-sm font-black text-white">
                                     {peakHour.hourIso ? formatHourTick(peakHour.hourIso) : 'No activity'}
                                 </p>
                             </div>
-                            <div className="rounded-2xl bg-white/[0.045] p-3">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Peak volume</p>
-                                <p className="mt-1 text-sm font-black text-white">{formatNumber(peakHour.total)}</p>
-                            </div>
+                        </div>
+                        <div className="mt-2 rounded-2xl bg-white/[0.045] p-3">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Peak volume</p>
+                            <p className="mt-1 text-sm font-black text-white">{formatNumber(peakHour.total)}</p>
                         </div>
                     </div>
-                    <StatRow
-                        className="self-start !rounded-2xl lg:self-stretch"
-                        items={[
-                            { label: 'Chat messages', value: formatNumber(behavior.totals?.messages) },
-                            { label: 'Reactions', value: formatNumber(behavior.totals?.reactions) },
-                            { label: 'Comments', value: formatNumber(behavior.totals?.comments) },
-                            { label: 'Uploads', value: formatNumber(behavior.totals?.media) },
-                        ]}
-                    />
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {totalsByKey.map((item) => (
+                            <div key={item.key} className="rounded-2xl bg-white/[0.045] p-3">
+                                <div className="flex items-center justify-between gap-3">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{item.label}</p>
+                                    <span className={`h-2 w-2 rounded-full ${item.active ? 'opacity-100' : 'opacity-35'}`} style={{ backgroundColor: item.color }} />
+                                </div>
+                                <p className="mt-3 text-3xl font-black tracking-normal text-white">{formatNumber(item.value)}</p>
+                                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/30">
+                                    <div
+                                        className="h-full rounded-full bg-white/70"
+                                        style={{ width: `${clampPercent(item.value, maxHypeChannelTotal)}%` }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                        <div className="rounded-2xl bg-white/[0.045] p-3">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Comments</p>
+                            <p className="mt-3 text-3xl font-black tracking-normal text-white">{formatNumber(behavior.totals?.comments)}</p>
+                            <p className="mt-3 text-xs font-semibold leading-5 text-zinc-500">Conversation depth outside quick reactions.</p>
+                        </div>
+                    </div>
                 </div>
                 {hasActivity ? (
-                    <div className="relative mt-5 h-[320px] rounded-2xl bg-black/20 p-3 md:h-[420px]">
+                    <div className="relative mt-5 h-[380px] rounded-[1.5rem] bg-black/20 p-3 md:h-[520px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={series} margin={{ top: 12, right: 14, bottom: 0, left: isMobile ? -18 : 0 }}>
                                 <defs>
@@ -187,7 +242,7 @@ function HypePanel({ behavior, isMobile }) {
                                     labelFormatter={formatHourTick}
                                     contentStyle={{
                                         background: '#09090b',
-                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        border: 0,
                                         borderRadius: 14,
                                         fontSize: 12,
                                     }}
@@ -198,9 +253,10 @@ function HypePanel({ behavior, isMobile }) {
                                         type="monotone"
                                         dataKey={key}
                                         name={HYPE_SERIES[key].label}
-                                        stackId={channel === 'all' ? 'hype' : undefined}
+                                        stackId={channel === 'all' && mode === 'stacked' ? 'hype' : undefined}
                                         stroke={HYPE_SERIES[key].color}
                                         fill={`url(#hypeGradient-${key})`}
+                                        fillOpacity={mode === 'lines' ? 0.18 : 1}
                                         strokeWidth={2.4}
                                         dot={false}
                                         activeDot={{ r: 4, fill: '#fff', stroke: '#09090b' }}
@@ -281,9 +337,9 @@ function TopMomentsPanel({ moments, onRemoved }) {
                                 type="button"
                                 onClick={() => remove(m.mediaId)}
                                 disabled={busyId === m.mediaId}
-                                className="shrink-0 rounded-full border border-red-400/30 bg-red-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-red-300 opacity-0 transition group-hover:opacity-100 disabled:opacity-60"
+                                className="shrink-0 rounded-full bg-red-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-red-300 opacity-0 transition group-hover:opacity-100 disabled:opacity-60"
                             >
-                                {busyId === m.mediaId ? '…' : 'Remove'}
+                                {busyId === m.mediaId ? '...' : 'Remove'}
                             </button>
                         </div>
                     </div>
@@ -470,13 +526,13 @@ function AnalyticsHero({ totals, last30d, velocity7d, loading, isLiveEvent }) {
     );
 }
 
-function EventPicker({ events, selectedEventId, onSelect, loading }) {
+function EventPicker({ events, selectedEventId, comparisonIds = [], onSelect, onToggleCompare, loading }) {
     return (
         <div className="rounded-[1.75rem] bg-white/[0.035] p-4">
             <div className="flex flex-col gap-1 pb-4 md:flex-row md:items-end md:justify-between">
                 <div>
-                    <p className="text-xs font-black uppercase tracking-widest text-white/40">Choose an event</p>
-                    <p className="mt-1 text-sm text-zinc-500">The sections below update to the selected event.</p>
+                    <p className="text-xs font-black uppercase tracking-widest text-white/40">Choose events</p>
+                    <p className="mt-1 text-sm text-zinc-500">Open one event for detail, or compare up to four at once.</p>
                 </div>
                 {loading ? <span className="text-xs font-semibold text-zinc-500">Syncing events</span> : null}
             </div>
@@ -486,26 +542,118 @@ function EventPicker({ events, selectedEventId, onSelect, loading }) {
                 <div className="dashboard-scrollbar-none flex gap-2 overflow-x-auto pb-1">
                     {events.map((event) => {
                         const selected = event.id === selectedEventId;
+                        const comparing = comparisonIds.includes(event.id);
                         return (
-                            <button
+                            <div
                                 key={event.id}
-                                type="button"
-                                onClick={() => onSelect(event.id)}
-                                aria-pressed={selected}
-                                className={`min-w-[170px] rounded-2xl px-4 py-3 text-left text-xs font-bold transition ${
+                                className={`min-w-[190px] rounded-2xl p-2 transition ${
                                     selected
                                         ? 'bg-white text-black shadow-[0_14px_36px_rgba(255,255,255,0.12)]'
                                         : 'bg-white/[0.055] text-zinc-300 hover:bg-white/[0.09] hover:text-white'
                                 }`}
                             >
-                                <span className="block">{event.name}</span>
-                                <span className={`mt-1 block text-[10px] uppercase tracking-widest ${selected ? 'text-black/55' : 'text-zinc-500'}`}>{event.dateLabel}</span>
-                            </button>
+                                <button
+                                    type="button"
+                                    onClick={() => onSelect(event.id)}
+                                    aria-pressed={selected}
+                                    className="block w-full rounded-xl px-2 py-1.5 text-left text-xs font-bold"
+                                >
+                                    <span className="block truncate">{event.name}</span>
+                                    <span className={`mt-1 block text-[10px] uppercase tracking-widest ${selected ? 'text-black/55' : 'text-zinc-500'}`}>{event.dateLabel}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => onToggleCompare(event.id)}
+                                    aria-pressed={comparing}
+                                    className={`mt-1 w-full rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition ${
+                                        comparing
+                                            ? selected ? 'bg-black text-white' : 'bg-white text-black'
+                                            : selected ? 'bg-black/10 text-black/60 hover:bg-black/15' : 'bg-white/[0.06] text-white/45 hover:bg-white/[0.1] hover:text-white'
+                                    }`}
+                                >
+                                    {comparing ? 'Comparing' : 'Compare'}
+                                </button>
+                            </div>
                         );
                     })}
                 </div>
             )}
         </div>
+    );
+}
+
+function CompareMetric({ label, value, barValue, maxValue }) {
+    return (
+        <div className="rounded-2xl bg-white/[0.035] px-3 py-3">
+            <div className="flex items-center justify-between gap-3">
+                <p className="truncate text-[10px] font-black uppercase tracking-widest text-white/35">{label}</p>
+                <p className="shrink-0 text-sm font-black text-white tabular-nums">{value}</p>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/30" aria-hidden="true">
+                <div className="h-full rounded-full bg-white/70" style={{ width: `${clampPercent(barValue, maxValue)}%` }} />
+            </div>
+        </div>
+    );
+}
+
+function EventComparisonPanel({ details = [], loading }) {
+    if (loading) {
+        return (
+            <div className="rounded-[1.75rem] bg-white/[0.035] p-5">
+                <p className="text-xs font-black uppercase tracking-widest text-white/35">Comparison</p>
+                <div className="mt-4 grid gap-3 lg:grid-cols-3">
+                    {[0, 1, 2].map((item) => (
+                        <div key={item} className="h-32 animate-pulse rounded-2xl bg-white/[0.035]" />
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (!details.length) {
+        return (
+            <div className="rounded-[1.75rem] bg-white/[0.035] p-5">
+                <p className="text-xs font-black uppercase tracking-widest text-white/35">Comparison</p>
+                <p className="mt-2 text-sm leading-6 text-zinc-500">Select Compare on one or more event chips to build a side-by-side read.</p>
+            </div>
+        );
+    }
+
+    const rows = details.map((detail) => ({
+        id: detail.event?.id,
+        name: detail.event?.name || 'Event',
+        tickets: Number(detail.sales?.total || detail.funnel?.sold || 0),
+        gross: Number(detail.sales?.revenue?.grossCents || 0),
+        scanRate: Number(detail.attendance?.scanRate || 0),
+        hype: Number(detail.behavior?.hypeIndex || 0),
+    }));
+    const maxTickets = Math.max(1, ...rows.map((row) => row.tickets));
+    const maxGross = Math.max(1, ...rows.map((row) => row.gross));
+    const maxHype = Math.max(100, ...rows.map((row) => row.hype));
+
+    return (
+        <section className="rounded-[1.75rem] bg-white/[0.035] p-5">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <p className="text-xs font-black uppercase tracking-widest text-white/35">Comparison</p>
+                    <h2 className="mt-2 text-xl font-black tracking-normal text-white">Event side-by-side</h2>
+                </div>
+                <p className="text-xs font-semibold text-zinc-500">{rows.length} selected</p>
+            </div>
+            <div className="mt-5 grid gap-3 xl:grid-cols-2">
+                {rows.map((row) => (
+                    <article key={row.id || row.name} className="rounded-[1.25rem] bg-black/20 p-4">
+                        <h3 className="truncate text-base font-black text-white">{row.name}</h3>
+                        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                            <CompareMetric label="Tickets" value={formatNumber(row.tickets)} barValue={row.tickets} maxValue={maxTickets} />
+                            <CompareMetric label="Gross" value={formatMoney(row.gross)} barValue={row.gross} maxValue={maxGross} />
+                            <CompareMetric label="Scan rate" value={percent(row.scanRate)} barValue={row.scanRate} maxValue={1} />
+                            <CompareMetric label="Hype" value={formatNumber(row.hype)} barValue={row.hype} maxValue={maxHype} />
+                        </div>
+                    </article>
+                ))}
+            </div>
+        </section>
     );
 }
 
@@ -595,7 +743,7 @@ function AnalyticsSectionLabel({ eyebrow, title, copy }) {
 
 function TopUploadersList({ uploaders = [] }) {
     if (!uploaders.length) {
-        return <div className="glow-surface-soft rounded-2xl p-4 text-sm text-zinc-400">No uploads yet.</div>;
+        return <div className="rounded-2xl bg-white/[0.035] p-4 text-sm text-zinc-400">No uploads yet.</div>;
     }
     return (
         <div className="space-y-2">
@@ -624,7 +772,7 @@ function TopUploadersList({ uploaders = [] }) {
 function LocationClustersCard({ clusters = [], noise = 0, totalGeotagged = 0 }) {
     if (!totalGeotagged) {
         return (
-            <div className="glow-surface-soft rounded-2xl p-6 text-sm text-zinc-400">
+            <div className="rounded-2xl bg-white/[0.035] p-6 text-sm text-zinc-400">
                 No geotagged photos yet for this event.
             </div>
         );
@@ -633,7 +781,7 @@ function LocationClustersCard({ clusters = [], noise = 0, totalGeotagged = 0 }) 
     return (
         <div className="space-y-3">
             {clusters.length === 0 ? (
-                <div className="glow-surface-soft rounded-2xl p-4 text-sm text-zinc-400">
+                <div className="rounded-2xl bg-white/[0.035] p-4 text-sm text-zinc-400">
                     No hotspots detected yet — photos are too spread out to cluster.
                 </div>
             ) : (
@@ -674,6 +822,9 @@ function AnalyticsPageContent() {
     const [overviewLoading, setOverviewLoading] = useState(true);
 
     const [selectedEventId, setSelectedEventId] = useState(null);
+    const [comparisonEventIds, setComparisonEventIds] = useState([]);
+    const [comparisonDetails, setComparisonDetails] = useState([]);
+    const [comparisonLoading, setComparisonLoading] = useState(false);
     const [eventDetail, setEventDetail] = useState(null);
     const [eventDetailLoading, setEventDetailLoading] = useState(false);
 
@@ -729,9 +880,27 @@ function AnalyticsPageContent() {
 
     useEffect(() => {
         if (eventsLoading || selectedEventId || !eventOptions.length) return;
-        const timer = setTimeout(() => setSelectedEventId(eventOptions[0].id), 0);
+        const timer = setTimeout(() => {
+            setSelectedEventId(eventOptions[0].id);
+            setComparisonEventIds([eventOptions[0].id]);
+        }, 0);
         return () => clearTimeout(timer);
     }, [eventOptions, eventsLoading, selectedEventId]);
+
+    const handleSelectEvent = (eventId) => {
+        setSelectedEventId(eventId);
+        setComparisonEventIds((current) => (current.length ? current : [eventId]));
+    };
+
+    const handleToggleCompare = (eventId) => {
+        setComparisonEventIds((current) => {
+            if (current.includes(eventId)) {
+                const next = current.filter((id) => id !== eventId);
+                return next.length ? next : [eventId];
+            }
+            return [...current, eventId].slice(-4);
+        });
+    };
 
     useEffect(() => {
         if (!selectedEventId) {
@@ -752,6 +921,30 @@ function AnalyticsPageContent() {
             clearTimeout(timer);
         };
     }, [selectedEventId]);
+
+    useEffect(() => {
+        const ids = comparisonEventIds.filter(Boolean).slice(0, 4);
+        if (!ids.length) {
+            const timer = setTimeout(() => setComparisonDetails([]), 0);
+            return () => clearTimeout(timer);
+        }
+        let cancelled = false;
+        const timer = setTimeout(() => {
+            setComparisonLoading(true);
+            Promise.allSettled(ids.map((id) => organizerAnalyticsService.getEventAnalytics(id)))
+                .then((results) => {
+                    if (cancelled) return;
+                    setComparisonDetails(results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : [])));
+                })
+                .finally(() => {
+                    if (!cancelled) setComparisonLoading(false);
+                });
+        }, 0);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [comparisonEventIds]);
 
     const totals = overview?.totals;
     const last30d = overview?.last30d;
@@ -800,7 +993,14 @@ function AnalyticsPageContent() {
             />
 
             <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-                <EventPicker events={eventOptions} selectedEventId={selectedEventId} onSelect={setSelectedEventId} loading={eventsLoading} />
+                <EventPicker
+                    events={eventOptions}
+                    selectedEventId={selectedEventId}
+                    comparisonIds={comparisonEventIds}
+                    onSelect={handleSelectEvent}
+                    onToggleCompare={handleToggleCompare}
+                    loading={eventsLoading}
+                />
                 <div className="rounded-[1.75rem] bg-white/[0.035] p-4">
                     <p className="text-xs font-black uppercase tracking-widest text-white/40">Portfolio totals</p>
                     <div className="mt-4 grid grid-cols-2 gap-3">
@@ -819,8 +1019,10 @@ function AnalyticsPageContent() {
                 </div>
             </div>
 
+            <EventComparisonPanel details={comparisonDetails} loading={comparisonLoading} />
+
             {!selectedEventId ? (
-                <div className="glow-surface-soft rounded-2xl p-6 text-sm text-zinc-400">Select an event above to see its full analytics.</div>
+                <div className="rounded-2xl bg-white/[0.035] p-6 text-sm text-zinc-400">Select an event above to see its full analytics.</div>
             ) : eventDetailLoading || !eventDetail ? (
                 <div className="space-y-4">
                     <ChartSkeleton className="h-[300px] md:h-[360px]" />

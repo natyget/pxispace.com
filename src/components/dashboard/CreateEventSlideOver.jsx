@@ -8,8 +8,8 @@ const CreateEventPage = dynamic(() => import('@/views/dashboard/CreateEventPage'
     loading: () => (
         <div className="space-y-5">
             <div className="h-5 w-40 animate-pulse rounded-full bg-white/[0.06]" />
-            <div className="glow-surface h-80 animate-pulse rounded-2xl" />
-            <div className="glow-surface h-56 animate-pulse rounded-2xl" />
+            <div className="h-80 animate-pulse rounded-2xl bg-white/[0.035]" />
+            <div className="h-56 animate-pulse rounded-2xl bg-white/[0.035]" />
         </div>
     ),
 });

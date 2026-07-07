@@ -6,7 +6,6 @@ import UserAvatar from '@/components/ui/UserAvatar';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { UserGroupIcon, Share01Icon, ClockIcon, Location01Icon, PencilIcon } from '@hugeicons/core-free-icons';
-import { useAuth } from '@/contexts/AuthContext';
 import { useEventManage } from './EventManageContext';
 import {
   coverImageUrl,
@@ -19,12 +18,7 @@ import {
 import { eventShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
 import { formatTicketPrice, parseEventTicketTiers } from '@/lib/ticketTiers';
 
-function formatDate(d) {
-  return d ? new Date(d).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '—';
-}
-
 export default function EventDetailsPageView() {
-  const { user } = useAuth();
   const { event, eventId, albumId, participants, featuredPeople } = useEventManage();
   const [shareHint, setShareHint] = useState(null);
 
@@ -50,10 +44,6 @@ export default function EventDetailsPageView() {
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
-
-  const myAlbumRole = participants.find((p) => p.userId === user?.id)?.role;
-  const isEventCreator = Boolean(user?.id && event?.createdBy && event.createdBy === user.id);
-  const isAlbumOwner = myAlbumRole === 'OWNER';
 
   const cover = coverImageUrl(event);
   const sched = scheduleDisplay(event);
@@ -140,7 +130,7 @@ export default function EventDetailsPageView() {
           </div>
 
           <div className="absolute inset-x-0 bottom-0 p-6 pt-24">
-            <p className="text-[1.65rem] font-black text-white tracking-tight leading-none drop-shadow-md">
+            <p className="text-[1.65rem] font-black text-white leading-none drop-shadow-md">
               {event.name?.trim() || 'Untitled event'}
             </p>
           </div>
@@ -184,7 +174,7 @@ export default function EventDetailsPageView() {
                 <div className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center shrink-0">
                   <HugeiconsIcon icon={ClockIcon} size={14} className="text-white" />
                 </div>
-                <span className="text-[13px] font-bold text-white tracking-tight leading-tight line-clamp-2">
+                <span className="text-[13px] font-bold text-white leading-tight line-clamp-2">
                   {sched.primary}
                 </span>
               </div>
@@ -275,7 +265,7 @@ export default function EventDetailsPageView() {
                         ) : null}
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-pxi-purple shrink-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/60 shrink-0">
                       {lineupRoleDisplay(person.role)}
                     </span>
                   </li>
@@ -313,7 +303,7 @@ export default function EventDetailsPageView() {
                     ))
                   )}
                 </div>
-                <span className="text-[11px] font-bold uppercase tracking-widest text-pxi-purple shrink-0">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-white/60 shrink-0">
                   View members
                 </span>
               </Link>

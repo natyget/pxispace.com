@@ -114,7 +114,7 @@ function CapacityIndicator({ isLive }) {
         <GlassPanel muted={!isLive}>
             <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Capacity</p>
             <div className="mt-3 flex items-end justify-between gap-4">
-                <p className="text-3xl font-black tracking-tight text-white">
+                <p className="text-3xl font-black text-white">
                     {currentAttendance.toLocaleString()}
                     <span className="text-base text-zinc-500"> / {venueCapacity.toLocaleString()}</span>
                 </p>
@@ -190,13 +190,13 @@ function RecentScansSection({ isLive }) {
         <GlassPanel muted={!isLive}>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <h2 className="text-lg font-black tracking-tight text-white">Recent Scans</h2>
+                    <h2 className="text-lg font-black text-white">Recent Scans</h2>
                     <p className="mt-1 text-sm text-zinc-500">{isLive ? 'Latest tickets moving through every active gate.' : 'Goes live during active events.'}</p>
                 </div>
             </div>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
+            <div className="mt-4 space-y-2">
                 {recentScans.map((scan) => (
-                    <div key={scan.id} className="grid gap-3 border-b border-white/10 bg-black/20 px-4 py-3 last:border-b-0 md:grid-cols-[1.2fr_0.9fr_0.7fr_auto] md:items-center">
+                    <div key={scan.id} className="grid gap-3 rounded-2xl bg-white/[0.035] px-4 py-3 md:grid-cols-[1.2fr_0.9fr_0.7fr_auto] md:items-center">
                         <div>
                             <p className="text-sm font-bold text-white">{scan.name}</p>
                             <p className="mt-0.5 text-xs text-zinc-500">{scan.ticket}</p>
@@ -242,8 +242,8 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <div className="flex items-center gap-2">
-                        <span className={cx('h-3 w-3 rounded-full', gate.issue ? 'bg-red-400 shadow-[0_0_16px_rgba(248,113,113,0.65)]' : 'bg-emerald-300 shadow-[0_0_16px_rgba(110,231,183,0.55)]')} />
-                        <h3 className="text-xl font-black tracking-tight text-white">{gate.name}</h3>
+                        <span className={cx('h-3 w-3 rounded-full', gate.issue ? 'bg-red-400' : 'bg-emerald-300')} />
+                        <h3 className="text-xl font-black text-white">{gate.name}</h3>
                     </div>
                     <p className="mt-1 text-xs font-bold uppercase tracking-widest text-zinc-500">
                         {isLive ? gate.velocity : 'Goes live during active events'}
@@ -338,9 +338,12 @@ function GateEditModal({ open, gate, rosterMembers, onClose, onSave }) {
     const [assignedPeople, setAssignedPeople] = useState([]);
 
     useEffect(() => {
-        if (!open) return;
-        setName(gate?.name || '');
-        setAssignedPeople(gate?.assignedPeople || []);
+        if (!open) return undefined;
+        const timer = setTimeout(() => {
+            setName(gate?.name || '');
+            setAssignedPeople(gate?.assignedPeople || []);
+        }, 0);
+        return () => clearTimeout(timer);
     }, [gate, open]);
 
     const togglePerson = (member) => {
@@ -452,7 +455,7 @@ function GateDetailsModal({ gate, open, onClose }) {
                         <div className="mt-3 space-y-2">
                             {gate.incidentLog.map((entry) => (
                                 <div key={entry} className="flex gap-2 rounded-xl glass-field px-3 py-2 text-sm text-zinc-300">
-                                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-pxi-purple" />
+                                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-white/45" />
                                     <span>{entry}</span>
                                 </div>
                             ))}
@@ -529,13 +532,26 @@ export default function LiveScanDashboard({ isLiveEvent }) {
     )), [teamRosters]);
 
     useEffect(() => {
-        try {
-            const stored = JSON.parse(window.localStorage.getItem(GATES_STORAGE_KEY) || 'null');
-            if (Array.isArray(stored)) setGates(stored);
-        } catch {
-            setGates(initialGates);
-        }
-        listTeamRosters().then(setTeamRosters).catch(() => setTeamRosters([]));
+        let alive = true;
+        const timer = setTimeout(() => {
+            try {
+                const stored = JSON.parse(window.localStorage.getItem(GATES_STORAGE_KEY) || 'null');
+                if (alive && Array.isArray(stored)) setGates(stored);
+            } catch {
+                if (alive) setGates(initialGates);
+            }
+            listTeamRosters()
+                .then((next) => {
+                    if (alive) setTeamRosters(next);
+                })
+                .catch(() => {
+                    if (alive) setTeamRosters([]);
+                });
+        }, 0);
+        return () => {
+            alive = false;
+            clearTimeout(timer);
+        };
     }, []);
 
     const persistGates = (updater) => {
@@ -593,7 +609,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
     return (
         <div className="mx-auto max-w-6xl space-y-6">
             <header>
-                <h1 className="text-2xl font-black tracking-tight text-white md:text-3xl">Operations</h1>
+                <h1 className="text-2xl font-black text-white md:text-3xl">Operations</h1>
                 <p className="mt-2 max-w-2xl text-sm text-zinc-500">Live event controls for gates, scans, and incident response.</p>
             </header>
 
@@ -614,7 +630,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
             <GlassPanel muted={!eventIsLive}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <h2 className="text-lg font-black tracking-tight text-white">Gate Control</h2>
+                        <h2 className="text-lg font-black text-white">Gate Control</h2>
                         <p className="mt-1 text-sm text-zinc-500">{eventIsLive ? 'Tap a gate for scanned tickets, issues, and incident history.' : 'Goes live during active events.'}</p>
                     </div>
                     <button
@@ -658,7 +674,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
             <GlassPanel muted={!eventIsLive}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h2 className="text-lg font-black tracking-tight text-white">Incident Response</h2>
+                        <h2 className="text-lg font-black text-white">Incident Response</h2>
                         <p className="mt-1 text-sm text-zinc-500">{eventIsLive ? 'Active flags and resolved floor issues.' : 'Goes live during active events.'}</p>
                     </div>
                     <HugeiconsIcon icon={Megaphone01Icon} size={20} className="text-zinc-500" />
