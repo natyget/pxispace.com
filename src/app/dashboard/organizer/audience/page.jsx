@@ -1,5 +1,5 @@
-import OrganizerAudiencePage from '@/views/dashboard/organizer/OrganizerAudiencePage';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-    return <OrganizerAudiencePage />;
+    redirect('/dashboard/audience');
 }

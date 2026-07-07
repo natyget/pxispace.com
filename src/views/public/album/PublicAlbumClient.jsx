@@ -21,6 +21,7 @@ import PublicAlbumDetailsSheet from './PublicAlbumDetailsSheet';
 import PublicAlbumJoinEventButton from './PublicAlbumJoinEventButton';
 import PublicAlbumParticipants from './PublicAlbumParticipants';
 import IphonePane from './IphonePane';
+import FindMyselfModal from './FindMyselfModal';
 import { mediaDisplayUrl } from './albumMediaLayout';
 import {
   PUBLIC_ALBUM_THREAD_LIST_HORIZONTAL_INSET,
@@ -55,6 +56,9 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [threadHasMore, setThreadHasMore] = useState(false);
   const [loadingMoreThread, setLoadingMoreThread] = useState(false);
+  const [findMyselfOpen, setFindMyselfOpen] = useState(false);
+  const [myMatchIds, setMyMatchIds] = useState(null); // Set<string> after a scan
+  const [onlyMyShots, setOnlyMyShots] = useState(false);
   const threadShellRef = useRef(null);
   const threadListRef = useRef(null);
   const threadEndRef = useRef(null);
@@ -232,6 +236,32 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
     if (tab !== 'gallery') setLightboxOpen(false);
   }, [tab]);
 
+  // Guest face scan: offer "find yourself" once per album per session,
+  // as soon as the gallery has content to match against.
+  useEffect(() => {
+    if (!albumId || !album || denied || contentLoading || galleryMedia.length === 0) return;
+    let prompted = false;
+    try {
+      const key = `pxi_findme_prompted_${albumId}`;
+      prompted = window.sessionStorage.getItem(key) === '1';
+      if (!prompted) window.sessionStorage.setItem(key, '1');
+    } catch {
+      /* sessionStorage unavailable — still show once for this mount */
+    }
+    if (!prompted) setFindMyselfOpen(true);
+  }, [albumId, album, denied, contentLoading, galleryMedia.length]);
+
+  const handleFaceMatches = useCallback((mediaIds) => {
+    setMyMatchIds(new Set(mediaIds.map(String)));
+    setOnlyMyShots(mediaIds.length > 0);
+    if (mediaIds.length > 0) setTab('gallery');
+  }, []);
+
+  const visibleGalleryMedia = useMemo(() => {
+    if (!onlyMyShots || !myMatchIds) return galleryMedia;
+    return galleryMedia.filter((m) => myMatchIds.has(String(publicAlbumMediaId(m) || '')));
+  }, [galleryMedia, onlyMyShots, myMatchIds]);
+
   if (loading) {
     return (
       <div className="public-album-page flex min-h-[100dvh] items-center justify-center">
@@ -362,8 +392,36 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
             <p className="py-16 text-center text-sm text-zinc-500">No photos yet. Open the app to see more.</p>
           ) : tab === 'gallery' ? (
             <div className="album-gallery-layout flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+              <div className="flex shrink-0 items-center gap-2 pb-3">
+                {myMatchIds ? (
+                  <button
+                    type="button"
+                    onClick={() => setOnlyMyShots((v) => !v)}
+                    className={`rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition ${
+                      onlyMyShots
+                        ? 'border-pxi-purple bg-pxi-purple/20 text-white shadow-[0_0_20px_rgba(216,74,255,0.3)]'
+                        : 'border-white/10 bg-white/[0.03] text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    My shots ({myMatchIds.size})
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => setFindMyselfOpen(true)}
+                  className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 transition hover:border-pxi-purple/50 hover:text-white"
+                >
+                  {myMatchIds ? 'Rescan' : 'Find my shots'}
+                </button>
+              </div>
               <div className="album-gallery-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-                <PublicAlbumMasonryGrid items={galleryMedia} onPressItem={openLightbox} />
+                {onlyMyShots && myMatchIds && visibleGalleryMedia.length === 0 ? (
+                  <p className="py-16 text-center text-sm text-zinc-500">
+                    No matches in this album yet — new uploads are matched as they land.
+                  </p>
+                ) : (
+                  <PublicAlbumMasonryGrid items={visibleGalleryMedia} onPressItem={openLightbox} />
+                )}
               </div>
               <PublicAlbumParticipants participants={participants} pinned />
             </div>
@@ -423,8 +481,17 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
 
       {/* Right: album details — desktop only; mobile uses three-dot sheet */}
       <div className="album-details-pane">
-        <div className="album-pane-scroll min-h-0 flex-1">
-          <PublicAlbumDetailsPanel album={album} albumId={albumId} />
+        <div className="album-details-shell">
+          <div className="album-details-chrome relative z-[5] w-full shrink-0 bg-black border-b border-white/5">
+            <div className="relative flex h-14 items-center justify-center">
+              <h2 className="truncate px-10 text-center text-xl font-black uppercase tracking-[0.24em] text-white">
+                Event Details
+              </h2>
+            </div>
+          </div>
+          <div className="album-pane-scroll min-h-0 flex-1 overflow-y-auto no-scrollbar">
+            <PublicAlbumDetailsPanel album={album} albumId={albumId} />
+          </div>
         </div>
       </div>
 
@@ -437,13 +504,20 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
 
       {lightboxOpen && tab === 'gallery' ? (
         <PublicAlbumThreadFocusOverlay
-          items={galleryMedia}
+          items={visibleGalleryMedia}
           index={lightboxIndex}
           albumId={albumId}
           onClose={() => setLightboxOpen(false)}
           onIndexChange={setLightboxIndex}
         />
       ) : null}
+
+      <FindMyselfModal
+        open={findMyselfOpen}
+        onClose={() => setFindMyselfOpen(false)}
+        albumId={albumId}
+        onMatches={handleFaceMatches}
+      />
       {threadFocusOpen && tab === 'thread' ? (
         <PublicAlbumThreadFocusOverlay
           items={threadMedia}

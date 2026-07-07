@@ -10,6 +10,7 @@ import { displayImageSrc } from '@/lib/mediaUrl';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { albumShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
 import { formatAlbumSchedule } from './publicAlbumDate';
+import AlbumPlaylistSection from './AlbumPlaylistSection';
 import { formatTicketPrice, parseEventTicketTiers } from '@/lib/ticketTiers';
 
 function eventRequiresPaidTicket(event) {
@@ -43,13 +44,11 @@ function formatLocation(event) {
 
 function InfoMetaCard({ icon, primary, secondary }) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-2 rounded-2xl border border-white/10 bg-white/5 p-4">
-      <div className="flex min-w-0 items-center gap-2">
-        <HugeiconsIcon icon={icon} size={18} className="shrink-0 text-white" aria-hidden />
-        <p className="min-w-0 flex-1 text-sm font-bold leading-snug text-white">{primary}</p>
-      </div>
+    <div className="flex min-w-0 flex-1 flex-col gap-1 rounded-2xl border border-white/10 bg-white/5 p-3 text-center items-center justify-center">
+      <HugeiconsIcon icon={icon} size={16} className="text-white mb-0.5" aria-hidden />
+      <p className="min-w-0 w-full truncate text-[11px] font-bold leading-tight text-white">{primary}</p>
       {secondary ? (
-        <p className="w-full text-[11px] font-bold uppercase leading-relaxed tracking-wide text-white/45">
+        <p className="min-w-0 w-full truncate text-[9px] font-bold uppercase leading-tight tracking-wide text-white/45">
           {secondary}
         </p>
       ) : null}
@@ -109,38 +108,40 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
           {shareHint}
         </p>
       ) : null}
-      <div className="min-h-0 flex-1">
-        {/* Cover */}
-        <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-zinc-900 sm:aspect-[16/10]">
-          {coverSrc ? (
-            <Image src={coverSrc} alt={title} fill unoptimized className="object-cover" priority />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-black" />
-          )}
-          {publicAlbumUrl ? (
-            <div className="absolute right-3 top-3 z-10">
-              <button
-                type="button"
-                onClick={handleCopyPublicLink}
-                className="inline-flex size-10 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white transition-colors hover:bg-black/65"
-                aria-label="Copy public album link"
-              >
-                <HugeiconsIcon icon={Share01Icon} size={18} />
-              </button>
+      <div className="min-h-0 flex-1 flex flex-col">
+        {/* Cover Card */}
+        <div className="px-5 pt-5 shrink-0">
+          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 shadow-lg">
+            {coverSrc ? (
+              <Image src={coverSrc} alt={title} fill unoptimized className="object-cover" priority />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-black" />
+            )}
+            {publicAlbumUrl ? (
+              <div className="absolute right-3 top-3 z-10">
+                <button
+                  type="button"
+                  onClick={handleCopyPublicLink}
+                  className="inline-flex size-9 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white transition-colors hover:bg-black/65"
+                  aria-label="Copy public album link"
+                >
+                  <HugeiconsIcon icon={Share01Icon} size={16} />
+                </button>
+              </div>
+            ) : null}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 p-4">
+              <h2 className="text-lg font-black uppercase leading-tight tracking-tight text-white drop-shadow-lg">
+                {title}
+              </h2>
             </div>
-          ) : null}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-black/50" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 p-5 pt-16">
-            <h2 className="text-2xl font-black uppercase leading-tight tracking-tight text-white drop-shadow-lg sm:text-3xl">
-              {title}
-            </h2>
           </div>
         </div>
 
-        <div className="space-y-6 px-5 py-6">
+        <div className="flex flex-col items-center justify-center text-center space-y-6 px-5 py-6 flex-1 min-h-0">
           {/* Badges + host */}
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col items-center space-y-3">
+            <div className="flex flex-wrap gap-2 justify-center">
               <span
                 className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
                   isPublic
@@ -161,13 +162,13 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
               </span>
             </div>
             {host ? (
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col items-center gap-2">
                 <UserAvatar
                   user={{ avatarUrl: host?.avatarUrl }}
-                  size={44}
+                  size={40}
                   className="shrink-0 border border-white/15"
                 />
-                <p className="text-sm text-white/60">
+                <p className="text-[11px] text-white/60">
                   Hosted by <span className="font-bold text-white">{host.name || host.username || 'Host'}</span>
                 </p>
               </div>
@@ -175,35 +176,35 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
           </div>
 
           {/* Schedule + location — icon inline with primary; secondary spans full width (mobile AlbumDetailsModal) */}
-          <div className="flex flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 w-full justify-center max-w-sm">
             <InfoMetaCard icon={Clock01Icon} primary={schedule.primary} secondary={schedule.secondary} />
             <InfoMetaCard icon={Location01Icon} primary={location.primary} secondary={location.secondary} />
           </div>
 
           {/* About */}
-          <section className="space-y-3">
+          <section className="space-y-2 text-center w-full max-w-sm">
             <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-pxi-purple">About</h3>
-            <p className="text-sm font-light leading-relaxed text-white/80">
+            <p className="text-xs font-light leading-relaxed text-white/80">
               {album?.event?.description?.trim() || 'No description provided.'}
             </p>
           </section>
 
           {ticketTiers.length > 0 ? (
-            <section className="space-y-3">
+            <section className="space-y-2 w-full max-w-sm">
               <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-pxi-purple">Ticket tiers</h3>
-              <ul className="space-y-2">
+              <ul className="space-y-2 w-full">
                 {ticketTiers.map((tier) => (
                   <li
                     key={tier.id || tier.label}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-left"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-white">{tier.label}</p>
+                      <p className="text-xs font-semibold text-white">{tier.label}</p>
                       {tier.capacity != null ? (
-                        <p className="mt-0.5 text-[11px] text-white/45">Capacity {tier.capacity}</p>
+                        <p className="mt-0.5 text-[9px] text-white/45">Capacity {tier.capacity}</p>
                       ) : null}
                     </div>
-                    <p className="shrink-0 text-sm font-bold text-amber-200">
+                    <p className="shrink-0 text-xs font-bold text-amber-200">
                       {formatTicketPrice(tier.priceUsd, album?.event?.currency || 'USD')}
                     </p>
                   </li>
@@ -213,47 +214,49 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
           ) : null}
 
           {/* Line up */}
-          <section className="space-y-3">
+          <section className="space-y-2 w-full max-w-sm text-center">
             <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-pxi-purple">Line up</h3>
-            <p className="text-xs leading-relaxed text-white/40">
+            <p className="text-[10px] leading-relaxed text-white/40">
               People highlighted for this event. They confirm by accepting an invite — separate from album staff.
             </p>
             {lineup.length > 0 ? (
-              <ul className="space-y-2">
+              <ul className="space-y-2 w-full">
                 {lineup.map((person) => (
                     <li
                       key={person.id || person.userId}
-                      className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5"
+                      className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2 text-left"
                     >
                       <UserAvatar
                         user={{ avatarUrl: person.avatarUrl }}
-                        size={40}
+                        size={32}
                         className="shrink-0 border border-white/10"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold text-white">
+                        <p className="truncate text-xs font-bold text-white">
                           {person.name?.trim() || `@${person.username || 'unknown'}`}
                         </p>
                         {person.name?.trim() && person.username ? (
-                          <p className="truncate text-xs text-white/45">@{person.username}</p>
+                          <p className="truncate text-[10px] text-white/45">@{person.username}</p>
                         ) : null}
                       </div>
-                      <span className="shrink-0 text-[10px] font-black uppercase tracking-wide text-white/50">
+                      <span className="shrink-0 text-[9px] font-black uppercase tracking-wide text-white/50">
                         {person.role || 'Line up'}
                       </span>
                     </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm italic text-white/45">No one on the line up yet.</p>
+              <p className="text-xs italic text-white/45">No one on the line up yet.</p>
             )}
           </section>
 
+          <AlbumPlaylistSection eventId={album?.event?.id} />
+
           {/* Who's going */}
-          <section className="space-y-3">
-            <div className="flex items-end justify-between gap-2">
+          <section className="space-y-2 w-full max-w-sm flex flex-col items-center">
+            <div className="flex items-end justify-between gap-2 w-full">
               <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-pxi-purple">Who&apos;s going</h3>
-              <span className="text-xs font-bold uppercase text-white">{memberCount} members</span>
+              <span className="text-[10px] font-bold uppercase text-white">{memberCount} members</span>
             </div>
             {participants.length > 0 ? (
               <div className="flex items-center gap-3">
@@ -261,17 +264,17 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
                   {participants.slice(0, 6).map((p, i) => (
                       <div
                         key={`${p.userId}-${i}`}
-                        className="relative size-12 overflow-hidden rounded-full border-[3px] border-[#050505]"
+                        className="relative size-10 overflow-hidden rounded-full border-[3px] border-[#050505]"
                         style={{ zIndex: 10 - i }}
                       >
-                        <UserAvatar user={{ avatarUrl: p.avatarUrl }} size={48} className="size-full" />
+                        <UserAvatar user={{ avatarUrl: p.avatarUrl }} size={40} className="size-full" />
                       </div>
                   ))}
                 </div>
-                <p className="text-[11px] font-semibold text-white/45">view</p>
+                <p className="text-[10px] font-semibold text-white/45">view</p>
               </div>
             ) : (
-              <p className="text-sm text-white/45">Be the first to join in the app.</p>
+              <p className="text-xs text-white/45">Be the first to join in the app.</p>
             )}
           </section>
         </div>

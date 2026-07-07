@@ -8,9 +8,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeftIcon, ArrowUpRightIcon, Loading02Icon, ScanIcon, SmartPhone01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { eventsService } from '@/services/events';
 import { api } from '@/services/api';
-import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
-import IosDownloadLink from '@/components/links/IosDownloadLink';
 import AppOpenBanner from '@/components/links/AppOpenBanner';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { PxiPassportCard } from '@/components/passport/PxiPassportCard';
@@ -21,10 +19,9 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { buildEventJsonLd } from '@/lib/seo/schemas';
 import { getSiteUrl } from '@/lib/siteUrl';
 
-const ACCENT = '#c44d54';
 const NAVBAR_TOP = 'top-[var(--public-navbar-height)]';
 /** Mobile: edge-to-edge under navbar; desktop: offset below fixed header */
-const DESKTOP_NAVBAR_OFFSET = 'md:pt-[var(--public-navbar-height)]';
+const DESKTOP_NAVBAR_OFFSET = 'pt-0 md:pt-[var(--public-navbar-height)]';
 const SECTION_EMPTY = 'Empty yet';
 const SECTION_NONE = 'None';
 
@@ -295,13 +292,13 @@ export default function EventDetailClient() {
   return (
     <div className={`min-h-screen bg-[#0a0a0a] font-sans text-white antialiased ${DESKTOP_NAVBAR_OFFSET}`}>
       {isPublicEvent ? <JsonLd data={buildEventJsonLd(apiEvent, getSiteUrl())} /> : null}
-      <div className={`fixed left-3 z-50 ${NAVBAR_TOP}`}>
+      <div className="fixed left-4 z-50 top-20 md:top-24 md:left-8">
         <Link
           href="/events"
-          className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/70 px-3 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md hover:bg-white/10 hover:text-white"
+          className="inline-flex items-center gap-1.5 rounded-full border-0 bg-black/45 hover:bg-black/65 backdrop-blur-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white transition-all shadow-lg"
         >
           <HugeiconsIcon icon={ArrowLeftIcon} className="size-3.5" />
-          Events
+          event
         </Link>
       </div>
 
@@ -328,9 +325,9 @@ export default function EventDetailClient() {
         </div>
 
         <div className="relative z-10">
-          <main className="mx-auto flex w-full max-w-5xl flex-col px-3 pb-40 sm:px-6 md:mt-4 md:grid md:pb-32 md:grid-cols-[minmax(0,1fr)_auto] md:gap-8 2xl:max-w-6xl 2xl:gap-12">
+          <main className="mx-auto flex w-full max-w-5xl flex-col px-3 pb-40 sm:px-6 md:mt-4 md:grid md:pb-32 md:grid-cols-[minmax(0,1fr)_auto] md:gap-8 md:pt-16 2xl:max-w-6xl 2xl:gap-12">
             <div className="order-1 flex flex-col md:order-2 md:w-[330px] lg:w-[375px] 2xl:w-[400px]">
-              <div className={`relative top-0 mx-auto h-auto w-full md:sticky ${NAVBAR_TOP} md:max-w-[400px]`}>
+              <div className="relative top-0 mx-auto h-auto w-full md:sticky md:top-28 md:max-w-[400px]">
                 <div className="relative -mx-3 w-[calc(100%+1.5rem)] sm:-mx-6 sm:w-[calc(100%+3rem)] md:mx-0 md:w-full">
                   <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-900 md:rounded-xl">
                     {heroImage ? (
@@ -360,8 +357,8 @@ export default function EventDetailClient() {
               </div>
             </div>
 
-            <div className="order-2 mb-0 mt-4 flex flex-col gap-4 border-t border-white/15 pt-2 md:order-1 md:mt-2 md:pt-0">
-              <div className="flex flex-col gap-3 pt-12 md:pt-0">
+            <div className="order-2 mb-0 mt-2 flex flex-col gap-4 border-t border-white/15 pt-4 md:order-1 md:mt-2 md:pt-0">
+              <div className="flex flex-col gap-3">
                 <h2 className="text-base font-semibold tracking-tight text-white">Organizer</h2>
                 {hasHost ? (
                   <div className="flex items-start justify-between gap-3">
@@ -380,12 +377,14 @@ export default function EventDetailClient() {
                         ) : null}
                       </div>
                     </div>
-                    <IosDownloadLink
-                      href={PXI_APP_STORE_URL}
-                      className="shrink-0 text-xs font-semibold text-pxi-purple hover:text-white"
-                    >
-                      App
-                    </IosDownloadLink>
+                    {albumId ? (
+                      <Link
+                        href={`/album/${albumId}`}
+                        className="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[var(--pxi-orange)]/15 px-3.5 text-xs font-black uppercase tracking-widest text-[var(--pxi-orange)] transition hover:bg-[var(--pxi-orange)]/25"
+                      >
+                        Open album
+                      </Link>
+                    ) : null}
                   </div>
                 ) : (
                   <p className="text-sm text-zinc-500">{SECTION_EMPTY}</p>
@@ -409,12 +408,12 @@ export default function EventDetailClient() {
                     {albumId ? (
                       <button
                         type="button"
-                        className="inline-flex h-7 shrink-0 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 text-xs font-medium text-zinc-200 transition hover:bg-white/10 hover:text-white"
+                        className="inline-flex h-7 shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--pxi-orange)]/15 px-3 text-xs font-medium text-[var(--pxi-orange)] transition hover:bg-[var(--pxi-orange)]/25"
                         onClick={() => setGuestlistOpen(true)}
                       >
                         <span className="hidden sm:inline">View guestlist</span>
                         <span className="sm:hidden">Guestlist</span>
-                        <HugeiconsIcon icon={ScanIcon} className="size-4" style={{ color: ACCENT }} aria-hidden />
+                        <HugeiconsIcon icon={ScanIcon} className="size-4 text-[var(--pxi-orange)]" aria-hidden />
                       </button>
                     ) : null}
                   </div>
@@ -450,12 +449,12 @@ export default function EventDetailClient() {
                     </div>
                     <button
                       type="button"
-                      className="inline-flex h-7 shrink-0 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 text-xs font-medium text-zinc-200 transition hover:bg-white/10 hover:text-white"
+                      className="inline-flex h-7 shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--pxi-orange)]/15 px-3 text-xs font-medium text-[var(--pxi-orange)] transition hover:bg-[var(--pxi-orange)]/25"
                       onClick={() => setGuestlistOpen(true)}
                     >
                       <span className="hidden sm:inline">View guestlist</span>
                       <span className="sm:hidden">Guestlist</span>
-                      <HugeiconsIcon icon={ScanIcon} className="size-4" style={{ color: ACCENT }} aria-hidden />
+                      <HugeiconsIcon icon={ScanIcon} className="size-4 text-[var(--pxi-orange)]" aria-hidden />
                     </button>
                   </div>
                 )}
@@ -567,14 +566,14 @@ export default function EventDetailClient() {
                           : 'This host has not published their PXI Passport on the web yet.'}
                       </p>
                     )}
-                    <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4 text-sm text-white/85">
+                    <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl bg-white/[0.03] px-5 py-4 text-sm text-white/85">
                       <span>
                         {hostEventsCreated} {hostEventsCreated === 1 ? 'event' : 'events'} created
                       </span>
                       <span className="hidden h-4 w-px bg-zinc-600 sm:block" aria-hidden />
                       <span>
                         {hostMembersJoinedAcrossEvents}{' '}
-                        {hostMembersJoinedAcrossEvents === 1 ? 'member' : 'members'} joined
+                        {hostMembersJoinedAcrossEvents === 1 ? 'community member' : 'community members'}
                       </span>
                     </div>
                   </div>
@@ -586,7 +585,7 @@ export default function EventDetailClient() {
               <div className="flex flex-col gap-6">
                 <SectionDivider />
                 <h2 className="text-base font-semibold tracking-tight text-white">Get the app</h2>
-                <div className="flex flex-col items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-6 py-8">
+                <div className="flex flex-col items-center gap-4 rounded-xl bg-white/[0.03] px-6 py-8">
                   <div className="flex flex-col items-center gap-2 text-center">
                     <HugeiconsIcon icon={SmartPhone01Icon} className="size-8 text-zinc-400" aria-hidden />
                     <h3 className="text-center text-xl font-semibold text-white md:text-2xl">More features in the app</h3>
@@ -604,10 +603,9 @@ export default function EventDetailClient() {
         <button
           type="button"
           onClick={() => router.push(`/events/${apiEvent.id}/checkout`)}
-          className="pointer-events-auto inline-flex h-[3.375rem] w-[min(25.5rem,calc(100vw-1.5rem))] shrink-0 items-center justify-center rounded-full px-8 text-sm font-semibold uppercase tracking-wide text-white shadow-md shadow-black/40 transition hover:opacity-90"
-          style={{ backgroundColor: ACCENT }}
+          className="pointer-events-auto pxi-orange-pill inline-flex h-[3.375rem] w-[min(25.5rem,calc(100vw-1.5rem))] shrink-0 items-center justify-center rounded-full px-8 text-sm font-semibold uppercase tracking-wide text-white shadow-md shadow-black/40 transition hover:opacity-90"
         >
-          Join Event
+          Join event
         </button>
       </div>
 
@@ -617,7 +615,7 @@ export default function EventDetailClient() {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setGuestlistOpen(false)}
           />
-          <div className="relative z-10 w-[92vw] max-w-3xl rounded-2xl border border-white/10 bg-[#0a0a0a] p-5 shadow-xl">
+          <div className="relative z-10 w-[92vw] max-w-3xl rounded-2xl bg-[#0a0a0a] p-5 shadow-xl">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="truncate text-lg font-semibold text-white">Guestlist</h2>

@@ -41,16 +41,20 @@ function ShareProfileLinkButton({ userId }) {
 // ─── main page ────────────────────────────────────────────────────────────────
 
 export default function PassportPage() {
-    const { user } = useAuth();
+    const { user, authReady, authRefreshing } = useAuth();
     const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
+    useEffect(() => {
+        const frame = requestAnimationFrame(() => setMounted(true));
+        return () => cancelAnimationFrame(frame);
+    }, []);
 
-    if (!mounted) return null;
-    if (!user?.isPassportIssued) return <PassportNotIssued user={user} />;
-    return <PassportIssued user={user} />;
+    if (!mounted || !authReady) return null;
+    const rolesReady = authReady && !authRefreshing;
+    if (!user?.isPassportIssued) return <PassportNotIssued user={user} rolesReady={rolesReady} />;
+    return <PassportIssued user={user} rolesReady={rolesReady} />;
 }
 
-function PassportIssued({ user }) {
+function PassportIssued({ user, rolesReady }) {
     const [friendsCount, setFriendsCount] = useState(0);
 
     useEffect(() => {
@@ -60,19 +64,21 @@ function PassportIssued({ user }) {
             .catch(() => {});
     }, [user?.id]);
 
-    const headerRight = user?.isVendor ? (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400 sm:gap-1.5 sm:px-2.5 sm:text-[10px] md:px-3 md:text-[11px]">
-            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="shrink-0" />
-            Vendor
-        </span>
-    ) : (
-        <Link
-            href="/dashboard/vendor-upgrade"
-            className="inline-flex items-center rounded-full border border-pxi-purple/30 bg-pxi-purple/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-pxi-purple hover:bg-pxi-purple/30"
-        >
-            Vendor Setup
-        </Link>
-    );
+    const headerRight = rolesReady
+        ? user?.isVendor ? (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400 sm:gap-1.5 sm:px-2.5 sm:text-[10px] md:px-3 md:text-[11px]">
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="shrink-0" />
+                Vendor
+            </span>
+        ) : (
+            <Link
+                href="/dashboard/vendor-upgrade"
+                className="inline-flex items-center rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-black hover:bg-zinc-200"
+            >
+                Start hosting
+            </Link>
+        )
+        : null;
 
     return (
         <PxiPassportSection
@@ -91,7 +97,7 @@ function PassportIssued({ user }) {
 
 // ─── PXI Passport not issued ──────────────────────────────────────────────────────
 
-function PassportNotIssued({ user }) {
+function PassportNotIssued({ user, rolesReady }) {
     const { updateUser } = useAuth();
     const [checkingVendor, setCheckingVendor] = useState(false);
     const [vendorStatusMsg, setVendorStatusMsg] = useState('');
@@ -110,7 +116,7 @@ function PassportNotIssued({ user }) {
                 return;
             }
             if (result?.code === 'NO_STRIPE_ACCOUNT') {
-                setVendorStatusMsg("No Stripe verification found yet. Start vendor setup below.");
+                setVendorStatusMsg('No Stripe verification found yet. Start hosting setup below.');
                 return;
             }
             setVendorChecks(result?.stripeStatus || null);
@@ -123,34 +129,39 @@ function PassportNotIssued({ user }) {
     };
 
     return (
-        <div className="max-w-xl mx-auto">
-            <div className="mb-6">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2">
+        <div className="mx-auto max-w-4xl space-y-6 md:space-y-8">
+            <section className="relative overflow-hidden rounded-[2rem] bg-black px-5 py-7 text-center shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:px-8 md:py-10">
+                <div className="relative mx-auto max-w-xl">
+                    <div className="mb-4 flex items-center justify-center gap-2">
                         <HugeiconsIcon icon={Shield01Icon} size={14} className="text-zinc-500" />
-                        <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest">PXI Passport</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">PXI Passport</span>
                     </div>
-                    {user?.isVendor ? (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400 sm:gap-1.5 sm:px-2.5 sm:text-[10px] md:px-3 md:text-[11px]">
-                            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="shrink-0" />
-                            Vendor
-                        </span>
-                    ) : (
-                        <Link href="/dashboard/vendor-upgrade" className="inline-flex items-center rounded-full bg-pxi-purple/20 border border-pxi-purple/30 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-pxi-purple hover:bg-pxi-purple/30">
-                            Vendor Setup
-                        </Link>
-                    )}
+                    <h1 className="text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">Claim your identity.</h1>
+                    <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-zinc-400">
+                        Your Passport is the profile layer for PXI events, stamps, friends, and public identity.
+                    </p>
+                    <div className="mt-5 flex justify-center">
+                        {rolesReady && user?.isVendor ? (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+                                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="shrink-0" />
+                                Vendor
+                            </span>
+                        ) : rolesReady ? (
+                            <Link href="/dashboard/vendor-upgrade" className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-black hover:bg-zinc-200">
+                                Start hosting
+                            </Link>
+                        ) : null}
+                    </div>
                 </div>
-                <h1 className="text-2xl font-black text-white tracking-tight">Get Your PXI Passport</h1>
-                <p className="text-zinc-500 text-sm mt-1">Your PXI Passport hasn't been issued yet.</p>
-            </div>
-            <div className="rounded-2xl p-8 text-center bg-zinc-900/50 border border-white/5">
-                <div className="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center bg-pxi-purple/10 border border-pxi-purple/20">
-                    <HugeiconsIcon icon={SmartPhone01Icon} size={26} className="text-pxi-purple" />
+            </section>
+
+            <div className="rounded-[2rem] bg-white/[0.04] p-6 text-center md:p-8">
+                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.055]">
+                    <HugeiconsIcon icon={SmartPhone01Icon} size={26} className="text-white/75" />
                 </div>
-                <h2 className="text-white font-black text-lg mb-2 tracking-tight">Use the PXI Mobile App</h2>
-                <p className="text-zinc-400 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
-                    Your PXI Passport is your digital identity for events. To issue your PXI Passport, please use the PXI mobile app — it only takes a minute.
+                <h2 className="mb-2 text-lg font-black tracking-normal text-white">Use the PXI mobile app</h2>
+                <p className="mx-auto mb-8 max-w-sm text-sm leading-relaxed text-zinc-400">
+                    Issue your Passport from the app. It only takes a minute.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                     <IosDownloadLink href={PXI_APP_STORE_URL}
@@ -166,10 +177,10 @@ function PassportNotIssued({ user }) {
                 </div>
 
                 {/* Vendor verification integration */}
-                <div className="mt-8 rounded-xl border border-white/10 bg-black/30 p-4 text-left">
+                <div className="mt-8 rounded-2xl bg-black/20 p-4 text-left">
                     <div className="flex items-center justify-between gap-3">
                         <div>
-                            <p className="text-[10px] font-bold tracking-widest uppercase text-pxi-purple">Vendor verification</p>
+                            <p className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Hosting verification</p>
                             <p className="text-xs text-zinc-400 mt-1">Check Stripe status or continue setup to unlock paid events.</p>
                         </div>
                         {user?.isVendor ? (
@@ -207,16 +218,16 @@ function PassportNotIssued({ user }) {
                             type="button"
                             onClick={handleCheckVendorVerification}
                             disabled={checkingVendor}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-200 hover:bg-white/10 disabled:opacity-50"
+                            className="inline-flex items-center justify-center gap-2 rounded-full bg-white/[0.06] px-3 py-2 text-xs font-semibold text-zinc-200 hover:bg-white/10 disabled:opacity-50"
                         >
                             {checkingVendor ? <HugeiconsIcon icon={Loading02Icon} size={13} className="animate-spin" /> : <HugeiconsIcon icon={RefreshIcon} size={13} />}
                             Check verification
                         </button>
                         <Link
                             href="/dashboard/vendor-upgrade"
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-pxi-purple px-3 py-2 text-xs font-semibold text-white hover:brightness-110"
+                            className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-bold text-black hover:bg-zinc-200"
                         >
-                            Continue vendor setup
+                            Continue hosting setup
                             <HugeiconsIcon icon={ArrowRight02Icon} size={13} />
                         </Link>
                     </div>

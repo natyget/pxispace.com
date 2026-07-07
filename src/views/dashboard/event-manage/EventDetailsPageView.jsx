@@ -5,7 +5,7 @@ import Image from 'next/image';
 import UserAvatar from '@/components/ui/UserAvatar';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { UserGroupIcon, Share01Icon, ClockIcon, Location01Icon } from '@hugeicons/core-free-icons';
+import { UserGroupIcon, Share01Icon, ClockIcon, Location01Icon, PencilIcon } from '@hugeicons/core-free-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventManage } from './EventManageContext';
 import {
@@ -109,7 +109,7 @@ export default function EventDetailsPageView() {
         </p>
       )}
 
-      <div id="event-details" className="scroll-mt-6 rounded-2xl overflow-hidden border border-white/10 bg-[#050505]">
+      <div id="event-details" className="glass-panel scroll-mt-6 overflow-hidden rounded-2xl">
         <div className="relative aspect-[4/5] md:aspect-[16/11] bg-zinc-900">
           {cover ? (
             <Image src={cover} alt="" fill unoptimized className="object-cover" priority />
@@ -121,11 +121,18 @@ export default function EventDetailsPageView() {
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-[#050505]" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#050505] to-transparent" />
 
-          <div className="absolute right-3 top-3 z-10">
+          <div className="absolute right-3 top-3 z-10 flex gap-2">
+            <Link
+              href={`/dashboard/events/${eventId}/edit`}
+              className="pill-ghost inline-flex h-10 w-10 items-center justify-center"
+              aria-label="Edit event"
+            >
+              <HugeiconsIcon icon={PencilIcon} size={19} />
+            </Link>
             <button
               type="button"
               onClick={handleShareEvent}
-              className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/45 text-white border border-white/15 hover:bg-black/65 transition-colors"
+              className="pill-ghost inline-flex h-10 w-10 items-center justify-center"
               aria-label="Share event"
             >
               <HugeiconsIcon icon={Share01Icon} size={18} />
@@ -139,20 +146,20 @@ export default function EventDetailsPageView() {
           </div>
         </div>
 
-        <div className="px-5 pt-6 pb-8 space-y-6 bg-[#050505]">
+        <div className="space-y-6 px-5 pb-8 pt-6">
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
               <span
-                className={`inline-flex items-center px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest border ${
+                className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
                   isPublic
-                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                    : 'bg-white/10 text-zinc-200 border-white/15'
+                    ? 'bg-emerald-500/15 text-emerald-300'
+                    : 'bg-white/10 text-zinc-200'
                 }`}
               >
                 {isPublic ? 'Public event' : 'Private album'}
               </span>
               {showPaidBadge ? (
-                <span className="inline-flex items-center px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-amber-500/15 text-amber-200 border border-amber-500/35">
+                <span className="inline-flex items-center rounded-full bg-amber-500/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-200">
                   Paid event
                 </span>
               ) : null}
@@ -162,7 +169,7 @@ export default function EventDetailsPageView() {
               <UserAvatar
                 user={{ avatarUrl: host?.avatarUrl }}
                 size={40}
-                className="shrink-0 border border-white/15"
+                className="shrink-0"
               />
               <p className="text-sm text-zinc-300">
                 Hosted by{' '}
@@ -172,7 +179,7 @@ export default function EventDetailsPageView() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-4 min-h-[6.5rem]">
+            <div className="glass-field min-h-[6.5rem] rounded-2xl p-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center shrink-0">
                   <HugeiconsIcon icon={ClockIcon} size={14} className="text-white" />
@@ -187,7 +194,7 @@ export default function EventDetailsPageView() {
                 </p>
               ) : null}
             </div>
-            <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-4 min-h-[6.5rem]">
+            <div className="glass-field min-h-[6.5rem] rounded-2xl p-4">
               <div className="flex gap-3">
                 <div className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center shrink-0 self-start mt-0.5">
                   <HugeiconsIcon icon={Location01Icon} size={14} className="text-white" />
@@ -222,7 +229,7 @@ export default function EventDetailsPageView() {
                 {ticketTiers.map((tier) => (
                   <li
                     key={tier.id || tier.label}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-zinc-900/40 px-3 py-2.5"
+                    className="glass-field flex items-center justify-between gap-3 rounded-2xl px-3 py-2.5"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-white">{tier.label}</p>
@@ -251,13 +258,13 @@ export default function EventDetailsPageView() {
                 {featuredPeople.map((person) => (
                   <li
                     key={person.id || person.userId}
-                    className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-zinc-900/40 px-3 py-2.5"
+                    className="glass-field flex items-center justify-between gap-2 rounded-2xl px-3 py-2.5"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <UserAvatar
                         user={{ avatarUrl: person.avatarUrl }}
                         size={40}
-                        className="shrink-0 border border-white/10"
+                        className="shrink-0"
                       />
                       <div className="min-w-0">
                         <p className="text-sm text-white truncate font-medium">
@@ -289,7 +296,7 @@ export default function EventDetailsPageView() {
               </div>
               <Link
                 href={`/dashboard/events/${eventId}/members`}
-                className="w-full rounded-xl border border-white/10 bg-zinc-900/40 px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors text-left"
+                className="glass-field flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition hover:bg-white/[0.08]"
               >
                 <div className="flex items-center -space-x-2">
                   {previewAvatars.length === 0 ? (

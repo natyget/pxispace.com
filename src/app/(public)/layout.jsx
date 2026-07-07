@@ -12,7 +12,7 @@ export default function PublicLayout({ children }) {
 
   useEffect(() => {
     if (pathname === '/' || pathname === '/home') {
-      const timer = setTimeout(() => setHydrated(true), 1800);
+      const timer = setTimeout(() => setHydrated(true), 900);
       return () => clearTimeout(timer);
     } else {
       setHydrated(true);
@@ -25,9 +25,15 @@ export default function PublicLayout({ children }) {
     pathname === '/home' ||
     pathname === '/about' ||
     pathname === '/beta' ||
+    pathname === '/faq' ||
+    pathname === '/pricing' ||
     pathname?.startsWith('/features') ||
     pathname?.startsWith('/competitors') ||
+    pathname?.startsWith('/editorial') ||
+    pathname?.startsWith('/discover') ||
     pathname === '/organizers' ||
+    pathname === '/platform' ||
+    pathname === '/book' ||
     pathname?.startsWith('/events') ||
     pathname?.startsWith('/u/') ||
     pathname?.startsWith('/p/') ||

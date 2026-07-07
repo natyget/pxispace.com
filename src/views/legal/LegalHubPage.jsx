@@ -12,7 +12,7 @@ const SECTIONS = [
   {
     id: 'privacy',
     title: 'Privacy Policy',
-    tldr: "We collect only what we need to run the party. Your face scan never leaves your phone. Your location is checked once at ticket scan, not tracked continuously. You own your photos. We use military-grade stateless tokens instead of passwords. We never sell your data.",
+    tldr: "We collect only what we need to run the party. Raw face scans never leave your device — only an encrypted, irreversible vector used to find your photos. Your location is checked once at ticket scan, not tracked continuously. You own your photos. We use military-grade stateless tokens instead of passwords. We never sell your data.",
     content: (
       <div className="space-y-8">
         <div>
@@ -47,17 +47,20 @@ const SECTIONS = [
                 <HugeiconsIcon icon={Shield01Icon} className="w-5 h-5" />
                 2.3 Biometric Data — BIPA Disclosure (Illinois)
               </h4>
-              <p className="text-gray-400 text-sm mb-4">PXI's "Find My Shots" feature uses a native on-device facial geometry vector scan ("FaceVector") to identify your photos within shared event albums. This feature is subject to the Illinois Biometric Information Privacy Act (BIPA), the California Consumer Privacy Act (CPRA Sensitive Data provisions), and analogous state laws.</p>
+              <p className="text-gray-400 text-sm mb-4">PXI's "Find My Shots" feature uses facial geometry vector scanning ("FaceVector") to identify your photos within shared event albums. This feature is subject to the Illinois Biometric Information Privacy Act (BIPA), the California Consumer Privacy Act (CPRA Sensitive Data provisions), and analogous state laws.</p>
               <ul className="list-disc pl-5 space-y-2 text-sm text-gray-400">
-                <li>Biometric identifiers (facial geometry vectors) are processed locally on your device using Apple/Android native on-device ML APIs.</li>
-                <li>Raw biometric vectors are <strong>NEVER transmitted to PXI servers</strong>.</li>
+                <li>Raw selfies and face images are processed on-device (in the app or in your browser) and permanently destroyed immediately. We never transmit or store raw biometric images.</li>
+                <li>On-device processing derives a mathematical face vector — an encrypted list of numbers that cannot be reversed into a photo. Only this vector is transmitted to and stored on PXI servers, encrypted in transit (TLS) and encrypted at rest.</li>
+                <li>The stored vector is used strictly to (a) match you in event photos you attend and (b) send you a "you're in a photo" alert. It is never used for advertising, identity verification, or any purpose beyond photo matching.</li>
                 <li>A distinct, upfront Biometric Consent Screen with plain-language explanation is required before this feature is activated — affirmative opt-in only.</li>
+                <li>Photos uploaded to event albums are scanned to derive per-face vectors so opted-in attendees can be matched to their photos. We store vectors only — never face crops or copies of the uploaded images from this matching process.</li>
+                <li>Web guests without the app can run a one-time face scan locally in their browser to find themselves in an event gallery. The raw scan never leaves the browser; the derived vector is sent once over an encrypted connection for that single gallery match and is never stored.</li>
                 <li>You may revoke consent at any time via Settings &gt; Permissions &gt; Face Recognition.</li>
-                <li>Upon revocation, locally-stored vectors are deleted immediately; previously matched photo tags remain visible until manually removed by you.</li>
+                <li>Upon revocation, your server-stored enrollment vector is deleted immediately; previously matched photo tags remain visible until manually removed by you.</li>
                 <li>We NEVER sell, lease, rent, trade, or profit from biometric data.</li>
-                <li>Biometric data is never shared with third parties except: (i) on-device ML providers (Apple/Google), and (ii) as required by valid legal process.</li>
+                <li>Biometric data is never shared with third parties except: (i) infrastructure and cloud storage providers strictly as necessary to store and process the encrypted vector, and (ii) as required by valid legal process.</li>
               </ul>
-              <p className="text-xs text-gray-500 mt-4 italic">Retention: Biometric data is retained until the earlier of: (i) revocation of your consent, (ii) the original purpose (photo matching) is satisfied, or (iii) three (3) years following your last interaction with the Services.</p>
+              <p className="text-xs text-gray-500 mt-4 italic">Retention: Enrollment vectors are retained until the earliest of: (i) revocation of your consent, (ii) deletion of your account, or (iii) three (3) years following your last interaction with the Services.</p>
             </div>
 
             <div>
@@ -88,7 +91,7 @@ const SECTIONS = [
           <ul className="list-disc pl-5 space-y-2 text-gray-400">
             <li>Providing and operating the Services (account creation, event access, album grouping, photo matching, ticketing, payouts).</li>
             <li>Running the Event Lock: computing your Haversine proximity to an event venue to unlock albums.</li>
-            <li>On-device biometric matching: identifying your photos in event albums (with consent only).</li>
+            <li>Biometric photo matching: identifying photos you appear in at events you attend (opt-in only; vectors only, never raw images).</li>
             <li>Running the Odyssey gamification system: awarding XP, Stamps, and Leaderboard rankings.</li>
             <li>Processing ticket purchases, distributing payouts to vendors via Stripe Connect.</li>
             <li>Personalizing your feed, event recommendations, and suggested connections based on attendance history.</li>
@@ -130,7 +133,7 @@ const SECTIONS = [
 
             <div>
               <h4 className="text-lg font-semibold text-white/90">4.4 With Service Providers</h4>
-              <p className="text-gray-400">Stripe, Inc. (payments), Cloudflare (Edge middleware, CDN, R2 storage), Apple/Google on-device ML (facial geometry processing), Analytics providers (aggregated, non-PII data only), SMS/Push notification providers.</p>
+              <p className="text-gray-400">Stripe, Inc. (payments), Cloudflare (Edge middleware, CDN, R2 storage), on-device ML frameworks (facial geometry processing), Analytics providers (aggregated, non-PII data only), SMS/Push notification providers.</p>
             </div>
 
             <div>
@@ -148,7 +151,7 @@ const SECTIONS = [
             <li><strong className="text-white">The Circle content:</strong> 24 hours from upload (auto-deleted).</li>
             <li><strong className="text-white">The Vault content:</strong> Until manually deleted by user.</li>
             <li><strong className="text-white">Hype Gate content:</strong> Deleted at event start time.</li>
-            <li><strong className="text-white">Biometric vectors:</strong> Until consent revoked or 3 years from last interaction (whichever is earlier).</li>
+            <li><strong className="text-white">Biometric vectors:</strong> Until consent revoked, account deletion, or 3 years from last interaction — whichever is earliest.</li>
             <li><strong className="text-white">Location data (Event Lock):</strong> Deleted after DBSCAN clustering computation; aggregate metadata up to 90 days.</li>
             <li><strong className="text-white">Payment and ticketing records:</strong> 7 years (tax/legal/compliance requirements).</li>
             <li><strong className="text-white">Usage and analytics data:</strong> 24 months rolling.</li>
@@ -283,7 +286,7 @@ const SECTIONS = [
             </div>
             <div>
               <h4 className="text-lg font-semibold text-white/90">10.2 For Vendors (Event Hosts)</h4>
-              <p>Fee structure: Consumer Variable Fee (4.59%) and Platform Service Fee ($0.99 flat). Payouts via Stripe Connect within 5 business days post-event. Vendors are responsible for chargebacks, refunds, and taxes.</p>
+              <p>Fee structure: Consumer Variable Fee (4.59%) and Platform Service Fee ($0.99 flat). Payouts via Stripe Connect typically within 2–5 business days after the event, subject to Stripe processing. Vendors are responsible for chargebacks, refunds, and taxes.</p>
             </div>
           </div>
         </div>
@@ -580,7 +583,7 @@ const SECTIONS = [
             </div>
             <div>
               <h4 className="text-lg font-semibold text-white/90">2.3 Payout Schedule</h4>
-              <p className="text-sm">Funds disbursed via Stripe Connect typically 2 business days after the event date. PXI does not hold funds beyond processing needs.</p>
+              <p className="text-sm">Funds disbursed via Stripe Connect typically within 2–5 business days after the event, subject to Stripe processing. PXI does not hold funds beyond processing needs.</p>
             </div>
           </div>
         </div>

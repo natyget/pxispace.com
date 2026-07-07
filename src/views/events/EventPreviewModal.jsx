@@ -2,10 +2,12 @@
 
 import React, { useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, Calendar01Icon, Location01Icon, Ticket01Icon } from '@hugeicons/core-free-icons';
 import Button from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
+import { spotifyEmbedSrc } from '@/lib/spotify';
 
 const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' }) => {
   const router = useRouter();
@@ -37,7 +39,7 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[8vh] md:pt-[10vh] p-4 md:p-8 overflow-y-auto"
       onClick={onClose}
     >
       {/* Backdrop — click anywhere to close */}
@@ -47,7 +49,7 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
       <div
         role="dialog"
         aria-modal="true"
-        className="relative w-full max-w-lg bg-zinc-950 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        className="relative w-full max-w-xl bg-zinc-950 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative h-56 md:h-64">
@@ -57,7 +59,7 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
             fill
             unoptimized
             className="object-cover"
-            sizes="(max-width: 640px) 100vw, 32rem"
+            sizes="(max-width: 640px) 100vw, 36rem"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent" />
           <button
@@ -86,15 +88,46 @@ const EventPreviewModal = ({ open, onClose, event, detailBasePath = '/events' })
           {event.description ? (
             <p className="text-zinc-500 text-sm leading-relaxed line-clamp-4">{event.description}</p>
           ) : null}
-          <div className="pt-2">
+          {(() => {
+            const embed = event.spotifyPlaylistUrl
+              ? spotifyEmbedSrc(event.spotifyPlaylistUrl)
+              : event.spotifyTopTrackUrl
+                ? spotifyEmbedSrc(event.spotifyTopTrackUrl)
+                : null;
+            if (!embed) return null;
+            return (
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Event Playlist</p>
+                <iframe
+                  title="Event playlist"
+                  src={embed}
+                  width="100%"
+                  height="152"
+                  frameBorder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  className="rounded-2xl"
+                />
+              </div>
+            );
+          })()}
+          <div className="pt-2 flex flex-col sm:flex-row gap-3">
             <Button
               variant="neon"
               className="w-full uppercase tracking-widest"
               onClick={goFull}
               icon={<HugeiconsIcon icon={Ticket01Icon} size={16} />}
             >
-              RSVP
+              {event.ticketType === 'PAID' || (event.price && event.price !== 'Free') ? 'Get Ticket' : 'RSVP'}
             </Button>
+            <Link
+              href={`/album/${event.albumId || event.id}`}
+              onClick={onClose}
+              className="w-full flex items-center justify-center gap-2 rounded-full bg-[var(--pxi-orange)]/15 hover:bg-[var(--pxi-orange)]/25 px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[var(--pxi-orange)] transition hover:scale-105 border-0 shadow-md"
+            >
+              <HugeiconsIcon icon={Calendar01Icon} size={16} className="text-[var(--pxi-orange)]" />
+              Open Album
+            </Link>
           </div>
         </div>
       </div>

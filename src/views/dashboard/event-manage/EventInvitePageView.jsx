@@ -51,13 +51,13 @@ function formatInviteWhen(iso) {
   }
 }
 
-export default function EventInvitePageView() {
+export default function EventInvitePageView({ initialTab = 'send', showTabs = true }) {
   const { user } = useAuth();
   const { event, eventId, albumId, participants, reloadParticipants, reloadFeaturedPeople } =
     useEventManage();
 
   // Tabs
-  const [invitePageTab, setInvitePageTab] = useState('send');
+  const [invitePageTab, setInvitePageTab] = useState(initialTab);
 
   // Search
   const [inviteQuery, setInviteQuery] = useState('');
@@ -395,7 +395,7 @@ export default function EventInvitePageView() {
   return (
     <div className="space-y-5">
       {/* Page tabs */}
-      <div role="tablist" className="flex flex-wrap gap-2">
+      {showTabs ? <div role="tablist" className="dashboard-segmented-toggle w-full">
         {[
           { id: 'send', icon: <HugeiconsIcon icon={SentIcon} size={14} />, label: 'Send invites' },
           { id: 'status', icon: <HugeiconsIcon icon={HelpCircleIcon} size={14} />, label: 'Invite status' },
@@ -406,21 +406,18 @@ export default function EventInvitePageView() {
             role="tab"
             aria-selected={invitePageTab === t.id}
             onClick={() => setInvitePageTab(t.id)}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border transition-colors ${
-              invitePageTab === t.id
-                ? 'border-pxi-purple bg-pxi-purple/15 text-white'
-                : 'border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
-            }`}
+            className="dashboard-segmented-toggle__item"
+            data-active={invitePageTab === t.id}
           >
             {t.icon}
             {t.label}
           </button>
         ))}
-      </div>
+      </div> : null}
 
       {/* ── Send tab ─────────────────────────────────────────────────────── */}
       {invitePageTab === 'send' && (
-        <section role="tabpanel" className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
+        <section role="tabpanel" className="glass-panel overflow-hidden rounded-2xl">
 
           {/* Event hero */}
           {event && (
@@ -682,7 +679,7 @@ export default function EventInvitePageView() {
 
       {/* ── Status tab ───────────────────────────────────────────────────── */}
       {invitePageTab === 'status' && (
-        <section role="tabpanel" className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
+        <section role="tabpanel" className="glass-panel overflow-hidden rounded-2xl">
           <div className="p-5 border-b border-white/5 flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-bold text-white uppercase tracking-widest text-sm">Direct invites</h2>
             <button

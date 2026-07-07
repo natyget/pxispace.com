@@ -2,28 +2,39 @@ import Home from '@/views/home/Home';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { HOMEPAGE_JSONLD } from '@/lib/seo/schemas';
 
+const TITLE = 'PXI — Tickets, One Shared Camera Roll & the Morning-After Scrapbook';
+const DESCRIPTION =
+  'Never lose the night. PXI is the event app for tickets, a live shared camera roll, and a scrapbook that compiles itself the morning after — for attendees and organizers.';
+
 export const metadata = {
-  title: 'PXI | Premier Event Operating System & Digital Scrapbook',
-  description:
-    'Transform nightlife with PXI. A privacy-first event operating system offering white-label ticketing for organizers and digital scrapbooks for attendees.',
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
   alternates: {
     canonical: 'https://pxispace.com',
   },
   openGraph: {
-    title: 'PXI | Premier Event Operating System & Digital Scrapbook',
-    description:
-      'Transform nightlife with PXI. A privacy-first event operating system offering white-label ticketing for organizers and digital scrapbooks for attendees.',
+    title: TITLE,
+    description: DESCRIPTION,
     url: 'https://pxispace.com',
+    images: [{ url: '/og?title=Never%20lose%20the%20night', width: 1200, height: 630, alt: 'PXI' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ['/og?title=Never%20lose%20the%20night'],
   },
 };
 
 export default function Page() {
   return (
     <>
-      {/* Visually hidden H1 for SEO — visible heading is in client Hero component */}
-      <h1 className="hidden">
-        PXI — Premier Event Operating System & Digital Scrapbook
-      </h1>
+      {/* Descriptive sr-only copy for SEO; the visible H1 lives in HeroEditorial */}
+      <p className="sr-only">
+        PXI is an event platform for tickets, a live shared camera roll, and the morning-after
+        scrapbook. Discover events, RSVP or buy tickets, shoot into one shared gallery, earn
+        verified passport stamps, and share your night to Instagram in one tap.
+      </p>
       <Home />
       <JsonLd data={HOMEPAGE_JSONLD} />
     </>

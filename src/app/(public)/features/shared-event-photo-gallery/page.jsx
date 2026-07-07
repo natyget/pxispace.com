@@ -24,12 +24,12 @@ const PAGE_JSONLD = {
   applicationCategory: 'EntertainmentApplication',
   url: 'https://pxispace.com/features/shared-event-photo-gallery',
   description:
-    'A live shared event photo gallery app with tactile native camera, real-time streaming, Wilson-scored engagement ranking, and automated DBSCAN-clustered digital scrapbook compilation.',
+    'A live shared event photo gallery app with a tactile native camera, real-time streaming, smart ranking that surfaces the best shots, and an automatically compiled digital scrapbook.',
   featureList: [
     'Tactile Native Camera',
     'Real-Time Shared Thread',
-    'Wilson-Scored Engagement Graph',
-    'DBSCAN Scrapbook Compilation',
+    'Best-Shots Ranking',
+    'Auto-Compiled Scrapbook',
     'Zero Location Tracking',
   ],
   offers: {

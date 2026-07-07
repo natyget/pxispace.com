@@ -2,7 +2,78 @@
 
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowDownRightIcon, ArrowUpRightIcon } from '@hugeicons/core-free-icons';
-import DataSourceBadge from './DataSourceBadge';
+
+function trendIconFor(trend) {
+    if (trend === 'up') return ArrowUpRightIcon;
+    if (trend === 'down') return ArrowDownRightIcon;
+    return null;
+}
+
+export function StatRow({ items = [], className = '' }) {
+    return (
+        <div
+            className={`glass-field grid gap-3 rounded-[1.25rem] p-4 ${className}`.trim()}
+            style={{ gridTemplateColumns: `repeat(${Math.min(Math.max(items.length, 1), 3)}, minmax(0, 1fr))` }}
+        >
+            {items.map((item) => (
+                <div key={item.label} className="min-w-0">
+                    <p className="truncate text-[10px] font-bold uppercase tracking-widest text-white/40">{item.label}</p>
+                    <p className="mt-1 truncate text-xl font-black tracking-normal text-white">{item.value}</p>
+                    {item.detail ? <p className="mt-0.5 truncate text-xs text-zinc-500">{item.detail}</p> : null}
+                </div>
+            ))}
+        </div>
+    );
+}
+
+export function MicroChart({ points = [], type = 'line', color = '#d84aff', className = '' }) {
+    const values = Array.isArray(points) ? points.filter((point) => Number.isFinite(Number(point))).map(Number) : [];
+    const max = Math.max(...values, 1);
+
+    if (type === 'bar') {
+        return (
+            <div className={`flex h-10 items-end gap-1 ${className}`.trim()} aria-hidden="true">
+                {values.map((value, index) => (
+                    <span
+                        key={`${value}-${index}`}
+                        className="w-full rounded-t-sm bg-white/45"
+                        style={{ height: `${Math.max(12, (value / max) * 100)}%` }}
+                    />
+                ))}
+            </div>
+        );
+    }
+
+    if (type === 'donut') {
+        const total = values.reduce((sum, value) => sum + value, 0) || 1;
+        const shades = values.reduce((state, value, index) => {
+            const start = state.cursor;
+            const end = start + (value / total) * 100;
+            const shade = 75 - index * 10;
+            return {
+                cursor: end,
+                segments: [...state.segments, `rgb(${shade} ${shade} ${shade}) ${start}% ${end}%`],
+            };
+        }, { cursor: 0, segments: [] }).segments;
+        return (
+            <span
+                className={`block h-12 w-12 rounded-full ${className}`.trim()}
+                style={{ background: `conic-gradient(${shades.join(', ')})` }}
+                aria-hidden="true"
+            />
+        );
+    }
+
+    const polyline = values
+        .map((point, index) => `${(index / Math.max(values.length - 1, 1)) * 100},${24 - (point / max) * 20}`)
+        .join(' ');
+
+    return (
+        <svg viewBox="0 0 100 24" preserveAspectRatio="none" className={`h-8 w-full ${className}`.trim()} aria-hidden="true">
+            <polyline fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={polyline} />
+        </svg>
+    );
+}
 
 export default function MetricCard({
     title,
@@ -10,23 +81,22 @@ export default function MetricCard({
     description,
     icon,
     trend = 'neutral',
-    source = 'Derived',
     loading = false,
+    dense = true,
+    sparkline = null,
+    actions = null,
 }) {
-    const trendClass =
-        trend === 'up'
-            ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-            : trend === 'down'
-                ? 'bg-red-500/10 text-red-300 border-red-500/30'
-                : 'bg-white/5 text-zinc-400 border-white/10';
+    const TrendIcon = trendIconFor(trend);
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6 md:p-8 flex flex-col justify-between relative">
-            <div className="flex items-center justify-between mb-6">
+        <div className={`glass-panel relative flex min-h-[132px] flex-col justify-between rounded-[1.5rem] ${dense ? 'p-4 md:p-5' : 'p-5 md:p-6'}`}>
+            <div className="mb-4 flex items-center justify-between gap-3">
                 <span className="text-[11px] md:text-[12px] font-bold tracking-widest text-white/40 uppercase">{title}</span>
-                {icon ? (
-                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
-                        <HugeiconsIcon icon={icon} className="h-4 w-4 text-white" />
+                {actions ? (
+                    actions
+                ) : icon ? (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5">
+                        <HugeiconsIcon icon={icon} className="h-4 w-4 text-white/75" />
                     </div>
                 ) : null}
             </div>
@@ -34,13 +104,20 @@ export default function MetricCard({
                 <div className="h-10 w-24 bg-white/5 rounded animate-pulse" />
             ) : (
                 <div className="mt-auto flex flex-col items-start gap-3">
-                    <div className="text-3xl lg:text-[40px] font-[900] text-white tracking-tighter leading-none">{value}</div>
-                    <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] md:text-[11px] font-bold tracking-wider uppercase border ${trendClass}`}>
-                        {trend === 'up' ? <HugeiconsIcon icon={ArrowUpRightIcon} className="w-3 h-3" /> : null}
-                        {trend === 'down' ? <HugeiconsIcon icon={ArrowDownRightIcon} className="w-3 h-3" /> : null}
+                    <div className="max-w-full truncate text-2xl font-[900] leading-none tracking-normal text-white">{value}</div>
+                    {sparkline ? (
+                        <div className="h-8 w-full overflow-hidden rounded-md bg-white/[0.035]">
+                            {Array.isArray(sparkline?.points) ? (
+                                <MicroChart points={sparkline.points} color={sparkline.color || '#d84aff'} />
+                            ) : (
+                                sparkline
+                            )}
+                        </div>
+                    ) : null}
+                    <div className="pill-ghost inline-flex max-w-full items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-300 md:text-[11px]">
+                        {TrendIcon ? <HugeiconsIcon icon={TrendIcon} className="h-3 w-3 shrink-0 text-white/50" /> : null}
                         <span>{description}</span>
                     </div>
-                    <DataSourceBadge source={source} />
                 </div>
             )}
         </div>

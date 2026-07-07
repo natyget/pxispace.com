@@ -109,7 +109,7 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
                         className="object-cover opacity-90"
                         priority
                     />
-                    <div className="pointer-events-none absolute inset-0 z-[2] overflow-hidden opacity-90">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 bottom-[70px] z-[2] overflow-hidden opacity-90 pr-12">
                         <PassportStampsLayer
                             events={filteredEvents}
                             availableYears={availableYears}
@@ -139,7 +139,7 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
             }
             bottom={
                 <div className="relative h-full px-3 py-2 sm:px-4 sm:py-2">
-                    <div className="mx-auto w-full max-w-[380px] shrink-0 overflow-hidden rounded-lg px-2 sm:px-3">
+                    <div className="mx-auto w-full max-w-[380px] shrink-0 px-2 sm:px-3">
                         <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1 pr-1">
                                 <h2 className="text-[14px] font-bold uppercase tracking-[0.16em] text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">
@@ -273,7 +273,9 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
                                 </div>
                             </div>
                         </div>
+                    </div>
 
+                    <div className="mx-auto w-full max-w-[380px] shrink-0 px-2 sm:px-3">
                         <PassportMrzFooter
                             variant="inline"
                             userId={user?.id}

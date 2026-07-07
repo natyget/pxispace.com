@@ -1,287 +1,213 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Shield01Icon } from '@hugeicons/core-free-icons';
+import { ArrowRight, Images, Printer, ShieldCheck, Ticket, UserRound } from 'lucide-react';
+import SectionShell from '@/components/marketing/SectionShell';
+import FaqList from '@/components/marketing/FaqList';
 
-const SECTIONS = [
+const EASE = [0.16, 1, 0.3, 1];
+
+const TOPICS = [
   {
-    id: 'account',
+    icon: UserRound,
     title: 'Account & Access',
-    tldr: "Getting started is quick. If you lose access, use the forgot password flow or email us. Need to wipe your data? You can delete your account right from Settings.",
-    content: (
-      <div className="space-y-8 text-gray-400">
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">1. How do I create a PXI account?</h3>
-          <p className="leading-relaxed">Download the PXI app and sign up with your email, Apple ID, or Google account. Verification takes a few seconds and you can join or create events straight away.</p>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">2. I can't log in — what should I do?</h3>
-          <p className="leading-relaxed">Try the 'Forgot password' link on the login screen. If you signed up with Apple or Google, make sure you're using the same provider. Still stuck? Email <span className="text-legal-hub-accent">support@pxispace.com</span> with your account email and we'll sort it out.</p>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">3. How do I delete my account?</h3>
-          <p className="leading-relaxed">Go to Settings → Account → Delete Account in the app. This permanently removes your profile, photos, and data. If you need help completing the process, email support@pxispace.com.</p>
-        </div>
-      </div>
-    )
+    body: 'Sign up, log back in, recover a password, or delete your account for good.',
+    href: '/faq',
+    cta: 'Read the answers',
   },
   {
-    id: 'events',
+    icon: Images,
     title: 'Events & Albums',
-    tldr: "Hosts control who sees what and when. Most albums unlock when you arrive at the venue. You can easily save your photos, unless the host has specifically restricted downloads.",
-    content: (
-      <div className="space-y-8 text-gray-400">
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">1. How do I join an event?</h3>
-          <p className="leading-relaxed">Tap the event link or QR code shared by the host, or search for the event by name in the app. Some events require a valid ticket for access — make sure you're checked in at the venue.</p>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">2. Why can't I see the event album?</h3>
-          <p className="leading-relaxed">Album access is controlled by the host. Most albums unlock once you are checked in at the venue. Check that your location permissions are on and that you have the latest version of the app.</p>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">3. How do I create and host an event?</h3>
-          <p className="leading-relaxed">Tap the '+' button on the Events tab and follow the setup flow. You can set a venue, upload a cover photo, enable ticketing, and configure album permissions — all from the app.</p>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">4. Can I download photos from an event?</h3>
-          <p className="leading-relaxed">Yes. Open any photo in the album, tap the download icon, and it will save to your camera roll. Hosts can set download permissions, so if the option is greyed out the host has disabled it for that event.</p>
-        </div>
-      </div>
-    )
+    body: 'Joining events, unlocking shared albums, hosting your own, and saving your shots.',
+    href: '/faq',
+    cta: 'Read the answers',
   },
   {
-    id: 'hardware',
-    title: 'PXIClip Device',
-    tldr: "Hold the button for 3 seconds to pair. Make sure it's charged and that the ZINK paper is loaded glossy-side up with the blue card at the bottom.",
-    content: (
-      <div className="space-y-8 text-gray-400">
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">1. How do I set up PXIClip?</h3>
-          <p className="leading-relaxed">Charge PXIClip fully before first use. Open the PXI app, go to the Clip tab, and tap 'Connect Device'. Enable Bluetooth when prompted and hold PXIClip in pairing mode (hold the power button for 3 seconds). The app will find it automatically.</p>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">2. PXIClip won't pair with my phone — how do I fix it?</h3>
-          <p className="leading-relaxed">First, make sure Bluetooth is on and PXI has Bluetooth permission in your phone's settings. Force-close the app, restart PXIClip, and try again. If the issue persists, forget the device in your Bluetooth settings and re-pair from scratch. Still not working? Email <span className="text-legal-hub-accent">support@pxispace.com</span> with your device serial number.</p>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">3. What paper does PXIClip use?</h3>
-          <p className="leading-relaxed">PXIClip uses standard 2×3 inch ZINK (Zero Ink) paper. We recommend using PXI-branded paper packs for the best colour accuracy and print life. Third-party ZINK paper also works in most cases.</p>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">4. My prints are coming out faded or streaky — what's wrong?</h3>
-          <p className="leading-relaxed">Faded prints are usually caused by low battery or paper loaded face-down. Make sure PXIClip is at least 50% charged and that the paper is loaded glossy-side up with the blue calibration sheet at the bottom of the stack.</p>
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 'tickets',
+    icon: Ticket,
     title: 'Tickets & Payments',
-    tldr: "Buy tickets right in the app. If you're a host, your payouts process automatically via Stripe and typically land in your account 2-7 business days after the event ends.",
-    content: (
-      <div className="space-y-8 text-gray-400">
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">1. How do I buy a ticket?</h3>
-          <p className="leading-relaxed">Find the event in the app or via a shared link, tap 'Get Tickets', choose your ticket type, and complete checkout with Apple Pay, Google Pay, or a card. Your ticket lives in the Tickets tab and can be shown at the door.</p>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">2. I was charged but can't access the event — what do I do?</h3>
-          <p className="leading-relaxed">Pull to refresh on the Tickets tab first, as the ticket can take a moment to appear. If it still isn't there after a minute, email <span className="text-legal-hub-accent">support@pxispace.com</span> with your order confirmation and we'll resolve it right away.</p>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">3. How do host payouts work?</h3>
-          <p className="leading-relaxed">Ticket revenue is processed through Stripe. Once your event closes, funds are transferred to your connected bank account on a standard Stripe payout schedule (usually 2–7 business days). For payout questions, email <span className="text-legal-hub-accent">support@pxispace.com</span> with your event name.</p>
-        </div>
-      </div>
-    )
+    body: 'Buying tickets, passes that have not landed yet, and how host payouts work via Stripe.',
+    href: '/faq',
+    cta: 'Read the answers',
   },
   {
-    id: 'privacy',
+    icon: ShieldCheck,
     title: 'Privacy & Safety',
-    tldr: "We don't sell your data. Face matching happens on your device, not our servers. If you see something unsafe, report it instantly.",
-    content: (
-      <div className="space-y-8 text-gray-400">
-        <div className="bg-legal-hub-surface border border-legal-hub-border p-6 rounded-xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-1 h-full bg-legal-hub-accent"></div>
-          <h3 className="text-lg font-bold text-legal-hub-accent mb-2 flex items-center gap-2">
-            <HugeiconsIcon icon={Shield01Icon} className="w-5 h-5" />
-            1. How does Find My Shots work?
-          </h3>
-          <p className="text-gray-400">Find My Shots uses on-device face recognition to surface photos that include you from an event album. No biometric data is sent to our servers. You can turn the feature off at any time in Settings → Privacy.</p>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">2. Is my data secure?</h3>
-          <p className="leading-relaxed">Yes. PXI uses encrypted connections for all data in transit, session-based authentication, and strict access controls so event content is only visible to verified attendees. See our Privacy Policy for full details.</p>
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-white">3. How do I report a safety or trust issue?</h3>
-          <p className="leading-relaxed">For content or behaviour that violates our community guidelines, use the in-app report button on any photo, profile, or event. For urgent trust and safety matters, email <span className="text-legal-hub-accent">trust@pxispace.com</span> directly.</p>
-        </div>
-      </div>
-    )
-  }
+    body: 'How Find My Shots works, how your data is protected, and how to report anything off.',
+    href: '/faq',
+    cta: 'Read the answers',
+  },
+  {
+    icon: Printer,
+    title: 'PXIClip Device',
+    body: 'Pairing your Clip, loading ZINK paper, and fixing faded or streaky prints.',
+    href: '#pxiclip',
+    cta: 'Jump to device help',
+  },
 ];
 
+const PXICLIP_FAQS = [
+  {
+    q: 'How do I set up PXIClip?',
+    a: 'Charge PXIClip fully before first use. Open the PXI app, go to the Clip tab, and tap Connect Device. Enable Bluetooth when prompted and hold the power button for 3 seconds to enter pairing mode. The app finds it automatically.',
+  },
+  {
+    q: "PXIClip won't pair with my phone. How do I fix it?",
+    a: 'Make sure Bluetooth is on and PXI has Bluetooth permission in your phone settings. Force close the app, restart PXIClip, and try again. If it still fails, forget the device in your Bluetooth settings and re-pair from scratch. Still not working? Email support@pxispace.com with your device serial number.',
+  },
+  {
+    q: 'What paper does PXIClip use?',
+    a: 'PXIClip uses standard 2x3 inch ZINK (Zero Ink) paper. PXI-branded packs give the best colour accuracy and print life, and third-party ZINK paper works in most cases.',
+  },
+  {
+    q: 'My prints look faded or streaky. What is wrong?',
+    a: 'Faded prints usually mean low battery or paper loaded face down. Keep PXIClip at least 50% charged and load the paper glossy side up with the blue calibration sheet at the bottom of the stack.',
+  },
+];
+
+const fadeUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-80px' },
+  transition: { duration: 0.7, ease: EASE },
+};
+
 export default function SupportPage() {
-  const [activeSection, setActiveSection] = useState(SECTIONS[0].id);
-
-  const scrollToSection = useCallback((id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      const y = element.getBoundingClientRect().top + window.scrollY - 100;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }
-  }, []);
-
-  useEffect(() => {
-    const observers = new Map();
-
-    const handleIntersect = (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setActiveSection(entry.target.id);
-        }
-      });
-    };
-
-    const observerOptions = {
-      root: null,
-      rootMargin: '-20% 0px -75% 0px',
-      threshold: 0
-    };
-
-    const observer = new IntersectionObserver(handleIntersect, observerOptions);
-
-    SECTIONS.forEach(section => {
-      const element = document.getElementById(section.id);
-      if (element) {
-        observer.observe(element);
-        observers.set(section.id, element);
-      }
-    });
-
-    return () => {
-      observers.forEach(element => observer.unobserve(element));
-    };
-  }, []);
-
-  useEffect(() => {
-    const scrollFromHash = () => {
-      const id = window.location.hash.replace(/^#/, '');
-      if (id && SECTIONS.some((s) => s.id === id)) {
-        scrollToSection(id);
-      }
-    };
-    const t = window.setTimeout(scrollFromHash, 0);
-    const t2 = window.setTimeout(scrollFromHash, 120);
-    window.addEventListener('hashchange', scrollFromHash);
-    return () => {
-      window.clearTimeout(t);
-      window.clearTimeout(t2);
-      window.removeEventListener('hashchange', scrollFromHash);
-    };
-  }, [scrollToSection]);
-
   return (
-    <div className="legal-hub min-h-screen bg-legal-hub-bg text-legal-hub-text selection:bg-legal-hub-accent selection:text-black">
-      <header className="pt-8 pb-12 md:pt-10 md:pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-legal-hub-border">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-3xl"
+    <div className="landing-v2 bg-black text-white">
+      {/* Hero */}
+      <section className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-28">
+        <div
+          className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[55vh] w-[80vw] max-w-[900px] -translate-x-1/2 rounded-full bg-pxi-purple/[0.08] blur-[160px]"
+          aria-hidden
+        />
+        <div className="mx-auto max-w-[1200px] px-6">
+          <span className="eyebrow">Support</span>
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: EASE }}
+            className="display-1 mt-6 max-w-4xl"
+          >
+            Here to <span className="text-pxi-purple">help.</span>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1, ease: EASE }}
+            className="body-lead mt-8 max-w-2xl"
+          >
+            A real person reads every message. Most answers already live in the FAQ, and everything
+            else lands at <strong>support@pxispace.com</strong>, usually answered within a day.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: EASE }}
+            className="mt-10 flex flex-wrap items-center gap-4"
+          >
+            <Link href="/faq" className="glow-cta px-8 py-4 text-sm">
+              Browse the full FAQ <ArrowRight className="h-4 w-4" />
+            </Link>
+            <a href="mailto:support@pxispace.com" className="pill-ghost px-8 py-4 text-sm font-semibold">
+              Email support
+            </a>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Topics */}
+      <SectionShell eyebrow="Browse by topic" pad="default">
+        <motion.h2 {...fadeUp} className="display-2 mt-6 max-w-2xl">
+          Find your answer fast.
+        </motion.h2>
+        <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {TOPICS.map((topic) => {
+            const Icon = topic.icon;
+            const isAnchor = topic.href.startsWith('#');
+            const inner = (
+              <>
+                <Icon className="h-6 w-6 text-pxi-purple" />
+                <h3 className="mt-5 text-lg font-semibold text-white">{topic.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-400">{topic.body}</p>
+                <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-white">
+                  {topic.cta} <ArrowRight className="h-4 w-4" />
+                </span>
+              </>
+            );
+            const cardClass =
+              'group flex flex-col items-start rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 transition-colors hover:border-white/[0.16]';
+            return (
+              <motion.div key={topic.title} {...fadeUp}>
+                {isAnchor ? (
+                  <a href={topic.href} className={cardClass}>
+                    {inner}
+                  </a>
+                ) : (
+                  <Link href={topic.href} className={cardClass}>
+                    {inner}
+                  </Link>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </SectionShell>
+
+      {/* PXIClip device help */}
+      <SectionShell id="pxiclip" eyebrow="PXIClip device" pad="default" className="scroll-mt-20">
+        <motion.h2 {...fadeUp} className="display-3 mt-6">
+          Get your Clip printing.
+        </motion.h2>
+        <motion.div {...fadeUp} className="mt-10">
+          <FaqList faqs={PXICLIP_FAQS} />
+        </motion.div>
+      </SectionShell>
+
+      {/* Trust & safety */}
+      <SectionShell pad="default">
+        <motion.div
+          {...fadeUp}
+          className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8 md:p-12"
         >
-          <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-[0.9] mb-6 text-[#E0E0E0]">
-            The Help Center.
-          </h1>
-          <p className="text-xl md:text-2xl text-[#AAAAAA] font-medium tracking-tight mb-4 italic">
-            Answers. Hardware. Accounts.
-          </p>
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-mono text-[#AAAAAA] uppercase tracking-widest">
-            <span>Contact: support@pxispace.com</span>
-            <span>Trust & Safety: trust@pxispace.com</span>
+          <div className="flex items-start gap-4">
+            <ShieldCheck className="mt-1 h-6 w-6 shrink-0 text-pxi-purple" />
+            <div>
+              <h2 className="display-3">Trust and safety, taken seriously.</h2>
+              <p className="body-lead mt-4 max-w-2xl">
+                For content or behaviour that breaks our community guidelines, use the in-app report
+                button on any photo, profile, or event. For urgent matters, email{' '}
+                <a
+                  href="mailto:trust@pxispace.com"
+                  className="text-pxi-purple underline-offset-4 hover:underline"
+                >
+                  trust@pxispace.com
+                </a>{' '}
+                and it goes straight to the team.
+              </p>
+            </div>
           </div>
         </motion.div>
-      </header>
+      </SectionShell>
 
-      {/* Mobile Navigation (Sticky) */}
-      <div className="md:hidden sticky top-0 z-30 bg-legal-hub-bg/95 backdrop-blur pt-4 pb-2 border-b border-legal-hub-border">
-        <div className="flex overflow-x-auto legal-hub-hide-scrollbar px-4 gap-6">
-          {SECTIONS.map((section) => (
-            <button
-              key={`mobile-${section.id}`}
-              onClick={() => scrollToSection(section.id)}
-              className={`whitespace-nowrap pb-2 text-lg transition-all ${
-                activeSection === section.id 
-                  ? 'font-bold text-white' 
-                  : 'font-normal text-gray-500'
-              }`}
-            >
-              {section.title}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-24">
-        <div className="flex flex-col md:flex-row gap-12 lg:gap-24">
-          
-          {/* Desktop Sidebar */}
-          <aside className="hidden md:block w-1/4 shrink-0">
-            <div className="sticky top-28 flex flex-col space-y-6">
-              {SECTIONS.map((section) => (
-                <button
-                  key={`desktop-${section.id}`}
-                  onClick={() => scrollToSection(section.id)}
-                  className={`text-left transition-all text-xl ${
-                    activeSection === section.id 
-                      ? 'font-bold text-white' 
-                      : 'font-normal text-gray-500 hover:text-white'
-                  }`}
-                >
-                  {section.title}
-                </button>
-              ))}
-            </div>
-          </aside>
-
-          {/* Content Panel */}
-          <div className="w-full md:w-3/4 space-y-24 md:space-y-32 pb-32">
-            {SECTIONS.map((section) => (
-              <section 
-                key={section.id} 
-                id={section.id}
-                className="scroll-mt-28"
-              >
-                <div className="mb-8">
-                  <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-8">
-                    {section.title}
-                  </h2>
-                  
-                  {/* TL;DR Box */}
-                  <div className="bg-neon-card shadow-neon-card p-8 md:p-12 rounded-[32px] mb-12 flex flex-col items-center justify-center text-center">
-                    <h3 
-                      className="font-black uppercase text-white text-4xl md:text-5xl leading-none mb-6 ghost-echo"
-                      data-text="TL;DR"
-                    >
-                      TL;DR
-                    </h3>
-                    <p className="text-white/90 font-light text-lg md:text-xl max-w-3xl">
-                      {section.tldr}
-                    </p>
-                  </div>
-                </div>
-
-                {section.content}
-              </section>
-            ))}
+      {/* Close */}
+      <SectionShell pad="loose">
+        <motion.div {...fadeUp} className="flex flex-col items-center text-center">
+          <h2 className="display-2 max-w-2xl">Still need a hand?</h2>
+          <p className="body-lead mt-6 max-w-xl">
+            Send as much detail as you can, screenshots help, and we will get you back to the night.
+          </p>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            <a href="mailto:support@pxispace.com" className="glow-cta px-8 py-4 text-sm">
+              Email support@pxispace.com <ArrowRight className="h-4 w-4" />
+            </a>
+            <Link href="/faq" className="pill-ghost px-8 py-4 text-sm font-semibold">
+              Read the FAQ
+            </Link>
           </div>
-        </div>
-      </main>
+        </motion.div>
+      </SectionShell>
     </div>
   );
 }

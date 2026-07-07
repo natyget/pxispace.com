@@ -1,0 +1,22 @@
+# PXI
+
+> PXI is a privacy-first event platform built around the memory. Attendees discover events, buy tickets, shoot into one live shared camera roll, and wake up to a scrapbook that compiles itself the morning after — plus a digital passport of verified attendance stamps. Organizers get white-label ticketing (revenue paid straight to them via Stripe), live door scanning, real-time analytics, audience campaigns, and forgery-proof signed tickets. Pricing is simple: free to use, with a flat $0.99 platform fee on paid tickets. Free events cost nothing.
+
+## Core pages
+- [Home](https://pxispace.com/): What PXI is — tickets, the live shared camera roll, and the morning-after scrapbook, for attendees and organizers.
+- [Platform](https://pxispace.com/platform): The organizer product — white-label ticketing, live door control, analytics, and audience tools.
+- [Pricing](https://pxispace.com/pricing): Free tool; flat $0.99 per paid ticket; free events are free; early-access perks; contact and demo booking.
+- [Events](https://pxispace.com/events): Discover public events and open the app; the product surface, separate from the marketing site.
+- [About](https://pxispace.com/about): Why PXI exists — memory is the product; privacy-first, organizer-friendly.
+
+## Features
+- [Shared event photo gallery](https://pxispace.com/features/shared-event-photo-gallery): One live camera per event; everyone shoots into a single thread.
+- [Digital event passport](https://pxispace.com/features/digital-event-passport): Verified attendance stamps and an Odyssey score, Bronze to Platinum.
+- [White-label ticketing](https://pxispace.com/features/white-label-event-ticketing): Your brand, your revenue, paid directly via Stripe.
+- [Event promoter analytics](https://pxispace.com/features/event-promoter-analytics): Hype, funnels, and heatmaps in real time.
+- [Instagram event sharing](https://pxispace.com/features/instagram-event-sharing): One-tap framed post cards from your scrapbook, for trips and organizer promo.
+
+## More
+- [PXI vs alternatives](https://pxispace.com/competitors/partiful-luma-alternative): How PXI compares as an all-in-one event platform.
+- [Editorial](https://pxispace.com/editorial): Stories and field notes from the night.
+- [Support](https://pxispace.com/support): Help center and FAQs.

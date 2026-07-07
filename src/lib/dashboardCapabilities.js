@@ -107,14 +107,54 @@ export async function getDashboardCapabilities(userOrId) {
     const notifications =
         notificationsResult.status === 'fulfilled' ? (notificationsResult.value?.notifications || []) : [];
 
+    const freshUser = meResult.status === 'fulfilled' ? (meResult.value?.user || meResult.value) : null;
+    const determined = eventsResult.status === 'fulfilled'
+        || notificationsResult.status === 'fulfilled'
+        || meResult.status === 'fulfilled'
+        || getLocalStaffAccessHint();
+
+    return resolveDashboardCapabilities({
+        user: baseUser,
+        userId,
+        events,
+        notifications,
+        freshUser,
+        source: {
+            events: eventsResult.status === 'fulfilled',
+            notifications: notificationsResult.status === 'fulfilled',
+            user: meResult.status === 'fulfilled',
+        },
+        determined,
+    });
+}
+
+/**
+ * Resolve dashboard capabilities from already-fetched data (no network).
+ * @param {object} params
+ * @param {object} [params.user]
+ * @param {string} params.userId
+ * @param {object[]} [params.events]
+ * @param {object[]} [params.notifications]
+ * @param {object} [params.freshUser]
+ * @param {object} [params.source]
+ * @param {boolean} [params.determined]
+ */
+export function resolveDashboardCapabilities({
+    user,
+    userId,
+    events = [],
+    notifications = [],
+    freshUser = null,
+    source = {},
+    determined = false,
+}) {
     const hasBouncerFromEvents = events.some((event) => eventHasBouncerRole(event, userId));
     const hasBouncerFromNotifications = notifications.some((n) => {
         const type = String(n?.type || '').toUpperCase();
         if (type !== 'STAFF_INVITE' && type !== 'ALBUM_INVITE') return false;
         return hasAcceptedBouncerInvite(n);
     });
-    const freshUser = meResult.status === 'fulfilled' ? (meResult.value?.user || meResult.value) : null;
-    const hasBouncerFromUser = userHasStaffAccess(baseUser) || userHasStaffAccess(freshUser);
+    const hasBouncerFromUser = userHasStaffAccess(user) || userHasStaffAccess(freshUser);
     const hasBouncerFromLocalHint = getLocalStaffAccessHint();
     const hasBouncerAccess =
         hasBouncerFromEvents || hasBouncerFromNotifications || hasBouncerFromUser || hasBouncerFromLocalHint;
@@ -126,19 +166,11 @@ export async function getDashboardCapabilities(userOrId) {
             /* ignore */
         }
     }
-    const determined = eventsResult.status === 'fulfilled'
-        || notificationsResult.status === 'fulfilled'
-        || meResult.status === 'fulfilled'
-        || hasBouncerFromLocalHint;
 
     return {
         hasBouncerAccess,
         determined,
-        source: {
-            events: eventsResult.status === 'fulfilled',
-            notifications: notificationsResult.status === 'fulfilled',
-            user: meResult.status === 'fulfilled',
-        },
+        source,
         freshUser,
     };
 }
