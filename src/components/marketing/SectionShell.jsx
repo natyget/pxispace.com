@@ -1,14 +1,12 @@
 'use client';
 
 import React from 'react';
-import Eyebrow from './Eyebrow';
 
 /**
  * Editorial section wrapper — consistent max width, horizontal padding and
  * vertical rhythm across every marketing page. Sections are separated by a
  * hairline top border (never a background band) per the redesign rules.
  *
- * @param {string} [eyebrow] — small uppercase label rendered above children
  * @param {boolean} [border] — draw a top hairline separator (default true)
  * @param {boolean} [fullBleed] — skip the inner max-width container
  * @param {'default'|'tight'|'loose'} [pad] — vertical padding rhythm
@@ -46,11 +44,6 @@ export default function SectionShell({
         children
       ) : (
         <div className="mx-auto w-full max-w-[1200px] px-6">
-          {eyebrow ? (
-            <div className={eyebrowCenter ? 'flex justify-center' : ''}>
-              <Eyebrow center={eyebrowCenter}>{eyebrow}</Eyebrow>
-            </div>
-          ) : null}
           {children}
         </div>
       )}

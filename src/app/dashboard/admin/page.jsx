@@ -35,7 +35,7 @@ function StatBlock({ title, rows }) {
             <h2 className="mb-4 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">{title}</h2>
             <dl className="space-y-2">
                 {rows.map(({ label, value }) => (
-                    <div key={label} className="flex items-center justify-between gap-4 rounded-2xl bg-black/20 px-4 py-3">
+                    <div key={label} className="flex items-center justify-between gap-4 rounded-2xl bg-white/[0.035] px-4 py-3">
                         <dt className="min-w-0 truncate text-sm font-semibold text-white/55">{label}</dt>
                         <dd className="shrink-0 text-lg font-black tabular-nums text-white">{formatInteger(value)}</dd>
                     </div>
@@ -52,7 +52,7 @@ function AdminOverviewHero({ stats, isLiveAdmin }) {
     const openSupport = Number(stats?.support?.open || 0);
 
     return (
-        <section className="relative overflow-hidden rounded-[2rem] bg-black px-5 py-7 shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:px-8 md:py-8">
+        <section className="dashboard-surface-b relative overflow-hidden rounded-[2rem] px-5 py-7 md:px-8 md:py-8">
             <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                 <div className="max-w-2xl">
                     <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -68,7 +68,7 @@ function AdminOverviewHero({ stats, isLiveAdmin }) {
                     </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2 xl:w-[520px]">
-                    <SummaryTile label="Users" value={formatInteger(userTotal)} hint={`${formatInteger(stats?.users?.vendor)} vendors`} />
+                    <SummaryTile label="Users" value={formatInteger(userTotal)} hint={`${formatInteger(stats?.users?.vendor)} organizers`} />
                     <SummaryTile label="Events" value={formatInteger(eventTotal)} hint={`${formatInteger(stats?.events?.upcoming)} upcoming`} />
                     <SummaryTile label="Reports" value={formatInteger(pendingReports)} hint="Pending review" />
                     <SummaryTile label="Support" value={formatInteger(openSupport)} hint="Open tickets" />
@@ -126,7 +126,7 @@ export default function AdminOverviewPage() {
             {!resolvedLoading && !error && resolvedStats && (
                 <>
                 <div className="rounded-[1.75rem] bg-white/[0.04] p-5">
-                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Workspace</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Operating mode</p>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
                         {isLiveAdmin
                             ? 'Live admin data is enabled for this account. Use the sidebar to manage users, events, safety, support, promos, and moderation.'
@@ -136,20 +136,20 @@ export default function AdminOverviewPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <StatBlock
-                        title="Users"
+                        title="Accounts"
                         rows={[
                             { label: 'Partial', value: resolvedStats.users.partial },
                             { label: 'Citizen', value: resolvedStats.users.citizen },
-                            { label: 'Vendor', value: resolvedStats.users.vendor },
+                            { label: 'Organizers', value: resolvedStats.users.vendor },
                             ...(resolvedStats.users.admin > 0 ? [{ label: 'Platform admin', value: resolvedStats.users.admin }] : []),
                         ]}
                     />
                     <StatBlock
                         title="Events"
                         rows={[
-                            { label: 'Pending (DORMANT)', value: resolvedStats.events.pending },
-                            { label: 'Upcoming (start in future)', value: resolvedStats.events.upcoming },
-                            { label: 'Ended / archived', value: resolvedStats.events.ended },
+                            { label: 'Pending review', value: resolvedStats.events.pending },
+                            { label: 'Upcoming', value: resolvedStats.events.upcoming },
+                            { label: 'Ended or archived', value: resolvedStats.events.ended },
                         ]}
                     />
                     <StatBlock

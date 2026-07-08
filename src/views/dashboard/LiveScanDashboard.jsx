@@ -68,7 +68,7 @@ function cx(...classes) {
 function StateChip({ state, muted = false }) {
     if (state === 'Accepted') {
         return (
-            <span className={cx('inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest', muted ? 'border-white/10 bg-white/5 text-zinc-500' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300')}>
+            <span className={cx('inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest', muted ? 'bg-white/5 text-zinc-500' : 'bg-emerald-500/10 text-emerald-300')}>
                 Accepted
             </span>
         );
@@ -76,14 +76,14 @@ function StateChip({ state, muted = false }) {
 
     if (state === 'Flagged') {
         return (
-            <span className={cx('inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest', muted ? 'border-white/10 bg-white/5 text-zinc-500' : 'border-red-500/30 bg-red-500/10 text-red-300')}>
+            <span className={cx('inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest', muted ? 'bg-white/5 text-zinc-500' : 'bg-red-500/10 text-red-300')}>
                 Flagged
             </span>
         );
     }
 
     return (
-        <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+        <span className="inline-flex rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
             {state}
         </span>
     );
@@ -99,8 +99,18 @@ function GlassPanel({ children, className = '', muted = false }) {
 
 function DormantMessage() {
     return (
-        <div className="dashboard-surface-b rounded-[2rem] px-4 py-3 text-sm font-semibold text-zinc-300">
+        <div className="dashboard-surface-b rounded-[1.5rem] px-4 py-3 text-sm font-semibold text-zinc-300">
             Goes live during active events.
+        </div>
+    );
+}
+
+function OpsMetric({ label, value, hint }) {
+    return (
+        <div className="rounded-2xl bg-white/[0.045] px-4 py-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{label}</p>
+            <p className="mt-2 text-2xl font-black tabular-nums text-white">{value}</p>
+            {hint ? <p className="mt-1 text-xs font-semibold text-zinc-500">{hint}</p> : null}
         </div>
     );
 }
@@ -144,7 +154,7 @@ function TeamMessagePanel({ isLive, onOpenChat }) {
                 disabled={!isLive}
                 className={cx(
                     'inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition',
-                    isLive ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed border border-white/10 bg-white/5 text-zinc-500'
+                    isLive ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed bg-white/5 text-zinc-500'
                 )}
             >
                 <HugeiconsIcon icon={UserGroupIcon} size={15} />
@@ -164,8 +174,8 @@ function ScanActionPanel() {
                 <button
                     type="button"
                     disabled
-                    title="Coming soon — scan tickets from the PXI mobile app"
-                    className="inline-flex w-fit cursor-not-allowed items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-500"
+                    title="Ticket scanning happens in the PXI mobile app today"
+                    className="inline-flex w-fit cursor-not-allowed items-center justify-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-500"
                 >
                     <HugeiconsIcon icon={QrCodeIcon} size={15} />
                     Scan Ticket
@@ -174,7 +184,7 @@ function ScanActionPanel() {
                     <HugeiconsIcon icon={Search01Icon} size={15} className="text-zinc-500" />
                     <input
                         type="text"
-                        placeholder="Coming soon — scan tickets in the PXI mobile app"
+                        placeholder="Scan from PXI mobile; results sync here when connected"
                         disabled
                         readOnly
                         className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500 disabled:cursor-not-allowed"
@@ -211,7 +221,7 @@ function RecentScansSection({ isLive }) {
                             disabled={!isLive}
                             className={cx(
                                 'rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition',
-                                isLive ? 'border border-red-400/30 bg-red-500/10 text-red-200 hover:bg-red-500/20' : 'cursor-not-allowed border border-white/10 bg-white/5 text-zinc-500'
+                                isLive ? 'bg-red-500/10 text-red-200 hover:bg-red-500/20' : 'cursor-not-allowed bg-white/5 text-zinc-500'
                             )}
                         >
                             Incident Report
@@ -295,10 +305,10 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
                 className={cx(
                     'mt-5 rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition',
                     !isLive
-                        ? 'cursor-not-allowed border border-white/10 bg-white/5 text-zinc-500'
+                        ? 'cursor-not-allowed bg-white/5 text-zinc-500'
                         : gate.paused
-                            ? 'border border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20'
-                            : 'border border-red-400/30 bg-red-500/10 text-red-200 hover:bg-red-500/20'
+                            ? 'bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20'
+                            : 'bg-red-500/10 text-red-200 hover:bg-red-500/20'
                 )}
             >
                 {gate.paused ? 'Resume Scan' : 'Halt Scan'}
@@ -315,7 +325,7 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
                     </div>
                 ))}
                 {!gate.scans.length ? (
-                    <div className="rounded-xl border border-dashed border-white/10 px-3 py-4 text-sm text-zinc-500">
+                    <div className="rounded-xl bg-white/[0.035] px-3 py-4 text-sm text-zinc-500">
                         No scans yet.
                     </div>
                 ) : null}
@@ -441,7 +451,7 @@ function GateDetailsModal({ gate, open, onClose }) {
                         <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400">Flagged Issues</h3>
                         <div className="mt-3 space-y-2">
                             {flaggedIssues.map((scan) => (
-                                <div key={`flag-${scan.id}`} className="rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-3">
+                                <div key={`flag-${scan.id}`} className="rounded-xl bg-red-500/10 px-3 py-3">
                                     <p className="text-sm font-bold text-red-100">{scan.ticket}</p>
                                     <p className="mt-1 text-xs text-red-200/70">{scan.state} at {scan.at}</p>
                                 </div>
@@ -499,13 +509,13 @@ function TeamChatModal({ open, onClose }) {
                 <button
                     type="button"
                     disabled
-                    title="Coming soon — staff messaging isn't wired to a live chat backend yet"
-                    className="cursor-not-allowed self-end rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-500"
+                    title="Team messaging is not connected to live chat yet"
+                    className="cursor-not-allowed self-end rounded-full bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-500"
                 >
                     Send
                 </button>
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">Coming soon — this draft isn&apos;t sent to your team yet.</p>
+            <p className="mt-2 text-[11px] text-zinc-500">Draft only — team chat is not connected yet.</p>
         </Modal>
     );
 }
@@ -521,6 +531,14 @@ export default function LiveScanDashboard({ isLiveEvent }) {
     const [editingGate, setEditingGate] = useState(null);
 
     const selectedGate = gates.find((gate) => gate.id === selectedGateId);
+    const flagCount = useMemo(
+        () => gates.reduce((sum, gate) => sum + gate.scans.filter((scan) => scan.state === 'Flagged' || scan.state === 'Manual Check').length, 0),
+        [gates]
+    );
+    const activeStaffCount = useMemo(
+        () => new Set(gates.flatMap((gate) => gate.assignedPeople || []).map((person) => person.id)).size,
+        [gates]
+    );
     const rosterMembers = useMemo(() => teamRosters.flatMap((roster) => (
         (roster.members || []).map((member) => ({
             id: `${roster.id}:${member.id}`,
@@ -608,14 +626,27 @@ export default function LiveScanDashboard({ isLiveEvent }) {
 
     return (
         <div className="mx-auto max-w-6xl space-y-6">
-            <header>
-                <h1 className="text-2xl font-black text-white md:text-3xl">Operations</h1>
-                <p className="mt-2 max-w-2xl text-sm text-zinc-500">Live event controls for gates, scans, and incident response.</p>
-            </header>
+            <section className="dashboard-surface-b rounded-[1.75rem] px-5 py-6 md:px-7">
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_440px] lg:items-end">
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Operations</p>
+                        <h1 className="mt-2 text-4xl font-black leading-none text-white md:text-5xl">Live control room</h1>
+                        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
+                            Gate flow, scan review, team messages, and incident response in one operator-friendly view.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <OpsMetric label="Mode" value={eventIsLive ? 'Live' : 'Preview'} hint={eventIsLive ? 'Controls enabled' : 'Planning only'} />
+                        <OpsMetric label="Gates" value={gates.length} hint={`${gates.filter((gate) => gate.paused).length} paused`} />
+                        <OpsMetric label="Flags" value={flagCount} hint="Needs review" />
+                        <OpsMetric label="Staff" value={activeStaffCount || '-'} hint="Assigned today" />
+                    </div>
+                </div>
+            </section>
 
-            <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
-                Sample data — gates, scans, and messages below are a planning preview, not a live feed. Ticket scanning
-                itself happens in the PXI mobile app; live sync to this dashboard is coming soon.
+            <div className="rounded-2xl bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
+                Planning preview — gates, scans, and messages below are not a live feed yet. Ticket scanning happens
+                in the PXI mobile app today; dashboard sync will connect here when available.
             </div>
 
             {!eventIsLive ? <DormantMessage /> : null}
@@ -639,7 +670,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                         disabled={!eventIsLive}
                         className={cx(
                             'flex h-10 w-10 items-center justify-center rounded-full text-2xl font-black transition',
-                            eventIsLive ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed border border-white/10 bg-white/5 text-zinc-500'
+                            eventIsLive ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed bg-white/5 text-zinc-500'
                         )}
                         aria-label="Add gate"
                     >
@@ -680,17 +711,17 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                     <HugeiconsIcon icon={Megaphone01Icon} size={20} className="text-zinc-500" />
                 </div>
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
-                    <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4">
+                    <div className="rounded-2xl bg-red-500/10 p-4">
                         <HugeiconsIcon icon={Alert02Icon} size={18} className={eventIsLive ? 'text-red-300' : 'text-zinc-500'} />
                         <p className="mt-3 text-sm font-black text-white">Duplicate ticket watch</p>
                         <p className="mt-1 text-xs text-zinc-500">VIP Desk flagged one ticket.</p>
                     </div>
-                    <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4">
+                    <div className="rounded-2xl bg-amber-500/10 p-4">
                         <HugeiconsIcon icon={Alert02Icon} size={18} className={eventIsLive ? 'text-amber-300' : 'text-zinc-500'} />
                         <p className="mt-3 text-sm font-black text-white">Manual check lane</p>
                         <p className="mt-1 text-xs text-zinc-500">Main Gate review queue is open.</p>
                     </div>
-                    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+                    <div className="rounded-2xl bg-emerald-500/10 p-4">
                         <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} className={eventIsLive ? 'text-emerald-300' : 'text-zinc-500'} />
                         <p className="mt-3 text-sm font-black text-white">Crowd flow stable</p>
                         <p className="mt-1 text-xs text-zinc-500">North Entry is clear.</p>

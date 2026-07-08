@@ -112,7 +112,7 @@ export default function AdminUgcModerationPage() {
             <AdminPanel className="bg-red-500/[0.055]">
                 <p className="text-sm text-red-200 flex items-center gap-2">
                     <HugeiconsIcon icon={Alert02Icon} size={16} />
-                    Zero-tolerance surface — triage critical reports immediately. Every action is written to the audit log.
+                    High-priority moderation queue. Review critical reports first; every action is written to the audit log.
                 </p>
             </AdminPanel>
 
@@ -153,23 +153,23 @@ export default function AdminUgcModerationPage() {
                         <tbody>
                             {rows.map((row) => (
                                 <tr key={row.id} className="hover:bg-white/[0.02] align-top">
-                                    <td className="px-6 py-4">
+                                    <td data-label="Status" className="px-6 py-4">
                                         <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${statusStyle[row.status] || statusStyle.PENDING}`}>
                                             {row.status || 'PENDING'}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-[13px] text-white/70">
+                                    <td data-label="Target" className="admin-table-primary px-6 py-4 text-[13px] text-white/70">
                                         <div className="font-mono text-[12px] text-white/50">{row.targetType || 'MEDIA'}</div>
                                         <div className="font-mono text-[11px] break-all max-w-[180px] mt-0.5">{row.targetId || '—'}</div>
                                     </td>
-                                    <td className={`${adminTdClass} max-w-[260px] text-white/75`}>
+                                    <td data-label="Reason" className={`${adminTdClass} max-w-[260px] text-white/75`}>
                                         <p className="line-clamp-3">{row.reason}</p>
                                     </td>
-                                    <td className={`${adminTdClass} break-all max-w-[160px]`}>
+                                    <td data-label="Reporter" className={`${adminTdClass} break-all max-w-[160px]`}>
                                         {row.reporter?.email || row.reporterId || row.author || '—'}
                                     </td>
-                                    <td className={`${adminTdClass} whitespace-nowrap`}>{formatDate(row.createdAt)}</td>
-                                    <td className="px-6 py-4">
+                                    <td data-label="Created" className={`${adminTdClass} whitespace-nowrap`}>{formatDate(row.createdAt)}</td>
+                                    <td data-label="Actions" className="px-6 py-4">
                                         {isLiveAdmin && row.status === 'PENDING' ? (
                                             <div className="flex items-center justify-end gap-2">
                                                 <button

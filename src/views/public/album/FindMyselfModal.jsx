@@ -15,11 +15,13 @@ import { warmupFaceEngine } from '@/lib/face/faceEmbedding';
 export default function FindMyselfModal({ open, onClose, albumId, onMatches }) {
   const [step, setStep] = useState('intro'); // intro | scan | matching | done | error
   const [matchCount, setMatchCount] = useState(0);
+  const [processingCount, setProcessingCount] = useState(0);
 
   useEffect(() => {
     if (open) {
       setStep('intro');
       setMatchCount(0);
+      setProcessingCount(0);
       warmupFaceEngine();
     }
   }, [open]);
@@ -32,6 +34,8 @@ export default function FindMyselfModal({ open, onClose, albumId, onMatches }) {
       const res = await faceService.matchAlbum(albumId, vector, modelId);
       const mediaIds = Array.isArray(res?.mediaIds) ? res.mediaIds : [];
       setMatchCount(mediaIds.length);
+      // Photos the server hasn't face-scanned yet (it starts processing them now).
+      setProcessingCount(Number(res?.processing) || 0);
       onMatches(mediaIds);
       setStep('done');
     } catch {
@@ -111,8 +115,16 @@ export default function FindMyselfModal({ open, onClose, albumId, onMatches }) {
             <p className="mt-4 text-sm leading-relaxed text-zinc-400">
               {matchCount > 0
                 ? 'The gallery is now filtered to your shots. Toggle "My shots" any time to see everything.'
-                : "We couldn't spot you in this album yet. New uploads are matched as they land — check back soon."}
+                : processingCount > 0
+                  ? `${processingCount} ${processingCount === 1 ? 'photo is' : 'photos are'} still being scanned for faces — try again in a few minutes.`
+                  : "We couldn't spot you in this album yet. New uploads are matched as they land — check back soon."}
             </p>
+            {matchCount > 0 && processingCount > 0 ? (
+              <p className="mt-2 text-xs leading-relaxed text-zinc-500">
+                {processingCount} more {processingCount === 1 ? 'photo is' : 'photos are'} still being
+                scanned — rescan in a few minutes to catch them.
+              </p>
+            ) : null}
             <button
               type="button"
               onClick={onClose}

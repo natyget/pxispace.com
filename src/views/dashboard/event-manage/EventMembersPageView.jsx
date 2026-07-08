@@ -105,18 +105,37 @@ export default function EventMembersPageView() {
       {activeTab === 'status' ? <EventInvitePageView initialTab="status" showTabs={false} /> : null}
 
       {activeTab === 'attending' ? (
-      <section className="glass-panel overflow-hidden rounded-2xl">
-        <div className="flex items-center justify-between gap-3 p-5">
-          <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
-            {event?.name || 'Event'} · {participants.length} members
-          </p>
-          {!canManageMembers ? (
-            <p className="text-[11px] text-zinc-500">Role updates + block are owner-only.</p>
-          ) : null}
+      <section className="dashboard-surface overflow-hidden rounded-2xl">
+        <div className="grid gap-4 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Access list</p>
+            <h2 className="mt-2 truncate text-xl font-black text-white">{event?.name || 'Event'} members</h2>
+            <p className="mt-1 text-sm leading-6 text-zinc-500">
+              Review attendance, promote gate staff, and remove people from this event album.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:min-w-[260px]">
+            <div className="rounded-2xl bg-white/[0.045] px-3 py-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Members</p>
+              <p className="mt-1 text-xl font-black text-white">{participants.length.toLocaleString()}</p>
+            </div>
+            <div className="rounded-2xl bg-white/[0.045] px-3 py-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Control</p>
+              <p className="mt-1 truncate text-sm font-black text-white">{canManageMembers ? 'Owner' : 'View only'}</p>
+            </div>
+          </div>
         </div>
-        <div className="p-5 space-y-2">
+        {!canManageMembers ? (
+          <div className="mx-5 rounded-2xl bg-white/[0.035] px-4 py-3 text-xs font-semibold text-zinc-500">
+            Role updates and removals are available to the album owner.
+          </div>
+        ) : null}
+        <div className="space-y-2 p-5">
           {sortedParticipants.length === 0 ? (
-            <p className="text-sm text-zinc-500">No album members yet.</p>
+            <div className="rounded-2xl bg-white/[0.025] px-5 py-8 text-center">
+              <p className="text-sm font-semibold text-white">No album members yet.</p>
+              <p className="mt-1 text-xs text-zinc-500">Send invites to start building the access list.</p>
+            </div>
           ) : (
             sortedParticipants.map((member) => {
               const isBusy = Boolean(busyByUserId[member.userId]);
@@ -125,7 +144,7 @@ export default function EventMembersPageView() {
               return (
                 <div
                   key={member.userId}
-                  className="glass-field flex flex-col gap-2 rounded-2xl p-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-3 rounded-2xl bg-white/[0.035] p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <UserAvatar

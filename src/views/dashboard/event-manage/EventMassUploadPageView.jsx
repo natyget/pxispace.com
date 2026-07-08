@@ -20,6 +20,19 @@ export default function EventMassUploadPageView() {
   const isEventCreator = Boolean(user?.id && event?.createdBy && event.createdBy === user.id);
   const canGalleryMassUpload =
     isEventCreator || myAlbumRole === 'OWNER' || myAlbumRole === 'ADMIN';
+  // Finalized scrapbook (event passed + grace over): uploads are closed server-side.
+  const isFinalized = event?.effectiveStatus === 'ARCHIVED';
+
+  if (isFinalized) {
+    return (
+      <div className="space-y-6">
+        <p className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+          Scrapbook — finalized · this event has ended, uploads are closed
+        </p>
+        <LineupPlaylistCard eventId={String(eventId)} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -84,7 +97,7 @@ export default function EventMassUploadPageView() {
           {/* Photographer share link */}
           <div className="glass-panel overflow-hidden rounded-2xl">
             <div className="flex items-center gap-2 px-5 pb-2 pt-5">
-              <HugeiconsIcon icon={Link01Icon} size={18} className="text-white/70" />
+              <HugeiconsIcon icon={Link01Icon} size={18} className="text-white opacity-70" />
               <h2 className="font-bold text-white uppercase tracking-widest text-sm">Photographer Upload Link</h2>
             </div>
             <div className="p-5 space-y-3">

@@ -73,7 +73,6 @@ export default function CityEventsView({ city }) {
           aria-hidden
         />
         <div className="mx-auto max-w-[1200px] px-6">
-          <span className="eyebrow">Discover</span>
           <h1 className="display-1 mt-6 max-w-3xl">
             Events in <span className="text-pxi-purple">{city.name}.</span>
           </h1>

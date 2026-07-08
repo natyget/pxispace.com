@@ -5,9 +5,13 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { FavouriteIcon } from '@hugeicons/core-free-icons';
 import { displayImageSrc } from '@/lib/mediaUrl';
 
-const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/events' }) => {
+const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/events', sponsored = false, onSponsoredClick }) => {
   const router = useRouter();
   const href = `${String(detailBasePath).replace(/\/$/, '')}/${event.id}`;
+  const open = () => {
+    if (sponsored) onSponsoredClick?.();
+    router.push(href);
+  };
 
   const dateStr =
     event.date ||
@@ -22,13 +26,13 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
 
   return (
     <div
-      onClick={() => router.push(href)}
+      onClick={open}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && router.push(href)}
-      className="group relative cursor-pointer overflow-hidden rounded-3xl bloom-purple transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+      onKeyDown={(e) => e.key === 'Enter' && open()}
+      className="group relative cursor-pointer overflow-hidden rounded-lg bloom-purple transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
     >
-      <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-zinc-900">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-zinc-900">
         <img
           src={event.coverImage || event.image}
           alt={event.title || ''}
@@ -43,10 +47,10 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
             <img
               src={displayImageSrc(organizerAvatarUrl)}
               alt={organizerDisplayName || 'Organizer'}
-              className="h-10 w-10 rounded-full object-cover ring-1 ring-white/20 shadow-lg shadow-black/40"
+              className="h-10 w-10 rounded-full object-cover shadow-lg shadow-black/40"
             />
           ) : (
-            <div className="h-10 w-10 rounded-full ring-1 ring-white/20 shadow-lg shadow-black/40 bg-zinc-800 grid place-items-center text-xs font-black text-white">
+            <div className="h-10 w-10 rounded-full shadow-lg shadow-black/40 bg-zinc-800 grid place-items-center text-xs font-black text-white">
               {organizerInitial}
             </div>
           )}
@@ -71,6 +75,11 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
 
         {/* Bottom overlay: time / title / location */}
         <div className="absolute bottom-0 left-0 right-0 p-5">
+          {sponsored ? (
+            <span className="mb-2 inline-flex rounded-full border border-white/20 bg-black/50 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white/90 backdrop-blur-sm">
+              Sponsored
+            </span>
+          ) : null}
           {dateStr ? (
             <p className="mb-1 text-[11px] font-bold uppercase tracking-widest text-zinc-300">{dateStr}</p>
           ) : null}

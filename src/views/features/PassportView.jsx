@@ -89,7 +89,6 @@ export default function PassportView() {
           aria-hidden
         />
         <div className="mx-auto max-w-[1200px] px-6">
-          <span className="eyebrow">The digital passport</span>
           <Motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}

@@ -30,7 +30,7 @@ function ShareProfileLinkButton({ userId }) {
         <button
             type="button"
             onClick={onClick}
-            className="mx-auto flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-white/10"
+            className="mx-auto flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-white/10"
         >
             {copied ? <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} className="shrink-0 text-emerald-400" /> : <HugeiconsIcon icon={Share01Icon} size={16} className="shrink-0" />}
             {copied ? 'Copied link' : 'Share profile link'}
@@ -64,9 +64,9 @@ function PassportIssued({ user, rolesReady }) {
 
     const headerRight = rolesReady
         ? user?.isVendor ? (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400 sm:gap-1.5 sm:px-2.5 sm:text-[10px] md:px-3 md:text-[11px]">
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400 sm:gap-1.5 sm:px-2.5 sm:text-[10px] md:px-3 md:text-[11px]">
                 <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="shrink-0" />
-                Vendor
+                Organizer
             </span>
         ) : (
             <Link
@@ -108,17 +108,17 @@ function PassportNotIssued({ user, rolesReady }) {
             const result = await authService.checkVendorStatus();
             if (result?.isVendor) {
                 updateUser({ isVendor: true });
-                setVendorStatusMsg('Vendor verification completed. You can now create paid events.');
+                setVendorStatusMsg('Hosting verification is complete. You can now create paid events.');
                 return;
             }
             if (result?.code === 'NO_STRIPE_ACCOUNT') {
-                setVendorStatusMsg('No Stripe verification found yet. Start hosting setup below.');
+                setVendorStatusMsg('No payment setup found yet. Start hosting setup below.');
                 return;
             }
             setVendorChecks(result?.stripeStatus || null);
             setVendorStatusMsg('Verification is still in progress. Complete any outstanding Stripe requirements.');
         } catch (err) {
-            setVendorStatusMsg(err?.message || 'Could not check vendor verification right now.');
+            setVendorStatusMsg(err?.message || 'Could not check hosting verification right now.');
         } finally {
             setCheckingVendor(false);
         }
@@ -126,7 +126,7 @@ function PassportNotIssued({ user, rolesReady }) {
 
     return (
         <div className="mx-auto max-w-5xl space-y-6 md:space-y-8">
-            <section className="relative overflow-hidden rounded-[1.75rem] bg-black px-5 py-7 shadow-[0_24px_80px_rgba(0,0,0,0.42)] md:px-8">
+            <section className="dashboard-surface-b relative overflow-hidden rounded-[1.75rem] px-5 py-7 md:px-8">
                 <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
                     <div className="max-w-2xl">
                         <div className="mb-4 flex items-center gap-2">
@@ -146,7 +146,7 @@ function PassportNotIssued({ user, rolesReady }) {
                         {rolesReady && user?.isVendor ? (
                                 <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
                                 <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="shrink-0" />
-                                Vendor
+                                Organizer
                             </span>
                         ) : rolesReady ? (
                                 <Link href="/dashboard/vendor-upgrade" className="pill-ghost inline-flex items-center px-4 py-2.5 text-xs font-black uppercase tracking-widest">
@@ -173,7 +173,7 @@ function PassportNotIssued({ user, rolesReady }) {
             <div className="grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
                 <div className="rounded-[1.5rem] bg-white/[0.04] p-6">
                     <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.055]">
-                        <HugeiconsIcon icon={SmartPhone01Icon} size={24} className="text-white/75" />
+                        <HugeiconsIcon icon={SmartPhone01Icon} size={24} className="text-white opacity-75" />
                     </div>
                     <h2 className="text-lg font-black text-white">Use the PXI mobile app</h2>
                     <p className="mt-2 text-sm leading-relaxed text-zinc-400">
@@ -189,11 +189,11 @@ function PassportNotIssued({ user, rolesReady }) {
                 <div className="rounded-[1.5rem] bg-white/[0.04] p-5">
                     <div className="flex items-center justify-between gap-3">
                         <div>
-                            <p className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Hosting verification</p>
-                            <p className="text-xs text-zinc-400 mt-1">Check Stripe status or continue setup to unlock paid events.</p>
+                            <p className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">Hosting setup</p>
+                            <p className="text-xs text-zinc-400 mt-1">Check payment status or continue setup to unlock paid events.</p>
                         </div>
                         {user?.isVendor ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
                                 <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} />
                                 Verified
                             </span>

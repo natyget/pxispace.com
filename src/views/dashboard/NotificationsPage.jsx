@@ -185,7 +185,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <section className="rounded-[1.75rem] bg-black px-5 py-6 shadow-[0_24px_80px_rgba(0,0,0,0.42)] md:px-7">
+      <section className="dashboard-surface-b rounded-[1.75rem] px-5 py-6 md:px-7">
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Inbox</p>
@@ -214,7 +214,7 @@ export default function NotificationsPage() {
               <HugeiconsIcon icon={Settings01Icon} size={17} />
             </button>
             {settingsOpen ? (
-              <div className="glass-panel absolute right-0 top-[calc(100%+8px)] z-30 w-44 rounded-2xl p-2">
+              <div className="dashboard-popover-surface absolute right-0 top-[calc(100%+8px)] z-30 w-44 rounded-2xl p-2">
                 <button
                   type="button"
                   onClick={handleMarkAllRead}
@@ -228,10 +228,10 @@ export default function NotificationsPage() {
         </div>
       </section>
 
-      {error ? <div className="glass-panel rounded-2xl p-4 text-sm font-semibold text-red-200">{error}</div> : null}
+      {error ? <div className="rounded-2xl bg-red-500/10 p-4 text-sm font-semibold text-red-200">{error}</div> : null}
 
       {loading ? (
-        <div className="glass-panel flex min-h-[260px] items-center justify-center rounded-3xl text-white/60">
+        <div className="dashboard-surface flex min-h-[260px] items-center justify-center rounded-3xl text-white/60">
           <HugeiconsIcon icon={Loading02Icon} size={24} className="animate-spin" />
         </div>
       ) : sections.length === 0 ? (

@@ -1,11 +1,20 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Loading02Icon, Alert01Icon, ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+import {
+  Loading02Icon,
+  Alert01Icon,
+  ArrowLeft01Icon,
+  Calendar03Icon,
+  Location01Icon,
+  Shield01Icon,
+  Ticket01Icon,
+} from '@hugeicons/core-free-icons';
 import Button from '../../components/ui/Button';
+import { PxiSpinner } from '@/components/loading/PxiLoading';
 import { eventsService } from '../../services/events';
 import { getTicketQuote, generateTicket, purchaseTicket, getUserTickets, getMyCredits } from '../../services/tickets';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,6 +50,40 @@ function formatPrice(usd, currency = 'USD') {
   if (usd == null) return null;
   const sym = currency === 'EUR' ? '€' : '$';
   return `${sym}${Number(usd).toFixed(2)}`;
+}
+
+function formatCheckoutDate(value) {
+  if (!value) return 'Date TBA';
+  return new Date(value).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function CheckoutMeta({ icon, label, value }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-2xl bg-white/[0.055] px-3.5 py-3">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/35 text-white">
+        <HugeiconsIcon icon={icon} size={16} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/35">{label}</p>
+        <p className="mt-0.5 truncate text-xs font-bold text-white">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function TrustItem({ children }) {
+  return (
+    <div className="flex items-center gap-2 text-[11px] font-bold text-white/55">
+      <span className="h-1.5 w-1.5 rounded-full bg-white/45" />
+      {children}
+    </div>
+  );
 }
 
 /**
@@ -81,30 +124,46 @@ export default function EventCheckout({ basePath = '/events' }) {
 
   useEffect(() => {
     if (!id) {
-      setEventLoading(false);
-      return;
+      const timer = setTimeout(() => setEventLoading(false), 0);
+      return () => clearTimeout(timer);
     }
-    setEventLoading(true);
-    eventsService
-      .getEvent(id)
-      .then((data) => setApiEvent(data.event || data))
-      .catch(() => setApiEvent(null))
-      .finally(() => setEventLoading(false));
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      setEventLoading(true);
+      eventsService
+        .getEvent(id)
+        .then((data) => {
+          if (!cancelled) setApiEvent(data.event || data);
+        })
+        .catch(() => {
+          if (!cancelled) setApiEvent(null);
+        })
+        .finally(() => {
+          if (!cancelled) setEventLoading(false);
+        });
+    }, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [id]);
 
   const tiers = useMemo(() => (apiEvent ? parseTicketTiers(apiEvent) : []), [apiEvent]);
 
   useEffect(() => {
-    if (!tiers.length) {
-      setSelectedTierId(null);
-      return;
-    }
-    const fromUrl = tierFromUrl != null && tiers.some((t) => String(t.id) === String(tierFromUrl)) ? tierFromUrl : null;
-    setSelectedTierId((prev) => {
-      if (fromUrl != null) return tiers.find((t) => String(t.id) === String(fromUrl))?.id ?? tiers[0].id;
-      if (prev != null && tiers.some((t) => t.id === prev)) return prev;
-      return tiers[0].id;
-    });
+    const timer = setTimeout(() => {
+      if (!tiers.length) {
+        setSelectedTierId(null);
+        return;
+      }
+      const fromUrl = tierFromUrl != null && tiers.some((t) => String(t.id) === String(tierFromUrl)) ? tierFromUrl : null;
+      setSelectedTierId((prev) => {
+        if (fromUrl != null) return tiers.find((t) => String(t.id) === String(fromUrl))?.id ?? tiers[0].id;
+        if (prev != null && tiers.some((t) => t.id === prev)) return prev;
+        return tiers[0].id;
+      });
+    }, 0);
+    return () => clearTimeout(timer);
   }, [tiers, tierFromUrl]);
 
   const apiTierId = typeof selectedTierId === 'string' ? selectedTierId : undefined;
@@ -112,19 +171,21 @@ export default function EventCheckout({ basePath = '/events' }) {
   const isPaidEvent = apiEvent?.ticketType === 'PAID' && tiers.length > 0;
   const isFreeEvent = apiEvent && apiEvent.ticketType !== 'PAID';
 
-  const refreshQuote = useCallback(() => {
-    if (!apiEvent?.id || !isPaidEvent) {
-      setQuoteTotal(null);
-      return;
-    }
-    getTicketQuote(apiEvent.id, null, apiTierId)
-      .then((q) => setQuoteTotal(q.totalForBuyerUsd))
-      .catch(() => setQuoteTotal(null));
-  }, [apiEvent?.id, isPaidEvent, apiTierId]);
-
   useEffect(() => {
-    refreshQuote();
-  }, [refreshQuote]);
+    if (!apiEvent?.id || !isPaidEvent) {
+      const timer = setTimeout(() => setQuoteTotal(null), 0);
+      return () => clearTimeout(timer);
+    }
+    let cancelled = false;
+    getTicketQuote(apiEvent.id, null, apiTierId)
+      .then((q) => {
+        if (!cancelled) setQuoteTotal(q.totalForBuyerUsd);
+      })
+      .catch(() => {
+        if (!cancelled) setQuoteTotal(null);
+      });
+    return () => { cancelled = true; };
+  }, [apiEvent?.id, isPaidEvent, apiTierId]);
 
   const priceDisplay = useMemo(() => {
     if (!apiEvent) return null;
@@ -138,8 +199,8 @@ export default function EventCheckout({ basePath = '/events' }) {
   // PXI credits: fetch balance once signed in so the "use credits" toggle can render.
   useEffect(() => {
     if (!isAuthenticated) {
-      setCreditBalanceCents(0);
-      return;
+      const timer = setTimeout(() => setCreditBalanceCents(0), 0);
+      return () => clearTimeout(timer);
     }
     let cancelled = false;
     getMyCredits()
@@ -215,7 +276,7 @@ export default function EventCheckout({ basePath = '/events' }) {
   if (eventLoading && !apiEvent) {
     return (
       <div className="pt-40 flex items-center justify-center text-white min-h-screen bg-black">
-        <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin" />
+        <PxiSpinner size="lg" className="mx-auto" />
       </div>
     );
   }
@@ -226,19 +287,27 @@ export default function EventCheckout({ basePath = '/events' }) {
         Event not found.
       </div>
     );
-  }  return (
+  }
+
+  const checkoutDate = formatCheckoutDate(apiEvent.startDate);
+  const checkoutLocation = apiEvent.location || 'Location TBA';
+  const selectedTier = tiers.find((x) => x.id === selectedTierId) || tiers[0];
+  const faceValue = isPaidEvent
+    ? formatPrice(selectedTier?.priceUsd ?? apiEvent.ticketPrice, apiEvent.currency)
+    : 'Free';
+
+  return (
     <>
       <div className="relative text-white min-h-screen bg-[#050505] overflow-x-hidden font-sans">
-        {/* Blurred album cover background */}
         <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
           {apiEvent?.coverImage ? (
             <img
               src={displayImageSrc(apiEvent.coverImage, DEFAULT_IMG)}
               alt=""
-              className="absolute inset-0 h-full w-full object-cover scale-150 blur-[60px] opacity-[0.25]"
+              className="absolute inset-0 h-full w-full object-cover scale-125 blur-[54px] opacity-[0.22]"
             />
           ) : null}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-[#0a0a0a]/90 to-black" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_12%,rgba(255,255,255,0.12),transparent_28%),linear-gradient(180deg,rgba(0,0,0,0.78),#050505_46%,#000)]" />
         </div>
 
         {/* Custom Scrollbar for this page */}
@@ -250,62 +319,104 @@ export default function EventCheckout({ basePath = '/events' }) {
         `}} />
 
         <div className="relative z-10">
-          {/* Floating Back Navigation wrapped in a capsule/pill tray */}
-          <div className="fixed top-24 left-6 z-30 md:left-8">
+          <div className="fixed top-24 left-5 z-30 md:left-8">
             <Link
               href={`${basePath}/${apiEvent.id}`}
-              className="inline-flex items-center gap-1.5 rounded-full border-0 bg-black/45 hover:bg-black/65 backdrop-blur-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white transition-all shadow-lg"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-300 shadow-lg backdrop-blur-xl transition-all hover:bg-black/70 hover:text-white"
             >
               <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
-              event
+              Event
             </Link>
           </div>
 
-          {/* Main Split Container */}
-          <div className="flex min-h-screen items-center justify-center py-10 md:py-20 px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center max-w-4xl w-full mx-auto">
-              
-              {/* Left column: Checkout Card */}
-              <div className="order-2 lg:order-1 w-full">
-                <div className="bg-zinc-950/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] space-y-6 shadow-2xl border border-white/5">
-                  <h2 className="text-3xl font-black">{priceDisplay}</h2>
-                  <p className="text-zinc-400 text-xs leading-relaxed">
-                    {isPaidEvent
-                      ? 'Total includes a 4.59% service fee plus Stripe processing costs, on top of the ticket price.'
-                      : 'This event is free to join.'}
-                  </p>
+          <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-28 sm:px-6 lg:px-8">
+            <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center">
+              <section className="min-w-0">
+                <div className="overflow-hidden rounded-[2rem] bg-white/[0.045] shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:rounded-[2.5rem]">
+                  <div className="grid gap-0 md:grid-cols-[minmax(0,0.86fr)_minmax(320px,1fr)]">
+                    <div className="relative min-h-[360px] overflow-hidden bg-zinc-900 md:min-h-[620px]">
+                      <img
+                        src={displayImageSrc(apiEvent.coverImage, DEFAULT_IMG)}
+                        alt={apiEvent.name}
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                      <div className="absolute inset-x-0 bottom-0 p-5 md:p-7">
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/55">PXI checkout</p>
+                        <h1 className="mt-2 text-4xl font-black leading-[0.9] tracking-normal text-white md:text-6xl">
+                          {apiEvent.name}
+                        </h1>
+                        <div className="mt-5 grid gap-2 sm:grid-cols-2 md:grid-cols-1">
+                          <CheckoutMeta icon={Calendar03Icon} label="When" value={checkoutDate} />
+                          <CheckoutMeta icon={Location01Icon} label="Where" value={checkoutLocation} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col justify-between p-5 md:p-7">
+                      <div>
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Order summary</p>
+                            <h2 className="mt-2 text-4xl font-black leading-none text-white">{priceDisplay}</h2>
+                          </div>
+                          <div className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-black">
+                            {isPaidEvent ? 'Paid' : 'Free'}
+                          </div>
+                        </div>
+                        <p className="mt-3 text-xs leading-relaxed text-zinc-500">
+                          {isPaidEvent
+                            ? 'Total includes PXI service and Stripe processing costs. Your ticket is issued after payment clears.'
+                            : 'This event is free to join. PXI will issue your ticket immediately after confirmation.'}
+                        </p>
 
                   {isPaidEvent && tiers.length > 0 ? (
-                    <div className="space-y-3">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Ticket tier</p>
+                    <div className="mt-6 space-y-3">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Choose ticket</p>
                       {tiers.map((t) => (
                         <label
                           key={t.id ?? 'base'}
-                          className={`flex items-center justify-between gap-3 p-4 rounded-xl cursor-pointer transition-colors border-0 ${
+                          className={`flex cursor-pointer items-center justify-between gap-3 rounded-[1.25rem] p-4 transition-colors ${
                             selectedTierId === t.id
-                              ? 'bg-[#d946ef]/20 text-white'
-                              : 'bg-white/[0.03] hover:bg-white/[0.06] text-white/80'
+                              ? 'bg-white/[0.12] text-white'
+                              : 'bg-white/[0.04] text-white/80 hover:bg-white/[0.07]'
                           }`}
                         >
                           <span className="flex items-center gap-3">
-                            <div className={`h-4 w-4 rounded-full border flex items-center justify-center transition-all ${
-                              selectedTierId === t.id ? 'border-[#d946ef] bg-[#d946ef]/20' : 'border-white/30 bg-transparent'
+                            <span className={`flex h-5 w-5 items-center justify-center rounded-full border transition-all ${
+                              selectedTierId === t.id ? 'border-white bg-white text-black' : 'border-white/30 bg-transparent'
                             }`}>
                               {selectedTierId === t.id && (
-                                <div className="h-2 w-2 rounded-full bg-[#d946ef]" />
+                                <span className="h-2 w-2 rounded-full bg-black" />
                               )}
-                            </div>
+                            </span>
                             <span className="font-bold text-white text-sm">{t.label}</span>
                           </span>
-                          <span className="text-sm font-black text-amber-200">{formatPrice(t.priceUsd, apiEvent.currency)}</span>
+                          <span className="text-sm font-black text-white">{formatPrice(t.priceUsd, apiEvent.currency)}</span>
                         </label>
                       ))}
                     </div>
                   ) : null}
 
+                        <div className="mt-5 rounded-[1.25rem] bg-white/[0.035] p-4">
+                          <div className="flex items-center justify-between gap-4 text-sm">
+                            <span className="text-zinc-500">Ticket</span>
+                            <span className="font-bold text-white">{selectedTier?.label || 'General admission'}</span>
+                          </div>
+                          <div className="mt-3 flex items-center justify-between gap-4 text-sm">
+                            <span className="text-zinc-500">Face value</span>
+                            <span className="font-bold text-white">{faceValue}</span>
+                          </div>
+                          <div className="mt-3 flex items-center justify-between gap-4 border-t border-white/10 pt-3 text-sm">
+                            <span className="font-bold text-white">Due today</span>
+                            <span className="text-lg font-black text-white">{priceDisplay}</span>
+                          </div>
+                        </div>
+                      </div>
+
                   {joinSuccess ? (
-                    <div className="space-y-6">
-                      <div className="space-y-4 rounded-2xl bg-white/[0.03] p-5">
+                    <div className="mt-6 space-y-6">
+                      <div className="space-y-4 rounded-[1.5rem] bg-white/[0.045] p-5">
                         <div className="text-center space-y-1">
                            <p className="text-lg font-black uppercase tracking-widest text-white">You’re in!</p>
                            <p className="text-sm text-zinc-400">Your spot is confirmed.</p>
@@ -339,15 +450,15 @@ export default function EventCheckout({ basePath = '/events' }) {
                       {/* Browse More Events button once checked out */}
                       <Link
                         href="/events"
-                        className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#d946ef] to-[#c026d3] py-4 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_20px_rgba(217,70,239,0.4)] transition hover:scale-105 border-0"
+                        className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-4 text-xs font-black uppercase tracking-widest text-black transition hover:bg-zinc-200"
                       >
                         Browse More Events
                       </Link>
                     </div>
                   ) : (
-                    <>
+                    <div className="mt-6">
                       {!isAuthenticated ? (
-                        <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-6 space-y-4">
+                        <div className="space-y-4 rounded-[1.5rem] bg-white/[0.045] p-5">
                           <p className="text-sm font-bold text-white">Sign in or create an account to continue</p>
                           <p className="text-zinc-500 text-xs leading-relaxed">
                             We need your PXI account to issue your ticket. After you log in, you can pay with Apple Pay, Google Pay, Link,
@@ -356,13 +467,13 @@ export default function EventCheckout({ basePath = '/events' }) {
                           <div className="flex flex-col sm:flex-row gap-3">
                             <Link
                               href={loginHref}
-                              className="flex-1 text-center py-3.5 rounded-full bg-pxi-purple text-white text-xs font-black uppercase tracking-widest hover:opacity-90 transition-opacity border-0"
+                              className="flex-1 rounded-full bg-white py-3.5 text-center text-xs font-black uppercase tracking-widest text-black transition hover:bg-zinc-200"
                             >
                               Log in
                             </Link>
                             <Link
                               href={signupHref}
-                              className="flex-1 text-center py-3.5 rounded-full border border-white/25 hover:bg-white/5 text-white text-xs font-black uppercase tracking-widest transition-colors"
+                              className="flex-1 rounded-full bg-white/[0.07] py-3.5 text-center text-xs font-black uppercase tracking-widest text-white transition-colors hover:bg-white/[0.12]"
                             >
                               Sign up
                             </Link>
@@ -401,12 +512,12 @@ export default function EventCheckout({ basePath = '/events' }) {
                           />
                           <Button
                             variant="neon"
-                            className="w-full uppercase tracking-widest py-3.5 rounded-full shadow-lg transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:scale-95 disabled:cursor-wait"
+                            className="w-full rounded-full py-3.5 uppercase tracking-widest shadow-lg transition-all duration-300 hover:scale-[1.01] disabled:cursor-wait disabled:opacity-60 disabled:scale-95"
                             onClick={startWalletCheckout}
                             disabled={joining}
                           >
                             {joining && !walletOpen ? (
-                              <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" />
+                              <PxiSpinner size="sm" className="mx-auto" />
                             ) : (
                               'Continue to payment'
                             )}
@@ -420,11 +531,11 @@ export default function EventCheckout({ basePath = '/events' }) {
                       {isAuthenticated && isFreeEvent ? (
                         <Button
                           variant="neonOrange"
-                          className="w-full uppercase tracking-widest py-4 rounded-full transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:scale-95 disabled:cursor-wait"
+                          className="w-full rounded-full py-4 uppercase tracking-widest transition-all duration-300 hover:scale-[1.01] disabled:cursor-wait disabled:opacity-60 disabled:scale-95"
                           onClick={handleFreeTicket}
                           disabled={joining}
                         >
-                          {joining ? <HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin mx-auto" /> : 'Join Event'}
+                          {joining ? <PxiSpinner size="sm" className="mx-auto" /> : 'Join Event'}
                         </Button>
                       ) : null}
 
@@ -440,39 +551,64 @@ export default function EventCheckout({ basePath = '/events' }) {
                           issued at the organizer&apos;s discretion.
                         </p>
                       </div>
-                    </>
+                    </div>
                   )}
-                </div>
-              </div>
-
-              {/* Right side: Cover Card */}
-              <div className="order-1 lg:order-2 w-full flex justify-center">
-                <div className="w-full max-w-[340px] flex flex-col gap-4">
-                  {/* Image cover card */}
-                  <div className="w-full aspect-[3/4] overflow-hidden rounded-[2rem] border-0 shadow-2xl relative bg-zinc-900/50">
-                    <img
-                      src={displayImageSrc(apiEvent.coverImage, DEFAULT_IMG)}
-                      alt={apiEvent.name}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  {/* Info text below the image */}
-                  <div className="px-2 space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-pxi-purple">Event Cover</p>
-                    <h1 className="text-2xl font-black uppercase tracking-tight text-white leading-tight">{apiEvent.name}</h1>
-                    <p className="text-zinc-400 text-sm">
-                      {apiEvent.startDate
-                        ? new Date(apiEvent.startDate).toLocaleDateString(undefined, { dateStyle: 'medium' })
-                        : 'Date TBA'}
-                      {' · '}
-                      {apiEvent.location || 'Location TBA'}
-                    </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
+                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                  <TrustItem>Stripe-secured payment</TrustItem>
+                  <TrustItem>Signed ticket delivery</TrustItem>
+                  <TrustItem>No card details stored by PXI</TrustItem>
+                </div>
+              </section>
+
+              <aside className="space-y-4">
+                <div className="rounded-[2rem] bg-white/[0.045] p-5 shadow-2xl backdrop-blur-2xl">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Ticket preview</p>
+                    <HugeiconsIcon icon={Ticket01Icon} size={18} className="text-white opacity-45" />
+                  </div>
+                  <div className="overflow-hidden rounded-[1.5rem] bg-black">
+                    <div className="relative aspect-[16/11]">
+                      <img
+                        src={displayImageSrc(apiEvent.coverImage, DEFAULT_IMG)}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                      <p className="absolute bottom-4 left-4 right-4 text-xl font-black leading-tight text-white">{apiEvent.name}</p>
+                    </div>
+                    <div className="space-y-3 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/35">Admission</span>
+                        <span className="text-sm font-black text-white">{selectedTier?.label || 'General admission'}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/35">Price</span>
+                        <span className="text-sm font-black text-white">{priceDisplay}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-[2rem] bg-white/[0.045] p-5 backdrop-blur-2xl">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/[0.07]">
+                      <HugeiconsIcon icon={Shield01Icon} size={18} className="text-white opacity-70" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-white">Your ticket is tied to your PXI identity.</p>
+                      <p className="mt-1 text-xs leading-5 text-zinc-500">
+                        After checkout, PXI issues a signed ticket and keeps delivery actions available from your account.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </aside>
             </div>
-          </div>
+          </main>
         </div>
       </div>
 

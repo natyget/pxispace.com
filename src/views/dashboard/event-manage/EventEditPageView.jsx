@@ -15,6 +15,7 @@ import { uploadImageToR2 } from '@/services/media';
 import { authService, authStorage } from '@/services/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventManage } from './EventManageContext';
+import { PxiSpinner } from '@/components/loading/PxiLoading';
 import {
   buildTicketPricingPayload,
   createEmptyTier,
@@ -331,7 +332,7 @@ export default function EventEditPageView() {
   if (loading && !event) {
     return (
       <div className="flex items-center justify-center py-16">
-        <HugeiconsIcon icon={Loading02Icon} size={28} className="animate-spin text-zinc-500" />
+        <PxiSpinner size="md" />
       </div>
     );
   }
@@ -388,29 +389,29 @@ export default function EventEditPageView() {
     <div className="space-y-6 pb-16">
       <form onSubmit={handleSubmit} className="space-y-6">
         {formError && (
-          <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">
             {formError}
           </div>
         )}
-        <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
+        <section className="dashboard-surface rounded-2xl p-5 space-y-4">
           <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-zinc-500">
             <HugeiconsIcon icon={ImageIcon} size={16} />
             Cover image
           </h2>
           <label className="relative block w-full sm:w-[300px] sm:mx-auto cursor-pointer" style={{ aspectRatio: '3/4' }}>
             <input type="file" accept="image/*" className="hidden" onChange={onCoverFile} disabled={isCoverUploading} />
-            <div className={`w-full h-full rounded-2xl overflow-hidden border ${coverImage || coverPreview ? 'border-white/10' : 'border-dashed border-white/20'} bg-white/5 flex items-center justify-center`}>
+            <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-white/[0.045]">
               {(coverImage || coverPreview) ? (
                 <img src={coverImage || coverPreview} alt="" className="w-full h-full object-cover" />
               ) : !isCoverUploading ? (
                 <div className="flex flex-col items-center gap-3">
-                  <HugeiconsIcon icon={ImageIcon} size={36} className="text-white/30" />
+                  <HugeiconsIcon icon={ImageIcon} size={36} className="text-white opacity-30" />
                   <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.15em]">Add cover image</span>
                 </div>
               ) : null}
               {isCoverUploading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 rounded-2xl">
-                  <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin text-white" />
+                  <PxiSpinner size="md" />
                   <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover...</span>
                 </div>
               )}
@@ -432,7 +433,7 @@ export default function EventEditPageView() {
           </label>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
+        <section className="dashboard-surface rounded-2xl p-5 space-y-4">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Basics</h2>
           <div>
             <label className={labelClass}>Event name *</label>
@@ -493,9 +494,9 @@ export default function EventEditPageView() {
               <label className={labelClass}>Custom passport stamp (recurring series)</label>
               <div className="flex items-center gap-3">
                 {stampImage ? (
-                  <img src={stampImage} alt="Custom stamp" className="h-16 w-16 rounded-xl border border-white/15 object-cover" />
+                  <img src={stampImage} alt="Custom stamp" className="h-16 w-16 rounded-xl object-cover" />
                 ) : null}
-                <label className="cursor-pointer rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white/70 hover:text-white">
+                <label className="pill-ghost cursor-pointer px-4 py-2 text-xs font-bold uppercase tracking-widest">
                   {isStampUploading ? 'Uploading...' : stampImage ? 'Replace stamp' : 'Upload stamp'}
                   <input
                     type="file"
@@ -553,10 +554,10 @@ export default function EventEditPageView() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-5">
+        <section className="dashboard-surface rounded-2xl p-5 space-y-5">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Configuration</h2>
 
-          <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 rounded-xl bg-white/[0.04] px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Public event</p>
               <p className="text-xs text-zinc-500">Anyone can discover this event.</p>
@@ -577,10 +578,10 @@ export default function EventEditPageView() {
             </button>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 rounded-xl bg-white/[0.04] px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Paid ticket</p>
-              <p className="text-xs text-zinc-500">Requires verified vendor / Stripe.</p>
+              <p className="text-xs text-zinc-500">Requires completed hosting payment setup.</p>
             </div>
             <button
               type="button"
@@ -597,7 +598,7 @@ export default function EventEditPageView() {
 
           {isPaid && (
             <>
-              <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
+              <div className="flex items-center justify-between gap-4 rounded-xl bg-white/[0.04] px-4 py-3">
                 <div>
                   <p className="text-sm font-bold text-white">Ticket tiers</p>
                   <p className="text-xs text-zinc-500">VVIP, VIP, general admission, and more.</p>
@@ -626,7 +627,7 @@ export default function EventEditPageView() {
                   {ticketTiers.map((tier, index) => (
                     <div
                       key={tier.id}
-                      className="rounded-xl border border-white/10 bg-zinc-800/30 p-4 space-y-3"
+                      className="space-y-3 rounded-xl bg-white/[0.035] p-4"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
@@ -696,13 +697,13 @@ export default function EventEditPageView() {
                   <button
                     type="button"
                     onClick={() => setTicketTiers((prev) => [...prev, createEmptyTier()])}
-                    className="w-full rounded-xl border border-dashed border-white/15 py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white hover:border-white/25 transition-colors"
+                    className="w-full rounded-xl bg-white/[0.045] py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
                   >
                     + Add tier
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 rounded-xl bg-zinc-800/80 border border-white/10 px-3 py-2">
+                <div className="flex items-center gap-2 rounded-xl bg-white/[0.045] px-3 py-2">
                   <HugeiconsIcon icon={HelpCircleIcon} size={18} className="text-zinc-500 shrink-0" />
                   <input
                     className="flex-1 bg-transparent text-white text-sm outline-none placeholder-zinc-500"
@@ -761,7 +762,7 @@ export default function EventEditPageView() {
         </section>
 
         {paidGate && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 space-y-2">
+          <div className="space-y-2 rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
             {paidGate === 'no-account' ? (
               <p>To sell tickets, complete hosting setup with Stripe.</p>
             ) : (
@@ -773,10 +774,10 @@ export default function EventEditPageView() {
           </div>
         )}
 
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-4 flex flex-col-reverse sm:flex-row gap-3 sm:items-center">
+        <div className="dashboard-surface flex flex-col-reverse gap-3 rounded-2xl p-4 sm:flex-row sm:items-center">
           <Link
             href={`/dashboard/events/${eventId}`}
-            className="inline-flex items-center justify-center min-h-[48px] px-5 rounded-xl border border-white/15 text-sm font-semibold text-zinc-200 hover:bg-white/5"
+            className="pill-ghost inline-flex min-h-[48px] items-center justify-center px-5 text-sm font-semibold"
           >
             Cancel
           </Link>
@@ -785,13 +786,13 @@ export default function EventEditPageView() {
             disabled={isSaving || isCoverUploading}
             className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] rounded-full bg-white px-6 text-sm font-bold uppercase tracking-widest text-black transition hover:bg-zinc-200 disabled:opacity-45"
           >
-            {isSaving ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin" /> : null}
+            {isSaving ? <PxiSpinner size="sm" /> : null}
             {isSaving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </form>
 
-      <section className="rounded-2xl border border-red-500/20 bg-red-500/5 overflow-hidden">
+      <section className="overflow-hidden rounded-2xl bg-red-500/5">
         <div className="p-5">
           <h2 className="text-xs font-bold text-red-400 uppercase tracking-widest">Danger zone</h2>
         </div>
@@ -800,7 +801,7 @@ export default function EventEditPageView() {
             type="button"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-red-500/40 bg-red-500/10 text-red-300 text-xs font-bold uppercase tracking-widest hover:bg-red-500/20 transition-all disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-red-500/10 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-red-300 transition-all hover:bg-red-500/20 disabled:opacity-50"
           >
             <HugeiconsIcon icon={Delete02Icon} size={14} />
             {isDeleting ? 'Deleting...' : 'Delete event'}
@@ -811,7 +812,7 @@ export default function EventEditPageView() {
 
       {showPublicConsent && (
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900 p-5 space-y-4">
+          <div className="dashboard-popover-surface w-full max-w-md space-y-4 rounded-2xl p-5">
             <h3 className="text-lg font-bold text-white">Public event</h3>
             <p className="text-sm text-zinc-300 leading-relaxed">
               By making this event public, you agree that photos and content from this event may be curated into public
@@ -821,7 +822,7 @@ export default function EventEditPageView() {
               <button
                 type="button"
                 onClick={() => setShowPublicConsent(false)}
-                className="px-4 py-2.5 rounded-xl border border-white/10 text-sm text-zinc-300 hover:bg-white/5"
+                className="pill-ghost px-4 py-2.5 text-sm text-zinc-300"
               >
                 Keep private
               </button>

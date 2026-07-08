@@ -38,7 +38,6 @@ export default function DualCtaCards({ cards = [], className = '' }) {
           <div className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-gradient-to-r from-pxi-purple to-pxi-orange transition-transform duration-500 group-hover:scale-x-100" />
 
           <div className="relative z-10 flex h-full flex-col justify-end p-7 md:p-10">
-            <span className="eyebrow mb-4">{card.eyebrow}</span>
             <h3 className="display-3 text-white">{card.title}</h3>
             {card.sub ? <p className="mt-3 max-w-sm text-base text-zinc-300">{card.sub}</p> : null}
             <div className="mt-6 flex flex-wrap items-center gap-5">

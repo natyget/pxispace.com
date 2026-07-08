@@ -367,7 +367,7 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
   return (
     <section className="overflow-hidden rounded-2xl bg-white/[0.035]">
       <div className="flex items-center gap-2 px-5 pb-2 pt-5">
-        <HugeiconsIcon icon={ImageAdd02Icon} size={18} className="text-white/70" />
+        <HugeiconsIcon icon={ImageAdd02Icon} size={18} className="text-white opacity-70" />
         <h2 className="font-bold text-white uppercase tracking-widest text-sm">Gallery / Mass upload</h2>
       </div>
       <div className="p-5 space-y-4">
@@ -398,7 +398,7 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
         </button>
         {busy && progress.total > 0 && (
           <div className="space-y-1">
-            <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+            <div className="h-2 overflow-hidden rounded-full bg-white/[0.08]">
               <div
                 className="h-full bg-white transition-all duration-300"
                 style={{ width: `${pct}%` }}

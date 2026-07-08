@@ -17,7 +17,7 @@ export default function CreateEventMock() {
           </h2>
           <div className="flex h-24 w-full items-center justify-center rounded-xl bg-black/20">
             <div className="flex flex-col items-center gap-2">
-              <HugeiconsIcon icon={ImageIcon} size={20} className="text-white/30" />
+              <HugeiconsIcon icon={ImageIcon} size={20} className="text-white opacity-30" />
               <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">Add cover</span>
             </div>
           </div>

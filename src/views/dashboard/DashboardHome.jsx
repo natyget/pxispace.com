@@ -2,14 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { motion as Motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { eventsService } from '../../services/events';
-import SectionCard from '@/components/dashboard/SectionCard';
 import { MicroChart, StatRow } from '@/components/dashboard/MetricCard';
 import { useNotifications } from '@/lib/dashboardStore';
-import { buildCommandCenterUpdates, listSupportQueue } from '@/services/commandCenter';
+import { buildCommandCenterUpdates } from '@/services/commandCenter';
 import { helpRequestsService } from '@/services/helpRequests';
 import { organizerAnalyticsService } from '@/services/organizerAnalytics';
 
@@ -57,7 +55,7 @@ export default function DashboardHome() {
     const [helpRequests, setHelpRequests] = useState([]);
     const [overview, setOverview] = useState(null);
     const [overviewLoading, setOverviewLoading] = useState(false);
-    const { notifications, unreadCount: notificationCount } = useNotifications(50);
+    const { unreadCount: notificationCount } = useNotifications(50);
 
     useEffect(() => {
         const frame = requestAnimationFrame(() => setMounted(true));
@@ -210,8 +208,8 @@ export default function DashboardHome() {
         () => eventRows.filter((event) => event.status === 'Active' || event.status === 'Scheduled').slice(0, 4),
         [eventRows]
     );
-    const { queue: urgentQueue, isSampleQueue } = useMemo(() => {
-        const localRequests = helpRequests
+    const urgentQueue = useMemo(() => {
+        return helpRequests
             .filter((request) => request.status !== 'resolved')
             .slice(0, 3)
             .map((request) => ({
@@ -223,9 +221,7 @@ export default function DashboardHome() {
                 action: request.status === 'reviewing' ? 'Continue review' : 'Review ticket',
                 href: request.eventId ? `/dashboard/events/${request.eventId}/members` : '/dashboard/events',
             }));
-        if (localRequests.length) return { queue: localRequests, isSampleQueue: false };
-        return { queue: listSupportQueue({ events, notifications }).requests.slice(0, 3), isSampleQueue: true };
-    }, [events, helpRequests, notifications]);
+    }, [helpRequests]);
     const reminderUpdates = updates.filter((update) => update.group !== 'product');
     const productUpdates = updates.filter((update) => update.group === 'product');
     const metricsLoading = vendorLoading || eventsLoading || overviewLoading;
@@ -260,15 +256,13 @@ export default function DashboardHome() {
     }
 
     return (
-        <div className="mx-auto max-w-7xl space-y-6">
-            <section className="relative overflow-hidden rounded-[1.75rem] bg-black px-5 py-6 shadow-[0_24px_80px_rgba(0,0,0,0.42)] md:px-7 md:py-7">
-                <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,440px)] lg:items-end">
+        <div className="mx-auto max-w-7xl space-y-5 md:space-y-6">
+            <section className="dashboard-surface-b relative overflow-hidden rounded-[1.75rem] px-5 py-6 md:px-7 md:py-7">
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] xl:items-end">
                     <div className="min-w-0">
                         <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">{dashboardHero.eyebrow}</p>
                         <h1 className="mt-2 text-4xl font-black leading-[0.9] text-white md:text-6xl">{dashboardHero.title}</h1>
-                        <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400">
-                            {dashboardHero.copy}
-                        </p>
+                        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">{dashboardHero.copy}</p>
                         <div className="mt-5 flex flex-wrap items-center gap-2">
                             <Link
                                 href={isVendorDashboard ? '/dashboard/events' : '/dashboard/vendor-upgrade'}
@@ -277,10 +271,16 @@ export default function DashboardHome() {
                                 {isVendorDashboard ? 'Manage events' : 'Start hosting'}
                             </Link>
                             <Link
+                                href="/dashboard/analytics"
+                                className="pill-ghost px-4 py-2.5 text-xs font-black uppercase tracking-widest"
+                            >
+                                Analytics
+                            </Link>
+                            <Link
                                 href="/dashboard/notifications"
                                 className="pill-ghost relative px-4 py-2.5 text-xs font-black uppercase tracking-widest"
                             >
-                                Notifications
+                                Inbox
                                 {notificationCount > 0 ? (
                                     <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-[10px] font-black text-black">
                                         {notificationCount > 99 ? '99+' : notificationCount}
@@ -291,165 +291,194 @@ export default function DashboardHome() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                         {commandMetrics.map((metric) => (
-                            <div key={metric.label} className="min-h-[96px] rounded-2xl bg-white/[0.055] p-4">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{metric.label}</p>
-                                <p className="mt-3 truncate text-2xl font-black text-white">{metric.value}</p>
-                            </div>
+                            <CommandMetric key={metric.label} metric={metric} />
                         ))}
                     </div>
                 </div>
             </section>
 
-            <Motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_380px]"
-            >
-                <div className="space-y-4">
-                    <SectionCard
-                        title="Upcoming + Live"
-                        actions={(
-                            <Link href="/dashboard/events" className="text-[12px] font-bold tracking-wide text-white/60 hover:text-white transition-colors uppercase whitespace-nowrap">
-                                View all
-                            </Link>
-                        )}
-                        bodyClassName="grid gap-3 md:grid-cols-2"
-                    >
+            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
+                <section className="dashboard-surface rounded-[1.75rem] p-5 md:p-6">
+                    <SurfaceHeader
+                        eyebrow="Now / next"
+                        title="Upcoming + live"
+                        action={<Link href="/dashboard/events" className="text-[12px] font-bold uppercase tracking-wide text-white/55 transition hover:text-white">View all</Link>}
+                    />
+                    <div className="mt-5 space-y-3">
                         {metricsLoading ? (
-                            <div className="grid gap-3 md:col-span-2 md:grid-cols-2">
-                                {[0, 1, 2].map((item) => (
-                                    <div key={item} className="h-28 rounded-2xl bg-white/[0.035] animate-pulse" />
+                            <div className="grid gap-3 md:grid-cols-2">
+                                {[0, 1, 2, 3].map((item) => (
+                                    <div key={item} className="h-[104px] animate-pulse rounded-[1.25rem] bg-white/[0.035]" />
                                 ))}
                             </div>
                         ) : upcomingAndLiveEvents.length === 0 ? (
-                            <div className="dashboard-surface-frosted rounded-[1.25rem] px-4 py-6 text-center md:col-span-2">
-                                <p className="text-sm font-semibold text-white">No live or upcoming events yet.</p>
-                                <Link href="/dashboard/events" className="pill-ghost mt-3 px-4 py-2 text-xs font-bold uppercase tracking-widest whitespace-nowrap">
-                                    Open events
-                                </Link>
-                            </div>
+                            <EmptyPanel
+                                title="No live or upcoming events yet."
+                                body={isVendorDashboard ? 'Create or schedule an event to start filling this queue.' : 'Events you host will appear here once hosting is enabled.'}
+                                href="/dashboard/events"
+                                action="Open events"
+                            />
                         ) : (
-                            upcomingAndLiveEvents.map((event) => (
-                                <article key={event.id} className="dashboard-surface-frosted rounded-[1.25rem] p-4">
-                                    <div className="flex min-w-0 items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                            <h2 className="truncate text-sm font-black text-white">{event.name}</h2>
-                                            <p className="mt-1 text-xs font-medium text-zinc-500">{event.dateLabel}</p>
-                                        </div>
-                                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${event.statusClassName}`}>
-                                            {event.status}
-                                        </span>
-                                    </div>
-                                    <div className="mt-3">
-                                        <StatRow
-                                            className="!rounded-xl !p-3"
-                                            items={[
-                                                { label: 'Revenue', value: event.revenueLabel },
-                                                { label: 'Tickets', value: event.ticketsSold.toLocaleString() },
-                                            ]}
-                                        />
-                                    </div>
-                                    <div className="mt-3 flex justify-end">
-                                        <Link href={event.href} className="text-[11px] font-bold uppercase tracking-widest text-white/55 transition hover:text-white whitespace-nowrap">
-                                            Open event
-                                        </Link>
-                                    </div>
-                                </article>
-                            ))
+                            <div className="grid gap-3">
+                                {upcomingAndLiveEvents.map((event) => (
+                                    <EventPriorityRow key={event.id} event={event} />
+                                ))}
+                            </div>
                         )}
-                    </SectionCard>
+                    </div>
+                </section>
 
-                    <SectionCard title="Snapshot" dense bodyClassName="space-y-4">
-                        <StatRow
-                            className="!rounded-xl !p-3"
-                            items={[
-                                { label: 'Revenue', value: metricsLoading ? '-' : summary.revenue },
-                                { label: 'Tickets', value: metricsLoading ? '-' : summary.sales.toLocaleString() },
-                                { label: 'Attendees', value: metricsLoading ? '-' : summary.attendees.toLocaleString() },
-                            ]}
-                        />
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="rounded-xl glass-field p-3">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Sales (30d)</p>
-                                <MicroChart points={summary.salesTrend} color={BASE_CHART_COLOR} className="mt-2" />
+                <aside className="space-y-5">
+                    <section className="dashboard-surface rounded-[1.75rem] p-5">
+                        <SurfaceHeader eyebrow="Pulse" title="Performance" />
+                        <div className="mt-4 space-y-4">
+                            <StatRow
+                                className="!rounded-[1.25rem] !p-3"
+                                items={[
+                                    { label: 'Revenue', value: metricsLoading ? '-' : summary.revenue },
+                                    { label: 'Tickets', value: metricsLoading ? '-' : summary.sales.toLocaleString() },
+                                    { label: 'Attendees', value: metricsLoading ? '-' : summary.attendees.toLocaleString() },
+                                ]}
+                            />
+                            <div className="grid grid-cols-2 gap-3">
+                                <MiniTrend label="Sales (30d)" points={summary.salesTrend} />
+                                <MiniTrend label="Media (30d)" points={summary.mediaTrend} />
                             </div>
-                            <div className="rounded-xl glass-field p-3">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Media (30d)</p>
-                                <MicroChart points={summary.mediaTrend} color={BASE_CHART_COLOR} className="mt-2" />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2">
-                            {[
-                                ['Active', summary.activeCount],
-                                ['Scheduled', summary.scheduledCount],
-                                ['Draft', summary.draftCount],
-                            ].map(([label, value]) => (
-                                <div key={label} className="rounded-xl glass-field px-3 py-2">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">{label}</p>
-                                    <p className="mt-1 text-lg font-black text-white">{metricsLoading ? '-' : value}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </SectionCard>
-                </div>
-
-                <div className="space-y-4">
-                    <SectionCard
-                        title="Urgent notices"
-                        dense
-                        bodyClassName="space-y-3"
-                        actions={isSampleQueue ? (
-                            <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-amber-300">
-                                Sample
-                            </span>
-                        ) : null}
-                    >
-                        {isSampleQueue ? (
-                            <p className="-mt-1 mb-1 text-[11px] leading-relaxed text-white/40">
-                                Showing example items. Help requests are stored on this device only and don&apos;t yet
-                                sync from attendees&apos; devices — this isn&apos;t a live support inbox.
-                            </p>
-                        ) : null}
-                        {urgentQueue.map((notice) => (
-                            <Link
-                                key={notice.id}
-                                href={notice.href}
-                                className="block rounded-[1.25rem] p-4 transition hover:bg-white/[0.075] glass-field"
-                            >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-black text-white">{notice.title}</p>
-                                        <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-white/35">{notice.event}</p>
-                                        <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-white/50">{notice.detail}</p>
+                            <div className="grid grid-cols-3 gap-2">
+                                {[
+                                    ['Active', summary.activeCount],
+                                    ['Scheduled', summary.scheduledCount],
+                                    ['Draft', summary.draftCount],
+                                ].map(([label, value]) => (
+                                    <div key={label} className="rounded-[1rem] bg-white/[0.035] px-3 py-3">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">{label}</p>
+                                        <p className="mt-1 text-lg font-black text-white">{metricsLoading ? '-' : value}</p>
                                     </div>
-                                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
-                                        notice.severity === 'high' ? 'bg-red-500/[0.08] text-red-400/80' : 'bg-white/[0.04] text-white/50'
-                                    }`}>
-                                        {notice.severity}
-                                    </span>
-                                </div>
-                                <p className="mt-3 text-[10px] font-black uppercase tracking-widest text-white/55">{notice.action}</p>
-                            </Link>
-                        ))}
-                    </SectionCard>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
 
-                    <SectionCard title="PXI Updates" dense bodyClassName="flex min-h-[420px] flex-col gap-5">
-                        <div className="space-y-3">
-                            <p className="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">Reminders</p>
-                            {reminderUpdates.map((update) => (
-                                <UpdateLink key={update.id} update={update} />
-                            ))}
+                    <section className="dashboard-surface rounded-[1.75rem] p-5">
+                        <SurfaceHeader eyebrow="Attention" title="Urgent notices" />
+                        <div className="mt-4 space-y-3">
+                            {urgentQueue.length ? (
+                                urgentQueue.map((notice) => <NoticeLink key={notice.id} notice={notice} />)
+                            ) : (
+                                <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-5">
+                                    <p className="text-sm font-semibold text-white">No urgent notices.</p>
+                                    <p className="mt-1 text-xs leading-5 text-zinc-500">Customer requests and event issues will surface here when they need review.</p>
+                                </div>
+                            )}
                         </div>
-                        <div className="mt-auto space-y-3">
-                            <p className="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">Product + Policy</p>
-                            {productUpdates.map((update) => (
-                                <UpdateLink key={update.id} update={update} />
-                            ))}
-                        </div>
-                    </SectionCard>
+                    </section>
+                </aside>
+            </div>
+
+            <section className="dashboard-surface rounded-[1.75rem] p-5 md:p-6">
+                <SurfaceHeader eyebrow="Updates" title="PXI updates" />
+                <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                    <div className="space-y-3">
+                        <p className="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">Reminders</p>
+                        {reminderUpdates.map((update) => (
+                            <UpdateLink key={update.id} update={update} />
+                        ))}
+                    </div>
+                    <div className="space-y-3">
+                        <p className="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">Product + policy</p>
+                        {productUpdates.map((update) => (
+                            <UpdateLink key={update.id} update={update} />
+                        ))}
+                    </div>
                 </div>
-            </Motion.div>
+            </section>
         </div>
+    );
+}
+
+function CommandMetric({ metric }) {
+    return (
+        <div className="min-h-[92px] rounded-[1.25rem] bg-white/[0.045] p-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{metric.label}</p>
+            <p className="mt-3 truncate text-2xl font-black text-white">{metric.value}</p>
+        </div>
+    );
+}
+
+function SurfaceHeader({ eyebrow, title, action = null }) {
+    return (
+        <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">{eyebrow}</p>
+                <h2 className="mt-1 text-xl font-black tracking-normal text-white">{title}</h2>
+            </div>
+            {action ? <div className="shrink-0 pt-1">{action}</div> : null}
+        </div>
+    );
+}
+
+function EventPriorityRow({ event }) {
+    return (
+        <Link href={event.href} className="grid gap-4 rounded-[1.25rem] bg-white/[0.035] p-4 transition hover:bg-white/[0.055] md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-center">
+            <div className="min-w-0">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <h3 className="max-w-full truncate text-base font-black text-white">{event.name}</h3>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${event.statusClassName}`}>
+                        {event.status}
+                    </span>
+                </div>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-white/35">{event.dateLabel}</p>
+            </div>
+            <StatRow
+                className="!rounded-[1rem] !p-3"
+                items={[
+                    { label: 'Revenue', value: event.revenueLabel },
+                    { label: 'Tickets', value: event.ticketsSold.toLocaleString() },
+                ]}
+            />
+            <span className="text-[11px] font-black uppercase tracking-widest text-white/50 md:text-right">Open</span>
+        </Link>
+    );
+}
+
+function EmptyPanel({ title, body, href, action }) {
+    return (
+        <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-7 text-center">
+            <p className="text-sm font-semibold text-white">{title}</p>
+            <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-zinc-500">{body}</p>
+            <Link href={href} className="pill-ghost mt-4 px-4 py-2 text-xs font-bold uppercase tracking-widest whitespace-nowrap">
+                {action}
+            </Link>
+        </div>
+    );
+}
+
+function MiniTrend({ label, points }) {
+    return (
+        <div className="rounded-[1rem] bg-white/[0.035] p-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">{label}</p>
+            <MicroChart points={points} color={BASE_CHART_COLOR} className="mt-2" />
+        </div>
+    );
+}
+
+function NoticeLink({ notice }) {
+    return (
+        <Link href={notice.href} className="block rounded-[1.25rem] bg-white/[0.035] p-4 transition hover:bg-white/[0.055]">
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-white">{notice.title}</p>
+                    <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-white/35">{notice.event}</p>
+                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-white/50">{notice.detail}</p>
+                </div>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                    notice.severity === 'high' ? 'bg-red-500/[0.08] text-red-400/80' : 'bg-white/[0.045] text-white/55'
+                }`}>
+                    {notice.severity}
+                </span>
+            </div>
+            <p className="mt-3 text-[10px] font-black uppercase tracking-widest text-white/55">{notice.action}</p>
+        </Link>
     );
 }
 
@@ -457,7 +486,7 @@ function UpdateLink({ update }) {
     return (
         <Link
             href={update.href}
-            className="block rounded-[1.25rem] glass-field p-4 transition hover:bg-white/[0.075]"
+            className="block rounded-[1.25rem] bg-white/[0.035] p-4 transition hover:bg-white/[0.055]"
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

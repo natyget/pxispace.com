@@ -164,7 +164,7 @@ function HypePanel({ behavior, isMobile }) {
         >
             <div className="relative overflow-hidden px-5 py-5 md:px-6 md:py-6">
                 <div className="relative grid grid-cols-1 gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-                    <div className="rounded-[1.5rem] bg-black/25 p-5 md:p-6">
+                    <div className="rounded-[1.5rem] bg-white/[0.035] p-5 md:p-6">
                         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Engagement pulse</p>
                         <p className="mt-3 text-6xl font-black leading-none tracking-normal text-white md:text-7xl">{formatNumber(behavior.hypeIndex)}</p>
                         <p className="mt-1 text-sm font-bold text-zinc-400">out of 100</p>
@@ -196,7 +196,7 @@ function HypePanel({ behavior, isMobile }) {
                                     <span className={`h-2 w-2 rounded-full ${item.active ? 'opacity-100' : 'opacity-35'}`} style={{ backgroundColor: item.color }} />
                                 </div>
                                 <p className="mt-3 text-3xl font-black tracking-normal text-white">{formatNumber(item.value)}</p>
-                                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/30">
+                                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.055]">
                                     <div
                                         className="h-full rounded-full bg-white/70"
                                         style={{ width: `${clampPercent(item.value, maxHypeChannelTotal)}%` }}
@@ -212,7 +212,7 @@ function HypePanel({ behavior, isMobile }) {
                     </div>
                 </div>
                 {hasActivity ? (
-                    <div className="relative mt-5 h-[380px] rounded-[1.5rem] bg-black/20 p-3 md:h-[520px]">
+                    <div className="relative mt-5 h-[380px] rounded-[1.5rem] bg-white/[0.025] p-3 md:h-[520px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={series} margin={{ top: 12, right: 14, bottom: 0, left: isMobile ? -18 : 0 }}>
                                 <defs>
@@ -275,7 +275,7 @@ function HypePanel({ behavior, isMobile }) {
                         </div>
                     </div>
                 ) : (
-                    <div className="relative mt-5 rounded-2xl bg-black/20 p-6 text-sm text-zinc-500">
+                    <div className="relative mt-5 rounded-2xl bg-white/[0.035] p-6 text-sm text-zinc-500">
                         No {channel === 'all' ? 'chat, reaction, or upload' : HYPE_CHANNELS.find((item) => item.id === channel)?.label.toLowerCase()} activity in the event window yet.
                     </div>
                 )}
@@ -319,7 +319,7 @@ function TopMomentsPanel({ moments, onRemoved }) {
             {error ? <p className="mb-3 text-xs text-red-400">{error}</p> : null}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {moments.map((m) => (
-                    <div key={m.mediaId} className="group relative overflow-hidden rounded-2xl bg-zinc-900/60">
+                    <div key={m.mediaId} className="group relative overflow-hidden rounded-2xl bg-white/[0.035]">
                         <img
                             src={m.thumbnailUrl || m.r2Url}
                             alt=""
@@ -481,7 +481,7 @@ function AnalyticsHero({ totals, last30d, velocity7d, loading, isLiveEvent }) {
     ];
 
     return (
-        <section className="relative overflow-hidden rounded-[2rem] bg-[#050505] px-5 py-6 shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:px-7 md:py-7">
+        <section className="dashboard-surface-b relative overflow-hidden rounded-[2rem] px-5 py-6 md:px-7 md:py-7">
             <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-2xl">
                     <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -589,7 +589,7 @@ function CompareMetric({ label, value, barValue, maxValue }) {
                 <p className="truncate text-[10px] font-black uppercase tracking-widest text-white/35">{label}</p>
                 <p className="shrink-0 text-sm font-black text-white tabular-nums">{value}</p>
             </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/30" aria-hidden="true">
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.055]" aria-hidden="true">
                 <div className="h-full rounded-full bg-white/70" style={{ width: `${clampPercent(barValue, maxValue)}%` }} />
             </div>
         </div>
@@ -642,7 +642,7 @@ function EventComparisonPanel({ details = [], loading }) {
             </div>
             <div className="mt-5 grid gap-3 xl:grid-cols-2">
                 {rows.map((row) => (
-                    <article key={row.id || row.name} className="rounded-[1.25rem] bg-black/20 p-4">
+                    <article key={row.id || row.name} className="rounded-[1.25rem] bg-white/[0.035] p-4">
                         <h3 className="truncate text-base font-black text-white">{row.name}</h3>
                         <div className="mt-4 grid gap-2 sm:grid-cols-2">
                             <CompareMetric label="Tickets" value={formatNumber(row.tickets)} barValue={row.tickets} maxValue={maxTickets} />
@@ -1010,7 +1010,7 @@ function AnalyticsPageContent() {
                             { label: 'Gross', value: formatMoney(totals?.grossCents) },
                             { label: 'Velocity', value: `${formatNumber(round1(overviewVelocity7d))}/day` },
                         ].map((item) => (
-                            <div key={item.label} className="rounded-2xl bg-black/25 px-3 py-3">
+                            <div key={item.label} className="rounded-2xl bg-white/[0.045] px-3 py-3">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{item.label}</p>
                                 <p className="mt-1 truncate text-lg font-black text-white">{overviewLoading ? '...' : item.value}</p>
                             </div>

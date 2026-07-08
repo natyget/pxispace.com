@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { eventsService } from '@/services/events';
+import { getAdSlot } from '@/services/ads';
+import { getAnonId, queueAdImpression, trackAdClick, useAdImpression } from '@/lib/adTracking';
 import EventCard from '@/views/events/EventCard';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { useAuth } from '@/contexts/AuthContext';
@@ -61,6 +63,71 @@ function normalizeApiEvent(e) {
 function formatHeroDate(d) {
   if (!d) return 'Date TBA';
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+/** Sponsored creative → the page's normalized event shape (carries its ad as __ad). */
+function normalizeAdEvent(ad) {
+  const e = ad.event;
+  const paid = e.ticketType === 'PAID';
+  const sym = e.currency === 'EUR' ? '€' : '$';
+  return {
+    id: e.id,
+    title: e.name,
+    coverImage: e.coverImage || DEFAULT_IMG,
+    venue: e.venueName || e.location || 'Location TBA',
+    createdAt: null,
+    startDate: e.startDate ? new Date(e.startDate) : null,
+    price: paid && Number(e.ticketPrice) > 0 ? `${sym}${Number(e.ticketPrice).toFixed(2)}` : 'Free',
+    attendees: 0,
+    ticketType: e.ticketType || null,
+    albumId: null,
+    image: e.coverImage || DEFAULT_IMG,
+    location: e.venueName || e.location || 'Location TBA',
+    date: e.startDate
+      ? new Date(e.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : 'Date TBA',
+    members: 0,
+    status: 'Sponsored',
+    vendorHint: null,
+    organizerAvatar: null,
+    organizerName: 'Sponsored',
+    __ad: ad,
+  };
+}
+
+/** Grid card that fires one viewable impression when sponsored. */
+function AdAwareEventCard({ event, favorited, onToggleFavorite }) {
+  const ad = event.__ad || null;
+  const impressionRef = useAdImpression(ad);
+  return (
+    <div ref={ad ? impressionRef : undefined} className="w-full max-w-[420px] mx-auto">
+      <EventCard
+        event={event}
+        favorited={favorited}
+        onToggleFavorite={onToggleFavorite}
+        detailBasePath="/events"
+        sponsored={Boolean(ad)}
+        onSponsoredClick={ad ? () => trackAdClick(ad) : undefined}
+      />
+    </div>
+  );
+}
+
+/** Sponsored cards drop into the grid after every 7 organic cards. */
+function interleaveGridAds(list, ads) {
+  if (!ads.length) return list;
+  const out = [];
+  let adCursor = 0;
+  list.forEach((item, index) => {
+    out.push(item);
+    if ((index + 1) % 7 === 0 && adCursor < ads.length) {
+      out.push(normalizeAdEvent(ads[adCursor]));
+      adCursor += 1;
+    }
+  });
+  // Small lists still show the first sponsored card at the end.
+  if (adCursor === 0 && out.length > 0) out.push(normalizeAdEvent(ads[0]));
+  return out;
 }
 
 const TRENDING_OPTIONS = [
@@ -151,7 +218,7 @@ function cityOptionMatchesQuery(city, query) {
 function EventCardSkeleton() {
   return (
     <div className="w-full max-w-[420px] mx-auto">
-      <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-zinc-900/80">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-zinc-900/80">
         <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-transparent" />
         <div className="absolute left-4 top-4 h-9 w-9 rounded-full bg-white/10" />
         <div className="absolute right-4 top-4 h-9 w-9 rounded-full bg-white/10" />
@@ -209,6 +276,9 @@ export default function PublicEventsPage() {
     setPortalTarget(document.getElementById('navbar-center-portal'));
   }, []);
 
+  const [featuredAds, setFeaturedAds] = useState([]);
+  const [gridAds, setGridAds] = useState([]);
+
   useEffect(() => {
     setLoading(true);
     eventsService
@@ -216,6 +286,10 @@ export default function PublicEventsPage() {
       .then((res) => setEvents((res.events || []).map(normalizeApiEvent)))
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));
+
+    const anonId = getAnonId();
+    getAdSlot('WEB_FEATURED', 3, anonId).then(setFeaturedAds);
+    getAdSlot('WEB_DISCOVERY', 4, anonId).then(setGridAds);
   }, []);
 
   const loadFavorites = useCallback(() => {
@@ -298,16 +372,26 @@ export default function PublicEventsPage() {
     return list;
   }, [events, trending, timeFilter, cityFilter, searchQuery, favoritesOnly, favoriteIds]);
 
+  // Paid featured slots pin first (labeled Sponsored); organic newest-first fills
+  // the remaining hero slots, deduped by event id.
   const heroEvents = useMemo(() => {
-    let list = [...events];
-    list.sort((a, b) => (b.createdAt?.getTime?.() ?? 0) - (a.createdAt?.getTime?.() ?? 0));
-    return list.slice(0, 8);
-  }, [events]);
+    const paid = featuredAds.map(normalizeAdEvent);
+    const paidIds = new Set(paid.map((e) => String(e.id)));
+    const organic = [...events]
+      .sort((a, b) => (b.createdAt?.getTime?.() ?? 0) - (a.createdAt?.getTime?.() ?? 0))
+      .filter((e) => !paidIds.has(String(e.id)));
+    return [...paid, ...organic].slice(0, 8);
+  }, [events, featuredAds]);
 
   const featured = useMemo(
     () => (heroEvents.length ? heroEvents[Math.min(heroIndex, heroEvents.length - 1)] : null),
     [heroEvents, heroIndex]
   );
+
+  // Each paid hero slide counts one impression when it rotates into view.
+  useEffect(() => {
+    if (featured?.__ad) queueAdImpression(featured.__ad);
+  }, [featured]);
 
   const rest = useMemo(() => {
     const isFiltered = searchQuery || timeFilter !== 'all' || cityFilter !== 'All' || favoritesOnly || trending !== 'all';
@@ -316,6 +400,13 @@ export default function PublicEventsPage() {
     }
     return filteredSortedEvents;
   }, [filteredSortedEvents, searchQuery, timeFilter, cityFilter, favoritesOnly, trending]);
+
+  // Sponsored discovery cards join the grid only in the unfiltered browse view.
+  const restWithAds = useMemo(() => {
+    const isFiltered = searchQuery || timeFilter !== 'all' || cityFilter !== 'All' || favoritesOnly || trending !== 'all';
+    if (isFiltered) return rest;
+    return interleaveGridAds(rest, gridAds);
+  }, [rest, gridAds, searchQuery, timeFilter, cityFilter, favoritesOnly, trending]);
 
   // Auto-advance carousel
   useEffect(() => {
@@ -386,115 +477,115 @@ export default function PublicEventsPage() {
     <div className="min-h-screen bg-black pt-16 font-sans text-white md:pt-20">
       {portalTarget
         ? createPortal(
-            <div ref={filterTrayRef} className="flex flex-nowrap items-center justify-center gap-0 rounded-full bg-white/[0.04] px-2.5 py-1 md:px-3.5 md:py-1.5 backdrop-blur-2xl border-0 shadow-lg max-w-[92vw]">
-              {/* Time */}
-              <div className="relative flex items-center" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  onClick={() => setOpenMenu((m) => (m === 'time' ? null : 'time'))}
-                  className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm md:text-base font-semibold text-white/80 transition-colors hover:text-white"
-                >
-                  {timeLabel}
-                  <HugeiconsIcon icon={ArrowDown01Icon} size={13} className="opacity-50" />
-                </button>
-                {openMenu === 'time' ? (
-                  <div className="absolute left-0 top-full z-50 mt-2 w-52 rounded-2xl border border-white/10 bg-zinc-950/90 p-2 backdrop-blur">
-                    {TIME_OPTIONS.map((o) => (
+          <div ref={filterTrayRef} className="flex flex-nowrap items-center justify-center gap-0 rounded-full bg-white/[0.04] px-2.5 py-1 md:px-3.5 md:py-1.5 backdrop-blur-2xl border-0 shadow-lg max-w-[92vw]">
+            {/* Time */}
+            <div className="relative flex items-center" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => setOpenMenu((m) => (m === 'time' ? null : 'time'))}
+                className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm md:text-base font-semibold text-white opacity-80 transition-opacity hover:opacity-100"
+              >
+                {timeLabel}
+                <HugeiconsIcon icon={ArrowDown01Icon} size={13} />
+              </button>
+              {openMenu === 'time' ? (
+                <div className="absolute left-0 top-full z-50 mt-2 w-52 rounded-2xl border border-white/10 bg-zinc-950/90 p-2 backdrop-blur">
+                  {TIME_OPTIONS.map((o) => (
+                    <button
+                      key={o.id}
+                      type="button"
+                      onClick={() => { setTimeFilter(o.id); setOpenMenu(null); }}
+                      className={`w-full rounded-xl px-3 py-2 text-left text-sm font-semibold hover:bg-white/5 ${timeFilter === o.id ? 'text-[#d946ef]' : 'text-white'}`}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <span className="text-sm md:text-base font-semibold text-white/40 px-1.5 select-none leading-none flex items-center h-full" aria-hidden="true">in</span>
+
+            {/* City */}
+            <div className="relative flex items-center" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => setOpenMenu((m) => (m === 'city' ? null : 'city'))}
+                className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm md:text-base font-semibold text-white opacity-80 transition-opacity hover:opacity-100"
+              >
+                {cityLabel === 'All' ? 'City' : cityLabel}
+                <HugeiconsIcon icon={ArrowDown01Icon} size={13} />
+              </button>
+              {openMenu === 'city' ? (
+                <div className="absolute left-0 top-full z-50 mt-2 w-[320px] rounded-2xl border border-white/10 bg-zinc-950/90 p-2 backdrop-blur">
+                  <div className="px-2 pb-2">
+                    <input
+                      value={cityQuery}
+                      onChange={(e) => setCityQuery(e.target.value)}
+                      placeholder="Search city..."
+                      className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none"
+                    />
+                  </div>
+                  <div className="max-h-64 overflow-auto">
+                    {CITY_PRESETS.filter((c) => cityOptionMatchesQuery(c, cityQuery)).map((c) => (
                       <button
-                        key={o.id}
+                        key={c}
                         type="button"
-                        onClick={() => { setTimeFilter(o.id); setOpenMenu(null); }}
-                        className={`w-full rounded-xl px-3 py-2 text-left text-sm font-semibold hover:bg-white/5 ${timeFilter === o.id ? 'text-[#d946ef]' : 'text-white'}`}
+                        onClick={() => { setCityFilter(c); setOpenMenu(null); }}
+                        className={`w-full rounded-xl px-3 py-2 text-left text-sm font-semibold hover:bg-white/5 ${cityFilter === c ? 'text-[#d946ef]' : 'text-white'}`}
                       >
-                        {o.label}
+                        {c}
                       </button>
                     ))}
                   </div>
-                ) : null}
-              </div>
-
-              <span className="text-sm md:text-base font-semibold text-white/40 px-1.5 select-none leading-none flex items-center h-full" aria-hidden="true">in</span>
-
-              {/* City */}
-              <div className="relative flex items-center" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  onClick={() => setOpenMenu((m) => (m === 'city' ? null : 'city'))}
-                  className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm md:text-base font-semibold text-white/80 transition-colors hover:text-white"
-                >
-                  {cityLabel === 'All' ? 'City' : cityLabel}
-                  <HugeiconsIcon icon={ArrowDown01Icon} size={13} className="opacity-50" />
-                </button>
-                {openMenu === 'city' ? (
-                  <div className="absolute left-0 top-full z-50 mt-2 w-[320px] rounded-2xl border border-white/10 bg-zinc-950/90 p-2 backdrop-blur">
-                    <div className="px-2 pb-2">
-                      <input
-                        value={cityQuery}
-                        onChange={(e) => setCityQuery(e.target.value)}
-                        placeholder="Search city..."
-                        className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none"
-                      />
-                    </div>
-                    <div className="max-h-64 overflow-auto">
-                      {CITY_PRESETS.filter((c) => cityOptionMatchesQuery(c, cityQuery)).map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => { setCityFilter(c); setOpenMenu(null); }}
-                          className={`w-full rounded-xl px-3 py-2 text-left text-sm font-semibold hover:bg-white/5 ${cityFilter === c ? 'text-[#d946ef]' : 'text-white'}`}
-                        >
-                          {c}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-
-              {user?.id ? (
-                <>
-                  <span className="h-5 w-px bg-white/10 mx-2" aria-hidden />
-                  {/* Favorites heart */}
-                  <button
-                    type="button"
-                    onClick={() => setFavoritesOnly((v) => !v)}
-                    className={`rounded-full p-2.5 transition-colors ${favoritesOnly ? 'text-[#d946ef]' : 'text-white/50 hover:text-white'}`}
-                    aria-label="Toggle favorites"
-                  >
-                    <HugeiconsIcon icon={FavouriteIcon} size={18} className={favoritesOnly ? 'fill-current' : ''} />
-                  </button>
-                </>
+                </div>
               ) : null}
+            </div>
 
-              <span className="h-5 w-px bg-white/10 mx-2" aria-hidden />
-
-              {/* Expandable search */}
-              <div className="flex items-center">
-                {searchOpen ? (
-                  <input
-                    ref={searchInputRef}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
-                    placeholder="Search..."
-                    className="w-[85px] sm:w-[120px] rounded-full bg-transparent px-2 py-1 text-xs text-white placeholder-white/30 focus:outline-none"
-                    autoFocus
-                  />
-                ) : null}
+            {user?.id ? (
+              <>
+                <span className="h-5 w-px bg-white/10 mx-2" aria-hidden />
+                {/* Favorites heart */}
                 <button
                   type="button"
-                  onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
-                  className="rounded-full p-2.5 text-white/50 transition-colors hover:text-white"
-                  aria-label="Search events"
+                  onClick={() => setFavoritesOnly((v) => !v)}
+                  className={`rounded-full p-2.5 transition-all ${favoritesOnly ? 'text-[#d946ef]' : 'text-white opacity-50 hover:opacity-100'}`}
+                  aria-label="Toggle favorites"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-                  </svg>
+                  <HugeiconsIcon icon={FavouriteIcon} size={18} className={favoritesOnly ? 'fill-current' : ''} />
                 </button>
-              </div>
-            </div>,
-            portalTarget
-          )
+              </>
+            ) : null}
+
+            <span className="h-5 w-px bg-white/10 mx-2" aria-hidden />
+
+            {/* Expandable search */}
+            <div className="flex items-center">
+              {searchOpen ? (
+                <input
+                  ref={searchInputRef}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
+                  placeholder="Search..."
+                  className="w-[85px] sm:w-[120px] rounded-full bg-transparent px-2 py-1 text-xs text-white placeholder-white/30 focus:outline-none"
+                  autoFocus
+                />
+              ) : null}
+              <button
+                type="button"
+                onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
+                className="rounded-full p-2.5 text-white opacity-50 transition-opacity hover:opacity-100"
+                aria-label="Search events"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                </svg>
+              </button>
+            </div>
+          </div>,
+          portalTarget
+        )
         : null}
 
       {/* Hero (Desktop only) */}
@@ -525,9 +616,8 @@ export default function PublicEventsPage() {
                 key={i}
                 type="button"
                 onClick={() => setHeroIndex(i)}
-                className={`pointer-events-auto h-2 w-2 rounded-full transition-colors ${
-                  i === heroIndex ? 'bg-white' : 'bg-neutral-700 hover:bg-neutral-500'
-                }`}
+                className={`pointer-events-auto h-2 w-2 rounded-full transition-colors ${i === heroIndex ? 'bg-white' : 'bg-neutral-700 hover:bg-neutral-500'
+                  }`}
                 aria-label={`Go to event ${i + 1}`}
               />
             ))}
@@ -538,11 +628,11 @@ export default function PublicEventsPage() {
             {featured ? (
               <img
                 src={featured.coverImage}
-                className="w-full max-w-[300px] aspect-[3/4] object-cover rounded-3xl shadow-2xl border-0"
+                className="w-full max-w-[320px] aspect-[3/4] object-cover rounded-lg shadow-2xl border-0"
                 alt="Featured"
               />
             ) : (
-              <div className="relative w-full max-w-[300px] aspect-[3/4] overflow-hidden rounded-3xl bg-zinc-900/70 border-0">
+              <div className="relative w-full max-w-[320px] aspect-[3/4] overflow-hidden rounded-lg bg-zinc-900/70 border-0">
                 <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-transparent" />
               </div>
             )}
@@ -552,6 +642,11 @@ export default function PublicEventsPage() {
             <div className="space-y-2">
               {featured ? (
                 <>
+                  {featured.__ad ? (
+                    <span className="inline-flex rounded-full border border-white/20 bg-black/50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white/90 backdrop-blur-sm">
+                      Sponsored
+                    </span>
+                  ) : null}
                   <h1 className="text-3xl font-black leading-tight tracking-tight md:text-5xl">
                     {featured.title}
                   </h1>
@@ -561,14 +656,15 @@ export default function PublicEventsPage() {
                 </>
               ) : (
                 <div className="space-y-4" aria-hidden="true">
-                  <div className="h-12 w-[min(100%,520px)] animate-pulse rounded-2xl bg-white/10" />
-                  <div className="h-5 w-64 animate-pulse rounded-full bg-white/10" />
+                  <div className="h-20 md:h-28 w-[min(100%,520px)] animate-pulse rounded-2xl bg-white/10" />
+                  <div className="h-6 w-64 animate-pulse rounded-full bg-white/10" />
                 </div>
               )}
             </div>
             {featured ? (
               <Link
                 href={featured.ticketType === 'PAID' ? `/events/${featured.id}/checkout` : `/events/${featured.id}`}
+                onClick={() => featured.__ad && trackAdClick(featured.__ad)}
                 className="inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md px-7 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:scale-105 border-0"
               >
                 {featured.ticketType === 'PAID' ? 'Get tickets' : 'Join album'}
@@ -586,22 +682,20 @@ export default function PublicEventsPage() {
           <button
             type="button"
             onClick={() => setActiveTab('featured')}
-            className={`pb-3 text-sm font-black uppercase tracking-widest transition-all ${
-              activeTab === 'featured'
+            className={`pb-3 text-sm font-black uppercase tracking-widest transition-all ${activeTab === 'featured'
                 ? 'text-white border-b-2 border-white'
                 : 'text-zinc-500 hover:text-zinc-300'
-            }`}
+              }`}
           >
             Featured
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('browse')}
-            className={`pb-3 text-sm font-black uppercase tracking-widest transition-all ${
-              activeTab === 'browse'
+            className={`pb-3 text-sm font-black uppercase tracking-widest transition-all ${activeTab === 'browse'
                 ? 'text-white border-b-2 border-white'
                 : 'text-zinc-500 hover:text-zinc-300'
-            }`}
+              }`}
           >
             Browse
           </button>
@@ -619,27 +713,23 @@ export default function PublicEventsPage() {
           ) : activeTab === 'featured' ? (
             <div className="grid gap-6 w-full justify-center py-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
               {heroEvents.map((ev) => (
-                <div key={ev.id} className="w-full max-w-[420px] mx-auto">
-                  <EventCard
-                    event={ev}
-                    favorited={favoriteIds.has(String(ev.id))}
-                    onToggleFavorite={handleToggleFavorite}
-                    detailBasePath="/events"
-                  />
-                </div>
+                <AdAwareEventCard
+                  key={ev.__ad ? `ad-${ev.__ad.campaignId}-${ev.id}` : ev.id}
+                  event={ev}
+                  favorited={favoriteIds.has(String(ev.id))}
+                  onToggleFavorite={handleToggleFavorite}
+                />
               ))}
             </div>
           ) : (
             <div className="grid gap-6 w-full justify-center py-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
-              {rest.map((ev) => (
-                <div key={ev.id} className="w-full max-w-[420px] mx-auto">
-                  <EventCard
-                    event={ev}
-                    favorited={favoriteIds.has(String(ev.id))}
-                    onToggleFavorite={handleToggleFavorite}
-                    detailBasePath="/events"
-                  />
-                </div>
+              {restWithAds.map((ev) => (
+                <AdAwareEventCard
+                  key={ev.__ad ? `ad-${ev.__ad.campaignId}-${ev.id}` : ev.id}
+                  event={ev}
+                  favorited={favoriteIds.has(String(ev.id))}
+                  onToggleFavorite={handleToggleFavorite}
+                />
               ))}
             </div>
           )}
@@ -651,15 +741,13 @@ export default function PublicEventsPage() {
             <EventsGridSkeleton />
           ) : (
             <div className="grid gap-6 w-full justify-center" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
-              {rest.map((ev) => (
-                <div key={ev.id} className="w-full max-w-[420px] mx-auto">
-                  <EventCard
-                    event={ev}
-                    favorited={favoriteIds.has(String(ev.id))}
-                    onToggleFavorite={handleToggleFavorite}
-                    detailBasePath="/events"
-                  />
-                </div>
+              {restWithAds.map((ev) => (
+                <AdAwareEventCard
+                  key={ev.__ad ? `ad-${ev.__ad.campaignId}-${ev.id}` : ev.id}
+                  event={ev}
+                  favorited={favoriteIds.has(String(ev.id))}
+                  onToggleFavorite={handleToggleFavorite}
+                />
               ))}
             </div>
           )}

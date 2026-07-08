@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import Eyebrow from './Eyebrow';
+
 
 /**
  * Music-based event matching teaser. Left: what you play.
@@ -110,7 +110,7 @@ export default function MusicMatchTeaser() {
     >
       {/* copy */}
       <div className="max-w-xl mb-6 sm:mb-12 flex flex-col items-center px-4">
-        <Eyebrow>Live now</Eyebrow>
+
         <h3 className="display-3 mt-4">
           <span className="text-neon-orange">Events</span> that <span className="text-neon-orange">sound</span> <span className="text-white">like you.</span>
         </h3>

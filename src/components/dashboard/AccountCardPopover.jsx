@@ -106,7 +106,7 @@ export default function AccountCardPopover({
               <span className="block truncate text-sm font-semibold text-white">{user?.name || 'PXI User'}</span>
               <span className="block truncate text-xs text-white/45">@{user?.username || 'account'}</span>
             </span>
-            <HugeiconsIcon icon={AccountSetting01Icon} size={16} className="text-white/45 group-hover:text-white/70" />
+            <HugeiconsIcon icon={AccountSetting01Icon} size={16} className="text-white opacity-45 group-hover:opacity-70" />
           </>
         )}
       </button>

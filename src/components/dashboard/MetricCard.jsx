@@ -96,7 +96,7 @@ export default function MetricCard({
                     actions
                 ) : icon ? (
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5">
-                        <HugeiconsIcon icon={icon} className="h-4 w-4 text-white/75" />
+                        <HugeiconsIcon icon={icon} className="h-4 w-4 text-white opacity-75" />
                     </div>
                 ) : null}
             </div>
@@ -115,7 +115,7 @@ export default function MetricCard({
                         </div>
                     ) : null}
                     <div className="pill-ghost inline-flex max-w-full items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-300 md:text-[11px]">
-                        {TrendIcon ? <HugeiconsIcon icon={TrendIcon} className="h-3 w-3 shrink-0 text-white/50" /> : null}
+                        {TrendIcon ? <HugeiconsIcon icon={TrendIcon} className="h-3 w-3 shrink-0 text-white opacity-50" /> : null}
                         <span>{description}</span>
                     </div>
                 </div>

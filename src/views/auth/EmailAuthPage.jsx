@@ -4,7 +4,16 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowLeft01Icon, ViewIcon, ViewOffIcon, CheckmarkCircle02Icon, CancelCircleIcon, Loading02Icon } from '@hugeicons/core-free-icons';
+import {
+    ArrowLeft01Icon,
+    ViewIcon,
+    ViewOffIcon,
+    CheckmarkCircle02Icon,
+    CancelCircleIcon,
+    Loading02Icon,
+    Shield01Icon,
+    Ticket01Icon,
+} from '@hugeicons/core-free-icons';
 import { FaApple, FaGoogle } from 'react-icons/fa';
 import { useGoogleLogin } from '@react-oauth/google';
 import { toast } from 'sonner';
@@ -17,7 +26,7 @@ import {
     PROFILE_USERNAME_MAX_LENGTH,
     USERNAME_RULES_HINT,
 } from '../../utils/username';
-const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
+const APPLE_SERVICE_ID = globalThis.process?.env?.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
 
 function shouldClearAuth(error) {
     const status = error?.status;
@@ -100,7 +109,7 @@ export default function EmailAuthPage() {
                 }
                 router.replace(safeRedirect || defaultPostLoginPath(user));
             });
-    }, [isAuthenticated, user?.id, safeRedirect, router, updateUser, logout]);
+    }, [isAuthenticated, user, user?.id, safeRedirect, router, updateUser, logout]);
 
     const loginWithGoogle = useGoogleLogin({
         flow: 'implicit',
@@ -156,6 +165,8 @@ export default function EmailAuthPage() {
 
     // Email availability check (signup mode only)
     useEffect(() => {
+        let cancelled = false;
+        const timer = setTimeout(() => {
         if (mode !== 'signup') { setEmailStatus('idle'); return; }
         const normalized = debouncedEmail.trim().toLowerCase();
         if (!normalized) { setEmailStatus('idle'); return; }
@@ -163,19 +174,31 @@ export default function EmailAuthPage() {
         setEmailStatus('checking');
         authService
             .checkEmail(normalized)
-            .then((result) => setEmailStatus(result))
-            .catch(() => setEmailStatus('error'));
+            .then((result) => { if (!cancelled) setEmailStatus(result); })
+            .catch(() => { if (!cancelled) setEmailStatus('error'); });
+        }, 0);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
     }, [debouncedEmail, mode]);
 
     // Username availability check (signup mode only)
     useEffect(() => {
+        let cancelled = false;
+        const timer = setTimeout(() => {
         if (mode !== 'signup' || !debouncedUsername) { setUsernameStatus('idle'); return; }
         if (!isValidUsername(debouncedUsername)) { setUsernameStatus('invalid'); return; }
         setUsernameStatus('checking');
         authService
             .checkUsername(debouncedUsername)
-            .then(({ available }) => setUsernameStatus(available ? 'available' : 'taken'))
-            .catch(() => setUsernameStatus('idle'));
+            .then(({ available }) => { if (!cancelled) setUsernameStatus(available ? 'available' : 'taken'); })
+            .catch(() => { if (!cancelled) setUsernameStatus('idle'); });
+        }, 0);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
     }, [debouncedUsername, mode]);
 
     // Reset fields when mode changes
@@ -273,10 +296,14 @@ export default function EmailAuthPage() {
     const isLogin = mode === 'login';
 
     return (
-        <div className="flex flex-1 flex-col min-h-0 bg-black relative overflow-hidden">
+        <div className="relative flex min-h-screen flex-1 flex-col overflow-hidden bg-[#050505]">
+            <div className="pointer-events-none fixed inset-0">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.13),transparent_28%),radial-gradient(circle_at_78%_18%,rgba(168,85,247,0.16),transparent_26%),linear-gradient(180deg,#070707,#000)]" />
+                <div className="absolute bottom-[-18rem] left-1/2 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-white/[0.035] blur-3xl" />
+            </div>
             {showVerifiedMessage && (
                 <div
-                    className="relative z-20 mx-4 mt-6 rounded-xl px-4 py-3 text-center text-sm font-semibold"
+                    className="relative z-20 mx-4 mt-6 rounded-2xl px-4 py-3 text-center text-sm font-semibold"
                     style={{
                         background: 'rgba(255,255,255,0.05)',
                         border: '1px solid rgba(255,255,255,0.1)',
@@ -290,54 +317,70 @@ export default function EmailAuthPage() {
             {/* Back button */}
             <button
                 onClick={() => router.push('/')}
-                className="absolute top-20 left-5 z-20 flex items-center justify-center md:top-24"
+                className="absolute left-5 top-20 z-20 flex items-center justify-center rounded-full bg-black/35 p-2.5 text-white/60 backdrop-blur-xl transition hover:bg-white/10 hover:text-white md:left-8 md:top-24"
                 style={{
-                    padding: 10,
-                    color: 'rgba(255,255,255,0.6)',
-                    borderRadius: 9999,
-                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.08)',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
+                aria-label="Back to home"
             >
-                <HugeiconsIcon icon={ArrowLeft01Icon} size={28} />
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={22} />
             </button>
 
             {/* Scrollable content */}
-            <div className="relative z-10 flex-1 overflow-y-auto flex flex-col items-center px-0 md:px-4">
-                <div className="w-full max-w-[400px] px-4 pt-[5.5rem] pb-12 flex flex-col md:px-0 md:pt-[5.5rem]">
+            <div className="relative z-10 flex-1 overflow-y-auto px-4 py-24 md:px-6 md:py-28">
+                <div className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[minmax(0,1fr)_430px]">
+                    <section className="hidden min-h-[620px] flex-col justify-between overflow-hidden rounded-[2.5rem] bg-white/[0.045] p-8 shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:flex">
+                        <div>
+                            <img src="/favicon.png" alt="PXI" width={92} height={92} className="h-16 w-16 object-contain" />
+                            <p className="mt-8 text-[10px] font-black uppercase tracking-[0.28em] text-zinc-500">
+                                PXI Passport
+                            </p>
+                            <h1 className="mt-3 max-w-xl text-6xl font-black leading-[0.9] tracking-normal text-white">
+                                Your night, carried forward.
+                            </h1>
+                            <p className="mt-5 max-w-lg text-sm leading-6 text-zinc-400">
+                                Sign in for tickets, albums, music-matched discovery, and the dashboard tools that keep every event in one place.
+                            </p>
+                        </div>
+                        <div className="grid gap-3">
+                            <AuthFeature icon={Ticket01Icon} title="Tickets stay tied to you" body="Checkout, delivery, and event access live under one PXI identity." />
+                            <AuthFeature icon={Shield01Icon} title="Secure by design" body="Payments stay with Stripe. PXI handles the signed ticket and event experience." />
+                        </div>
+                    </section>
 
-                    {/* Header */}
-                    <div className="mb-5 flex justify-center">
-                        <img
-                            src="/favicon.png"
-                            alt="PXI"
-                            width={200}
-                            height={120}
-                            className="h-[120px] w-[200px] object-contain"
-                        />
-                    </div>
+                    <div className="mx-auto flex w-full max-w-[430px] flex-col">
+                        <div className="mb-6 text-center lg:text-left">
+                            <img
+                                src="/favicon.png"
+                                alt="PXI"
+                                width={128}
+                                height={88}
+                                className="mx-auto h-20 w-32 object-contain lg:mx-0"
+                            />
+                            <p className="mt-3 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">
+                                {isLogin ? 'Welcome back' : 'Create your PXI'}
+                            </p>
+                            <h1 className="mt-1 text-3xl font-black leading-none tracking-normal text-white">
+                                {isLogin ? 'Log in to continue.' : 'Start with your account.'}
+                            </h1>
+                        </div>
 
                     {/* Auth card — panel chrome on md+ only (mobile matches app: no card wrapper) */}
                     <div
-                        className="flex flex-col p-0 md:rounded-3xl md:bg-white/[0.05] md:backdrop-blur-3xl border-0 md:p-8 md:shadow-2xl"
+                        className="flex flex-col rounded-[2rem] bg-white/[0.045] p-5 shadow-2xl backdrop-blur-3xl md:p-7"
                     >
                     {/* Mode toggle */}
-                    <div className="flex mb-6 border-b border-white/10">
+                    <div className="mb-6 grid grid-cols-2 gap-1 rounded-full bg-white/[0.055] p-1">
                         {['login', 'signup'].map((m) => (
                             <button
                                 key={m}
                                 type="button"
                                 onClick={() => switchMode(m)}
-                                className="flex-1 font-black uppercase transition-colors"
+                                className={`rounded-full py-3 text-xs font-black uppercase tracking-[0.15em] transition-colors ${
+                                    mode === m ? 'bg-white text-black' : 'text-white/45 hover:text-white'
+                                }`}
                                 style={{
-                                    paddingTop: 12,
-                                    paddingBottom: 12,
-                                    fontSize: 12,
-                                    letterSpacing: '0.15em',
-                                    color: mode === m ? '#fff' : 'rgba(255,255,255,0.4)',
-                                    borderBottom: mode === m ? '2px solid var(--color-pxi-purple)' : '2px solid transparent',
-                                    marginBottom: -1,
+                                    border: 0,
                                 }}
                             >
                                 {m === 'login' ? 'LOG IN' : 'SIGN UP'}
@@ -501,8 +544,8 @@ export default function EmailAuthPage() {
                                 disabled={!canSubmit}
                                 className={`relative z-[2] h-14 w-full rounded-full border border-white/15 font-black uppercase text-[13px] tracking-[0.15em] transition-all ${
                                     canSubmit
-                                        ? 'cursor-pointer bg-pxi-purple text-white shadow-[0_0_20px_rgba(216,74,255,0.4)] hover:brightness-110'
-                                        : 'cursor-not-allowed bg-pxi-purple/30 text-white/30'
+                                        ? 'cursor-pointer bg-white text-black shadow-[0_18px_40px_rgba(0,0,0,0.35)] hover:bg-zinc-200'
+                                        : 'cursor-not-allowed bg-white/10 text-white/30'
                                 }`}
                             >
                                 {loading ? (
@@ -526,7 +569,7 @@ export default function EmailAuthPage() {
                                         left: '10%',
                                         right: '10%',
                                         height: 10,
-                                        background: '#B026FF',
+                                        background: '#ffffff',
                                         opacity: 0.35,
                                         filter: 'blur(8px)',
                                         borderRadius: 8,
@@ -548,15 +591,15 @@ export default function EmailAuthPage() {
                             }}
                         >
                             {isLogin ? 'By signing in, you agree to our ' : 'By signing up, you agree to our '}
-                            <Link href="/legal#terms" className="text-pxi-purple underline">
+                            <Link href="/legal#terms" className="text-white underline decoration-white/30 underline-offset-4">
                                 Terms of Service
                             </Link>
                             {', '}
-                            <Link href="/legal#privacy" className="text-pxi-purple underline">
+                            <Link href="/legal#privacy" className="text-white underline decoration-white/30 underline-offset-4">
                                 Privacy Policy
                             </Link>
                             {', and '}
-                            <Link href="/legal#cookie" className="text-pxi-purple underline">
+                            <Link href="/legal#cookie" className="text-white underline decoration-white/30 underline-offset-4">
                                 Cookie Policy
                             </Link>
                             .
@@ -594,6 +637,7 @@ export default function EmailAuthPage() {
                     </div>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     );
@@ -654,6 +698,20 @@ function FieldHint({ color, children }) {
         >
             {children}
         </p>
+    );
+}
+
+function AuthFeature({ icon, title, body }) {
+    return (
+        <div className="flex items-start gap-3 rounded-[1.5rem] bg-white/[0.045] p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/35 text-white">
+                <HugeiconsIcon icon={icon} size={18} />
+            </div>
+            <div>
+                <p className="text-sm font-black text-white">{title}</p>
+                <p className="mt-1 text-xs leading-5 text-zinc-500">{body}</p>
+            </div>
+        </div>
     );
 }
 

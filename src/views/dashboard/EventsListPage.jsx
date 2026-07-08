@@ -29,6 +29,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ActionMenu from '@/components/dashboard/ActionMenu';
 import CreateEventSlideOver from '@/components/dashboard/CreateEventSlideOver';
 import GlowCard from '@/components/dashboard/GlowCard';
+import { PxiSpinner } from '@/components/loading/PxiLoading';
 import SegmentedToggle from '@/components/dashboard/SegmentedToggle';
 import Modal from '@/components/ui/Modal';
 import { useAttendedEvents, useEvents } from '@/lib/dashboardStore';
@@ -162,7 +163,7 @@ function EmptyState({ icon, title, body, action }) {
 
 function EventsHero({ mode, onModeChange, hostedCount, attendedCount, liveCount, onCreate }) {
   return (
-    <section className="rounded-[2rem] bg-black px-5 py-6 shadow-[0_24px_90px_rgba(0,0,0,0.42)] md:px-7">
+    <section className="dashboard-surface-b rounded-[2rem] px-5 py-6 md:px-7">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Events</p>
@@ -244,7 +245,7 @@ function EventCard({ event, relation, now, pinned, requestCount = 0, onOpen, onN
         {cover ? (
           <Image src={cover} alt={event.name || 'Event cover'} fill unoptimized className="object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-zinc-900">
+          <div className="flex h-full w-full items-center justify-center bg-white/[0.035]">
             <HugeiconsIcon icon={isHosted ? Calendar01Icon : Ticket01Icon} className="text-zinc-600" size={40} />
           </div>
         )}
@@ -293,7 +294,7 @@ function HostedEventModal({ event, now, pinned, onClose, onNavigate, onTogglePin
   return (
     <Modal open={!!event} onClose={onClose} title={event.name || 'Hosted event'} description="Organizer detail view" maxWidth="max-w-2xl">
       <div className="grid gap-5 md:grid-cols-[180px_1fr]">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-zinc-900">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-white/[0.035]">
           {cover ? (
             <Image src={cover} alt={event.name || 'Event cover'} fill unoptimized className="object-cover" />
           ) : (
@@ -417,7 +418,7 @@ function ParticipantEventModal({ event, requests, onClose, onSubmitHelp }) {
               <div><p className="text-[10px] font-black uppercase tracking-widest text-white/35">Date</p><p className="mt-1 text-sm font-semibold text-white">{formatDate(event.startDate)}</p></div>
               <div><p className="text-[10px] font-black uppercase tracking-widest text-white/35">Odyssey XP</p><p className="mt-1 text-sm font-semibold text-white">{Number(event.xp || 0).toLocaleString()}</p></div>
             </div>
-            <p className="mt-4 flex items-start gap-2 text-sm text-zinc-400"><HugeiconsIcon icon={Location01Icon} size={16} className="mt-0.5 shrink-0 text-white/35" />{event.location || event.venue || 'Location'}</p>
+            <p className="mt-4 flex items-start gap-2 text-sm text-zinc-400"><HugeiconsIcon icon={Location01Icon} size={16} className="mt-0.5 shrink-0 text-white opacity-35" />{event.location || event.venue || 'Location'}</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <button type="button" onClick={() => openHelp('refund', 'Refund request')} className="pill-solid inline-flex min-h-[46px] items-center justify-center gap-2 whitespace-nowrap px-4 text-sm"><HugeiconsIcon icon={Ticket01Icon} size={17} />Refund request</button>
@@ -451,7 +452,7 @@ export default function EventsListPage() {
   const router = useRouter();
   const { user } = useAuth();
   const userId = user?.id;
-  const { events: cachedEvents, loading, error: loadError, invalidate } = useEvents({ limit: 100, offset: 0 });
+  const { events: cachedEvents, loading, error: loadError, invalidate, refresh: refreshHostedEvents } = useEvents({ limit: 100, offset: 0 });
   const { events: attendedEvents, loading: attendedLoading, error: attendedError, invalidate: invalidateAttended } = useAttendedEvents({ limit: 100, offset: 0 });
   const [mode, setMode] = useState('hosted');
   const [createOpen, setCreateOpen] = useState(false);
@@ -561,19 +562,47 @@ export default function EventsListPage() {
   if (loading && hostedEvents.length === 0) {
     return (
       <div className="mx-auto max-w-6xl space-y-6">
-        <div className="rounded-[2rem] bg-black px-5 py-10 text-center shadow-[0_24px_90px_rgba(0,0,0,0.42)]">
+        <div className="dashboard-surface-b rounded-[2rem] px-5 py-10 text-center">
           <p className="text-sm font-semibold text-zinc-500">Loading events...</p>
         </div>
       </div>
     );
   }
-  if (loadError) {
+  if (loadError && hostedEvents.length === 0) {
     return (
-      <div className="mx-auto max-w-6xl">
-        <div className="rounded-[2rem] bg-red-500/10 p-6 text-sm font-semibold text-red-200">
-          {loadError.message || 'Failed to load events'}
+      <>
+        <div className="mx-auto max-w-6xl space-y-8">
+          <EventsHero
+            mode={mode}
+            onModeChange={setMode}
+            hostedCount={0}
+            attendedCount={attendedEvents.length}
+            liveCount={0}
+            onCreate={() => setCreateOpen(true)}
+          />
+          <div className="dashboard-surface-b rounded-[2rem] p-6 md:p-8">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div className="max-w-xl">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-200/70">Events</p>
+                <h2 className="mt-3 text-2xl font-black tracking-normal text-white">Event data is temporarily unavailable.</h2>
+                <p className="mt-3 text-sm leading-6 text-zinc-400">
+                  We could not reach your hosted event list. You can try again, or keep building a new event while the connection settles.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button type="button" onClick={() => refreshHostedEvents({ force: true })} className="pill-ghost inline-flex min-h-[42px] items-center justify-center px-5 text-sm font-bold">
+                  Refresh
+                </button>
+                <button type="button" onClick={() => setCreateOpen(true)} className="pill-solid inline-flex min-h-[42px] items-center justify-center gap-2 px-5 text-sm">
+                  <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2.5} />
+                  Create
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+        <CreateEventSlideOver open={createOpen} onClose={() => setCreateOpen(false)} />
+      </>
     );
   }
 
@@ -583,12 +612,12 @@ export default function EventsListPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
           <GlowCard className="w-full max-w-sm overflow-hidden">
             <div className="flex flex-col items-center gap-4 px-6 pb-4 pt-6 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10"><HugeiconsIcon icon={Delete02Icon} size={24} className="text-red-400" /></div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10"><HugeiconsIcon icon={Delete02Icon} size={24} className="text-red-400" /></div>
               <div><h3 className="text-lg font-bold text-white">Delete event?</h3><p className="mt-1.5 text-sm leading-relaxed text-zinc-400"><span className="font-semibold text-white">"{deleteTarget.name || 'This event'}"</span> will be permanently deleted. This action cannot be undone.</p></div>
             </div>
             <div className="mt-2 flex gap-3 px-6 pb-6">
               <button type="button" onClick={() => setDeleteTarget(null)} className="min-h-[44px] flex-1 rounded-xl bg-white/[0.055] text-sm font-semibold text-zinc-200 transition-colors hover:bg-white/10">Cancel</button>
-              <button type="button" onClick={confirmDelete} disabled={!!deletingEventId} className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-red-500/90 text-sm font-bold text-white transition-colors hover:bg-red-500 disabled:opacity-50">{deletingEventId ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : null}Delete</button>
+              <button type="button" onClick={confirmDelete} disabled={!!deletingEventId} className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-red-500/90 text-sm font-bold text-white transition-colors hover:bg-red-500 disabled:opacity-50">{deletingEventId ? <PxiSpinner size="sm" className="mx-auto" /> : null}Delete</button>
             </div>
           </GlowCard>
         </div>
@@ -632,8 +661,8 @@ export default function EventsListPage() {
         ) : (
           <div className="space-y-8">
             <EventControls query={attendedQuery} onQueryChange={setAttendedQuery} status={attendedFilter} onStatusChange={setAttendedFilter} sort={attendedSort} onSortChange={setAttendedSort} />
-            {attendedError ? <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-400">{attendedError.message || 'Failed to load attended events'}</div>
-              : attendedLoading ? <GlowCard className="p-10 text-center"><div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-transparent" /><p className="mt-4 text-sm text-zinc-500">Loading attended events...</p></GlowCard>
+            {attendedError ? <div className="rounded-2xl bg-red-500/10 p-6 text-red-400">{attendedError.message || 'Failed to load attended events'}</div>
+              : attendedLoading ? <GlowCard className="p-10 text-center"><PxiSpinner size="md" className="mx-auto" /><p className="mt-4 text-sm text-zinc-500">Loading attended events...</p></GlowCard>
                 : attendedEvents.length === 0 ? <EmptyState icon={Ticket01Icon} title="No attended events yet" body="Your tickets will appear here." action={<button type="button" onClick={() => invalidateAttended()} className="mt-6 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl glow-chip px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-white/[0.12]"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />Refresh</button>} />
                   : filteredAttendedEvents.length === 0 ? <EmptyState icon={Search01Icon} title="No attended events match your filters" body="Try clearing the search or changing the event status filter." />
                     : <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">{filteredAttendedEvents.map((event) => <EventCard key={`${event.id}-${event.ticketId || 'ticket'}`} event={event} relation="attended" now={now} requestCount={myRequestCountByEventId[String(event.id)] || 0} onOpen={setSelectedAttendedEvent} onNavigate={(href) => router.push(href)} />)}</div>}

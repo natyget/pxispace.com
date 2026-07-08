@@ -36,7 +36,6 @@ export default function InstagramSharingView() {
           aria-hidden
         />
         <div className="mx-auto max-w-[1200px] px-6">
-          <span className="eyebrow">Share to Instagram</span>
           <div className="mt-8">
             <InstaShareShowcase />
           </div>

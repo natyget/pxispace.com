@@ -5,7 +5,7 @@ import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 export function AdminPageShell({ title, copy, source, metrics = [], actions = null, children }) {
     return (
         <div className="max-w-7xl space-y-6 md:space-y-8">
-            <section className="relative overflow-hidden rounded-[2rem] bg-black px-5 py-6 shadow-[0_24px_90px_rgba(0,0,0,0.42)] md:px-7">
+            <section className="dashboard-surface-b relative overflow-hidden rounded-[2rem] px-5 py-6 md:px-7">
                 <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                     <div className="max-w-3xl">
                         <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -41,7 +41,7 @@ export function AdminPageShell({ title, copy, source, metrics = [], actions = nu
 
 export function AdminPanel({ children, className = '' }) {
     return (
-        <section className={`rounded-[1.75rem] bg-white/[0.035] p-5 ${className}`.trim()}>
+        <section className={`dashboard-surface rounded-[1.75rem] p-5 ${className}`.trim()}>
             {children}
         </section>
     );
@@ -49,7 +49,7 @@ export function AdminPanel({ children, className = '' }) {
 
 export function AdminTableShell({ loading, emptyMessage, children }) {
     return (
-        <div className="overflow-hidden rounded-[1.75rem] bg-white/[0.035]">
+        <div className="admin-table-shell dashboard-surface overflow-hidden rounded-[1.75rem]">
             {loading ? (
                 <AdminStateMessage>Loading...</AdminStateMessage>
             ) : emptyMessage ? (
@@ -79,5 +79,5 @@ export function AdminError({ children }) {
 }
 
 export const adminTableClass = 'w-full border-collapse text-left';
-export const adminThClass = 'px-6 py-4 text-[11px] font-black uppercase tracking-widest text-white/40';
+export const adminThClass = 'px-6 py-4 text-[11px] font-black uppercase tracking-widest text-white/35';
 export const adminTdClass = 'px-6 py-4 text-[13px] text-white/65';

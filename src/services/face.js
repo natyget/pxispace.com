@@ -9,8 +9,11 @@ export const faceService = {
   matchAlbum: (albumId, vector, modelId) =>
     api.post('/api/face/match', { albumId, vector, modelId }),
 
-  /** Authenticated enrollment (used by the in-app WebView flow / web account). */
-  enroll: (vector, modelId) => api.put('/api/face/vector', { vector, modelId }),
+  /** Authenticated enrollment (used by the in-app WebView flow / web account).
+   *  poseVectors (optional): individual guided-pose embeddings, kept server-side
+   *  as per-angle match exemplars. */
+  enroll: (vector, modelId, poseVectors) =>
+    api.put('/api/face/vector', { vector, modelId, poseVectors }),
 
   status: () => api.get('/api/face/status'),
 

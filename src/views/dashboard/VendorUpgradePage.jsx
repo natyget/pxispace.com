@@ -21,7 +21,7 @@ const BENEFITS = [
     {
         icon: CheckmarkCircle02Icon,
         title: 'Secure Verification',
-        desc: 'Powered by Stripe - industry-standard identity and payment verification.',
+        desc: 'Powered by Stripe for identity, banking, and payment verification.',
     },
 ];
 
@@ -210,13 +210,13 @@ export default function VendorUpgradePage() {
         return (
             <div className="mx-auto max-w-xl py-12 text-center">
                 <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.055]">
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={34} className="text-white/80" />
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={34} className="text-white opacity-80" />
                 </div>
                 <h1 className="text-3xl font-black text-white mb-3 tracking-normal">
                     Hosting is active
                 </h1>
                 <p className="text-zinc-400 mb-8">
-                    Your PXI Passport has been issued. You can now create paid
+                    Your hosting access is active. You can now create paid
                     events and collect revenue on PXI.
                 </p>
                 {fromMobile ? (
@@ -242,7 +242,7 @@ export default function VendorUpgradePage() {
 
     return (
         <div className="mx-auto max-w-5xl space-y-6 md:space-y-8">
-            <section className="rounded-[1.75rem] bg-black px-5 py-7 shadow-[0_24px_80px_rgba(0,0,0,0.42)] md:px-8">
+            <section className="dashboard-surface-b rounded-[1.75rem] px-5 py-7 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Hosting access</p>
@@ -271,7 +271,7 @@ export default function VendorUpgradePage() {
                 {BENEFITS.map(({ icon: Icon, title, desc }) => (
                     <div key={title} className="glass-panel rounded-[1.25rem] p-5">
                         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.055]">
-                            <HugeiconsIcon icon={Icon} size={18} className="text-white/75" />
+                            <HugeiconsIcon icon={Icon} size={18} className="text-white opacity-75" />
                         </div>
                         <h3 className="text-white font-bold text-sm mb-1">{title}</h3>
                         <p className="text-zinc-500 text-xs leading-relaxed">{desc}</p>
@@ -290,7 +290,7 @@ export default function VendorUpgradePage() {
             {/* Stripe status breakdown — shown after a Check Status call returns PENDING */}
             {stripeStatus && (
                 <div className="glass-panel space-y-3 rounded-[1.25rem] p-5">
-                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Stripe Account Status</p>
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Payment status</p>
 
                     <StatusRow
                         label="Charges Enabled"
@@ -335,7 +335,7 @@ export default function VendorUpgradePage() {
 
                 {step === 'redirecting' ? (
                     <div className="flex items-center gap-3 text-zinc-400 text-sm">
-                        <HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin text-white/75" />
+                        <HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin text-white opacity-75" />
                         Redirecting to Stripe...
                     </div>
                 ) : (
@@ -357,7 +357,7 @@ export default function VendorUpgradePage() {
                         <button
                             onClick={handleStartOnboarding}
                             disabled={step === 'loading' || hasSubmittedVerification}
-                            title={hasSubmittedVerification ? 'Submitted the vendor verification already' : undefined}
+                            title={hasSubmittedVerification ? 'Submitted hosting verification already' : undefined}
                             className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                                 hasSubmittedVerification && hasOutstandingRequirements
                                     ? 'pill-ghost text-zinc-500'
@@ -411,7 +411,7 @@ export default function VendorUpgradePage() {
                 <a href="https://stripe.com/connect-account/legal" target="_blank" rel="noopener noreferrer" className="underline hover:text-zinc-400 transition-colors">
                     Connected Account Agreement
                 </a>
-                . PXI charges a 4.59% consumer fee and a $0.90 vendor flat fee per transaction.
+                . PXI charges a 4.59% consumer fee and a $0.90 organizer flat fee per transaction.
             </p>
         </div>
     );

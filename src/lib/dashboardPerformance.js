@@ -8,6 +8,7 @@ export const DASHBOARD_PREFETCH_ROUTES = [
   '/dashboard/events',
   '/dashboard/analytics',
   '/dashboard/audience',
+  '/dashboard/ads',
   '/dashboard/team',
   '/dashboard/account',
   '/dashboard/earnings',

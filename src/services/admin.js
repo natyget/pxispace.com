@@ -104,7 +104,34 @@ export function fetchPromoRedemptions(promoId) {
     return api.get(`/api/admin/promos/${promoId}/redemptions`);
 }
 
-/** body: { userId, amountCents, note } */
+/** body: { username?, userId?, amountCents, note } — username resolved server-side */
 export function grantCredits(body) {
     return api.post('/api/admin/credits/grant', body);
+}
+
+// ————— Ads (W12) —————
+
+export function fetchAdminAdsOverview() {
+    return api.get('/api/admin/ads/overview');
+}
+
+export function fetchAdminAdCampaigns(params = {}) {
+    return api.get(`/api/admin/ads/campaigns${query(params)}`);
+}
+
+export function adminPauseAdCampaign(campaignId, reason) {
+    return api.post(`/api/admin/ads/campaigns/${campaignId}/pause`, { reason });
+}
+
+export function adminResumeAdCampaign(campaignId) {
+    return api.post(`/api/admin/ads/campaigns/${campaignId}/resume`, {});
+}
+
+export function adminCancelAdCampaign(campaignId, reason) {
+    return api.post(`/api/admin/ads/campaigns/${campaignId}/cancel`, { reason });
+}
+
+/** Per-surface kill switch (e.g. yank one featured placement). */
+export function adminToggleAdPlacement(placementId, disabled) {
+    return api.patch(`/api/admin/ads/placements/${placementId}`, { disabled });
 }

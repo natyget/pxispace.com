@@ -32,7 +32,6 @@ export default function OrganizersView() {
           aria-hidden
         />
         <div className="mx-auto max-w-[1200px] px-6">
-          <span className="eyebrow">The platform</span>
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -168,7 +167,6 @@ export default function OrganizersView() {
             <div>
               <div className="flex items-center gap-3">
                 <Layers className="h-6 w-6 text-pxi-purple" />
-                <span className="eyebrow">The memory layer</span>
               </div>
               <h2 className="display-3 mt-5">Every night makes the next one smarter.</h2>
               <p className="mt-4 max-w-md text-base leading-relaxed text-zinc-400">

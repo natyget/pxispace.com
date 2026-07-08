@@ -9,6 +9,7 @@ import { ArrowLeftIcon, ArrowUpRightIcon, Loading02Icon, ScanIcon, SmartPhone01I
 import { eventsService } from '@/services/events';
 import { api } from '@/services/api';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
+import { PxiSpinner } from '@/components/loading/PxiLoading';
 import AppOpenBanner from '@/components/links/AppOpenBanner';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { PxiPassportCard } from '@/components/passport/PxiPassportCard';
@@ -268,7 +269,7 @@ export default function EventDetailClient() {
   if (loading) {
     return (
       <div className={`flex min-h-screen items-center justify-center bg-[#0a0a0a] ${DESKTOP_NAVBAR_OFFSET} text-zinc-300`}>
-        <HugeiconsIcon icon={Loading02Icon} className="size-6 animate-spin" />
+        <PxiSpinner size="md" />
       </div>
     );
   }
@@ -329,7 +330,7 @@ export default function EventDetailClient() {
             <div className="order-1 flex flex-col md:order-2 md:w-[330px] lg:w-[375px] 2xl:w-[400px]">
               <div className="relative top-0 mx-auto h-auto w-full md:sticky md:top-28 md:max-w-[400px]">
                 <div className="relative -mx-3 w-[calc(100%+1.5rem)] sm:-mx-6 sm:w-[calc(100%+3rem)] md:mx-0 md:w-full">
-                  <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-900 md:rounded-xl">
+                  <div className="relative aspect-[3/4] w-full overflow-hidden bg-zinc-900 md:rounded-lg">
                     {heroImage ? (
                       <Image
                         alt={`${eventTitle} flyer`}
@@ -424,7 +425,7 @@ export default function EventDetailClient() {
                         {previewGuestTiles.map((tile, i) => (
                           <span
                             key={tile.key}
-                            className="relative inline-flex size-8 items-center justify-center overflow-hidden rounded-full border-2 border-[#0a0a0a] bg-zinc-800 text-[11px] font-bold uppercase text-zinc-300 ring-1 ring-white/10"
+                            className="relative inline-flex size-8 items-center justify-center overflow-hidden rounded-full bg-zinc-800 text-[11px] font-bold uppercase text-zinc-300"
                             style={{ zIndex: previewGuestTiles.length - i }}
                             title={tile.label || undefined}
                           >
@@ -438,7 +439,7 @@ export default function EventDetailClient() {
                           </span>
                         ))}
                         {previewExtraCount > 0 ? (
-                          <span className="inline-flex size-8 items-center justify-center rounded-full border-2 border-[#0a0a0a] bg-white/5 text-[11px] font-semibold text-zinc-200 ring-1 ring-white/10">
+                          <span className="inline-flex size-8 items-center justify-center rounded-full bg-white/5 text-[11px] font-semibold text-zinc-200">
                             +{previewExtraCount}
                           </span>
                         ) : null}
@@ -638,7 +639,7 @@ export default function EventDetailClient() {
                 <div className="py-10 text-center text-zinc-500">{SECTION_NONE}</div>
               ) : participantsLoading ? (
                 <div className="flex items-center justify-center py-10 text-zinc-400">
-                  <HugeiconsIcon icon={Loading02Icon} className="size-6 animate-spin" />
+                  <PxiSpinner size="sm" />
                 </div>
               ) : participantsLoaded && participants.length === 0 ? (
                 <div className="py-10 text-center text-zinc-500">{SECTION_EMPTY}</div>
@@ -651,7 +652,7 @@ export default function EventDetailClient() {
                     return (
                       <div key={p?.userId || p?.id || `${label}-${idx}`} className="flex flex-col items-center gap-1.5 min-w-0">
                         <span
-                          className="relative inline-flex size-12 shrink-0 overflow-hidden rounded-full border-2 border-[#0a0a0a] ring-1 ring-white/10"
+                          className="relative inline-flex size-12 shrink-0 overflow-hidden rounded-full"
                           title={label}
                         >
                           <UserAvatar user={{ avatarUrl: p?.avatarUrl }} size={48} alt={label} className="size-full" />

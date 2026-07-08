@@ -24,7 +24,7 @@ function ProviderPill({ provider }) {
   return (
     <span
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide"
-      style={{ color: meta.color, backgroundColor: `${meta.color}1a`, border: `1px solid ${meta.color}40` }}
+      style={{ color: meta.color, backgroundColor: `${meta.color}1a` }}
     >
       <HugeiconsIcon icon={meta.icon} size={12} />
       {meta.label}
@@ -112,7 +112,7 @@ export default function LineupPlaylistCard({ eventId }) {
   return (
     <div className="glass-panel overflow-hidden rounded-2xl">
       <div className="flex items-center gap-2 px-5 pb-2 pt-5">
-        <HugeiconsIcon icon={MusicNote01Icon} size={18} className="text-white/70" />
+        <HugeiconsIcon icon={MusicNote01Icon} size={18} className="text-white opacity-70" />
         <h2 className="font-bold text-white uppercase tracking-widest text-sm">Lineup Playlist</h2>
       </div>
 
@@ -123,7 +123,7 @@ export default function LineupPlaylistCard({ eventId }) {
             Loading playlist...
           </div>
         ) : playlist ? (
-          <div className="rounded-xl border border-white/10 bg-zinc-800/40 p-4 space-y-2">
+          <div className="space-y-2 rounded-xl bg-white/[0.04] p-4">
             <div className="flex items-center gap-2 flex-wrap">
               <ProviderPill provider={playlist.provider} />
               <span className="text-xs text-zinc-500">
@@ -136,7 +136,7 @@ export default function LineupPlaylistCard({ eventId }) {
                 {playlist.topGenres.map((genre) => (
                   <span
                     key={genre}
-                    className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] text-zinc-400"
+                    className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-zinc-400"
                   >
                     {genre}
                   </span>
@@ -156,7 +156,7 @@ export default function LineupPlaylistCard({ eventId }) {
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
-              className="flex-1 rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 px-3 py-2.5 text-sm focus:border-white/25 focus:outline-none"
+              className="dashboard-input flex-1 rounded-xl px-3 py-2.5 text-sm text-white placeholder-zinc-500"
               placeholder="https://open.spotify.com/playlist/..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -195,7 +195,7 @@ export default function LineupPlaylistCard({ eventId }) {
               <p className="text-xs text-zinc-500 leading-relaxed">
                 Share this link — your DJ can paste their set without an account.
               </p>
-              <div className="rounded-xl bg-zinc-800 border border-white/10 p-3 flex items-center gap-3">
+              <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3">
                 <p className="flex-1 text-xs text-white break-all font-mono leading-relaxed">{djUrl}</p>
                 <button
                   type="button"

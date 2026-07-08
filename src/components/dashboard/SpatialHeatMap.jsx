@@ -68,7 +68,7 @@ export default function SpatialHeatMap({ rooms = [], timeSlices = [], eventCompa
 
     if (disabledReason) {
         return (
-            <div className="glow-surface-soft rounded-2xl p-6">
+            <div className="dashboard-surface rounded-2xl p-6">
                 <p className="text-xs font-black uppercase tracking-widest text-zinc-500">Spatial intelligence paused</p>
                 <p className="mt-3 text-lg font-black text-white">Select events from one venue to compare heat signatures.</p>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">{disabledReason}</p>
@@ -80,8 +80,8 @@ export default function SpatialHeatMap({ rooms = [], timeSlices = [], eventCompa
         <div className="space-y-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-2 rounded-full bg-white/[0.04] p-1">
-                    <HeatToggle active={styleMode === 'blob'} onClick={() => setStyleMode('blob')}>Gradient Blob</HeatToggle>
-                    <HeatToggle active={styleMode === 'dots'} onClick={() => setStyleMode('dots')}>Dot Pinpoint</HeatToggle>
+                    <HeatToggle active={styleMode === 'blob'} onClick={() => setStyleMode('blob')}>Gradient</HeatToggle>
+                    <HeatToggle active={styleMode === 'dots'} onClick={() => setStyleMode('dots')}>Pins</HeatToggle>
                 </div>
                 <div className="flex flex-1 items-center gap-3 md:max-w-xl">
                     <button
@@ -119,7 +119,7 @@ export default function SpatialHeatMap({ rooms = [], timeSlices = [], eventCompa
             ) : null}
 
             <div className="min-h-[720px] space-y-4">
-                <div className="glow-surface-soft overflow-hidden rounded-2xl p-3">
+                <div className="dashboard-surface overflow-hidden rounded-2xl p-3">
                     <svg viewBox="0 0 760 470" role="img" aria-label="Club floor plan heat map" className="h-auto w-full">
                         <defs>
                             <filter id="spatial-soft-blur">
@@ -222,7 +222,7 @@ export default function SpatialHeatMap({ rooms = [], timeSlices = [], eventCompa
                         return (
                             <div
                                 key={room.id}
-                                className={`glow-surface-soft rounded-2xl p-4 transition duration-200 ${
+                                className={`dashboard-surface rounded-2xl p-4 transition duration-200 ${
                                     hoveredRoomId === room.id ? 'bg-white/[0.095] shadow-[0_18px_36px_rgba(0,0,0,0.34)]' : faded ? 'opacity-35' : 'opacity-100'
                                 }`}
                             >
