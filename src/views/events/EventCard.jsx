@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { FavouriteIcon } from '@hugeicons/core-free-icons';
+import { Bookmark02Icon } from '@hugeicons/core-free-icons';
 import { displayImageSrc } from '@/lib/mediaUrl';
 
 const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/events', sponsored = false, onSponsoredClick }) => {
@@ -64,10 +64,10 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
             onToggleFavorite?.(event.id);
           }}
           className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-black/40 border-0 text-white hover:bg-black/60 transition-colors backdrop-blur-sm"
-          aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
+          aria-label={favorited ? 'Remove from wishlist' : 'Add to wishlist'}
         >
           <HugeiconsIcon
-            icon={FavouriteIcon}
+            icon={Bookmark02Icon}
             size={14}
             className={favorited ? 'fill-current text-[#d946ef]' : 'text-white/70'}
           />

@@ -68,6 +68,8 @@ const normalizeApiEvent = (e) => {
     albumId: e.albumId || e.albums?.[0]?.id || null,
     distanceKm: e.distanceKm ?? null,
     musicMatchScore: e.musicMatchScore ?? null,
+    playlistTopGenres: e.playlist?.topGenres ?? [],
+    playlistUrl: e.playlist?.sourceUrl ?? null,
     organizer: e.organizer ?? null,
     ticketType: e.ticketType ?? null,
     spotifyPlaylistUrl: e.spotifyPlaylistUrl ?? null,
@@ -92,6 +94,35 @@ const Events = ({ detailBasePath = '/events' }) => {
   const [coords, setCoords] = useState(null);
   const [geoError, setGeoError] = useState(null);
   const [musicConnected, setMusicConnected] = useState(null);
+  /** User's top genres (from their connected music profile) for the genre filter dropdown. */
+  const [myGenres, setMyGenres] = useState([]);
+  const [genreFilter, setGenreFilter] = useState(() => new Set());
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      const timer = setTimeout(() => {
+        setMyGenres([]);
+        setGenreFilter(new Set());
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+    musicService
+      .getProfile()
+      .then((p) => setMyGenres(p?.connected ? p.topGenres ?? [] : []))
+      .catch(() => setMyGenres([]));
+    return undefined;
+  }, [isLoggedIn]);
+
+  const toggleGenre = useCallback((genre) => {
+    setGenreFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(genre)) next.delete(genre);
+      else next.add(genre);
+      return next;
+    });
+  }, []);
+
+  const clearGenres = useCallback(() => setGenreFilter(new Set()), []);
 
   const loadFavorites = useCallback(() => {
     loadFavoriteEventIds(isLoggedIn).then(setFavoriteIds).catch(() => setFavoriteIds(new Set()));
@@ -205,9 +236,11 @@ const Events = ({ detailBasePath = '/events' }) => {
       const matchesSearch =
         !q || (event.title || '').toLowerCase().includes(q) || (event.location || '').toLowerCase().includes(q);
       const matchesFav = !favoritesOnly || favoriteIds.has(String(event.id));
-      return matchesFilter && matchesSearch && matchesFav;
+      const matchesGenre =
+        genreFilter.size === 0 || (event.playlistTopGenres || []).some((g) => genreFilter.has(g));
+      return matchesFilter && matchesSearch && matchesFav && matchesGenre;
     });
-  }, [apiEvents, filter, searchQuery, favoritesOnly, favoriteIds]);
+  }, [apiEvents, filter, searchQuery, favoritesOnly, favoriteIds, genreFilter]);
 
   const mapEvents = useMemo(
     () =>
@@ -253,6 +286,14 @@ const Events = ({ detailBasePath = '/events' }) => {
           setNearMe={setNearMe}
           radiusKm={radiusKm}
           setRadiusKm={setRadiusKm}
+          myGenres={myGenres}
+          genreFilter={genreFilter}
+          toggleGenre={toggleGenre}
+          clearGenres={clearGenres}
+          musicConnected={musicConnected}
+          sortMode={sortMode}
+          setSortMode={setSortMode}
+          isLoggedIn={isLoggedIn}
         />
 
         {sortMode === 'match' && !isLoggedIn ? (
