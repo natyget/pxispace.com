@@ -111,7 +111,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
     };
 
     return (
-        <div className="rounded-[1.75rem] bg-white/[0.035] p-6 space-y-5">
+        <div className="dashboard-surface rounded-[1.75rem] p-6 space-y-5">
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-lg font-bold text-white">{ticket?.subject || 'Ticket'}</h2>
@@ -171,7 +171,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                         {(ticket.messages || []).map((m) => (
                             <div
                                 key={m.id}
-                                className={`rounded-xl px-4 py-3 ${m.isStaff ? 'ml-8 bg-white/[0.075]' : 'mr-8 bg-black/25'}`}
+                                className={`rounded-xl px-4 py-3 ${m.isStaff ? 'ml-8 bg-white/[0.075]' : 'mr-8 bg-white/[0.035]'}`}
                             >
                                 <div className="flex items-center justify-between gap-3 mb-1.5">
                                     <span className="text-[11px] font-bold uppercase tracking-wider text-white/45">
@@ -190,7 +190,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                             onChange={(e) => setReply(e.target.value)}
                             rows={3}
                             placeholder="Reply as PXI staff..."
-                            className="w-full rounded-xl bg-black/25 px-4 py-3 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-black/35 resize-y"
+                            className="w-full rounded-xl bg-white/[0.055] px-4 py-3 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075] resize-y"
                         />
                         <div className="flex justify-end">
                             <button
@@ -256,15 +256,15 @@ export default function AdminSupportPage() {
 
     return (
         <AdminPageShell
-            title="Support tickets"
-            copy="User-filed tickets from the app and web, with priority, status, replies, and ownership in one queue."
+            title="Support"
+            copy="Tickets from the app and web, with priority, status, replies, and ownership in one queue."
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
                 { label: 'Matches', value: total.toLocaleString(), hint: status || 'All statuses' },
                 { label: 'Rows', value: rows.length.toLocaleString(), hint: `Page ${page}` },
             ]}
         >
-            <AdminPanel className="flex flex-wrap gap-2">
+            <AdminPanel className="flex flex-wrap items-center gap-2">
                 {STATUS_FILTERS.map((f) => (
                     <button
                         key={f.value || 'all'}
@@ -313,21 +313,21 @@ export default function AdminSupportPage() {
                                     onClick={() => setOpenTicketId(t.id)}
                                     className="hover:bg-white/[0.04] transition-colors cursor-pointer"
                                 >
-                                    <td className="px-6 py-4"><StatusBadge status={t.status} /></td>
-                                    <td className={`px-6 py-4 text-[12px] font-bold ${priorityStyle[t.priority] || 'text-white/70'}`}>
+                                    <td data-label="Status" className="px-6 py-4"><StatusBadge status={t.status} /></td>
+                                    <td data-label="Priority" className={`px-6 py-4 text-[12px] font-bold ${priorityStyle[t.priority] || 'text-white/70'}`}>
                                         {t.priority}
                                     </td>
-                                    <td className="px-6 py-4 text-[14px] text-white/90 max-w-[260px]">
+                                    <td data-label="Ticket" className="admin-table-primary px-6 py-4 text-[14px] text-white/90 max-w-[260px]">
                                         <p className="truncate">{t.subject}</p>
                                         {t.messages?.[0] ? (
                                             <p className="text-[12px] text-white/40 truncate mt-0.5">{t.messages[0].body}</p>
                                         ) : null}
                                     </td>
-                                    <td className="px-6 py-4 text-[13px] text-white/60 break-all max-w-[180px]">
+                                    <td data-label="Account" className="px-6 py-4 text-[13px] text-white/60 break-all max-w-[180px]">
                                         {t.user?.email || t.userId}
                                     </td>
-                                    <td className={`${adminTdClass} text-[12px]`}>{t.category}</td>
-                                    <td className={`${adminTdClass} whitespace-nowrap`}>{formatDate(t.lastMessageAt)}</td>
+                                    <td data-label="Category" className={`${adminTdClass} text-[12px]`}>{t.category}</td>
+                                    <td data-label="Last activity" className={`${adminTdClass} whitespace-nowrap`}>{formatDate(t.lastMessageAt)}</td>
                                 </tr>
                             ))}
                         </tbody>

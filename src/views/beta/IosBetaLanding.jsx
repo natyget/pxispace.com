@@ -17,7 +17,6 @@ export default function IosBetaLanding() {
           aria-hidden
         />
         <div className="mx-auto flex max-w-[1200px] flex-col items-center px-6 text-center">
-          <span className="eyebrow eyebrow--center">Beta access</span>
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}

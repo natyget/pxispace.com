@@ -1,25 +1,23 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import ActionMenu from '@/components/dashboard/ActionMenu';
 import SectionCard from '@/components/dashboard/SectionCard';
 import SegmentedToggle from '@/components/dashboard/SegmentedToggle';
 import Modal from '@/components/ui/Modal';
-import { useEvents, useNotifications } from '@/lib/dashboardStore';
+import { useAdCampaigns, useEvents, useNotifications } from '@/lib/dashboardStore';
 import {
     buildAudienceRows,
-    exportSegmentToCampaignDraft,
     deleteAudienceSegment,
     listAudienceSegments,
     saveAudienceSegment,
 } from '@/services/audienceSegments';
 import {
-    createCampaignDraftFromInsights,
-    deleteCampaignDraft,
-    listCampaignDrafts,
-    resumeCampaignDraft,
-} from '@/services/campaignDrafts';
+    cancelAdCampaign,
+    pauseAdCampaign,
+    resumeAdCampaign,
+} from '@/services/ads';
 import { api } from '@/services/api';
 
 /** Real attendee demographics from GET /api/analytics/audience (not sample data). */
@@ -87,7 +85,6 @@ function RealAudienceOverview() {
 }
 
 const INVITE_TYPES = ['ALBUM_INVITE', 'STAFF_INVITE', 'LINEUP_INVITE'];
-const ACTIVE_CAMPAIGN_STORAGE_KEY = 'pxi_active_campaign_status_v1';
 const MONEY_FORMATTER = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
 const FILTER_DEFAULTS = {
@@ -158,22 +155,6 @@ const AUDIENCE_SELECT_CLASS = `${AUDIENCE_INPUT_CLASS} appearance-none pr-10`;
 const AUDIENCE_SCROLLBAR_CLASS =
     '[scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.18)_transparent] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-thumb:hover]:bg-white/25';
 
-function soldTickets(event) {
-    return Math.max(0, (event?._count?.tickets ?? 0) - 1);
-}
-
-function isPastEvent(event) {
-    const status = String(event?.status || '').toLowerCase();
-    return status === 'ended' || status === 'past' || status === 'completed' || status === 'archived';
-}
-
-function eventTimeLabel(event) {
-    if (!event?.startDate) return 'Timing TBD';
-    const start = new Date(event.startDate);
-    if (Number.isNaN(start.getTime())) return 'Timing TBD';
-    return start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric' });
-}
-
 function formatUpdatedAt(value) {
     if (!value) return 'Saved';
     const date = new Date(value);
@@ -181,36 +162,54 @@ function formatUpdatedAt(value) {
     return `Updated ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
 }
 
-function mixChannelLabel(mix = {}) {
-    const channels = [];
-    if (mix.sms) channels.push('SMS');
-    if (mix.email) channels.push('Email');
-    if (mix.feedPosts) channels.push('Feed');
-    if (mix.discoveryRanking) channels.push('Discovery');
-    return channels.length ? channels.join(' + ') : 'No channels selected';
+const AD_SURFACE_SHORT = {
+    FEED: 'Feed',
+    DISCOVERY: 'Discovery',
+    WEB_DISCOVERY: 'Web',
+    WEB_FEATURED: 'Featured',
+};
+
+const AD_STATUS_LABELS = {
+    DRAFT: 'Draft',
+    PENDING_PAYMENT: 'Awaiting payment',
+    SCHEDULED: 'Scheduled',
+    ACTIVE: 'Active',
+    PAUSED: 'Paused',
+    COMPLETED: 'Completed',
+    CANCELLED: 'Cancelled',
+};
+
+function adCampaignChannels(campaign) {
+    const channels = (campaign.placements || []).map((p) => AD_SURFACE_SHORT[p.surface] || p.surface);
+    if (campaign.emailEnabled) channels.push('Email');
+    return channels.length ? channels.join(' + ') : 'No channels';
 }
 
-function readActiveCampaignStates() {
-    if (typeof window === 'undefined') return {};
-    try {
-        const raw = window.localStorage.getItem(ACTIVE_CAMPAIGN_STORAGE_KEY);
-        return raw ? JSON.parse(raw) : {};
-    } catch {
-        return {};
-    }
+function adCampaignSchedule(campaign) {
+    const fmt = (iso) => {
+        const date = new Date(iso);
+        return Number.isNaN(date.getTime())
+            ? '—'
+            : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+    return `${fmt(campaign.startAt)} → ${fmt(campaign.endAt)}`;
 }
 
-function writeActiveCampaignStates(states) {
-    if (typeof window !== 'undefined') {
-        window.localStorage.setItem(ACTIVE_CAMPAIGN_STORAGE_KEY, JSON.stringify(states));
-    }
-    return states;
-}
-
-function activeCampaignStatusLabel(status) {
-    if (status === 'paused') return 'Paused';
-    if (status === 'cancelled') return 'Cancelled';
-    return 'Active';
+/** Real AdCampaign → the planner's list-item shape. */
+function adCampaignToListItem(campaign, type) {
+    const stats = campaign.stats || { impressions: 0, clicks: 0 };
+    return {
+        id: campaign.id,
+        title: campaign.name,
+        audience: `${stats.impressions.toLocaleString()} impressions · ${stats.clicks.toLocaleString()} clicks`,
+        budget: Math.round((campaign.priceCents || 0) / 100),
+        channels: adCampaignChannels(campaign),
+        schedule: adCampaignSchedule(campaign),
+        statusLabel: AD_STATUS_LABELS[campaign.status] || campaign.status,
+        status: campaign.status,
+        pausedByAdmin: Boolean(campaign.pausedByAdmin),
+        type,
+    };
 }
 
 function CampaignList({ items, emptyTitle, emptyCopy, selectedDraftId, onOpenDraft, onUseDraft, onDeleteDraft, onManageActive }) {
@@ -303,14 +302,19 @@ function matchesEventCountFilter(row, operator, rawValue) {
 }
 
 export default function AudiencePage() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const view = searchParams.get('view') === 'campaigns' ? 'campaigns' : 'crm';
     const { events, loading: eventsLoading } = useEvents({ limit: 100, offset: 0 });
     const { notifications, loading: notificationsLoading } = useNotifications(100);
+    const {
+        campaigns: adCampaigns,
+        refresh: refreshAdCampaigns,
+        invalidate: invalidateAdCampaigns,
+    } = useAdCampaigns();
     const loading = eventsLoading || notificationsLoading;
     const [activeCampaignTab, setActiveCampaignTab] = useState('active');
     const [campaignMix, setCampaignMix] = useState(DEFAULT_CAMPAIGN_MIX);
-    const [campaignDrafts, setCampaignDrafts] = useState([]);
     const [selectedDraftId, setSelectedDraftId] = useState(null);
     const [audienceFilters, setAudienceFilters] = useState(FILTER_DEFAULTS);
     const [selectedAudienceRows, setSelectedAudienceRows] = useState([]);
@@ -319,17 +323,8 @@ export default function AudiencePage() {
     const [selectedSegmentId, setSelectedSegmentId] = useState(null);
     const [handoffStatus, setHandoffStatus] = useState('');
     const [activeCampaignModal, setActiveCampaignModal] = useState(null);
-    const [activeCampaignStates, setActiveCampaignStates] = useState(() => readActiveCampaignStates());
-
-    useEffect(() => {
-        let cancelled = false;
-        listCampaignDrafts().then((drafts) => {
-            if (!cancelled) setCampaignDrafts(drafts);
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, []);
+    const [campaignActionBusy, setCampaignActionBusy] = useState(false);
+    const [campaignActionError, setCampaignActionError] = useState('');
 
     const inviteNotifications = useMemo(
         () => notifications.filter((item) => INVITE_TYPES.includes(item.type)),
@@ -348,10 +343,6 @@ export default function AudiencePage() {
         );
     }, [inviteNotifications]);
 
-    const totalTickets = useMemo(
-        () => events.reduce((sum, event) => sum + soldTickets(event), 0),
-        [events]
-    );
     const audienceRows = useMemo(
         () => buildAudienceRows(events, notifications),
         [events, notifications]
@@ -397,99 +388,28 @@ export default function AudiencePage() {
     }, [rowsForSegment]);
     const segmentIsActive = selectedAudienceRows.length > 0;
 
-    const upcomingEvents = useMemo(
-        () => events.filter((event) => !isPastEvent(event)),
-        [events]
+    // Real ad campaigns from GET /api/ads/campaigns (via the dashboard memory layer).
+    const activeCampaigns = useMemo(
+        () => adCampaigns
+            .filter((c) => ['ACTIVE', 'SCHEDULED', 'PAUSED', 'PENDING_PAYMENT'].includes(c.status))
+            .map((c) => adCampaignToListItem(c, 'active')),
+        [adCampaigns]
     );
-    const pastEvents = useMemo(
-        () => events.filter((event) => isPastEvent(event)),
-        [events]
-    );
-    const activeCampaigns = useMemo(() => {
-        const eventCampaigns = upcomingEvents.slice(0, 3).map((event, index) => ({
-            id: `event-${event.id}`,
-            title: `${event.name || 'Untitled event'} last-call reminder`,
-            audience: inviteCounts.pending > 0 ? `${inviteCounts.pending} pending invitees` : 'Ticket holders and Passport followers',
-            budget: index === 0 ? campaignMix.budget : Math.max(120, campaignMix.budget - 140),
-            channels: index === 0 ? mixChannelLabel(campaignMix) : 'Email + Feed',
-            schedule: eventTimeLabel(event),
-            statusLabel: index === 0 && inviteCounts.pending > 0 ? 'Ready to schedule' : 'Planned',
-            type: 'active',
-        }));
-
-        if (eventCampaigns.length === 0) {
-            eventCampaigns.push({
-                id: 'fallback-passport-reactivation',
-                title: 'Passport reactivation campaign',
-                audience: 'Best-fit Passport segment',
-                budget: campaignMix.budget,
-                channels: mixChannelLabel(campaignMix),
-                schedule: 'Draft send window',
-                statusLabel: 'Planned',
-                type: 'active',
-            });
-        }
-
-        return eventCampaigns.map((campaign) => {
-            const storedStatus = activeCampaignStates[campaign.id] || 'active';
-            return {
-                ...campaign,
-                status: storedStatus,
-                statusLabel: activeCampaignStatusLabel(storedStatus),
-            };
-        });
-    }, [activeCampaignStates, campaignMix, inviteCounts.pending, upcomingEvents]);
     const draftCampaigns = useMemo(
-        () => campaignDrafts
-            .filter((draft) => draft.status !== 'archived')
-            .map((draft) => ({
-                id: draft.id,
-                title: draft.title,
-                audience: draft.audience,
-                budget: Number(draft.mix?.budget || 0),
-                channels: mixChannelLabel(draft.mix),
-                schedule: `${draft.stage} · ${formatUpdatedAt(draft.updatedAt)}`,
-                statusLabel: 'Draft',
-                type: 'draft',
-            })),
-        [campaignDrafts]
+        () => adCampaigns.filter((c) => c.status === 'DRAFT').map((c) => adCampaignToListItem(c, 'draft')),
+        [adCampaigns]
     );
-    const pastCampaigns = useMemo(() => {
-        const archivedDrafts = campaignDrafts
-            .filter((draft) => draft.status === 'archived')
-            .map((draft) => ({
-                id: draft.id,
-                title: draft.title,
-                audience: draft.audience,
-                budget: Number(draft.mix?.budget || 0),
-                channels: mixChannelLabel(draft.mix),
-                schedule: formatUpdatedAt(draft.updatedAt),
-                statusLabel: 'Archived',
-                type: 'past',
-            }));
-        const eventRecaps = pastEvents.slice(0, 2).map((event) => ({
-            id: `past-${event.id}`,
-            title: `${event.name || 'Recent event'} recap campaign`,
-            audience: 'Recent attendees',
-            budget: 180,
-            channels: 'Email + Feed',
-            schedule: eventTimeLabel(event),
-            statusLabel: 'Completed',
-            type: 'past',
-        }));
-
-        return [...archivedDrafts, ...eventRecaps];
-    }, [campaignDrafts, pastEvents]);
+    const pastCampaigns = useMemo(
+        () => adCampaigns
+            .filter((c) => ['COMPLETED', 'CANCELLED'].includes(c.status))
+            .map((c) => adCampaignToListItem(c, 'past')),
+        [adCampaigns]
+    );
     const campaignItemsByTab = {
         active: activeCampaigns,
         drafts: draftCampaigns,
         past: pastCampaigns,
     };
-    const selectedDraft = campaignDrafts.find((draft) => draft.id === selectedDraftId);
-    const campaignAudience =
-        inviteCounts.pending > 0
-            ? `${inviteCounts.pending} pending invitees`
-            : `${Math.max(totalTickets, 120).toLocaleString()} Passport-qualified guests`;
     const insightRecommendations = [
         inviteCounts.pending > 0
             ? 'Pending invitees are the fastest conversion segment; use SMS only for the final reminder window.'
@@ -510,55 +430,66 @@ export default function AudiencePage() {
         setCampaignMix((current) => ({ ...current, budget: Number(value) }));
     }
 
-    async function refreshCampaignDrafts(nextSelectedId) {
-        const drafts = await listCampaignDrafts();
-        setCampaignDrafts(drafts);
-        if (nextSelectedId !== undefined) setSelectedDraftId(nextSelectedId);
+    /** Deep-link into the Ads Manager wizard carrying the planned mix. */
+    function adsWizardHref(extraParams = {}) {
+        const mix = Object.entries(campaignMix)
+            .filter(([key, value]) => key !== 'budget' && value)
+            .map(([key]) => key);
+        const params = new URLSearchParams({ create: '1', mix: mix.join(','), budget: String(campaignMix.budget) });
+        Object.entries(extraParams).forEach(([key, value]) => {
+            if (value) params.set(key, String(value));
+        });
+        return `/dashboard/ads?${params}`;
     }
 
-    async function handleGenerateCampaignDraft() {
-        const draft = await createCampaignDraftFromInsights({
-            title: upcomingEvents[0]?.name ? `${upcomingEvents[0].name} campaign mix` : 'Campaign draft',
-            audience: campaignAudience,
-            schedule: upcomingEvents[0] ? eventTimeLabel(upcomingEvents[0]) : 'Next best send window',
-            mix: campaignMix,
-            insights: insightRecommendations,
-        });
-        setCampaignDrafts((current) => [draft, ...current]);
-        setSelectedDraftId(draft.id);
-        setActiveCampaignTab('drafts');
+    function handleGenerateCampaignDraft() {
+        router.push(adsWizardHref());
     }
 
     function handleOpenDraft(id) {
-        const draft = campaignDrafts.find((item) => item.id === id);
-        if (draft?.mix) setCampaignMix({ ...DEFAULT_CAMPAIGN_MIX, ...draft.mix });
         setSelectedDraftId(id);
+        router.push('/dashboard/ads');
     }
 
-    async function handleUseDraft(id) {
-        const draft = campaignDrafts.find((item) => item.id === id);
-        if (draft?.mix) setCampaignMix({ ...DEFAULT_CAMPAIGN_MIX, ...draft.mix });
-        await resumeCampaignDraft(id);
-        await refreshCampaignDrafts(id);
+    function handleUseDraft() {
+        router.push('/dashboard/ads');
     }
 
     async function handleDeleteDraft(id) {
-        await deleteCampaignDraft(id);
-        await refreshCampaignDrafts(selectedDraftId === id ? null : selectedDraftId);
+        setCampaignActionBusy(true);
+        try {
+            await cancelAdCampaign(id);
+            invalidateAdCampaigns();
+            await refreshAdCampaigns({ force: true });
+        } catch (error) {
+            setCampaignActionError(error?.data?.error || error?.message || 'Failed to delete draft');
+        } finally {
+            setCampaignActionBusy(false);
+        }
     }
 
-    function handleActiveCampaignStatus(status) {
-        if (!activeCampaignModal?.id) return;
-        const nextStates = writeActiveCampaignStates({
-            ...activeCampaignStates,
-            [activeCampaignModal.id]: status,
-        });
-        setActiveCampaignStates(nextStates);
-        setActiveCampaignModal((current) => current ? {
-            ...current,
-            status,
-            statusLabel: activeCampaignStatusLabel(status),
-        } : current);
+    async function handleActiveCampaignStatus(status) {
+        if (!activeCampaignModal?.id || campaignActionBusy) return;
+        setCampaignActionBusy(true);
+        setCampaignActionError('');
+        try {
+            let result;
+            if (status === 'paused') result = await pauseAdCampaign(activeCampaignModal.id);
+            else if (status === 'active') result = await resumeAdCampaign(activeCampaignModal.id);
+            else result = await cancelAdCampaign(activeCampaignModal.id);
+            const updated = result?.campaign;
+            invalidateAdCampaigns();
+            await refreshAdCampaigns({ force: true });
+            setActiveCampaignModal((current) => current && updated ? {
+                ...current,
+                status: updated.status,
+                statusLabel: AD_STATUS_LABELS[updated.status] || updated.status,
+            } : current);
+        } catch (error) {
+            setCampaignActionError(error?.data?.error || error?.message || 'Campaign update failed');
+        } finally {
+            setCampaignActionBusy(false);
+        }
     }
 
     function updateAudienceFilter(key, value) {
@@ -611,17 +542,10 @@ export default function AudiencePage() {
         setHandoffStatus('Segment draft reset.');
     }
 
-    async function handleExportSegment() {
+    function handleExportSegment() {
         const rowsForExport = rowsForSegment;
-        const draft = exportSegmentToCampaignDraft({
-            name: segmentName.trim() || 'Audience CRM handoff',
-            filters: audienceFilters,
-            rowIds: rowsForExport.map((row) => row.id),
-            rowCount: rowsForExport.length,
-        });
-        await refreshCampaignDrafts(draft.id);
-        setActiveCampaignTab('drafts');
-        setHandoffStatus(`${rowsForExport.length} audience rows staged for Campaigns.`);
+        setHandoffStatus(`${rowsForExport.length} audience rows staged — opening the Ads Manager.`);
+        router.push(adsWizardHref());
     }
 
     return (
@@ -648,8 +572,8 @@ export default function AudiencePage() {
                 <>
                     <div className="space-y-7">
                         <RealAudienceOverview />
-                        <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
-                            Sample data — rows below model likely audience segments from your real ticket and invite
+                        <div className="rounded-2xl bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
+                            Planning model — rows below estimate likely audience segments from your real ticket and invite
                             counts. They are not a literal roster of individual attendees. Live totals are in the
                             &quot;Your real audience&quot; panel above.
                         </div>
@@ -863,7 +787,61 @@ export default function AudiencePage() {
                                 </div>
 
                                 <div className="dashboard-surface-b overflow-hidden rounded-[1.75rem] !border-0 p-2">
-                                    <div className={`overflow-x-auto pb-1 ${AUDIENCE_SCROLLBAR_CLASS}`}>
+                                    <div className="space-y-3 p-2 md:hidden">
+                                        <div className="flex items-center justify-between gap-3 px-1">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                                                {filteredAudienceRows.length} audience rows
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={toggleVisibleAudienceRows}
+                                                className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-300"
+                                            >
+                                                Select all
+                                            </button>
+                                        </div>
+                                        {filteredAudienceRows.map((row) => {
+                                            const selected = selectedAudienceRows.includes(row.id);
+                                            return (
+                                                <button
+                                                    key={row.id}
+                                                    type="button"
+                                                    onClick={() => toggleAudienceRow(row.id)}
+                                                    className={`w-full rounded-2xl px-4 py-4 text-left transition ${
+                                                        selected ? 'bg-white/[0.09]' : 'bg-white/[0.035]'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="text-base font-bold leading-6 text-white">{row.audienceName}</p>
+                                                            <p className="mt-1 text-xs leading-5 text-zinc-500">{row.sourceEvent} · {row.rowType}</p>
+                                                        </div>
+                                                        <span className={`mt-1 h-4 w-4 shrink-0 rounded-md ${selected ? 'bg-white' : 'bg-white/12'}`} aria-hidden="true" />
+                                                    </div>
+                                                    <div className="mt-4 grid grid-cols-2 gap-2">
+                                                        <div className="rounded-xl bg-white/[0.04] px-3 py-2">
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Paid</p>
+                                                            <p className="mt-1 font-mono text-sm font-bold text-zinc-100">{formatMoney(row.pricePaid)}</p>
+                                                        </div>
+                                                        <div className="rounded-xl bg-white/[0.04] px-3 py-2">
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Odyssey</p>
+                                                            <p className="mt-1 font-mono text-sm font-bold text-zinc-100">{row.odysseyScore.toLocaleString()}</p>
+                                                        </div>
+                                                        <div className="rounded-xl bg-white/[0.04] px-3 py-2">
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Events</p>
+                                                            <p className="mt-1 font-mono text-sm font-bold text-zinc-100">{row.eventsAttendedCount}</p>
+                                                        </div>
+                                                        <div className="rounded-xl bg-white/[0.04] px-3 py-2">
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Invite</p>
+                                                            <p className="mt-1 truncate text-sm font-bold text-zinc-100">{row.inviteState}</p>
+                                                        </div>
+                                                    </div>
+                                                    <p className="mt-3 text-xs font-semibold text-zinc-500">{row.stampTier}</p>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className={`hidden overflow-x-auto pb-1 md:block ${AUDIENCE_SCROLLBAR_CLASS}`}>
                                         <table className="w-full min-w-[960px] border-separate [border-spacing:0_0.5rem] text-left">
                                             <thead className="text-[11px] font-black uppercase tracking-[0.18em] text-zinc-500">
                                                 <tr>
@@ -931,11 +909,16 @@ export default function AudiencePage() {
                 </>
             ) : (
                 <>
-                    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-xs font-semibold text-emerald-200">
-                        Email campaigns are LIVE — send real emails to your opted-in attendees from{' '}
-                        <a href="/dashboard/campaigns" className="underline">Email Campaigns</a>. The planner below is
-                        for drafting your mix; SMS and feed placements are still coming.
+                    <div className="rounded-2xl bg-emerald-500/10 px-4 py-3 text-xs font-semibold text-emerald-200">
+                        Campaigns are LIVE — the lists below are your real ad campaigns. Launch sponsored placements
+                        (feed, discovery, featured) and email from the{' '}
+                        <a href="/dashboard/ads" className="underline">Ads Manager</a>; SMS is still coming.
                     </div>
+                    {campaignActionError ? (
+                        <div className="rounded-2xl bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-200">
+                            {campaignActionError}
+                        </div>
+                    ) : null}
                     <SectionCard
                         title="Campaign Management"
                         className={AUDIENCE_SECTION_CLASS}
@@ -1016,22 +999,10 @@ export default function AudiencePage() {
                                     </div>
                                 </div>
 
-                                {selectedDraft ? (
-                                    <div className="glow-surface-soft rounded-2xl px-4 py-4">
-                                        <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Selected Draft</p>
-                                        <p className="mt-2 text-sm font-bold text-white">{selectedDraft.title}</p>
-                                        <p className="mt-1 text-xs text-zinc-500">{selectedDraft.stage} · {mixChannelLabel(selectedDraft.mix)}</p>
-                                        {selectedDraft.insights?.length ? (
-                                            <div className="mt-3 space-y-2">
-                                                {selectedDraft.insights.slice(0, 2).map((insight) => (
-                                                    <p key={insight} className="rounded-xl glass-field px-3 py-2 text-xs text-zinc-400">
-                                                        {insight}
-                                                    </p>
-                                                ))}
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                ) : null}
+                                <p className="rounded-2xl glass-field px-4 py-3 text-xs leading-5 text-zinc-500">
+                                    This mix carries into the Ads Manager wizard — surfaces, email, and budget arrive
+                                    prefilled when you generate the campaign.
+                                </p>
                             </div>
                         </SectionCard>
 
@@ -1076,7 +1047,7 @@ export default function AudiencePage() {
                         <button
                             type="button"
                             onClick={() => handleActiveCampaignStatus('paused')}
-                            disabled={activeCampaignModal?.status === 'paused' || activeCampaignModal?.status === 'cancelled'}
+                            disabled={campaignActionBusy || !['ACTIVE', 'SCHEDULED'].includes(activeCampaignModal?.status)}
                             className="flex-1 rounded-xl glass-field px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/12 disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap"
                         >
                             Pause
@@ -1084,7 +1055,7 @@ export default function AudiencePage() {
                         <button
                             type="button"
                             onClick={() => handleActiveCampaignStatus('active')}
-                            disabled={activeCampaignModal?.status === 'active' || activeCampaignModal?.status === 'cancelled'}
+                            disabled={campaignActionBusy || activeCampaignModal?.status !== 'PAUSED' || activeCampaignModal?.pausedByAdmin}
                             className="flex-1 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap"
                         >
                             Resume
@@ -1092,7 +1063,7 @@ export default function AudiencePage() {
                         <button
                             type="button"
                             onClick={() => handleActiveCampaignStatus('cancelled')}
-                            disabled={activeCampaignModal?.status === 'cancelled'}
+                            disabled={campaignActionBusy || ['CANCELLED', 'COMPLETED'].includes(activeCampaignModal?.status)}
                             className="flex-1 rounded-xl bg-red-500/20 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap"
                         >
                             Cancel

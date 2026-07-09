@@ -78,7 +78,7 @@ function AdminAnalyticsHero({ days, setDays, isLiveAdmin, loading, signups, tick
     ];
 
     return (
-        <section className="relative overflow-hidden rounded-[2rem] bg-black px-5 py-7 shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:px-8 md:py-8">
+        <section className="dashboard-surface-b relative overflow-hidden rounded-[2rem] px-5 py-7 md:px-8 md:py-8">
             <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                 <div className="max-w-2xl">
                     <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -157,7 +157,7 @@ function DailyBars({ title, data, color, format = (v) => String(v) }) {
                         : `Peak ${format(max)}`}
                 </span>
             </div>
-            <div className="rounded-2xl bg-black/20 p-3">
+            <div className="rounded-2xl bg-white/[0.025] p-3">
                 <svg
                     viewBox={`0 0 ${W} ${H}`}
                     className="block h-auto w-full"
@@ -271,7 +271,7 @@ function RevenueLines({ data }) {
                     </span>
                 ) : null}
             </div>
-            <div className="rounded-2xl bg-black/20 p-3">
+            <div className="rounded-2xl bg-white/[0.025] p-3">
                 <svg
                     viewBox={`0 0 ${W} ${H}`}
                     className="block h-auto w-full"

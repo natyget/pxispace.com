@@ -7,25 +7,22 @@ import { motion } from 'framer-motion';
  * Purple spinner — matches mobile Wall Circle strip loading
  * (`TheCircle` → ActivityIndicator, Colors.neonPurple / #B026FF).
  */
+/**
+ * Purple filled pulsing circle/dot loader.
+ * Matches the premium dark mode branding.
+ */
 const NEON_PURPLE = '#B026FF';
 
-const SPINNER_SIZES = {
-  sm: 'h-5 w-5 border-2',
-  md: 'h-8 w-8 border-2',
-  lg: 'h-10 w-10 border-[3px]',
-};
-
-function PxiSpinner({ size = 'lg', className = '' }) {
-  const dim = SPINNER_SIZES[size] ?? SPINNER_SIZES.lg;
+export function PxiSpinner({ size = 'lg', className = '' }) {
+  const dim = size === 'sm' ? 'h-3.5 w-3.5' : size === 'md' ? 'h-6 w-6' : 'h-8 w-8';
 
   return (
     <div
       role="status"
       aria-label="Loading"
-      className={`shrink-0 rounded-full border-solid animate-spin motion-reduce:animate-none ${dim} ${className}`}
+      className={`shrink-0 rounded-full bg-gradient-to-tr from-[#B026FF] to-[#d946ef] animate-pulse ${dim} ${className}`}
       style={{
-        borderColor: `${NEON_PURPLE}33`,
-        borderTopColor: NEON_PURPLE,
+        boxShadow: '0 0 10px rgba(176, 38, 255, 0.4)',
       }}
     />
   );

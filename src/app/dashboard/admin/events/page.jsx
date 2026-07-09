@@ -71,8 +71,8 @@ export default function AdminEventsPage() {
 
     return (
         <AdminPageShell
-            title="Event management"
-            copy="A platform-wide operating view of every hosted event, host, visibility state, and schedule."
+            title="Events"
+            copy="A platform-wide view of hosted events, organizers, visibility state, and schedule."
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
                 { label: 'Total', value: total.toLocaleString(), hint: 'Events tracked' },
@@ -96,21 +96,21 @@ export default function AdminEventsPage() {
                         <tbody>
                             {rows.map((ev) => (
                                 <tr key={ev.id} className="hover:bg-white/[0.02] transition-colors">
-                                    <td className="px-6 py-4 text-[14px] font-semibold text-white max-w-[220px]">
+                                    <td data-label="Event" className="admin-table-primary px-6 py-4 text-[14px] font-semibold text-white max-w-[220px]">
                                         <div className="line-clamp-2">{ev.name}</div>
                                         {ev.location ? (
                                             <div className="text-[12px] font-normal text-white/45 mt-1 line-clamp-1">{ev.location}</div>
                                         ) : null}
                                     </td>
-                                    <td className={`${adminTdClass} whitespace-nowrap`}>{formatDate(ev.startDate)}</td>
-                                    <td className={`${adminTdClass} whitespace-nowrap`}>{formatDate(ev.endDate)}</td>
-                                    <td className="px-6 py-4">
+                                    <td data-label="Start" className={`${adminTdClass} whitespace-nowrap`}>{formatDate(ev.startDate)}</td>
+                                    <td data-label="End" className={`${adminTdClass} whitespace-nowrap`}>{formatDate(ev.endDate)}</td>
+                                    <td data-label="Status" className="px-6 py-4">
                                         <span className="inline-flex rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
                                             {ev.status}
                                         </span>
                                     </td>
-                                    <td className={adminTdClass}>{ev.visibility}</td>
-                                    <td className="px-6 py-4 text-[13px] text-white/55 break-all max-w-[180px]">
+                                    <td data-label="Visibility" className={adminTdClass}>{ev.visibility}</td>
+                                    <td data-label="Organizer" className="px-6 py-4 text-[13px] text-white/55 break-all max-w-[180px]">
                                         {ev.creator?.email || '—'}
                                     </td>
                                 </tr>

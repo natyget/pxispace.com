@@ -117,9 +117,9 @@ export default function FunnelChart({ data = [] }) {
                                         <StageStat label="Drop-off" value={formatNumber(stage.dropoff)} active={active} />
                                     </div>
                                 </div>
-                                <div className={`mt-4 h-2 overflow-hidden rounded-full ${active ? 'bg-black/10' : 'bg-black/25'}`} aria-hidden="true">
+                                <div className={`mt-4 h-2 overflow-hidden rounded-full ${active ? 'bg-zinc-200' : 'bg-white/[0.055]'}`} aria-hidden="true">
                                     <div
-                                        className={`h-full rounded-full ${active ? 'bg-black' : 'bg-white/65'}`}
+                                        className={`h-full rounded-full ${active ? 'bg-zinc-950' : 'bg-white/65'}`}
                                         style={{ width: `${stage.width}%` }}
                                     />
                                 </div>

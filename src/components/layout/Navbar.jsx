@@ -135,24 +135,20 @@ const Navbar = () => {
                                     </button>
 
                                     {userMenuOpen && (
-                                        <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-950 border border-white/8 rounded-xl shadow-2xl overflow-hidden z-50">
-                                            <div className="px-4 py-3 border-b border-white/5">
-                                                <p className="text-white text-xs font-semibold truncate">{user?.name}</p>
-                                                <p className="text-zinc-500 text-xs truncate">@{user?.username}</p>
-                                            </div>
+                                        <div className="absolute right-0 top-full mt-2 w-40 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.7)] z-50 animate-fade-in">
                                             <Link
                                                 href="/dashboard"
                                                 onClick={() => setUserMenuOpen(false)}
-                                                className="flex items-center gap-2.5 px-4 py-2.5 text-zinc-300 hover:text-white hover:bg-white/5 text-xs font-medium transition-all"
+                                                className="flex items-center gap-2.5 px-3 py-2 text-zinc-300 hover:text-white hover:bg-white/5 rounded-xl text-xs font-semibold tracking-wide transition-all"
                                             >
-                                                <HugeiconsIcon icon={DashboardSquare01Icon} size={13} />
+                                                <HugeiconsIcon icon={DashboardSquare01Icon} size={14} className="text-zinc-400" />
                                                 Dashboard
                                             </Link>
                                             <button
                                                 onClick={() => { setUserMenuOpen(false); setShowLogoutModal(true); }}
-                                                className="flex items-center gap-2.5 w-full px-4 py-2.5 text-zinc-500 hover:text-pxi-purple hover:bg-pxi-purple/10 text-xs font-medium transition-all"
+                                                className="flex items-center gap-2.5 w-full px-3 py-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl text-xs font-semibold tracking-wide transition-all"
                                             >
-                                                <HugeiconsIcon icon={Logout01Icon} size={13} />
+                                                <HugeiconsIcon icon={Logout01Icon} size={14} className="text-zinc-400" />
                                                 Sign Out
                                             </button>
                                         </div>

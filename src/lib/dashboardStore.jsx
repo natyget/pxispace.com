@@ -8,6 +8,7 @@ import { authService } from '@/services/auth';
 import { eventsService, getEventsForWallet, getMyEventXp } from '@/services/events';
 import { getNotifications } from '@/services/notifications';
 import { getUserTickets } from '@/services/tickets';
+import { listAdCampaigns } from '@/services/ads';
 import { resolveDashboardCapabilities } from '@/lib/dashboardCapabilities';
 
 const DEFAULT_TTL = 60_000;
@@ -16,6 +17,7 @@ const VENDOR_TTL = 45_000;
 const NOTIFICATIONS_TTL = 30_000;
 const CAPABILITIES_TTL = 120_000;
 const ATTENDED_EVENTS_TTL = 90_000;
+const AD_CAMPAIGNS_TTL = 45_000;
 
 const DashboardDataContext = createContext(null);
 
@@ -94,6 +96,7 @@ function makeKeys(userId) {
         vendor: `vendor:${userId}`,
         me: `me:${userId}`,
         capabilities: `capabilities:${userId}`,
+        adCampaigns: `ad-campaigns:${userId}`,
     };
 }
 
@@ -227,6 +230,19 @@ export function DashboardDataProvider({ children }) {
         [cache, keys, userId]
     );
 
+    const loadAdCampaigns = useCallback(
+        (options = {}) => {
+            if (!userId) return Promise.resolve([]);
+            return cache.read(
+                keys.adCampaigns,
+                () => listAdCampaigns().then((res) => res?.campaigns || []),
+                AD_CAMPAIGNS_TTL,
+                options
+            );
+        },
+        [cache, keys, userId]
+    );
+
     const loadCapabilities = useCallback(
         async (options = {}) => {
             if (!userId) {
@@ -276,16 +292,17 @@ export function DashboardDataProvider({ children }) {
 
     useEffect(() => {
         if (!userId) return;
-        loadEvents();
-        loadNotifications(50);
-        loadCapabilities();
-        if (user?.isVendor) loadVendorDashboard();
+        loadEvents().catch(() => {});
+        loadNotifications(50).catch(() => {});
+        loadCapabilities().catch(() => {});
+        if (user?.isVendor) loadVendorDashboard().catch(() => {});
     }, [loadCapabilities, loadEvents, loadNotifications, loadVendorDashboard, user?.isVendor, userId]);
 
     const value = useMemo(
         () => ({
             cache,
             invalidate,
+            loadAdCampaigns,
             loadAttendedEvents,
             loadCapabilities,
             loadEvents,
@@ -293,7 +310,7 @@ export function DashboardDataProvider({ children }) {
             loadVendorDashboard,
             sameUserPatch: (patch) => samePatch(user, patch),
         }),
-        [cache, invalidate, loadAttendedEvents, loadCapabilities, loadEvents, loadNotifications, loadVendorDashboard, user]
+        [cache, invalidate, loadAdCampaigns, loadAttendedEvents, loadCapabilities, loadEvents, loadNotifications, loadVendorDashboard, user]
     );
 
     return <DashboardDataContext.Provider value={value}>{children}</DashboardDataContext.Provider>;
@@ -366,6 +383,19 @@ export function useNotifications(limit = 50, unreadOnly = false) {
         notifications: data.notifications || [],
         unreadCount: data.unreadCount ?? data.notifications?.filter((item) => !item.readAt).length ?? 0,
         invalidate: () => invalidate('notifications'),
+    };
+}
+
+export function useAdCampaigns() {
+    const { invalidate, loadAdCampaigns } = useDashboardData();
+    const fallback = useMemo(() => [], []);
+    const loader = useCallback((options = {}) => loadAdCampaigns(options), [loadAdCampaigns]);
+    const resource = useCachedResource(loader, fallback);
+
+    return {
+        ...resource,
+        campaigns: resource.data || [],
+        invalidate: () => invalidate('ad-campaigns'),
     };
 }
 

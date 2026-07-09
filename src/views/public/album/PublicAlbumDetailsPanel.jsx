@@ -75,6 +75,8 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
   }, [isPaidEvent, ticketTiers, album?.event?.ticketPrice, album?.event?.currency]);
   const lineup = album?.featuredPeople || album?.lineup || [];
   const participants = album?.previewParticipants || [];
+  // Finalized scrapbook (event passed + grace over): joining is closed server-side.
+  const isFinalized = album?.event?.effectiveStatus === 'ARCHIVED';
   const memberCount = album?.memberCount ?? participants.length;
   const openInAppUrl = albumId ? `pxi://album/${albumId}` : null;
   const publicAlbumUrl = albumId ? `${getSiteUrl()}/album/${albumId}` : null;
@@ -160,13 +162,18 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
               >
                 {isPaidEvent ? 'PAID' : 'FREE'}
               </span>
+              {isFinalized ? (
+                <span className="rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400">
+                  Scrapbook · Finalized
+                </span>
+              ) : null}
             </div>
             {host ? (
               <div className="flex flex-col items-center gap-2">
                 <UserAvatar
                   user={{ avatarUrl: host?.avatarUrl }}
                   size={40}
-                  className="shrink-0 border border-white/15"
+                  className="shrink-0"
                 />
                 <p className="text-[11px] text-white/60">
                   Hosted by <span className="font-bold text-white">{host.name || host.username || 'Host'}</span>
@@ -229,7 +236,7 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
                       <UserAvatar
                         user={{ avatarUrl: person.avatarUrl }}
                         size={32}
-                        className="shrink-0 border border-white/10"
+                        className="shrink-0"
                       />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-bold text-white">
@@ -264,7 +271,7 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
                   {participants.slice(0, 6).map((p, i) => (
                       <div
                         key={`${p.userId}-${i}`}
-                        className="relative size-10 overflow-hidden rounded-full border-[3px] border-[#050505]"
+                        className="relative size-10 overflow-hidden rounded-full"
                         style={{ zIndex: 10 - i }}
                       >
                         <UserAvatar user={{ avatarUrl: p.avatarUrl }} size={40} className="size-full" />
@@ -292,7 +299,11 @@ export default function PublicAlbumDetailsPanel({ album, albumId, layout = 'colu
         }
       >
         <div className="mx-auto flex w-full max-w-lg flex-row items-stretch gap-3 lg:max-w-none">
-          {album?.event?.id ? (
+          {isFinalized ? (
+            <div className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-2 py-4 text-center text-[11px] font-black uppercase leading-tight tracking-[0.1em] text-zinc-500 sm:text-sm sm:tracking-[0.15em]">
+              Scrapbook — finalized
+            </div>
+          ) : album?.event?.id ? (
             <Link
               href={`/events/${album.event.id}/checkout`}
               className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-white px-2 py-4 text-center text-[11px] font-black uppercase leading-tight tracking-[0.1em] text-black shadow-lg transition hover:bg-zinc-200 sm:text-sm sm:tracking-[0.15em]"

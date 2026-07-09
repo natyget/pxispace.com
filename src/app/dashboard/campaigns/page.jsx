@@ -134,6 +134,10 @@ export default function CampaignsPage() {
                         <h1 className="mt-2 text-4xl font-black leading-none text-white md:text-5xl">Email Campaigns</h1>
                         <p className="mt-2 text-sm leading-6 text-zinc-400">
                             Send to opted-in attendees with pricing, consent, and unsubscribe handling managed by PXI.
+                            Want sponsored feed, discovery, or featured placements?{' '}
+                            <a href="/dashboard/ads" className="font-bold text-white underline decoration-white/30 underline-offset-2">
+                                Promote with Ads →
+                            </a>
                         </p>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[360px]">
@@ -213,11 +217,11 @@ export default function CampaignsPage() {
                         </div>
                         <div className="mt-6 space-y-3">
                             <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div className="rounded-2xl bg-black/20 px-3 py-3">
+                                <div className="rounded-2xl bg-white/[0.04] px-3 py-3">
                                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Consent</p>
                                     <p className="mt-1 font-black text-white">Enforced</p>
                                 </div>
-                                <div className="rounded-2xl bg-black/20 px-3 py-3">
+                                <div className="rounded-2xl bg-white/[0.04] px-3 py-3">
                                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Unsubscribe</p>
                                     <p className="mt-1 font-black text-white">Automatic</p>
                                 </div>
@@ -233,7 +237,7 @@ export default function CampaignsPage() {
                         </div>
                     </aside>
                 </div>
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-black/20 px-4 py-3">
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white/[0.035] px-4 py-3">
                     <p className="text-sm text-zinc-400">
                         {quote
                             ? quote.recipientCount > 0

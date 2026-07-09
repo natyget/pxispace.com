@@ -16,6 +16,7 @@ import { uploadImageToR2 } from '../../services/media';
 import { authService, authStorage } from '../../services/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/lib/dashboardStore';
+import { PxiSpinner } from '@/components/loading/PxiLoading';
 import {
   assignRosterToEvent,
   clearCreateEventTeamAssignments,
@@ -586,13 +587,13 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                 />
               ) : !isCoverUploading ? (
                 <div className="flex flex-col items-center gap-3">
-                  <HugeiconsIcon icon={ImageIcon} size={36} className="text-white/30" />
+                  <HugeiconsIcon icon={ImageIcon} size={36} className="text-white opacity-30" />
                   <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.15em]">Add cover image</span>
                 </div>
               ) : null}
               {isCoverUploading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 rounded-2xl">
-                  <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin text-white" />
+                  <PxiSpinner size="md" />
                   <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover...</span>
                 </div>
               )}
@@ -673,9 +674,9 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               </p>
               <div className="flex items-center gap-3">
                 {stampImage ? (
-                  <img src={stampImage} alt="Custom stamp" className="h-16 w-16 rounded-xl border border-white/15 object-cover" />
+                  <img src={stampImage} alt="Custom stamp" className="h-16 w-16 rounded-xl object-cover" />
                 ) : null}
-                <label className="cursor-pointer rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white/70 hover:text-white">
+                <label className="pill-ghost cursor-pointer px-4 py-2 text-xs font-bold uppercase tracking-widest">
                   {isStampUploading ? 'Uploading...' : stampImage ? 'Replace stamp' : 'Upload stamp'}
                   <input
                     type="file"
@@ -760,7 +761,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           <div className="glass-field flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Paid ticket</p>
-              <p className="text-xs text-zinc-500">Requires verified vendor / Stripe.</p>
+              <p className="text-xs text-zinc-500">Requires completed hosting payment setup.</p>
             </div>
             <button
               type="button"
@@ -876,7 +877,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                   <button
                     type="button"
                     onClick={() => setTicketTiers((prev) => [...prev, createEmptyTier()])}
-                    className="w-full rounded-xl border border-dashed border-white/15 py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white hover:border-white/25 transition-colors"
+                    className="w-full rounded-xl bg-white/[0.045] py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
                   >
                     + Add tier
                   </button>
@@ -1058,7 +1059,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               disabled={isSubmitting || isCoverUploading || !coverImage}
               className="pill-solid flex-1 inline-flex min-h-[48px] items-center justify-center gap-2 px-6 text-sm font-bold uppercase tracking-widest disabled:opacity-45"
             >
-              {isSubmitting ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin" /> : null}
+              {isSubmitting ? <PxiSpinner size="sm" /> : null}
               {isSubmitting ? 'Creating...' : isCoverUploading ? 'Uploading cover...' : 'Create event'}
             </button>
           </div>

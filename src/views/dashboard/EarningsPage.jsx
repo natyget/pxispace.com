@@ -235,7 +235,7 @@ function EarningsHero({ netAfterCosts, gross, retainedPct, timeframe, setTimefra
     const statusLabel = sseStatus === 'connected' ? 'Connected' : sseStatus === 'connecting' ? 'Connecting' : 'Offline';
 
     return (
-        <section className="relative overflow-hidden rounded-[2rem] bg-black px-5 py-7 shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:px-8">
+        <section className="dashboard-surface-b relative overflow-hidden rounded-[2rem] px-5 py-7 md:px-8">
             <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                 <div className="max-w-2xl">
                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Business</p>
@@ -303,6 +303,9 @@ export default function EarningsPage() {
     const [timeframe, setTimeframe] = useState('1m');
     const [includeEventCost, setIncludeEventCost] = useState(true);
     const [eventCosts, setEventCosts] = useState([]);
+    const [costName, setCostName] = useState('');
+    const [costAmount, setCostAmount] = useState('');
+    const [costError, setCostError] = useState('');
     useEffect(() => {
         const timer = setTimeout(() => {
             const saved = localStorage.getItem('pxi_event_costs_v1');
@@ -313,6 +316,47 @@ export default function EarningsPage() {
     const saveEventCosts = (newCosts) => {
         setEventCosts(newCosts);
         localStorage.setItem('pxi_event_costs_v1', JSON.stringify(newCosts));
+    };
+
+    const handleAddEventCost = () => {
+        const label = costName.trim();
+        const amount = Number.parseFloat(costAmount);
+        if (!label || !Number.isFinite(amount) || amount <= 0) {
+            setCostError('Add a name and a positive dollar amount.');
+            return;
+        }
+        saveEventCosts([
+            ...eventCosts,
+            { id: globalThis.crypto?.randomUUID?.() || `${Date.now()}`, name: label, amount: Math.round(amount * 100), date: new Date().toISOString() },
+        ]);
+        setCostName('');
+        setCostAmount('');
+        setCostError('');
+    };
+
+    const handleImportCosts = (file) => {
+        if (!file) return;
+        setCostError('');
+        Papa.parse(file, {
+            header: true,
+            complete: (res) => {
+                const imported = res.data
+                    .filter((row) => row.name && row.amount)
+                    .map((row, index) => ({
+                        id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${index}`,
+                        name: String(row.name).trim(),
+                        amount: Math.round(Number.parseFloat(row.amount) * 100),
+                        date: row.date || new Date().toISOString(),
+                    }))
+                    .filter((row) => row.name && Number.isFinite(row.amount) && row.amount > 0);
+                if (!imported.length) {
+                    setCostError('No valid rows found. Use columns named name and amount.');
+                    return;
+                }
+                saveEventCosts([...eventCosts, ...imported]);
+            },
+            error: () => setCostError('Could not read that CSV.'),
+        });
     };
 
 
@@ -434,10 +478,10 @@ export default function EarningsPage() {
     if (!user?.isVendor) {
         return (
             <div className="mx-auto max-w-4xl space-y-6 md:space-y-8">
-                <section className="relative overflow-hidden rounded-[2rem] bg-black px-5 py-10 text-center shadow-[0_24px_90px_rgba(0,0,0,0.45)] md:px-8">
+                <section className="dashboard-surface-b relative overflow-hidden rounded-[2rem] px-5 py-10 text-center md:px-8">
                     <div className="relative mx-auto max-w-xl">
                         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.055]">
-                            <HugeiconsIcon icon={HelpCircleIcon} size={28} className="text-white/75" />
+                            <HugeiconsIcon icon={HelpCircleIcon} size={28} className="text-white opacity-75" />
                         </div>
                         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Business</p>
                         <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">Earnings</h1>
@@ -489,7 +533,7 @@ export default function EarningsPage() {
             />
 
             {error && (
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                <div className="flex items-center gap-3 rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
                     <HugeiconsIcon icon={Alert02Icon} size={16} className="flex-shrink-0" />
                     {error}
                 </div>
@@ -576,98 +620,116 @@ export default function EarningsPage() {
                     </RechartsChart>
                 </SectionCard>
 
-                <SectionCard title="Event Cost Entry">
-                    <div className="p-5 space-y-4">
-                        <div className="flex gap-3">
-                            <input type="text" id="costName" placeholder="Expense name (e.g., Venue)" className="dashboard-input flex-1" />
-                            <input type="number" id="costAmount" placeholder="$0.00" className="dashboard-input w-28" />
-                            <button type="button" onClick={() => {
-                                const name = document.getElementById('costName').value;
-                                const amt = document.getElementById('costAmount').value;
-                                if(name && amt) {
-                                    saveEventCosts([...eventCosts, { id: Math.random().toString(), name, amount: parseFloat(amt) * 100, date: new Date().toISOString() }]);
-                                    document.getElementById('costName').value = '';
-                                    document.getElementById('costAmount').value = '';
-                                }
-                            }} className="rounded-xl bg-white text-black px-4 py-2 font-bold text-sm hover:bg-zinc-200 transition">Add</button>
+                <SectionCard title="Cost planning">
+                    <div className="space-y-5 p-5">
+                        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_150px_auto]">
+                            <input
+                                type="text"
+                                value={costName}
+                                onChange={(event) => setCostName(event.target.value)}
+                                placeholder="Expense name, e.g. venue"
+                                className="dashboard-input min-h-12"
+                            />
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={costAmount}
+                                onChange={(event) => setCostAmount(event.target.value)}
+                                placeholder="$0.00"
+                                className="dashboard-input min-h-12"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleAddEventCost}
+                                className="pill-solid min-h-12 justify-center px-5 text-sm"
+                            >
+                                Add cost
+                            </button>
                         </div>
-                        
-                        <div className="flex justify-between items-center py-2">
-                            <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Or Import CSV</p>
-                            <label className="flex items-center gap-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] px-4 py-2 text-xs font-bold text-white cursor-pointer transition">
+
+                        <div className="flex flex-col gap-3 rounded-2xl bg-white/[0.035] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">CSV import</p>
+                                <p className="mt-1 text-xs text-zinc-500">Use columns named name and amount.</p>
+                            </div>
+                            <label className="pill-ghost inline-flex cursor-pointer items-center justify-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest">
                                 <HugeiconsIcon icon={Upload01Icon} size={14} />
-                                Upload .csv
-                                <input type="file" accept=".csv" className="hidden" onChange={(e) => {
-                                    const file = e.target.files[0];
-                                    if(!file) return;
-                                    Papa.parse(file, {
-                                        header: true,
-                                        complete: (res) => {
-                                            const newC = res.data.filter(r => r.name && r.amount).map(r => ({
-                                                id: Math.random().toString(), name: r.name, amount: parseFloat(r.amount)*100, date: r.date || new Date().toISOString()
-                                            }));
-                                            saveEventCosts([...eventCosts, ...newC]);
-                                        }
-                                    });
-                                }} />
+                                Upload CSV
+                                <input type="file" accept=".csv" className="hidden" onChange={(event) => handleImportCosts(event.target.files?.[0])} />
                             </label>
                         </div>
 
-                        <div className="space-y-2 mt-4 max-h-40 overflow-y-auto pr-2">
-                            {eventCosts.map(c => (
-                                <div key={c.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02]">
-                                    <span className="text-sm font-semibold text-white">{c.name}</span>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-sm font-mono text-zinc-400">{fmt(c.amount)}</span>
-                                        <button type="button" onClick={() => saveEventCosts(eventCosts.filter(x => x.id !== c.id))} className="text-red-400 hover:text-red-300 text-xs font-bold">Remove</button>
+                        {costError ? <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-200">{costError}</p> : null}
+
+                        <div className="space-y-2">
+                            {eventCosts.map((cost) => (
+                                <div key={cost.id} className="flex flex-col gap-3 rounded-2xl bg-white/[0.035] p-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="min-w-0">
+                                        <p className="truncate text-sm font-bold text-white">{cost.name}</p>
+                                        <p className="mt-0.5 text-xs text-zinc-500">{fmtDate(cost.date)}</p>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-4 sm:justify-end">
+                                        <span className="font-mono text-sm font-bold text-zinc-200">{fmt(cost.amount)}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => saveEventCosts(eventCosts.filter((item) => item.id !== cost.id))}
+                                            className="text-xs font-bold uppercase tracking-widest text-red-400 transition hover:text-red-300"
+                                        >
+                                            Remove
+                                        </button>
                                     </div>
                                 </div>
                             ))}
-                            {eventCosts.length === 0 && <p className="text-center text-xs text-zinc-500 py-4">No event costs added yet.</p>}
+                            {eventCosts.length === 0 ? (
+                                <div className="rounded-2xl bg-white/[0.025] px-4 py-8 text-center">
+                                    <p className="text-sm font-semibold text-white">No event costs added yet.</p>
+                                    <p className="mt-1 text-xs text-zinc-500">Add costs to see profit update in the chart.</p>
+                                </div>
+                            ) : null}
                         </div>
                     </div>
                 </SectionCard>
             </div>
 
             <SectionCard title="Payout history">
-                <div className="overflow-x-auto -mx-6 px-6">
+                <div className="p-5">
                     {loading ? (
-                        <div className="px-5 py-10 flex items-center justify-center"><HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin text-zinc-600" /></div>
+                        <div className="flex min-h-40 items-center justify-center"><HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin text-zinc-600" /></div>
                     ) : payouts.length === 0 ? (
-                        <div className="px-5 py-10 text-center text-zinc-600 text-sm">No payouts yet.</div>
+                        <div className="rounded-2xl bg-white/[0.025] px-5 py-10 text-center">
+                            <p className="text-sm font-semibold text-white">No payouts yet.</p>
+                            <p className="mt-1 text-xs text-zinc-500">Completed payouts will appear here with destination and status.</p>
+                        </div>
                     ) : (
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr>
-                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Date</th>
-                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Amount</th>
-                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase">Destination</th>
-                                    <th className="px-6 py-5 text-[11px] font-bold tracking-widest text-white/40 uppercase text-right">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {payouts.map((p) => (
-                                    <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
-                                        <td className="px-6 py-5 text-[14px] font-mono font-medium text-white/50 flex items-center">
-                                            <HugeiconsIcon icon={Calendar01Icon} className="w-4 h-4 mr-3 opacity-50" /> {fmtDate(p.arrivalDate ?? p.createdAt)}
-                                        </td>
-                                        <td className="px-6 py-5 text-[15px] font-mono font-bold text-white">{fmt(p.amount)}</td>
-                                        <td className="px-6 py-5 text-[14px] font-mono font-medium text-white/50">
-                                            {p.stripePayoutId ? `Stripe • ${String(p.stripePayoutId).slice(-6)}` : 'Stripe'}
-                                        </td>
-                                        <td className="px-6 py-5 text-right">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                                                p.status === 'paid'
-                                                    ? 'bg-white/10 text-white border-white/20'
-                                                    : 'bg-red-500/10 text-red-400 border-red-500/20'
-                                            }`}>
-                                                {p.status === 'paid' ? 'Cleared' : 'Failed'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        <div className="space-y-2">
+                            {payouts.map((payout) => (
+                                <div key={payout.id} className="grid gap-3 rounded-2xl bg-white/[0.035] p-4 md:grid-cols-[1fr_140px_170px_auto] md:items-center">
+                                    <div className="flex min-w-0 items-center gap-3">
+                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.055]">
+                                            <HugeiconsIcon icon={Calendar01Icon} className="h-4 w-4 text-white opacity-55" />
+                                        </span>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-bold text-white">{fmtDate(payout.arrivalDate ?? payout.createdAt)}</p>
+                                            <p className="mt-0.5 truncate text-xs text-zinc-500">
+                                                {payout.stripePayoutId ? `Stripe • ${String(payout.stripePayoutId).slice(-6)}` : 'Stripe payout'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <p className="font-mono text-sm font-black text-white md:text-right">{fmt(payout.amount)}</p>
+                                    <p className="truncate text-xs font-semibold text-zinc-500 md:text-right">
+                                        {payout.stripePayoutId ? `Destination ${String(payout.stripePayoutId).slice(-6)}` : 'Default payout rail'}
+                                    </p>
+                                    <span className={`w-fit rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest md:justify-self-end ${
+                                        payout.status === 'paid'
+                                            ? 'bg-white/10 text-white'
+                                            : 'bg-red-500/10 text-red-300'
+                                    }`}>
+                                        {payout.status === 'paid' ? 'Cleared' : 'Failed'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
                     )}
                 </div>
             </SectionCard>

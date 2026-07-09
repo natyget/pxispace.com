@@ -21,9 +21,11 @@ export default function FaceScanEmbedPage() {
   }, []);
 
   const handleVector = useCallback(
-    (vector, modelId) => {
+    (vector, modelId, extras) => {
       setDone(true);
-      postToApp({ type: 'PXI_FACE_VECTOR', vector, modelId });
+      // poseVectors: the individual guided-pose embeddings — the backend stores
+      // them as per-angle match exemplars alongside the averaged vector.
+      postToApp({ type: 'PXI_FACE_VECTOR', vector, modelId, poseVectors: extras?.poseVectors });
     },
     [postToApp],
   );

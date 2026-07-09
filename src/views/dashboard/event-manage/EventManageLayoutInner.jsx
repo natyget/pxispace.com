@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { useEventManage } from './EventManageContext';
+import { PxiSpinner } from '@/components/loading/PxiLoading';
 
 const TABS = [
   { label: 'Details',  segment: null },
@@ -19,7 +20,7 @@ export default function EventManageLayoutInner({ children }) {
   if (loading && !event) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="w-8 h-8 border-2 border-white/30 border-t-transparent rounded-full animate-spin" />
+        <PxiSpinner size="md" />
       </div>
     );
   }

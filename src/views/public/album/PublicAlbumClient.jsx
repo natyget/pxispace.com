@@ -5,9 +5,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Loading02Icon, LockIcon, MoreHorizontalCircle02Icon } from '@hugeicons/core-free-icons';
 import { albumsService } from '@/services/albums';
+import { faceService } from '@/services/face';
+import { useAuth } from '@/contexts/AuthContext';
 import PublicAlbumBottomBar from '@/views/public/PublicAlbumBottomBar';
 import PublicAlbumMasonryGrid from './PublicAlbumMasonryGrid';
 import PublicAlbumThreadMediaCard from './PublicAlbumThreadMediaCard';
+import PublicAlbumThreadMediaCarousel from './PublicAlbumThreadMediaCarousel';
 import PublicAlbumThreadMessage from './PublicAlbumThreadMessage';
 import PublicAlbumThreadJoinEvent from './PublicAlbumThreadJoinEvent';
 import PublicAlbumThreadFocusOverlay from './PublicAlbumThreadFocusOverlay';
@@ -59,6 +62,8 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   const [findMyselfOpen, setFindMyselfOpen] = useState(false);
   const [myMatchIds, setMyMatchIds] = useState(null); // Set<string> after a scan
   const [onlyMyShots, setOnlyMyShots] = useState(false);
+  const { isAuthenticated, authReady, faceEnrolled } = useAuth();
+  const myMatchesLoadedForRef = useRef(null);
   const threadShellRef = useRef(null);
   const threadListRef = useRef(null);
   const threadEndRef = useRef(null);
@@ -236,10 +241,31 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
     if (tab !== 'gallery') setLightboxOpen(false);
   }, [tab]);
 
-  // Guest face scan: offer "find yourself" once per album per session,
-  // as soon as the gallery has content to match against.
+  // Face scan prompt: offer "find yourself" once per album per session, as soon as
+  // the gallery has content to match against — but NEVER re-prompt a signed-in user
+  // who already enrolled (their tags load server-side instead).
   useEffect(() => {
     if (!albumId || !album || denied || contentLoading || galleryMedia.length === 0) return;
+    if (!authReady) return;
+
+    if (isAuthenticated) {
+      // Enrollment status unknown (still loading / errored) — skip rather than nag.
+      if (faceEnrolled !== false) {
+        if (faceEnrolled === true && myMatchesLoadedForRef.current !== albumId) {
+          // Enrolled: hydrate "My shots" from the server-side face tags, no scan needed.
+          myMatchesLoadedForRef.current = albumId;
+          faceService
+            .myAlbumMatches(albumId)
+            .then((res) => {
+              const ids = Array.isArray(res?.mediaIds) ? res.mediaIds : [];
+              if (ids.length > 0) setMyMatchIds(new Set(ids.map(String)));
+            })
+            .catch(() => {});
+        }
+        return;
+      }
+    }
+
     let prompted = false;
     try {
       const key = `pxi_findme_prompted_${albumId}`;
@@ -249,7 +275,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
       /* sessionStorage unavailable — still show once for this mount */
     }
     if (!prompted) setFindMyselfOpen(true);
-  }, [albumId, album, denied, contentLoading, galleryMedia.length]);
+  }, [albumId, album, denied, contentLoading, galleryMedia.length, authReady, isAuthenticated, faceEnrolled]);
 
   const handleFaceMatches = useCallback((mediaIds) => {
     setMyMatchIds(new Set(mediaIds.map(String)));
@@ -442,6 +468,25 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
                         key={key}
                         message={row.data}
                         rotation={chatTilt}
+                      />
+                    );
+                  }
+                  if (row.type === 'MEDIA_GROUP') {
+                    // Same-member media burst → one carousel card (progress dots,
+                    // reactions/focus target the active slide).
+                    const groupStartIndex = mediaIndex;
+                    mediaIndex += row.data.items.length;
+                    const firstId = publicAlbumMediaId(row.data.items[0]);
+                    const groupTilt = mediaRotationById.get(firstId) ?? THREAD_MEDIA_TILT_DEG;
+                    return (
+                      <PublicAlbumThreadMediaCarousel
+                        key={key}
+                        items={row.data.items}
+                        rotation={groupTilt}
+                        paneWidth={threadPaneWidth}
+                        openInAppUrl={openInAppUrl}
+                        activeVideoId={effectiveThreadVideoId}
+                        onPressSlide={(offset) => openThreadFocus(groupStartIndex + offset)}
                       />
                     );
                   }

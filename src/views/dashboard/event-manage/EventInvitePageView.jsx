@@ -400,22 +400,27 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
   const displayUrl = publicUrl.replace(/^https?:\/\//, '');
   const currentRoleLabel = roleLabel(inviteRoleKind, lineupSubDraft);
 
+  // Finalized scrapbook (event passed + grace over): inviting is closed server-side,
+  // so hide the send affordances and keep the read-only status view.
+  const isFinalized = event?.effectiveStatus === 'ARCHIVED';
+  const activeInviteTab = isFinalized ? 'status' : invitePageTab;
+
   return (
     <div className="space-y-5">
       {/* Page tabs */}
       {showTabs ? <div role="tablist" className="dashboard-segmented-toggle w-full">
         {[
-          { id: 'send', icon: <HugeiconsIcon icon={SentIcon} size={14} />, label: 'Send invites' },
+          ...(isFinalized ? [] : [{ id: 'send', icon: <HugeiconsIcon icon={SentIcon} size={14} />, label: 'Send invites' }]),
           { id: 'status', icon: <HugeiconsIcon icon={HelpCircleIcon} size={14} />, label: 'Invite status' },
         ].map((t) => (
           <button
             key={t.id}
             type="button"
             role="tab"
-            aria-selected={invitePageTab === t.id}
+            aria-selected={activeInviteTab === t.id}
             onClick={() => setInvitePageTab(t.id)}
             className="dashboard-segmented-toggle__item"
-            data-active={invitePageTab === t.id}
+            data-active={activeInviteTab === t.id}
           >
             {t.icon}
             {t.label}
@@ -423,8 +428,14 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
         ))}
       </div> : null}
 
+      {isFinalized ? (
+        <p className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+          Scrapbook — finalized · this event has ended, invites are closed
+        </p>
+      ) : null}
+
       {/* ── Send tab ─────────────────────────────────────────────────────── */}
-      {invitePageTab === 'send' && (
+      {activeInviteTab === 'send' && !isFinalized && (
         <section role="tabpanel" className="glass-panel overflow-hidden rounded-2xl">
 
           {/* Event hero */}
@@ -457,7 +468,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
               <button
                 type="button"
                 onClick={handleShareLink}
-                className="flex-1 flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border border-white/20 hover:border-white/35 transition-colors text-left"
+                className="flex flex-1 items-center justify-between gap-2 rounded-xl bg-white/[0.045] px-3.5 py-2.5 text-left transition-colors hover:bg-white/[0.07]"
               >
                 <div className="min-w-0">
                   <p className="text-[9px] font-black tracking-widest uppercase text-zinc-500 mb-0.5">TAP TO SHARE</p>
@@ -487,7 +498,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
               <button
                 type="button"
                 onClick={() => setShowQR(true)}
-                className="w-[68px] flex flex-col items-center justify-center gap-1 rounded-xl border border-white/20 hover:border-white/35 transition-colors py-2.5 shrink-0"
+                className="flex w-[68px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-white/[0.045] py-2.5 transition-colors hover:bg-white/[0.07]"
               >
                 <span className="text-[9px] font-black tracking-widest uppercase text-white">SCAN</span>
                 <HugeiconsIcon icon={QrCodeIcon} size={20} className="text-white" />
@@ -623,12 +634,12 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                           type="button"
                           disabled={busy}
                           onClick={() => handleInviteAction(c, rsvpState)}
-                          className={`shrink-0 px-3 py-2 rounded-full text-[11px] font-bold border transition-colors ${
+                          className={`shrink-0 rounded-full px-3 py-2 text-[11px] font-bold transition-colors ${
                             rsvpState === 'pending'
-                              ? 'border-amber-500/50 bg-amber-500/10 text-amber-100'
+                              ? 'bg-amber-500/10 text-amber-100'
                               : rsvpState === 'coming'
-                                ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-100'
-                                : 'border-white/25 bg-white/8 text-zinc-200'
+                                ? 'bg-emerald-500/10 text-emerald-100'
+                                : 'bg-white/[0.08] text-zinc-200'
                           } disabled:opacity-50`}
                         >
                           {busy ? '...' : `${tagLabel} · ${actionLabel}`}
@@ -649,8 +660,8 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                         <p className="text-sm text-white font-semibold truncate">{c.name || c.username}</p>
                         <p className="text-xs text-zinc-500 truncate">@{c.username}</p>
                       </div>
-                      <div className={`w-7 h-7 rounded-full border-[1.5px] flex items-center justify-center shrink-0 transition-colors ${
-                        selected ? 'bg-white border-white' : 'border-zinc-600'
+                      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
+                        selected ? 'bg-white' : 'bg-white/[0.075]'
                       }`}>
                         {selected
                           ? <HugeiconsIcon icon={CheckmarkBadge01Icon} size={14} strokeWidth={3} className="text-black" />
@@ -686,7 +697,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
       )}
 
       {/* ── Status tab ───────────────────────────────────────────────────── */}
-      {invitePageTab === 'status' && (
+      {activeInviteTab === 'status' && (
         <section role="tabpanel" className="glass-panel overflow-hidden rounded-2xl">
           <div className="flex flex-wrap items-center justify-between gap-3 p-5">
             <h2 className="font-bold text-white uppercase tracking-widest text-sm">Direct invites</h2>
@@ -694,7 +705,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
               type="button"
               disabled={directInvitesLoading}
               onClick={loadDirectInvites}
-              className="px-3 py-2 rounded-xl border border-white/10 text-xs font-bold uppercase tracking-widest text-zinc-300 hover:bg-white/5 disabled:opacity-50"
+              className="rounded-xl bg-white/[0.055] px-3 py-2 text-xs font-bold uppercase tracking-widest text-zinc-300 hover:bg-white/[0.08] disabled:opacity-50"
             >
               Refresh
             </button>
@@ -801,7 +812,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
             <button
               type="button"
               onClick={handleShareQr}
-              className="flex items-center gap-2 px-5 py-3 rounded-full border border-white/20 bg-white/6 text-sm font-bold text-white hover:bg-white/10 transition-colors"
+              className="flex items-center gap-2 rounded-full bg-white/[0.06] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10"
             >
               <HugeiconsIcon icon={Share01Icon} size={14} /> Share QR
             </button>
@@ -819,7 +830,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
       {/* ── Confirm modal ────────────────────────────────────────────────── */}
       {confirmOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm space-y-4 rounded-2xl bg-zinc-900 p-5">
+          <div className="dashboard-popover-surface w-full max-w-sm space-y-4 rounded-2xl p-5">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-black text-white uppercase tracking-widest">Send Invitations</h3>
               <button
@@ -853,7 +864,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
               <button
                 type="button"
                 onClick={() => setConfirmOpen(false)}
-                className="flex-1 py-3.5 rounded-xl border border-white/20 text-sm text-zinc-300 font-bold hover:bg-white/5"
+                className="pill-ghost flex-1 py-3.5 text-sm font-bold text-zinc-300"
               >
                 Cancel
               </button>

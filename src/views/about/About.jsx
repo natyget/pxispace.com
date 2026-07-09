@@ -59,7 +59,6 @@ const AboutPage = () => {
             viewport={{ once: true, margin: '-80px' }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            <span className="eyebrow">Origin</span>
             <h2 className="display-3 mt-5">Built from lost moments.</h2>
             <div className="mt-6 space-y-5 text-base leading-relaxed text-zinc-400">
               <p>

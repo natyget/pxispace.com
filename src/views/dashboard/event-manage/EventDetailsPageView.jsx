@@ -94,13 +94,13 @@ export default function EventDetailsPageView() {
   return (
     <div className="space-y-6">
       {shareHint && (
-        <p className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-zinc-800 px-4 py-2 text-xs font-bold text-white shadow-lg border border-white/10">
+        <p className="dashboard-popover-surface fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full px-4 py-2 text-xs font-bold text-white">
           {shareHint}
         </p>
       )}
 
       <div id="event-details" className="glass-panel scroll-mt-6 overflow-hidden rounded-2xl">
-        <div className="relative aspect-[4/5] md:aspect-[16/11] bg-zinc-900">
+        <div className="relative aspect-[4/5] bg-white/[0.035] md:aspect-[16/11]">
           {cover ? (
             <Image src={cover} alt="" fill unoptimized className="object-cover" priority />
           ) : (
@@ -295,7 +295,7 @@ export default function EventDetailsPageView() {
                     previewAvatars.map((uri, i) => (
                       <div
                         key={`${uri}-${i}`}
-                        className="relative w-10 h-10 rounded-full border-2 border-[#050505] overflow-hidden bg-zinc-800"
+                        className="relative h-10 w-10 overflow-hidden rounded-full"
                         style={{ zIndex: 10 - i }}
                       >
                         <Image src={uri} alt="" fill unoptimized className="object-cover" />

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Calendar01Icon, Location01Icon, UserGroupIcon, TagIcon, Alert01Icon, Loading02Icon, FavouriteIcon, InstagramIcon, GlobeIcon, SmartPhone01Icon, SparklesIcon, HelpCircleIcon } from '@hugeicons/core-free-icons';
 import Button from '../../components/ui/Button';
+import { PxiSpinner } from '@/components/loading/PxiLoading';
 import { eventsService } from '../../services/events';
 import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket } from '../../services/tickets';
 import { spotifyEmbedSrc } from '@/lib/spotify';
@@ -202,7 +203,7 @@ const EventDetails = ({ basePath = '/events' }) => {
   if (eventLoading && !apiEvent) {
     return (
       <div className="pt-40 flex items-center justify-center text-white min-h-screen bg-black">
-        <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin" />
+        <PxiSpinner size="lg" className="mx-auto" />
       </div>
     );
   }
@@ -434,7 +435,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                           user={{ avatarUrl: u.avatarUrl }}
                           size={64}
                           alt=""
-                          className="border border-white/10"
+                          className=""
                         />
                         <div>
                           <p className="font-black text-white">{u.name || u.username || 'Performer'}</p>
@@ -465,7 +466,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                     size={112}
                     rounded="lg"
                     alt=""
-                    className="shrink-0 border border-white/10"
+                    className="shrink-0"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-2xl font-black">{host.name || host.username || 'Host'}</p>

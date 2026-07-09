@@ -14,7 +14,7 @@ import {
 
 function TeamHero({ rosterCount, memberCount }) {
     return (
-        <section className="relative overflow-hidden rounded-[1.75rem] bg-black px-5 py-7 shadow-[0_24px_80px_rgba(0,0,0,0.42)] md:px-8">
+        <section className="dashboard-surface-b relative overflow-hidden rounded-[1.75rem] px-5 py-7 md:px-8">
             <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
                 <div className="max-w-2xl">
                     <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Access control</p>

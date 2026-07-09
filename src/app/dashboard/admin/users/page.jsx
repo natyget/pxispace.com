@@ -50,7 +50,7 @@ function UserActions({ user: row, canManageRoles, onDone }) {
     };
 
     return (
-        <div className="rounded-2xl bg-black/25 p-4 space-y-3">
+        <div className="rounded-2xl bg-white/[0.035] p-4 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
                 <button
                     type="button"
@@ -58,7 +58,7 @@ function UserActions({ user: row, canManageRoles, onDone }) {
                     onClick={() => act(() => updateAdminUser(row.id, { isVendor: !row.isVendor }))}
                     className="rounded-full bg-white/[0.065] px-4 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40"
                 >
-                    {row.isVendor ? 'Remove vendor' : 'Make vendor'}
+                    {row.isVendor ? 'Remove organizer' : 'Make organizer'}
                 </button>
                 <button
                     type="button"
@@ -100,7 +100,7 @@ function UserActions({ user: row, canManageRoles, onDone }) {
                         type="button"
                         disabled={busy}
                         onClick={() => act(() => unsuspendUser(row.id))}
-                            className="rounded-full bg-emerald-500/10 px-4 py-1.5 text-[12px] text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-40"
+                        className="rounded-full bg-emerald-500/10 px-4 py-1.5 text-[12px] text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-40"
                     >
                         Unsuspend
                     </button>
@@ -109,7 +109,7 @@ function UserActions({ user: row, canManageRoles, onDone }) {
                         <input
                             value={suspendReason}
                             onChange={(e) => setSuspendReason(e.target.value)}
-                            placeholder="Suspension reason (required, audited)"
+                            placeholder="Reason for suspension"
                             className="flex-1 min-w-[220px] rounded-full bg-white/[0.055] px-4 py-1.5 text-[12px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]"
                         />
                         <button
@@ -189,23 +189,23 @@ export default function AdminUsersPage() {
 
     return (
         <AdminPageShell
-            title="User management"
-            copy={`Search by email, username, or ID. Click a live row to manage roles, verification, and suspensions.${canManageRoles ? ' Super-admin controls are enabled.' : ''}`}
+            title="Accounts"
+            copy={`Search by email, username, or ID. Open a live account to adjust organizer access, verification, and suspension state.${canManageRoles ? ' Super-admin controls are enabled.' : ''}`}
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
                 { label: 'Matches', value: total.toLocaleString(), hint: q || 'All users' },
                 { label: 'Rows', value: rows.length.toLocaleString(), hint: `Page ${page}` },
             ]}
         >
-            <AdminPanel className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <AdminPanel className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
                 <input
                     type="search"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Search users..."
-                    className="w-full rounded-full bg-black/25 px-5 py-3 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-black/35 sm:max-w-md"
+                    placeholder="Search accounts..."
+                    className="w-full rounded-full bg-white/[0.055] px-5 py-3 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]"
                 />
-                <p className="text-xs font-semibold text-zinc-500">
+                <p className="w-fit rounded-full bg-white/[0.045] px-3 py-1.5 text-xs font-semibold text-zinc-400">
                     {isLiveAdmin ? 'Live management enabled' : 'Previewing mock users'}
                 </p>
             </AdminPanel>
@@ -219,7 +219,7 @@ export default function AdminUsersPage() {
                                 <th className={adminThClass}>Email</th>
                                 <th className={adminThClass}>Username</th>
                                 <th className={adminThClass}>Tier / Role</th>
-                                <th className={adminThClass}>Vendor</th>
+                                <th className={adminThClass}>Organizer</th>
                                 <th className={adminThClass}>Status</th>
                                 <th className={adminThClass}>Joined</th>
                             </tr>
@@ -231,9 +231,12 @@ export default function AdminUsersPage() {
                                         onClick={() => isLiveAdmin && setOpenUserId(openUserId === u.id ? null : u.id)}
                                         className={`hover:bg-white/[0.02] transition-colors ${isLiveAdmin ? 'cursor-pointer' : ''}`}
                                     >
-                                        <td className="px-6 py-4 text-[14px] text-white/90 break-all max-w-[200px]">{u.email}</td>
-                                        <td className={`${adminTdClass} text-[14px]`}>{u.username || '—'}</td>
-                                        <td className="px-6 py-4">
+                                        <td data-label="Email" className="admin-table-primary px-6 py-4 text-[14px] text-white/90 break-all max-w-[200px]">
+                                            <div className="font-semibold">{u.email}</div>
+                                            <div className="mt-1 text-[12px] font-normal text-white/40 md:hidden">@{u.username || 'account'}</div>
+                                        </td>
+                                        <td data-label="Username" className={`${adminTdClass} text-[14px]`}>{u.username || '—'}</td>
+                                        <td data-label="Tier / role" className="px-6 py-4">
                                             <span className="inline-flex rounded-full bg-white/[0.055] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/70">
                                                 {u.accountTier}
                                             </span>
@@ -243,8 +246,8 @@ export default function AdminUsersPage() {
                                                 </span>
                                             ) : null}
                                         </td>
-                                        <td className={`${adminTdClass} text-[14px]`}>{u.isVendor ? 'Yes' : 'No'}</td>
-                                        <td className="px-6 py-4">
+                                        <td data-label="Organizer" className={`${adminTdClass} text-[14px]`}>{u.isVendor ? 'Yes' : 'No'}</td>
+                                        <td data-label="Status" className="px-6 py-4">
                                             {u.suspendedAt ? (
                                                 <span className="inline-flex rounded-full bg-red-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-red-300">
                                                     Suspended
@@ -253,10 +256,10 @@ export default function AdminUsersPage() {
                                                 <span className="text-[13px] text-white/50">{u.isVerified ? 'Verified' : 'Active'}</span>
                                             )}
                                         </td>
-                                        <td className={`${adminTdClass} whitespace-nowrap`}>{formatDate(u.createdAt)}</td>
+                                        <td data-label="Joined" className={`${adminTdClass} whitespace-nowrap`}>{formatDate(u.createdAt)}</td>
                                     </tr>
                                     {openUserId === u.id && isLiveAdmin && (
-                                        <tr>
+                                        <tr className="admin-table-expanded-row">
                                             <td colSpan={6} className="px-6 pb-5">
                                                 <UserActions
                                                     user={u}

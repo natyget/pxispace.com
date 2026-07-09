@@ -212,7 +212,7 @@ export default function PublicAlbumThreadMediaCard({
                       <span className="truncate text-xs font-extrabold tracking-wide text-white">
                         {item.author.username || 'Member'}
                       </span>
-                      <span className="relative size-7 shrink-0 overflow-hidden rounded-full border border-white/35">
+                      <span className="relative size-7 shrink-0 overflow-hidden rounded-full">
                         <UserAvatar user={{ avatarUrl: item.author?.avatarUrl }} size={28} className="size-full" />
                       </span>
                     </span>
@@ -223,7 +223,7 @@ export default function PublicAlbumThreadMediaCard({
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[28] px-[5px] pb-[7px] pt-[3px]">
                     <div className="overflow-hidden rounded-[14px] border-[1.5px] border-[rgba(138,144,158,0.48)] bg-[rgba(92,96,108,0.38)]">
                       <div className="flex items-start gap-2 px-[9px] py-[7px]">
-                        <span className="size-8 shrink-0 overflow-hidden rounded-full border border-white/30">
+                        <span className="size-8 shrink-0 overflow-hidden rounded-full">
                           <UserAvatar
                             user={{ avatarUrl: lastComment?.sender?.avatarUrl }}
                             size={32}

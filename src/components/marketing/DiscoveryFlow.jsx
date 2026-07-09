@@ -49,13 +49,13 @@ function GuestRow() {
           {PROFILES.map((src, i) => (
             <span
               key={src}
-              className="relative inline-flex size-8 items-center justify-center overflow-hidden rounded-full border-2 border-[#0a0a0a] bg-zinc-800 ring-1 ring-white/10"
+              className="relative inline-flex size-8 items-center justify-center overflow-hidden rounded-full bg-zinc-800"
               style={{ zIndex: PROFILES.length - i }}
             >
               <img src={src} alt="" aria-hidden className="size-full object-cover" />
             </span>
           ))}
-          <span className="inline-flex size-8 items-center justify-center rounded-full border-2 border-[#0a0a0a] bg-white/5 text-[11px] font-semibold text-zinc-200 ring-1 ring-white/10">
+          <span className="inline-flex size-8 items-center justify-center rounded-full bg-white/5 text-[11px] font-semibold text-zinc-200">
             +38
           </span>
         </div>

@@ -61,7 +61,7 @@ function ActionPanel({ report, onDone, onCancel }) {
     };
 
     return (
-        <div className="rounded-2xl bg-black/25 p-4 space-y-3">
+        <div className="rounded-2xl bg-white/[0.035] p-4 space-y-3">
             <div className="flex flex-wrap gap-3">
                 <select
                     value={status}
@@ -153,7 +153,7 @@ export default function AdminReportsPage() {
 
     return (
         <AdminPageShell
-            title="Report management"
+            title="Reports"
             copy="Trust and safety reports with target context, reporter details, enforcement actions, and audit-ready resolutions."
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
@@ -179,23 +179,23 @@ export default function AdminReportsPage() {
                             {rows.map((r) => (
                                 <Fragment key={r.id}>
                                     <tr className="hover:bg-white/[0.02] transition-colors align-top">
-                                        <td className="px-6 py-4">
+                                        <td data-label="Status" className="px-6 py-4">
                                             <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyle[r.status] || statusStyle.PENDING}`}>
                                                 {r.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-[13px] text-white/70 break-all max-w-[160px]">
+                                        <td data-label="Reporter" className="px-6 py-4 text-[13px] text-white/70 break-all max-w-[160px]">
                                             {r.reporter?.email || r.reporterId}
                                         </td>
-                                        <td className="px-6 py-4 text-[13px] text-white/70">
+                                        <td data-label="Target" className="px-6 py-4 text-[13px] text-white/70">
                                             <div className="font-mono text-[12px] text-white/50">{r.targetType}</div>
                                             <div className="font-mono text-[11px] break-all max-w-[200px] mt-0.5">{r.targetId}</div>
                                         </td>
-                                        <td className={`${adminTdClass} max-w-[280px]`}>
+                                        <td data-label="Reason" className={`${adminTdClass} max-w-[280px]`}>
                                             <p className="line-clamp-3">{r.reason}</p>
                                         </td>
-                                        <td className={`${adminTdClass} whitespace-nowrap`}>{formatDate(r.createdAt)}</td>
-                                        <td className="px-6 py-4">
+                                        <td data-label="Created" className={`${adminTdClass} whitespace-nowrap`}>{formatDate(r.createdAt)}</td>
+                                        <td data-label="Action" className="px-6 py-4">
                                             {isLiveAdmin && r.status === 'PENDING' && (
                                                 <button
                                                     type="button"
@@ -208,7 +208,7 @@ export default function AdminReportsPage() {
                                         </td>
                                     </tr>
                                     {actingOn === r.id && (
-                                        <tr>
+                                        <tr className="admin-table-expanded-row">
                                             <td colSpan={6} className="px-6 pb-5">
                                                 <ActionPanel
                                                     report={r}

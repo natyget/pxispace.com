@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
     fetchAdminPromos,
     createAdminPromo,
     updateAdminPromo,
     grantCredits,
 } from '@/services/admin';
+import { searchUsers } from '@/services/events';
 import AdminPagination from '@/components/admin/AdminPagination';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -34,14 +35,93 @@ function formatUsd(cents) {
 }
 
 const inputCls =
-    'w-full rounded-xl bg-black/25 px-4 py-2.5 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-black/35';
+    'w-full rounded-xl bg-white/[0.055] px-4 py-2.5 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]';
+
+/** Username-first user picker: debounced lookup with an inline preview dropdown. */
+function UsernameInput({ value, onChange, placeholder }) {
+    const [results, setResults] = useState([]);
+    const [open, setOpen] = useState(false);
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        const q = value.trim().replace(/^@/, '');
+        if (q.length < 2) {
+            setResults([]);
+            return;
+        }
+        let cancelled = false;
+        const timer = setTimeout(() => {
+            searchUsers(q)
+                .then((data) => {
+                    if (!cancelled) setResults((data.results || data.users || []).slice(0, 5));
+                })
+                .catch(() => {
+                    if (!cancelled) setResults([]);
+                });
+        }, 300);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [value]);
+
+    useEffect(() => {
+        const onDocClick = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener('mousedown', onDocClick);
+        return () => document.removeEventListener('mousedown', onDocClick);
+    }, []);
+
+    return (
+        <div ref={containerRef} className="relative">
+            <input
+                value={value}
+                onChange={(e) => {
+                    onChange(e.target.value);
+                    setOpen(true);
+                }}
+                onFocus={() => setOpen(true)}
+                placeholder={placeholder}
+                className={inputCls}
+            />
+            {open && results.length > 0 ? (
+                <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border border-white/10 bg-[#101013] shadow-2xl">
+                    {results.map((u) => (
+                        <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => {
+                                onChange(u.username || '');
+                                setOpen(false);
+                            }}
+                            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left hover:bg-white/[0.06]"
+                        >
+                            {u.avatarUrl ? (
+                                <img src={u.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
+                            ) : (
+                                <span className="grid h-7 w-7 place-items-center rounded-full bg-white/10 text-[11px] font-black text-white">
+                                    {(u.username || u.name || '?').charAt(0).toUpperCase()}
+                                </span>
+                            )}
+                            <span className="min-w-0">
+                                <span className="block truncate text-[13px] font-bold text-white">@{u.username}</span>
+                                {u.name ? <span className="block truncate text-[11px] text-white/40">{u.name}</span> : null}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            ) : null}
+        </div>
+    );
+}
 
 function CreatePromoCard({ onCreated }) {
     const [kind, setKind] = useState('CREDIT');
     const [code, setCode] = useState('');
     const [creditUsd, setCreditUsd] = useState('');
     const [commissionPct, setCommissionPct] = useState('');
-    const [ownerUserId, setOwnerUserId] = useState('');
+    const [ownerUsername, setOwnerUsername] = useState('');
     const [maxRedemptions, setMaxRedemptions] = useState('');
     const [expiresAt, setExpiresAt] = useState('');
     const [note, setNote] = useState('');
@@ -59,7 +139,7 @@ function CreatePromoCard({ onCreated }) {
                 code: code.trim() || undefined,
                 creditCents: creditUsd ? Math.round(parseFloat(creditUsd) * 100) : 0,
                 commissionBps: commissionPct ? Math.round(parseFloat(commissionPct) * 100) : 0,
-                ownerUserId: ownerUserId.trim() || undefined,
+                ownerUsername: ownerUsername.trim() || undefined,
                 maxRedemptions: maxRedemptions ? parseInt(maxRedemptions, 10) : undefined,
                 expiresAt: expiresAt || undefined,
                 note: note.trim() || undefined,
@@ -69,7 +149,7 @@ function CreatePromoCard({ onCreated }) {
             setCode('');
             setCreditUsd('');
             setCommissionPct('');
-            setOwnerUserId('');
+            setOwnerUsername('');
             setMaxRedemptions('');
             setExpiresAt('');
             setNote('');
@@ -83,7 +163,7 @@ function CreatePromoCard({ onCreated }) {
 
     return (
         <AdminPanel className="space-y-4">
-            <h2 className="text-[11px] font-bold tracking-widest text-white/40 uppercase">Create promo code</h2>
+            <h2 className="text-[11px] font-bold tracking-widest text-white/40 uppercase">Create code</h2>
             <div className="grid gap-3 sm:grid-cols-2">
                 <select value={kind} onChange={(e) => setKind(e.target.value)} className={inputCls}>
                     <option value="CREDIT">Credit — grants credits to redeemers</option>
@@ -94,7 +174,7 @@ function CreatePromoCard({ onCreated }) {
                 {kind === 'AMBASSADOR' && (
                     <>
                         <input value={commissionPct} onChange={(e) => setCommissionPct(e.target.value)} type="number" min="0" max="50" step="0.1" placeholder="Commission % of attributed sales" className={inputCls} />
-                        <input value={ownerUserId} onChange={(e) => setOwnerUserId(e.target.value)} placeholder="Ambassador user ID (required)" className={inputCls} />
+                        <UsernameInput value={ownerUsername} onChange={setOwnerUsername} placeholder="Ambassador username (required)" />
                     </>
                 )}
                 <input value={maxRedemptions} onChange={(e) => setMaxRedemptions(e.target.value)} type="number" min="1" placeholder="Max redemptions (blank = unlimited)" className={inputCls} />
@@ -120,7 +200,7 @@ function CreatePromoCard({ onCreated }) {
 }
 
 function GrantCreditsCard() {
-    const [userId, setUserId] = useState('');
+    const [username, setUsername] = useState('');
     const [amountUsd, setAmountUsd] = useState('');
     const [note, setNote] = useState('');
     const [busy, setBusy] = useState(false);
@@ -133,12 +213,12 @@ function GrantCreditsCard() {
         setDone(null);
         try {
             const data = await grantCredits({
-                userId: userId.trim(),
+                username: username.trim(),
                 amountCents: Math.round(parseFloat(amountUsd) * 100),
                 note: note.trim(),
             });
             setDone(data.balanceCents);
-            setUserId('');
+            setUsername('');
             setAmountUsd('');
             setNote('');
         } catch (err) {
@@ -152,7 +232,7 @@ function GrantCreditsCard() {
         <AdminPanel className="space-y-4">
             <h2 className="text-[11px] font-bold tracking-widest text-white/40 uppercase">Grant credits directly</h2>
             <div className="grid gap-3 sm:grid-cols-3">
-                <input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="User ID" className={inputCls} />
+                <UsernameInput value={username} onChange={setUsername} placeholder="Username (e.g. @dj-nova)" />
                 <input value={amountUsd} onChange={(e) => setAmountUsd(e.target.value)} type="number" step="0.01" placeholder="Amount USD (negative = adjust down)" className={inputCls} />
                 <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason (required, audited)" className={inputCls} />
             </div>
@@ -161,7 +241,7 @@ function GrantCreditsCard() {
             <button
                 type="button"
                 onClick={submit}
-                disabled={busy || !userId.trim() || !amountUsd || !note.trim()}
+                disabled={busy || !username.trim() || !amountUsd || !note.trim()}
                 className="rounded-full bg-white text-black px-5 py-2 text-[13px] font-bold disabled:opacity-40"
             >
                 {busy ? 'Granting...' : 'Grant'}
@@ -249,20 +329,20 @@ export default function AdminPromosPage() {
                         <tbody>
                             {rows.map((p) => (
                                 <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
-                                    <td className="px-6 py-4">
+                                    <td data-label="Code" className="admin-table-primary px-6 py-4">
                                         <span className="font-mono text-[13px] text-white/90">{p.code}</span>
                                         {p.owner ? (
                                             <p className="text-[11px] text-white/40 mt-0.5">→ {p.owner.username || p.owner.email}</p>
                                         ) : null}
                                     </td>
-                                    <td className={`${adminTdClass} text-[12px]`}>{p.kind}</td>
-                                    <td className={`${adminTdClass} text-white/80 tabular-nums`}>{p.creditCents ? formatUsd(p.creditCents) : '—'}</td>
-                                    <td className={`${adminTdClass} text-white/80 tabular-nums`}>{p.commissionBps ? `${(p.commissionBps / 100).toFixed(1)}%` : '—'}</td>
-                                    <td className={`${adminTdClass} text-white/70 tabular-nums`}>
+                                    <td data-label="Kind" className={`${adminTdClass} text-[12px]`}>{p.kind}</td>
+                                    <td data-label="Credit" className={`${adminTdClass} text-white/80 tabular-nums`}>{p.creditCents ? formatUsd(p.creditCents) : '—'}</td>
+                                    <td data-label="Commission" className={`${adminTdClass} text-white/80 tabular-nums`}>{p.commissionBps ? `${(p.commissionBps / 100).toFixed(1)}%` : '—'}</td>
+                                    <td data-label="Redemptions" className={`${adminTdClass} text-white/70 tabular-nums`}>
                                         {p.redemptionCount}{p.maxRedemptions ? ` / ${p.maxRedemptions}` : ''}
                                     </td>
-                                    <td className={adminTdClass}>{formatDate(p.expiresAt)}</td>
-                                    <td className="px-6 py-4">
+                                    <td data-label="Expires" className={adminTdClass}>{formatDate(p.expiresAt)}</td>
+                                    <td data-label="Status" className="px-6 py-4">
                                         <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
                                             p.isActive
                                                 ? 'bg-emerald-500/10 text-emerald-300'
@@ -271,7 +351,7 @@ export default function AdminPromosPage() {
                                             {p.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td data-label="Action" className="px-6 py-4">
                                         <button
                                             type="button"
                                             onClick={() => toggleActive(p)}

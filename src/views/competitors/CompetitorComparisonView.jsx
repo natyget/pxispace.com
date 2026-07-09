@@ -89,7 +89,6 @@ export default function CompetitorComparisonView() {
           aria-hidden
         />
         <div className="mx-auto max-w-[1200px] px-6">
-          <span className="eyebrow">PXI vs the rest</span>
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}

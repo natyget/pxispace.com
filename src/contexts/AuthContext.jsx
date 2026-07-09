@@ -3,6 +3,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { authStorage, authService } from '../services/auth';
+import { faceService } from '../services/face';
 
 const AuthContext = createContext(null);
 
@@ -17,6 +18,28 @@ export function AuthProvider({ children }) {
     const [token, setToken] = useState(null);
     const [authReady, setAuthReady] = useState(false);
     const [authRefreshing, setAuthRefreshing] = useState(true);
+    // Face-enrollment status (null = unknown, boolean once loaded). Cached here so
+    // album pages don't re-prompt already-enrolled users to scan (one status call/session).
+    const [faceEnrolled, setFaceEnrolled] = useState(null);
+
+    useEffect(() => {
+        if (!token || !user?.id) {
+            setFaceEnrolled(null);
+            return undefined;
+        }
+        let cancelled = false;
+        faceService
+            .status()
+            .then((res) => {
+                if (!cancelled) setFaceEnrolled(Boolean(res?.enrolled));
+            })
+            .catch(() => {
+                /* leave null (unknown) — album pages skip the auto-prompt rather than nag */
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [token, user?.id]);
 
     // Hydrate from localStorage and immediately refresh role-sensitive fields.
     useEffect(() => {
@@ -90,7 +113,7 @@ export function AuthProvider({ children }) {
     const isAuthenticated = !!token && !!user;
 
     return (
-        <AuthContext.Provider value={{ user, token, isAuthenticated, authReady, authRefreshing, saveAuth, updateUser, logout }}>
+        <AuthContext.Provider value={{ user, token, isAuthenticated, authReady, authRefreshing, faceEnrolled, setFaceEnrolled, saveAuth, updateUser, logout }}>
             {children}
         </AuthContext.Provider>
     );

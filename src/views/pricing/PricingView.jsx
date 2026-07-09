@@ -65,7 +65,6 @@ export default function PricingView() {
           aria-hidden
         />
         <div className="mx-auto max-w-[1200px] px-6">
-          <span className="eyebrow">Pricing</span>
           <MotionH1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -123,7 +122,6 @@ export default function PricingView() {
           <div className="flex items-start gap-4">
             <Sparkles className="mt-1 h-6 w-6 shrink-0 text-amber-300" />
             <div>
-              <span className="eyebrow">Early access</span>
               <h2 className="display-3 mt-4">Move fast, get more free.</h2>
               <p className="body-lead mt-4 max-w-2xl">
                 Organizers who get moving quickly on PXI earn <strong>free promotional credits</strong>{' '}

@@ -336,6 +336,81 @@ html, body {
     background: rgba(255, 255, 255, 0.055);
   }
 
+  @media (max-width: 767px) {
+    .admin-table-shell {
+      background: rgba(15, 15, 18, 0.82);
+    }
+
+    .admin-table-shell table {
+      min-width: 0 !important;
+      width: 100%;
+    }
+
+    .admin-table-shell thead {
+      display: none;
+    }
+
+    .admin-table-shell tbody {
+      display: grid;
+      gap: 0.75rem;
+      padding: 0.75rem;
+    }
+
+    .admin-table-shell tr {
+      display: grid;
+      gap: 0.25rem;
+      border-radius: 1.25rem;
+      background: rgba(255, 255, 255, 0.035);
+      padding: 0.85rem;
+    }
+
+    .admin-table-shell tr:hover {
+      background: rgba(255, 255, 255, 0.055);
+    }
+
+    .admin-table-shell tr.admin-table-expanded-row {
+      margin-top: -0.6rem;
+      background: rgba(255, 255, 255, 0.02);
+      padding-top: 0.4rem;
+    }
+
+    .admin-table-shell td {
+      display: grid;
+      grid-template-columns: minmax(86px, 34%) minmax(0, 1fr);
+      gap: 0.75rem;
+      max-width: none !important;
+      padding: 0.48rem 0;
+      word-break: break-word;
+    }
+
+    .admin-table-shell td::before {
+      content: attr(data-label);
+      color: rgba(255, 255, 255, 0.34);
+      font-size: 0.62rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      line-height: 1.4;
+      text-transform: uppercase;
+    }
+
+    .admin-table-shell td.admin-table-primary {
+      display: block;
+      order: -1;
+      padding-bottom: 0.72rem;
+    }
+
+    .admin-table-shell td.admin-table-primary::before,
+    .admin-table-shell td.admin-table-empty::before,
+    .admin-table-shell td[colspan]::before {
+      display: none;
+    }
+
+    .admin-table-shell td[colspan] {
+      display: block;
+      padding: 0;
+    }
+  }
+
   .pill-solid {
     display: inline-flex;
     align-items: center;
@@ -1046,11 +1121,13 @@ html, body {
   background: #050505;
 }
 
+/* Desktop: X-style full-width split — edge-to-edge thread on the left, a fixed
+   ~420px mobile-format pane on the right rendering the album details modal inline. */
 @media (min-width: 1024px) {
   .public-album-page {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr) 420px;
+    align-items: stretch;
     height: calc(100dvh - 80px);
     max-height: calc(100dvh - 80px);
     margin-top: 80px;
@@ -1062,19 +1139,16 @@ html, body {
     flex-direction: column;
     min-width: 0;
     height: 100%;
-    justify-content: center;
-    align-items: center;
     overflow: hidden;
   }
 
   .album-details-pane {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
     height: 100%;
     min-height: 0;
     overflow: hidden;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .iphone-pane {
@@ -1084,18 +1158,27 @@ html, body {
 
   .album-thread-shell,
   .album-details-shell {
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 32px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    background: #000;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
-    width: min(100%, 390px);
-    max-width: 390px;
-    height: 680px;
-    max-height: 680px;
-    min-height: 680px;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    min-height: 0;
+    margin-inline: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: hidden;
+  }
+
+  .album-thread-shell {
+    background: #000;
+  }
+
+  /* Matches the standalone details modal (PublicAlbumDetailsSheet) look */
+  .album-details-shell {
+    background: #050505;
   }
 
   .album-details-chrome {

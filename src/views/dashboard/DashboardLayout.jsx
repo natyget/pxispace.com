@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -11,7 +11,7 @@ import {
     PanelLeftOpenIcon,
 } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { authService } from '../../services/auth';
+import { authService, authStorage } from '../../services/auth';
 import { canAccessAdminDashboard } from '@/lib/adminAccess';
 import AccountCardPopover from '@/components/dashboard/AccountCardPopover';
 import SidebarIconTooltip from '@/components/dashboard/SidebarIconTooltip';
@@ -55,18 +55,18 @@ function NavLink({
         ? 'bg-emerald-500/[0.06] text-emerald-200'
         : 'bg-white/[0.04] text-white/90';
     const inactiveClasses = isLiveOperations
-        ? 'bg-transparent text-emerald-300/60 hover:bg-emerald-500/[0.04] hover:text-emerald-200/80'
-        : 'bg-transparent text-white/40 hover:bg-white/[0.02] hover:text-white/70';
+        ? 'group bg-transparent hover:bg-emerald-500/[0.04]'
+        : 'group bg-transparent hover:bg-white/[0.02]';
     const iconClasses = isLiveOperations
-        ? 'text-emerald-300/80 transition-colors duration-300'
+        ? 'text-emerald-300 opacity-60 group-hover:opacity-80 transition-opacity duration-300'
         : isActive
-            ? 'text-white/80'
-            : 'text-white/40 transition-colors duration-300';
+            ? 'text-white opacity-80'
+            : 'text-white opacity-40 group-hover:opacity-70 transition-opacity duration-300';
     const labelClasses = isLiveOperations
-        ? 'text-emerald-300/80'
+        ? 'text-emerald-300/60 group-hover:text-emerald-200/80 transition-colors duration-300'
         : isActive
             ? 'text-white/90'
-            : 'text-white/50';
+            : 'text-white/40 group-hover:text-white/70 transition-colors duration-300';
 
     const linkClasses = sidebarCollapsed
         ? `w-10 h-10 rounded-full flex items-center justify-center mx-auto transition-all duration-300 ease-in-out ${
@@ -119,6 +119,7 @@ export default function DashboardLayout({ children }) {
     const [liveNow, setLiveNow] = useState(0);
     const { capabilities, refresh: refreshCapabilities } = useCapabilities();
     const { events: shellEvents } = useEvents({ limit: 100, offset: 0 });
+    const vendorStatusCheckedUserRef = useRef(null);
 
     useEffect(() => {
         const frame = requestAnimationFrame(() => setMounted(true));
@@ -198,6 +199,23 @@ export default function DashboardLayout({ children }) {
                 });
         }
     }, [mounted, authReady, user?.id, user?.phoneNumber, fromMobile, phoneCheckDone, router, updateUser, logout]);
+
+    useEffect(() => {
+        if (!rolesReady || !user?.id || user?.isVendor || vendorStatusCheckedUserRef.current === user.id) return;
+        vendorStatusCheckedUserRef.current = user.id;
+        authService.checkVendorStatus()
+            .then(async (result) => {
+                if (!result?.isVendor) return;
+                if (result.token) {
+                    await authStorage.save({ token: result.token, user: { ...user, isVendor: true } });
+                }
+                updateUser({ isVendor: true });
+                refreshCapabilities({ force: true });
+            })
+            .catch(() => {
+                /* Vendor status is opportunistic; keep the current session state if unavailable. */
+            });
+    }, [refreshCapabilities, rolesReady, updateUser, user]);
 
     const hasLiveEvent = useMemo(() => {
         if (!mounted || !user?.id) return false;
@@ -321,11 +339,8 @@ export default function DashboardLayout({ children }) {
             mounted: rolesReady,
             user,
         });
-        if (pathname.startsWith('/dashboard/vendor-upgrade')) {
-            return items.filter((item) => item.key !== 'vendor-setup');
-        }
         return items;
-    }, [isAdminNav, rolesReady, hasOrganizerAccess, hasLiveOpsAccess, hasLiveEvent, pathname, user]);
+    }, [isAdminNav, rolesReady, hasOrganizerAccess, hasLiveOpsAccess, hasLiveEvent, user]);
     const navEntries = useMemo(() => {
         if (isAdminNav || sidebarCollapsed) {
             return navItems.map((item) => ({ type: 'item', key: item.key, item }));
