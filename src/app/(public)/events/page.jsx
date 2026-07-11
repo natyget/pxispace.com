@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import PublicEventsPage from '@/views/publicEvents/PublicEventsPage';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildItemListJsonLd } from '@/lib/seo/schemas';
@@ -33,7 +34,9 @@ export default function Page() {
   return (
     <>
       <h1 className="sr-only">Discover Events on PXI</h1>
-      <PublicEventsPage />
+      <Suspense fallback={<div className="min-h-screen bg-black" />}>
+        <PublicEventsPage />
+      </Suspense>
       <JsonLd data={buildItemListJsonLd(cityList, 'Discover events by city')} />
     </>
   );

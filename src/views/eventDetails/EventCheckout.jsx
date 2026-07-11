@@ -11,8 +11,6 @@ import {
   Calendar03Icon,
   CheckmarkCircle02Icon,
   Location01Icon,
-  Shield01Icon,
-  Ticket01Icon,
 } from '@hugeicons/core-free-icons';
 import Button from '../../components/ui/Button';
 import { PxiSpinner } from '@/components/loading/PxiLoading';
@@ -88,15 +86,6 @@ function CheckoutMeta({ icon, label, value }) {
         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">{label}</p>
         <p className="mt-0.5 truncate text-xs font-bold text-white">{value}</p>
       </div>
-    </div>
-  );
-}
-
-function TrustItem({ children }) {
-  return (
-    <div className="flex items-center gap-2 text-[11px] font-bold text-white/55">
-      <span className="h-1.5 w-1.5 rounded-full bg-white/45" />
-      {children}
     </div>
   );
 }
@@ -454,8 +443,8 @@ export default function EventCheckout({ basePath = '/events' }) {
             </Link>
           </div>
 
-          <main className="mx-auto flex min-h-dvh w-full max-w-6xl items-center px-4 pb-12 pt-24 sm:px-6 lg:px-8">
-            <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center">
+          <main className="mx-auto flex min-h-dvh w-full max-w-4xl items-center px-4 pb-12 pt-24 sm:px-6 lg:px-8">
+            <div className="w-full">
               <section className="min-w-0">
                 <div className="overflow-hidden rounded-[2rem] bg-white/[0.045] shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:rounded-[2.5rem]">
                   <div className="grid gap-0 md:grid-cols-[minmax(0,0.86fr)_minmax(320px,1fr)]">
@@ -735,53 +724,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                     </div>
                   </div>
                 </div>
-
-                <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                  <TrustItem>Stripe-secured payment</TrustItem>
-                  <TrustItem>Signed ticket delivery</TrustItem>
-                  <TrustItem>No card details stored by PXI</TrustItem>
-                </div>
               </section>
-
-              <aside className="space-y-4">
-                <div className="rounded-[2rem] bg-white/[0.045] p-5 shadow-2xl backdrop-blur-2xl">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Ticket preview</p>
-                    <HugeiconsIcon icon={Ticket01Icon} size={18} className="text-white opacity-45" />
-                  </div>
-                  <div className="overflow-hidden rounded-[20px] bg-black">
-                    <div className="relative aspect-[16/11]">
-                      <CoverArt src={coverSrc} className="absolute inset-0 h-full w-full" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                      <p className="absolute bottom-4 left-4 right-4 text-xl font-black leading-tight text-white">{apiEvent.name}</p>
-                    </div>
-                    <div className="space-y-3 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-white/35">Admission</span>
-                        <span className="text-sm font-black text-white">{selectedTier?.label || 'General admission'}</span>
-                      </div>
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-white/35">Price</span>
-                        <span className="text-sm font-black text-white">{priceDisplay}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-[2rem] bg-white/[0.045] p-5 backdrop-blur-2xl">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/[0.07]">
-                      <HugeiconsIcon icon={Shield01Icon} size={18} className="text-white opacity-70" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-black text-white">Your ticket is tied to your PXI identity.</p>
-                      <p className="mt-1 text-xs leading-5 text-zinc-500">
-                        After checkout, PXI issues a signed ticket and keeps delivery actions available from your account.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </aside>
             </div>
           </main>
         </div>
