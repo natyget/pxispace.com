@@ -234,6 +234,8 @@ function ActionButton({ action, variant }) {
  *
  * `presentation="modal"` — floating centered card with backdrop (desktop).
  * `presentation="sheet"` — full-screen sheet, drag-down (touch/pointer) to dismiss (mobile web).
+ * `presentation="inline"` — fills its parent with its own scroll region, no portal/scrim/dismiss
+ *   (the desktop album page's phone-sized right pane).
  */
 export default function EventDetailsModal({
   open,
@@ -246,22 +248,25 @@ export default function EventDetailsModal({
   const y = useMotionValue(0);
   const scrimOpacity = useTransform(y, [0, 420], [1, 0], { clamp: true });
 
+  const isInline = presentation === 'inline';
+
   useEffect(() => {
-    if (!open) return undefined;
+    // Inline never owns the page — no scroll lock.
+    if (!open || isInline) return undefined;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = '';
     };
-  }, [open]);
+  }, [open, isInline]);
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open || isInline) return undefined;
     const onKey = (e) => {
       if (e.key === 'Escape') onClose?.();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  }, [open, onClose, isInline]);
 
   useEffect(() => {
     if (open) y.set(0);
@@ -431,16 +436,32 @@ export default function EventDetailsModal({
         <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-black" />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,20,20,0.95)] to-transparent" />
-      <button
-        type="button"
-        onClick={dismiss}
-        className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
-        aria-label="Close details"
-      >
-        <HugeiconsIcon icon={Cancel01Icon} size={20} />
-      </button>
+      {!isInline ? (
+        <button
+          type="button"
+          onClick={dismiss}
+          className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
+          aria-label="Close details"
+        >
+          <HugeiconsIcon icon={Cancel01Icon} size={20} />
+        </button>
+      ) : null}
     </div>
   );
+
+  // `presentation="inline"` — no portal, no scrim, no dismiss: fills its parent
+  // (the desktop album page's phone-sized right pane) with its own scroll region,
+  // showing exactly what the mobile-web sheet shows.
+  if (isInline) {
+    return (
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#0c0c0c]">
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {header}
+          {body}
+        </div>
+      </div>
+    );
+  }
 
   if (presentation === 'sheet') {
     const overlay = (

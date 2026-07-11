@@ -20,10 +20,8 @@ import {
   timelineRowKey,
 } from './buildPublicAlbumTimeline';
 import EventDetailsModal from '@/components/events/EventDetailsModal';
-import PublicAlbumDetailsTrigger from './PublicAlbumDetailsTrigger';
 import { buildAlbumEventDetails } from './albumEventDetailsAdapter';
 import PublicAlbumJoinEventButton from './PublicAlbumJoinEventButton';
-import PublicAlbumParticipants from './PublicAlbumParticipants';
 import IphonePane from './IphonePane';
 import FindMyselfModal from './FindMyselfModal';
 import { mediaDisplayUrl } from './albumMediaLayout';
@@ -58,7 +56,6 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   const [threadFocusOpen, setThreadFocusOpen] = useState(false);
   const [threadFocusIndex, setThreadFocusIndex] = useState(0);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [desktopDetailsOpen, setDesktopDetailsOpen] = useState(false);
   const [threadHasMore, setThreadHasMore] = useState(false);
   const [loadingMoreThread, setLoadingMoreThread] = useState(false);
   const [findMyselfOpen, setFindMyselfOpen] = useState(false);
@@ -452,7 +449,6 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
                   <PublicAlbumMasonryGrid items={visibleGalleryMedia} onPressItem={openLightbox} />
                 )}
               </div>
-              <PublicAlbumParticipants participants={participants} pinned />
             </div>
           ) : (
             <>
@@ -527,31 +523,22 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
 
       </div>
 
-      {/* Right: album details — desktop only; mobile uses three-dot sheet. A compact
-          trigger card (no duplicate chrome header) opens the shared EventDetailsModal
-          as a proper floating modal, instead of an always-expanded inline pane. */}
+      {/* Right: album details — desktop only; mobile uses three-dot sheet. Renders the
+          same EventDetailsModal the mobile-web sheet shows, inline inside a phone-sized
+          frame — a live preview of the phone experience, not a trigger card. */}
       <div className="album-details-pane">
-        <div className="album-details-shell">
-          <div className="album-pane-scroll min-h-0 flex-1 overflow-y-auto no-scrollbar p-4">
-            <PublicAlbumDetailsTrigger
-              title={albumDetails.event?.title}
-              coverSrc={albumDetails.event?.image}
-              schedule={albumDetails.event?.schedule}
-              location={albumDetails.event?.location}
-              onOpen={() => setDesktopDetailsOpen(true)}
+        <div className="album-details-shell items-center justify-center p-5">
+          <div className="flex h-full max-h-[820px] w-full max-w-[390px] flex-col overflow-hidden rounded-[36px] ring-1 ring-white/10">
+            <EventDetailsModal
+              open
+              presentation="inline"
+              event={albumDetails.event}
+              primaryAction={albumDetails.primaryAction}
+              secondaryAction={albumDetails.secondaryAction}
             />
           </div>
         </div>
       </div>
-
-      <EventDetailsModal
-        open={desktopDetailsOpen}
-        onClose={() => setDesktopDetailsOpen(false)}
-        presentation="modal"
-        event={albumDetails.event}
-        primaryAction={albumDetails.primaryAction}
-        secondaryAction={albumDetails.secondaryAction}
-      />
 
       <EventDetailsModal
         open={detailsOpen}

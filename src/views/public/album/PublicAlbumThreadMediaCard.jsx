@@ -192,36 +192,35 @@ export default function PublicAlbumThreadMediaCard({
                 />
 
                 {durationLabel ? (
-                  <span className="pointer-events-none absolute bottom-1.5 left-1.5 z-[26] rounded-full bg-black/65 px-2 py-0.5 text-[11px] font-bold tabular-nums tracking-wide text-white">
+                  <span className="pointer-events-none absolute left-1.5 top-1.5 z-[26] rounded-full bg-black/65 px-2 py-0.5 text-[11px] font-bold tabular-nums tracking-wide text-white">
                     {durationLabel}
                   </span>
                 ) : null}
 
                 {item.author ? (
-                  <span
-                    className={`absolute top-0 z-[25] max-w-[78%] overflow-hidden rounded-full border border-white/[0.42] ${
-                      posterOnRight ? 'right-0' : 'left-0'
-                    }`}
-                  >
-                    <span className="absolute inset-0 rounded-full bg-black/56" aria-hidden />
+                  <>
+                    {/* Bottom gradient keeps the author legible over any media (mobile parity). */}
+                    <div
+                      className="pointer-events-none absolute inset-x-0 bottom-0 z-[24] h-20 bg-gradient-to-t from-black/75 to-transparent"
+                      aria-hidden
+                    />
                     <span
-                      className={`relative flex items-center gap-2 py-1.5 pl-2.5 pr-2.5 ${
-                        posterOnRight ? 'flex-row' : 'flex-row-reverse'
-                      }`}
+                      className="absolute left-2 z-[25] flex max-w-[78%] items-center gap-2"
+                      style={{ bottom: lastComment ? 62 : 8 }}
                     >
-                      <span className="truncate text-xs font-extrabold tracking-wide text-white">
-                        {item.author.username || 'Member'}
-                      </span>
                       <span className="relative size-7 shrink-0 overflow-hidden rounded-full">
                         <UserAvatar user={{ avatarUrl: item.author?.avatarUrl }} size={28} className="size-full" />
                       </span>
+                      <span className="truncate text-xs font-extrabold tracking-wide text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.65)]">
+                        {item.author.username || 'Member'}
+                      </span>
                     </span>
-                  </span>
+                  </>
                 ) : null}
 
                 {lastComment ? (
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[28] px-[5px] pb-[7px] pt-[3px]">
-                    <div className="overflow-hidden rounded-[14px] border-[1.5px] border-[rgba(138,144,158,0.48)] bg-[rgba(92,96,108,0.38)]">
+                    <div className="overflow-hidden rounded-[14px] bg-[rgba(52,56,64,0.72)]">
                       <div className="flex items-start gap-2 px-[9px] py-[7px]">
                         <span className="size-8 shrink-0 overflow-hidden rounded-full">
                           <UserAvatar
