@@ -587,12 +587,12 @@ export default function PublicEventsPage() {
                 <button
                   type="button"
                   onClick={() => setMusicSortActive((v) => !v)}
-                  className={`rounded-full p-2.5 transition-all ${musicSortActive ? 'text-[#d946ef]' : 'text-white opacity-50 hover:opacity-100'}`}
+                  className={`rounded-full p-2.5 transition-all ${musicSortActive ? 'bg-white text-black' : 'text-white opacity-50 hover:opacity-100'}`}
                   aria-label="Sort by music match"
                   aria-pressed={musicSortActive}
                   title="Sort by music match"
                 >
-                  <HugeiconsIcon icon={MusicNote01Icon} size={18} className={musicSortActive ? 'fill-current' : ''} />
+                  <HugeiconsIcon icon={MusicNote01Icon} size={16} strokeWidth={2} />
                 </button>
               </>
             ) : null}

@@ -450,11 +450,14 @@ export default function EventDetailsModal({
   );
 
   // `presentation="inline"` — no portal, no scrim, no dismiss: fills its parent
-  // (the desktop album page's phone-sized right pane) with its own scroll region,
-  // showing exactly what the mobile-web sheet shows.
+  // (the desktop album page's right pane) with its own scroll region, wearing the
+  // same glass-card chrome as the floating desktop modal.
   if (isInline) {
     return (
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#0c0c0c]">
+      <div
+        className={`flex h-full min-h-0 flex-col overflow-hidden shadow-2xl ${GLASS_SURFACE}`}
+        style={{ borderRadius: RADIUS_PX }}
+      >
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {header}
           {body}

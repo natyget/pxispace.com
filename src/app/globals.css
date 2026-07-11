@@ -1124,11 +1124,11 @@ html, body {
 }
 
 /* Desktop: X-style full-width split — edge-to-edge thread on the left, a fixed
-   ~420px mobile-format pane on the right rendering the album details modal inline. */
+   ~530px pane on the right rendering the album details modal card inline. */
 @media (min-width: 1024px) {
   .public-album-page {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 420px;
+    grid-template-columns: minmax(0, 1fr) 530px;
     align-items: stretch;
     height: calc(100dvh - 80px);
     max-height: calc(100dvh - 80px);

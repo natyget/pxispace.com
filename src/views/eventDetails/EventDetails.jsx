@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Calendar01Icon, Location01Icon, UserGroupIcon, TagIcon, Alert01Icon, Loading02Icon, Bookmark02Icon, InstagramIcon, GlobeIcon, SmartPhone01Icon, SparklesIcon, HelpCircleIcon, MusicNote01Icon } from '@hugeicons/core-free-icons';
+import { Calendar01Icon, Location01Icon, UserGroupIcon, TagIcon, Alert01Icon, Loading02Icon, FavouriteIcon, InstagramIcon, GlobeIcon, SmartPhone01Icon, SparklesIcon, HelpCircleIcon, MusicNote01Icon } from '@hugeicons/core-free-icons';
 import Button from '../../components/ui/Button';
 import { PxiSpinner } from '@/components/loading/PxiLoading';
 import { eventsService } from '../../services/events';
@@ -290,9 +290,9 @@ const EventDetails = ({ basePath = '/events' }) => {
               <button
                 type="button"
                 onClick={handleToggleFavorite}
-                className="glass px-4 py-2 rounded-full text-xs uppercase inline-flex items-center gap-2 border border-white/10"
+                className="glass px-4 py-2 rounded-full text-xs uppercase inline-flex items-center gap-2"
               >
-                <HugeiconsIcon icon={Bookmark02Icon} size={16} className={favorited ? 'fill-pxi-purple text-pxi-purple' : ''} />
+                <HugeiconsIcon icon={FavouriteIcon} size={16} className={favorited ? 'fill-[#d84aff] text-[#d84aff]' : ''} />
                 {favorited ? 'On wishlist' : 'Wishlist'}
               </button>
             </div>

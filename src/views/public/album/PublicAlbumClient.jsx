@@ -524,11 +524,10 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
       </div>
 
       {/* Right: album details — desktop only; mobile uses three-dot sheet. Renders the
-          same EventDetailsModal the mobile-web sheet shows, inline inside a phone-sized
-          frame — a live preview of the phone experience, not a trigger card. */}
+          same EventDetailsModal card the events page shows, inline (no portal/scrim). */}
       <div className="album-details-pane">
-        <div className="album-details-shell items-center justify-center p-5">
-          <div className="flex h-full max-h-[820px] w-full max-w-[390px] flex-col overflow-hidden rounded-[36px] ring-1 ring-white/10">
+        <div className="album-details-shell items-center justify-center p-6">
+          <div className="flex h-full max-h-[860px] w-full max-w-[480px] flex-col overflow-hidden">
             <EventDetailsModal
               open
               presentation="inline"

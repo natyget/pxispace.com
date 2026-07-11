@@ -145,7 +145,7 @@ const Navbar = () => {
                                                 Dashboard
                                             </Link>
                                             <Link
-                                                href="/events?wishlist=1"
+                                                href="/wishlist"
                                                 onClick={() => setUserMenuOpen(false)}
                                                 className="flex items-center gap-2.5 px-3 py-2 text-zinc-300 hover:text-white hover:bg-white/5 rounded-xl text-xs font-semibold tracking-wide transition-all"
                                             >
