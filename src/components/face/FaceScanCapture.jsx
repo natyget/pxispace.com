@@ -317,7 +317,7 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
           {POSES.map((p, i) => (
             <li
               key={p.key}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"
+              className="flex items-center justify-between gap-3 rounded-2xl bg-white/[0.06] px-4 py-3"
             >
               <span className="flex items-center gap-3">
                 <span className="flex size-6 items-center justify-center rounded-full bg-pxi-purple text-[11px] font-black text-white">
@@ -330,7 +330,7 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
               <button
                 type="button"
                 onClick={() => handleRetakePose(i)}
-                className="rounded-full border border-white/20 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-300 transition hover:border-pxi-purple/60 hover:text-white"
+                className="rounded-full bg-white/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-300 transition hover:bg-white/20 hover:text-white"
               >
                 Retake
               </button>
@@ -377,10 +377,10 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
       {/* Face-ID-style portrait oval, sized to dominate the screen.
           Border goes green the moment the pose is aligned. */}
       <div
-        className={`relative h-[26rem] w-[19rem] max-h-[55dvh] overflow-hidden rounded-[50%] border-2 bg-zinc-900 transition-colors duration-300 ${
+        className={`relative h-[26rem] w-[19rem] max-h-[55dvh] overflow-hidden rounded-[50%] bg-zinc-900 ring-1 transition-shadow duration-300 ${
           aligned
-            ? 'border-emerald-400/90 shadow-[0_0_40px_rgba(52,211,153,0.35)]'
-            : 'border-pxi-purple/50 shadow-[0_0_40px_rgba(216,74,255,0.25)]'
+            ? 'ring-emerald-400/80 shadow-[0_0_36px_rgba(52,211,153,0.3)]'
+            : 'ring-white/15'
         }`}
       >
         <video
@@ -404,35 +404,34 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
             <button
               type="button"
               onClick={() => setStartAttempt((n) => n + 1)}
-              className="rounded-full border border-white/25 px-5 py-2 text-[11px] font-bold uppercase tracking-widest text-white"
+              className="rounded-full bg-white/10 px-5 py-2 text-[11px] font-bold uppercase tracking-widest text-white"
             >
               Try again
             </button>
           </div>
         ) : null}
-        {/* Live guidance chip (ID-verification style) */}
+      </div>
+
+      {/* Live guidance chip — BELOW the oval so the ellipse mask can never clip it */}
+      <div className="mt-4 flex h-7 items-center justify-center">
         {cameraState === 'ready' && justCaptured == null && guide ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center">
-            <span
-              className={`rounded-full bg-black/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest ${
-                aligned ? 'text-emerald-300' : 'text-white'
-              }`}
-            >
-              {scanning ? 'Capturing…' : guide.message}
-            </span>
-          </div>
+          <span
+            className={`rounded-full bg-white/[0.07] px-4 py-1.5 text-[11px] font-black uppercase tracking-widest ${
+              aligned ? 'text-emerald-300' : 'text-white'
+            }`}
+          >
+            {scanning ? 'Capturing…' : guide.message}
+          </span>
         ) : null}
         {justCaptured != null ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center">
-            <span className="rounded-full bg-black/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-pxi-purple">
-              ✓ Pose {justCaptured + 1} captured
-            </span>
-          </div>
+          <span className="rounded-full bg-white/[0.07] px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-pxi-purple">
+            ✓ Pose {justCaptured + 1} captured
+          </span>
         ) : null}
       </div>
 
       {/* 3-step progress dots — filled + check once a pose is captured */}
-      <div className="mt-5 flex items-center gap-3">
+      <div className="mt-3 flex items-center gap-3">
         {POSES.map((p, i) => (
           <span
             key={p.key}
@@ -470,7 +469,7 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
         type="button"
         onClick={() => capturePose(activePose)}
         disabled={cameraState !== 'ready' || scanning}
-        className="mt-5 w-full max-w-xs rounded-full border border-white/20 px-8 py-3 text-xs font-black uppercase tracking-widest text-zinc-300 transition hover:border-pxi-purple/60 hover:text-white disabled:opacity-40"
+        className="mt-5 w-full max-w-xs rounded-full bg-white/10 px-8 py-3 text-xs font-black uppercase tracking-widest text-zinc-300 transition hover:bg-white/20 hover:text-white disabled:opacity-40"
       >
         {scanning ? 'Scanning…' : capturedCount === 0 ? `${ctaLabel} manually` : 'Capture this angle manually'}
       </button>
