@@ -298,7 +298,7 @@ export default function EmailAuthPage() {
     return (
         <div className="relative flex min-h-screen flex-1 flex-col overflow-hidden bg-[#050505]">
             <div className="pointer-events-none fixed inset-0">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.13),transparent_28%),radial-gradient(circle_at_78%_18%,rgba(168,85,247,0.16),transparent_26%),linear-gradient(180deg,#070707,#000)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.13),transparent_28%),radial-gradient(circle_at_78%_18%,rgba(216,74,255,0.18),transparent_26%),linear-gradient(180deg,#070707,#000)]" />
                 <div className="absolute bottom-[-18rem] left-1/2 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-white/[0.035] blur-3xl" />
             </div>
             {showVerifiedMessage && (
@@ -314,20 +314,17 @@ export default function EmailAuthPage() {
                 </div>
             )}
 
-            {/* Back button */}
+            {/* Back button — the only top chrome on this page */}
             <button
                 onClick={() => router.push('/')}
-                className="absolute left-5 top-20 z-20 flex items-center justify-center rounded-full bg-black/35 p-2.5 text-white/60 backdrop-blur-xl transition hover:bg-white/10 hover:text-white md:left-8 md:top-24"
-                style={{
-                    border: '1px solid rgba(255,255,255,0.08)',
-                }}
+                className="absolute left-5 top-5 z-20 flex items-center justify-center rounded-full bg-[rgba(26,26,26,0.6)] p-2.5 text-white/60 backdrop-blur-xl transition hover:bg-white/10 hover:text-white md:left-8 md:top-8"
                 aria-label="Back to home"
             >
                 <HugeiconsIcon icon={ArrowLeft01Icon} size={22} />
             </button>
 
             {/* Scrollable content */}
-            <div className="relative z-10 flex-1 overflow-y-auto px-4 py-24 md:px-6 md:py-28">
+            <div className="relative z-10 flex-1 overflow-y-auto px-4 py-20 md:px-6 md:py-16">
                 <div className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[minmax(0,1fr)_430px]">
                     <section className="hidden min-h-[620px] flex-col justify-between overflow-hidden rounded-[2.5rem] bg-white/[0.045] p-8 shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:flex">
                         <div>
@@ -369,19 +366,21 @@ export default function EmailAuthPage() {
                     <div
                         className="flex flex-col rounded-[2rem] bg-white/[0.045] p-5 shadow-2xl backdrop-blur-3xl md:p-7"
                     >
-                    {/* Mode toggle */}
-                    <div className="mb-6 grid grid-cols-2 gap-1 rounded-full bg-white/[0.055] p-1">
+                    {/* Mode toggle — glass segmented control, matches mobile */}
+                    <div className="relative mb-6 grid grid-cols-2 gap-0 overflow-hidden rounded-2xl bg-[rgba(26,26,26,0.6)] p-1 backdrop-blur-xl">
+                        <div
+                            className="absolute inset-y-1 w-[calc(50%-4px)] rounded-xl bg-[#d84aff] transition-transform duration-300 ease-out"
+                            style={{ transform: mode === 'signup' ? 'translateX(calc(100% + 8px))' : 'translateX(0)' }}
+                        />
                         {['login', 'signup'].map((m) => (
                             <button
                                 key={m}
                                 type="button"
                                 onClick={() => switchMode(m)}
-                                className={`rounded-full py-3 text-xs font-black uppercase tracking-[0.15em] transition-colors ${
-                                    mode === m ? 'bg-white text-black' : 'text-white/45 hover:text-white'
+                                className={`relative z-[1] rounded-xl py-3 text-xs font-black uppercase tracking-[0.15em] transition-colors ${
+                                    mode === m ? 'text-white' : 'text-white/45 hover:text-white'
                                 }`}
-                                style={{
-                                    border: 0,
-                                }}
+                                style={{ border: 0 }}
                             >
                                 {m === 'login' ? 'LOG IN' : 'SIGN UP'}
                             </button>
@@ -537,16 +536,17 @@ export default function EmailAuthPage() {
                             </AuthField>
                         )}
 
-                        {/* Submit button */}
+                        {/* Submit button — brand-purple gradient, matches mobile PillButton primary */}
                         <div className="relative mt-2 mb-2">
                             <button
                                 type="submit"
                                 disabled={!canSubmit}
-                                className={`relative z-[2] h-14 w-full rounded-full border border-white/15 font-black uppercase text-[13px] tracking-[0.15em] transition-all ${
+                                className={`relative z-[2] h-14 w-full rounded-full border-0 font-black uppercase text-[13px] tracking-[0.15em] transition-all ${
                                     canSubmit
-                                        ? 'cursor-pointer bg-white text-black shadow-[0_18px_40px_rgba(0,0,0,0.35)] hover:bg-zinc-200'
+                                        ? 'cursor-pointer text-white shadow-[0_18px_40px_rgba(216,74,255,0.28)]'
                                         : 'cursor-not-allowed bg-white/10 text-white/30'
                                 }`}
+                                style={canSubmit ? { background: 'linear-gradient(90deg, #d84aff, #be32eb)' } : undefined}
                             >
                                 {loading ? (
                                     <span className="flex items-center justify-center gap-2">
@@ -569,7 +569,7 @@ export default function EmailAuthPage() {
                                         left: '10%',
                                         right: '10%',
                                         height: 10,
-                                        background: '#ffffff',
+                                        background: '#d84aff',
                                         opacity: 0.35,
                                         filter: 'blur(8px)',
                                         borderRadius: 8,
@@ -655,7 +655,7 @@ function AuthField({ children }) {
 
 function AuthInput({ focusColor, style = {}, ...props }) {
     const [focused, setFocused] = useState(false);
-    const defaultFocus = 'rgba(168,85,247,0.5)';
+    const defaultFocus = 'rgba(216,74,255,0.55)';
     const activeFocus = focusColor || defaultFocus;
 
     return (
@@ -663,15 +663,13 @@ function AuthInput({ focusColor, style = {}, ...props }) {
             {...props}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            className="auth-glass-input w-full text-sm font-semibold text-white outline-none transition-all placeholder:text-sm placeholder:font-semibold placeholder:text-white/30 placeholder:uppercase placeholder:tracking-[0.5px]"
+            className="auth-glass-input w-full text-sm font-semibold text-white outline-none backdrop-blur-xl transition-all placeholder:text-sm placeholder:font-semibold placeholder:text-white/30 placeholder:uppercase placeholder:tracking-[0.5px]"
             style={{
                 height: AUTH_INPUT_HEIGHT_PX,
-                borderRadius: 9999,
-                background: focused ? '#252525' : '#1c1c1c',
-                border: `1px solid ${focused ? activeFocus : 'rgba(255,255,255,0.05)'}`,
-                boxShadow: focused
-                    ? '0 0 10px rgba(168, 85, 247, 0.2)'
-                    : 'none',
+                borderRadius: 20,
+                background: 'rgba(26,26,26,0.6)',
+                border: 0,
+                boxShadow: focused ? `0 0 0 1.5px ${activeFocus}, 0 0 16px ${activeFocus}` : 'none',
                 fontSize: 14,
                 fontWeight: 600,
                 letterSpacing: '0.5px',
@@ -720,7 +718,7 @@ function FooterPill({ onClick, icon, children }) {
         <button
             type="button"
             onClick={onClick}
-            className="auth-social-pill flex-1 min-h-12 rounded-full border-0 bg-white/[0.06] px-4 py-3 text-[10px] font-bold uppercase tracking-[2px] text-white/[0.55] transition-all hover:text-white/70 active:bg-white/10"
+            className="auth-social-pill flex-1 min-h-12 rounded-full border-0 bg-[rgba(26,26,26,0.6)] px-4 py-3 text-[10px] font-bold uppercase tracking-[2px] text-white/[0.55] backdrop-blur-xl transition-all hover:text-white/70 active:bg-white/10"
         >
             <span className="flex items-center justify-center gap-2">
                 {icon}

@@ -6,7 +6,7 @@ import { FAQ_PAGE_FLAT } from '@/content/faqs';
 const TITLE = 'FAQ: Questions, Answered';
 const DESCRIPTION =
   'Quick answers about tickets, shared event albums, passport stamps, privacy, and your PXI account.';
-const OG = '/og?title=Questions%2C%20answered&eyebrow=FAQ';
+const OG = '/og-hero.png';
 
 export const metadata = {
   title: TITLE,

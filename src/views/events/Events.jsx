@@ -2,18 +2,47 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Calendar01Icon, Ticket01Icon } from '@hugeicons/core-free-icons';
 import EventsHero from './EventsHero';
 import EventsFilters from './EventsFilters';
 import EventsGrid from './EventsGrid';
 import EventsEmpty from './EventsEmpty';
 import EventsCTA from './EventsCTA';
 import EventsDiscoverMap from './EventsDiscoverMap';
-import EventPreviewModal from './EventPreviewModal';
+import EventDetailsModal from '@/components/events/EventDetailsModal';
 import { eventsService } from '../../services/events';
 import { musicService } from '../../services/music';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { useAuth } from '@/contexts/AuthContext';
+
+/** Adapt the flat `normalizeApiEvent` shape into `EventDetailsModal`'s section-driven
+ * contract. This call site only has flat discover-list data (no lineup / ticket-tier /
+ * participant arrays), so those sections simply don't render — badges, schedule,
+ * location, description and playlist do. */
+function toEventDetailsModalEvent(event) {
+  if (!event) return null;
+  return {
+    id: event.id,
+    title: event.title,
+    image: event.image,
+    badges: event.status ? [{ label: event.status, tone: 'purple' }] : [],
+    schedule: event.date,
+    location: event.location,
+    description: event.description,
+    host: event.organizer
+      ? { name: event.organizer.name, username: event.organizer.username, avatarUrl: event.organizer.avatarUrl }
+      : null,
+    memberCount: event.members > 0 ? event.members : undefined,
+    playlist: { spotifyPlaylistUrl: event.spotifyPlaylistUrl, spotifyTopTrackUrl: event.spotifyTopTrackUrl },
+  };
+}
+
+function ticketCtaLabel(event) {
+  return event.ticketType === 'PAID' || (event.price && event.price !== 'Free') ? 'Get Ticket' : 'RSVP';
+}
 
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
@@ -78,6 +107,7 @@ const normalizeApiEvent = (e) => {
 };
 
 const Events = ({ detailBasePath = '/events' }) => {
+  const router = useRouter();
   const { user } = useAuth();
   const isLoggedIn = !!user?.id;
   const [filter, setFilter] = useState('All');
@@ -351,7 +381,34 @@ const Events = ({ detailBasePath = '/events' }) => {
 
         <EventsCTA />
 
-        <EventPreviewModal open={!!previewEvent} onClose={() => setPreviewEvent(null)} event={previewEvent} detailBasePath={detailBasePath} />
+        <EventDetailsModal
+          open={!!previewEvent}
+          onClose={() => setPreviewEvent(null)}
+          presentation="modal"
+          event={toEventDetailsModalEvent(previewEvent)}
+          primaryAction={
+            previewEvent
+              ? {
+                  label: ticketCtaLabel(previewEvent),
+                  icon: <HugeiconsIcon icon={Ticket01Icon} size={16} />,
+                  onClick: () => {
+                    setPreviewEvent(null);
+                    router.push(`${String(detailBasePath).replace(/\/$/, '')}/${previewEvent.id}`);
+                  },
+                }
+              : null
+          }
+          secondaryAction={
+            previewEvent
+              ? {
+                  label: 'Open Album',
+                  icon: <HugeiconsIcon icon={Calendar01Icon} size={16} />,
+                  href: `/album/${previewEvent.albumId || previewEvent.id}`,
+                  onClick: () => setPreviewEvent(null),
+                }
+              : null
+          }
+        />
       </div>
     </div>
   );

@@ -12,54 +12,35 @@ import {
 } from '@hugeicons/core-free-icons';
 import Modal from '@/components/ui/Modal';
 import { useDashboardShellStore } from '@/lib/dashboardShellStore';
+import { useEvents } from '@/lib/dashboardStore';
 import { listTeamRosters } from '@/services/teamRosters';
+import { authStorage } from '@/services/auth';
+import { getLiveOpsSnapshot } from '@/services/liveOps';
+import { BUDGET_CATEGORIES, getBudgetSummary, setBudgets, createExpense } from '@/services/budget';
 
+const BASE_URL = globalThis.process?.env?.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
 const GATES_STORAGE_KEY = 'pxi.live_ops.gates.v1';
 
-const recentScans = [
-    { id: 'scan-1', ticket: 'PXI-4218', name: '@_julesx', state: 'Accepted', gate: 'North Entry', at: '8:09 PM' },
-    { id: 'scan-2', ticket: 'PXI-4217', name: '@mariacole', state: 'Accepted', gate: 'North Entry', at: '8:08 PM' },
-    { id: 'scan-3', ticket: 'PXI-4216', name: '@davidx', state: 'Flagged', gate: 'VIP Desk', at: '8:07 PM' },
-    { id: 'scan-4', ticket: 'PXI-4215', name: '@avryj', state: 'Accepted', gate: 'Main Gate', at: '8:06 PM' },
-    { id: 'scan-5', ticket: 'PXI-4214', name: '@rennorth', state: 'Manual Check', gate: 'Main Gate', at: '8:05 PM' },
-    { id: 'scan-6', ticket: 'PXI-4213', name: '@kims', state: 'Accepted', gate: 'VIP Desk', at: '8:04 PM' },
-];
-
-const initialGates = [
-    {
-        id: 'north-entry',
-        name: 'North Entry',
-        velocity: '42 scans/min',
-        paused: false,
-        issue: false,
-        scans: recentScans.filter((scan) => scan.gate === 'North Entry'),
-        incidentLog: ['Crowd flow normal', 'Two staff active'],
-    },
-    {
-        id: 'main-gate',
-        name: 'Main Gate',
-        velocity: '36 scans/min',
-        paused: false,
-        issue: true,
-        scans: recentScans.filter((scan) => scan.gate === 'Main Gate'),
-        incidentLog: ['Manual ID check queued', 'Lane two rerouted for three minutes'],
-    },
-    {
-        id: 'vip-desk',
-        name: 'VIP Desk',
-        velocity: '18 scans/min',
-        paused: true,
-        issue: true,
-        scans: recentScans.filter((scan) => scan.gate === 'VIP Desk'),
-        incidentLog: ['Duplicate ticket flagged', 'Supervisor review requested'],
-    },
-];
+const initialGates = [];
 
 const teamMessages = [
     { id: 'team-1', author: 'Floor Lead', body: 'Keep Main Gate open but slow manual checks.', at: '8:06 PM' },
     { id: 'team-2', author: 'Security', body: 'VIP Desk has one duplicate scan under review.', at: '8:07 PM' },
     { id: 'team-3', author: 'Ops', body: 'Capacity pacing looks stable.', at: '8:08 PM' },
 ];
+
+function formatCents(cents) {
+    return `$${((Number(cents) || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatClockTime(iso) {
+    if (!iso) return '';
+    try {
+        return new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    } catch {
+        return '';
+    }
+}
 
 function cx(...classes) {
     return classes.filter(Boolean).join(' ');
@@ -115,26 +96,51 @@ function OpsMetric({ label, value, hint }) {
     );
 }
 
-function CapacityIndicator({ isLive }) {
-    const venueCapacity = 1200;
-    const currentAttendance = isLive ? 894 : 0;
-    const capacityPercent = Math.round((currentAttendance / venueCapacity) * 100);
+function CapacityIndicator({ isLive, capacity, scanned, sold }) {
+    const hasCapacity = typeof capacity === 'number' && capacity > 0;
+    const denominator = hasCapacity ? capacity : sold || 0;
+    const capacityPercent = denominator > 0 ? Math.round(((scanned || 0) / denominator) * 100) : 0;
 
     return (
         <GlassPanel muted={!isLive}>
             <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Capacity</p>
             <div className="mt-3 flex items-end justify-between gap-4">
                 <p className="text-3xl font-black text-white">
-                    {currentAttendance.toLocaleString()}
-                    <span className="text-base text-zinc-500"> / {venueCapacity.toLocaleString()}</span>
+                    {(scanned || 0).toLocaleString()}
+                    <span className="text-base text-zinc-500"> / {hasCapacity ? capacity.toLocaleString() : `${(sold || 0).toLocaleString()} sold`}</span>
                 </p>
-                <p className="text-sm font-bold text-zinc-400">{capacityPercent}% full</p>
+                <p className="text-sm font-bold text-zinc-400">{capacityPercent}% {hasCapacity ? 'full' : 'scanned'}</p>
             </div>
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
                 <div
                     className={cx('h-full rounded-full transition-all', isLive ? 'bg-emerald-300' : 'bg-zinc-600')}
-                    style={{ width: `${capacityPercent}%` }}
+                    style={{ width: `${Math.min(100, capacityPercent)}%` }}
                 />
+            </div>
+            {!isLive ? <p className="mt-3 text-xs font-semibold text-zinc-500">Goes live during active events.</p> : null}
+        </GlassPanel>
+    );
+}
+
+function RevenueCostPanel({ isLive, revenue, costCents, netProfitCents }) {
+    const tiles = [
+        { label: 'Revenue (net to you)', value: formatCents(revenue?.organizerNetCents) },
+        { label: 'PXI fees', value: formatCents(revenue?.platformFeesCents) },
+        { label: 'Costs logged', value: formatCents(costCents) },
+        { label: 'Net profit', value: formatCents(netProfitCents), emphasize: true },
+    ];
+    return (
+        <GlassPanel muted={!isLive}>
+            <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Revenue &amp; cost</p>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+                {tiles.map((tile) => (
+                    <div key={tile.label} className="rounded-2xl bg-white/[0.045] px-4 py-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{tile.label}</p>
+                        <p className={cx('mt-1 text-xl font-black tabular-nums', tile.emphasize ? (Number(netProfitCents) >= 0 ? 'text-emerald-300' : 'text-red-300') : 'text-white')}>
+                            {tile.value}
+                        </p>
+                    </div>
+                ))}
             </div>
             {!isLive ? <p className="mt-3 text-xs font-semibold text-zinc-500">Goes live during active events.</p> : null}
         </GlassPanel>
@@ -195,17 +201,17 @@ function ScanActionPanel() {
     );
 }
 
-function RecentScansSection({ isLive }) {
+function RecentScansSection({ isLive, scans }) {
     return (
         <GlassPanel muted={!isLive}>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <h2 className="text-lg font-black text-white">Recent Scans</h2>
-                    <p className="mt-1 text-sm text-zinc-500">{isLive ? 'Latest tickets moving through every active gate.' : 'Goes live during active events.'}</p>
+                    <p className="mt-1 text-sm text-zinc-500">{isLive ? 'Latest tickets scanned in, across every gate.' : 'Goes live during active events.'}</p>
                 </div>
             </div>
             <div className="mt-4 space-y-2">
-                {recentScans.map((scan) => (
+                {scans.map((scan) => (
                     <div key={scan.id} className="grid gap-3 rounded-2xl bg-white/[0.035] px-4 py-3 md:grid-cols-[1.2fr_0.9fr_0.7fr_auto] md:items-center">
                         <div>
                             <p className="text-sm font-bold text-white">{scan.name}</p>
@@ -228,6 +234,11 @@ function RecentScansSection({ isLive }) {
                         </button>
                     </div>
                 ))}
+                {!scans.length ? (
+                    <div className="rounded-2xl bg-white/[0.035] px-4 py-4 text-sm text-zinc-500">
+                        {isLive ? 'No tickets scanned yet.' : 'Goes live during active events.'}
+                    </div>
+                ) : null}
             </div>
         </GlassPanel>
     );
@@ -520,6 +531,153 @@ function TeamChatModal({ open, onClose }) {
     );
 }
 
+function BudgetPanel({ eventId, isLive, summary, onChanged }) {
+    const [drafts, setDrafts] = useState({});
+    const [savingBudgets, setSavingBudgets] = useState(false);
+    const [expenseForm, setExpenseForm] = useState({ category: 'OTHER', amount: '', label: '' });
+    const [loggingExpense, setLoggingExpense] = useState(false);
+    const [error, setError] = useState('');
+
+    if (!summary) return null;
+    const byCategory = new Map(summary.byCategory.map((c) => [c.category, c]));
+
+    async function saveBudgets() {
+        const budgets = Object.entries(drafts)
+            .filter(([, value]) => value !== '' && value != null)
+            .map(([category, value]) => ({ category, amountCents: Math.round(Number(value) * 100) }));
+        if (!budgets.length) return;
+        setSavingBudgets(true);
+        setError('');
+        try {
+            await setBudgets(eventId, budgets);
+            setDrafts({});
+            onChanged?.();
+        } catch (err) {
+            setError(err?.data?.error || err?.message || 'Failed to save budgets');
+        } finally {
+            setSavingBudgets(false);
+        }
+    }
+
+    async function logExpense() {
+        const amount = Number(expenseForm.amount);
+        if (!expenseForm.label.trim() || !Number.isFinite(amount) || amount <= 0) {
+            setError('Enter a label and a positive amount');
+            return;
+        }
+        setLoggingExpense(true);
+        setError('');
+        try {
+            await createExpense(eventId, {
+                category: expenseForm.category,
+                amountCents: Math.round(amount * 100),
+                label: expenseForm.label.trim(),
+            });
+            setExpenseForm({ category: 'OTHER', amount: '', label: '' });
+            onChanged?.();
+        } catch (err) {
+            setError(err?.data?.error || err?.message || 'Failed to log expense');
+        } finally {
+            setLoggingExpense(false);
+        }
+    }
+
+    return (
+        <GlassPanel muted={!isLive}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 className="text-lg font-black text-white">Budget</h2>
+                    <p className="mt-1 text-sm text-zinc-500">
+                        Set what you planned to spend per category, log real costs as they happen.
+                    </p>
+                </div>
+                <div className="text-right">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Total spent / budgeted</p>
+                    <p className="mt-1 text-lg font-black text-white">
+                        {formatCents(summary.totalSpentCents)} <span className="text-zinc-500">/ {formatCents(summary.totalBudgetedCents)}</span>
+                    </p>
+                </div>
+            </div>
+
+            <div className="mt-4 space-y-2">
+                {BUDGET_CATEGORIES.map(({ id, label }) => {
+                    const row = byCategory.get(id) || { budgetedCents: 0, spentCents: 0 };
+                    const pct = row.budgetedCents > 0 ? Math.min(100, Math.round((row.spentCents / row.budgetedCents) * 100)) : 0;
+                    return (
+                        <div key={id} className="grid grid-cols-[100px_1fr_120px] items-center gap-3 rounded-2xl bg-white/[0.035] px-4 py-3">
+                            <p className="text-sm font-bold text-white">{label}</p>
+                            <div className="space-y-1">
+                                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                                    <div
+                                        className={cx('h-full rounded-full', row.spentCents > row.budgetedCents && row.budgetedCents > 0 ? 'bg-red-400' : 'bg-emerald-300')}
+                                        style={{ width: `${pct}%` }}
+                                    />
+                                </div>
+                                <p className="text-xs text-zinc-500">{formatCents(row.spentCents)} spent of {formatCents(row.budgetedCents)}</p>
+                            </div>
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder={(row.budgetedCents / 100).toFixed(0)}
+                                value={drafts[id] ?? ''}
+                                onChange={(e) => setDrafts((cur) => ({ ...cur, [id]: e.target.value }))}
+                                className="glass-field rounded-xl px-3 py-2 text-sm text-white outline-none"
+                            />
+                        </div>
+                    );
+                })}
+            </div>
+            <button
+                type="button"
+                onClick={saveBudgets}
+                disabled={savingBudgets || !Object.keys(drafts).length}
+                className="pill-solid mt-3 px-4 py-2 text-xs disabled:opacity-40"
+            >
+                {savingBudgets ? 'Saving...' : 'Save budgets'}
+            </button>
+
+            <div className="mt-6 border-t border-white/10 pt-4">
+                <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Log an expense</p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <select
+                        value={expenseForm.category}
+                        onChange={(e) => setExpenseForm((cur) => ({ ...cur, category: e.target.value }))}
+                        className="glass-field rounded-xl px-3 py-2 text-sm text-white"
+                    >
+                        {BUDGET_CATEGORIES.map(({ id, label }) => (
+                            <option key={id} value={id}>{label}</option>
+                        ))}
+                    </select>
+                    <input
+                        type="text"
+                        placeholder="What was it for?"
+                        value={expenseForm.label}
+                        onChange={(e) => setExpenseForm((cur) => ({ ...cur, label: e.target.value }))}
+                        className="glass-field min-w-[160px] flex-1 rounded-xl px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-500"
+                    />
+                    <input
+                        type="number"
+                        min="0"
+                        placeholder="Amount ($)"
+                        value={expenseForm.amount}
+                        onChange={(e) => setExpenseForm((cur) => ({ ...cur, amount: e.target.value }))}
+                        className="glass-field w-32 rounded-xl px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-500"
+                    />
+                    <button
+                        type="button"
+                        onClick={logExpense}
+                        disabled={loggingExpense}
+                        className="pill-solid px-4 py-2 text-xs disabled:opacity-40"
+                    >
+                        {loggingExpense ? 'Logging...' : 'Log expense'}
+                    </button>
+                </div>
+            </div>
+            {error ? <p className="mt-2 text-xs font-semibold text-red-300">{error}</p> : null}
+        </GlassPanel>
+    );
+}
+
 export default function LiveScanDashboard({ isLiveEvent }) {
     const shellLiveEvent = useDashboardShellStore((store) => store.isLiveEvent);
     const eventIsLive = isLiveEvent ?? shellLiveEvent;
@@ -529,11 +687,41 @@ export default function LiveScanDashboard({ isLiveEvent }) {
     const [menuGateId, setMenuGateId] = useState(null);
     const [chatOpen, setChatOpen] = useState(false);
     const [editingGate, setEditingGate] = useState(null);
+    const [snapshot, setSnapshot] = useState(null);
+    const [budgetSummary, setBudgetSummary] = useState(null);
 
-    const selectedGate = gates.find((gate) => gate.id === selectedGateId);
+    const { events } = useEvents({ limit: 100, offset: 0 });
+    const liveEvents = useMemo(() => {
+        const nowMs = Date.now();
+        return (events || []).filter((event) => {
+            const status = String(event?.status || '').toUpperCase();
+            if (status === 'LIVE' || status === 'ACTIVE') return true;
+            const startMs = event.startDate ? new Date(event.startDate).getTime() : 0;
+            const endMs = event.endDate ? new Date(event.endDate).getTime() : 0;
+            return startMs && startMs <= nowMs && (!endMs || endMs >= nowMs);
+        });
+    }, [events]);
+    const selectedEvent = liveEvents[0] || null;
+    const selectedEventId = selectedEvent?.id || null;
+
+    const realRecentScans = useMemo(() => (snapshot?.recentScans || []).map((scan) => ({
+        id: scan.id,
+        ticket: scan.ticketId.slice(0, 8).toUpperCase(),
+        name: scan.attendee?.name ? `@${scan.attendee.name}` : 'Guest',
+        state: 'Accepted',
+        gate: scan.gate || 'Unassigned',
+        at: formatClockTime(scan.scannedAt),
+    })), [snapshot]);
+
+    const gatesWithRealScans = useMemo(() => gates.map((gate) => ({
+        ...gate,
+        scans: realRecentScans.filter((scan) => scan.gate.toLowerCase() === gate.name.toLowerCase()),
+    })), [gates, realRecentScans]);
+
+    const selectedGate = gatesWithRealScans.find((gate) => gate.id === selectedGateId);
     const flagCount = useMemo(
-        () => gates.reduce((sum, gate) => sum + gate.scans.filter((scan) => scan.state === 'Flagged' || scan.state === 'Manual Check').length, 0),
-        [gates]
+        () => gatesWithRealScans.reduce((sum, gate) => sum + gate.scans.filter((scan) => scan.state === 'Flagged' || scan.state === 'Manual Check').length, 0),
+        [gatesWithRealScans]
     );
     const activeStaffCount = useMemo(
         () => new Set(gates.flatMap((gate) => gate.assignedPeople || []).map((person) => person.id)).size,
@@ -571,6 +759,38 @@ export default function LiveScanDashboard({ isLiveEvent }) {
             clearTimeout(timer);
         };
     }, []);
+
+    // Real live-ops data: initial fetch + SSE for scan/expense/budget updates.
+    useEffect(() => {
+        if (!selectedEventId) {
+            setSnapshot(null);
+            setBudgetSummary(null);
+            return undefined;
+        }
+        let alive = true;
+
+        const refresh = () => {
+            getLiveOpsSnapshot(selectedEventId).then((data) => { if (alive) setSnapshot(data); }).catch(() => {});
+            getBudgetSummary(selectedEventId).then((data) => { if (alive) setBudgetSummary(data); }).catch(() => {});
+        };
+        refresh();
+
+        const token = authStorage.getToken();
+        let es;
+        if (token) {
+            es = new EventSource(
+                `${BASE_URL}/api/analytics/events/${selectedEventId}/live-ops/stream?token=${encodeURIComponent(token)}`
+            );
+            es.addEventListener('scan', refresh);
+            es.addEventListener('expense', refresh);
+            es.addEventListener('budget', refresh);
+        }
+
+        return () => {
+            alive = false;
+            es?.close();
+        };
+    }, [selectedEventId]);
 
     const persistGates = (updater) => {
         setGates((current) => {
@@ -644,19 +864,51 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                 </div>
             </section>
 
-            <div className="rounded-2xl bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
-                Planning preview — gates, scans, and messages below are not a live feed yet. Ticket scanning happens
-                in the PXI mobile app today; dashboard sync will connect here when available.
+            {eventIsLive && liveEvents.length > 1 ? (
+                <div className="rounded-2xl bg-white/[0.045] px-4 py-3 text-xs font-semibold text-zinc-300">
+                    You have {liveEvents.length} events live right now — showing <span className="text-white">{selectedEvent?.name}</span>.
+                </div>
+            ) : null}
+            {eventIsLive && !selectedEventId ? (
+                <div className="rounded-2xl bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
+                    Marked live, but no matching event was found to load real scan/revenue data for.
+                </div>
+            ) : null}
+
+            <div className="rounded-2xl bg-white/[0.045] px-4 py-3 text-xs font-semibold text-zinc-400">
+                Gate setup, incident notes, and team chat below are planning tools you configure — scans, capacity,
+                and revenue/cost are live from real ticket and budget data once an event is live.
             </div>
 
             {!eventIsLive ? <DormantMessage /> : null}
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-[1.1fr_0.9fr]">
-                <CapacityIndicator isLive={eventIsLive} />
-                <TeamMessagePanel isLive={eventIsLive} onOpenChat={() => setChatOpen(true)} />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <CapacityIndicator
+                    isLive={eventIsLive}
+                    capacity={snapshot?.capacity}
+                    scanned={snapshot?.ticketsScanned}
+                    sold={snapshot?.ticketsSold}
+                />
+                <RevenueCostPanel
+                    isLive={eventIsLive}
+                    revenue={snapshot?.revenue}
+                    costCents={snapshot?.costCents}
+                    netProfitCents={snapshot?.netProfitCents}
+                />
             </div>
 
+            <TeamMessagePanel isLive={eventIsLive} onOpenChat={() => setChatOpen(true)} />
+
             <ScanActionPanel />
+
+            {selectedEventId ? (
+                <BudgetPanel
+                    eventId={selectedEventId}
+                    isLive={eventIsLive}
+                    summary={budgetSummary}
+                    onChanged={() => getBudgetSummary(selectedEventId).then(setBudgetSummary).catch(() => {})}
+                />
+            ) : null}
 
             <GlassPanel muted={!eventIsLive}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -679,7 +931,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                 </div>
 
                 <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
-                    {gates.map((gate) => (
+                    {gatesWithRealScans.map((gate) => (
                         <GateCard
                             key={gate.id}
                             gate={gate}
@@ -694,38 +946,37 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                     ))}
                     {!gates.length ? (
                         <div className="glass-panel rounded-2xl p-8 text-center text-sm font-semibold text-zinc-500 lg:col-span-3">
-                            Add a gate when Operations is live.
+                            Add a gate to label scans by door (e.g. &quot;North Entry&quot;) — scanners tag the gate name at scan time.
                         </div>
                     ) : null}
                 </div>
             </GlassPanel>
 
-            <RecentScansSection isLive={eventIsLive} />
+            <RecentScansSection isLive={eventIsLive} scans={realRecentScans} />
 
             <GlassPanel muted={!eventIsLive}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h2 className="text-lg font-black text-white">Incident Response</h2>
-                        <p className="mt-1 text-sm text-zinc-500">{eventIsLive ? 'Active flags and resolved floor issues.' : 'Goes live during active events.'}</p>
+                        <h2 className="text-lg font-black text-white">Incident Log</h2>
+                        <p className="mt-1 text-sm text-zinc-500">{eventIsLive ? 'Notes logged per gate.' : 'Goes live during active events.'}</p>
                     </div>
                     <HugeiconsIcon icon={Megaphone01Icon} size={20} className="text-zinc-500" />
                 </div>
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
-                    <div className="rounded-2xl bg-red-500/10 p-4">
-                        <HugeiconsIcon icon={Alert02Icon} size={18} className={eventIsLive ? 'text-red-300' : 'text-zinc-500'} />
-                        <p className="mt-3 text-sm font-black text-white">Duplicate ticket watch</p>
-                        <p className="mt-1 text-xs text-zinc-500">VIP Desk flagged one ticket.</p>
-                    </div>
-                    <div className="rounded-2xl bg-amber-500/10 p-4">
-                        <HugeiconsIcon icon={Alert02Icon} size={18} className={eventIsLive ? 'text-amber-300' : 'text-zinc-500'} />
-                        <p className="mt-3 text-sm font-black text-white">Manual check lane</p>
-                        <p className="mt-1 text-xs text-zinc-500">Main Gate review queue is open.</p>
-                    </div>
-                    <div className="rounded-2xl bg-emerald-500/10 p-4">
-                        <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} className={eventIsLive ? 'text-emerald-300' : 'text-zinc-500'} />
-                        <p className="mt-3 text-sm font-black text-white">Crowd flow stable</p>
-                        <p className="mt-1 text-xs text-zinc-500">North Entry is clear.</p>
-                    </div>
+                    {gates.flatMap((gate) => (gate.incidentLog || []).map((entry, i) => (
+                        <div key={`${gate.id}-${i}`} className="rounded-2xl bg-white/[0.045] p-4">
+                            <HugeiconsIcon icon={Alert02Icon} size={18} className={eventIsLive ? 'text-amber-300' : 'text-zinc-500'} />
+                            <p className="mt-3 text-sm font-black text-white">{gate.name}</p>
+                            <p className="mt-1 text-xs text-zinc-500">{entry}</p>
+                        </div>
+                    )))}
+                    {!gates.some((gate) => gate.incidentLog?.length) ? (
+                        <div className="rounded-2xl bg-white/[0.045] p-4 md:col-span-3">
+                            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} className={eventIsLive ? 'text-emerald-300' : 'text-zinc-500'} />
+                            <p className="mt-3 text-sm font-black text-white">No incidents logged</p>
+                            <p className="mt-1 text-xs text-zinc-500">Add a gate and edit it to keep floor notes here.</p>
+                        </div>
+                    ) : null}
                 </div>
             </GlassPanel>
 

@@ -15,13 +15,13 @@ export const metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: 'https://pxispace.com/events',
-    images: [{ url: '/og?title=Discover%20events&eyebrow=PXI', width: 1200, height: 630, alt: 'Discover events on PXI' }],
+    images: [{ url: '/og-hero.png', width: 1200, height: 630, alt: 'Discover events on PXI' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: TITLE,
     description: DESCRIPTION,
-    images: ['/og?title=Discover%20events&eyebrow=PXI'],
+    images: ['/og-hero.png'],
   },
 };
 

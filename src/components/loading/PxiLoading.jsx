@@ -20,7 +20,7 @@ export function PxiSpinner({ size = 'lg', className = '' }) {
     <div
       role="status"
       aria-label="Loading"
-      className={`shrink-0 rounded-full bg-gradient-to-tr from-[#B026FF] to-[#d946ef] animate-pulse ${dim} ${className}`}
+      className={`shrink-0 rounded-full bg-gradient-to-tr from-[#B026FF] to-[#d84aff] animate-pulse ${dim} ${className}`}
       style={{
         boxShadow: '0 0 10px rgba(176, 38, 255, 0.4)',
       }}

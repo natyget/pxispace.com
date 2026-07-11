@@ -50,7 +50,7 @@ export const dashboardNavConfig = [
   { key: 'events', label: 'My Events', path: '/dashboard/events', icon: Calendar01Icon, section: 'Hub', end: true },
   { key: 'analytics', label: 'Analytics', path: '/dashboard/analytics', icon: Activity01Icon, section: 'Intelligence', end: true, organizerOnly: true },
   { key: 'operations', label: 'Operations', path: '/dashboard/analytics?view=live-ops', icon: QrCodeIcon, section: 'Intelligence', end: true, organizerOnly: true },
-  { key: 'audience', label: 'Audience & Campaigns', path: '/dashboard/audience', icon: UserGroupIcon, section: 'People', end: true, organizerOnly: true },
+  { key: 'audience', label: 'CRM', path: '/dashboard/audience', icon: UserGroupIcon, section: 'People', end: true, organizerOnly: true },
   { key: 'ads', label: 'Ads Manager', path: '/dashboard/ads', icon: Megaphone01Icon, section: 'People', end: true, organizerOnly: true },
   { key: 'campaigns', label: 'Email Campaigns', path: '/dashboard/campaigns', icon: Megaphone01Icon, section: 'People', end: true, organizerOnly: true },
   { key: 'earnings', label: 'Earnings', path: '/dashboard/earnings', icon: Wallet01Icon, section: 'Business', end: true, vendorOnly: true },
@@ -101,9 +101,7 @@ export function isNavItemActive(pathname, item, searchParams) {
     return (pathname === path && currentView === 'live-ops') || pathname.startsWith('/dashboard/live-scan');
   }
   if (item.key === 'audience') {
-    return pathname === '/dashboard/audience'
-      || pathname.startsWith('/dashboard/organizer/audience')
-      || pathname.startsWith('/dashboard/organizer/campaigns');
+    return pathname === '/dashboard/audience' || pathname.startsWith('/dashboard/organizer/audience');
   }
   if (item.end) return pathname === path;
   return pathname.startsWith(`${item.path}/`) || pathname === item.path;

@@ -16,13 +16,13 @@ export const metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: 'https://pxispace.com',
-    images: [{ url: '/og?title=Never%20lose%20the%20night', width: 1200, height: 630, alt: 'PXI' }],
+    images: [{ url: '/og-hero.png', width: 1200, height: 630, alt: 'PXI' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: TITLE,
     description: DESCRIPTION,
-    images: ['/og?title=Never%20lose%20the%20night'],
+    images: ['/og-hero.png'],
   },
 };
 

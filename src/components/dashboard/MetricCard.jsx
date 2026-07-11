@@ -2,6 +2,8 @@
 
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowDownRightIcon, ArrowUpRightIcon } from '@hugeicons/core-free-icons';
+import { SparkAreaChart, SparkBarChart, SparkDonutChart } from './ChartFrame';
+import { DASHBOARD_BRAND_COLOR } from './chartStyles';
 
 function trendIconFor(trend) {
     if (trend === 'up') return ArrowUpRightIcon;
@@ -26,52 +28,60 @@ export function StatRow({ items = [], className = '' }) {
     );
 }
 
-export function MicroChart({ points = [], type = 'line', color = '#d84aff', className = '' }) {
-    const values = Array.isArray(points) ? points.filter((point) => Number.isFinite(Number(point))).map(Number) : [];
-    const max = Math.max(...values, 1);
-
+export function MicroChart({
+    points = [],
+    type = 'line',
+    color = DASHBOARD_BRAND_COLOR,
+    className = '',
+    labels = [],
+    name = 'Value',
+    height = 36,
+    formatValue,
+    formatLabel,
+    emptyLabel,
+}) {
     if (type === 'bar') {
         return (
-            <div className={`flex h-10 items-end gap-1 ${className}`.trim()} aria-hidden="true">
-                {values.map((value, index) => (
-                    <span
-                        key={`${value}-${index}`}
-                        className="w-full rounded-t-sm bg-white/45"
-                        style={{ height: `${Math.max(12, (value / max) * 100)}%` }}
-                    />
-                ))}
-            </div>
-        );
-    }
-
-    if (type === 'donut') {
-        const total = values.reduce((sum, value) => sum + value, 0) || 1;
-        const shades = values.reduce((state, value, index) => {
-            const start = state.cursor;
-            const end = start + (value / total) * 100;
-            const shade = 75 - index * 10;
-            return {
-                cursor: end,
-                segments: [...state.segments, `rgb(${shade} ${shade} ${shade}) ${start}% ${end}%`],
-            };
-        }, { cursor: 0, segments: [] }).segments;
-        return (
-            <span
-                className={`block h-12 w-12 rounded-full ${className}`.trim()}
-                style={{ background: `conic-gradient(${shades.join(', ')})` }}
-                aria-hidden="true"
+            <SparkBarChart
+                points={points}
+                labels={labels}
+                color={color}
+                height={height || 40}
+                name={name}
+                className={className}
+                {...(formatValue ? { formatValue } : {})}
+                {...(formatLabel ? { formatLabel } : {})}
+                {...(emptyLabel ? { emptyLabel } : {})}
             />
         );
     }
 
-    const polyline = values
-        .map((point, index) => `${(index / Math.max(values.length - 1, 1)) * 100},${24 - (point / max) * 20}`)
-        .join(' ');
+    if (type === 'donut') {
+        return (
+            <SparkDonutChart
+                points={points}
+                labels={labels}
+                color={color}
+                size={48}
+                className={className}
+                {...(formatValue ? { formatValue } : {})}
+                {...(emptyLabel ? { emptyLabel } : {})}
+            />
+        );
+    }
 
     return (
-        <svg viewBox="0 0 100 24" preserveAspectRatio="none" className={`h-8 w-full ${className}`.trim()} aria-hidden="true">
-            <polyline fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={polyline} />
-        </svg>
+        <SparkAreaChart
+            points={points}
+            labels={labels}
+            color={color}
+            height={height}
+            name={name}
+            className={className}
+            {...(formatValue ? { formatValue } : {})}
+            {...(formatLabel ? { formatLabel } : {})}
+            {...(emptyLabel ? { emptyLabel } : {})}
+        />
     );
 }
 
@@ -106,9 +116,14 @@ export default function MetricCard({
                 <div className="mt-auto flex flex-col items-start gap-3">
                     <div className="max-w-full truncate text-2xl font-[900] leading-none tracking-normal text-white">{value}</div>
                     {sparkline ? (
-                        <div className="h-8 w-full overflow-hidden rounded-md bg-white/[0.035]">
+                        <div className="w-full overflow-hidden rounded-md bg-white/[0.035]">
                             {Array.isArray(sparkline?.points) ? (
-                                <MicroChart points={sparkline.points} color={sparkline.color || '#d84aff'} />
+                                <MicroChart
+                                    points={sparkline.points}
+                                    labels={sparkline.labels || []}
+                                    color={sparkline.color || DASHBOARD_BRAND_COLOR}
+                                    name={sparkline.name || title}
+                                />
                             ) : (
                                 sparkline
                             )}

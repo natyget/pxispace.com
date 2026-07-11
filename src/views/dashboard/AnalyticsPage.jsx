@@ -16,6 +16,7 @@ import SectionCard from '@/components/dashboard/SectionCard';
 import { TimeSeriesChartShell, ChartSkeleton } from '@/components/dashboard/ChartFrame';
 import MetricCard, { MicroChart, StatRow } from '@/components/dashboard/MetricCard';
 import FunnelChart from '@/components/dashboard/FunnelChart';
+import SpatialHeatMap from '@/components/dashboard/SpatialHeatMap';
 import { getDashboardChartShade } from '@/components/dashboard/chartStyles';
 import { eventsService } from '@/services/events';
 import { organizerAnalyticsService } from '@/services/organizerAnalytics';
@@ -428,24 +429,30 @@ function SalesVelocityChart({ byDay, velocityPerDay7d, totalSold, isMobile }) {
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
-                <div className="h-16 shrink-0 rounded-2xl bg-black/15 px-2 py-2">
-                    <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-white/35">Cumulative</p>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={byDay} margin={{ top: 0, right: 12, left: isMobile ? -18 : 0, bottom: 0 }}>
-                            <Tooltip content={<SalesTooltip />} />
-                            <Area
-                                type="monotone"
-                                dataKey="cumulative"
-                                name="Cumulative tickets"
-                                stroke={cumulativeShade}
-                                fill={cumulativeShade}
-                                fillOpacity={0.14}
-                                strokeWidth={1.6}
-                                dot={false}
-                                isAnimationActive={false}
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
+                <div className="flex h-20 shrink-0 flex-col gap-1 rounded-2xl bg-black/15 px-2 py-2">
+                    <p className="shrink-0 text-[10px] font-black uppercase tracking-widest text-white/35">Cumulative</p>
+                    {/* The label above sits in normal flow, so the chart needs its own
+                        flex-1/min-h-0 box — a bare height:100% ResponsiveContainer here
+                        would size itself off the parent's full height and get clipped
+                        by the label instead of only using the space left beneath it. */}
+                    <div className="min-h-0 flex-1">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={byDay} margin={{ top: 0, right: 12, left: isMobile ? -18 : 0, bottom: 0 }}>
+                                <Tooltip content={<SalesTooltip />} />
+                                <Area
+                                    type="monotone"
+                                    dataKey="cumulative"
+                                    name="Cumulative tickets"
+                                    stroke={cumulativeShade}
+                                    fill={cumulativeShade}
+                                    fillOpacity={0.14}
+                                    strokeWidth={1.6}
+                                    dot={false}
+                                    isAnimationActive={false}
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
             </div>
         </TimeSeriesChartShell>
@@ -1077,6 +1084,21 @@ function AnalyticsPageContent() {
 
                     <SectionCard title="Where the night happened" className="!rounded-[1.75rem]">
                         <LocationClustersCard {...eventDetail.locationClusters} />
+                    </SectionCard>
+
+                    <SectionCard title="Spatial intelligence" className="!rounded-[1.75rem]">
+                        {/* Built to take real room-by-room hype data (rooms + timeSlices), but no
+                            backend endpoint publishes a venue floor plan or per-room readings yet —
+                            only the photo-location DBSCAN clusters above are wired to real geodata.
+                            Mounting it here (instead of leaving it unimported) so the feature is
+                            reachable and its own disabled state explains the gap honestly rather
+                            than faking room coordinates. */}
+                        <SpatialHeatMap
+                            rooms={[]}
+                            timeSlices={[]}
+                            eventComparisons={[]}
+                            disabledReason="Room-level heat mapping needs a venue floor plan wired to this event — add zone coordinates and per-room hype tracking on the backend to unlock this view."
+                        />
                     </SectionCard>
                 </>
             )}

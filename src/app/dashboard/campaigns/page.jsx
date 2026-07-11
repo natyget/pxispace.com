@@ -52,12 +52,15 @@ export default function CampaignsPage() {
     const [error, setError] = useState(null);
 
     const [name, setName] = useState('');
+    const [channel, setChannel] = useState('EMAIL');
     const [subject, setSubject] = useState('');
     const [body, setBody] = useState('');
     const [audience, setAudience] = useState('ALL_PAST');
     const [eventId, setEventId] = useState('');
     const [quote, setQuote] = useState(null);
     const [busy, setBusy] = useState(false);
+    const isSms = channel === 'SMS';
+    const bodyMaxLength = isSms ? 320 : 10000;
 
     const [payState, setPayState] = useState(null); // { campaignId, clientSecret }
 
@@ -82,10 +85,10 @@ export default function CampaignsPage() {
         return () => clearTimeout(timer);
     }, [load]);
 
-    // Live quote as the audience selection changes.
+    // Live quote as the audience/channel selection changes.
     useEffect(() => {
         let cancelled = false;
-        const params = new URLSearchParams({ audience });
+        const params = new URLSearchParams({ audience, channel });
         if (audience === 'ATTENDEES' && eventId) params.set('eventId', eventId);
         if (audience === 'ATTENDEES' && !eventId) {
             const timer = setTimeout(() => setQuote(null), 0);
@@ -100,7 +103,7 @@ export default function CampaignsPage() {
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [audience, eventId]);
+    }, [audience, eventId, channel]);
 
     const createAndPay = async () => {
         setBusy(true);
@@ -108,7 +111,8 @@ export default function CampaignsPage() {
         try {
             const { campaign } = await api.post('/api/campaigns', {
                 name: name.trim(),
-                subject: subject.trim(),
+                channel,
+                ...(isSms ? {} : { subject: subject.trim() }),
                 body: body.trim(),
                 audience,
                 ...(audience === 'ATTENDEES' ? { eventId } : {}),
@@ -122,8 +126,9 @@ export default function CampaignsPage() {
         }
     };
 
-    const canSubmit = name.trim() && subject.trim() && body.trim() && quote?.recipientCount > 0
-        && (audience !== 'ATTENDEES' || eventId);
+    const smsNotReady = isSms && quote?.smsChannelReady === false;
+    const canSubmit = name.trim() && (isSms || subject.trim()) && body.trim() && quote?.recipientCount > 0
+        && (audience !== 'ATTENDEES' || eventId) && !smsNotReady;
 
     return (
         <div className="mx-auto max-w-7xl space-y-6">
@@ -162,14 +167,31 @@ export default function CampaignsPage() {
             <SectionCard title="Compose send" dense className="dashboard-surface-b !shadow-[0_22px_70px_rgba(0,0,0,0.28)]">
                 <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
                     <div className="grid gap-4 sm:grid-cols-2">
+                        <label className="space-y-2 sm:col-span-2">
+                            <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Channel</span>
+                            <div className="grid grid-cols-2 gap-2 rounded-[1.25rem] bg-white/[0.04] p-1">
+                                {[{ id: 'EMAIL', label: 'Email' }, { id: 'SMS', label: 'SMS' }].map((c) => (
+                                    <button
+                                        key={c.id}
+                                        type="button"
+                                        onClick={() => setChannel(c.id)}
+                                        className={`min-h-10 rounded-[1rem] text-sm font-bold transition ${channel === c.id ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}`}
+                                    >
+                                        {c.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </label>
                         <label className="space-y-2">
                             <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Internal name</span>
                             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Summer kickoff blast" className={inputCls} />
                         </label>
-                        <label className="space-y-2">
-                            <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Subject line</span>
-                            <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Tonight's details are live" className={inputCls} />
-                        </label>
+                        {!isSms ? (
+                            <label className="space-y-2">
+                                <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Subject line</span>
+                                <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Tonight's details are live" className={inputCls} />
+                            </label>
+                        ) : <div className="hidden sm:block" />}
                         <label className="space-y-2">
                             <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Audience</span>
                             <select value={audience} onChange={(e) => setAudience(e.target.value)} className={`${inputCls} appearance-none`}>
@@ -189,16 +211,30 @@ export default function CampaignsPage() {
                             </label>
                         ) : <div className="hidden sm:block" />}
                         <label className="space-y-2 sm:col-span-2">
-                            <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Message</span>
+                            <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                Message {isSms ? <span className="text-zinc-600">({body.length}/{bodyMaxLength})</span> : null}
+                            </span>
                             <textarea
                                 value={body}
-                                onChange={(e) => setBody(e.target.value)}
-                                rows={8}
-                                placeholder={'Write your message...\n\nBlank lines become paragraphs. An unsubscribe link is added automatically.'}
+                                onChange={(e) => setBody(e.target.value.slice(0, bodyMaxLength))}
+                                rows={isSms ? 4 : 8}
+                                placeholder={isSms
+                                    ? "Tonight's set starts at 9. See you there!"
+                                    : 'Write your message...\n\nBlank lines become paragraphs. An unsubscribe link is added automatically.'}
                                 className={`${inputCls} resize-y rounded-[1.25rem]`}
                             />
+                            {isSms ? (
+                                <span className="block px-1 text-xs text-zinc-500">
+                                    &quot;Reply STOP to unsubscribe.&quot; is appended automatically.
+                                </span>
+                            ) : null}
                         </label>
                     </div>
+                    {smsNotReady ? (
+                        <div className="sm:col-span-2 rounded-2xl bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
+                            SMS is pending carrier registration — this channel isn&apos;t sendable yet. Draft here; it&apos;ll unlock once a live number is configured.
+                        </div>
+                    ) : null}
                     <aside className="flex flex-col justify-between rounded-[1.35rem] bg-white/[0.045] p-5">
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Send quote</p>

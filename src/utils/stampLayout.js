@@ -68,12 +68,16 @@ export const STAMP_FONT = {
     cityCompact: 6,
 };
 
+// Synced with mobile's corrected STAMP_TIER_COLORS (was mismatched from mobile
+// entirely, and LUMINARY/WANDERER collided on the same hex — two tiers reading
+// identically). WANDERER is pxiPurple: measured 2.4:1 against the passport map
+// as the old #B026FF-family purple; pxiPurple clears 3.3:1.
 export const STAMP_TIER_COLORS = {
-    WANDERER:   '#F59E0B',
-    SEEKER:     '#3B82F6',
-    VOYAGER:    '#10B981',
-    PATHFINDER: '#F97316',
-    LUMINARY:   '#F59E0B',
+    WANDERER:   '#d84aff',
+    SEEKER:     '#60A5FA',
+    VOYAGER:    '#34D399',
+    PATHFINDER: '#FB923C',
+    LUMINARY:   '#FCD34D',
     ODYSSEY:    '#E5E7EB',
 };
 
@@ -97,10 +101,10 @@ export function getStampViewBox(shape) {
 }
 
 /** Max full SVG stamps rendered per season (rest shown as +N pill, bottom-right). */
-export const MAX_VISIBLE_PASSPORT_STAMPS = 20;
+export const MAX_VISIBLE_PASSPORT_STAMPS = 14;
 
-/** Floor scale for very dense seasons (30+). */
-export const MIN_STAMP_SCALE = 0.28;
+/** Floor scale for very dense seasons (30+). Raised so worn-ink texture + arc text stay legible. */
+export const MIN_STAMP_SCALE = 0.36;
 
 /** @deprecated Use getStampScaleForCount — kept for tests. */
 export const STAMP_VISUAL_SCALE = 0.42;
@@ -261,7 +265,7 @@ export function getStampScaleForCount(count, base, area) {
     let scale = Math.sqrt(targetPerStampArea / baseArea) * 1.04 * STAMP_LAYOUT_SIZE_FACTOR;
 
     const minScale =
-        c <= 4 ? 0.54 : c <= 8 ? 0.46 : c <= 14 ? 0.38 : c <= 22 ? 0.33 : MIN_STAMP_SCALE;
+        c <= 4 ? 0.6 : c <= 8 ? 0.52 : c <= 14 ? 0.44 : c <= 22 ? 0.4 : MIN_STAMP_SCALE;
 
     return clamp(scale, minScale, maxScaleForPassport(base, area));
 }
@@ -333,7 +337,9 @@ export function clampStampPosition(params) {
 
 function placementBounds(w, h, area) {
     const yearRow = area.yearRowHeight ?? 0;
-    const pad = 8;
+    // Reduced overlap allowance — more breathing room between stamps so the
+    // new arc text / grunge texture doesn't collide with a neighbor's ring.
+    const pad = 13;
     const radiusX = w / 2 + pad;
     const radiusY = h / 2 + pad;
     const minCX = radiusX;
@@ -550,6 +556,52 @@ export function layoutOvalEntryFields(date, name, city, role) {
         { text: city, size: STAMP_FONT.cityCompact, y: nameY + gap },
         { text: role, size: STAMP_FONT.cityCompact, y: nameY + gap * 2 },
     ];
+}
+
+/**
+ * Travel-visa art direction — geometry for the 9 true "stamp" templates
+ * (the 3 label templates — visa-sticker, barcode-label, hologram-ticket —
+ * stay printed-document styled, not rubber-stamped, so they keep the plain
+ * stacked-line layout). Kept in sync with mobile's `stampLayout.ts`.
+ */
+export const STAMP_ARC_GEOMETRY = {
+    'square-border':  { cx: 50, cy: 50, r: 36, sweepDeg: 128 },
+    'circle-exit':    { cx: CIRCLE_MEMBER_STAMP.cx, cy: CIRCLE_MEMBER_STAMP.cy, r: CIRCLE_MEMBER_STAMP.rInner - 5, sweepDeg: 150 },
+    'diamond-pass':   { cx: 50, cy: 46, r: 30, sweepDeg: 104 },
+    'hexagon-pass':   { cx: 50, cy: 48, r: 33, sweepDeg: 126 },
+    'oval-entry':     { cx: 50, cy: 28, r: 19, sweepDeg: 144 },
+    'arch-gate':      { cx: 50, cy: 56, r: 34, sweepDeg: 136 },
+    'star-burst':     { cx: STAR_BURST_INNER_CIRCLE.cx, cy: STAR_BURST_INNER_CIRCLE.cy, r: STAR_BURST_INNER_CIRCLE.r - 4, sweepDeg: 150 },
+    'shield-crest':   { cx: 50, cy: 48, r: 32, sweepDeg: 118 },
+    'wax-seal':       { cx: CIRCLE_MEMBER_STAMP.cx, cy: CIRCLE_MEMBER_STAMP.cy, r: CIRCLE_MEMBER_STAMP.rInner - 5, sweepDeg: 150 },
+};
+
+/** Central banner ribbon (viewBox units) — carries CITY + DATE in the largest type. */
+export const STAMP_BANNER_GEOMETRY = {
+    'square-border':  { cx: 50, cy: 60, w: 62, h: 17 },
+    'circle-exit':    { cx: CIRCLE_MEMBER_STAMP.cx, cy: 58, w: 58, h: 16 },
+    'diamond-pass':   { cx: 50, cy: 58, w: 44, h: 14 },
+    'hexagon-pass':   { cx: 50, cy: 58, w: 54, h: 15 },
+    'oval-entry':     { cx: 50, cy: 34, w: 68, h: 14 },
+    'arch-gate':      { cx: 50, cy: 80, w: 60, h: 16 },
+    'star-burst':     { cx: 50, cy: 54, w: 44, h: 14 },
+    'shield-crest':   { cx: 50, cy: 68, w: 56, h: 15 },
+    'wax-seal':       { cx: CIRCLE_MEMBER_STAMP.cx, cy: 58, w: 58, h: 16 },
+};
+
+/** Small role caption sits directly under the banner. */
+export function stampRoleY(shape) {
+    const b = STAMP_BANNER_GEOMETRY[shape];
+    return b ? b.cy + b.h / 2 + 8 : 80;
+}
+
+/** Travel-visa field set for the 9 arc-text stamp templates. */
+export function buildStampBannerFields(date, name, city, role) {
+    return {
+        arcText: name,
+        bannerLine: [city, date].filter(Boolean).join('   •   '),
+        roleText: role,
+    };
 }
 
 export function formatStampDate(startDate) {

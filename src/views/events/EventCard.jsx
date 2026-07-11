@@ -69,7 +69,7 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
           <HugeiconsIcon
             icon={Bookmark02Icon}
             size={14}
-            className={favorited ? 'fill-current text-[#d946ef]' : 'text-white/70'}
+            className={favorited ? 'fill-current text-[#d84aff]' : 'text-white/70'}
           />
         </button>
 

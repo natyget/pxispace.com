@@ -1,3 +1,44 @@
+/** One brand purple across every dashboard chart (design law token). */
+export const DASHBOARD_BRAND_COLOR = '#d84aff';
+
+/** Secondary series / de-emphasized chart ink. */
+export const DASHBOARD_MUTED_COLOR = '#a1a1aa';
+
+/** Shared recharts <Tooltip contentStyle> so every chart pops the same panel. */
+export const DASHBOARD_TOOLTIP_CONTENT_STYLE = {
+    background: '#09090b',
+    border: 0,
+    borderRadius: 14,
+    fontSize: 12,
+    boxShadow: '0 18px 44px rgba(0,0,0,0.45)',
+    padding: '10px 12px',
+};
+
+export const DASHBOARD_TOOLTIP_LABEL_STYLE = {
+    color: 'rgba(255,255,255,0.55)',
+    fontWeight: 700,
+    fontSize: 11,
+    marginBottom: 4,
+};
+
+export const DASHBOARD_TOOLTIP_ITEM_STYLE = {
+    color: '#ffffff',
+    fontWeight: 800,
+    fontSize: 12,
+    padding: 0,
+};
+
+/** Shared axis tick styling for recharts XAxis/YAxis. */
+export const DASHBOARD_AXIS_TICK = { fill: 'rgba(255,255,255,0.46)', fontSize: 11 };
+
+/** Spread onto a recharts <Tooltip> for the shared dashboard look. */
+export const DASHBOARD_TOOLTIP_PROPS = {
+    contentStyle: DASHBOARD_TOOLTIP_CONTENT_STYLE,
+    labelStyle: DASHBOARD_TOOLTIP_LABEL_STYLE,
+    itemStyle: DASHBOARD_TOOLTIP_ITEM_STYLE,
+    cursor: { stroke: 'rgba(255,255,255,0.14)', strokeWidth: 1 },
+};
+
 export const DASHBOARD_CHART_SHADES = [
     '#f4f4f5',
     '#d4d4d8',

@@ -23,6 +23,8 @@ export async function purchaseTicket(eventId, tierId, opts = {}) {
     ...(tierId ? { tierId } : {}),
     ...(opts.applyCredits ? { applyCredits: true } : {}),
     ...(opts.promoCode ? { promoCode: opts.promoCode } : {}),
+    ...(opts.emailOptIn ? { emailOptIn: true } : {}),
+    ...(opts.smsOptIn ? { smsOptIn: true } : {}),
   });
 }
 
@@ -41,6 +43,8 @@ export async function createCheckoutSession(eventId, successUrl, cancelUrl, tier
     ...(tierId ? { tierId } : {}),
     ...(opts.applyCredits ? { applyCredits: true } : {}),
     ...(opts.promoCode ? { promoCode: opts.promoCode } : {}),
+    ...(opts.emailOptIn ? { emailOptIn: true } : {}),
+    ...(opts.smsOptIn ? { smsOptIn: true } : {}),
   });
 }
 
@@ -53,8 +57,13 @@ export async function getMyCredits() {
  * Generate a free ticket for an event.
  * POST /api/tickets/generate
  */
-export async function generateTicket(userId, eventId) {
-  const data = await api.post('/api/tickets/generate', { userId, eventId });
+export async function generateTicket(userId, eventId, opts = {}) {
+  const data = await api.post('/api/tickets/generate', {
+    userId,
+    eventId,
+    ...(opts.emailOptIn ? { emailOptIn: true } : {}),
+    ...(opts.smsOptIn ? { smsOptIn: true } : {}),
+  });
   return data;
 }
 

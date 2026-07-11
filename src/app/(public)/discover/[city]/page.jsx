@@ -15,7 +15,7 @@ export async function generateMetadata({ params }) {
   const title = `Events in ${city.name} — Parties, Shows & Nights Out`;
   const description = `Discover events in ${city.name} on PXI. ${city.blurb} Buy tickets, see who's going, and share the night.`;
   const url = `${SITE_URL}/discover/${slug}`;
-  const og = `/og?title=${encodeURIComponent(`Events in ${city.name}`)}&eyebrow=Discover`;
+  const og = '/og-hero.png';
   return {
     title,
     description,

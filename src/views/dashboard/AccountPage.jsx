@@ -18,6 +18,8 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { musicService } from '@/services/music';
+import { api } from '@/services/api';
+import { listAdCampaigns } from '@/services/ads';
 import { getSingleShadeDonutCellProps } from '@/components/dashboard/chartStyles';
 
 const DELETION_ITEMS = [
@@ -35,12 +37,6 @@ const TABS = [
     { id: 'billing', label: 'Payouts', icon: Wallet01Icon },
     { id: 'usage', label: 'Usage', icon: SecurityCheckIcon },
     { id: 'payments', label: 'Cards', icon: CreditCardIcon },
-];
-
-const USAGE_BREAKDOWN = [
-    { name: 'Marketing sends', value: 420 },
-    { name: 'Ad boosts', value: 280 },
-    { name: 'Data & storage', value: 160 },
 ];
 
 function UsageTooltip({ active, payload }) {
@@ -404,16 +400,52 @@ function AccountPageContent() {
     const [showConfirm, setShowConfirm] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState('');
+    const [billing, setBilling] = useState(null);
+    const [usageBreakdown, setUsageBreakdown] = useState([]);
 
     useEffect(() => {
         const frame = requestAnimationFrame(() => setMounted(true));
         return () => cancelAnimationFrame(frame);
     }, []);
 
+    useEffect(() => {
+        if (activeTab === 'billing' || activeTab === 'payments') {
+            authService.getVendorDashboard().then(setBilling).catch(() => setBilling(null));
+        }
+    }, [activeTab]);
+
+    useEffect(() => {
+        if (activeTab !== 'usage') return;
+        let cancelled = false;
+        Promise.all([
+            api.get('/api/campaigns').then((r) => r.campaigns || []).catch(() => []),
+            listAdCampaigns().then((r) => r.campaigns || []).catch(() => []),
+        ]).then(([campaigns, adCampaigns]) => {
+            if (cancelled) return;
+            const marketingSendsCents = campaigns
+                .filter((c) => c.status === 'SENT')
+                .reduce((sum, c) => sum + (c.priceCents || 0), 0);
+            const adBoostsCents = adCampaigns
+                .filter((c) => !['DRAFT', 'CANCELLED'].includes(c.status))
+                .reduce((sum, c) => sum + (c.priceCents || 0), 0);
+            setUsageBreakdown([
+                { name: 'Marketing sends', value: Math.round(marketingSendsCents) / 100 },
+                { name: 'Ad boosts', value: Math.round(adBoostsCents) / 100 },
+            ]);
+        });
+        return () => { cancelled = true; };
+    }, [activeTab]);
+
     const usageTotal = useMemo(
-        () => USAGE_BREAKDOWN.reduce((sum, item) => sum + item.value, 0),
-        []
+        () => usageBreakdown.reduce((sum, item) => sum + item.value, 0),
+        [usageBreakdown]
     );
+    const paidOutCents = useMemo(
+        () => (billing?.payouts || []).filter((p) => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0),
+        [billing]
+    );
+    const availableBalanceCents = Math.max(0, (billing?.aggregates?.netPayout || 0) - paidOutCents);
+    const lastPayout = billing?.payouts?.[0] || null;
     const showSettingsAside = activeTab === 'usage' || activeTab === 'billing' || activeTab === 'payments';
 
     const handleDelete = async () => {
@@ -476,34 +508,50 @@ function AccountPageContent() {
 
                     {activeTab === 'billing' && (
                         <SettingsSurface eyebrow="Money movement" title="Billing & payouts">
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
-                                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Next payout</p>
-                                    <p className="mt-2 text-2xl font-black text-white">$1,240.00</p>
-                                    <p className="mt-1 text-xs text-zinc-500">Est. arrival in 2 business days</p>
+                            {!billing ? (
+                                <p className="text-sm text-zinc-500">Loading real payout data...</p>
+                            ) : (
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
+                                        <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Available balance</p>
+                                        <p className="mt-2 text-2xl font-black text-white">${(availableBalanceCents / 100).toFixed(2)}</p>
+                                        <p className="mt-1 text-xs text-zinc-500">Net of PXI fees, not yet paid out by Stripe</p>
+                                    </div>
+                                    <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
+                                        <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Most recent payout</p>
+                                        <p className="mt-2 text-2xl font-black text-white">
+                                            {lastPayout ? `$${(lastPayout.amount / 100).toFixed(2)}` : '—'}
+                                        </p>
+                                        <p className="mt-1 text-xs text-zinc-500">
+                                            {lastPayout
+                                                ? `${lastPayout.status === 'paid' ? 'Paid' : 'Failed'}${lastPayout.arrivalDate ? ' · ' + new Date(lastPayout.arrivalDate).toLocaleDateString() : ''}`
+                                                : 'No payouts yet'}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
-                                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Pending balance</p>
-                                    <p className="mt-2 text-2xl font-black text-white">$386.50</p>
-                                    <p className="mt-1 text-xs text-zinc-500">From recent ticket sales</p>
-                                </div>
-                            </div>
+                            )}
                         </SettingsSurface>
                     )}
 
                     {activeTab === 'usage' && (
-                        <SettingsSurface eyebrow="Current cycle" title="Usage & costs">
-                            <div className="grid gap-3 sm:grid-cols-3">
-                                {USAGE_BREAKDOWN.map((item) => (
-                                    <div key={item.name} className="rounded-[1.25rem] bg-white/[0.035] p-4">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{item.name}</p>
-                                        <p className="mt-2 text-2xl font-black text-white">${item.value}</p>
+                        <SettingsSurface eyebrow="All-time" title="Usage & costs">
+                            {!usageBreakdown.length ? (
+                                <p className="text-sm text-zinc-500">No paid marketing or ad spend yet.</p>
+                            ) : (
+                                <>
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                        {usageBreakdown.map((item) => (
+                                            <div key={item.name} className="rounded-[1.25rem] bg-white/[0.035] p-4">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{item.name}</p>
+                                                <p className="mt-2 text-2xl font-black text-white">${item.value.toFixed(2)}</p>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-                            <p className="mt-4 text-sm text-zinc-400">
-                                Total spend <span className="font-bold text-white">${usageTotal}</span> this cycle.
-                            </p>
+                                    <p className="mt-4 text-sm text-zinc-400">
+                                        Total spend <span className="font-bold text-white">${usageTotal.toFixed(2)}</span> all-time (email campaigns + ad boosts).
+                                    </p>
+                                </>
+                            )}
                         </SettingsSurface>
                     )}
 
@@ -591,12 +639,12 @@ function AccountPageContent() {
 
                 {showSettingsAside && (
                     <aside className="space-y-4">
-                        {(activeTab === 'usage' || activeTab === 'billing') && (
+                        {activeTab === 'usage' && usageBreakdown.length > 0 && (
                             <DonutPanel
                                 title="Cost breakdown"
-                                data={USAGE_BREAKDOWN}
-                                centerLabel="This cycle"
-                                centerValue={`$${usageTotal}`}
+                                data={usageBreakdown}
+                                centerLabel="All-time"
+                                centerValue={`$${usageTotal.toFixed(2)}`}
                             />
                         )}
                         {(activeTab === 'billing' || activeTab === 'payments') && (

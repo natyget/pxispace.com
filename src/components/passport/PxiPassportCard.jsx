@@ -2,6 +2,7 @@
 
 import { useId, useMemo } from 'react';
 import Image from 'next/image';
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import { getPassportLevelDisplay, getOdysseyTierFromXp, getPassportLevelBadgeTheme } from '@/utils/odysseyTier';
 import { getLevelProgress, ODYSSEY_TIER_BANDS } from '@/components/passport/passportVisualParts';
 import { PassportMrzFooter } from '@/components/passport/PassportMrzFooter';
@@ -95,20 +96,25 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
 
     const { availableYears, selectedSeason, setSelectedSeason, filteredEvents } =
         usePassportSeason(attendedEvents);
+    // Shared with PassportStampsLayer so the map background translates in lockstep
+    // with the live-tracked season-pager drag — top half only, per design law.
+    const topDragX = useMotionValue(0);
 
     return (
         <PassportCardShell
             className={className}
             top={
                 <>
-                    <Image
-                        src="/images/map-world.png"
-                        alt=""
-                        fill
-                        unoptimized
-                        className="object-cover opacity-90"
-                        priority
-                    />
+                    <motion.div className="absolute inset-0" style={{ x: topDragX }}>
+                        <Image
+                            src="/images/map-world.png"
+                            alt=""
+                            fill
+                            unoptimized
+                            className="object-cover opacity-90"
+                            priority
+                        />
+                    </motion.div>
                     <div className="pointer-events-none absolute inset-x-0 top-0 bottom-[70px] z-[2] overflow-hidden opacity-90 pr-12">
                         <PassportStampsLayer
                             events={filteredEvents}
@@ -116,6 +122,7 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
                             selectedSeason={selectedSeason}
                             onSelectSeason={setSelectedSeason}
                             seasonPillsPointerEvents
+                            dragX={topDragX}
                         />
                     </div>
                 </>
@@ -129,11 +136,21 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
                         className="pointer-events-none absolute z-10 flex items-center justify-center"
                         style={{ top: 130, left: -185, width: 400, transform: 'rotate(-90deg)' }}
                     >
-                        <PassportDottedText
-                            text={`SEASON ${selectedSeason ?? new Date().getFullYear()}`}
-                            fontSize={24}
-                            width={300}
-                        />
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={selectedSeason ?? 'default'}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <PassportDottedText
+                                    text={`SEASON ${selectedSeason ?? new Date().getFullYear()}`}
+                                    fontSize={24}
+                                    width={300}
+                                />
+                            </motion.div>
+                        </AnimatePresence>
                     </div>
                 </>
             }

@@ -20,24 +20,29 @@ export default function PublicLayout({ children }) {
   }, [pathname]);
 
   const isLanding = pathname === '/' || pathname === '/home';
+  // The checkout step owns its own full-bleed chrome (back pill + immersive
+  // cover art) with no room reserved for the fixed marketing Navbar above it,
+  // so it's excluded from showNavbar below to avoid two competing headers.
+  const isEventCheckoutRoute = /^\/events(?:-old)?\/[^/]+\/checkout(?:\/|$)/.test(pathname || '');
   const showNavbar =
-    pathname === '/' ||
-    pathname === '/home' ||
-    pathname === '/about' ||
-    pathname === '/beta' ||
-    pathname === '/faq' ||
-    pathname === '/pricing' ||
-    pathname?.startsWith('/features') ||
-    pathname?.startsWith('/competitors') ||
-    pathname?.startsWith('/editorial') ||
-    pathname?.startsWith('/discover') ||
-    pathname === '/organizers' ||
-    pathname === '/platform' ||
-    pathname === '/book' ||
-    pathname?.startsWith('/events') ||
-    pathname?.startsWith('/u/') ||
-    pathname?.startsWith('/p/') ||
-    pathname?.startsWith('/album/');
+    (pathname === '/' ||
+      pathname === '/home' ||
+      pathname === '/about' ||
+      pathname === '/beta' ||
+      pathname === '/faq' ||
+      pathname === '/pricing' ||
+      pathname?.startsWith('/features') ||
+      pathname?.startsWith('/competitors') ||
+      pathname?.startsWith('/editorial') ||
+      pathname?.startsWith('/discover') ||
+      pathname === '/organizers' ||
+      pathname === '/platform' ||
+      pathname === '/book' ||
+      pathname?.startsWith('/events') ||
+      pathname?.startsWith('/u/') ||
+      pathname?.startsWith('/p/') ||
+      pathname?.startsWith('/album/')) &&
+    !isEventCheckoutRoute;
   const isPublicProfile = pathname?.startsWith('/u/');
   const isPublicPost = pathname?.startsWith('/p/');
   const isPublicAlbum = pathname?.startsWith('/album/');

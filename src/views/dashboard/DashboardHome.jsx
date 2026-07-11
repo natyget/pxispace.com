@@ -6,6 +6,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { eventsService } from '../../services/events';
 import { MicroChart, StatRow } from '@/components/dashboard/MetricCard';
+import { RechartsChart, ChartSkeleton } from '@/components/dashboard/ChartFrame';
+import { DASHBOARD_BRAND_COLOR, DASHBOARD_TOOLTIP_PROPS } from '@/components/dashboard/chartStyles';
 import { useNotifications } from '@/lib/dashboardStore';
 import { buildCommandCenterUpdates } from '@/services/commandCenter';
 import { helpRequestsService } from '@/services/helpRequests';
@@ -13,6 +15,28 @@ import { organizerAnalyticsService } from '@/services/organizerAnalytics';
 
 const DASHBOARD_RENDER_NOW = Date.now();
 const BASE_CHART_COLOR = '#d4d4d8';
+
+/** 'YYYY-MM-DD' -> 'Jun 7'. Falls back to the raw value for non-date labels. */
+function formatDayTick(value) {
+    if (!value) return '';
+    const [y, m, d] = String(value).split('-').map(Number);
+    if (!y || !m || !d) return String(value);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    if (Number.isNaN(date.getTime())) return String(value);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+/** Best-effort day label for a trailing-N-day series point that has no explicit date field. */
+function fallbackDayLabel(index, total, now = DASHBOARD_RENDER_NOW) {
+    const daysAgo = Math.max(0, total - index - 1);
+    const date = new Date(now);
+    date.setUTCDate(date.getUTCDate() - daysAgo);
+    return date.toISOString().slice(0, 10);
+}
+
+function formatRevenueTick(value) {
+    return `$${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
 
 function soldTicketsExcludingOrganizer(count) {
     return Math.max(0, (count ?? 0) - 1);
@@ -200,6 +224,14 @@ export default function DashboardHome() {
             },
         };
     }, [events, vendorData, overview]);
+    const revenueTrend = useMemo(() => {
+        const revenueByDay = overview?.last30d?.revenueByDay || [];
+        return revenueByDay.map((d, index) => ({
+            date: d.date || d.day || fallbackDayLabel(index, revenueByDay.length),
+            value: (d.netCents ?? d.grossCents ?? 0) / 100,
+        }));
+    }, [overview]);
+    const hasRevenueTrend = revenueTrend.some((point) => point.value > 0);
     const updates = useMemo(
         () => buildCommandCenterUpdates({ events, unreadCount: notificationCount, vendorDashboard: vendorData }),
         [events, notificationCount, vendorData]
@@ -374,6 +406,72 @@ export default function DashboardHome() {
                     </section>
                 </aside>
             </div>
+
+            {isVendorDashboard ? (
+                <section className="dashboard-surface rounded-[1.75rem] p-5 md:p-6">
+                    <SurfaceHeader
+                        eyebrow="Trend"
+                        title="Revenue"
+                        action={<span className="text-[12px] font-bold uppercase tracking-wide text-white/45">Last 30 days</span>}
+                    />
+                    <div className="mt-5 h-[220px] md:h-[260px]">
+                        {metricsLoading ? (
+                            <ChartSkeleton />
+                        ) : !hasRevenueTrend ? (
+                            <div className="flex h-full items-center justify-center rounded-2xl bg-white/[0.03]">
+                                <p className="text-xs font-bold uppercase tracking-widest text-white/30">No revenue data yet</p>
+                            </div>
+                        ) : (
+                            <RechartsChart>
+                                {({ ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip }) => (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={revenueTrend} margin={{ top: 12, right: 12, left: -8, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="dashboardRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor={DASHBOARD_BRAND_COLOR} stopOpacity={0.38} />
+                                                    <stop offset="100%" stopColor={DASHBOARD_BRAND_COLOR} stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                                            <XAxis
+                                                dataKey="date"
+                                                tickFormatter={formatDayTick}
+                                                interval={revenueTrend.length > 8 ? Math.ceil(revenueTrend.length / 8) - 1 : 0}
+                                                tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 11 }}
+                                                axisLine={false}
+                                                tickLine={false}
+                                            />
+                                            <YAxis
+                                                tickFormatter={formatRevenueTick}
+                                                tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 11 }}
+                                                axisLine={false}
+                                                tickLine={false}
+                                                width={56}
+                                            />
+                                            <Tooltip
+                                                {...DASHBOARD_TOOLTIP_PROPS}
+                                                labelFormatter={formatDayTick}
+                                                formatter={(value) => [formatRevenueTick(value), 'Revenue']}
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="value"
+                                                name="Revenue"
+                                                stroke={DASHBOARD_BRAND_COLOR}
+                                                strokeWidth={2.2}
+                                                fill="url(#dashboardRevenueGradient)"
+                                                dot={false}
+                                                activeDot={{ r: 4, fill: '#ffffff', stroke: '#09090b' }}
+                                                isAnimationActive={false}
+                                            />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                )}
+                            </RechartsChart>
+                        )}
+                    </div>
+                </section>
+            ) : null}
 
             <section className="dashboard-surface rounded-[1.75rem] p-5 md:p-6">
                 <SurfaceHeader eyebrow="Updates" title="PXI updates" />

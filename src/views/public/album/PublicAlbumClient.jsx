@@ -19,8 +19,9 @@ import {
   mergeOlderPublicThreadPage,
   timelineRowKey,
 } from './buildPublicAlbumTimeline';
-import PublicAlbumDetailsPanel from './PublicAlbumDetailsPanel';
-import PublicAlbumDetailsSheet from './PublicAlbumDetailsSheet';
+import EventDetailsModal from '@/components/events/EventDetailsModal';
+import PublicAlbumDetailsTrigger from './PublicAlbumDetailsTrigger';
+import { buildAlbumEventDetails } from './albumEventDetailsAdapter';
 import PublicAlbumJoinEventButton from './PublicAlbumJoinEventButton';
 import PublicAlbumParticipants from './PublicAlbumParticipants';
 import IphonePane from './IphonePane';
@@ -57,6 +58,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   const [threadFocusOpen, setThreadFocusOpen] = useState(false);
   const [threadFocusIndex, setThreadFocusIndex] = useState(0);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [desktopDetailsOpen, setDesktopDetailsOpen] = useState(false);
   const [threadHasMore, setThreadHasMore] = useState(false);
   const [loadingMoreThread, setLoadingMoreThread] = useState(false);
   const [findMyselfOpen, setFindMyselfOpen] = useState(false);
@@ -86,6 +88,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
     [threadTimeline],
   );
   const openInAppUrl = albumId ? `pxi://album/${albumId}` : null;
+  const albumDetails = useMemo(() => buildAlbumEventDetails(album, albumId), [album, albumId]);
   const threadScrollActive = tab === 'thread' && !contentLoading;
   const activeThreadVideoId = useAlbumThreadActiveVideo({
     scrollRef: threadListRef,
@@ -524,27 +527,39 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
 
       </div>
 
-      {/* Right: album details — desktop only; mobile uses three-dot sheet */}
+      {/* Right: album details — desktop only; mobile uses three-dot sheet. A compact
+          trigger card (no duplicate chrome header) opens the shared EventDetailsModal
+          as a proper floating modal, instead of an always-expanded inline pane. */}
       <div className="album-details-pane">
         <div className="album-details-shell">
-          <div className="album-details-chrome relative z-[5] w-full shrink-0 bg-black border-b border-white/5">
-            <div className="relative flex h-14 items-center justify-center">
-              <h2 className="truncate px-10 text-center text-xl font-black uppercase tracking-[0.24em] text-white">
-                Event Details
-              </h2>
-            </div>
-          </div>
-          <div className="album-pane-scroll min-h-0 flex-1 overflow-y-auto no-scrollbar">
-            <PublicAlbumDetailsPanel album={album} albumId={albumId} />
+          <div className="album-pane-scroll min-h-0 flex-1 overflow-y-auto no-scrollbar p-4">
+            <PublicAlbumDetailsTrigger
+              title={albumDetails.event?.title}
+              coverSrc={albumDetails.event?.image}
+              schedule={albumDetails.event?.schedule}
+              location={albumDetails.event?.location}
+              onOpen={() => setDesktopDetailsOpen(true)}
+            />
           </div>
         </div>
       </div>
 
-      <PublicAlbumDetailsSheet
+      <EventDetailsModal
+        open={desktopDetailsOpen}
+        onClose={() => setDesktopDetailsOpen(false)}
+        presentation="modal"
+        event={albumDetails.event}
+        primaryAction={albumDetails.primaryAction}
+        secondaryAction={albumDetails.secondaryAction}
+      />
+
+      <EventDetailsModal
         open={detailsOpen}
         onClose={() => setDetailsOpen(false)}
-        album={album}
-        albumId={albumId}
+        presentation="sheet"
+        event={albumDetails.event}
+        primaryAction={albumDetails.primaryAction}
+        secondaryAction={albumDetails.secondaryAction}
       />
 
       {lightboxOpen && tab === 'gallery' ? (

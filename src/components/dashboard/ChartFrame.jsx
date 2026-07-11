@@ -1,10 +1,14 @@
 'use client';
 
+import { useId, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import {
+    DASHBOARD_BRAND_COLOR,
     DASHBOARD_TIMEFRAMES,
+    DASHBOARD_TOOLTIP_PROPS,
     TIME_SERIES_KEYS,
     TIME_SERIES_STYLES,
+    getDashboardChartShade,
     getTimeSeriesProps,
 } from './chartStyles';
 
@@ -155,5 +159,241 @@ export function RechartsChart({ children, className = '' }) {
         <ChartFrame className={className}>
             <LazyRecharts>{children}</LazyRecharts>
         </ChartFrame>
+    );
+}
+
+/* Same lazy-recharts pattern as RechartsChart, but with a sparkline-sized loader
+   (ChartSkeleton's 220px minimum would blow out metric cards). */
+const LazySparkRecharts = dynamic(
+    () => import('recharts').then((module) => {
+        const recharts = module;
+        return function SparkRechartsModule({ children }) {
+            return children(recharts);
+        };
+    }),
+    {
+        ssr: false,
+        loading: () => <div className="h-full w-full animate-pulse rounded-lg bg-white/[0.05]" />,
+    }
+);
+
+function SparkEmpty({ height, label }) {
+    return (
+        <div
+            className="flex w-full items-center justify-center rounded-lg bg-white/[0.03]"
+            style={{ height }}
+        >
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">{label}</span>
+        </div>
+    );
+}
+
+/**
+ * Framed mini recharts area: the dashboard-wide sparkline. Lazy-loads recharts
+ * (same pattern as RechartsChart) so metric grids stay light, uses the brand
+ * gradient + shared tooltip, and renders a "No data yet" placeholder instead of
+ * a flat zero line when the series is empty.
+ *
+ * `points` is a plain number array; `labels` (optional, same length) feeds the
+ * tooltip header — pass ISO dates plus `formatLabel` for day series.
+ */
+export function SparkAreaChart({
+    points = [],
+    labels = [],
+    color = DASHBOARD_BRAND_COLOR,
+    height = 48,
+    name = 'Value',
+    formatValue = (value) => Number(value).toLocaleString('en-US'),
+    formatLabel = (label) => label,
+    emptyLabel = 'No data yet',
+    className = '',
+}) {
+    const gradientId = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+    const data = useMemo(
+        () => (Array.isArray(points) ? points : [])
+            .map((point, index) => ({
+                index,
+                label: labels?.[index] ?? null,
+                value: Number.isFinite(Number(point)) ? Number(point) : 0,
+            })),
+        [points, labels]
+    );
+    const hasData = data.length > 0 && data.some((point) => point.value > 0);
+
+    if (!hasData) {
+        return (
+            <div className={className}>
+                <SparkEmpty height={height} label={emptyLabel} />
+            </div>
+        );
+    }
+
+    return (
+        <div className={`w-full overflow-hidden rounded-lg ${className}`.trim()} style={{ height }}>
+            <LazySparkRecharts>
+                {({ ResponsiveContainer, AreaChart, Area, Tooltip }) => (
+                    <ResponsiveContainer width="100%" height={height}>
+                        <AreaChart data={data} margin={{ top: 4, right: 2, bottom: 2, left: 2 }}>
+                            <defs>
+                                <linearGradient id={`spark-${gradientId}`} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+                                    <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+                                </linearGradient>
+                            </defs>
+                            <Tooltip
+                                {...DASHBOARD_TOOLTIP_PROPS}
+                                labelFormatter={(index) => {
+                                    const point = data[index];
+                                    return point?.label != null ? formatLabel(point.label) : '';
+                                }}
+                                formatter={(value) => [formatValue(value), name]}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="value"
+                                name={name}
+                                stroke={color}
+                                strokeWidth={1.8}
+                                fill={`url(#spark-${gradientId})`}
+                                dot={false}
+                                activeDot={{ r: 3, fill: '#ffffff', stroke: '#09090b' }}
+                                isAnimationActive={false}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                )}
+            </LazySparkRecharts>
+        </div>
+    );
+}
+
+/**
+ * Framed mini recharts bar chart: the sparkline-sized bar variant (replaces the old
+ * hand-rolled flex/div bars). Same lazy-recharts + tooltip + empty-state contract as
+ * `SparkAreaChart`.
+ */
+export function SparkBarChart({
+    points = [],
+    labels = [],
+    color = DASHBOARD_BRAND_COLOR,
+    height = 40,
+    name = 'Value',
+    formatValue = (value) => Number(value).toLocaleString('en-US'),
+    formatLabel = (label) => label,
+    emptyLabel = 'No data yet',
+    className = '',
+}) {
+    const data = useMemo(
+        () => (Array.isArray(points) ? points : [])
+            .map((point, index) => ({
+                index,
+                label: labels?.[index] ?? null,
+                value: Number.isFinite(Number(point)) ? Number(point) : 0,
+            })),
+        [points, labels]
+    );
+    const hasData = data.length > 0 && data.some((point) => point.value > 0);
+
+    if (!hasData) {
+        return (
+            <div className={className}>
+                <SparkEmpty height={height} label={emptyLabel} />
+            </div>
+        );
+    }
+
+    return (
+        <div className={`w-full overflow-hidden rounded-lg ${className}`.trim()} style={{ height }}>
+            <LazySparkRecharts>
+                {({ ResponsiveContainer, BarChart, Bar, Tooltip }) => (
+                    <ResponsiveContainer width="100%" height={height}>
+                        <BarChart data={data} margin={{ top: 4, right: 2, bottom: 2, left: 2 }} barCategoryGap="22%">
+                            <Tooltip
+                                {...DASHBOARD_TOOLTIP_PROPS}
+                                cursor={{ fill: 'rgba(255,255,255,0.06)' }}
+                                labelFormatter={(index) => {
+                                    const point = data[index];
+                                    return point?.label != null ? formatLabel(point.label) : '';
+                                }}
+                                formatter={(value) => [formatValue(value), name]}
+                            />
+                            <Bar
+                                dataKey="value"
+                                name={name}
+                                fill={color}
+                                radius={[3, 3, 0, 0]}
+                                isAnimationActive={false}
+                            />
+                        </BarChart>
+                    </ResponsiveContainer>
+                )}
+            </LazySparkRecharts>
+        </div>
+    );
+}
+
+/**
+ * Framed mini recharts donut: the sparkline-sized segment-share variant (replaces the
+ * old conic-gradient span). `points` is a plain number array of segment values; `labels`
+ * (optional, same length) names each segment for the tooltip + legend dots.
+ */
+export function SparkDonutChart({
+    points = [],
+    labels = [],
+    color = DASHBOARD_BRAND_COLOR,
+    size = 48,
+    formatValue = (value) => Number(value).toLocaleString('en-US'),
+    emptyLabel = 'No data yet',
+    className = '',
+}) {
+    const data = useMemo(
+        () => (Array.isArray(points) ? points : [])
+            .map((point, index) => ({
+                label: labels?.[index] ?? `Segment ${index + 1}`,
+                value: Number.isFinite(Number(point)) ? Number(point) : 0,
+            }))
+            .filter((point) => point.value > 0),
+        [points, labels]
+    );
+    const hasData = data.length > 0;
+
+    if (!hasData) {
+        return (
+            <div className={className}>
+                <SparkEmpty height={size} label={emptyLabel} />
+            </div>
+        );
+    }
+
+    return (
+        <div className={`overflow-hidden rounded-full ${className}`.trim()} style={{ width: size, height: size }}>
+            <LazySparkRecharts>
+                {({ ResponsiveContainer, PieChart, Pie, Cell, Tooltip }) => (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Tooltip
+                                {...DASHBOARD_TOOLTIP_PROPS}
+                                formatter={(value, entryName) => [formatValue(value), entryName]}
+                            />
+                            <Pie
+                                data={data}
+                                dataKey="value"
+                                nameKey="label"
+                                cx="50%"
+                                cy="50%"
+                                innerRadius="62%"
+                                outerRadius="100%"
+                                stroke="none"
+                                isAnimationActive={false}
+                            >
+                                {data.map((entry, index) => (
+                                    <Cell key={entry.label} fill={index === 0 ? color : getDashboardChartShade(index)} />
+                                ))}
+                            </Pie>
+                        </PieChart>
+                    </ResponsiveContainer>
+                )}
+            </LazySparkRecharts>
+        </div>
     );
 }

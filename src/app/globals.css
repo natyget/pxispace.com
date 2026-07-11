@@ -101,10 +101,10 @@ html, body {
 
 /* Tailwind v4 @theme: custom colors for utilities (bg-pxi-purple, text-pxi-dark, etc.) */
 @theme {
-  --color-pxi-purple: #f01fff;
-  --color-newpurple-base: #f01fff;
-  /** `#f01fff` at 80% opacity */
-  --color-newpurple: rgb(240 31 255 / 0.8);
+  --color-pxi-purple: #d84aff;
+  --color-newpurple-base: #d84aff;
+  /** `#d84aff` at 80% opacity */
+  --color-newpurple: rgb(216 74 255 / 0.8);
   --color-pxi-dark: #050505;
   --color-pxi-charcoal: #121212;
   --color-pxi-violet: #2d1b4e;
@@ -149,9 +149,9 @@ html, body {
     --glow-pink: rgba(236, 72, 153, 0.4);
     --glow-purple: rgba(168, 85, 247, 0.4);
     --glow-cyan: rgba(6, 182, 212, 0.4);
-    --pxi-purple: #f01fff;
-    --newpurple-base: #f01fff;
-    --newpurple: rgb(240 31 255 / 0.8);
+    --pxi-purple: #d84aff;
+    --newpurple-base: #d84aff;
+    --newpurple: rgb(216 74 255 / 0.8);
     --pxi-dark: #050505;
     --pxi-charcoal: #121212;
     --pxi-violet: #2d1b4e;
@@ -175,11 +175,11 @@ html, body {
     --dashboard-text-primary: #f2f2f4;
     --dashboard-text-secondary: #bbbcc3;
     --dashboard-text-muted: #8b8d98;
-    --dashboard-accent: #f01fff;
-    --dashboard-accent-soft: rgba(240, 31, 255, 0.2);
-    --dashboard-brand-neon: #f01fff;
-    --dashboard-brand-glow: 0 0 10px rgba(240, 31, 255, 0.75), 0 0 24px rgba(240, 31, 255, 0.42);
-    --dashboard-blur-gradient: radial-gradient(circle at 20% 0%, rgba(240, 31, 255, 0.12), transparent 48%),
+    --dashboard-accent: #d84aff;
+    --dashboard-accent-soft: rgba(216, 74, 255, 0.2);
+    --dashboard-brand-neon: #d84aff;
+    --dashboard-brand-glow: 0 0 10px rgba(216, 74, 255, 0.75), 0 0 24px rgba(216, 74, 255, 0.42);
+    --dashboard-blur-gradient: radial-gradient(circle at 20% 0%, rgba(216, 74, 255, 0.12), transparent 48%),
       radial-gradient(circle at 85% 18%, rgba(115, 119, 255, 0.1), transparent 42%);
     --dashboard-space-1: 0.25rem;
     --dashboard-space-2: 0.5rem;
@@ -595,7 +595,7 @@ html, body {
 
   .text-neon {
     color: var(--pxi-purple);
-    text-shadow: 0 0 10px rgba(240, 31, 255, 0.6), 0 0 25px rgba(240, 31, 255, 0.4);
+    text-shadow: 0 0 10px rgba(216, 74, 255, 0.6), 0 0 25px rgba(216, 74, 255, 0.4);
   }
 
   .text-neon-orange {
@@ -610,7 +610,7 @@ html, body {
   }
 
   .bloom-purple {
-    box-shadow: 0 0 25px 2px rgba(240, 31, 255, 0.12);
+    box-shadow: 0 0 25px 2px rgba(216, 74, 255, 0.12);
   }
 
   .glass {
@@ -667,7 +667,7 @@ html, body {
   .pxi-home-purple {
     background-color: var(--color-pxi-purple);
     color: #fff;
-    box-shadow: 0 0 20px rgba(240, 31, 255, 0.4);
+    box-shadow: 0 0 20px rgba(216, 74, 255, 0.4);
   }
 
   /* Legal hub page — neon TL;DR / CTA cards (from pxi-legal-hub) */
@@ -777,16 +777,18 @@ html, body {
   width: 100%;
   height: 3.5rem;
   padding: 0 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 9999px;
+  background: rgba(26, 26, 26, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: none;
+  border-radius: 20px;
   --PhoneInput-color--focus: #B026FF;
   --PhoneInputCountryFlag-borderColor: rgba(255, 255, 255, 0.2);
 }
 
 .verify-phone-input-wrapper .PhoneInput:focus-within {
-  border-color: #B026FF;
   outline: none;
+  box-shadow: 0 0 0 1.5px rgba(216, 74, 255, 0.55);
 }
 
 .verify-phone-input-wrapper .PhoneInputInput {
@@ -1438,7 +1440,7 @@ html, body {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(240, 31, 255, 0.5),
+    rgba(216, 74, 255, 0.5),
     rgba(255, 90, 31, 0.35),
     transparent
   );
@@ -1453,13 +1455,13 @@ html, body {
   background: #ffffff;
   color: #050505;
   font-weight: 700;
-  box-shadow: 0 0 24px rgba(240, 31, 255, 0.25);
+  box-shadow: 0 0 24px rgba(216, 74, 255, 0.25);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .glow-cta:hover {
   transform: translateY(-1px);
-  box-shadow: 0 0 34px rgba(240, 31, 255, 0.45);
+  box-shadow: 0 0 34px rgba(216, 74, 255, 0.45);
   background: #f4f4f5;
 }
 
