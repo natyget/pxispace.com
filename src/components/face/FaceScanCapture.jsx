@@ -1,36 +1,38 @@
 'use client';
 
-// PXI — In-browser face scan (camera preview + local pxi-face-v1 embedding).
-// Raw frames never leave the device: the camera stream feeds the local model
-// and only the numeric vector is handed to `onVector`.
+// PXI — Guided face capture (camera preview + on-device framing analysis).
+// The local model (facemesh) is used ONLY for live guidance gates — framing,
+// lighting, head angle. Captured frames are handed to `onFrames` as JPEG
+// data-URLs; the caller sends them to the PXI server, which computes the
+// pxi-face-v2 embedding in memory and never stores the images.
 //
 // ID-verification-style guided capture: a live analysis loop checks framing,
 // lighting and head angle (facemesh rotation) for each guided pose and
 // AUTO-CAPTURES once the pose is held steady — with live corrective guidance
 // ("move closer", "turn a bit more") like passport/ID scan apps. A manual
 // capture button remains as fallback (and for devices where mesh can't load).
-//
-// Multi-angle enrollment: one embedding per guided pose with per-pose retakes and
-// a final review step. The averaged vector is emitted via the existing
-// `onVector(vector, FACE_MODEL_ID, extras)` contract; `extras.poseVectors` carries
-// the individual pose embeddings for backends that learn from them.
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  extractFaceVector,
-  averageFaceVectors,
-  analyzeFace,
-  warmupFaceEngine,
-  FACE_MODEL_ID,
-} from '@/lib/face/faceEmbedding';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { analyzeFace, warmupFaceEngine } from '@/lib/face/faceEmbedding';
 
-// One embedding per guided pose. Averaging a few angles makes the stored vector
+// One frame per guided pose. Multiple angles make the server-side enrollment
 // far more robust to head rotation at match time.
-const POSES = [
+const ALL_POSES = [
   { key: 'center', label: 'Straight on', prompt: 'Look straight at the camera', side: false },
   { key: 'left', label: 'Slightly left', prompt: 'Slowly turn your head slightly left', side: true },
   { key: 'right', label: 'Slightly right', prompt: 'Now turn your head slightly right', side: true },
 ];
+
+/** Snapshot the current (unmirrored) camera frame as a JPEG data-URL. */
+function captureFrame(video) {
+  const w = video.videoWidth || 640;
+  const h = video.videoHeight || 640;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+  return canvas.toDataURL('image/jpeg', 0.88);
+}
 
 const CAPTURED_FLASH_MS = 1400;
 const ANALYZE_INTERVAL_MS = 220;
@@ -89,7 +91,9 @@ function evaluateGates(a, pose, oppositeSideSign) {
   return { ok: true, message: 'Perfect — hold still…' };
 }
 
-export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan my face' }) {
+export default function FaceScanCapture({ onFrames, onCancel, ctaLabel = 'Scan my face', poseCount = 3 }) {
+  // Guest scans need a single straight-on frame; enrollment uses all poses.
+  const POSES = useMemo(() => ALL_POSES.slice(0, Math.max(1, poseCount)), [poseCount]);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const flashTimerRef = useRef(null);
@@ -97,8 +101,8 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState(null);
   const [startAttempt, setStartAttempt] = useState(0);
-  // Per-pose captured vectors (null until that pose is captured).
-  const [captures, setCaptures] = useState(() => POSES.map(() => null));
+  // Per-pose captured frames (null until that pose is captured).
+  const [captures, setCaptures] = useState(() => ALL_POSES.slice(0, Math.max(1, poseCount)).map(() => null));
   const [activePose, setActivePose] = useState(0);
   const [mode, setMode] = useState('capture'); // capture | review
   const [justCaptured, setJustCaptured] = useState(null); // pose index, transient
@@ -180,25 +184,28 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
       setScanning(true);
       setScanError(null);
       try {
-        // Sample a few frames and keep the first confident face for this pose
-        let vector = null;
-        for (let attempt = 0; attempt < 3 && !vector; attempt++) {
-          vector = await extractFaceVector(videoRef.current);
-          if (!vector) await new Promise((r) => setTimeout(r, 350));
+        // Confirm a face is actually in frame before keeping the shot (manual
+        // captures skip the auto-capture gates, so re-check here).
+        let present = false;
+        for (let attempt = 0; attempt < 3 && !present; attempt++) {
+          const a = await analyzeFace(videoRef.current).catch(() => null);
+          present = !!a && a.count > 0;
+          if (!present) await new Promise((r) => setTimeout(r, 350));
         }
-        if (!vector) {
+        if (!present) {
           setScanError('No face detected. Center your face in the frame with good lighting and try again.');
           setScanning(false);
           scanningRef.current = false;
           return;
         }
+        const frame = captureFrame(videoRef.current);
 
         // Remember which way the head was turned for opposite-direction checks.
         if (POSES[poseIndex].side && lastYawSignRef.current != null) {
           sideSignsRef.current[poseIndex] = lastYawSignRef.current;
         }
 
-        const nextCaptures = capturesRef.current.map((v, i) => (i === poseIndex ? vector : v));
+        const nextCaptures = capturesRef.current.map((v, i) => (i === poseIndex ? frame : v));
         setCaptures(nextCaptures);
         setScanning(false);
         scanningRef.current = false;
@@ -212,9 +219,14 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
 
         const nextEmpty = nextCaptures.findIndex((v) => !v);
         if (nextEmpty === -1) {
-          // All poses captured — review before anything is saved.
           stopCamera();
-          setMode('review');
+          if (POSES.length === 1) {
+            // Single-frame flows (guest scan) skip review — hand off directly.
+            onFrames(nextCaptures.filter(Boolean));
+          } else {
+            // All poses captured — review before anything is sent.
+            setMode('review');
+          }
         } else {
           setActivePose(nextEmpty);
         }
@@ -224,7 +236,7 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
         scanningRef.current = false;
       }
     },
-    [stopCamera],
+    [stopCamera, POSES, onFrames],
   );
 
   // ── Live guidance + auto-capture loop ───────────────────────────────────────
@@ -292,13 +304,12 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
   }, []);
 
   const handleSave = useCallback(() => {
-    const vectors = captures.filter(Boolean);
-    if (vectors.length !== POSES.length) return;
-    // Average the per-pose L2-normalized embeddings, re-normalize, emit ONE
-    // vector on the existing contract; the raw pose vectors ride along so the
-    // backend can keep them as per-angle match exemplars.
-    onVector(averageFaceVectors(vectors), FACE_MODEL_ID, { poseVectors: vectors });
-  }, [captures, onVector]);
+    const frames = captures.filter(Boolean);
+    if (frames.length !== POSES.length) return;
+    // Hand the captured pose frames to the caller — the server derives the
+    // enrollment vector (+ per-angle exemplars) and discards the images.
+    onFrames(frames);
+  }, [captures, onFrames, POSES.length]);
 
   const pose = POSES[Math.min(activePose, POSES.length - 1)];
 
@@ -363,8 +374,8 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
         ) : null}
 
         <p className="mt-5 max-w-xs text-center text-[11px] leading-relaxed text-zinc-500">
-          Your scan is processed entirely on this device. The photos are destroyed instantly —
-          only an irreversible mathematical vector is used to find your shots.
+          Your captures are sent securely to PXI, converted once into an irreversible
+          mathematical vector, and the photos are immediately destroyed — never stored.
         </p>
       </div>
     );
@@ -502,8 +513,8 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
       ) : null}
 
       <p className="mt-5 max-w-xs text-center text-[11px] leading-relaxed text-zinc-500">
-        Your scan is processed entirely on this device. The photo is destroyed instantly —
-        only an irreversible mathematical vector is used to find your shots.
+        Your capture is sent securely to PXI, converted once into an irreversible
+        mathematical vector, and the photo is immediately destroyed — never stored.
       </p>
     </div>
   );

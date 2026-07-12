@@ -1,10 +1,11 @@
 'use client';
 
 // Chrome-free face-scan page loaded inside the PXI mobile app's on-device WebView
-// for biometric enrollment. The camera + pxi-face-v1 embedding run entirely on the
-// device inside this WebView; the derived vector is handed back to the native app
-// via ReactNativeWebView.postMessage. No image data ever leaves the device and this
-// page performs no network calls with biometric content.
+// for biometric enrollment (pxi-face-v2). The camera + guided capture run inside
+// this WebView; the captured pose FRAMES are handed back to the native app via
+// ReactNativeWebView.postMessage, and the app submits them to the PXI server,
+// which derives the embedding in memory and never stores the images. This page
+// itself performs no network calls with biometric content.
 
 import React, { useCallback, useState } from 'react';
 import FaceScanCapture from '@/components/face/FaceScanCapture';
@@ -20,12 +21,11 @@ export default function FaceScanEmbedPage() {
     }
   }, []);
 
-  const handleVector = useCallback(
-    (vector, modelId, extras) => {
+  const handleFrames = useCallback(
+    (images) => {
       setDone(true);
-      // poseVectors: the individual guided-pose embeddings — the backend stores
-      // them as per-angle match exemplars alongside the averaged vector.
-      postToApp({ type: 'PXI_FACE_VECTOR', vector, modelId, poseVectors: extras?.poseVectors });
+      // The app PUTs these to /api/face/enrollment with its auth token.
+      postToApp({ type: 'PXI_FACE_FRAMES', images });
     },
     [postToApp],
   );
@@ -48,7 +48,7 @@ export default function FaceScanEmbedPage() {
           <h1 className="mb-8 text-center text-xl font-black uppercase tracking-[0.18em]">
             Center your <span className="text-pxi-purple">face</span>
           </h1>
-          <FaceScanCapture onVector={handleVector} onCancel={handleCancel} ctaLabel="Scan my face" />
+          <FaceScanCapture onFrames={handleFrames} onCancel={handleCancel} ctaLabel="Scan my face" />
         </>
       )}
     </div>
