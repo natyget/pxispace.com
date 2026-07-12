@@ -50,4 +50,10 @@ export const musicService = {
 
   /** POST /api/music/playlist-link/:token (public) — DJ submits a playlist URL */
   submitPlaylistLink: (token, url) => api.post(`/api/music/playlist-link/${token}`, { url }),
+
+  /** GET /api/music/lineup-playlist/:token (public) — shared lineup playlist landing { playlist, event } */
+  getLineupPlaylistLanding: (token) => api.get(`/api/music/lineup-playlist/${token}`),
+
+  /** GET /api/music/events/:eventId/playlists (public/auth) — { playlists, averageScore } */
+  getLineupPlaylists: (eventId) => api.get(`/api/music/events/${eventId}/playlists`),
 };
