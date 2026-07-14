@@ -1,3 +1,5 @@
+import { isAdminTierUser } from '@/lib/accountTier';
+
 const PXI_DOMAIN = 'pxispace.com';
 const SUPER_ADMIN_EMAIL = 'natan@pxispace.com';
 
@@ -11,7 +13,7 @@ export function isPxiEmployee(user) {
 }
 
 export function canAccessAdminDashboard(user) {
-    return user?.accountTier === 'ADMIN' || isPxiEmployee(user);
+    return isAdminTierUser(user) || isPxiEmployee(user);
 }
 
 /**
@@ -23,7 +25,7 @@ export function adminRoleOf(user) {
     if (!user) return 'NONE';
     if (String(user.email || '').trim().toLowerCase() === SUPER_ADMIN_EMAIL) return 'SUPER_ADMIN';
     if (user.adminRole && ROLE_RANK[user.adminRole] != null) return user.adminRole;
-    if (user.accountTier === 'ADMIN' || isPxiEmployee(user)) return 'ADMIN';
+    if (isAdminTierUser(user) || isPxiEmployee(user)) return 'ADMIN';
     return 'NONE';
 }
 

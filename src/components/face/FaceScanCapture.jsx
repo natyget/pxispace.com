@@ -23,18 +23,25 @@ const ALL_POSES = [
   { key: 'right', label: 'Slightly right', prompt: 'Now turn your head slightly right', side: true },
 ];
 
+// Keep payloads small for the RN WebView bridge (full-res data-URLs used to hang).
+const MAX_CAPTURE_DIM = 480;
+const JPEG_QUALITY = 0.68;
+
 /** Snapshot the current (unmirrored) camera frame as a JPEG data-URL. */
 function captureFrame(video) {
-  const w = video.videoWidth || 640;
-  const h = video.videoHeight || 640;
+  const srcW = video.videoWidth || 640;
+  const srcH = video.videoHeight || 640;
+  const scale = Math.min(1, MAX_CAPTURE_DIM / Math.max(srcW, srcH));
+  const w = Math.max(1, Math.round(srcW * scale));
+  const h = Math.max(1, Math.round(srcH * scale));
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
   canvas.getContext('2d').drawImage(video, 0, 0, w, h);
-  return canvas.toDataURL('image/jpeg', 0.88);
+  return canvas.toDataURL('image/jpeg', JPEG_QUALITY);
 }
 
-const CAPTURED_FLASH_MS = 1400;
+const CAPTURED_FLASH_MS = 1200;
 const ANALYZE_INTERVAL_MS = 220;
 // Pose must be held for this many consecutive good samples before auto-capture.
 const STABLE_SAMPLES = 3;
@@ -277,7 +284,7 @@ export default function FaceScanCapture({ onFrames, onCancel, ctaLabel = 'Scan m
       disposed = true;
       clearInterval(timer);
     };
-  }, [mode, cameraState, capturePose]);
+  }, [mode, cameraState, capturePose, POSES]);
 
   const handleRetakePose = useCallback((index) => {
     setCaptures((prev) => prev.map((v, i) => (i === index ? null : v)));
@@ -301,7 +308,7 @@ export default function FaceScanCapture({ onFrames, onCancel, ctaLabel = 'Scan m
     setGuide(null);
     setMode('capture');
     setStartAttempt((n) => n + 1);
-  }, []);
+  }, [POSES]);
 
   const handleSave = useCallback(() => {
     const frames = captures.filter(Boolean);
@@ -317,31 +324,21 @@ export default function FaceScanCapture({ onFrames, onCancel, ctaLabel = 'Scan m
   if (mode === 'review') {
     return (
       <div className="flex flex-col items-center">
-        <h3 className="text-center text-sm font-black uppercase tracking-[0.2em] text-white">
-          {POSES.length}/{POSES.length} captured
-        </h3>
-        <p className="mt-2 max-w-xs text-center text-xs text-zinc-400">
-          Retake any angle, or save to finish.
+        <p className="text-center text-sm text-zinc-400">
+          {POSES.length} poses ready — retake any, or save.
         </p>
 
         <ul className="mt-5 w-full max-w-xs space-y-2">
           {POSES.map((p, i) => (
-            <li
-              key={p.key}
-              className="flex items-center justify-between gap-3 rounded-2xl bg-white/[0.06] px-4 py-3"
-            >
-              <span className="flex items-center gap-3">
-                <span className="flex size-6 items-center justify-center rounded-full bg-pxi-purple text-[11px] font-black text-white">
-                  ✓
-                </span>
-                <span className="text-xs font-bold uppercase tracking-widest text-white">
-                  {p.label}
-                </span>
+            <li key={p.key} className="flex items-center justify-between gap-3 px-1 py-2">
+              <span className="flex items-center gap-2.5">
+                <span className="size-2 rounded-full bg-emerald-400" aria-hidden />
+                <span className="text-sm text-white">{p.label}</span>
               </span>
               <button
                 type="button"
                 onClick={() => handleRetakePose(i)}
-                className="rounded-full bg-white/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-300 transition hover:bg-white/20 hover:text-white"
+                className="text-xs text-zinc-400 hover:text-white"
               >
                 Retake
               </button>
@@ -352,14 +349,14 @@ export default function FaceScanCapture({ onFrames, onCancel, ctaLabel = 'Scan m
         <button
           type="button"
           onClick={handleSave}
-          className="mt-6 w-full max-w-xs rounded-full bg-pxi-purple px-8 py-3.5 text-sm font-black uppercase tracking-widest text-white shadow-[0_0_30px_rgba(216,74,255,0.4)] transition"
+          className="mt-6 w-full max-w-xs rounded-full bg-emerald-400 px-8 py-3.5 text-sm font-semibold text-black transition"
         >
           Save
         </button>
         <button
           type="button"
           onClick={handleStartOver}
-          className="mt-3 text-xs font-semibold uppercase tracking-widest text-zinc-500 hover:text-white"
+          className="mt-3 text-sm text-zinc-500 hover:text-white"
         >
           Start over
         </button>
@@ -367,31 +364,37 @@ export default function FaceScanCapture({ onFrames, onCancel, ctaLabel = 'Scan m
           <button
             type="button"
             onClick={onCancel}
-            className="mt-3 text-xs font-semibold uppercase tracking-widest text-zinc-600 hover:text-white"
+            className="mt-2 text-sm text-zinc-600 hover:text-white"
           >
             Not now
           </button>
         ) : null}
-
-        <p className="mt-5 max-w-xs text-center text-[11px] leading-relaxed text-zinc-500">
-          Your captures are sent securely to PXI, converted once into an irreversible
-          mathematical vector, and the photos are immediately destroyed — never stored.
-        </p>
       </div>
     );
   }
 
   // ── Capture step ────────────────────────────────────────────────────────────
-  const aligned = guide?.ok === true;
+  const aligned = guide?.ok === true || justCaptured != null;
   return (
     <div className="flex flex-col items-center">
-      {/* Face-ID-style portrait oval, sized to dominate the screen.
-          Border goes green the moment the pose is aligned. */}
+      {/* Prompt ABOVE viewfinder — never inside the oval */}
+      {cameraState === 'ready' ? (
+        <div className="mb-3 max-w-xs text-center">
+          <p className="text-[11px] tracking-wide text-white/50">
+            {activePose + 1} of {POSES.length}
+          </p>
+          <h1 className="mt-1 text-[15px] font-medium leading-snug text-white">{pose.prompt}</h1>
+        </div>
+      ) : (
+        <h1 className="mb-3 text-center text-base font-medium text-white">Center your face</h1>
+      )}
+
+      {/* Portrait oval — white while scanning; green when aligned / just captured */}
       <div
-        className={`relative h-[26rem] w-[19rem] max-h-[55dvh] overflow-hidden rounded-[50%] bg-zinc-900 ring-1 transition-shadow duration-300 ${
+        className={`relative h-[min(20rem,40dvh)] w-[min(14.5rem,64vw)] overflow-hidden rounded-[50%] bg-zinc-900 ring-2 transition-all duration-300 ${
           aligned
-            ? 'ring-emerald-400/80 shadow-[0_0_36px_rgba(52,211,153,0.3)]'
-            : 'ring-white/15'
+            ? 'ring-emerald-400 shadow-[0_0_28px_rgba(52,211,153,0.4)]'
+            : 'ring-white/75'
         }`}
       >
         <video
@@ -406,7 +409,7 @@ export default function FaceScanCapture({ onFrames, onCancel, ctaLabel = 'Scan m
           </div>
         ) : null}
         {cameraState === 'denied' || cameraState === 'error' ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/80 px-8 text-center text-xs text-zinc-400">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80 px-6 text-center text-xs text-zinc-400">
             <span>
               {cameraState === 'denied'
                 ? 'Camera access was blocked. Allow camera permission to scan.'
@@ -415,7 +418,7 @@ export default function FaceScanCapture({ onFrames, onCancel, ctaLabel = 'Scan m
             <button
               type="button"
               onClick={() => setStartAttempt((n) => n + 1)}
-              className="rounded-full bg-white/10 px-5 py-2 text-[11px] font-bold uppercase tracking-widest text-white"
+              className="rounded-full bg-white/10 px-4 py-2 text-[11px] text-white"
             >
               Try again
             </button>
@@ -423,69 +426,52 @@ export default function FaceScanCapture({ onFrames, onCancel, ctaLabel = 'Scan m
         ) : null}
       </div>
 
-      {/* Live guidance chip — BELOW the oval so the ellipse mask can never clip it */}
-      <div className="mt-4 flex h-7 items-center justify-center">
-        {cameraState === 'ready' && justCaptured == null && guide ? (
-          <span
-            className={`rounded-full bg-white/[0.07] px-4 py-1.5 text-[11px] font-black uppercase tracking-widest ${
-              aligned ? 'text-emerald-300' : 'text-white'
+      {/* Guidance BELOW the oval — never clipped by overflow-hidden */}
+      <div className="mt-3 flex min-h-7 w-full max-w-xs items-center justify-center px-2">
+        {justCaptured != null ? (
+          <p className="text-center text-sm font-medium text-emerald-400">
+            Pose captured — next
+          </p>
+        ) : cameraState === 'ready' && guide ? (
+          <p
+            className={`text-center text-sm ${
+              aligned ? 'font-medium text-emerald-400' : 'text-white/85'
             }`}
           >
             {scanning ? 'Capturing…' : guide.message}
-          </span>
-        ) : null}
-        {justCaptured != null ? (
-          <span className="rounded-full bg-white/[0.07] px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-pxi-purple">
-            ✓ Pose {justCaptured + 1} captured
-          </span>
+          </p>
         ) : null}
       </div>
 
-      {/* 3-step progress dots — filled + check once a pose is captured */}
-      <div className="mt-3 flex items-center gap-3">
+      {/* Minimal progress — tiny dots only */}
+      <div className="mt-3 flex items-center gap-2" aria-label="Pose progress">
         {POSES.map((p, i) => (
           <span
             key={p.key}
-            className={`flex size-4 items-center justify-center rounded-full text-[9px] font-black text-white transition ${
+            className={`size-1.5 rounded-full transition ${
               captures[i]
-                ? 'bg-pxi-purple'
+                ? 'bg-emerald-400'
                 : i === activePose
-                  ? 'bg-pxi-purple/40 ring-2 ring-pxi-purple/50'
-                  : 'bg-white/15'
+                  ? 'bg-white'
+                  : 'bg-white/25'
             }`}
-          >
-            {captures[i] ? '✓' : ''}
-          </span>
+          />
         ))}
       </div>
 
-      {/* Current pose prompt */}
-      {cameraState === 'ready' ? (
-        <p className="mt-3 max-w-xs text-center text-sm font-semibold text-white">
-          {`Step ${activePose + 1} of ${POSES.length} — ${pose.prompt}`}
-        </p>
-      ) : null}
-      {cameraState === 'ready' && !scanning ? (
-        <p className="mt-1 text-center text-[11px] text-zinc-500">
-          Captures automatically when the pose is right
-        </p>
-      ) : null}
-
       {scanError ? (
-        <p className="mt-4 max-w-xs text-center text-xs text-red-400">{scanError}</p>
+        <p className="mt-3 max-w-xs text-center text-xs text-red-400">{scanError}</p>
       ) : null}
 
-      {/* Manual fallback — auto-capture is the primary path */}
       <button
         type="button"
         onClick={() => capturePose(activePose)}
         disabled={cameraState !== 'ready' || scanning}
-        className="mt-5 w-full max-w-xs rounded-full bg-white/10 px-8 py-3 text-xs font-black uppercase tracking-widest text-zinc-300 transition hover:bg-white/20 hover:text-white disabled:opacity-40"
+        className="mt-5 text-xs text-zinc-500 hover:text-white disabled:opacity-40"
       >
-        {scanning ? 'Scanning…' : capturedCount === 0 ? `${ctaLabel} manually` : 'Capture this angle manually'}
+        {scanning ? 'Scanning…' : 'Capture manually'}
       </button>
 
-      {/* Retake the previous pose without losing the rest */}
       {capturedCount > 0 && !scanning ? (
         <button
           type="button"
@@ -493,9 +479,9 @@ export default function FaceScanCapture({ onFrames, onCancel, ctaLabel = 'Scan m
             const lastCaptured = captures.reduce((acc, v, i) => (v ? i : acc), -1);
             if (lastCaptured >= 0) handleRetakePose(lastCaptured);
           }}
-          className="mt-3 text-xs font-semibold uppercase tracking-widest text-zinc-400 hover:text-white"
+          className="mt-2 text-xs text-zinc-500 hover:text-white"
         >
-          Retake previous pose
+          Retake last
         </button>
       ) : null}
 
@@ -506,16 +492,11 @@ export default function FaceScanCapture({ onFrames, onCancel, ctaLabel = 'Scan m
             stopCamera();
             onCancel();
           }}
-          className="mt-3 text-xs font-semibold uppercase tracking-widest text-zinc-500 hover:text-white"
+          className="mt-3 text-xs text-zinc-600 hover:text-white"
         >
           Not now
         </button>
       ) : null}
-
-      <p className="mt-5 max-w-xs text-center text-[11px] leading-relaxed text-zinc-500">
-        Your capture is sent securely to PXI, converted once into an irreversible
-        mathematical vector, and the photo is immediately destroyed — never stored.
-      </p>
     </div>
   );
 }

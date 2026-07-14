@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { authService, authStorage } from '../../services/auth';
 import { canAccessAdminDashboard } from '@/lib/adminAccess';
+import { isVendorUser } from '@/lib/accountTier';
 import AccountCardPopover from '@/components/dashboard/AccountCardPopover';
 import SidebarIconTooltip from '@/components/dashboard/SidebarIconTooltip';
 import DashboardModalHost from '@/components/dashboard/DashboardModalHost';
@@ -52,27 +53,27 @@ function NavLink({
     const isActive = isNavItemActive(pathname, item, searchParams);
     const isLiveOperations = item.key === 'operations' && isLiveEvent;
     const activeClasses = isLiveOperations
-        ? 'bg-emerald-500/[0.06] text-emerald-200'
-        : 'bg-white/[0.04] text-white/90';
+        ? 'bg-emerald-500/[0.07] text-emerald-200'
+        : 'bg-white/[0.055] text-white';
     const inactiveClasses = isLiveOperations
         ? 'group bg-transparent hover:bg-emerald-500/[0.04]'
-        : 'group bg-transparent hover:bg-white/[0.02]';
+        : 'group bg-transparent hover:bg-white/[0.03]';
     const iconClasses = isLiveOperations
         ? 'text-emerald-300 opacity-60 group-hover:opacity-80 transition-opacity duration-300'
         : isActive
-            ? 'text-white opacity-80'
+            ? 'text-white opacity-90'
             : 'text-white opacity-40 group-hover:opacity-70 transition-opacity duration-300';
     const labelClasses = isLiveOperations
         ? 'text-emerald-300/60 group-hover:text-emerald-200/80 transition-colors duration-300'
         : isActive
-            ? 'text-white/90'
-            : 'text-white/40 group-hover:text-white/70 transition-colors duration-300';
+            ? 'text-white'
+            : 'text-white/45 group-hover:text-white/75 transition-colors duration-300';
 
     const linkClasses = sidebarCollapsed
-        ? `w-10 h-10 rounded-full flex items-center justify-center mx-auto transition-all duration-300 ease-in-out ${
+        ? `w-10 h-10 rounded-xl flex items-center justify-center mx-auto transition-all duration-300 ease-in-out ${
             isActive ? activeClasses : inactiveClasses
         }`
-        : `w-full inline-flex items-center px-4 py-[9px] rounded-full transition-all duration-300 ease-in-out ${
+        : `relative w-full inline-flex items-center px-4 py-[9px] rounded-xl transition-all duration-300 ease-in-out ${
             isActive ? activeClasses : inactiveClasses
         }`;
 
@@ -83,6 +84,12 @@ function NavLink({
             className={linkClasses}
             title={sidebarCollapsed ? item.label : undefined}
         >
+            {isActive && !sidebarCollapsed ? (
+                <span
+                    aria-hidden="true"
+                    className={`absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full ${isLiveOperations ? 'bg-emerald-300' : 'bg-[#d84aff]'}`}
+                />
+            ) : null}
             <span className="relative flex-shrink-0">
                 <HugeiconsIcon
                     icon={item.icon}
@@ -201,7 +208,7 @@ export default function DashboardLayout({ children }) {
     }, [mounted, authReady, user?.id, user?.phoneNumber, fromMobile, phoneCheckDone, router, updateUser, logout]);
 
     useEffect(() => {
-        if (!rolesReady || !user?.id || user?.isVendor || vendorStatusCheckedUserRef.current === user.id) return;
+        if (!rolesReady || !user?.id || isVendorUser(user) || vendorStatusCheckedUserRef.current === user.id) return;
         vendorStatusCheckedUserRef.current = user.id;
         authService.checkVendorStatus()
             .then(async (result) => {
@@ -232,7 +239,7 @@ export default function DashboardLayout({ children }) {
         dashboardShellActions.setIsLiveEvent(hasLiveEvent);
     }, [hasLiveEvent]);
 
-    const hasLiveOpsAccess = capabilities.hasBouncerAccess || (rolesReady && !!user?.isVendor);
+    const hasLiveOpsAccess = capabilities.hasBouncerAccess || (rolesReady && isVendorUser(user));
     const hasOrganizerAccess = hasLiveOpsAccess;
 
     useEffect(() => {
@@ -369,7 +376,7 @@ export default function DashboardLayout({ children }) {
             )}
 
             <aside
-                className={`dashboard-sidebar glass-panel fixed top-0 left-0 z-50 flex h-full flex-col overflow-hidden transition-all duration-300 ease-in-out shadow-[12px_0_42px_rgba(0,0,0,0.42)]
+                className={`dashboard-sidebar fixed top-0 left-0 z-50 flex h-full flex-col overflow-hidden border-r border-white/[0.06] bg-[#0b0b0f] transition-all duration-300 ease-in-out
                     ${sidebarCollapsed ? 'md:w-[72px] w-[240px]' : 'w-[240px]'}
                     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:static md:z-auto md:translate-x-0`}
             >
@@ -438,7 +445,7 @@ export default function DashboardLayout({ children }) {
                         <nav className={`dashboard-scrollbar-none mt-1 flex-1 overflow-hidden ${sidebarCollapsed ? 'flex flex-col items-center gap-1.5 px-0' : 'space-y-1.5 px-3 md:px-4'}`}>
                             {navEntries.map((entry) => (
                                 entry.type === 'section' ? (
-                                    <div key={entry.key} className="px-4 pt-4 pb-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/[0.28] first:pt-1">
+                                    <div key={entry.key} className="px-4 pt-4 pb-1 text-[11px] font-medium tracking-[0.02em] text-white/[0.28] first:pt-1">
                                         {entry.label}
                                     </div>
                                 ) : (

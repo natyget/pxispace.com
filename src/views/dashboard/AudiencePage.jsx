@@ -62,23 +62,23 @@ function RealAudienceOverview() {
                 <p className="px-2 py-3 text-sm text-zinc-500">Loading live demographics...</p>
             ) : (
                 <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-white/[0.06] ring-1 ring-white/[0.07] sm:grid-cols-4">
                         {[
                             { label: 'Attendees', value: data.totalAttendees },
                             { label: 'Passport holders', value: data.tiers.citizen },
                             { label: 'Email reachable', value: data.marketing.emailOptIn },
                             { label: 'Repeat guests', value: `${Math.round((data.repeat.repeatRate || 0) * 100)}%` },
                         ].map((t) => (
-                            <div key={t.label} className="glow-surface-soft rounded-xl px-4 py-3">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t.label}</p>
-                                <p className="mt-1 text-xl font-black tabular-nums text-white">{t.value}</p>
+                            <div key={t.label} className="bg-[#0e0e13] px-4 py-3.5">
+                                <p className="text-[12px] font-medium text-zinc-500">{t.label}</p>
+                                <p className="mt-1.5 text-[22px] font-semibold leading-none tracking-tight tabular-nums text-white">{t.value}</p>
                             </div>
                         ))}
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                         {data.topCities.length > 0 && (
                             <div className="glow-surface-soft rounded-xl px-4 py-3">
-                                <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Top cities</p>
+                                <p className="mb-3 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Top cities</p>
                                 <div className="flex items-center gap-4">
                                     <SparkDonutChart
                                         points={data.topCities.slice(0, 5).map((c) => c.count)}
@@ -106,7 +106,7 @@ function RealAudienceOverview() {
                         )}
                         {data.ageBrackets.some((b) => b.count > 0) && (
                             <div className="glow-surface-soft rounded-xl px-4 py-3">
-                                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Age brackets (opted-in ages)</p>
+                                <p className="mb-2 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Age brackets (opted-in ages)</p>
                                 <div className="h-[200px]">
                                     <RechartsChart className="h-[200px]">
                                         {({ ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip }) => (
@@ -142,7 +142,7 @@ function RealAudienceOverview() {
                     </div>
                     {retentionStages.some((stage) => stage.value > 0) ? (
                         <div className="glow-surface-soft rounded-xl px-4 py-4">
-                            <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Retention funnel</p>
+                            <p className="mb-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Retention funnel</p>
                             <p className="mb-3 text-xs leading-5 text-zinc-500">
                                 Three real signals read top to bottom — reachable audience size, Passport depth, then repeat rate.
                             </p>
@@ -219,7 +219,7 @@ function triStateValue(value) {
 function OptBadge({ label, active }) {
     return (
         <span
-            className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${
+            className={`rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${
                 active ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/5 text-zinc-500'
             }`}
         >
@@ -234,7 +234,7 @@ function AudienceAvatar({ row }) {
         return <img src={row.avatarUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />;
     }
     return (
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-black text-zinc-300">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-zinc-300">
             {initial}
         </span>
     );
@@ -246,12 +246,12 @@ function PassportSignals({ row }) {
     return (
         <div className="flex flex-wrap items-center gap-1.5">
             {row.faceEnrolled ? (
-                <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-fuchsia-300">
+                <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-fuchsia-300">
                     Face match
                 </span>
             ) : null}
             {row.hasPaidTicket ? (
-                <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-300">
+                <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-amber-300">
                     Paid
                 </span>
             ) : null}
@@ -385,15 +385,16 @@ export default function AudiencePage() {
     }
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8">
-            <div className="mx-auto max-w-2xl space-y-3 text-center">
-                <h1 className="text-3xl font-black tracking-[-0.02em] text-white md:text-4xl">CRM</h1>
-                <p className="text-sm leading-6 text-zinc-400">
+        <div className="mx-auto max-w-7xl space-y-6">
+            <div className="px-1">
+                <p className="text-[13px] font-medium text-zinc-500">Audience</p>
+                <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Know your crowd</h1>
+                <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-500">
                     Real attendee intel — Passport signal, music taste, and engagement — beyond email and phone.
                 </p>
             </div>
 
-            <div className="space-y-7">
+            <div className="space-y-6">
                 <RealAudienceOverview />
 
                 <SectionCard
@@ -417,7 +418,7 @@ export default function AudiencePage() {
                                 />
                             </div>
                             <div className="rounded-3xl px-4 py-3 text-sm glass-field text-zinc-400">
-                                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Matching now</p>
+                                <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Matching now</p>
                                 <p className="mt-1 font-semibold text-white">{total.toLocaleString()} attendees</p>
                             </div>
                         </div>
@@ -428,14 +429,14 @@ export default function AudiencePage() {
                                     type="button"
                                     onClick={handleSaveSegment}
                                     disabled={!segmentName.trim() || segmentActionBusy}
-                                    className="pill-solid px-5 py-2.5 text-xs font-bold uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-40"
+                                    className="pill-solid px-5 py-2.5 text-xs font-bold tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-40"
                                 >
                                     Save Segment
                                 </button>
                                 <button
                                     type="button"
                                     onClick={resetFilters}
-                                    className="pill-ghost px-5 py-2.5 text-xs font-bold uppercase tracking-widest"
+                                    className="pill-ghost px-5 py-2.5 text-xs font-bold tracking-[0.02em]"
                                 >
                                     Reset Filters
                                 </button>
@@ -444,7 +445,7 @@ export default function AudiencePage() {
                         </div>
 
                         <div className="space-y-3">
-                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Saved segments</p>
+                            <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Saved segments</p>
                             {segmentsLoading ? (
                                 <p className="rounded-2xl glass-field px-4 py-3 text-sm leading-6 text-zinc-500">Loading segments...</p>
                             ) : segments.length ? (
@@ -467,7 +468,7 @@ export default function AudiencePage() {
                                                     type="button"
                                                     onClick={() => handleDeleteSegment(segment.id)}
                                                     disabled={segmentActionBusy}
-                                                    className="rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-red-400 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-40"
+                                                    className="rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-red-400 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-40"
                                                 >
                                                     Delete
                                                 </button>
@@ -491,20 +492,20 @@ export default function AudiencePage() {
                         {loadError ? (
                             <div className="rounded-2xl bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-200">{loadError}</div>
                         ) : null}
-                        <div className="dashboard-surface-b rounded-[1.75rem] !border-0 p-4 sm:p-5">
+                        <div className="dashboard-surface-b rounded-[1.25rem] !border-0 p-4 sm:p-5">
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Filter audience</p>
+                                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Filter audience</p>
                                     <p className="mt-1 text-sm leading-6 text-zinc-400">Real per-attendee data — opt-in, Passport signal, and engagement.</p>
                                 </div>
-                                <p className="rounded-full bg-white/[0.06] px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-zinc-300">
+                                <p className="rounded-full bg-white/[0.06] px-3 py-1.5 text-xs font-bold tracking-[0.02em] text-zinc-300">
                                     {total.toLocaleString()} attendees
                                 </p>
                             </div>
 
                             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                                 <div className="space-y-2 rounded-2xl glass-field p-3">
-                                    <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Email opt-in</p>
+                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Email opt-in</p>
                                     <select
                                         value={triStateValue(filters.emailOptIn)}
                                         onChange={(event) => updateFilter('emailOptIn', parseTriState(event.target.value))}
@@ -515,7 +516,7 @@ export default function AudiencePage() {
                                 </div>
 
                                 <div className="space-y-2 rounded-2xl glass-field p-3">
-                                    <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">SMS opt-in</p>
+                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">SMS opt-in</p>
                                     <select
                                         value={triStateValue(filters.smsOptIn)}
                                         onChange={(event) => updateFilter('smsOptIn', parseTriState(event.target.value))}
@@ -526,7 +527,7 @@ export default function AudiencePage() {
                                 </div>
 
                                 <div className="space-y-2 rounded-2xl glass-field p-3">
-                                    <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Face-match enrolled</p>
+                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Face-match enrolled</p>
                                     <select
                                         value={triStateValue(filters.faceEnrolled)}
                                         onChange={(event) => updateFilter('faceEnrolled', parseTriState(event.target.value))}
@@ -537,7 +538,7 @@ export default function AudiencePage() {
                                 </div>
 
                                 <label className="space-y-2 rounded-2xl glass-field p-3">
-                                    <span className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">City</span>
+                                    <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">City</span>
                                     <input
                                         type="text"
                                         value={filters.city}
@@ -548,7 +549,7 @@ export default function AudiencePage() {
                                 </label>
 
                                 <div className="space-y-2 rounded-2xl glass-field p-3">
-                                    <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Account tier</p>
+                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Account tier</p>
                                     <select
                                         value={filters.accountTier}
                                         onChange={(event) => updateFilter('accountTier', event.target.value)}
@@ -559,7 +560,7 @@ export default function AudiencePage() {
                                 </div>
 
                                 <label className="space-y-2 rounded-2xl glass-field p-3">
-                                    <span className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Min Odyssey XP</span>
+                                    <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Min Odyssey XP</span>
                                     <input
                                         type="number"
                                         min="0"
@@ -572,19 +573,19 @@ export default function AudiencePage() {
                             </div>
                         </div>
 
-                        <div className="dashboard-surface-b overflow-hidden rounded-[1.75rem] !border-0 p-2">
+                        <div className="dashboard-surface-b overflow-hidden rounded-[1.25rem] !border-0 p-2">
                             {loading ? (
-                                <p className="px-3 py-2 text-xs font-bold uppercase tracking-widest text-zinc-500">Loading audience...</p>
+                                <p className="px-3 py-2 text-xs font-bold tracking-[0.02em] text-zinc-500">Loading audience...</p>
                             ) : null}
                             <div className="space-y-3 p-2 md:hidden">
                                 <div className="flex items-center justify-between gap-3 px-1">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">
                                         {rows.length} of {total.toLocaleString()} attendees
                                     </p>
                                     <button
                                         type="button"
                                         onClick={toggleVisibleRows}
-                                        className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-300"
+                                        className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-zinc-300"
                                     >
                                         Select all
                                     </button>
@@ -617,11 +618,11 @@ export default function AudiencePage() {
                                             </div>
                                             <div className="mt-4 grid grid-cols-2 gap-2">
                                                 <div className="rounded-xl bg-white/[0.04] px-3 py-2">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Odyssey XP</p>
+                                                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Odyssey XP</p>
                                                     <p className="mt-1 font-mono text-sm font-bold text-zinc-100">{row.odysseyXp?.toLocaleString?.() ?? row.odysseyXp}</p>
                                                 </div>
                                                 <div className="rounded-xl bg-white/[0.04] px-3 py-2">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Events</p>
+                                                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Events</p>
                                                     <p className="mt-1 font-mono text-sm font-bold text-zinc-100">{row.eventsAttended}</p>
                                                 </div>
                                             </div>
@@ -635,80 +636,80 @@ export default function AudiencePage() {
                                 })}
                             </div>
                             <div className={`hidden overflow-x-auto pb-1 md:block ${AUDIENCE_SCROLLBAR_CLASS}`}>
-                                <table className="w-full min-w-[1240px] border-separate [border-spacing:0_0.5rem] text-left">
-                                    <thead className="text-[11px] font-black uppercase tracking-[0.18em] text-zinc-500">
-                                        <tr>
-                                            <th className="w-14 px-4 py-2">
+                                <table className="w-full min-w-[1240px] text-left">
+                                    <thead>
+                                        <tr className="text-[11px] font-medium text-zinc-500">
+                                            <th className="w-14 border-b border-white/[0.07] px-4 py-2.5">
                                                 <button
                                                     type="button"
                                                     onClick={toggleVisibleRows}
-                                                    className="rounded-full glow-chip px-3 py-1.5 text-[10px] font-bold text-zinc-300 transition hover:bg-white/[0.1]"
+                                                    className="rounded-full bg-white/[0.06] px-3 py-1 text-[11px] font-medium text-zinc-300 transition hover:bg-white/[0.1]"
                                                 >
                                                     All
                                                 </button>
                                             </th>
-                                            <th className="px-4 py-2">Attendee</th>
-                                            <th className="px-4 py-2">City</th>
-                                            <th className="px-4 py-2">Age</th>
-                                            <th className="px-4 py-2">Tier</th>
-                                            <th className="px-4 py-2">Opt-in</th>
-                                            <th className="px-4 py-2">Passport signal</th>
-                                            <th className="px-4 py-2">Odyssey XP</th>
-                                            <th className="px-4 py-2">Events</th>
-                                            <th className="px-4 py-2">Last attended</th>
+                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Attendee</th>
+                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">City</th>
+                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Age</th>
+                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Tier</th>
+                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Opt-in</th>
+                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Passport signal</th>
+                                            <th className="border-b border-white/[0.07] px-4 py-2.5 text-right font-medium">Odyssey XP</th>
+                                            <th className="border-b border-white/[0.07] px-4 py-2.5 text-right font-medium">Events</th>
+                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Last attended</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {rows.map((row) => {
                                             const selected = selectedRowIds.includes(row.id);
-                                            const rowSurface = selected ? 'bg-white/[0.09]' : 'bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.055]';
+                                            const rowSurface = selected ? 'bg-[#d84aff]/[0.06]' : 'hover:bg-white/[0.03]';
                                             return (
-                                                <tr key={row.id} className="group">
-                                                    <td className={`rounded-l-2xl px-4 py-5 align-top transition-colors ${rowSurface}`}>
+                                                <tr key={row.id} className={`border-b border-white/[0.04] transition-colors ${rowSurface}`}>
+                                                    <td className="px-4 py-3.5 align-middle">
                                                         <input
                                                             type="checkbox"
                                                             checked={selected}
                                                             onChange={() => toggleRow(row.id)}
-                                                            className="h-4 w-4 rounded-md bg-white/10 accent-zinc-200 [border:0] focus:outline-none"
+                                                            className="h-4 w-4 rounded-md bg-white/10 accent-[#d84aff] [border:0] focus:outline-none"
                                                             aria-label={`Select ${row.name || row.username || row.id}`}
                                                         />
                                                     </td>
-                                                    <td className={`px-4 py-5 align-top transition-colors ${rowSurface}`}>
+                                                    <td className="px-4 py-3.5 align-middle">
                                                         <div className="flex items-center gap-3">
                                                             <AudienceAvatar row={row} />
                                                             <div className="min-w-0">
-                                                                <p className="truncate text-sm font-bold text-white">{row.name || row.username || 'Unnamed'}</p>
+                                                                <p className="truncate text-sm font-semibold text-white">{row.name || row.username || 'Unnamed'}</p>
                                                                 {row.username ? <p className="truncate text-xs text-zinc-500">@{row.username}</p> : null}
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className={`px-4 py-5 align-top text-sm font-semibold text-zinc-300 transition-colors ${rowSurface}`}>
+                                                    <td className="px-4 py-3.5 align-middle text-sm text-zinc-300">
                                                         {row.city || '—'}
                                                     </td>
-                                                    <td className={`px-4 py-5 align-top text-sm font-semibold text-zinc-300 transition-colors ${rowSurface}`}>
+                                                    <td className="px-4 py-3.5 align-middle text-sm text-zinc-300">
                                                         {row.ageBracket || '—'}
                                                     </td>
-                                                    <td className={`px-4 py-5 align-top transition-colors ${rowSurface}`}>
-                                                        <span className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-300">
+                                                    <td className="px-4 py-3.5 align-middle">
+                                                        <span className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] font-medium text-zinc-300">
                                                             {ACCOUNT_TIER_LABELS[row.accountTier] || row.accountTier}
                                                         </span>
                                                     </td>
-                                                    <td className={`px-4 py-5 align-top transition-colors ${rowSurface}`}>
+                                                    <td className="px-4 py-3.5 align-middle">
                                                         <div className="flex flex-wrap gap-1.5">
                                                             <OptBadge label="Email" active={row.emailMarketingOptIn} />
                                                             <OptBadge label="SMS" active={row.smsMarketingOptIn} />
                                                         </div>
                                                     </td>
-                                                    <td className={`px-4 py-5 align-top transition-colors ${rowSurface}`}>
+                                                    <td className="px-4 py-3.5 align-middle">
                                                         <PassportSignals row={row} />
                                                     </td>
-                                                    <td className={`px-4 py-5 align-top font-mono text-sm font-bold text-zinc-100 transition-colors ${rowSurface}`}>
+                                                    <td className="px-4 py-3.5 text-right align-middle text-sm font-semibold tabular-nums text-zinc-100">
                                                         {row.odysseyXp?.toLocaleString?.() ?? row.odysseyXp}
                                                     </td>
-                                                    <td className={`px-4 py-5 align-top font-mono text-sm font-bold text-zinc-100 transition-colors ${rowSurface}`}>
+                                                    <td className="px-4 py-3.5 text-right align-middle text-sm font-semibold tabular-nums text-zinc-100">
                                                         {row.eventsAttended}
                                                     </td>
-                                                    <td className={`rounded-r-2xl px-4 py-5 align-top text-sm font-semibold text-zinc-300 transition-colors ${rowSurface}`}>
+                                                    <td className="px-4 py-3.5 align-middle text-sm text-zinc-400">
                                                         {formatLastAttended(row.lastAttendedAt)}
                                                     </td>
                                                 </tr>
@@ -734,7 +735,7 @@ export default function AudiencePage() {
                                         type="button"
                                         disabled={loading || page <= 1}
                                         onClick={() => setPage((current) => Math.max(1, current - 1))}
-                                        className="pill-ghost px-4 py-2 text-xs font-bold uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-40"
+                                        className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-40"
                                     >
                                         Previous
                                     </button>
@@ -742,7 +743,7 @@ export default function AudiencePage() {
                                         type="button"
                                         disabled={loading || page >= totalPages}
                                         onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                                        className="pill-solid px-4 py-2 text-xs font-bold uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-40"
+                                        className="pill-solid px-4 py-2 text-xs font-bold tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-40"
                                     >
                                         Next
                                     </button>

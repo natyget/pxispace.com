@@ -23,7 +23,7 @@ function ProviderPill({ provider }) {
   const meta = PROVIDER_META[String(provider || '').toUpperCase()] || PROVIDER_META.SPOTIFY;
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide"
       style={{ color: meta.color, backgroundColor: `${meta.color}1a` }}
     >
       <HugeiconsIcon icon={meta.icon} size={12} />
@@ -113,7 +113,7 @@ export default function LineupPlaylistCard({ eventId }) {
     <div className="glass-panel overflow-hidden rounded-2xl">
       <div className="flex items-center gap-2 px-5 pb-2 pt-5">
         <HugeiconsIcon icon={MusicNote01Icon} size={18} className="text-white opacity-70" />
-        <h2 className="font-bold text-white uppercase tracking-widest text-sm">Lineup Playlist</h2>
+        <h2 className="font-bold text-white tracking-[0.02em] text-sm">Lineup Playlist</h2>
       </div>
 
       <div className="p-5 space-y-4">
@@ -151,7 +151,7 @@ export default function LineupPlaylistCard({ eventId }) {
         )}
 
         <div className="space-y-2">
-          <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
+          <label className="block text-[11px] font-bold text-zinc-500 tracking-[0.02em]">
             Spotify or Apple Music URL
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
@@ -166,7 +166,7 @@ export default function LineupPlaylistCard({ eventId }) {
               type="button"
               onClick={handleSave}
               disabled={saving || !url.trim()}
-              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-black transition hover:bg-zinc-200 disabled:opacity-50"
+              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-xs font-bold tracking-[0.02em] text-black transition hover:bg-zinc-200 disabled:opacity-50"
             >
               {saving ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" /> : null}
               {saving ? 'Reading playlist...' : 'Save playlist'}
@@ -181,7 +181,7 @@ export default function LineupPlaylistCard({ eventId }) {
               type="button"
               onClick={handleCreateLink}
               disabled={linkLoading}
-              className="pill-ghost inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-widest disabled:opacity-50"
+              className="pill-ghost inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold tracking-[0.02em] disabled:opacity-50"
             >
               {linkLoading ? (
                 <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />

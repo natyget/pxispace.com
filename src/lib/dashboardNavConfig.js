@@ -12,6 +12,7 @@ import {
   UserGroupIcon,
   Wallet01Icon,
 } from '@hugeicons/core-free-icons';
+import { isVendorUser } from '@/lib/accountTier';
 
 export const ADMIN_SIDEBAR_MODE_KEY = 'pxi_dashboard_admin_ui_mode';
 
@@ -71,12 +72,13 @@ export function buildMemberNavItems({ hasOrganizerAccess, hasLiveOpsAccess, isLi
   const items = [...dashboardNavConfig];
   const hasResolvedUser = mounted && !!user;
   const hasResolvedVendorStatus = typeof user?.isVendor === 'boolean';
+  const vendor = isVendorUser(user);
 
   return items.filter((item) => {
     const isRoleSensitive = item.vendorOnly || item.nonVendorOnly || item.organizerOnly || item.bouncerOnly || item.liveOnly;
     if (!hasResolvedUser && isRoleSensitive) return false;
-    if (item.vendorOnly && !user?.isVendor) return false;
-    if (item.nonVendorOnly && (!hasResolvedVendorStatus || user.isVendor)) return false;
+    if (item.vendorOnly && !vendor) return false;
+    if (item.nonVendorOnly && (!hasResolvedVendorStatus || vendor)) return false;
     if (item.bouncerOnly && !hasLiveOpsAccess) return false;
     if (item.organizerOnly && !hasOrganizerAccess) return false;
     if (item.liveOnly && !isLiveEvent) return false;

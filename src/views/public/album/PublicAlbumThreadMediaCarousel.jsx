@@ -57,7 +57,7 @@ function CarouselDots({ count, active }) {
     );
   }
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-2 z-[29] flex items-center justify-center gap-1.5">
+    <div className="pointer-events-none flex items-center justify-center gap-1.5">
       {dots}
     </div>
   );
@@ -157,7 +157,6 @@ export default function PublicAlbumThreadMediaCarousel({
   const activeItem = items[Math.min(activeIndex, items.length - 1)] || first;
   const activeMediaId = publicAlbumMediaId(activeItem);
   const activeIsVideo = String(activeItem?.type || '').toUpperCase() === 'VIDEO';
-  const lastComment = getLastThreadComment(activeItem);
 
   const reactionBarWidth = box.outerW;
   const reactionBarMinWidth = Math.min(THREAD_REACTION_BAR_MIN_WIDTH, reactionBarWidth);
@@ -165,10 +164,10 @@ export default function PublicAlbumThreadMediaCarousel({
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el || el.clientWidth <= 0) return;
-    const slideW = el.clientWidth * 0.88; // keep in sync with the slides' basis-[88%] peek layout
+    const slideW = box.outerW + 16; // width + gap
     const next = Math.max(0, Math.min(items.length - 1, Math.round(el.scrollLeft / slideW)));
     setActiveIndex((prev) => (prev === next ? prev : next));
-  }, [items.length]);
+  }, [items.length, box.outerW]);
 
   const handleSlideKeyDown = useCallback(
     (e, index) => {
@@ -184,48 +183,66 @@ export default function PublicAlbumThreadMediaCarousel({
     <article
       className="mx-auto mb-6 flex w-full max-w-full flex-col items-center"
       style={{
-        maxWidth: metrics.threadCardMaxWidth,
-        transform: `rotate(${rotation}deg)`,
+        maxWidth: '100%',
       }}
       {...(activeIsVideo && activeMediaId ? { 'data-thread-video-id': activeMediaId } : {})}
     >
-      <div className="flex w-full flex-col" style={{ width: box.outerW, maxWidth: '100%' }}>
+      <div className="flex w-full flex-col items-center" style={{ maxWidth: '100%' }}>
         {timeLabel ? (
-          <div className={`mb-1 flex w-full px-1 ${timestampOnRight ? 'justify-end' : 'justify-start'}`}>
+          <div className="mb-2 flex w-full justify-center px-1">
             <span className="text-[10px] text-[rgba(158,162,176,0.75)]">{timeLabel}</span>
           </div>
         ) : null}
 
-        <div className="flex w-full flex-col" style={{ gap: THREAD_CARD_MEDIA_ROW_GAP }}>
+        <div className="relative w-full max-w-full">
+          {/* Slide count chip for the whole carousel, or we can use dots */}
+          <div className="mb-3 flex w-full justify-center">
+            <CarouselDots count={items.length} active={activeIndex} />
+          </div>
+
           <div
-            className="relative overflow-hidden rounded-2xl bg-black shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
-            style={{
-              width: box.outerW,
-              maxWidth: '100%',
-              height: box.outerH,
-              border: `${THREAD_SCRAPBOOK_BORDER_PX}px solid ${ALBUM_MEDIA_FRAME_COLOR}`,
-            }}
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="no-scrollbar flex w-full snap-x snap-mandatory items-start overflow-x-auto overflow-y-hidden py-4"
           >
-            <div className="relative overflow-hidden rounded-[9px]" style={{ width: box.width, height: box.height }}>
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className="no-scrollbar flex size-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
-              >
-                {items.map((item, index) => {
-                  const isVideo = String(item.type || '').toUpperCase() === 'VIDEO';
-                  const mediaId = publicAlbumMediaId(item);
-                  const posterSrc = displayImageSrc(mediaDisplayUrl(item), null);
-                  const isActiveSlide = index === activeIndex;
-                  return (
-                    <div
-                      key={mediaId || index}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => onPressSlide?.(index)}
-                      onKeyDown={(e) => handleSlideKeyDown(e, index)}
-                      className="relative h-full shrink-0 basis-[88%] snap-center cursor-pointer overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
-                    >
+            {/* 
+              To allow peeking and centering of cards, we add spacer blocks or rely on margin auto 
+              but since we have snap-center, we just need padding on the container.
+            */}
+            <div className="shrink-0" style={{ width: `calc(50% - ${box.outerW / 2}px)` }} />
+            
+            {items.map((item, index) => {
+              const isVideo = String(item.type || '').toUpperCase() === 'VIDEO';
+              const mediaId = publicAlbumMediaId(item);
+              const posterSrc = displayImageSrc(mediaDisplayUrl(item), null);
+              const isActiveSlide = index === activeIndex;
+              const isLast = index === items.length - 1;
+              const tilt = index % 2 === 0 ? rotation : -rotation;
+              const slideLastComment = getLastThreadComment(item);
+              
+              return (
+                <div
+                  key={mediaId || index}
+                  className="flex shrink-0 snap-center flex-col items-center focus:outline-none"
+                  style={{
+                    width: box.outerW,
+                    marginRight: isLast ? 0 : 16,
+                    transform: `rotate(${tilt}deg)`,
+                  }}
+                >
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onPressSlide?.(index)}
+                    onKeyDown={(e) => handleSlideKeyDown(e, index)}
+                    className="relative overflow-hidden rounded-2xl bg-black shadow-[0_8px_16px_rgba(0,0,0,0.5)] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
+                    style={{
+                      width: box.outerW,
+                      height: box.outerH,
+                      border: `${THREAD_SCRAPBOOK_BORDER_PX}px solid ${ALBUM_MEDIA_FRAME_COLOR}`,
+                    }}
+                  >
+                    <div className="relative overflow-hidden rounded-[9px]" style={{ width: box.width, height: box.height }}>
                       {isVideo ? (
                         <CarouselVideoSlide
                           item={item}
@@ -245,82 +262,74 @@ export default function PublicAlbumThreadMediaCarousel({
                           className="size-full object-cover"
                         />
                       ) : null}
+                      
                       <div
                         className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/30"
                         aria-hidden
                       />
-                    </div>
-                  );
-                })}
-              </div>
+                      
+                      {item.author ? (
+                        <>
+                          <div
+                            className="pointer-events-none absolute inset-x-0 bottom-0 z-[24] h-20 bg-gradient-to-t from-black/75 to-transparent"
+                            aria-hidden
+                          />
+                          <span
+                            className="absolute left-2 z-[25] flex max-w-[78%] items-center gap-2"
+                            style={{ bottom: slideLastComment ? 62 : 8 }}
+                          >
+                            <span className="relative size-7 shrink-0 overflow-hidden rounded-full">
+                              <UserAvatar user={{ avatarUrl: item.author?.avatarUrl }} size={28} className="size-full" />
+                            </span>
+                            <span className="truncate text-xs font-extrabold tracking-wide text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.65)]">
+                              {item.author.username || 'Member'}
+                            </span>
+                          </span>
+                        </>
+                      ) : null}
 
-              {/* Slide count chip (top corner opposite the author pill) */}
-              <span
-                className={`pointer-events-none absolute top-1.5 z-[26] rounded-full bg-black/65 px-2 py-0.5 text-[10px] font-bold tabular-nums text-white ${
-                  posterOnRight ? 'left-1.5' : 'right-1.5'
-                }`}
-              >
-                {activeIndex + 1}/{items.length}
-              </span>
-
-              {first?.author ? (
-                <>
-                  {/* Bottom gradient keeps the author legible over any media (mobile parity). */}
-                  <div
-                    className="pointer-events-none absolute inset-x-0 bottom-0 z-[24] h-20 bg-gradient-to-t from-black/75 to-transparent"
-                    aria-hidden
-                  />
-                  <span
-                    className="absolute left-2 z-[25] flex max-w-[78%] items-center gap-2"
-                    style={{ bottom: lastComment ? 62 : 8 }}
-                  >
-                    <span className="relative size-7 shrink-0 overflow-hidden rounded-full">
-                      <UserAvatar user={{ avatarUrl: first.author?.avatarUrl }} size={28} className="size-full" />
-                    </span>
-                    <span className="truncate text-xs font-extrabold tracking-wide text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.65)]">
-                      {first.author.username || 'Member'}
-                    </span>
-                  </span>
-                </>
-              ) : null}
-
-              {lastComment ? (
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[28] px-[5px] pb-[7px] pt-[3px]">
-                  <div className="overflow-hidden rounded-[14px] bg-[rgba(52,56,64,0.72)]">
-                    <div className="flex items-start gap-2 px-[9px] py-[7px]">
-                      <span className="size-8 shrink-0 overflow-hidden rounded-full">
-                        <UserAvatar
-                          user={{ avatarUrl: lastComment?.sender?.avatarUrl }}
-                          size={32}
-                          className="size-full"
-                        />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <p className="mb-1 text-[11px] font-extrabold tracking-wide text-[rgba(158,162,176,0.98)]">
-                          {lastComment.sender?.username || 'Member'}
-                        </p>
-                        <p className="line-clamp-2 text-[13px] font-medium leading-[18px] text-white">
-                          {lastComment.content}
-                        </p>
-                      </span>
+                      {slideLastComment ? (
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[28] px-[5px] pb-[7px] pt-[3px]">
+                          <div className="overflow-hidden rounded-[14px] bg-[rgba(52,56,64,0.72)]">
+                            <div className="flex items-start gap-2 px-[9px] py-[7px]">
+                              <span className="size-8 shrink-0 overflow-hidden rounded-full">
+                                <UserAvatar
+                                  user={{ avatarUrl: slideLastComment?.sender?.avatarUrl }}
+                                  size={32}
+                                  className="size-full"
+                                />
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <p className="mb-1 text-[11px] font-extrabold tracking-wide text-[rgba(158,162,176,0.98)]">
+                                  {slideLastComment.sender?.username || 'Member'}
+                                </p>
+                                <p className="line-clamp-2 text-[13px] font-medium leading-[18px] text-white">
+                                  {slideLastComment.content}
+                                </p>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
+                  
+                  {/* Reaction bar directly below each card */}
+                  <div className="mt-3 flex w-full justify-center px-2">
+                    <PublicAlbumReactionBar
+                      key={mediaId || index}
+                      item={item}
+                      maxWidth={box.outerW}
+                      minWidth={reactionBarMinWidth}
+                      openInAppUrl={openInAppUrl}
+                    />
+                  </div>
                 </div>
-              ) : null}
-
-              <CarouselDots count={items.length} active={activeIndex} />
-            </div>
+              );
+            })}
+            
+            <div className="shrink-0" style={{ width: `calc(50% - ${box.outerW / 2}px)` }} />
           </div>
-        </div>
-
-        <div className="mt-1 flex w-full justify-center self-center">
-          <PublicAlbumReactionBar
-            key={activeMediaId || activeIndex}
-            item={activeItem}
-            maxWidth={reactionBarWidth}
-            minWidth={reactionBarMinWidth}
-            openInAppUrl={openInAppUrl}
-          />
         </div>
       </div>
     </article>

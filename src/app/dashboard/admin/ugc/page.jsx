@@ -122,7 +122,7 @@ export default function AdminUgcModerationPage() {
                         key={status}
                         type="button"
                         onClick={() => setStatusFilter(status)}
-                        className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest ${
+                        className={`rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] ${
                             statusFilter === status
                                 ? 'bg-white text-black'
                                 : 'bg-white/[0.045] text-zinc-400 hover:bg-white/[0.075] hover:text-white'
@@ -154,7 +154,7 @@ export default function AdminUgcModerationPage() {
                             {rows.map((row) => (
                                 <tr key={row.id} className="hover:bg-white/[0.02] align-top">
                                     <td data-label="Status" className="px-6 py-4">
-                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${statusStyle[row.status] || statusStyle.PENDING}`}>
+                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${statusStyle[row.status] || statusStyle.PENDING}`}>
                                             {row.status || 'PENDING'}
                                         </span>
                                     </td>
@@ -176,7 +176,7 @@ export default function AdminUgcModerationPage() {
                                                     type="button"
                                                     disabled={busyId === row.id}
                                                     onClick={() => act(row, 'TAKEDOWN_MEDIA')}
-                                                    className="rounded-lg bg-red-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-red-200 hover:bg-red-500/20 disabled:opacity-50"
+                                                    className="rounded-lg bg-red-500/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-red-200 hover:bg-red-500/20 disabled:opacity-50"
                                                 >
                                                     <HugeiconsIcon icon={Delete02Icon} size={12} className="inline mr-1" />
                                                     Take down
@@ -185,7 +185,7 @@ export default function AdminUgcModerationPage() {
                                                     type="button"
                                                     disabled={busyId === row.id}
                                                     onClick={() => act(row, 'NONE')}
-                                                    className="rounded-lg bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-50"
+                                                    className="rounded-lg bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-50"
                                                 >
                                                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="inline mr-1" />
                                                     Dismiss

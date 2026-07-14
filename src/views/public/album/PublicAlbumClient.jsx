@@ -20,6 +20,7 @@ import {
   timelineRowKey,
 } from './buildPublicAlbumTimeline';
 import EventDetailsModal from '@/components/events/EventDetailsModal';
+import EventDetailClient from '@/views/events/EventDetailClient';
 import { buildAlbumEventDetails } from './albumEventDetailsAdapter';
 import PublicAlbumJoinEventButton from './PublicAlbumJoinEventButton';
 import IphonePane from './IphonePane';
@@ -343,7 +344,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
         >
         <div className="album-thread-chrome relative z-[5] w-full shrink-0 bg-black max-lg:border-b max-lg:border-white/5">
           <div
-            className="relative flex h-14 items-center justify-center"
+            className="relative flex h-14 items-center justify-center lg:hidden"
             style={{ paddingLeft: THREAD_PAGE_HORIZONTAL_GUTTER, paddingRight: THREAD_PAGE_HORIZONTAL_GUTTER }}
           >
             <h1 className="truncate px-10 text-center text-xl font-black uppercase tracking-[0.24em] text-white">
@@ -524,19 +525,27 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
       </div>
 
       {/* Right: album details — desktop only; mobile uses three-dot sheet. Renders the
-          same EventDetailsModal card the events page shows, inline (no portal/scrim). */}
-      <div className="album-details-pane">
-        <div className="album-details-shell items-center justify-center p-6">
-          <div className="flex h-full max-h-[860px] w-full max-w-[480px] flex-col overflow-hidden">
-            <EventDetailsModal
-              open
-              presentation="inline"
-              event={albumDetails.event}
-              primaryAction={albumDetails.primaryAction}
-              secondaryAction={albumDetails.secondaryAction}
-            />
+         full EventDetailClient layout constrained to the pane. */}
+      <div className="album-details-pane relative bg-[#0a0a0a]">
+        {album?.event?.id || album?.eventId ? (
+          <EventDetailClient
+            eventIdOverride={album?.event?.id || album?.eventId}
+            initialEvent={album?.event}
+            presentation="pane"
+          />
+        ) : (
+          <div className="album-details-shell items-center justify-center p-6">
+            <div className="flex h-full max-h-[860px] w-full max-w-[480px] flex-col overflow-hidden">
+              <EventDetailsModal
+                open
+                presentation="inline"
+                event={albumDetails.event}
+                primaryAction={albumDetails.primaryAction}
+                secondaryAction={albumDetails.secondaryAction}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <EventDetailsModal

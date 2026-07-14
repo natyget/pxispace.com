@@ -381,11 +381,11 @@ export default function AdsPage() {
 
     return (
         <div className="mx-auto max-w-7xl space-y-6">
-            <section className="dashboard-surface-b rounded-[1.75rem] px-5 py-6 md:px-7">
+            <section className="dashboard-surface-b rounded-[1.25rem] px-5 py-6 md:px-7">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl">
-                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Growth</p>
-                        <h1 className="mt-2 text-4xl font-black leading-none text-white md:text-5xl">Ads Manager</h1>
+                        <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Growth</p>
+                        <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Ads Manager</h1>
                         <p className="mt-2 text-sm leading-6 text-zinc-400">
                             Promote your events across the PXI mobile feed, discovery, the web featured hero, and email —
                             targeted by city, age, music taste, and attendance. Credits apply first; cards cover the rest.
@@ -443,7 +443,7 @@ export default function AdsPage() {
                             {step === 0 ? (
                                 <>
                                     <label className="block space-y-2">
-                                        <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Campaign name</span>
+                                        <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Campaign name</span>
                                         <input
                                             value={draft.name}
                                             onChange={(e) => patchDraft({ name: e.target.value })}
@@ -452,7 +452,7 @@ export default function AdsPage() {
                                         />
                                     </label>
                                     <div className="space-y-2">
-                                        <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                        <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">
                                             Events to promote ({draft.eventIds.length} selected)
                                         </span>
                                         {events.length === 0 ? (
@@ -473,7 +473,7 @@ export default function AdsPage() {
                             {step === 1 ? (
                                 <>
                                     <div className="space-y-2">
-                                        <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Cities</span>
+                                        <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Cities</span>
                                         <TagInput
                                             tags={draft.cities}
                                             onChange={(cities) => patchDraft({ cities })}
@@ -481,7 +481,7 @@ export default function AdsPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Age brackets</span>
+                                        <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Age brackets</span>
                                         <ChipPicker
                                             options={AD_AGE_BRACKETS.map((b) => ({ id: b, label: b }))}
                                             selected={draft.ageBrackets}
@@ -489,7 +489,7 @@ export default function AdsPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Music genres</span>
+                                        <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Music genres</span>
                                         <TagInput
                                             tags={draft.genres}
                                             onChange={(genres) => patchDraft({ genres })}
@@ -497,12 +497,12 @@ export default function AdsPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Passport tier</span>
+                                        <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Passport tier</span>
                                         <ChipPicker options={AD_XP_TIERS} selected={draft.xpTiers} onToggle={toggleListValue('xpTiers')} />
                                     </div>
                                     <div className="grid gap-4 sm:grid-cols-2">
                                         <label className="space-y-2">
-                                            <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Attendance</span>
+                                            <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Attendance</span>
                                             <select
                                                 value={draft.attendance}
                                                 onChange={(e) => patchDraft({ attendance: e.target.value })}
@@ -513,7 +513,7 @@ export default function AdsPage() {
                                             </select>
                                         </label>
                                         <label className="space-y-2">
-                                            <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Frequency cap / day</span>
+                                            <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Frequency cap / day</span>
                                             <input
                                                 type="number"
                                                 min={1}
@@ -543,7 +543,7 @@ export default function AdsPage() {
                                                             type="button"
                                                             aria-pressed={enabled}
                                                             onClick={() => toggleSurface(surface.id)}
-                                                            className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition ${
+                                                            className={`rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] transition ${
                                                                 enabled ? 'bg-white text-black' : 'bg-white/[0.07] text-zinc-400 hover:bg-white/[0.12]'
                                                             }`}
                                                         >
@@ -564,10 +564,10 @@ export default function AdsPage() {
                                         })}
                                         <div className="rounded-2xl bg-white/[0.03] p-4 opacity-60">
                                             <div className="flex items-center justify-between gap-3">
-                                                <span className="rounded-full bg-white/[0.06] px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-500">
+                                                <span className="rounded-full bg-white/[0.06] px-4 py-2 text-xs font-bold tracking-[0.02em] text-zinc-500">
                                                     SMS
                                                 </span>
-                                                <span className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                                                <span className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-zinc-500">
                                                     Coming soon
                                                 </span>
                                             </div>
@@ -580,7 +580,7 @@ export default function AdsPage() {
                                                 type="button"
                                                 aria-pressed={draft.emailEnabled}
                                                 onClick={() => patchDraft({ emailEnabled: !draft.emailEnabled })}
-                                                className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition ${
+                                                className={`rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] transition ${
                                                     draft.emailEnabled ? 'bg-white text-black' : 'bg-white/[0.07] text-zinc-400 hover:bg-white/[0.12]'
                                                 }`}
                                             >
@@ -614,7 +614,7 @@ export default function AdsPage() {
                             {step === 3 ? (
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <label className="space-y-2">
-                                        <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Starts</span>
+                                        <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Starts</span>
                                         <input
                                             type="date"
                                             value={draft.startAt}
@@ -623,7 +623,7 @@ export default function AdsPage() {
                                         />
                                     </label>
                                     <label className="space-y-2">
-                                        <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Ends</span>
+                                        <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Ends</span>
                                         <input
                                             type="date"
                                             value={draft.endAt}
@@ -642,7 +642,7 @@ export default function AdsPage() {
                                                             {li.intensity.toLowerCase()} · {li.days}d
                                                         </span>
                                                     </span>
-                                                    <span className="font-black tabular-nums text-white">{formatUsd(li.priceCents)}</span>
+                                                    <span className="font-bold tabular-nums text-white">{formatUsd(li.priceCents)}</span>
                                                 </div>
                                             ))}
                                             {draft.emailEnabled ? (
@@ -653,7 +653,7 @@ export default function AdsPage() {
                                                             {quote.emailRecipientCount} recipients
                                                         </span>
                                                     </span>
-                                                    <span className="font-black tabular-nums text-white">{formatUsd(quote.emailPriceCents)}</span>
+                                                    <span className="font-bold tabular-nums text-white">{formatUsd(quote.emailPriceCents)}</span>
                                                 </div>
                                             ) : null}
                                         </div>
@@ -735,10 +735,10 @@ export default function AdsPage() {
                             </div>
                         </div>
 
-                        <aside className="flex h-fit flex-col gap-4 rounded-[1.35rem] bg-white/[0.045] p-5">
+                        <aside className="flex h-fit flex-col gap-4 rounded-[1rem] bg-white/[0.045] p-5">
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Estimated reach</p>
-                                <p className="mt-2 text-3xl font-black tabular-nums text-white">
+                                <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Estimated reach</p>
+                                <p className="mt-2 text-3xl font-bold tabular-nums text-white">
                                     {reach ? reach.totalMatched.toLocaleString() : '—'}
                                 </p>
                                 <p className="mt-1 text-xs text-zinc-500">
@@ -746,8 +746,8 @@ export default function AdsPage() {
                                 </p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Quote</p>
-                                <p className="mt-2 text-3xl font-black tabular-nums text-white">
+                                <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Quote</p>
+                                <p className="mt-2 text-3xl font-bold tabular-nums text-white">
                                     {quote ? formatUsd(quote.totalCents) : '—'}
                                 </p>
                                 {quote ? (
@@ -787,11 +787,11 @@ export default function AdsPage() {
                                     <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2">
                                             <p className="truncate text-sm font-bold text-white">{c.name}</p>
-                                            <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${statusStyle[c.status] || statusStyle.DRAFT}`}>
+                                            <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${statusStyle[c.status] || statusStyle.DRAFT}`}>
                                                 {String(c.status).replaceAll('_', ' ')}
                                             </span>
                                             {c.pausedByAdmin ? (
-                                                <span className="inline-flex rounded-full bg-red-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-red-300">
+                                                <span className="inline-flex rounded-full bg-red-500/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-red-300">
                                                     Staff hold
                                                 </span>
                                             ) : null}

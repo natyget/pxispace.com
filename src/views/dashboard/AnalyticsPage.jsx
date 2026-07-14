@@ -17,7 +17,13 @@ import { TimeSeriesChartShell, ChartSkeleton } from '@/components/dashboard/Char
 import MetricCard, { MicroChart, StatRow } from '@/components/dashboard/MetricCard';
 import FunnelChart from '@/components/dashboard/FunnelChart';
 import SpatialHeatMap from '@/components/dashboard/SpatialHeatMap';
-import { getDashboardChartShade } from '@/components/dashboard/chartStyles';
+import {
+    DASHBOARD_BRAND_COLOR,
+    DASHBOARD_GRID_STROKE,
+    DASHBOARD_MUTED_COLOR,
+    DASHBOARD_TOOLTIP_PROPS,
+    getDashboardChartShade,
+} from '@/components/dashboard/chartStyles';
 import { eventsService } from '@/services/events';
 import { organizerAnalyticsService } from '@/services/organizerAnalytics';
 import { deleteFeedItem } from '@/services/feed';
@@ -82,9 +88,9 @@ const HYPE_CHANNELS = [
 ];
 
 const HYPE_SERIES = {
-    messages: { label: 'Messages', color: '#f4f4f5' },
-    reactions: { label: 'Reactions', color: '#a1a1aa' },
-    media: { label: 'Uploads', color: '#71717a' },
+    messages: { label: 'Messages', color: getDashboardChartShade(0) },
+    reactions: { label: 'Reactions', color: getDashboardChartShade(1) },
+    media: { label: 'Uploads', color: getDashboardChartShade(2) },
 };
 
 const HYPE_MODES = [
@@ -160,43 +166,43 @@ function HypePanel({ behavior, isMobile }) {
         <SectionCard
             title="Hype index"
             actions={actions}
-            className="!rounded-[1.75rem]"
+            className="!rounded-[1.25rem]"
             bodyClassName="!p-0"
         >
             <div className="relative overflow-hidden px-5 py-5 md:px-6 md:py-6">
                 <div className="relative grid grid-cols-1 gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-                    <div className="rounded-[1.5rem] bg-white/[0.035] p-5 md:p-6">
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Engagement pulse</p>
-                        <p className="mt-3 text-6xl font-black leading-none tracking-normal text-white md:text-7xl">{formatNumber(behavior.hypeIndex)}</p>
+                    <div className="rounded-[1.25rem] bg-white/[0.035] p-5 md:p-6">
+                        <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Engagement pulse</p>
+                        <p className="mt-3 text-6xl font-bold leading-none tracking-normal text-white md:text-7xl">{formatNumber(behavior.hypeIndex)}</p>
                         <p className="mt-1 text-sm font-bold text-zinc-400">out of 100</p>
                         <p className="mt-4 text-sm leading-6 text-zinc-400">
                             A blended signal from chat, reactions, comments, and uploads per attendee.
                         </p>
                         <div className="mt-6 grid grid-cols-2 gap-2">
                             <div className="rounded-2xl bg-white/[0.045] p-3">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Selected volume</p>
-                                <p className="mt-1 text-sm font-black text-white">{formatNumber(activeTotal)}</p>
+                                <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Selected volume</p>
+                                <p className="mt-1 text-sm font-bold text-white">{formatNumber(activeTotal)}</p>
                             </div>
                             <div className="rounded-2xl bg-white/[0.045] p-3">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Peak hour</p>
-                                <p className="mt-1 text-sm font-black text-white">
+                                <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Peak hour</p>
+                                <p className="mt-1 text-sm font-bold text-white">
                                     {peakHour.hourIso ? formatHourTick(peakHour.hourIso) : 'No activity'}
                                 </p>
                             </div>
                         </div>
                         <div className="mt-2 rounded-2xl bg-white/[0.045] p-3">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Peak volume</p>
-                            <p className="mt-1 text-sm font-black text-white">{formatNumber(peakHour.total)}</p>
+                            <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Peak volume</p>
+                            <p className="mt-1 text-sm font-bold text-white">{formatNumber(peakHour.total)}</p>
                         </div>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                         {totalsByKey.map((item) => (
                             <div key={item.key} className="rounded-2xl bg-white/[0.045] p-3">
                                 <div className="flex items-center justify-between gap-3">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{item.label}</p>
+                                    <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">{item.label}</p>
                                     <span className={`h-2 w-2 rounded-full ${item.active ? 'opacity-100' : 'opacity-35'}`} style={{ backgroundColor: item.color }} />
                                 </div>
-                                <p className="mt-3 text-3xl font-black tracking-normal text-white">{formatNumber(item.value)}</p>
+                                <p className="mt-3 text-3xl font-bold tracking-normal text-white">{formatNumber(item.value)}</p>
                                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.055]">
                                     <div
                                         className="h-full rounded-full bg-white/70"
@@ -206,14 +212,14 @@ function HypePanel({ behavior, isMobile }) {
                             </div>
                         ))}
                         <div className="rounded-2xl bg-white/[0.045] p-3">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Comments</p>
-                            <p className="mt-3 text-3xl font-black tracking-normal text-white">{formatNumber(behavior.totals?.comments)}</p>
+                            <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Comments</p>
+                            <p className="mt-3 text-3xl font-bold tracking-normal text-white">{formatNumber(behavior.totals?.comments)}</p>
                             <p className="mt-3 text-xs font-semibold leading-5 text-zinc-500">Conversation depth outside quick reactions.</p>
                         </div>
                     </div>
                 </div>
                 {hasActivity ? (
-                    <div className="relative mt-5 h-[380px] rounded-[1.5rem] bg-white/[0.025] p-3 md:h-[520px]">
+                    <div className="relative mt-5 h-[380px] rounded-[1.25rem] bg-white/[0.025] p-3 md:h-[520px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={series} margin={{ top: 12, right: 14, bottom: 0, left: isMobile ? -18 : 0 }}>
                                 <defs>
@@ -224,7 +230,7 @@ function HypePanel({ behavior, isMobile }) {
                                         </linearGradient>
                                     ))}
                                 </defs>
-                                <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                                <CartesianGrid stroke={DASHBOARD_GRID_STROKE} vertical={false} />
                                 <XAxis
                                     dataKey="hourIso"
                                     tickFormatter={formatHourTick}
@@ -239,15 +245,7 @@ function HypePanel({ behavior, isMobile }) {
                                     axisLine={false}
                                     tickLine={false}
                                 />
-                                <Tooltip
-                                    labelFormatter={formatHourTick}
-                                    contentStyle={{
-                                        background: '#09090b',
-                                        border: 0,
-                                        borderRadius: 14,
-                                        fontSize: 12,
-                                    }}
-                                />
+                                <Tooltip {...DASHBOARD_TOOLTIP_PROPS} labelFormatter={formatHourTick} />
                                 {activeKeys.map((key) => (
                                     <Area
                                         key={key}
@@ -338,7 +336,7 @@ function TopMomentsPanel({ moments, onRemoved }) {
                                 type="button"
                                 onClick={() => remove(m.mediaId)}
                                 disabled={busyId === m.mediaId}
-                                className="shrink-0 rounded-full bg-red-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-red-300 opacity-0 transition group-hover:opacity-100 disabled:opacity-60"
+                                className="shrink-0 rounded-full bg-red-500/15 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-red-300 opacity-0 transition group-hover:opacity-100 disabled:opacity-60"
                             >
                                 {busyId === m.mediaId ? '...' : 'Remove'}
                             </button>
@@ -362,7 +360,7 @@ function SalesTooltip({ active, payload, label }) {
     return (
         <div className="dashboard-glow-popover min-w-[180px] rounded-2xl bg-zinc-950 p-3.5 shadow-2xl">
             <p className="text-[11px] font-semibold tracking-wide text-zinc-300">{formatDayTick(label)}</p>
-            <p className="mt-1 text-base font-black text-white">{formatNumber(point.count)} tickets</p>
+            <p className="mt-1 text-base font-bold text-white">{formatNumber(point.count)} tickets</p>
             {point.cumulative != null ? (
                 <p className="mt-1 text-xs font-semibold text-zinc-400">{formatNumber(point.cumulative)} cumulative</p>
             ) : null}
@@ -377,8 +375,8 @@ function SalesTooltip({ active, payload, label }) {
  * differ by orders of magnitude.
  */
 function SalesVelocityChart({ byDay, velocityPerDay7d, totalSold, isMobile }) {
-    const heroShade = getDashboardChartShade(0);
-    const cumulativeShade = getDashboardChartShade(3);
+    const heroShade = DASHBOARD_BRAND_COLOR;
+    const cumulativeShade = DASHBOARD_MUTED_COLOR;
     const interval = tickInterval(byDay.length, isMobile ? 5 : 9);
 
     return (
@@ -400,19 +398,21 @@ function SalesVelocityChart({ byDay, velocityPerDay7d, totalSold, isMobile }) {
                                     <stop offset="100%" stopColor={heroShade} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 8" vertical={false} />
+                            <CartesianGrid stroke={DASHBOARD_GRID_STROKE} vertical={false} />
                             <XAxis
                                 dataKey="date"
-                                stroke="rgba(255,255,255,0.24)"
-                                tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: isMobile ? 9 : 10 }}
+                                tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: isMobile ? 9 : 10 }}
                                 tickFormatter={formatDayTick}
                                 interval={interval}
+                                axisLine={false}
+                                tickLine={false}
                             />
                             <YAxis
-                                stroke="rgba(255,255,255,0.24)"
-                                tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 10 }}
+                                tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 10 }}
                                 width={isMobile ? 28 : 36}
                                 allowDecimals={false}
+                                axisLine={false}
+                                tickLine={false}
                             />
                             <Tooltip content={<SalesTooltip />} />
                             <Area
@@ -430,7 +430,7 @@ function SalesVelocityChart({ byDay, velocityPerDay7d, totalSold, isMobile }) {
                     </ResponsiveContainer>
                 </div>
                 <div className="flex h-20 shrink-0 flex-col gap-1 rounded-2xl bg-black/15 px-2 py-2">
-                    <p className="shrink-0 text-[10px] font-black uppercase tracking-widest text-white/35">Cumulative</p>
+                    <p className="shrink-0 text-[11px] font-medium tracking-[0.02em] text-white/35">Cumulative</p>
                     {/* The label above sits in normal flow, so the chart needs its own
                         flex-1/min-h-0 box — a bare height:100% ResponsiveContainer here
                         would size itself off the parent's full height and get clipped
@@ -488,46 +488,44 @@ function AnalyticsHero({ totals, last30d, velocity7d, loading, isLiveEvent }) {
     ];
 
     return (
-        <section className="dashboard-surface-b relative overflow-hidden rounded-[2rem] px-5 py-6 md:px-7 md:py-7">
-            <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <section>
+            <div className="flex flex-wrap items-end justify-between gap-4 px-1">
                 <div className="max-w-2xl">
-                    <div className="mb-3 flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-black">
-                            Organizer Analytics
-                        </span>
+                    <p className="flex items-center gap-2.5 text-[13px] font-medium text-zinc-500">
+                        Analytics
                         {isLiveEvent ? (
                             <Link
                                 href="/dashboard/analytics?view=live-ops"
-                                className="inline-flex items-center gap-2 rounded-full bg-emerald-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-200"
+                                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-200 transition hover:bg-emerald-400/15"
                             >
-                                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-300" />
-                                Live operations
+                                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300" />
+                                Live now
                             </Link>
                         ) : null}
-                    </div>
-                    <h1 className="max-w-xl text-3xl font-black leading-[0.95] tracking-normal text-white normal-case md:text-5xl">
-                        See what moved the room.
+                    </p>
+                    <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">
+                        See what moved the room
                     </h1>
-                    <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-300 md:text-base">
+                    <p className="mt-1.5 text-sm leading-6 text-zinc-500">
                         Revenue, attendance, hype, and shareable moments in one clean read.
                     </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 lg:w-[430px]">
-                    {heroMetrics.map((metric) => (
-                        <div key={metric.label} className="min-h-[118px] rounded-2xl bg-white/[0.055] p-4">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-white/45">{metric.label}</p>
-                            {loading ? (
-                                <div className="mt-4 h-8 w-20 animate-pulse rounded-lg bg-white/10" />
-                            ) : (
-                                <p className="mt-3 truncate text-2xl font-black tracking-normal text-white">{metric.value}</p>
-                            )}
-                            <p className="mt-2 text-xs font-semibold leading-4 text-zinc-400">{metric.detail}</p>
-                            {metric.sparkline?.length ? (
-                                <MicroChart points={metric.sparkline} color="#ffffff" className="mt-3 opacity-70" />
-                            ) : null}
-                        </div>
-                    ))}
-                </div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-[1.25rem] bg-white/[0.06] ring-1 ring-white/[0.07] lg:grid-cols-4">
+                {heroMetrics.map((metric) => (
+                    <div key={metric.label} className="bg-[#0e0e13] px-5 py-4">
+                        <p className="text-[12px] font-medium text-zinc-500">{metric.label}</p>
+                        {loading ? (
+                            <div className="mt-3 h-8 w-20 animate-pulse rounded-lg bg-white/10" />
+                        ) : (
+                            <p className="mt-2 truncate text-[26px] font-semibold leading-none tracking-tight text-white">{metric.value}</p>
+                        )}
+                        <p className="mt-2 text-xs leading-4 text-zinc-500">{metric.detail}</p>
+                        {metric.sparkline?.length ? (
+                            <MicroChart points={metric.sparkline} className="mt-3 opacity-80" />
+                        ) : null}
+                    </div>
+                ))}
             </div>
         </section>
     );
@@ -535,10 +533,10 @@ function AnalyticsHero({ totals, last30d, velocity7d, loading, isLiveEvent }) {
 
 function EventPicker({ events, selectedEventId, comparisonIds = [], onSelect, onToggleCompare, loading }) {
     return (
-        <div className="rounded-[1.75rem] bg-white/[0.035] p-4">
+        <div className="rounded-[1.25rem] bg-white/[0.035] p-4">
             <div className="flex flex-col gap-1 pb-4 md:flex-row md:items-end md:justify-between">
                 <div>
-                    <p className="text-xs font-black uppercase tracking-widest text-white/40">Choose events</p>
+                    <p className="text-xs font-bold tracking-[0.02em] text-white/40">Choose events</p>
                     <p className="mt-1 text-sm text-zinc-500">Open one event for detail, or compare up to four at once.</p>
                 </div>
                 {loading ? <span className="text-xs font-semibold text-zinc-500">Syncing events</span> : null}
@@ -566,13 +564,13 @@ function EventPicker({ events, selectedEventId, comparisonIds = [], onSelect, on
                                     className="block w-full rounded-xl px-2 py-1.5 text-left text-xs font-bold"
                                 >
                                     <span className="block truncate">{event.name}</span>
-                                    <span className={`mt-1 block text-[10px] uppercase tracking-widest ${selected ? 'text-black/55' : 'text-zinc-500'}`}>{event.dateLabel}</span>
+                                    <span className={`mt-1 block text-[10px] tracking-[0.02em] ${selected ? 'text-black/55' : 'text-zinc-500'}`}>{event.dateLabel}</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => onToggleCompare(event.id)}
                                     aria-pressed={comparing}
-                                    className={`mt-1 w-full rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition ${
+                                    className={`mt-1 w-full rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] transition ${
                                         comparing
                                             ? selected ? 'bg-black text-white' : 'bg-white text-black'
                                             : selected ? 'bg-black/10 text-black/60 hover:bg-black/15' : 'bg-white/[0.06] text-white/45 hover:bg-white/[0.1] hover:text-white'
@@ -593,8 +591,8 @@ function CompareMetric({ label, value, barValue, maxValue }) {
     return (
         <div className="rounded-2xl bg-white/[0.035] px-3 py-3">
             <div className="flex items-center justify-between gap-3">
-                <p className="truncate text-[10px] font-black uppercase tracking-widest text-white/35">{label}</p>
-                <p className="shrink-0 text-sm font-black text-white tabular-nums">{value}</p>
+                <p className="truncate text-[11px] font-medium tracking-[0.02em] text-white/35">{label}</p>
+                <p className="shrink-0 text-sm font-bold text-white tabular-nums">{value}</p>
             </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.055]" aria-hidden="true">
                 <div className="h-full rounded-full bg-white/70" style={{ width: `${clampPercent(barValue, maxValue)}%` }} />
@@ -606,8 +604,8 @@ function CompareMetric({ label, value, barValue, maxValue }) {
 function EventComparisonPanel({ details = [], loading }) {
     if (loading) {
         return (
-            <div className="rounded-[1.75rem] bg-white/[0.035] p-5">
-                <p className="text-xs font-black uppercase tracking-widest text-white/35">Comparison</p>
+            <div className="rounded-[1.25rem] bg-white/[0.035] p-5">
+                <p className="text-xs font-bold tracking-[0.02em] text-white/35">Comparison</p>
                 <div className="mt-4 grid gap-3 lg:grid-cols-3">
                     {[0, 1, 2].map((item) => (
                         <div key={item} className="h-32 animate-pulse rounded-2xl bg-white/[0.035]" />
@@ -619,8 +617,8 @@ function EventComparisonPanel({ details = [], loading }) {
 
     if (!details.length) {
         return (
-            <div className="rounded-[1.75rem] bg-white/[0.035] p-5">
-                <p className="text-xs font-black uppercase tracking-widest text-white/35">Comparison</p>
+            <div className="rounded-[1.25rem] bg-white/[0.035] p-5">
+                <p className="text-xs font-bold tracking-[0.02em] text-white/35">Comparison</p>
                 <p className="mt-2 text-sm leading-6 text-zinc-500">Select Compare on one or more event chips to build a side-by-side read.</p>
             </div>
         );
@@ -639,18 +637,18 @@ function EventComparisonPanel({ details = [], loading }) {
     const maxHype = Math.max(100, ...rows.map((row) => row.hype));
 
     return (
-        <section className="rounded-[1.75rem] bg-white/[0.035] p-5">
+        <section className="rounded-[1.25rem] bg-white/[0.035] p-5">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <p className="text-xs font-black uppercase tracking-widest text-white/35">Comparison</p>
-                    <h2 className="mt-2 text-xl font-black tracking-normal text-white">Event side-by-side</h2>
+                    <p className="text-xs font-bold tracking-[0.02em] text-white/35">Comparison</p>
+                    <h2 className="mt-2 text-xl font-bold tracking-normal text-white">Event side-by-side</h2>
                 </div>
                 <p className="text-xs font-semibold text-zinc-500">{rows.length} selected</p>
             </div>
             <div className="mt-5 grid gap-3 xl:grid-cols-2">
                 {rows.map((row) => (
                     <article key={row.id || row.name} className="rounded-[1.25rem] bg-white/[0.035] p-4">
-                        <h3 className="truncate text-base font-black text-white">{row.name}</h3>
+                        <h3 className="truncate text-base font-bold text-white">{row.name}</h3>
                         <div className="mt-4 grid gap-2 sm:grid-cols-2">
                             <CompareMetric label="Tickets" value={formatNumber(row.tickets)} barValue={row.tickets} maxValue={maxTickets} />
                             <CompareMetric label="Gross" value={formatMoney(row.gross)} barValue={row.gross} maxValue={maxGross} />
@@ -668,10 +666,10 @@ function InsightMetric({ label, value, detail, sparkline, tone = 'default' }) {
     const toneClass = tone === 'muted' ? 'text-zinc-300' : 'text-white';
     return (
         <div className="rounded-2xl bg-white/[0.045] p-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/40">{label}</p>
-            <p className={`mt-2 truncate text-2xl font-black tracking-normal ${toneClass}`}>{value}</p>
+            <p className="text-[11px] font-medium tracking-[0.02em] text-white/40">{label}</p>
+            <p className={`mt-2 truncate text-2xl font-bold tracking-normal ${toneClass}`}>{value}</p>
             {detail ? <p className="mt-1 text-xs font-semibold leading-5 text-zinc-500">{detail}</p> : null}
-            {sparkline ? <MicroChart points={sparkline} color="#ffffff" className="mt-3 opacity-65" /> : null}
+            {sparkline ? <MicroChart points={sparkline} className="mt-3 opacity-80" /> : null}
         </div>
     );
 }
@@ -679,7 +677,7 @@ function InsightMetric({ label, value, detail, sparkline, tone = 'default' }) {
 function EventSummaryPanel({ eventDetail }) {
     const scanRate = percent(eventDetail.attendance.scanRate);
     return (
-        <SectionCard title="Event snapshot" className="!rounded-[1.75rem]" bodyClassName="!p-4 md:!p-5">
+        <SectionCard title="Event snapshot" className="!rounded-[1.25rem]" bodyClassName="!p-4 md:!p-5">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <InsightMetric
                     label="Gross revenue"
@@ -714,7 +712,7 @@ function EventSummaryPanel({ eventDetail }) {
 
 function MediaPanel({ media }) {
     return (
-        <SectionCard title="Content engine" className="h-full !rounded-[1.75rem]">
+        <SectionCard title="Content engine" className="h-full !rounded-[1.25rem]">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                 <div className="space-y-3">
                     <InsightMetric
@@ -741,8 +739,8 @@ function MediaPanel({ media }) {
 function AnalyticsSectionLabel({ eyebrow, title, copy }) {
     return (
         <div className="px-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">{eyebrow}</p>
-            <h2 className="mt-2 text-xl font-black tracking-normal text-white normal-case md:text-2xl">{title}</h2>
+            <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">{eyebrow}</p>
+            <h2 className="mt-2 text-xl font-bold tracking-normal text-white normal-case md:text-2xl">{title}</h2>
             {copy ? <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-500">{copy}</p> : null}
         </div>
     );
@@ -754,13 +752,13 @@ function TopUploadersList({ uploaders = [] }) {
     }
     return (
         <div className="space-y-2">
-            <p className="px-1 text-[10px] font-black uppercase tracking-widest text-white/35">Top uploaders</p>
+            <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-white/35">Top uploaders</p>
             {uploaders.map((uploader) => (
                 <div key={uploader.userId} className="glass-field flex items-center gap-3 rounded-2xl p-3">
                     {uploader.avatarUrl ? (
                         <img src={uploader.avatarUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
                     ) : (
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-xs font-black text-white">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-xs font-bold text-white">
                             {(uploader.name || uploader.username || '?').slice(0, 1).toUpperCase()}
                         </span>
                     )}
@@ -768,7 +766,7 @@ function TopUploadersList({ uploaders = [] }) {
                         <p className="truncate text-sm font-bold text-white">{uploader.name || uploader.username || 'Guest'}</p>
                         {uploader.username ? <p className="truncate text-xs text-zinc-500">@{uploader.username}</p> : null}
                     </div>
-                    <span className="shrink-0 text-xs font-black text-zinc-300">{formatNumber(uploader.count)}</span>
+                    <span className="shrink-0 text-xs font-bold text-zinc-300">{formatNumber(uploader.count)}</span>
                 </div>
             ))}
         </div>
@@ -798,10 +796,10 @@ function LocationClustersCard({ clusters = [], noise = 0, totalGeotagged = 0 }) 
                         className="glass-field flex items-center justify-between gap-4 rounded-2xl p-4"
                     >
                         <div className="min-w-0">
-                            <p className="text-sm font-black text-white">Cluster of {formatNumber(cluster.count)} photos</p>
+                            <p className="text-sm font-bold text-white">Cluster of {formatNumber(cluster.count)} photos</p>
                             <p className="mt-1 text-xs font-semibold text-zinc-500">~{formatNumber(cluster.radiusM)} m radius</p>
                         </div>
-                        <span className="shrink-0 rounded-full bg-white/[0.07] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-zinc-300">
+                        <span className="shrink-0 rounded-full bg-white/[0.07] px-3 py-1 text-[11px] font-medium tracking-[0.02em] text-zinc-300">
                             Hotspot {index + 1}
                         </span>
                     </div>
@@ -1008,8 +1006,8 @@ function AnalyticsPageContent() {
                     onToggleCompare={handleToggleCompare}
                     loading={eventsLoading}
                 />
-                <div className="rounded-[1.75rem] bg-white/[0.035] p-4">
-                    <p className="text-xs font-black uppercase tracking-widest text-white/40">Portfolio totals</p>
+                <div className="rounded-[1.25rem] bg-white/[0.035] p-4">
+                    <p className="text-xs font-bold tracking-[0.02em] text-white/40">Portfolio totals</p>
                     <div className="mt-4 grid grid-cols-2 gap-3">
                         {[
                             { label: 'Events', value: formatNumber(totals?.events) },
@@ -1018,8 +1016,8 @@ function AnalyticsPageContent() {
                             { label: 'Velocity', value: `${formatNumber(round1(overviewVelocity7d))}/day` },
                         ].map((item) => (
                             <div key={item.label} className="rounded-2xl bg-white/[0.045] px-3 py-3">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{item.label}</p>
-                                <p className="mt-1 truncate text-lg font-black text-white">{overviewLoading ? '...' : item.value}</p>
+                                <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">{item.label}</p>
+                                <p className="mt-1 truncate text-lg font-bold text-white">{overviewLoading ? '...' : item.value}</p>
                             </div>
                         ))}
                     </div>
@@ -1058,7 +1056,7 @@ function AnalyticsPageContent() {
 
                     <HypePanel behavior={eventDetail.behavior} isMobile={isMobile} />
 
-                    <SectionCard title="Attendance path" className="!rounded-[1.75rem]">
+                    <SectionCard title="Attendance path" className="!rounded-[1.25rem]">
                         <FunnelChart data={funnelData} singleSelection />
                     </SectionCard>
 
@@ -1082,11 +1080,11 @@ function AnalyticsPageContent() {
                         />
                     </div>
 
-                    <SectionCard title="Where the night happened" className="!rounded-[1.75rem]">
+                    <SectionCard title="Where the night happened" className="!rounded-[1.25rem]">
                         <LocationClustersCard {...eventDetail.locationClusters} />
                     </SectionCard>
 
-                    <SectionCard title="Spatial intelligence" className="!rounded-[1.75rem]">
+                    <SectionCard title="Spatial intelligence" className="!rounded-[1.25rem]">
                         {/* Built to take real room-by-room hype data (rooms + timeSlices), but no
                             backend endpoint publishes a venue floor plan or per-room readings yet —
                             only the photo-location DBSCAN clusters above are wired to real geodata.

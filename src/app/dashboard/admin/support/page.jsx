@@ -60,7 +60,7 @@ function formatDate(iso) {
 
 function StatusBadge({ status }) {
     return (
-        <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyle[status] || statusStyle.OPEN}`}>
+        <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${statusStyle[status] || statusStyle.OPEN}`}>
             {String(status || '').replaceAll('_', ' ')}
         </span>
     );
@@ -111,7 +111,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
     };
 
     return (
-        <div className="dashboard-surface rounded-[1.75rem] p-6 space-y-5">
+        <div className="dashboard-surface rounded-[1.25rem] p-6 space-y-5">
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-lg font-bold text-white">{ticket?.subject || 'Ticket'}</h2>
@@ -174,7 +174,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                                 className={`rounded-xl px-4 py-3 ${m.isStaff ? 'ml-8 bg-white/[0.075]' : 'mr-8 bg-white/[0.035]'}`}
                             >
                                 <div className="flex items-center justify-between gap-3 mb-1.5">
-                                    <span className="text-[11px] font-bold uppercase tracking-wider text-white/45">
+                                    <span className="text-[11px] font-bold tracking-[0.02em] text-white/45">
                                         {m.isStaff ? `PXI Staff${m.author?.username ? ` · ${m.author.username}` : ''}` : (m.author?.username || 'User')}
                                     </span>
                                     <span className="text-[11px] text-white/35">{formatDate(m.createdAt)}</span>

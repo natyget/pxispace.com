@@ -4,6 +4,26 @@ import { getNotifications } from '@/services/notifications';
 
 const STAFF_ACCESS_HINT_KEY = 'pxi_staff_access_hint';
 
+/** Per-user hint key — a hint left by one account must never grant UI to another. */
+function staffHintKey(userId) {
+    return userId ? `${STAFF_ACCESS_HINT_KEY}:${userId}` : STAFF_ACCESS_HINT_KEY;
+}
+
+/** Remove all staff-access hints (legacy global key included). Called on logout. */
+export function clearStaffAccessHints() {
+    if (typeof window === 'undefined') return;
+    try {
+        const stale = [];
+        for (let i = 0; i < window.localStorage.length; i += 1) {
+            const key = window.localStorage.key(i);
+            if (key && key.startsWith(STAFF_ACCESS_HINT_KEY)) stale.push(key);
+        }
+        stale.forEach((key) => window.localStorage.removeItem(key));
+    } catch {
+        /* ignore */
+    }
+}
+
 function normalizeRole(value) {
     return String(value || '').trim().toUpperCase().replace('-', '_');
 }
@@ -64,9 +84,9 @@ function hasAcceptedBouncerInvite(notification) {
     return response === 'accepted' || notification?.data?.acceptedAt;
 }
 
-function getLocalStaffAccessHint() {
+function getLocalStaffAccessHint(userId) {
     if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem(STAFF_ACCESS_HINT_KEY) === '1';
+    return window.localStorage.getItem(staffHintKey(userId)) === '1';
 }
 
 function userHasStaffAccess(user) {
@@ -110,8 +130,7 @@ export async function getDashboardCapabilities(userOrId) {
     const freshUser = meResult.status === 'fulfilled' ? (meResult.value?.user || meResult.value) : null;
     const determined = eventsResult.status === 'fulfilled'
         || notificationsResult.status === 'fulfilled'
-        || meResult.status === 'fulfilled'
-        || getLocalStaffAccessHint();
+        || meResult.status === 'fulfilled';
 
     return resolveDashboardCapabilities({
         user: baseUser,
@@ -155,13 +174,20 @@ export function resolveDashboardCapabilities({
         return hasAcceptedBouncerInvite(n);
     });
     const hasBouncerFromUser = userHasStaffAccess(user) || userHasStaffAccess(freshUser);
-    const hasBouncerFromLocalHint = getLocalStaffAccessHint();
-    const hasBouncerAccess =
-        hasBouncerFromEvents || hasBouncerFromNotifications || hasBouncerFromUser || hasBouncerFromLocalHint;
+    const hasBouncerFromServer = hasBouncerFromEvents || hasBouncerFromNotifications || hasBouncerFromUser;
 
-    if (typeof window !== 'undefined' && hasBouncerAccess) {
+    // The local hint only bridges the gap while nothing could be fetched (offline,
+    // cold start). Once a real answer exists, the server wins — including revocation.
+    const hasBouncerAccess = hasBouncerFromServer || (!determined && getLocalStaffAccessHint(userId));
+
+    if (typeof window !== 'undefined' && determined) {
         try {
-            window.localStorage.setItem(STAFF_ACCESS_HINT_KEY, '1');
+            if (hasBouncerFromServer) {
+                window.localStorage.setItem(staffHintKey(userId), '1');
+            } else {
+                window.localStorage.removeItem(staffHintKey(userId));
+                window.localStorage.removeItem(STAFF_ACCESS_HINT_KEY);
+            }
         } catch {
             /* ignore */
         }

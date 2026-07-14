@@ -19,8 +19,8 @@ export function StatRow({ items = [], className = '' }) {
         >
             {items.map((item) => (
                 <div key={item.label} className="min-w-0">
-                    <p className="truncate text-[10px] font-bold uppercase tracking-widest text-white/40">{item.label}</p>
-                    <p className="mt-1 truncate text-xl font-black tracking-normal text-white">{item.value}</p>
+                    <p className="truncate text-[11px] font-medium tracking-[0.02em] text-white/40">{item.label}</p>
+                    <p className="mt-1 truncate text-xl font-bold tracking-normal text-white">{item.value}</p>
                     {item.detail ? <p className="mt-0.5 truncate text-xs text-zinc-500">{item.detail}</p> : null}
                 </div>
             ))}
@@ -99,9 +99,9 @@ export default function MetricCard({
     const TrendIcon = trendIconFor(trend);
 
     return (
-        <div className={`glass-panel relative flex min-h-[132px] flex-col justify-between rounded-[1.5rem] ${dense ? 'p-4 md:p-5' : 'p-5 md:p-6'}`}>
+        <div className={`glass-panel relative flex min-h-[132px] flex-col justify-between rounded-[1.25rem] ${dense ? 'p-4 md:p-5' : 'p-5 md:p-6'}`}>
             <div className="mb-4 flex items-center justify-between gap-3">
-                <span className="text-[11px] md:text-[12px] font-bold tracking-widest text-white/40 uppercase">{title}</span>
+                <span className="text-[11px] md:text-[12px] font-bold tracking-[0.02em] text-white/40">{title}</span>
                 {actions ? (
                     actions
                 ) : icon ? (
@@ -129,7 +129,7 @@ export default function MetricCard({
                             )}
                         </div>
                     ) : null}
-                    <div className="pill-ghost inline-flex max-w-full items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-300 md:text-[11px]">
+                    <div className="pill-ghost inline-flex max-w-full items-center gap-1 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-zinc-300 md:text-[11px]">
                         {TrendIcon ? <HugeiconsIcon icon={TrendIcon} className="h-3 w-3 shrink-0 text-white opacity-50" /> : null}
                         <span>{description}</span>
                     </div>

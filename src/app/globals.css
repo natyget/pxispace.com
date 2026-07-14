@@ -156,7 +156,7 @@ html, body {
     --pxi-charcoal: #121212;
     --pxi-violet: #2d1b4e;
     /* Dashboard tokens */
-    --dashboard-bg-base: #050506;
+    --dashboard-bg-base: #08080b;
     --dashboard-bg-elev-1: #0d0d11;
     --dashboard-bg-elev-2: #14141a;
     --dashboard-bg-elev-3: #1a1a22;
@@ -260,25 +260,30 @@ html, body {
 }
 
 @layer utilities {
+  /* Afterhours chrome: crisp bordered surfaces on a deep plane. Depth comes from
+     the hairline + inset top-light, not from floating shadow blobs. */
   .surface-a,
   .dashboard-surface-a,
   .matte-surface,
   .dashboard-surface {
-    background: rgba(15, 15, 18, 0.82);
-    border: none;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 18px 54px rgba(0, 0, 0, 0.28);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0) 42%), #0e0e13;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 12px 32px rgba(0, 0, 0, 0.32);
   }
 
   .dashboard-page-surface {
-    background: var(--dashboard-bg-base);
+    background:
+      radial-gradient(900px 420px at 12% -6%, rgba(216, 74, 255, 0.05), transparent 62%),
+      radial-gradient(720px 380px at 96% 4%, rgba(99, 102, 241, 0.035), transparent 60%),
+      var(--dashboard-bg-base);
     color: var(--dashboard-text-primary);
   }
 
   .dashboard-page-surface :is(h1, h2, h3, h4, h5, h6) {
     font-family: var(--font-inter);
-    letter-spacing: 0;
+    letter-spacing: -0.01em;
     text-transform: none;
   }
 
@@ -286,35 +291,35 @@ html, body {
   .dashboard-surface-b,
   .dashboard-glass-surface,
   .dashboard-surface-frosted {
-    background: rgba(16, 16, 18, 0.78);
-    border: none;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    box-shadow: 0 18px 46px rgba(0, 0, 0, 0.26);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0) 46%), #0e0e13;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 14px 36px rgba(0, 0, 0, 0.34);
   }
 
   .dashboard-popover-surface {
-    background: rgba(10, 10, 12, 0.94);
-    border: none;
+    background: rgba(12, 12, 16, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.09);
     backdrop-filter: blur(var(--dashboard-surface-b-blur));
     -webkit-backdrop-filter: blur(var(--dashboard-surface-b-blur));
     box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
   }
 
   .glass-panel {
-    background: rgba(14, 14, 16, 0.82);
-    border: none;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0) 42%), #0e0e13;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 12px 32px rgba(0, 0, 0, 0.32);
   }
 
   .glass-panel-strong {
-    background: rgba(20, 20, 22, 0.9);
-    border: none;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    box-shadow: 0 20px 52px rgba(0, 0, 0, 0.34);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 48%), #111117;
+    border: 1px solid rgba(255, 255, 255, 0.085);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 16px 40px rgba(0, 0, 0, 0.36);
   }
 
   .glass-field {
@@ -417,9 +422,10 @@ html, body {
     justify-content: center;
     border-radius: 9999px;
     background: #fff;
-    color: #050506;
-    font-weight: 900;
-    box-shadow: none;
+    color: #08080b;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.24) inset, 0 8px 24px rgba(255, 255, 255, 0.07);
     transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
   }
 
@@ -466,7 +472,7 @@ html, body {
   }
 
   .dashboard-input:focus {
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 1.5px rgba(216, 74, 255, 0.45);
     background: rgba(255, 255, 255, 0.055);
   }
 
@@ -516,13 +522,12 @@ html, body {
     justify-content: center;
     white-space: nowrap;
     border-radius: 9999px;
-    padding: 0.55rem 1rem;
-    color: rgba(255, 255, 255, 0.52);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
+    padding: 0.5rem 1rem;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
     line-height: 1;
-    text-transform: uppercase;
     transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
   }
 
@@ -1128,7 +1133,7 @@ html, body {
 @media (min-width: 1024px) {
   .public-album-page {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 530px;
+    grid-template-columns: minmax(0, 1fr) 414px;
     align-items: stretch;
     height: calc(100dvh - 80px);
     max-height: calc(100dvh - 80px);

@@ -100,7 +100,7 @@ function UsernameInput({ value, onChange, placeholder }) {
                             {u.avatarUrl ? (
                                 <img src={u.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
                             ) : (
-                                <span className="grid h-7 w-7 place-items-center rounded-full bg-white/10 text-[11px] font-black text-white">
+                                <span className="grid h-7 w-7 place-items-center rounded-full bg-white/10 text-[11px] font-bold text-white">
                                     {(u.username || u.name || '?').charAt(0).toUpperCase()}
                                 </span>
                             )}
@@ -163,7 +163,7 @@ function CreatePromoCard({ onCreated }) {
 
     return (
         <AdminPanel className="space-y-4">
-            <h2 className="text-[11px] font-bold tracking-widest text-white/40 uppercase">Create code</h2>
+            <h2 className="text-[11px] font-bold tracking-[0.02em] text-white/40">Create code</h2>
             <div className="grid gap-3 sm:grid-cols-2">
                 <select value={kind} onChange={(e) => setKind(e.target.value)} className={inputCls}>
                     <option value="CREDIT">Credit — grants credits to redeemers</option>
@@ -230,7 +230,7 @@ function GrantCreditsCard() {
 
     return (
         <AdminPanel className="space-y-4">
-            <h2 className="text-[11px] font-bold tracking-widest text-white/40 uppercase">Grant credits directly</h2>
+            <h2 className="text-[11px] font-bold tracking-[0.02em] text-white/40">Grant credits directly</h2>
             <div className="grid gap-3 sm:grid-cols-3">
                 <UsernameInput value={username} onChange={setUsername} placeholder="Username (e.g. @dj-nova)" />
                 <input value={amountUsd} onChange={(e) => setAmountUsd(e.target.value)} type="number" step="0.01" placeholder="Amount USD (negative = adjust down)" className={inputCls} />
@@ -343,7 +343,7 @@ export default function AdminPromosPage() {
                                     </td>
                                     <td data-label="Expires" className={adminTdClass}>{formatDate(p.expiresAt)}</td>
                                     <td data-label="Status" className="px-6 py-4">
-                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${
                                             p.isActive
                                                 ? 'bg-emerald-500/10 text-emerald-300'
                                                 : 'bg-white/[0.055] text-white/55'

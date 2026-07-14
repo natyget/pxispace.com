@@ -52,8 +52,8 @@ function UsageTooltip({ active, payload }) {
 
 function DonutPanel({ title, data, centerLabel, centerValue }) {
     return (
-        <div className="dashboard-surface rounded-[1.5rem] p-5">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">{title}</p>
+        <div className="dashboard-surface rounded-[1.25rem] p-5">
+            <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">{title}</p>
             <div className="relative mt-4 h-[180px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -66,8 +66,8 @@ function DonutPanel({ title, data, centerLabel, centerValue }) {
                     </PieChart>
                 </ResponsiveContainer>
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{centerLabel}</span>
-                    <span className="text-xl font-black text-white">{centerValue}</span>
+                    <span className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">{centerLabel}</span>
+                    <span className="text-xl font-bold text-white">{centerValue}</span>
                 </div>
             </div>
         </div>
@@ -80,26 +80,20 @@ const profileInputCls =
 function SettingsHero({ user, activeTab }) {
     const activeLabel = TABS.find((tab) => tab.id === activeTab)?.label || 'Profile';
     return (
-        <section className="dashboard-surface-b relative overflow-hidden rounded-[1.75rem] px-5 py-7 md:px-8">
-            <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
-                <div className="max-w-2xl">
-                    <p className="text-[10px] font-black uppercase tracking-[0.28em] text-zinc-500">PXI Account</p>
-                    <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-normal text-white md:text-6xl">Account settings</h1>
-                    <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-400">
-                        Your identity, music, billing rails, and account controls.
-                    </p>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-[1.25rem] bg-white/[0.04] p-4">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Account</p>
-                        <p className="mt-2 truncate text-lg font-black text-white">@{user?.username || 'account'}</p>
-                    </div>
-                    <div className="rounded-[1.25rem] bg-white/[0.04] p-4">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Section</p>
-                        <p className="mt-2 truncate text-lg font-black text-white">{activeLabel}</p>
-                    </div>
-                </div>
+        <section className="flex flex-col gap-4 px-1 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+                <p className="flex items-center gap-2.5 text-[13px] font-medium text-zinc-500">
+                    Account
+                    <span className="rounded-full bg-white/[0.05] px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">@{user?.username || 'account'}</span>
+                </p>
+                <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Settings</h1>
+                <p className="mt-1.5 max-w-xl text-sm leading-6 text-zinc-500">
+                    Your identity, music, billing rails, and account controls.
+                </p>
             </div>
+            <p className="shrink-0 text-sm text-zinc-500 lg:pb-1">
+                Viewing <span className="font-semibold text-zinc-300">{activeLabel}</span>
+            </p>
         </section>
     );
 }
@@ -139,15 +133,15 @@ function ProfileEditor({ user, updateUser }) {
         <SettingsSurface eyebrow="Identity" title="Profile">
             <div className="grid gap-4 sm:grid-cols-2">
                 <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Display name</span>
+                    <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Display name</span>
                     <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={profileInputCls} />
                 </label>
                 <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Username</p>
+                    <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Username</p>
                     <p className="mt-2 text-sm font-semibold text-white">@{user?.username || 'account'}</p>
                 </div>
                 <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3 sm:col-span-2">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Bio</span>
+                    <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Bio</span>
                     <textarea
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
@@ -159,18 +153,18 @@ function ProfileEditor({ user, updateUser }) {
                     <span className="mt-1 block text-right text-[10px] text-zinc-600">{bio.length}/280</span>
                 </label>
                 <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">City</span>
+                    <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">City</span>
                     <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Where you're based" className={profileInputCls} />
                 </label>
                 <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
-                    <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+                    <span className="flex items-center gap-2 text-[11px] font-bold tracking-[0.02em] text-zinc-500">
                         <HugeiconsIcon icon={InstagramIcon} size={13} />
                         Instagram
                     </span>
                     <input value={instagramHandle} onChange={(e) => setInstagramHandle(e.target.value)} placeholder="@handle" className={profileInputCls} />
                 </label>
                 <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3 sm:col-span-2">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Email</p>
+                    <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Email</p>
                     <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-white">
                         <HugeiconsIcon icon={Mail01Icon} size={14} className="text-zinc-500" />
                         {user?.email || 'Add email in mobile app'}
@@ -317,7 +311,7 @@ function MusicConnectionsCard() {
                         type="button"
                         onClick={disconnect}
                         disabled={busy}
-                        className="pill-ghost px-4 py-2 text-xs font-bold uppercase tracking-widest disabled:opacity-50"
+                        className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em] disabled:opacity-50"
                     >
                         Disconnect
                     </button>
@@ -326,7 +320,7 @@ function MusicConnectionsCard() {
                         type="button"
                         onClick={connect}
                         disabled={busy || loading}
-                        className="rounded-full bg-[#1DB954] px-5 py-2 text-xs font-black uppercase tracking-widest text-black disabled:opacity-50"
+                        className="rounded-full bg-[#1DB954] px-5 py-2 text-xs font-bold tracking-[0.02em] text-black disabled:opacity-50"
                     >
                         {busy ? 'Opening...' : 'Connect Spotify'}
                     </button>
@@ -353,7 +347,7 @@ function MusicConnectionsCard() {
                         type="button"
                         onClick={disconnect}
                         disabled={busy}
-                        className="pill-ghost px-4 py-2 text-xs font-bold uppercase tracking-widest disabled:opacity-50"
+                        className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em] disabled:opacity-50"
                     >
                         Disconnect
                     </button>
@@ -362,7 +356,7 @@ function MusicConnectionsCard() {
                         type="button"
                         onClick={connectApple}
                         disabled={busy || loading}
-                        className="rounded-full bg-[#fa2d48] px-5 py-2 text-xs font-black uppercase tracking-widest text-white disabled:opacity-50"
+                        className="rounded-full bg-[#fa2d48] px-5 py-2 text-xs font-bold tracking-[0.02em] text-white disabled:opacity-50"
                     >
                         {busy ? 'Opening...' : 'Connect Apple Music'}
                     </button>
@@ -376,11 +370,11 @@ function MusicConnectionsCard() {
 
 function SettingsSurface({ eyebrow, title, children, action = null }) {
     return (
-        <section className="dashboard-surface rounded-[1.5rem] p-5 md:p-6">
+        <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
             <div className="mb-5 flex items-start justify-between gap-4">
                 <div>
-                    {eyebrow ? <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">{eyebrow}</p> : null}
-                    <h2 className="mt-1 text-xl font-black text-white">{title}</h2>
+                    {eyebrow ? <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">{eyebrow}</p> : null}
+                    <h2 className="mt-1 text-xl font-bold text-white">{title}</h2>
                 </div>
                 {action}
             </div>
@@ -482,7 +476,7 @@ function AccountPageContent() {
         <div className="mx-auto max-w-6xl space-y-5 md:space-y-6">
             <SettingsHero user={user} activeTab={activeTab} />
 
-            <div className="grid w-full grid-cols-2 gap-1 rounded-[1.35rem] bg-white/[0.045] p-1 sm:flex sm:w-fit sm:rounded-full" role="tablist" aria-label="Account settings sections">
+            <div className="grid w-full grid-cols-2 gap-1 rounded-[1rem] bg-white/[0.045] p-1 sm:flex sm:w-fit sm:rounded-full" role="tablist" aria-label="Account settings sections">
                 {TABS.map((tab) => (
                     <a
                         key={tab.id}
@@ -513,13 +507,13 @@ function AccountPageContent() {
                             ) : (
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
-                                        <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Available balance</p>
-                                        <p className="mt-2 text-2xl font-black text-white">${(availableBalanceCents / 100).toFixed(2)}</p>
+                                        <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Available balance</p>
+                                        <p className="mt-2 text-2xl font-bold text-white">${(availableBalanceCents / 100).toFixed(2)}</p>
                                         <p className="mt-1 text-xs text-zinc-500">Net of PXI fees, not yet paid out by Stripe</p>
                                     </div>
                                     <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
-                                        <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Most recent payout</p>
-                                        <p className="mt-2 text-2xl font-black text-white">
+                                        <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Most recent payout</p>
+                                        <p className="mt-2 text-2xl font-bold text-white">
                                             {lastPayout ? `$${(lastPayout.amount / 100).toFixed(2)}` : '—'}
                                         </p>
                                         <p className="mt-1 text-xs text-zinc-500">
@@ -542,8 +536,8 @@ function AccountPageContent() {
                                     <div className="grid gap-3 sm:grid-cols-2">
                                         {usageBreakdown.map((item) => (
                                             <div key={item.name} className="rounded-[1.25rem] bg-white/[0.035] p-4">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{item.name}</p>
-                                                <p className="mt-2 text-2xl font-black text-white">${item.value.toFixed(2)}</p>
+                                                <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">{item.name}</p>
+                                                <p className="mt-2 text-2xl font-bold text-white">${item.value.toFixed(2)}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -571,7 +565,7 @@ function AccountPageContent() {
                                     type="button"
                                     disabled
                                     title="Saved payment methods are not available yet — cards are entered per purchase at checkout"
-                                    className="pill-ghost cursor-not-allowed px-3 py-1.5 text-xs font-bold uppercase tracking-widest opacity-40"
+                                    className="pill-ghost cursor-not-allowed px-3 py-1.5 text-xs font-bold tracking-[0.02em] opacity-40"
                                 >
                                     Manage
                                 </button>
@@ -648,8 +642,8 @@ function AccountPageContent() {
                             />
                         )}
                         {(activeTab === 'billing' || activeTab === 'payments') && (
-                            <div className="dashboard-surface rounded-[1.5rem] p-5">
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Payout rail</p>
+                            <div className="dashboard-surface rounded-[1.25rem] p-5">
+                                <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Payout rail</p>
                                 <div className="mt-3 flex items-center gap-3">
                                     <HugeiconsIcon icon={Wallet01Icon} size={20} className="text-emerald-400" />
                                     <div>

@@ -8,13 +8,14 @@ import { eventsService } from '../../services/events';
 import { MicroChart, StatRow } from '@/components/dashboard/MetricCard';
 import { RechartsChart, ChartSkeleton } from '@/components/dashboard/ChartFrame';
 import { DASHBOARD_BRAND_COLOR, DASHBOARD_TOOLTIP_PROPS } from '@/components/dashboard/chartStyles';
+import { isVendorUser } from '@/lib/accountTier';
 import { useNotifications } from '@/lib/dashboardStore';
 import { buildCommandCenterUpdates } from '@/services/commandCenter';
 import { helpRequestsService } from '@/services/helpRequests';
 import { organizerAnalyticsService } from '@/services/organizerAnalytics';
 
 const DASHBOARD_RENDER_NOW = Date.now();
-const BASE_CHART_COLOR = '#d4d4d8';
+const BASE_CHART_COLOR = DASHBOARD_BRAND_COLOR;
 
 /** 'YYYY-MM-DD' -> 'Jun 7'. Falls back to the raw value for non-date labels. */
 function formatDayTick(value) {
@@ -257,16 +258,16 @@ export default function DashboardHome() {
     const reminderUpdates = updates.filter((update) => update.group !== 'product');
     const productUpdates = updates.filter((update) => update.group === 'product');
     const metricsLoading = vendorLoading || eventsLoading || overviewLoading;
-    const isVendorDashboard = mounted && authReady && !authRefreshing && !!user?.isVendor;
+    const isVendorDashboard = mounted && authReady && !authRefreshing && isVendorUser(user);
     const dashboardHero = isVendorDashboard
         ? {
               eyebrow: 'Command center',
-              title: 'Run the room.',
+              title: 'Run the room',
               copy: 'A focused read on live work, upcoming events, revenue, and anything that needs attention.',
           }
         : {
               eyebrow: 'Workspace',
-              title: 'Your PXI.',
+              title: 'Your PXI',
               copy: 'Tickets, notifications, hosted events, and account tools in one clean place.',
           };
     const commandMetrics = isVendorDashboard
@@ -289,39 +290,39 @@ export default function DashboardHome() {
 
     return (
         <div className="mx-auto max-w-7xl space-y-5 md:space-y-6">
-            <section className="dashboard-surface-b relative overflow-hidden rounded-[1.75rem] px-5 py-6 md:px-7 md:py-7">
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] xl:items-end">
+            <section className="px-1">
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,480px)] xl:items-end">
                     <div className="min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">{dashboardHero.eyebrow}</p>
-                        <h1 className="mt-2 text-4xl font-black leading-[0.9] text-white md:text-6xl">{dashboardHero.title}</h1>
-                        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">{dashboardHero.copy}</p>
-                        <div className="mt-5 flex flex-wrap items-center gap-2">
+                        <p className="text-[13px] font-medium text-zinc-500">{dashboardHero.eyebrow}</p>
+                        <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">{dashboardHero.title}</h1>
+                        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-500">{dashboardHero.copy}</p>
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
                             <Link
                                 href={isVendorDashboard ? '/dashboard/events' : '/dashboard/vendor-upgrade'}
-                                className="pill-solid px-4 py-2.5 text-xs uppercase tracking-widest"
+                                className="pill-solid px-4 py-2.5 text-xs tracking-[0.02em]"
                             >
                                 {isVendorDashboard ? 'Manage events' : 'Start hosting'}
                             </Link>
                             <Link
                                 href="/dashboard/analytics"
-                                className="pill-ghost px-4 py-2.5 text-xs font-black uppercase tracking-widest"
+                                className="pill-ghost px-4 py-2.5 text-xs font-bold tracking-[0.02em]"
                             >
                                 Analytics
                             </Link>
                             <Link
                                 href="/dashboard/notifications"
-                                className="pill-ghost relative px-4 py-2.5 text-xs font-black uppercase tracking-widest"
+                                className="pill-ghost relative px-4 py-2.5 text-xs font-bold tracking-[0.02em]"
                             >
                                 Inbox
                                 {notificationCount > 0 ? (
-                                    <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-[10px] font-black text-black">
+                                    <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-[11px] font-medium text-black">
                                         {notificationCount > 99 ? '99+' : notificationCount}
                                     </span>
                                 ) : null}
                             </Link>
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[1.25rem] bg-white/[0.06] ring-1 ring-white/[0.07] sm:grid-cols-4">
                         {commandMetrics.map((metric) => (
                             <CommandMetric key={metric.label} metric={metric} />
                         ))}
@@ -330,11 +331,11 @@ export default function DashboardHome() {
             </section>
 
             <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
-                <section className="dashboard-surface rounded-[1.75rem] p-5 md:p-6">
+                <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
                     <SurfaceHeader
                         eyebrow="Now / next"
                         title="Upcoming + live"
-                        action={<Link href="/dashboard/events" className="text-[12px] font-bold uppercase tracking-wide text-white/55 transition hover:text-white">View all</Link>}
+                        action={<Link href="/dashboard/events" className="text-[12px] font-bold tracking-wide text-white/55 transition hover:text-white">View all</Link>}
                     />
                     <div className="mt-5 space-y-3">
                         {metricsLoading ? (
@@ -361,7 +362,7 @@ export default function DashboardHome() {
                 </section>
 
                 <aside className="space-y-5">
-                    <section className="dashboard-surface rounded-[1.75rem] p-5">
+                    <section className="dashboard-surface rounded-[1.25rem] p-5">
                         <SurfaceHeader eyebrow="Pulse" title="Performance" />
                         <div className="mt-4 space-y-4">
                             <StatRow
@@ -383,15 +384,15 @@ export default function DashboardHome() {
                                     ['Draft', summary.draftCount],
                                 ].map(([label, value]) => (
                                     <div key={label} className="rounded-[1rem] bg-white/[0.035] px-3 py-3">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">{label}</p>
-                                        <p className="mt-1 text-lg font-black text-white">{metricsLoading ? '-' : value}</p>
+                                        <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">{label}</p>
+                                        <p className="mt-1 text-lg font-bold text-white">{metricsLoading ? '-' : value}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </section>
 
-                    <section className="dashboard-surface rounded-[1.75rem] p-5">
+                    <section className="dashboard-surface rounded-[1.25rem] p-5">
                         <SurfaceHeader eyebrow="Attention" title="Urgent notices" />
                         <div className="mt-4 space-y-3">
                             {urgentQueue.length ? (
@@ -408,18 +409,18 @@ export default function DashboardHome() {
             </div>
 
             {isVendorDashboard ? (
-                <section className="dashboard-surface rounded-[1.75rem] p-5 md:p-6">
+                <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
                     <SurfaceHeader
                         eyebrow="Trend"
                         title="Revenue"
-                        action={<span className="text-[12px] font-bold uppercase tracking-wide text-white/45">Last 30 days</span>}
+                        action={<span className="text-[12px] font-bold tracking-wide text-white/45">Last 30 days</span>}
                     />
                     <div className="mt-5 h-[220px] md:h-[260px]">
                         {metricsLoading ? (
                             <ChartSkeleton />
                         ) : !hasRevenueTrend ? (
                             <div className="flex h-full items-center justify-center rounded-2xl bg-white/[0.03]">
-                                <p className="text-xs font-bold uppercase tracking-widest text-white/30">No revenue data yet</p>
+                                <p className="text-xs font-bold tracking-[0.02em] text-white/30">No revenue data yet</p>
                             </div>
                         ) : (
                             <RechartsChart>
@@ -473,17 +474,17 @@ export default function DashboardHome() {
                 </section>
             ) : null}
 
-            <section className="dashboard-surface rounded-[1.75rem] p-5 md:p-6">
+            <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
                 <SurfaceHeader eyebrow="Updates" title="PXI updates" />
                 <div className="mt-5 grid gap-4 lg:grid-cols-2">
                     <div className="space-y-3">
-                        <p className="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">Reminders</p>
+                        <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-white/35">Reminders</p>
                         {reminderUpdates.map((update) => (
                             <UpdateLink key={update.id} update={update} />
                         ))}
                     </div>
                     <div className="space-y-3">
-                        <p className="px-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">Product + policy</p>
+                        <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-white/35">Product + policy</p>
                         {productUpdates.map((update) => (
                             <UpdateLink key={update.id} update={update} />
                         ))}
@@ -496,9 +497,9 @@ export default function DashboardHome() {
 
 function CommandMetric({ metric }) {
     return (
-        <div className="min-h-[92px] rounded-[1.25rem] bg-white/[0.045] p-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{metric.label}</p>
-            <p className="mt-3 truncate text-2xl font-black text-white">{metric.value}</p>
+        <div className="bg-[#0e0e13] px-4 py-3.5">
+            <p className="text-[12px] font-medium text-zinc-500">{metric.label}</p>
+            <p className="mt-1.5 truncate text-[22px] font-semibold leading-none tracking-tight text-white">{metric.value}</p>
         </div>
     );
 }
@@ -507,8 +508,8 @@ function SurfaceHeader({ eyebrow, title, action = null }) {
     return (
         <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">{eyebrow}</p>
-                <h2 className="mt-1 text-xl font-black tracking-normal text-white">{title}</h2>
+                <p className="text-[12px] font-medium text-zinc-500">{eyebrow}</p>
+                <h2 className="mt-1 text-[17px] font-semibold tracking-tight text-white">{title}</h2>
             </div>
             {action ? <div className="shrink-0 pt-1">{action}</div> : null}
         </div>
@@ -520,12 +521,12 @@ function EventPriorityRow({ event }) {
         <Link href={event.href} className="grid gap-4 rounded-[1.25rem] bg-white/[0.035] p-4 transition hover:bg-white/[0.055] md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-center">
             <div className="min-w-0">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <h3 className="max-w-full truncate text-base font-black text-white">{event.name}</h3>
-                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${event.statusClassName}`}>
+                    <h3 className="max-w-full truncate text-base font-bold text-white">{event.name}</h3>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] whitespace-nowrap ${event.statusClassName}`}>
                         {event.status}
                     </span>
                 </div>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-white/35">{event.dateLabel}</p>
+                <p className="mt-1 text-xs font-semibold tracking-[0.02em] text-white/35">{event.dateLabel}</p>
             </div>
             <StatRow
                 className="!rounded-[1rem] !p-3"
@@ -534,7 +535,7 @@ function EventPriorityRow({ event }) {
                     { label: 'Tickets', value: event.ticketsSold.toLocaleString() },
                 ]}
             />
-            <span className="text-[11px] font-black uppercase tracking-widest text-white/50 md:text-right">Open</span>
+            <span className="text-[11px] font-bold tracking-[0.02em] text-white/50 md:text-right">Open</span>
         </Link>
     );
 }
@@ -544,7 +545,7 @@ function EmptyPanel({ title, body, href, action }) {
         <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-7 text-center">
             <p className="text-sm font-semibold text-white">{title}</p>
             <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-zinc-500">{body}</p>
-            <Link href={href} className="pill-ghost mt-4 px-4 py-2 text-xs font-bold uppercase tracking-widest whitespace-nowrap">
+            <Link href={href} className="pill-ghost mt-4 px-4 py-2 text-xs font-bold tracking-[0.02em] whitespace-nowrap">
                 {action}
             </Link>
         </div>
@@ -554,7 +555,7 @@ function EmptyPanel({ title, body, href, action }) {
 function MiniTrend({ label, points }) {
     return (
         <div className="rounded-[1rem] bg-white/[0.035] p-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">{label}</p>
+            <p className="text-[11px] font-medium tracking-[0.02em] text-white/40">{label}</p>
             <MicroChart points={points} color={BASE_CHART_COLOR} className="mt-2" />
         </div>
     );
@@ -565,17 +566,17 @@ function NoticeLink({ notice }) {
         <Link href={notice.href} className="block rounded-[1.25rem] bg-white/[0.035] p-4 transition hover:bg-white/[0.055]">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="truncate text-sm font-black text-white">{notice.title}</p>
-                    <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-white/35">{notice.event}</p>
+                    <p className="truncate text-sm font-bold text-white">{notice.title}</p>
+                    <p className="mt-1 text-[11px] font-bold tracking-[0.02em] text-white/35">{notice.event}</p>
                     <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-white/50">{notice.detail}</p>
                 </div>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${
                     notice.severity === 'high' ? 'bg-red-500/[0.08] text-red-400/80' : 'bg-white/[0.045] text-white/55'
                 }`}>
                     {notice.severity}
                 </span>
             </div>
-            <p className="mt-3 text-[10px] font-black uppercase tracking-widest text-white/55">{notice.action}</p>
+            <p className="mt-3 text-[11px] font-medium tracking-[0.02em] text-white/55">{notice.action}</p>
         </Link>
     );
 }
@@ -591,7 +592,7 @@ function UpdateLink({ update }) {
                     <p className="truncate text-sm font-bold text-white">{update.title}</p>
                     <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500">{update.detail}</p>
                 </div>
-                <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-white/45 whitespace-nowrap">
+                <span className="shrink-0 text-[11px] font-medium tracking-[0.02em] text-white/45 whitespace-nowrap">
                     {update.action}
                 </span>
             </div>

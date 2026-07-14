@@ -49,7 +49,7 @@ function cx(...classes) {
 function StateChip({ state, muted = false }) {
     if (state === 'Accepted') {
         return (
-            <span className={cx('inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest', muted ? 'bg-white/5 text-zinc-500' : 'bg-emerald-500/10 text-emerald-300')}>
+            <span className={cx('inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em]', muted ? 'bg-white/5 text-zinc-500' : 'bg-emerald-500/10 text-emerald-300')}>
                 Accepted
             </span>
         );
@@ -57,14 +57,14 @@ function StateChip({ state, muted = false }) {
 
     if (state === 'Flagged') {
         return (
-            <span className={cx('inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest', muted ? 'bg-white/5 text-zinc-500' : 'bg-red-500/10 text-red-300')}>
+            <span className={cx('inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em]', muted ? 'bg-white/5 text-zinc-500' : 'bg-red-500/10 text-red-300')}>
                 Flagged
             </span>
         );
     }
 
     return (
-        <span className="inline-flex rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+        <span className="inline-flex rounded-full bg-white/5 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-zinc-400">
             {state}
         </span>
     );
@@ -72,7 +72,7 @@ function StateChip({ state, muted = false }) {
 
 function GlassPanel({ children, className = '', muted = false }) {
     return (
-        <section className={cx('glass-panel rounded-[2rem] p-5', muted && 'grayscale opacity-65', className)}>
+        <section className={cx('glass-panel rounded-[1.25rem] p-5', muted && 'grayscale opacity-65', className)}>
             {children}
         </section>
     );
@@ -80,7 +80,7 @@ function GlassPanel({ children, className = '', muted = false }) {
 
 function DormantMessage() {
     return (
-        <div className="dashboard-surface-b rounded-[1.5rem] px-4 py-3 text-sm font-semibold text-zinc-300">
+        <div className="dashboard-surface-b rounded-[1.25rem] px-4 py-3 text-sm font-semibold text-zinc-300">
             Goes live during active events.
         </div>
     );
@@ -89,8 +89,8 @@ function DormantMessage() {
 function OpsMetric({ label, value, hint }) {
     return (
         <div className="rounded-2xl bg-white/[0.045] px-4 py-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{label}</p>
-            <p className="mt-2 text-2xl font-black tabular-nums text-white">{value}</p>
+            <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">{label}</p>
+            <p className="mt-2 text-2xl font-bold tabular-nums text-white">{value}</p>
             {hint ? <p className="mt-1 text-xs font-semibold text-zinc-500">{hint}</p> : null}
         </div>
     );
@@ -103,9 +103,9 @@ function CapacityIndicator({ isLive, capacity, scanned, sold }) {
 
     return (
         <GlassPanel muted={!isLive}>
-            <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Capacity</p>
+            <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Capacity</p>
             <div className="mt-3 flex items-end justify-between gap-4">
-                <p className="text-3xl font-black text-white">
+                <p className="text-3xl font-bold text-white">
                     {(scanned || 0).toLocaleString()}
                     <span className="text-base text-zinc-500"> / {hasCapacity ? capacity.toLocaleString() : `${(sold || 0).toLocaleString()} sold`}</span>
                 </p>
@@ -131,12 +131,12 @@ function RevenueCostPanel({ isLive, revenue, costCents, netProfitCents }) {
     ];
     return (
         <GlassPanel muted={!isLive}>
-            <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Revenue &amp; cost</p>
+            <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Revenue &amp; cost</p>
             <div className="mt-3 grid grid-cols-2 gap-3">
                 {tiles.map((tile) => (
                     <div key={tile.label} className="rounded-2xl bg-white/[0.045] px-4 py-3">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{tile.label}</p>
-                        <p className={cx('mt-1 text-xl font-black tabular-nums', tile.emphasize ? (Number(netProfitCents) >= 0 ? 'text-emerald-300' : 'text-red-300') : 'text-white')}>
+                        <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">{tile.label}</p>
+                        <p className={cx('mt-1 text-xl font-bold tabular-nums', tile.emphasize ? (Number(netProfitCents) >= 0 ? 'text-emerald-300' : 'text-red-300') : 'text-white')}>
                             {tile.value}
                         </p>
                     </div>
@@ -151,7 +151,7 @@ function TeamMessagePanel({ isLive, onOpenChat }) {
     return (
         <GlassPanel muted={!isLive} className="flex flex-col justify-between gap-4">
             <div>
-                <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Team Message</p>
+                <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Team Message</p>
                 <p className="mt-2 text-sm text-zinc-300">Open the shared staff thread for floor, security, and gate leads.</p>
             </div>
             <button
@@ -159,7 +159,7 @@ function TeamMessagePanel({ isLive, onOpenChat }) {
                 onClick={onOpenChat}
                 disabled={!isLive}
                 className={cx(
-                    'inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition',
+                    'inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] transition',
                     isLive ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed bg-white/5 text-zinc-500'
                 )}
             >
@@ -181,7 +181,7 @@ function ScanActionPanel() {
                     type="button"
                     disabled
                     title="Ticket scanning happens in the PXI mobile app today"
-                    className="inline-flex w-fit cursor-not-allowed items-center justify-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-500"
+                    className="inline-flex w-fit cursor-not-allowed items-center justify-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-bold tracking-[0.02em] text-zinc-500"
                 >
                     <HugeiconsIcon icon={QrCodeIcon} size={15} />
                     Scan Ticket
@@ -206,7 +206,7 @@ function RecentScansSection({ isLive, scans }) {
         <GlassPanel muted={!isLive}>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <h2 className="text-lg font-black text-white">Recent Scans</h2>
+                    <h2 className="text-lg font-bold text-white">Recent Scans</h2>
                     <p className="mt-1 text-sm text-zinc-500">{isLive ? 'Latest tickets scanned in, across every gate.' : 'Goes live during active events.'}</p>
                 </div>
             </div>
@@ -226,7 +226,7 @@ function RecentScansSection({ isLive, scans }) {
                             type="button"
                             disabled={!isLive}
                             className={cx(
-                                'rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition',
+                                'rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] transition',
                                 isLive ? 'bg-red-500/10 text-red-200 hover:bg-red-500/20' : 'cursor-not-allowed bg-white/5 text-zinc-500'
                             )}
                         >
@@ -256,7 +256,7 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
                 if (event.key === 'Enter' || event.key === ' ') onOpen(gate.id);
             }}
             className={cx(
-                'glass-panel relative min-h-[260px] cursor-pointer rounded-[2rem] p-5 transition hover:bg-white/[0.07]',
+                'glass-panel relative min-h-[260px] cursor-pointer rounded-[1.25rem] p-5 transition hover:bg-white/[0.07]',
                 !isLive && 'grayscale opacity-65'
             )}
         >
@@ -264,9 +264,9 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
                 <div>
                     <div className="flex items-center gap-2">
                         <span className={cx('h-3 w-3 rounded-full', gate.issue ? 'bg-red-400' : 'bg-emerald-300')} />
-                        <h3 className="text-xl font-black text-white">{gate.name}</h3>
+                        <h3 className="text-xl font-bold text-white">{gate.name}</h3>
                     </div>
-                    <p className="mt-1 text-xs font-bold uppercase tracking-widest text-zinc-500">
+                    <p className="mt-1 text-xs font-bold tracking-[0.02em] text-zinc-500">
                         {isLive ? gate.velocity : 'Goes live during active events'}
                     </p>
                 </div>
@@ -277,7 +277,7 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
                             event.stopPropagation();
                             onToggleMenu(gate.id);
                         }}
-                        className="pill-ghost px-3 py-1 text-sm font-black"
+                        className="pill-ghost px-3 py-1 text-sm font-bold"
                         aria-label={`${gate.name} options`}
                     >
                         ...
@@ -314,7 +314,7 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
                     onTogglePause(gate.id);
                 }}
                 className={cx(
-                    'mt-5 rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition',
+                    'mt-5 rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] transition',
                     !isLive
                         ? 'cursor-not-allowed bg-white/5 text-zinc-500'
                         : gate.paused
@@ -346,7 +346,7 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
                 {issueScans.length ? `${issueScans.length} issue${issueScans.length > 1 ? 's' : ''} flagged` : 'No active issues'}
             </p>
             {gate.assignedPeople?.length ? (
-                <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-white/35">
+                <p className="mt-2 text-[11px] font-medium tracking-[0.02em] text-white/35">
                     {gate.assignedPeople.length} assigned
                 </p>
             ) : null}
@@ -386,7 +386,7 @@ function GateEditModal({ open, gate, rosterMembers, onClose, onSave }) {
         >
             <div className="space-y-5">
                 <label className="block">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Gate name</span>
+                    <span className="text-[11px] font-medium tracking-[0.02em] text-white/40">Gate name</span>
                     <input
                         value={name}
                         onChange={(event) => setName(event.target.value)}
@@ -395,7 +395,7 @@ function GateEditModal({ open, gate, rosterMembers, onClose, onSave }) {
                     />
                 </label>
                 <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Assign people</p>
+                    <p className="text-[11px] font-medium tracking-[0.02em] text-white/40">Assign people</p>
                     <div className="mt-3 flex max-h-64 flex-wrap gap-2 overflow-y-auto">
                         {rosterMembers.length ? rosterMembers.map((member) => {
                             const active = assignedPeople.some((person) => person.id === member.id);
@@ -442,7 +442,7 @@ function GateDetailsModal({ gate, open, onClose }) {
         >
             <div className="grid gap-4 lg:grid-cols-[1.35fr_0.85fr]">
                 <div className="rounded-2xl glass-field p-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400">All Tickets Scanned</h3>
+                    <h3 className="text-sm font-bold tracking-[0.02em] text-zinc-400">All Tickets Scanned</h3>
                     <div className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
                         {gate.scans.map((scan) => (
                             <div key={`modal-${scan.id}`} className="flex items-center justify-between gap-3 rounded-xl glass-field px-3 py-3">
@@ -459,7 +459,7 @@ function GateDetailsModal({ gate, open, onClose }) {
 
                 <div className="space-y-4">
                     <div className="rounded-2xl glass-field p-4">
-                        <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400">Flagged Issues</h3>
+                        <h3 className="text-sm font-bold tracking-[0.02em] text-zinc-400">Flagged Issues</h3>
                         <div className="mt-3 space-y-2">
                             {flaggedIssues.map((scan) => (
                                 <div key={`flag-${scan.id}`} className="rounded-xl bg-red-500/10 px-3 py-3">
@@ -472,7 +472,7 @@ function GateDetailsModal({ gate, open, onClose }) {
                     </div>
 
                     <div className="rounded-2xl glass-field p-4">
-                        <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400">Incident Log</h3>
+                        <h3 className="text-sm font-bold tracking-[0.02em] text-zinc-400">Incident Log</h3>
                         <div className="mt-3 space-y-2">
                             {gate.incidentLog.map((entry) => (
                                 <div key={entry} className="flex gap-2 rounded-xl glass-field px-3 py-2 text-sm text-zinc-300">
@@ -503,7 +503,7 @@ function TeamChatModal({ open, onClose }) {
                 {teamMessages.map((message) => (
                     <div key={message.id} className="rounded-2xl glass-field px-4 py-3">
                         <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm font-black text-white">{message.author}</p>
+                            <p className="text-sm font-bold text-white">{message.author}</p>
                             <p className="text-xs text-zinc-500">{message.at}</p>
                         </div>
                         <p className="mt-2 text-sm text-zinc-300">{message.body}</p>
@@ -521,7 +521,7 @@ function TeamChatModal({ open, onClose }) {
                     type="button"
                     disabled
                     title="Team messaging is not connected to live chat yet"
-                    className="cursor-not-allowed self-end rounded-full bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-500"
+                    className="cursor-not-allowed self-end rounded-full bg-white/5 px-4 py-2 text-xs font-bold tracking-[0.02em] text-zinc-500"
                 >
                     Send
                 </button>
@@ -586,14 +586,14 @@ function BudgetPanel({ eventId, isLive, summary, onChanged }) {
         <GlassPanel muted={!isLive}>
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h2 className="text-lg font-black text-white">Budget</h2>
+                    <h2 className="text-lg font-bold text-white">Budget</h2>
                     <p className="mt-1 text-sm text-zinc-500">
                         Set what you planned to spend per category, log real costs as they happen.
                     </p>
                 </div>
                 <div className="text-right">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Total spent / budgeted</p>
-                    <p className="mt-1 text-lg font-black text-white">
+                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Total spent / budgeted</p>
+                    <p className="mt-1 text-lg font-bold text-white">
                         {formatCents(summary.totalSpentCents)} <span className="text-zinc-500">/ {formatCents(summary.totalBudgetedCents)}</span>
                     </p>
                 </div>
@@ -637,7 +637,7 @@ function BudgetPanel({ eventId, isLive, summary, onChanged }) {
             </button>
 
             <div className="mt-6 border-t border-white/10 pt-4">
-                <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Log an expense</p>
+                <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Log an expense</p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                     <select
                         value={expenseForm.category}
@@ -846,11 +846,11 @@ export default function LiveScanDashboard({ isLiveEvent }) {
 
     return (
         <div className="mx-auto max-w-6xl space-y-6">
-            <section className="dashboard-surface-b rounded-[1.75rem] px-5 py-6 md:px-7">
+            <section className="dashboard-surface-b rounded-[1.25rem] px-5 py-6 md:px-7">
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_440px] lg:items-end">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Operations</p>
-                        <h1 className="mt-2 text-4xl font-black leading-none text-white md:text-5xl">Live control room</h1>
+                        <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Operations</p>
+                        <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Live control room</h1>
                         <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
                             Gate flow, scan review, team messages, and incident response in one operator-friendly view.
                         </p>
@@ -913,7 +913,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
             <GlassPanel muted={!eventIsLive}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <h2 className="text-lg font-black text-white">Gate Control</h2>
+                        <h2 className="text-lg font-bold text-white">Gate Control</h2>
                         <p className="mt-1 text-sm text-zinc-500">{eventIsLive ? 'Tap a gate for scanned tickets, issues, and incident history.' : 'Goes live during active events.'}</p>
                     </div>
                     <button
@@ -921,7 +921,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                         onClick={addGate}
                         disabled={!eventIsLive}
                         className={cx(
-                            'flex h-10 w-10 items-center justify-center rounded-full text-2xl font-black transition',
+                            'flex h-10 w-10 items-center justify-center rounded-full text-2xl font-bold transition',
                             eventIsLive ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed bg-white/5 text-zinc-500'
                         )}
                         aria-label="Add gate"
@@ -957,7 +957,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
             <GlassPanel muted={!eventIsLive}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h2 className="text-lg font-black text-white">Incident Log</h2>
+                        <h2 className="text-lg font-bold text-white">Incident Log</h2>
                         <p className="mt-1 text-sm text-zinc-500">{eventIsLive ? 'Notes logged per gate.' : 'Goes live during active events.'}</p>
                     </div>
                     <HugeiconsIcon icon={Megaphone01Icon} size={20} className="text-zinc-500" />
@@ -966,14 +966,14 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                     {gates.flatMap((gate) => (gate.incidentLog || []).map((entry, i) => (
                         <div key={`${gate.id}-${i}`} className="rounded-2xl bg-white/[0.045] p-4">
                             <HugeiconsIcon icon={Alert02Icon} size={18} className={eventIsLive ? 'text-amber-300' : 'text-zinc-500'} />
-                            <p className="mt-3 text-sm font-black text-white">{gate.name}</p>
+                            <p className="mt-3 text-sm font-bold text-white">{gate.name}</p>
                             <p className="mt-1 text-xs text-zinc-500">{entry}</p>
                         </div>
                     )))}
                     {!gates.some((gate) => gate.incidentLog?.length) ? (
                         <div className="rounded-2xl bg-white/[0.045] p-4 md:col-span-3">
                             <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} className={eventIsLive ? 'text-emerald-300' : 'text-zinc-500'} />
-                            <p className="mt-3 text-sm font-black text-white">No incidents logged</p>
+                            <p className="mt-3 text-sm font-bold text-white">No incidents logged</p>
                             <p className="mt-1 text-xs text-zinc-500">Add a gate and edit it to keep floor notes here.</p>
                         </div>
                     ) : null}

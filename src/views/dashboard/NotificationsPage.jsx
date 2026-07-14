@@ -185,11 +185,11 @@ export default function NotificationsPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <section className="dashboard-surface-b rounded-[1.75rem] px-5 py-6 md:px-7">
+      <section className="dashboard-surface-b rounded-[1.25rem] px-5 py-6 md:px-7">
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Inbox</p>
-            <h1 className="mt-2 text-4xl font-black leading-none text-white md:text-5xl">Notifications</h1>
+            <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Inbox</p>
+            <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Notifications</h1>
             <p className="mt-3 text-sm leading-6 text-zinc-400">
               {unreadCount} unread update{unreadCount === 1 ? '' : 's'} across invites, albums, friends, and account activity.
             </p>
@@ -256,7 +256,7 @@ export default function NotificationsPage() {
                 <button
                   type="button"
                   onClick={() => handleHide(notification)}
-                  className="pill-ghost absolute right-3 top-3 h-7 px-3 text-[10px] font-black uppercase tracking-widest"
+                  className="pill-ghost absolute right-3 top-3 h-7 px-3 text-[11px] font-medium tracking-[0.02em]"
                 >
                   Hide
                 </button>

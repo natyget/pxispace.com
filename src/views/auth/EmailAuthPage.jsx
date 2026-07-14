@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
+import FloatingAuthElements from '../../components/auth/FloatingAuthElements';
 import {
     ArrowLeft01Icon,
     ViewIcon,
@@ -297,10 +299,7 @@ export default function EmailAuthPage() {
 
     return (
         <div className="relative flex min-h-screen flex-1 flex-col overflow-hidden bg-[#050505]">
-            <div className="pointer-events-none fixed inset-0">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.13),transparent_28%),radial-gradient(circle_at_78%_18%,rgba(216,74,255,0.18),transparent_26%),linear-gradient(180deg,#070707,#000)]" />
-                <div className="absolute bottom-[-18rem] left-1/2 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-white/[0.035] blur-3xl" />
-            </div>
+            <FloatingAuthElements />
             {showVerifiedMessage && (
                 <div
                     className="relative z-20 mx-4 mt-6 rounded-2xl px-4 py-3 text-center text-sm font-semibold"
@@ -324,36 +323,15 @@ export default function EmailAuthPage() {
             </button>
 
             {/* Scrollable content */}
-            <div className="relative z-10 flex-1 overflow-y-auto px-4 py-20 md:px-6 md:py-16">
-                <div className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[minmax(0,1fr)_430px]">
-                    <section className="hidden min-h-[620px] flex-col justify-between overflow-hidden rounded-[2.5rem] bg-white/[0.045] p-8 shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:flex">
-                        <div>
-                            <img src="/favicon.png" alt="PXI" width={92} height={92} className="h-16 w-16 object-contain" />
-                            <p className="mt-8 text-[10px] font-black uppercase tracking-[0.28em] text-zinc-500">
-                                PXI Passport
-                            </p>
-                            <h1 className="mt-3 max-w-xl text-6xl font-black leading-[0.9] tracking-normal text-white">
-                                Your night, carried forward.
-                            </h1>
-                            <p className="mt-5 max-w-lg text-sm leading-6 text-zinc-400">
-                                Sign in for tickets, albums, music-matched discovery, and the dashboard tools that keep every event in one place.
-                            </p>
-                        </div>
-                        <div className="grid gap-3">
-                            <AuthFeature icon={Ticket01Icon} title="Tickets stay tied to you" body="Checkout, delivery, and event access live under one PXI identity." />
-                            <AuthFeature icon={Shield01Icon} title="Secure by design" body="Payments stay with Stripe. PXI handles the signed ticket and event experience." />
-                        </div>
-                    </section>
+            <div className="relative z-10 flex flex-1 items-center justify-center overflow-y-auto px-4 py-20 md:px-6 md:py-16">
 
-                    <div className="mx-auto flex w-full max-w-[430px] flex-col">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                        className="mx-auto flex w-full max-w-[430px] flex-col"
+                    >
                         <div className="mb-6 text-center lg:text-left">
-                            <img
-                                src="/favicon.png"
-                                alt="PXI"
-                                width={128}
-                                height={88}
-                                className="mx-auto h-20 w-32 object-contain lg:mx-0"
-                            />
                             <p className="mt-3 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">
                                 {isLogin ? 'Welcome back' : 'Create your PXI'}
                             </p>
@@ -364,12 +342,12 @@ export default function EmailAuthPage() {
 
                     {/* Auth card — panel chrome on md+ only (mobile matches app: no card wrapper) */}
                     <div
-                        className="flex flex-col rounded-[2rem] bg-white/[0.045] p-5 shadow-2xl backdrop-blur-3xl md:p-7"
+                        className="flex flex-col rounded-[2rem] bg-black/40 p-5 backdrop-blur-[40px] md:p-7"
                     >
                     {/* Mode toggle — glass segmented control, matches mobile */}
-                    <div className="relative mb-6 grid grid-cols-2 gap-0 overflow-hidden rounded-2xl bg-[rgba(26,26,26,0.6)] p-1 backdrop-blur-xl">
+                    <div className="relative mb-6 grid grid-cols-2 gap-0 overflow-hidden rounded-full bg-[rgba(26,26,26,0.6)] p-1 backdrop-blur-xl">
                         <div
-                            className="absolute inset-y-1 w-[calc(50%-4px)] rounded-xl bg-[#d84aff] transition-transform duration-300 ease-out"
+                            className="absolute inset-y-1 w-[calc(50%-4px)] rounded-full bg-white transition-transform duration-300 ease-out"
                             style={{ transform: mode === 'signup' ? 'translateX(calc(100% + 8px))' : 'translateX(0)' }}
                         />
                         {['login', 'signup'].map((m) => (
@@ -378,7 +356,7 @@ export default function EmailAuthPage() {
                                 type="button"
                                 onClick={() => switchMode(m)}
                                 className={`relative z-[1] rounded-xl py-3 text-xs font-black uppercase tracking-[0.15em] transition-colors ${
-                                    mode === m ? 'text-white' : 'text-white/45 hover:text-white'
+                                    mode === m ? 'text-black' : 'text-white/45 hover:text-white'
                                 }`}
                                 style={{ border: 0 }}
                             >
@@ -536,17 +514,16 @@ export default function EmailAuthPage() {
                             </AuthField>
                         )}
 
-                        {/* Submit button — brand-purple gradient, matches mobile PillButton primary */}
+                        {/* Submit button — matches mobile PillButton primary */}
                         <div className="relative mt-2 mb-2">
                             <button
                                 type="submit"
                                 disabled={!canSubmit}
                                 className={`relative z-[2] h-14 w-full rounded-full border-0 font-black uppercase text-[13px] tracking-[0.15em] transition-all ${
                                     canSubmit
-                                        ? 'cursor-pointer text-white shadow-[0_18px_40px_rgba(216,74,255,0.28)]'
+                                        ? 'cursor-pointer text-black bg-white shadow-xl'
                                         : 'cursor-not-allowed bg-white/10 text-white/30'
                                 }`}
-                                style={canSubmit ? { background: 'linear-gradient(90deg, #d84aff, #be32eb)' } : undefined}
                             >
                                 {loading ? (
                                     <span className="flex items-center justify-center gap-2">
@@ -559,24 +536,6 @@ export default function EmailAuthPage() {
                                     'CREATE ACCOUNT'
                                 )}
                             </button>
-
-                            {/* Glow strip below button — matches mobile effect */}
-                            {canSubmit && (
-                                <div
-                                    style={{
-                                        position: 'absolute',
-                                        bottom: -4,
-                                        left: '10%',
-                                        right: '10%',
-                                        height: 10,
-                                        background: '#d84aff',
-                                        opacity: 0.35,
-                                        filter: 'blur(8px)',
-                                        borderRadius: 8,
-                                        zIndex: 1,
-                                    }}
-                                />
-                            )}
                         </div>
 
                         <p
@@ -636,8 +595,7 @@ export default function EmailAuthPage() {
                         </FooterPill>
                     </div>
                     </div>
-                </div>
-            </div>
+                    </motion.div>
             </div>
         </div>
     );
@@ -718,9 +676,9 @@ function FooterPill({ onClick, icon, children }) {
         <button
             type="button"
             onClick={onClick}
-            className="auth-social-pill flex-1 min-h-12 rounded-full border-0 bg-[rgba(26,26,26,0.6)] px-4 py-3 text-[10px] font-bold uppercase tracking-[2px] text-white/[0.55] backdrop-blur-xl transition-all hover:text-white/70 active:bg-white/10"
-        >
-            <span className="flex items-center justify-center gap-2">
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-white/10 backdrop-blur-xl font-bold uppercase tracking-widest text-white transition-all hover:bg-white/15 active:scale-95"
+            style={{ fontSize: 11 }}
+        ><span className="flex items-center justify-center gap-2">
                 {icon}
                 {children}
             </span>

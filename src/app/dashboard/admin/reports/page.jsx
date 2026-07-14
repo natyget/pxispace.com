@@ -180,7 +180,7 @@ export default function AdminReportsPage() {
                                 <Fragment key={r.id}>
                                     <tr className="hover:bg-white/[0.02] transition-colors align-top">
                                         <td data-label="Status" className="px-6 py-4">
-                                            <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyle[r.status] || statusStyle.PENDING}`}>
+                                            <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${statusStyle[r.status] || statusStyle.PENDING}`}>
                                                 {r.status}
                                             </span>
                                         </td>

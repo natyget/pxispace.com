@@ -14,10 +14,13 @@ import {
     CIRCLE_MEMBER_TEXT_AVAIL,
     CIRCLE_MEMBER_TEXT_START,
     HOLOGRAM_TICKET_LINE_GAP,
+    maxTextWidthAt,
     SQUARE_BORDER_RECT,
     SQUARE_BORDER_STROKE,
     STAMP_ARC_GEOMETRY,
     STAMP_BANNER_GEOMETRY,
+    STAMP_RADIAL_NAME,
+    buildStampStackedRows,
     STAR_BURST_PATH,
     STAR_BURST_INNER_CIRCLE,
     stampFieldLineGap,
@@ -26,6 +29,7 @@ import {
     VISA_STICKER_PAD_X,
     WAX_SEAL_INK,
 } from '@/utils/stampLayout';
+import { fitStampText, stampCharWidths } from '@/utils/stampTextFit';
 
 const CONDENSED_FAMILY = "'Arial Narrow', 'Helvetica Neue Condensed', sans-serif";
 const MONO_FAMILY = 'Courier New, monospace';
@@ -50,44 +54,56 @@ function pointOnArc(cx, cy, r, angleDeg) {
     return { x: cx + r * Math.sin(rad), y: cy - r * Math.cos(rad) };
 }
 
-function StampFieldLines({ cx, lines, color, yStart, lineGap }) {
+function StampFieldLines({ cx, lines, color, yStart, lineGap, shape }) {
     return (
         <>
-            {lines.map((line, i) => (
-                <text
-                    key={`${line.text}-${i}`}
-                    x={cx}
-                    y={yStart + i * lineGap}
-                    textAnchor="middle"
-                    fill={color}
-                    fontSize={line.size}
-                    fontWeight={line.bold ? 'bold' : 'normal'}
-                    fontFamily={MONO_FAMILY}
-                >
-                    {line.text}
-                </text>
-            ))}
+            {lines.map((line, i) => {
+                if (!line.text) return null;
+                const y = yStart + i * lineGap;
+                const { text, size } = fitStampText(line.text, line.size, maxTextWidthAt(shape, y), MONO_FAMILY, line.bold);
+                if (!text) return null;
+                return (
+                    <text
+                        key={`${line.text}-${i}`}
+                        x={cx}
+                        y={y}
+                        textAnchor="middle"
+                        fill={color}
+                        fontSize={size}
+                        fontWeight={line.bold ? 'bold' : 'normal'}
+                        fontFamily={MONO_FAMILY}
+                    >
+                        {text}
+                    </text>
+                );
+            })}
         </>
     );
 }
 
-function StampFieldLinesLeft({ x, lines, color, yStart, lineGap }) {
+function StampFieldLinesLeft({ x, lines, color, yStart, lineGap, shape }) {
     return (
         <>
-            {lines.map((line, i) => (
-                <text
-                    key={`${line.text}-${i}`}
-                    x={x}
-                    y={yStart + i * lineGap}
-                    textAnchor="start"
-                    fill={color}
-                    fontSize={line.size}
-                    fontWeight={line.bold ? 'bold' : 'normal'}
-                    fontFamily={MONO_FAMILY}
-                >
-                    {line.text}
-                </text>
-            ))}
+            {lines.map((line, i) => {
+                if (!line.text) return null;
+                const y = yStart + i * lineGap;
+                const { text, size } = fitStampText(line.text, line.size, maxTextWidthAt(shape, y) - x, MONO_FAMILY, line.bold);
+                if (!text) return null;
+                return (
+                    <text
+                        key={`${line.text}-${i}`}
+                        x={x}
+                        y={y}
+                        textAnchor="start"
+                        fill={color}
+                        fontSize={size}
+                        fontWeight={line.bold ? 'bold' : 'normal'}
+                        fontFamily={MONO_FAMILY}
+                    >
+                        {text}
+                    </text>
+                );
+            })}
         </>
     );
 }
@@ -183,86 +199,135 @@ function OrnamentPlane({ x, y, color, rotateDeg = 0, scale = 1 }) {
     );
 }
 
-/** Central banner ribbon — carries CITY + DATE in the largest type on the stamp. */
+/**
+ * Central banner ribbon — carries CITY + DATE in the largest type on the
+ * stamp. Shrinks the natural text to fit the ribbon instead of stretching it
+ * to an exact length (the old `textLength`/`lengthAdjust` forced short combos
+ * into ugly wide letter-spacing and squished long ones).
+ */
 function StampBanner({ cx, cy, w, h, color, text }) {
     const notch = h * 0.32;
     const d = `M${cx - w / 2} ${cy - h / 2} L${cx + w / 2} ${cy - h / 2} L${cx + w / 2 - notch} ${cy} L${cx + w / 2} ${cy + h / 2} L${cx - w / 2} ${cy + h / 2} L${cx - w / 2 + notch} ${cy} Z`;
-    const textLen = w - notch * 2 - 6;
+    const maxWidth = w - notch * 2 - 6;
+    const fitted = text ? fitStampText(text, h * 0.6, maxWidth, CONDENSED_FAMILY, true) : null;
     return (
         <g>
             <path d={d} fill={color} opacity={0.16} />
             <path d={d} stroke={color} strokeWidth={1.3} fill="none" strokeLinejoin="round" />
-            {text ? (
+            {fitted?.text ? (
                 <text
                     x={cx}
-                    y={cy + h * 0.6 * 0.32}
+                    y={cy + fitted.size * 0.32}
                     textAnchor="middle"
                     fill={color}
-                    fontSize={h * 0.6}
+                    fontSize={fitted.size}
                     fontWeight="bold"
                     fontFamily={CONDENSED_FAMILY}
-                    textLength={textLen}
-                    lengthAdjust="spacingAndGlyphs"
                 >
-                    {text}
+                    {fitted.text}
                 </text>
             ) : null}
         </g>
     );
 }
 
+/** Event name curved around a true-circle stamp's ring, one glyph at a time. */
+function ArcName({ shape, color, text }) {
+    const arc = STAMP_ARC_GEOMETRY[shape];
+    if (!arc || !text) return null;
+    const arcLength = (arc.r * arc.sweepDeg * Math.PI) / 180;
+    const fit = fitStampText(text, 10.5, arcLength * 0.9, CONDENSED_FAMILY, true);
+    if (!fit.text) return null;
+    const chars = Array.from(fit.text);
+    const widths = stampCharWidths(fit.text, fit.size, CONDENSED_FAMILY, true);
+    const total = widths.reduce((a, b) => a + b, 0);
+    const totalAngle = total / arc.r;
+    let acc = 0;
+    const nodes = [];
+    chars.forEach((ch, i) => {
+        const w = widths[i];
+        const deg = ((-totalAngle / 2 + (acc + w / 2) / arc.r) * 180) / Math.PI;
+        const pt = pointOnArc(arc.cx, arc.cy, arc.r, deg);
+        nodes.push(
+            <text key={i} x={0} y={0} textAnchor="middle" transform={`translate(${pt.x} ${pt.y}) rotate(${deg})`} fill={color} fontSize={fit.size} fontWeight="bold" fontFamily={CONDENSED_FAMILY}>
+                {ch}
+            </text>,
+        );
+        acc += w;
+    });
+    return <>{nodes}</>;
+}
+
 /**
- * Shared travel-visa face — arc-text heading (native SVG textPath), central
- * banner, ornaments, grunge specks. Composed on top of each shape's own
- * outer/inner boundary (rendered by the caller — geometry differs per shape).
+ * Clean stacked text (date → name[1–2 lines] → city → role) for non-circular
+ * stamps. Each row fit to the shape's real interior width (`maxTextWidthAt`)
+ * so it can't overflow; rows fill the shape's text box. Matches mobile.
  */
-function TravelVisaFace({ shape, color, seedInt, arcText, bannerLine, roleText, grungeRadius, uid }) {
+function StackedText({ shape, color, date, name, city, role }) {
+    const rows = buildStampStackedRows(shape, date, name, city, role);
+    return (
+        <>
+            {rows.map((row, i) => {
+                if (!row.text) return null;
+                const family = row.bold ? CONDENSED_FAMILY : MONO_FAMILY;
+                const { text, size } = fitStampText(row.text, row.size, maxTextWidthAt(shape, row.y) - 6, family, row.bold);
+                if (!text) return null;
+                return (
+                    <text
+                        key={i}
+                        x={50}
+                        y={row.y}
+                        textAnchor="middle"
+                        fill={color}
+                        fontSize={size}
+                        fontWeight={row.bold ? 'bold' : 'normal'}
+                        fontFamily={family}
+                        opacity={row.faded ? 0.78 : 1}
+                    >
+                        {text}
+                    </text>
+                );
+            })}
+        </>
+    );
+}
+
+/**
+ * Stamp face — true circles (STAMP_RADIAL_NAME) get the curved name + banner +
+ * role + ornaments; every other shape gets clean stacked text (fit to its real
+ * width) + edge grunge only (center ornaments would collide with the text).
+ */
+function StampFace({ shape, color, seedInt, date, name, city, role, grungeRadius }) {
     const arc = STAMP_ARC_GEOMETRY[shape];
     const banner = STAMP_BANNER_GEOMETRY[shape];
     const roleY = stampRoleY(shape);
+    const fields = buildStampBannerFields(date, name, city, role);
 
-    let arcPathD = null;
-    if (arc) {
-        const p1 = pointOnArc(arc.cx, arc.cy, arc.r, -arc.sweepDeg / 2);
-        const p2 = pointOnArc(arc.cx, arc.cy, arc.r, arc.sweepDeg / 2);
-        arcPathD = `M ${p1.x} ${p1.y} A ${arc.r} ${arc.r} 0 0 1 ${p2.x} ${p2.y}`;
+    if (STAMP_RADIAL_NAME[shape]) {
+        return (
+            <>
+                <ArcName shape={shape} color={color} text={fields.arcText} />
+                {banner ? <StampBanner cx={banner.cx} cy={banner.cy} w={banner.w} h={banner.h} color={color} text={fields.bannerLine} /> : null}
+                {fields.roleText ? (
+                    <text x={50} y={roleY} textAnchor="middle" fill={color} fontSize={6.5} fontFamily={MONO_FAMILY} opacity={0.82}>
+                        {fields.roleText}
+                    </text>
+                ) : null}
+                {arc ? (
+                    <>
+                        <OrnamentStar {...pointOnArc(arc.cx, arc.cy, arc.r + 4, -arc.sweepDeg / 2 - 12)} color={color} scale={0.85} />
+                        <OrnamentStar {...pointOnArc(arc.cx, arc.cy, arc.r + 4, arc.sweepDeg / 2 + 12)} color={color} scale={0.85} />
+                        <OrnamentPlane {...pointOnArc(arc.cx, arc.cy, arc.r * 0.55, 180)} color={color} rotateDeg={90} scale={0.8} />
+                    </>
+                ) : null}
+                <GrungeSpecks cx={50} cy={50} rMin={grungeRadius.min} rMax={grungeRadius.max} count={14} color={color} seed={seedInt} />
+            </>
+        );
     }
-    const arcId = `stamp-arc-${uid}`;
-    const arcLength = arc ? (arc.r * arc.sweepDeg * Math.PI) / 180 : 0;
 
     return (
         <>
-            {arc && arcPathD ? (
-                <>
-                    <defs>
-                        <path id={arcId} d={arcPathD} />
-                    </defs>
-                    <text fill={color} fontSize={10.5} fontWeight="bold" fontFamily={CONDENSED_FAMILY} letterSpacing="0.4">
-                        <textPath
-                            href={`#${arcId}`}
-                            startOffset="50%"
-                            textAnchor="middle"
-                            textLength={arcLength}
-                            lengthAdjust="spacingAndGlyphs"
-                        >
-                            {arcText}
-                        </textPath>
-                    </text>
-                </>
-            ) : null}
-            {banner ? <StampBanner cx={banner.cx} cy={banner.cy} w={banner.w} h={banner.h} color={color} text={bannerLine} /> : null}
-            {roleText ? (
-                <text x={50} y={roleY} textAnchor="middle" fill={color} fontSize={6.5} fontFamily={MONO_FAMILY} opacity={0.82}>
-                    {roleText}
-                </text>
-            ) : null}
-            {arc ? (
-                <>
-                    <OrnamentStar {...pointOnArc(arc.cx, arc.cy, arc.r + 4, -arc.sweepDeg / 2 - 12)} color={color} scale={0.85} />
-                    <OrnamentStar {...pointOnArc(arc.cx, arc.cy, arc.r + 4, arc.sweepDeg / 2 + 12)} color={color} scale={0.85} />
-                    <OrnamentPlane {...pointOnArc(arc.cx, arc.cy, arc.r * 0.55, 180)} color={color} rotateDeg={90} scale={0.8} />
-                </>
-            ) : null}
+            <StackedText shape={shape} color={color} date={date} name={name} city={city} role={role} />
             <GrungeSpecks cx={50} cy={50} rMin={grungeRadius.min} rMax={grungeRadius.max} count={14} color={color} seed={seedInt} />
         </>
     );
@@ -273,7 +338,6 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
     const ink = textColor || color;
     const uid = useId().replace(/[:]/g, '');
     const seedInt = seedToInt(seed ?? name);
-    const banner = buildStampBannerFields(date, name, city, role);
 
     switch (shape) {
         case 'square-border': {
@@ -284,7 +348,7 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
                         <rect x={x} y={y} width={w} height={h} stroke={color} strokeWidth={SQUARE_BORDER_STROKE} fill="none" />
                         <rect x={x + 3} y={y + 3} width={w - 6} height={h - 6} stroke={color} strokeWidth="1.6" fill="none" opacity={0.8} />
                         <rect x={x + 9} y={y + 9} width={w - 18} height={h - 18} stroke={color} strokeWidth="1" strokeDasharray="2.5 2" fill="none" />
-                        <TravelVisaFace shape={shape} color={ink} seedInt={seedInt} arcText={banner.arcText} bannerLine={banner.bannerLine} roleText={banner.roleText} grungeRadius={{ min: 40, max: 47 }} uid={uid} />
+                        <StampFace shape={shape} color={ink} seedInt={seedInt} date={date} name={name} city={city} role={role} grungeRadius={{ min: 40, max: 47 }} />
                     </g>
                 </svg>
             );
@@ -297,7 +361,7 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
                     <g>
                         <DoubleOutline shape="circle" geo={{ cx, cy, r: rOuter }} color={color} strokeWidth={3} />
                         <circle cx={cx} cy={cy} r={rInner} stroke={color} strokeWidth="1" strokeDasharray="3 2" fill="none" />
-                        <TravelVisaFace shape={shape} color={ink} seedInt={seedInt} arcText={banner.arcText} bannerLine={banner.bannerLine} roleText={banner.roleText} grungeRadius={{ min: rOuter - 8, max: rOuter + 2 }} uid={uid} />
+                        <StampFace shape={shape} color={ink} seedInt={seedInt} date={date} name={name} city={city} role={role} grungeRadius={{ min: rOuter - 8, max: rOuter + 2 }} />
                     </g>
                 </svg>
             );
@@ -310,7 +374,7 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
                     <g>
                         <DoubleOutline d={d} color={color} strokeWidth={3} center={{ cx: 50, cy: 50 }} />
                         <path d="M50 15 L83 50 L50 85 L17 50 Z" stroke={color} strokeWidth="1" strokeDasharray="2 2" fill="none" />
-                        <TravelVisaFace shape={shape} color={ink} seedInt={seedInt} arcText={banner.arcText} bannerLine={banner.bannerLine} roleText={banner.roleText} grungeRadius={{ min: 34, max: 43 }} uid={uid} />
+                        <StampFace shape={shape} color={ink} seedInt={seedInt} date={date} name={name} city={city} role={role} grungeRadius={{ min: 34, max: 43 }} />
                     </g>
                 </svg>
             );
@@ -323,7 +387,7 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
                     <g>
                         <DoubleOutline d={d} color={color} strokeWidth={2.5} center={{ cx: 50, cy: 50 }} />
                         <path d="M50 12 L83 30 V70 L50 88 L17 70 V30 L50 12Z" stroke={color} strokeWidth="1" strokeDasharray="2 2" fill="none" />
-                        <TravelVisaFace shape={shape} color={ink} seedInt={seedInt} arcText={banner.arcText} bannerLine={banner.bannerLine} roleText={banner.roleText} grungeRadius={{ min: 36, max: 44 }} uid={uid} />
+                        <StampFace shape={shape} color={ink} seedInt={seedInt} date={date} name={name} city={city} role={role} grungeRadius={{ min: 36, max: 44 }} />
                     </g>
                 </svg>
             );
@@ -336,7 +400,7 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
                         <ellipse cx="50" cy="30" rx="48" ry="28" stroke={color} strokeWidth="3" fill="none" />
                         <ellipse cx="50" cy="30" rx="45" ry="25" stroke={color} strokeWidth="1.6" fill="none" opacity={0.8} />
                         <ellipse cx="50" cy="30" rx="41" ry="21" stroke={color} strokeWidth="1" strokeDasharray="2.5 2" fill="none" />
-                        <TravelVisaFace shape={shape} color={ink} seedInt={seedInt} arcText={banner.arcText} bannerLine={banner.bannerLine} roleText={banner.roleText} grungeRadius={{ min: 24, max: 30 }} uid={uid} />
+                        <StampFace shape={shape} color={ink} seedInt={seedInt} date={date} name={name} city={city} role={role} grungeRadius={{ min: 24, max: 30 }} />
                     </g>
                 </svg>
             );
@@ -348,7 +412,7 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
                     <g>
                         <DoubleOutline d={ARCH_GATE_OUTER_PATH} color={color} strokeWidth={3} innerScale={0.94} center={{ cx: 50, cy: 60 }} />
                         <path d={ARCH_GATE_INNER_PATH} stroke={color} strokeWidth="1" strokeDasharray="2.5 2" fill="none" />
-                        <TravelVisaFace shape={shape} color={ink} seedInt={seedInt} arcText={banner.arcText} bannerLine={banner.bannerLine} roleText={banner.roleText} grungeRadius={{ min: 40, max: 48 }} uid={uid} />
+                        <StampFace shape={shape} color={ink} seedInt={seedInt} date={date} name={name} city={city} role={role} grungeRadius={{ min: 40, max: 48 }} />
                     </g>
                 </svg>
             );
@@ -361,7 +425,7 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
                     <g>
                         <DoubleOutline d={STAR_BURST_PATH} color={color} strokeWidth={2} innerScale={0.92} center={{ cx: 50, cy: 50 }} />
                         <circle cx={cx} cy={cy} r={r} stroke={color} strokeWidth="1" strokeDasharray="2 2" fill="none" />
-                        <TravelVisaFace shape={shape} color={ink} seedInt={seedInt} arcText={banner.arcText} bannerLine={banner.bannerLine} roleText={banner.roleText} grungeRadius={{ min: r - 4, max: r + 8 }} uid={uid} />
+                        <StampFace shape={shape} color={ink} seedInt={seedInt} date={date} name={name} city={city} role={role} grungeRadius={{ min: r - 4, max: r + 8 }} />
                     </g>
                 </svg>
             );
@@ -374,7 +438,7 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
                     <g>
                         <DoubleOutline d={d} color={color} strokeWidth={3} innerScale={0.94} center={{ cx: 50, cy: 60 }} />
                         <path d="M16 14 H84 V56 C84 82 50 102 50 102 C50 102 16 82 16 56 Z" stroke={color} strokeWidth="1" strokeDasharray="2.5 2" fill="none" />
-                        <TravelVisaFace shape={shape} color={ink} seedInt={seedInt} arcText={banner.arcText} bannerLine={banner.bannerLine} roleText={banner.roleText} grungeRadius={{ min: 36, max: 44 }} uid={uid} />
+                        <StampFace shape={shape} color={ink} seedInt={seedInt} date={date} name={name} city={city} role={role} grungeRadius={{ min: 36, max: 44 }} />
                     </g>
                 </svg>
             );
@@ -392,6 +456,7 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
                             color={ink}
                             yStart={14}
                             lineGap={VISA_STICKER_LINE_GAP}
+                            shape={shape}
                         />
                         <VisaQrIcon color={ink} />
                     </g>
@@ -423,6 +488,7 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
                             color={ink}
                             yStart={BARCODE_LABEL_TEXT_START}
                             lineGap={BARCODE_LABEL_LINE_GAP}
+                            shape={shape}
                         />
                     </g>
                 </svg>
@@ -439,7 +505,7 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
                         <circle cx={cx} cy={cy} r={rOuter} fill={color} />
                         <circle cx={cx} cy={cy} r={rOuter - 3} stroke="rgba(0,0,0,0.18)" strokeWidth="1.2" fill="none" />
                         <circle cx={cx} cy={cy} r={rInner} stroke="rgba(0,0,0,0.35)" strokeWidth="1" strokeDasharray="3 2" fill="none" />
-                        <StampFieldLines cx={cx} lines={lines} color={WAX_SEAL_INK} yStart={CIRCLE_MEMBER_TEXT_START} lineGap={gap} />
+                        <StampFieldLines cx={cx} lines={lines} color={WAX_SEAL_INK} yStart={CIRCLE_MEMBER_TEXT_START} lineGap={gap} shape={shape} />
                     </g>
                 </svg>
             );
@@ -459,7 +525,7 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
                     <g>
                         <rect x="1" y="1" width="98" height="54" rx="3" fill={`url(#holoGrad-${uid})`} stroke={color} strokeWidth="1.5" />
                         <rect x="4" y="4" width="92" height="48" rx="2" fill="rgba(255,255,255,0.55)" stroke={color} strokeWidth="0.5" opacity="0.6" />
-                        <StampFieldLines cx={50} lines={lines} color={ink} yStart={12} lineGap={HOLOGRAM_TICKET_LINE_GAP} />
+                        <StampFieldLines cx={50} lines={lines} color={ink} yStart={12} lineGap={HOLOGRAM_TICKET_LINE_GAP} shape={shape} />
                     </g>
                 </svg>
             );

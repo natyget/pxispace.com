@@ -58,14 +58,14 @@ export function TimeSeriesChartHeader({
     return (
         <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
-                {title ? <h2 className="text-lg font-black tracking-normal text-white">{title}</h2> : null}
+                {title ? <h2 className="text-lg font-bold tracking-normal text-white">{title}</h2> : null}
                 {subheading ? <p className="mt-1 text-sm leading-5 text-zinc-400">{subheading}</p> : null}
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <span className="text-2xl font-black tracking-normal text-white">
+                    <span className="text-2xl font-bold tracking-normal text-white">
                         {liveValue ?? '—'}{unit ? <span className="ml-1 text-sm font-bold text-zinc-400">{unit}</span> : null}
                     </span>
                     {changeLabel ? (
-                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${changeToneClass(changeTone)}`}>
+                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${changeToneClass(changeTone)}`}>
                             {changeLabel}
                         </span>
                     ) : null}
@@ -183,7 +183,7 @@ function SparkEmpty({ height, label }) {
             className="flex w-full items-center justify-center rounded-lg bg-white/[0.03]"
             style={{ height }}
         >
-            <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">{label}</span>
+            <span className="text-[11px] font-medium tracking-[0.02em] text-white/30">{label}</span>
         </div>
     );
 }
@@ -383,7 +383,9 @@ export function SparkDonutChart({
                                 cy="50%"
                                 innerRadius="62%"
                                 outerRadius="100%"
-                                stroke="none"
+                                stroke="#0e0e13"
+                                strokeWidth={2}
+                                paddingAngle={data.length > 1 ? 2 : 0}
                                 isAnimationActive={false}
                             >
                                 {data.map((entry, index) => (

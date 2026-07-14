@@ -23,6 +23,8 @@ export default function sitemap() {
     { url: `${base}/support`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/faq`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/legal`, changeFrequency: 'monthly', priority: 0.3 },
+    { url: `${base}/privacy`, changeFrequency: 'monthly', priority: 0.3 },
+    { url: `${base}/terms`, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${base}/child-safety`, changeFrequency: 'yearly', priority: 0.2 },
   ];
 

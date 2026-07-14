@@ -492,8 +492,80 @@ export function getStampLayout(
     );
 }
 
+/**
+ * Generous safety cap only — real text fitting now happens by measured pixel
+ * width in the renderer (see `maxTextWidthAt`), not by guessing a char count.
+ */
 export function formatStampName(name) {
-    return name.toUpperCase().slice(0, 11);
+    return name.toUpperCase().slice(0, 24);
+}
+
+/**
+ * Approximate available width (in the shape's own viewBox units, see
+ * `STAMP_VIEWBOX`) for a text row drawn at `y`, based on each stamp
+ * template's inner boundary. The renderer measures actual glyph width against
+ * this to shrink-to-fit (and, as a last resort, truncate with an ellipsis)
+ * instead of letting long names spill past the ink outline. Kept in sync
+ * with mobile's `stampLayout.ts`.
+ */
+export function maxTextWidthAt(shape, y) {
+    const PAD = 8;
+    switch (shape) {
+        case 'square-border': {
+            const { w } = SQUARE_BORDER_RECT;
+            return Math.max(10, w - PAD);
+        }
+        case 'circle-exit': {
+            const { cy, rInner } = CIRCLE_MEMBER_STAMP;
+            const dy = y - cy;
+            const r2 = rInner * rInner - dy * dy;
+            return Math.max(10, 2 * Math.sqrt(Math.max(0, r2)) - PAD);
+        }
+        case 'wax-seal': {
+            const { cy, rOuter } = CIRCLE_MEMBER_STAMP;
+            const dy = y - cy;
+            const r2 = rOuter * rOuter - dy * dy;
+            return Math.max(10, 2 * Math.sqrt(Math.max(0, r2)) - PAD);
+        }
+        case 'diamond-pass': {
+            const half = 45 - Math.abs(y - 50);
+            return Math.max(8, 2 * half - PAD);
+        }
+        case 'hexagon-pass': {
+            if (y >= 27.5 && y <= 72.5) return 78 - PAD;
+            const dist = y < 27.5 ? 27.5 - y : y - 72.5;
+            const t = Math.max(0, 1 - dist / 22.5);
+            return Math.max(8, 78 * t - PAD);
+        }
+        case 'oval-entry': {
+            const cy = 30, rx = 44, ry = 24;
+            const dy = y - cy;
+            const t = 1 - (dy * dy) / (ry * ry);
+            return Math.max(10, 2 * rx * Math.sqrt(Math.max(0, t)) - PAD);
+        }
+        case 'arch-gate':
+            return Math.max(10, 88 - PAD - 4);
+        case 'star-burst': {
+            const { cy, r } = STAR_BURST_INNER_CIRCLE;
+            const dy = y - cy;
+            const r2 = r * r - dy * dy;
+            return Math.max(8, 2 * Math.sqrt(Math.max(0, r2)) - PAD * 0.6);
+        }
+        case 'shield-crest': {
+            if (y <= 58) return 80 - PAD;
+            const t = Math.max(0, (112 - y) / (112 - 58));
+            return Math.max(8, 80 * t - PAD);
+        }
+        case 'visa-sticker':
+            // Leave room for the QR icon overlay at the bottom-right.
+            return 100 - VISA_STICKER_PAD_X * 2 - 14;
+        case 'barcode-label':
+            return 98 - PAD * 2;
+        case 'hologram-ticket':
+            return 92 - PAD;
+        default:
+            return 60;
+    }
 }
 
 /** Two short lines for diamond-pass — keeps title inside the narrow center column. */
@@ -604,6 +676,73 @@ export function buildStampBannerFields(date, name, city, role) {
     };
 }
 
+/**
+ * True-circle shapes whose event name curves around their ring
+ * (`STAMP_ARC_GEOMETRY`). Every other stamp uses the stacked layout below —
+ * clean straight lines fit to the shape's real width, which can't overflow and
+ * fills the vertical space. Kept in sync with mobile's `stampLayout.ts`.
+ */
+export const STAMP_RADIAL_NAME = {
+    'circle-exit': true,
+    'wax-seal': true,
+};
+
+/** Vertical interior band each non-radial stamp lays its stacked text into (viewBox units). */
+export const STAMP_TEXT_BOX = {
+    'square-border': { top: 24, bottom: 76 },
+    'diamond-pass':  { top: 34, bottom: 66 },
+    'hexagon-pass':  { top: 32, bottom: 68 },
+    'oval-entry':    { top: 15, bottom: 45 },
+    'arch-gate':     { top: 56, bottom: 106 },
+    'star-burst':    { top: 34, bottom: 60 },
+    'shield-crest':  { top: 24, bottom: 78 },
+};
+
+/** Split a long name near its middle (preferring a space) so it fills two rows instead of shrinking tiny. */
+export function splitStampName(name, maxChars = 11) {
+    const n = String(name || '').trim();
+    if (!n) return [];
+    if (n.length <= maxChars) return [n];
+    const mid = Math.floor(n.length / 2);
+    let best = -1;
+    let bestDist = Infinity;
+    for (let i = 1; i < n.length - 1; i++) {
+        if (n[i] === ' ') {
+            const d = Math.abs(i - mid);
+            if (d < bestDist) { bestDist = d; best = i; }
+        }
+    }
+    if (best > 0) return [n.slice(0, best).trim(), n.slice(best + 1).trim()];
+    return [n.slice(0, mid), n.slice(mid)];
+}
+
+/**
+ * Stacked rows (date → name[1–2 lines] → city → role) with natural line height,
+ * centered in the shape's `STAMP_TEXT_BOX`. Each row's `y` is a baseline; the
+ * renderer fits every row to `maxTextWidthAt(shape, y)` so nothing overflows.
+ */
+export function buildStampStackedRows(shape, date, name, city, role) {
+    const box = STAMP_TEXT_BOX[shape] ?? { top: 30, bottom: 70 };
+    const nameLines = splitStampName(name);
+    const nameSize = nameLines.length > 1 ? STAMP_FONT.nameCompact : STAMP_FONT.name;
+    const base = [
+        ...(date ? [{ text: date, size: STAMP_FONT.dateCompact }] : []),
+        ...nameLines.map((t) => ({ text: t, size: nameSize, bold: true })),
+        ...(city ? [{ text: city, size: STAMP_FONT.cityCompact }] : []),
+        ...(role ? [{ text: role, size: STAMP_FONT.cityCompact, faded: true }] : []),
+    ];
+    const LINE_HEIGHT = 1.32;
+    const heights = base.map((r) => r.size * LINE_HEIGHT);
+    const totalH = heights.reduce((a, b) => a + b, 0);
+    const center = (box.top + box.bottom) / 2;
+    let cursor = center - totalH / 2;
+    return base.map((r, i) => {
+        const baseline = cursor + heights[i] * 0.74;
+        cursor += heights[i];
+        return { ...r, y: baseline };
+    });
+}
+
 export function formatStampDate(startDate) {
     try {
         const d = new Date(startDate);
@@ -614,9 +753,10 @@ export function formatStampDate(startDate) {
     } catch { return ''; }
 }
 
+/** Generous safety cap — see `formatStampName`; real fit happens by measured width. */
 export function formatStampCity(location) {
     if (!location) return '';
-    return String(location).split(',')[0].toUpperCase().slice(0, 10);
+    return String(location).split(',')[0].toUpperCase().slice(0, 18);
 }
 
 /** Short album role label for stamp face (OWNER, ADMIN, MEMBER, BOUNCER, …). */
