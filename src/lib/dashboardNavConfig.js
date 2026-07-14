@@ -12,6 +12,7 @@ import {
   UserGroupIcon,
   Wallet01Icon,
 } from '@hugeicons/core-free-icons';
+import { isVendorUser } from '@/lib/accountTier';
 
 export const ADMIN_SIDEBAR_MODE_KEY = 'pxi_dashboard_admin_ui_mode';
 
@@ -50,7 +51,7 @@ export const dashboardNavConfig = [
   { key: 'events', label: 'My Events', path: '/dashboard/events', icon: Calendar01Icon, section: 'Hub', end: true },
   { key: 'analytics', label: 'Analytics', path: '/dashboard/analytics', icon: Activity01Icon, section: 'Intelligence', end: true, organizerOnly: true },
   { key: 'operations', label: 'Operations', path: '/dashboard/analytics?view=live-ops', icon: QrCodeIcon, section: 'Intelligence', end: true, organizerOnly: true },
-  { key: 'audience', label: 'Audience & Campaigns', path: '/dashboard/audience', icon: UserGroupIcon, section: 'People', end: true, organizerOnly: true },
+  { key: 'audience', label: 'CRM', path: '/dashboard/audience', icon: UserGroupIcon, section: 'People', end: true, organizerOnly: true },
   { key: 'ads', label: 'Ads Manager', path: '/dashboard/ads', icon: Megaphone01Icon, section: 'People', end: true, organizerOnly: true },
   { key: 'campaigns', label: 'Email Campaigns', path: '/dashboard/campaigns', icon: Megaphone01Icon, section: 'People', end: true, organizerOnly: true },
   { key: 'earnings', label: 'Earnings', path: '/dashboard/earnings', icon: Wallet01Icon, section: 'Business', end: true, vendorOnly: true },
@@ -71,12 +72,13 @@ export function buildMemberNavItems({ hasOrganizerAccess, hasLiveOpsAccess, isLi
   const items = [...dashboardNavConfig];
   const hasResolvedUser = mounted && !!user;
   const hasResolvedVendorStatus = typeof user?.isVendor === 'boolean';
+  const vendor = isVendorUser(user);
 
   return items.filter((item) => {
     const isRoleSensitive = item.vendorOnly || item.nonVendorOnly || item.organizerOnly || item.bouncerOnly || item.liveOnly;
     if (!hasResolvedUser && isRoleSensitive) return false;
-    if (item.vendorOnly && !user?.isVendor) return false;
-    if (item.nonVendorOnly && (!hasResolvedVendorStatus || user.isVendor)) return false;
+    if (item.vendorOnly && !vendor) return false;
+    if (item.nonVendorOnly && (!hasResolvedVendorStatus || vendor)) return false;
     if (item.bouncerOnly && !hasLiveOpsAccess) return false;
     if (item.organizerOnly && !hasOrganizerAccess) return false;
     if (item.liveOnly && !isLiveEvent) return false;
@@ -101,9 +103,7 @@ export function isNavItemActive(pathname, item, searchParams) {
     return (pathname === path && currentView === 'live-ops') || pathname.startsWith('/dashboard/live-scan');
   }
   if (item.key === 'audience') {
-    return pathname === '/dashboard/audience'
-      || pathname.startsWith('/dashboard/organizer/audience')
-      || pathname.startsWith('/dashboard/organizer/campaigns');
+    return pathname === '/dashboard/audience' || pathname.startsWith('/dashboard/organizer/audience');
   }
   if (item.end) return pathname === path;
   return pathname.startsWith(`${item.path}/`) || pathname === item.path;

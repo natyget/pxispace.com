@@ -6,8 +6,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
 
-const CHART_PRIMARY = '#ffffff';
-const CHART_ACCENT = '#a1a1aa';
+import { getDashboardChartShade } from '@/components/dashboard/chartStyles';
+
+const CHART_PRIMARY = getDashboardChartShade(0);
+const CHART_ACCENT = getDashboardChartShade(1);
 
 const RANGES = [
     { days: 7, label: '7d' },
@@ -58,8 +60,8 @@ function fillDays(days, rows, pick) {
 function StatTile({ label, value, hint }) {
     return (
         <div className="rounded-2xl bg-white/[0.04] p-5 backdrop-blur-md">
-            <p className="text-[10px] font-black tracking-widest text-white/40 uppercase">{label}</p>
-            <p className="mt-3 text-[28px] font-black leading-none tracking-normal text-white tabular-nums">{value}</p>
+            <p className="text-[11px] font-medium tracking-[0.02em] text-white/40">{label}</p>
+            <p className="mt-3 text-[28px] font-bold leading-none tracking-normal text-white tabular-nums">{value}</p>
             {hint ? <p className="mt-2 text-[12px] font-semibold leading-5 text-white/45">{hint}</p> : null}
         </div>
     );
@@ -78,15 +80,15 @@ function AdminAnalyticsHero({ days, setDays, isLiveAdmin, loading, signups, tick
     ];
 
     return (
-        <section className="dashboard-surface-b relative overflow-hidden rounded-[2rem] px-5 py-7 md:px-8 md:py-8">
+        <section className="dashboard-surface-b relative overflow-hidden rounded-[1.25rem] px-5 py-7 md:px-8 md:py-8">
             <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                 <div className="max-w-2xl">
                     <div className="mb-3 flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">PXI Admin</span>
+                        <span className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">PXI Admin</span>
                         <span className="text-zinc-700">/</span>
                         <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
                     </div>
-                    <h1 className="max-w-xl text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">
+                    <h1 className="max-w-xl text-2xl font-semibold tracking-tight text-white md:text-[28px]">
                         Platform analytics
                     </h1>
                     <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-300 md:text-base">
@@ -142,16 +144,16 @@ function DailyBars({ title, data, color, format = (v) => String(v) }) {
     const daysWithActivity = activeDays(data);
 
     return (
-        <div className="glass-panel overflow-hidden rounded-[1.75rem] p-5">
+        <div className="glass-panel overflow-hidden rounded-[1.25rem] p-5">
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Daily flow</p>
-                    <h2 className="mt-2 text-lg font-black tracking-normal text-white">{title}</h2>
+                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Daily flow</p>
+                    <h2 className="mt-2 text-lg font-bold tracking-normal text-white">{title}</h2>
                     <p className="mt-1 text-xs font-semibold text-white/40">
                         {daysWithActivity} active days · {format(total)} total
                     </p>
                 </div>
-                <span className="w-fit rounded-full bg-white/[0.065] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-white/55 tabular-nums">
+                <span className="w-fit rounded-full bg-white/[0.065] px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/55 tabular-nums">
                     {hover != null
                         ? `${shortDate(data[hover].key)} · ${format(data[hover].value)}`
                         : `Peak ${format(max)}`}
@@ -232,27 +234,27 @@ function RevenueLines({ data }) {
     };
 
     return (
-        <div className="glass-panel overflow-hidden rounded-[1.75rem] p-5">
+        <div className="glass-panel overflow-hidden rounded-[1.25rem] p-5">
             <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Money movement</p>
-                    <h2 className="mt-2 text-xl font-black tracking-normal text-white">Revenue per day</h2>
+                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Money movement</p>
+                    <h2 className="mt-2 text-xl font-bold tracking-normal text-white">Revenue per day</h2>
                     <p className="mt-1 text-sm leading-6 text-white/45">
                         Gross sales compared with captured PXI take.
                     </p>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-left">
                     <div className="rounded-2xl bg-white/[0.045] px-3 py-2">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-white/35">Gross</p>
-                        <p className="mt-1 text-sm font-black text-white">{formatUsd(grossTotal)}</p>
+                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Gross</p>
+                        <p className="mt-1 text-sm font-bold text-white">{formatUsd(grossTotal)}</p>
                     </div>
                     <div className="rounded-2xl bg-white/[0.045] px-3 py-2">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-white/35">Take</p>
-                        <p className="mt-1 text-sm font-black text-white">{formatUsd(takeTotal)}</p>
+                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Take</p>
+                        <p className="mt-1 text-sm font-bold text-white">{formatUsd(takeTotal)}</p>
                     </div>
                     <div className="rounded-2xl bg-white/[0.045] px-3 py-2">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-white/35">Rate</p>
-                        <p className="mt-1 text-sm font-black text-white">{takeRate}</p>
+                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Rate</p>
+                        <p className="mt-1 text-sm font-bold text-white">{takeRate}</p>
                     </div>
                 </div>
             </div>
@@ -266,7 +268,7 @@ function RevenueLines({ data }) {
                     </span>
                 </div>
                 {hover != null ? (
-                    <span className="rounded-full bg-white/[0.065] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-white/70 tabular-nums">
+                    <span className="rounded-full bg-white/[0.065] px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/70 tabular-nums">
                         {shortDate(data[hover].key)} · gross {formatUsd(data[hover].gross)} · take {formatUsd(data[hover].take)}
                     </span>
                 ) : null}

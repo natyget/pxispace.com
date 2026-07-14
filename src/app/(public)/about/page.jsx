@@ -14,13 +14,13 @@ export const metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: 'https://pxispace.com/about',
-    images: [{ url: '/og?title=Memory%20is%20the%20product&eyebrow=About%20PXI', width: 1200, height: 630, alt: 'About PXI' }],
+    images: [{ url: '/og-hero.png', width: 1200, height: 630, alt: 'About PXI' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: TITLE,
     description: DESCRIPTION,
-    images: ['/og?title=Memory%20is%20the%20product&eyebrow=About%20PXI'],
+    images: ['/og-hero.png'],
   },
 };
 

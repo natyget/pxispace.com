@@ -1,38 +1,47 @@
 'use client';
 
-// PXI — In-browser face scan (camera preview + local pxi-face-v1 embedding).
-// Raw frames never leave the device: the camera stream feeds the local model
-// and only the numeric vector is handed to `onVector`.
+// PXI — Guided face capture (camera preview + on-device framing analysis).
+// The local model (facemesh) is used ONLY for live guidance gates — framing,
+// lighting, head angle. Captured frames are handed to `onFrames` as JPEG
+// data-URLs; the caller sends them to the PXI server, which computes the
+// pxi-face-v2 embedding in memory and never stores the images.
 //
 // ID-verification-style guided capture: a live analysis loop checks framing,
 // lighting and head angle (facemesh rotation) for each guided pose and
 // AUTO-CAPTURES once the pose is held steady — with live corrective guidance
 // ("move closer", "turn a bit more") like passport/ID scan apps. A manual
 // capture button remains as fallback (and for devices where mesh can't load).
-//
-// Multi-angle enrollment: one embedding per guided pose with per-pose retakes and
-// a final review step. The averaged vector is emitted via the existing
-// `onVector(vector, FACE_MODEL_ID, extras)` contract; `extras.poseVectors` carries
-// the individual pose embeddings for backends that learn from them.
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  extractFaceVector,
-  averageFaceVectors,
-  analyzeFace,
-  warmupFaceEngine,
-  FACE_MODEL_ID,
-} from '@/lib/face/faceEmbedding';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { analyzeFace, warmupFaceEngine } from '@/lib/face/faceEmbedding';
 
-// One embedding per guided pose. Averaging a few angles makes the stored vector
+// One frame per guided pose. Multiple angles make the server-side enrollment
 // far more robust to head rotation at match time.
-const POSES = [
+const ALL_POSES = [
   { key: 'center', label: 'Straight on', prompt: 'Look straight at the camera', side: false },
   { key: 'left', label: 'Slightly left', prompt: 'Slowly turn your head slightly left', side: true },
   { key: 'right', label: 'Slightly right', prompt: 'Now turn your head slightly right', side: true },
 ];
 
-const CAPTURED_FLASH_MS = 1400;
+// Keep payloads small for the RN WebView bridge (full-res data-URLs used to hang).
+const MAX_CAPTURE_DIM = 480;
+const JPEG_QUALITY = 0.68;
+
+/** Snapshot the current (unmirrored) camera frame as a JPEG data-URL. */
+function captureFrame(video) {
+  const srcW = video.videoWidth || 640;
+  const srcH = video.videoHeight || 640;
+  const scale = Math.min(1, MAX_CAPTURE_DIM / Math.max(srcW, srcH));
+  const w = Math.max(1, Math.round(srcW * scale));
+  const h = Math.max(1, Math.round(srcH * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+  return canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+}
+
+const CAPTURED_FLASH_MS = 1200;
 const ANALYZE_INTERVAL_MS = 220;
 // Pose must be held for this many consecutive good samples before auto-capture.
 const STABLE_SAMPLES = 3;
@@ -89,7 +98,9 @@ function evaluateGates(a, pose, oppositeSideSign) {
   return { ok: true, message: 'Perfect — hold still…' };
 }
 
-export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan my face' }) {
+export default function FaceScanCapture({ onFrames, onCancel, ctaLabel = 'Scan my face', poseCount = 3 }) {
+  // Guest scans need a single straight-on frame; enrollment uses all poses.
+  const POSES = useMemo(() => ALL_POSES.slice(0, Math.max(1, poseCount)), [poseCount]);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const flashTimerRef = useRef(null);
@@ -97,8 +108,8 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState(null);
   const [startAttempt, setStartAttempt] = useState(0);
-  // Per-pose captured vectors (null until that pose is captured).
-  const [captures, setCaptures] = useState(() => POSES.map(() => null));
+  // Per-pose captured frames (null until that pose is captured).
+  const [captures, setCaptures] = useState(() => ALL_POSES.slice(0, Math.max(1, poseCount)).map(() => null));
   const [activePose, setActivePose] = useState(0);
   const [mode, setMode] = useState('capture'); // capture | review
   const [justCaptured, setJustCaptured] = useState(null); // pose index, transient
@@ -180,25 +191,28 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
       setScanning(true);
       setScanError(null);
       try {
-        // Sample a few frames and keep the first confident face for this pose
-        let vector = null;
-        for (let attempt = 0; attempt < 3 && !vector; attempt++) {
-          vector = await extractFaceVector(videoRef.current);
-          if (!vector) await new Promise((r) => setTimeout(r, 350));
+        // Confirm a face is actually in frame before keeping the shot (manual
+        // captures skip the auto-capture gates, so re-check here).
+        let present = false;
+        for (let attempt = 0; attempt < 3 && !present; attempt++) {
+          const a = await analyzeFace(videoRef.current).catch(() => null);
+          present = !!a && a.count > 0;
+          if (!present) await new Promise((r) => setTimeout(r, 350));
         }
-        if (!vector) {
+        if (!present) {
           setScanError('No face detected. Center your face in the frame with good lighting and try again.');
           setScanning(false);
           scanningRef.current = false;
           return;
         }
+        const frame = captureFrame(videoRef.current);
 
         // Remember which way the head was turned for opposite-direction checks.
         if (POSES[poseIndex].side && lastYawSignRef.current != null) {
           sideSignsRef.current[poseIndex] = lastYawSignRef.current;
         }
 
-        const nextCaptures = capturesRef.current.map((v, i) => (i === poseIndex ? vector : v));
+        const nextCaptures = capturesRef.current.map((v, i) => (i === poseIndex ? frame : v));
         setCaptures(nextCaptures);
         setScanning(false);
         scanningRef.current = false;
@@ -212,9 +226,14 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
 
         const nextEmpty = nextCaptures.findIndex((v) => !v);
         if (nextEmpty === -1) {
-          // All poses captured — review before anything is saved.
           stopCamera();
-          setMode('review');
+          if (POSES.length === 1) {
+            // Single-frame flows (guest scan) skip review — hand off directly.
+            onFrames(nextCaptures.filter(Boolean));
+          } else {
+            // All poses captured — review before anything is sent.
+            setMode('review');
+          }
         } else {
           setActivePose(nextEmpty);
         }
@@ -224,7 +243,7 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
         scanningRef.current = false;
       }
     },
-    [stopCamera],
+    [stopCamera, POSES, onFrames],
   );
 
   // ── Live guidance + auto-capture loop ───────────────────────────────────────
@@ -265,7 +284,7 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
       disposed = true;
       clearInterval(timer);
     };
-  }, [mode, cameraState, capturePose]);
+  }, [mode, cameraState, capturePose, POSES]);
 
   const handleRetakePose = useCallback((index) => {
     setCaptures((prev) => prev.map((v, i) => (i === index ? null : v)));
@@ -289,16 +308,15 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
     setGuide(null);
     setMode('capture');
     setStartAttempt((n) => n + 1);
-  }, []);
+  }, [POSES]);
 
   const handleSave = useCallback(() => {
-    const vectors = captures.filter(Boolean);
-    if (vectors.length !== POSES.length) return;
-    // Average the per-pose L2-normalized embeddings, re-normalize, emit ONE
-    // vector on the existing contract; the raw pose vectors ride along so the
-    // backend can keep them as per-angle match exemplars.
-    onVector(averageFaceVectors(vectors), FACE_MODEL_ID, { poseVectors: vectors });
-  }, [captures, onVector]);
+    const frames = captures.filter(Boolean);
+    if (frames.length !== POSES.length) return;
+    // Hand the captured pose frames to the caller — the server derives the
+    // enrollment vector (+ per-angle exemplars) and discards the images.
+    onFrames(frames);
+  }, [captures, onFrames, POSES.length]);
 
   const pose = POSES[Math.min(activePose, POSES.length - 1)];
 
@@ -306,31 +324,21 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
   if (mode === 'review') {
     return (
       <div className="flex flex-col items-center">
-        <h3 className="text-center text-sm font-black uppercase tracking-[0.2em] text-white">
-          {POSES.length}/{POSES.length} captured
-        </h3>
-        <p className="mt-2 max-w-xs text-center text-xs text-zinc-400">
-          Retake any angle, or save to finish.
+        <p className="text-center text-sm text-zinc-400">
+          {POSES.length} poses ready — retake any, or save.
         </p>
 
         <ul className="mt-5 w-full max-w-xs space-y-2">
           {POSES.map((p, i) => (
-            <li
-              key={p.key}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"
-            >
-              <span className="flex items-center gap-3">
-                <span className="flex size-6 items-center justify-center rounded-full bg-pxi-purple text-[11px] font-black text-white">
-                  ✓
-                </span>
-                <span className="text-xs font-bold uppercase tracking-widest text-white">
-                  {p.label}
-                </span>
+            <li key={p.key} className="flex items-center justify-between gap-3 px-1 py-2">
+              <span className="flex items-center gap-2.5">
+                <span className="size-2 rounded-full bg-emerald-400" aria-hidden />
+                <span className="text-sm text-white">{p.label}</span>
               </span>
               <button
                 type="button"
                 onClick={() => handleRetakePose(i)}
-                className="rounded-full border border-white/20 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-300 transition hover:border-pxi-purple/60 hover:text-white"
+                className="text-xs text-zinc-400 hover:text-white"
               >
                 Retake
               </button>
@@ -341,14 +349,14 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
         <button
           type="button"
           onClick={handleSave}
-          className="mt-6 w-full max-w-xs rounded-full bg-pxi-purple px-8 py-3.5 text-sm font-black uppercase tracking-widest text-white shadow-[0_0_30px_rgba(216,74,255,0.4)] transition"
+          className="mt-6 w-full max-w-xs rounded-full bg-emerald-400 px-8 py-3.5 text-sm font-semibold text-black transition"
         >
           Save
         </button>
         <button
           type="button"
           onClick={handleStartOver}
-          className="mt-3 text-xs font-semibold uppercase tracking-widest text-zinc-500 hover:text-white"
+          className="mt-3 text-sm text-zinc-500 hover:text-white"
         >
           Start over
         </button>
@@ -356,31 +364,37 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
           <button
             type="button"
             onClick={onCancel}
-            className="mt-3 text-xs font-semibold uppercase tracking-widest text-zinc-600 hover:text-white"
+            className="mt-2 text-sm text-zinc-600 hover:text-white"
           >
             Not now
           </button>
         ) : null}
-
-        <p className="mt-5 max-w-xs text-center text-[11px] leading-relaxed text-zinc-500">
-          Your scan is processed entirely on this device. The photos are destroyed instantly —
-          only an irreversible mathematical vector is used to find your shots.
-        </p>
       </div>
     );
   }
 
   // ── Capture step ────────────────────────────────────────────────────────────
-  const aligned = guide?.ok === true;
+  const aligned = guide?.ok === true || justCaptured != null;
   return (
     <div className="flex flex-col items-center">
-      {/* Face-ID-style portrait oval, sized to dominate the screen.
-          Border goes green the moment the pose is aligned. */}
+      {/* Prompt ABOVE viewfinder — never inside the oval */}
+      {cameraState === 'ready' ? (
+        <div className="mb-3 max-w-xs text-center">
+          <p className="text-[11px] tracking-wide text-white/50">
+            {activePose + 1} of {POSES.length}
+          </p>
+          <h1 className="mt-1 text-[15px] font-medium leading-snug text-white">{pose.prompt}</h1>
+        </div>
+      ) : (
+        <h1 className="mb-3 text-center text-base font-medium text-white">Center your face</h1>
+      )}
+
+      {/* Portrait oval — white while scanning; green when aligned / just captured */}
       <div
-        className={`relative h-[26rem] w-[19rem] max-h-[55dvh] overflow-hidden rounded-[50%] border-2 bg-zinc-900 transition-colors duration-300 ${
+        className={`relative h-[min(20rem,40dvh)] w-[min(14.5rem,64vw)] overflow-hidden rounded-[50%] bg-zinc-900 ring-2 transition-all duration-300 ${
           aligned
-            ? 'border-emerald-400/90 shadow-[0_0_40px_rgba(52,211,153,0.35)]'
-            : 'border-pxi-purple/50 shadow-[0_0_40px_rgba(216,74,255,0.25)]'
+            ? 'ring-emerald-400 shadow-[0_0_28px_rgba(52,211,153,0.4)]'
+            : 'ring-white/75'
         }`}
       >
         <video
@@ -395,7 +409,7 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
           </div>
         ) : null}
         {cameraState === 'denied' || cameraState === 'error' ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/80 px-8 text-center text-xs text-zinc-400">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80 px-6 text-center text-xs text-zinc-400">
             <span>
               {cameraState === 'denied'
                 ? 'Camera access was blocked. Allow camera permission to scan.'
@@ -404,78 +418,60 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
             <button
               type="button"
               onClick={() => setStartAttempt((n) => n + 1)}
-              className="rounded-full border border-white/25 px-5 py-2 text-[11px] font-bold uppercase tracking-widest text-white"
+              className="rounded-full bg-white/10 px-4 py-2 text-[11px] text-white"
             >
               Try again
             </button>
           </div>
         ) : null}
-        {/* Live guidance chip (ID-verification style) */}
-        {cameraState === 'ready' && justCaptured == null && guide ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center">
-            <span
-              className={`rounded-full bg-black/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest ${
-                aligned ? 'text-emerald-300' : 'text-white'
-              }`}
-            >
-              {scanning ? 'Capturing…' : guide.message}
-            </span>
-          </div>
-        ) : null}
+      </div>
+
+      {/* Guidance BELOW the oval — never clipped by overflow-hidden */}
+      <div className="mt-3 flex min-h-7 w-full max-w-xs items-center justify-center px-2">
         {justCaptured != null ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center">
-            <span className="rounded-full bg-black/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-pxi-purple">
-              ✓ Pose {justCaptured + 1} captured
-            </span>
-          </div>
+          <p className="text-center text-sm font-medium text-emerald-400">
+            Pose captured — next
+          </p>
+        ) : cameraState === 'ready' && guide ? (
+          <p
+            className={`text-center text-sm ${
+              aligned ? 'font-medium text-emerald-400' : 'text-white/85'
+            }`}
+          >
+            {scanning ? 'Capturing…' : guide.message}
+          </p>
         ) : null}
       </div>
 
-      {/* 3-step progress dots — filled + check once a pose is captured */}
-      <div className="mt-5 flex items-center gap-3">
+      {/* Minimal progress — tiny dots only */}
+      <div className="mt-3 flex items-center gap-2" aria-label="Pose progress">
         {POSES.map((p, i) => (
           <span
             key={p.key}
-            className={`flex size-4 items-center justify-center rounded-full text-[9px] font-black text-white transition ${
+            className={`size-1.5 rounded-full transition ${
               captures[i]
-                ? 'bg-pxi-purple'
+                ? 'bg-emerald-400'
                 : i === activePose
-                  ? 'bg-pxi-purple/40 ring-2 ring-pxi-purple/50'
-                  : 'bg-white/15'
+                  ? 'bg-white'
+                  : 'bg-white/25'
             }`}
-          >
-            {captures[i] ? '✓' : ''}
-          </span>
+          />
         ))}
       </div>
 
-      {/* Current pose prompt */}
-      {cameraState === 'ready' ? (
-        <p className="mt-3 max-w-xs text-center text-sm font-semibold text-white">
-          {`Step ${activePose + 1} of ${POSES.length} — ${pose.prompt}`}
-        </p>
-      ) : null}
-      {cameraState === 'ready' && !scanning ? (
-        <p className="mt-1 text-center text-[11px] text-zinc-500">
-          Captures automatically when the pose is right
-        </p>
-      ) : null}
-
       {scanError ? (
-        <p className="mt-4 max-w-xs text-center text-xs text-red-400">{scanError}</p>
+        <p className="mt-3 max-w-xs text-center text-xs text-red-400">{scanError}</p>
       ) : null}
 
-      {/* Manual fallback — auto-capture is the primary path */}
       <button
         type="button"
         onClick={() => capturePose(activePose)}
         disabled={cameraState !== 'ready' || scanning}
-        className="mt-5 w-full max-w-xs rounded-full border border-white/20 px-8 py-3 text-xs font-black uppercase tracking-widest text-zinc-300 transition hover:border-pxi-purple/60 hover:text-white disabled:opacity-40"
+        className="mt-5 text-xs text-zinc-500 hover:text-white disabled:opacity-40"
       >
-        {scanning ? 'Scanning…' : capturedCount === 0 ? `${ctaLabel} manually` : 'Capture this angle manually'}
+        {scanning ? 'Scanning…' : 'Capture manually'}
       </button>
 
-      {/* Retake the previous pose without losing the rest */}
       {capturedCount > 0 && !scanning ? (
         <button
           type="button"
@@ -483,9 +479,9 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
             const lastCaptured = captures.reduce((acc, v, i) => (v ? i : acc), -1);
             if (lastCaptured >= 0) handleRetakePose(lastCaptured);
           }}
-          className="mt-3 text-xs font-semibold uppercase tracking-widest text-zinc-400 hover:text-white"
+          className="mt-2 text-xs text-zinc-500 hover:text-white"
         >
-          Retake previous pose
+          Retake last
         </button>
       ) : null}
 
@@ -496,16 +492,11 @@ export default function FaceScanCapture({ onVector, onCancel, ctaLabel = 'Scan m
             stopCamera();
             onCancel();
           }}
-          className="mt-3 text-xs font-semibold uppercase tracking-widest text-zinc-500 hover:text-white"
+          className="mt-3 text-xs text-zinc-600 hover:text-white"
         >
           Not now
         </button>
       ) : null}
-
-      <p className="mt-5 max-w-xs text-center text-[11px] leading-relaxed text-zinc-500">
-        Your scan is processed entirely on this device. The photo is destroyed instantly —
-        only an irreversible mathematical vector is used to find your shots.
-      </p>
     </div>
   );
 }

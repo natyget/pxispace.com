@@ -105,7 +105,7 @@ export default function AdminEventsPage() {
                                     <td data-label="Start" className={`${adminTdClass} whitespace-nowrap`}>{formatDate(ev.startDate)}</td>
                                     <td data-label="End" className={`${adminTdClass} whitespace-nowrap`}>{formatDate(ev.endDate)}</td>
                                     <td data-label="Status" className="px-6 py-4">
-                                        <span className="inline-flex rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                                        <span className="inline-flex rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-emerald-300">
                                             {ev.status}
                                         </span>
                                     </td>

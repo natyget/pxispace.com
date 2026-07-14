@@ -18,6 +18,8 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { musicService } from '@/services/music';
+import { api } from '@/services/api';
+import { listAdCampaigns } from '@/services/ads';
 import { getSingleShadeDonutCellProps } from '@/components/dashboard/chartStyles';
 
 const DELETION_ITEMS = [
@@ -37,12 +39,6 @@ const TABS = [
     { id: 'payments', label: 'Cards', icon: CreditCardIcon },
 ];
 
-const USAGE_BREAKDOWN = [
-    { name: 'Marketing sends', value: 420 },
-    { name: 'Ad boosts', value: 280 },
-    { name: 'Data & storage', value: 160 },
-];
-
 function UsageTooltip({ active, payload }) {
     if (!active || !payload?.length) return null;
     const item = payload[0];
@@ -56,8 +52,8 @@ function UsageTooltip({ active, payload }) {
 
 function DonutPanel({ title, data, centerLabel, centerValue }) {
     return (
-        <div className="dashboard-surface rounded-[1.5rem] p-5">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">{title}</p>
+        <div className="dashboard-surface rounded-[1.25rem] p-5">
+            <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">{title}</p>
             <div className="relative mt-4 h-[180px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -70,8 +66,8 @@ function DonutPanel({ title, data, centerLabel, centerValue }) {
                     </PieChart>
                 </ResponsiveContainer>
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{centerLabel}</span>
-                    <span className="text-xl font-black text-white">{centerValue}</span>
+                    <span className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">{centerLabel}</span>
+                    <span className="text-xl font-bold text-white">{centerValue}</span>
                 </div>
             </div>
         </div>
@@ -84,26 +80,20 @@ const profileInputCls =
 function SettingsHero({ user, activeTab }) {
     const activeLabel = TABS.find((tab) => tab.id === activeTab)?.label || 'Profile';
     return (
-        <section className="dashboard-surface-b relative overflow-hidden rounded-[1.75rem] px-5 py-7 md:px-8">
-            <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
-                <div className="max-w-2xl">
-                    <p className="text-[10px] font-black uppercase tracking-[0.28em] text-zinc-500">PXI Account</p>
-                    <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-normal text-white md:text-6xl">Account settings</h1>
-                    <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-400">
-                        Your identity, music, billing rails, and account controls.
-                    </p>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-[1.25rem] bg-white/[0.04] p-4">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Account</p>
-                        <p className="mt-2 truncate text-lg font-black text-white">@{user?.username || 'account'}</p>
-                    </div>
-                    <div className="rounded-[1.25rem] bg-white/[0.04] p-4">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Section</p>
-                        <p className="mt-2 truncate text-lg font-black text-white">{activeLabel}</p>
-                    </div>
-                </div>
+        <section className="flex flex-col gap-4 px-1 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+                <p className="flex items-center gap-2.5 text-[13px] font-medium text-zinc-500">
+                    Account
+                    <span className="rounded-full bg-white/[0.05] px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">@{user?.username || 'account'}</span>
+                </p>
+                <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Settings</h1>
+                <p className="mt-1.5 max-w-xl text-sm leading-6 text-zinc-500">
+                    Your identity, music, billing rails, and account controls.
+                </p>
             </div>
+            <p className="shrink-0 text-sm text-zinc-500 lg:pb-1">
+                Viewing <span className="font-semibold text-zinc-300">{activeLabel}</span>
+            </p>
         </section>
     );
 }
@@ -143,15 +133,15 @@ function ProfileEditor({ user, updateUser }) {
         <SettingsSurface eyebrow="Identity" title="Profile">
             <div className="grid gap-4 sm:grid-cols-2">
                 <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Display name</span>
+                    <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Display name</span>
                     <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={profileInputCls} />
                 </label>
                 <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Username</p>
+                    <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Username</p>
                     <p className="mt-2 text-sm font-semibold text-white">@{user?.username || 'account'}</p>
                 </div>
                 <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3 sm:col-span-2">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Bio</span>
+                    <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Bio</span>
                     <textarea
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
@@ -163,18 +153,18 @@ function ProfileEditor({ user, updateUser }) {
                     <span className="mt-1 block text-right text-[10px] text-zinc-600">{bio.length}/280</span>
                 </label>
                 <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">City</span>
+                    <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">City</span>
                     <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Where you're based" className={profileInputCls} />
                 </label>
                 <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
-                    <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+                    <span className="flex items-center gap-2 text-[11px] font-bold tracking-[0.02em] text-zinc-500">
                         <HugeiconsIcon icon={InstagramIcon} size={13} />
                         Instagram
                     </span>
                     <input value={instagramHandle} onChange={(e) => setInstagramHandle(e.target.value)} placeholder="@handle" className={profileInputCls} />
                 </label>
                 <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3 sm:col-span-2">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Email</p>
+                    <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Email</p>
                     <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-white">
                         <HugeiconsIcon icon={Mail01Icon} size={14} className="text-zinc-500" />
                         {user?.email || 'Add email in mobile app'}
@@ -195,12 +185,45 @@ function ProfileEditor({ user, updateUser }) {
     );
 }
 
-/** Spotify connect/disconnect (Apple Music connects in the mobile app). */
+/** Ensure MusicKit JS is loaded, configured, and return the instance. */
+async function getConfiguredMusicKit() {
+    if (!window.MusicKit) {
+        await new Promise((resolve, reject) => {
+            const existing = document.querySelector('script[data-musickit]');
+            const onLoaded = () => resolve();
+            document.addEventListener('musickitloaded', onLoaded, { once: true });
+            if (!existing) {
+                const s = document.createElement('script');
+                s.src = 'https://js-cdn.music.apple.com/musickit/v3/musickit.js';
+                s.async = true;
+                s.dataset.musickit = '1';
+                s.onerror = () => reject(new Error('Could not load Apple MusicKit'));
+                document.head.appendChild(s);
+            }
+            setTimeout(() => reject(new Error('Apple MusicKit took too long to load')), 15000);
+        });
+    }
+    const { developerToken } = await musicService.getAppleDeveloperToken();
+    await window.MusicKit.configure({
+        developerToken,
+        app: { name: 'PXI', build: '1.0' },
+    });
+    return window.MusicKit.getInstance();
+}
+
+/** Spotify + Apple Music connect/disconnect. One provider at a time powers match scores. */
 function MusicConnectionsCard() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+
+    const refreshProfile = () => {
+        return musicService
+            .getProfile()
+            .then(setProfile)
+            .catch(() => setProfile(null));
+    };
 
     useEffect(() => {
         let cancelled = false;
@@ -224,6 +247,28 @@ function MusicConnectionsCard() {
         }
     };
 
+    const connectApple = async () => {
+        setBusy(true);
+        setError('');
+        try {
+            const music = await getConfiguredMusicKit();
+            const musicUserToken = await music.authorize();
+            if (!musicUserToken) throw new Error('Authorization was cancelled.');
+            await musicService.connectAppleMusic(musicUserToken);
+            await refreshProfile();
+        } catch (err) {
+            const message =
+                err?.code === 'APPLE_MUSIC_UNCONFIGURED'
+                    ? 'Apple Music is not configured yet — try again later.'
+                    : err?.code === 'APPLE_MUSIC_EMPTY_LIBRARY'
+                        ? 'Your Apple Music library looks empty — save some songs and try again.'
+                        : err?.message || 'Could not connect Apple Music';
+            setError(message);
+        } finally {
+            setBusy(false);
+        }
+    };
+
     const disconnect = async () => {
         setBusy(true);
         setError('');
@@ -238,6 +283,10 @@ function MusicConnectionsCard() {
     };
 
     const connected = Boolean(profile?.connected);
+    const provider = profile?.provider || null;
+    const spotifyConnected = connected && provider !== 'APPLE_MUSIC';
+    const appleConnected = connected && provider === 'APPLE_MUSIC';
+    const genresSuffix = profile?.topGenres?.length ? ` · ${profile.topGenres.slice(0, 3).join(', ')}` : '';
 
     return (
         <SettingsSurface eyebrow="Personalization" title="Music">
@@ -251,18 +300,18 @@ function MusicConnectionsCard() {
                     <p className="mt-0.5 text-xs text-zinc-500">
                         {loading
                             ? 'Checking connection...'
-                            : connected
-                                ? `Connected${profile?.topGenres?.length ? ` · ${profile.topGenres.slice(0, 3).join(', ')}` : ''}. Powers your event match scores.`
+                            : spotifyConnected
+                                ? `Connected${genresSuffix}. Powers your event match scores.`
                                 : 'Connect to get events matched to your music taste.'}
                     </p>
                     </div>
                 </div>
-                {connected ? (
+                {spotifyConnected ? (
                     <button
                         type="button"
                         onClick={disconnect}
                         disabled={busy}
-                        className="pill-ghost px-4 py-2 text-xs font-bold uppercase tracking-widest disabled:opacity-50"
+                        className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em] disabled:opacity-50"
                     >
                         Disconnect
                     </button>
@@ -271,13 +320,49 @@ function MusicConnectionsCard() {
                         type="button"
                         onClick={connect}
                         disabled={busy || loading}
-                        className="rounded-full bg-[#1DB954] px-5 py-2 text-xs font-black uppercase tracking-widest text-black disabled:opacity-50"
+                        className="rounded-full bg-[#1DB954] px-5 py-2 text-xs font-bold tracking-[0.02em] text-black disabled:opacity-50"
                     >
                         {busy ? 'Opening...' : 'Connect Spotify'}
                     </button>
                 )}
             </div>
-            <p className="mt-3 text-xs text-zinc-600">Apple Music connects from the PXI mobile app.</p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-4 rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
+                <div className="flex min-w-0 items-start gap-3">
+                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fa2d48]/15 text-[#fa2d48]">
+                        <HugeiconsIcon icon={MusicNote01Icon} size={18} />
+                    </div>
+                    <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white">Apple Music</p>
+                    <p className="mt-0.5 text-xs text-zinc-500">
+                        {loading
+                            ? 'Checking connection...'
+                            : appleConnected
+                                ? `Connected${genresSuffix}. Powers your event match scores.`
+                                : 'Connect your Apple Music library for event matching.'}
+                    </p>
+                    </div>
+                </div>
+                {appleConnected ? (
+                    <button
+                        type="button"
+                        onClick={disconnect}
+                        disabled={busy}
+                        className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em] disabled:opacity-50"
+                    >
+                        Disconnect
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={connectApple}
+                        disabled={busy || loading}
+                        className="rounded-full bg-[#fa2d48] px-5 py-2 text-xs font-bold tracking-[0.02em] text-white disabled:opacity-50"
+                    >
+                        {busy ? 'Opening...' : 'Connect Apple Music'}
+                    </button>
+                )}
+            </div>
+            <p className="mt-3 text-xs text-zinc-600">One provider at a time — connecting the other replaces your taste profile.</p>
             {error ? <p className="mt-2 text-xs text-red-400">{error}</p> : null}
         </SettingsSurface>
     );
@@ -285,11 +370,11 @@ function MusicConnectionsCard() {
 
 function SettingsSurface({ eyebrow, title, children, action = null }) {
     return (
-        <section className="dashboard-surface rounded-[1.5rem] p-5 md:p-6">
+        <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
             <div className="mb-5 flex items-start justify-between gap-4">
                 <div>
-                    {eyebrow ? <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35">{eyebrow}</p> : null}
-                    <h2 className="mt-1 text-xl font-black text-white">{title}</h2>
+                    {eyebrow ? <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">{eyebrow}</p> : null}
+                    <h2 className="mt-1 text-xl font-bold text-white">{title}</h2>
                 </div>
                 {action}
             </div>
@@ -309,16 +394,52 @@ function AccountPageContent() {
     const [showConfirm, setShowConfirm] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState('');
+    const [billing, setBilling] = useState(null);
+    const [usageBreakdown, setUsageBreakdown] = useState([]);
 
     useEffect(() => {
         const frame = requestAnimationFrame(() => setMounted(true));
         return () => cancelAnimationFrame(frame);
     }, []);
 
+    useEffect(() => {
+        if (activeTab === 'billing' || activeTab === 'payments') {
+            authService.getVendorDashboard().then(setBilling).catch(() => setBilling(null));
+        }
+    }, [activeTab]);
+
+    useEffect(() => {
+        if (activeTab !== 'usage') return;
+        let cancelled = false;
+        Promise.all([
+            api.get('/api/campaigns').then((r) => r.campaigns || []).catch(() => []),
+            listAdCampaigns().then((r) => r.campaigns || []).catch(() => []),
+        ]).then(([campaigns, adCampaigns]) => {
+            if (cancelled) return;
+            const marketingSendsCents = campaigns
+                .filter((c) => c.status === 'SENT')
+                .reduce((sum, c) => sum + (c.priceCents || 0), 0);
+            const adBoostsCents = adCampaigns
+                .filter((c) => !['DRAFT', 'CANCELLED'].includes(c.status))
+                .reduce((sum, c) => sum + (c.priceCents || 0), 0);
+            setUsageBreakdown([
+                { name: 'Marketing sends', value: Math.round(marketingSendsCents) / 100 },
+                { name: 'Ad boosts', value: Math.round(adBoostsCents) / 100 },
+            ]);
+        });
+        return () => { cancelled = true; };
+    }, [activeTab]);
+
     const usageTotal = useMemo(
-        () => USAGE_BREAKDOWN.reduce((sum, item) => sum + item.value, 0),
-        []
+        () => usageBreakdown.reduce((sum, item) => sum + item.value, 0),
+        [usageBreakdown]
     );
+    const paidOutCents = useMemo(
+        () => (billing?.payouts || []).filter((p) => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0),
+        [billing]
+    );
+    const availableBalanceCents = Math.max(0, (billing?.aggregates?.netPayout || 0) - paidOutCents);
+    const lastPayout = billing?.payouts?.[0] || null;
     const showSettingsAside = activeTab === 'usage' || activeTab === 'billing' || activeTab === 'payments';
 
     const handleDelete = async () => {
@@ -355,7 +476,7 @@ function AccountPageContent() {
         <div className="mx-auto max-w-6xl space-y-5 md:space-y-6">
             <SettingsHero user={user} activeTab={activeTab} />
 
-            <div className="grid w-full grid-cols-2 gap-1 rounded-[1.35rem] bg-white/[0.045] p-1 sm:flex sm:w-fit sm:rounded-full" role="tablist" aria-label="Account settings sections">
+            <div className="grid w-full grid-cols-2 gap-1 rounded-[1rem] bg-white/[0.045] p-1 sm:flex sm:w-fit sm:rounded-full" role="tablist" aria-label="Account settings sections">
                 {TABS.map((tab) => (
                     <a
                         key={tab.id}
@@ -381,34 +502,50 @@ function AccountPageContent() {
 
                     {activeTab === 'billing' && (
                         <SettingsSurface eyebrow="Money movement" title="Billing & payouts">
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
-                                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Next payout</p>
-                                    <p className="mt-2 text-2xl font-black text-white">$1,240.00</p>
-                                    <p className="mt-1 text-xs text-zinc-500">Est. arrival in 2 business days</p>
+                            {!billing ? (
+                                <p className="text-sm text-zinc-500">Loading real payout data...</p>
+                            ) : (
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
+                                        <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Available balance</p>
+                                        <p className="mt-2 text-2xl font-bold text-white">${(availableBalanceCents / 100).toFixed(2)}</p>
+                                        <p className="mt-1 text-xs text-zinc-500">Net of PXI fees, not yet paid out by Stripe</p>
+                                    </div>
+                                    <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
+                                        <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Most recent payout</p>
+                                        <p className="mt-2 text-2xl font-bold text-white">
+                                            {lastPayout ? `$${(lastPayout.amount / 100).toFixed(2)}` : '—'}
+                                        </p>
+                                        <p className="mt-1 text-xs text-zinc-500">
+                                            {lastPayout
+                                                ? `${lastPayout.status === 'paid' ? 'Paid' : 'Failed'}${lastPayout.arrivalDate ? ' · ' + new Date(lastPayout.arrivalDate).toLocaleDateString() : ''}`
+                                                : 'No payouts yet'}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
-                                    <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Pending balance</p>
-                                    <p className="mt-2 text-2xl font-black text-white">$386.50</p>
-                                    <p className="mt-1 text-xs text-zinc-500">From recent ticket sales</p>
-                                </div>
-                            </div>
+                            )}
                         </SettingsSurface>
                     )}
 
                     {activeTab === 'usage' && (
-                        <SettingsSurface eyebrow="Current cycle" title="Usage & costs">
-                            <div className="grid gap-3 sm:grid-cols-3">
-                                {USAGE_BREAKDOWN.map((item) => (
-                                    <div key={item.name} className="rounded-[1.25rem] bg-white/[0.035] p-4">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{item.name}</p>
-                                        <p className="mt-2 text-2xl font-black text-white">${item.value}</p>
+                        <SettingsSurface eyebrow="All-time" title="Usage & costs">
+                            {!usageBreakdown.length ? (
+                                <p className="text-sm text-zinc-500">No paid marketing or ad spend yet.</p>
+                            ) : (
+                                <>
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                        {usageBreakdown.map((item) => (
+                                            <div key={item.name} className="rounded-[1.25rem] bg-white/[0.035] p-4">
+                                                <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">{item.name}</p>
+                                                <p className="mt-2 text-2xl font-bold text-white">${item.value.toFixed(2)}</p>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-                            <p className="mt-4 text-sm text-zinc-400">
-                                Total spend <span className="font-bold text-white">${usageTotal}</span> this cycle.
-                            </p>
+                                    <p className="mt-4 text-sm text-zinc-400">
+                                        Total spend <span className="font-bold text-white">${usageTotal.toFixed(2)}</span> all-time (email campaigns + ad boosts).
+                                    </p>
+                                </>
+                            )}
                         </SettingsSurface>
                     )}
 
@@ -428,7 +565,7 @@ function AccountPageContent() {
                                     type="button"
                                     disabled
                                     title="Saved payment methods are not available yet — cards are entered per purchase at checkout"
-                                    className="pill-ghost cursor-not-allowed px-3 py-1.5 text-xs font-bold uppercase tracking-widest opacity-40"
+                                    className="pill-ghost cursor-not-allowed px-3 py-1.5 text-xs font-bold tracking-[0.02em] opacity-40"
                                 >
                                     Manage
                                 </button>
@@ -496,17 +633,17 @@ function AccountPageContent() {
 
                 {showSettingsAside && (
                     <aside className="space-y-4">
-                        {(activeTab === 'usage' || activeTab === 'billing') && (
+                        {activeTab === 'usage' && usageBreakdown.length > 0 && (
                             <DonutPanel
                                 title="Cost breakdown"
-                                data={USAGE_BREAKDOWN}
-                                centerLabel="This cycle"
-                                centerValue={`$${usageTotal}`}
+                                data={usageBreakdown}
+                                centerLabel="All-time"
+                                centerValue={`$${usageTotal.toFixed(2)}`}
                             />
                         )}
                         {(activeTab === 'billing' || activeTab === 'payments') && (
-                            <div className="dashboard-surface rounded-[1.5rem] p-5">
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Payout rail</p>
+                            <div className="dashboard-surface rounded-[1.25rem] p-5">
+                                <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Payout rail</p>
                                 <div className="mt-3 flex items-center gap-3">
                                     <HugeiconsIcon icon={Wallet01Icon} size={20} className="text-emerald-400" />
                                     <div>

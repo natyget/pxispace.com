@@ -237,11 +237,11 @@ export default function AdminUsersPage() {
                                         </td>
                                         <td data-label="Username" className={`${adminTdClass} text-[14px]`}>{u.username || '—'}</td>
                                         <td data-label="Tier / role" className="px-6 py-4">
-                                            <span className="inline-flex rounded-full bg-white/[0.055] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/70">
+                                            <span className="inline-flex rounded-full bg-white/[0.055] px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-white/70">
                                                 {u.accountTier}
                                             </span>
                                             {u.adminRole && u.adminRole !== 'NONE' ? (
-                                                <span className="ml-1.5 inline-flex rounded-full bg-sky-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-300">
+                                                <span className="ml-1.5 inline-flex rounded-full bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-sky-300">
                                                     {u.adminRole.replaceAll('_', ' ')}
                                                 </span>
                                             ) : null}
@@ -249,7 +249,7 @@ export default function AdminUsersPage() {
                                         <td data-label="Organizer" className={`${adminTdClass} text-[14px]`}>{u.isVendor ? 'Yes' : 'No'}</td>
                                         <td data-label="Status" className="px-6 py-4">
                                             {u.suspendedAt ? (
-                                                <span className="inline-flex rounded-full bg-red-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-red-300">
+                                                <span className="inline-flex rounded-full bg-red-500/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-red-300">
                                                     Suspended
                                                 </span>
                                             ) : (

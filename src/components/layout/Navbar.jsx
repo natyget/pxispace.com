@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Menu01Icon, Cancel01Icon, Logout01Icon, DashboardSquare01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons';
+import { Menu01Icon, Cancel01Icon, Logout01Icon, DashboardSquare01Icon, ArrowDown01Icon, FavouriteIcon } from '@hugeicons/core-free-icons';
 import { useAuth } from "../../contexts/AuthContext";
 import { PxiLoadingIcon } from '@/components/loading/PxiLoading';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -144,6 +144,14 @@ const Navbar = () => {
                                                 <HugeiconsIcon icon={DashboardSquare01Icon} size={14} className="text-zinc-400" />
                                                 Dashboard
                                             </Link>
+                                            <Link
+                                                href="/wishlist"
+                                                onClick={() => setUserMenuOpen(false)}
+                                                className="flex items-center gap-2.5 px-3 py-2 text-zinc-300 hover:text-white hover:bg-white/5 rounded-xl text-xs font-semibold tracking-wide transition-all"
+                                            >
+                                                <HugeiconsIcon icon={FavouriteIcon} size={14} className="text-zinc-400" />
+                                                Wishlist
+                                            </Link>
                                             <button
                                                 onClick={() => { setUserMenuOpen(false); setShowLogoutModal(true); }}
                                                 className="flex items-center gap-2.5 w-full px-3 py-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl text-xs font-semibold tracking-wide transition-all"
@@ -226,6 +234,13 @@ const Navbar = () => {
                                     className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-zinc-400"
                                 >
                                     Dashboard
+                                </Link>
+                                <Link
+                                    href="/events?wishlist=1"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-zinc-400"
+                                >
+                                    Wishlist
                                 </Link>
                                 <button
                                     onClick={() => { setMobileMenuOpen(false); setShowLogoutModal(true); }}

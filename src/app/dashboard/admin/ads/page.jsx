@@ -151,7 +151,7 @@ export default function AdminAdsPage() {
             ]}
         >
             <AdminPanel className="space-y-3">
-                <h2 className="text-[11px] font-bold tracking-widest text-white/40 uppercase">Filter by status</h2>
+                <h2 className="text-[11px] font-bold tracking-[0.02em] text-white/40">Filter by status</h2>
                 <div className="flex flex-wrap gap-2">
                     {STATUS_FILTERS.map((s) => (
                         <button
@@ -220,11 +220,11 @@ export default function AdminAdsPage() {
                                         {stats.impressions.toLocaleString()} impr · {stats.clicks.toLocaleString()} clk
                                     </td>
                                     <td data-label="Status" className="px-6 py-4">
-                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusPill[c.status] || statusPill.DRAFT}`}>
+                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${statusPill[c.status] || statusPill.DRAFT}`}>
                                             {String(c.status).replaceAll('_', ' ')}
                                         </span>
                                         {c.pausedByAdmin ? (
-                                            <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-red-300/80">Staff hold</p>
+                                            <p className="mt-1 text-[11px] font-medium tracking-[0.02em] text-red-300/80">Staff hold</p>
                                         ) : null}
                                     </td>
                                     <td data-label="Actions" className="px-6 py-4">
@@ -271,7 +271,7 @@ export default function AdminAdsPage() {
             <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={loading} />
 
             <AdminPanel className="space-y-3">
-                <h2 className="text-[11px] font-bold tracking-widest text-white/40 uppercase">Featured hero placements</h2>
+                <h2 className="text-[11px] font-bold tracking-[0.02em] text-white/40">Featured hero placements</h2>
                 {featuredPlacements.length === 0 ? (
                     <p className="text-[13px] text-white/45">No featured placements in the loaded campaigns.</p>
                 ) : (

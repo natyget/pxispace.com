@@ -19,10 +19,10 @@ import {
   mergeOlderPublicThreadPage,
   timelineRowKey,
 } from './buildPublicAlbumTimeline';
-import PublicAlbumDetailsPanel from './PublicAlbumDetailsPanel';
-import PublicAlbumDetailsSheet from './PublicAlbumDetailsSheet';
+import EventDetailsModal from '@/components/events/EventDetailsModal';
+import EventDetailClient from '@/views/events/EventDetailClient';
+import { buildAlbumEventDetails } from './albumEventDetailsAdapter';
 import PublicAlbumJoinEventButton from './PublicAlbumJoinEventButton';
-import PublicAlbumParticipants from './PublicAlbumParticipants';
 import IphonePane from './IphonePane';
 import FindMyselfModal from './FindMyselfModal';
 import { mediaDisplayUrl } from './albumMediaLayout';
@@ -86,6 +86,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
     [threadTimeline],
   );
   const openInAppUrl = albumId ? `pxi://album/${albumId}` : null;
+  const albumDetails = useMemo(() => buildAlbumEventDetails(album, albumId), [album, albumId]);
   const threadScrollActive = tab === 'thread' && !contentLoading;
   const activeThreadVideoId = useAlbumThreadActiveVideo({
     scrollRef: threadListRef,
@@ -343,7 +344,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
         >
         <div className="album-thread-chrome relative z-[5] w-full shrink-0 bg-black max-lg:border-b max-lg:border-white/5">
           <div
-            className="relative flex h-14 items-center justify-center"
+            className="relative flex h-14 items-center justify-center lg:hidden"
             style={{ paddingLeft: THREAD_PAGE_HORIZONTAL_GUTTER, paddingRight: THREAD_PAGE_HORIZONTAL_GUTTER }}
           >
             <h1 className="truncate px-10 text-center text-xl font-black uppercase tracking-[0.24em] text-white">
@@ -449,7 +450,6 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
                   <PublicAlbumMasonryGrid items={visibleGalleryMedia} onPressItem={openLightbox} />
                 )}
               </div>
-              <PublicAlbumParticipants participants={participants} pinned />
             </div>
           ) : (
             <>
@@ -524,27 +524,37 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
 
       </div>
 
-      {/* Right: album details — desktop only; mobile uses three-dot sheet */}
-      <div className="album-details-pane">
-        <div className="album-details-shell">
-          <div className="album-details-chrome relative z-[5] w-full shrink-0 bg-black border-b border-white/5">
-            <div className="relative flex h-14 items-center justify-center">
-              <h2 className="truncate px-10 text-center text-xl font-black uppercase tracking-[0.24em] text-white">
-                Event Details
-              </h2>
+      {/* Right: album details — desktop only; mobile uses three-dot sheet. Renders the
+         full EventDetailClient layout constrained to the pane. */}
+      <div className="album-details-pane relative bg-[#0a0a0a]">
+        {album?.event?.id || album?.eventId ? (
+          <EventDetailClient
+            eventIdOverride={album?.event?.id || album?.eventId}
+            initialEvent={album?.event}
+            presentation="pane"
+          />
+        ) : (
+          <div className="album-details-shell items-center justify-center p-6">
+            <div className="flex h-full max-h-[860px] w-full max-w-[480px] flex-col overflow-hidden">
+              <EventDetailsModal
+                open
+                presentation="inline"
+                event={albumDetails.event}
+                primaryAction={albumDetails.primaryAction}
+                secondaryAction={albumDetails.secondaryAction}
+              />
             </div>
           </div>
-          <div className="album-pane-scroll min-h-0 flex-1 overflow-y-auto no-scrollbar">
-            <PublicAlbumDetailsPanel album={album} albumId={albumId} />
-          </div>
-        </div>
+        )}
       </div>
 
-      <PublicAlbumDetailsSheet
+      <EventDetailsModal
         open={detailsOpen}
         onClose={() => setDetailsOpen(false)}
-        album={album}
-        albumId={albumId}
+        presentation="sheet"
+        event={albumDetails.event}
+        primaryAction={albumDetails.primaryAction}
+        secondaryAction={albumDetails.secondaryAction}
       />
 
       {lightboxOpen && tab === 'gallery' ? (

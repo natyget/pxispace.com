@@ -7,7 +7,7 @@ const TITLE = 'Editorial — Stories From the Night';
 const DESCRIPTION =
   'Field notes and culture from PXI: how shared galleries, scrapbooks, and passport stamps turn a single night into something that lasts.';
 const URL = 'https://pxispace.com/editorial';
-const OG = '/og?title=Stories%20from%20the%20night&eyebrow=Editorial';
+const OG = '/og-hero.png';
 
 export const metadata = {
   title: TITLE,

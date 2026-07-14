@@ -212,7 +212,7 @@ export default function VendorUpgradePage() {
                 <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.055]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={34} className="text-white opacity-80" />
                 </div>
-                <h1 className="text-3xl font-black text-white mb-3 tracking-normal">
+                <h1 className="text-3xl font-bold text-white mb-3 tracking-normal">
                     Hosting is active
                 </h1>
                 <p className="text-zinc-400 mb-8">
@@ -222,7 +222,7 @@ export default function VendorUpgradePage() {
                 {fromMobile ? (
                     <a
                         href="pxi://vendor-onboarding-complete"
-                        className="pill-solid inline-flex items-center gap-2 px-6 py-3 text-sm uppercase tracking-widest"
+                        className="pill-solid inline-flex items-center gap-2 px-6 py-3 text-sm tracking-[0.02em]"
                     >
                         <HugeiconsIcon icon={SmartPhone01Icon} size={14} />
                         Return to PXI App
@@ -230,7 +230,7 @@ export default function VendorUpgradePage() {
                 ) : (
                     <button
                         onClick={() => router.push('/dashboard')}
-                        className="pill-solid inline-flex items-center gap-2 px-6 py-3 text-sm uppercase tracking-widest"
+                        className="pill-solid inline-flex items-center gap-2 px-6 py-3 text-sm tracking-[0.02em]"
                     >
                         Go to Dashboard
                         <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
@@ -242,11 +242,11 @@ export default function VendorUpgradePage() {
 
     return (
         <div className="mx-auto max-w-5xl space-y-6 md:space-y-8">
-            <section className="dashboard-surface-b rounded-[1.75rem] px-5 py-7 md:px-8">
+            <section className="dashboard-surface-b rounded-[1.25rem] px-5 py-7 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Hosting access</p>
-                        <h1 className="mt-3 text-4xl font-black leading-[0.92] text-white md:text-6xl">
+                        <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Hosting access</p>
+                        <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">
                             Start hosting on PXI.
                         </h1>
                         <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 md:text-base">
@@ -255,12 +255,12 @@ export default function VendorUpgradePage() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                         <div className="rounded-2xl bg-white/[0.045] p-4">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Status</p>
-                            <p className="mt-2 text-xl font-black text-white">{hasSubmittedVerification ? 'Submitted' : 'Not started'}</p>
+                            <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Status</p>
+                            <p className="mt-2 text-xl font-bold text-white">{hasSubmittedVerification ? 'Submitted' : 'Not started'}</p>
                         </div>
                         <div className="rounded-2xl bg-white/[0.045] p-4">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Provider</p>
-                            <p className="mt-2 text-xl font-black text-white">Stripe</p>
+                            <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Provider</p>
+                            <p className="mt-2 text-xl font-bold text-white">Stripe</p>
                         </div>
                     </div>
                 </div>
@@ -290,7 +290,7 @@ export default function VendorUpgradePage() {
             {/* Stripe status breakdown — shown after a Check Status call returns PENDING */}
             {stripeStatus && (
                 <div className="glass-panel space-y-3 rounded-[1.25rem] p-5">
-                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">Payment status</p>
+                    <p className="text-xs font-bold text-zinc-400 tracking-[0.02em] mb-3">Payment status</p>
 
                     <StatusRow
                         label="Charges Enabled"
@@ -305,7 +305,7 @@ export default function VendorUpgradePage() {
 
                     {stripeStatus.currentlyDue?.length > 0 && (
                         <div className="pt-1">
-                            <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-2">
+                            <p className="text-xs font-bold text-amber-400 tracking-[0.02em] mb-2">
                                 Outstanding Requirements
                             </p>
                             <p className="text-xs text-zinc-500 mb-3">
@@ -344,7 +344,7 @@ export default function VendorUpgradePage() {
                             <button
                                 onClick={handleResubmitOnboarding}
                                 disabled={step === 'loading'}
-                                className="pill-solid inline-flex items-center gap-2 px-6 py-3 text-sm uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-50"
+                                className="pill-solid inline-flex items-center gap-2 px-6 py-3 text-sm tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {step === 'loading' ? (
                                     <><HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />Reopening...</>
@@ -358,7 +358,7 @@ export default function VendorUpgradePage() {
                             onClick={handleStartOnboarding}
                             disabled={step === 'loading' || hasSubmittedVerification}
                             title={hasSubmittedVerification ? 'Submitted hosting verification already' : undefined}
-                            className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                            className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm tracking-[0.02em] transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                                 hasSubmittedVerification && hasOutstandingRequirements
                                     ? 'pill-ghost text-zinc-500'
                                     : 'pill-solid'
@@ -375,7 +375,7 @@ export default function VendorUpgradePage() {
                             <button
                                 onClick={handleResubmitOnboarding}
                                 disabled={step === 'loading'}
-                                className="pill-ghost inline-flex items-center gap-2 px-4 py-3 text-xs uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-50"
+                                className="pill-ghost inline-flex items-center gap-2 px-4 py-3 text-xs tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 Resubmit Verification
                                 <HugeiconsIcon icon={ArrowRight02Icon} size={13} />

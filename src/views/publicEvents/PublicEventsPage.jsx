@@ -3,14 +3,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { eventsService } from '@/services/events';
 import { getAdSlot } from '@/services/ads';
+import { musicService } from '@/services/music';
 import { getAnonId, queueAdImpression, trackAdClick, useAdImpression } from '@/lib/adTracking';
 import EventCard from '@/views/events/EventCard';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowDown01Icon, FavouriteIcon } from '@hugeicons/core-free-icons';
+import { ArrowDown01Icon, MusicNote01Icon } from '@hugeicons/core-free-icons';
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
 
@@ -40,6 +42,8 @@ function normalizeApiEvent(e) {
     attendees: e._count?.tickets ?? 0,
     ticketType: e.ticketType || null,
     albumId: e.albumId || e.albums?.[0]?.id || null,
+    // Populated only when the discover fetch requests `includeMatch` (music-preference sort).
+    musicMatchScore: e.musicMatchScore ?? null,
 
     // Fields used by original EventCard UI
     image: e.coverImage || DEFAULT_IMG,
@@ -249,10 +253,17 @@ function EventsGridSkeleton({ count = 6 }) {
 export default function PublicEventsPage() {
   const { user } = useAuth();
   const isLoggedIn = !!user?.id;
+  const searchParams = useSearchParams();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState(() => new Set());
+  // Wishlist view now lives behind the profile dropdown's "Wishlist" link (?wishlist=1)
+  // rather than an in-page toggle.
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  // Music-preference sort: re-ranks the grid by the signed-in user's music match score
+  // (same discover endpoint + includeMatch flag the legacy Events.jsx "For you" sort uses).
+  const [musicSortActive, setMusicSortActive] = useState(false);
+  const [musicConnected, setMusicConnected] = useState(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [bgCover, setBgCover] = useState(null);
   const [bgPrevCover, setBgPrevCover] = useState(null);
@@ -279,18 +290,38 @@ export default function PublicEventsPage() {
   const [featuredAds, setFeaturedAds] = useState([]);
   const [gridAds, setGridAds] = useState([]);
 
+  // Read the wishlist deep link once on mount / whenever it changes (e.g. the profile
+  // dropdown's Wishlist link navigating here while already on /events).
   useEffect(() => {
-    setLoading(true);
-    eventsService
-      .getDiscoverEvents(48, 0, 'vendor')
-      .then((res) => setEvents((res.events || []).map(normalizeApiEvent)))
-      .catch(() => setEvents([]))
-      .finally(() => setLoading(false));
+    setFavoritesOnly(searchParams.get('wishlist') === '1');
+  }, [searchParams]);
 
+  useEffect(() => {
     const anonId = getAnonId();
     getAdSlot('WEB_FEATURED', 3, anonId).then(setFeaturedAds);
     getAdSlot('WEB_DISCOVERY', 4, anonId).then(setGridAds);
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setMusicConnected(null);
+      return;
+    }
+    musicService
+      .getProfile()
+      .then((p) => setMusicConnected(!!p?.connected))
+      .catch(() => setMusicConnected(null));
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    setLoading(true);
+    const useMatchSort = musicSortActive && isLoggedIn;
+    eventsService
+      .getDiscoverEvents(48, 0, useMatchSort ? 'match' : 'vendor', useMatchSort ? { includeMatch: true } : {})
+      .then((res) => setEvents((res.events || []).map(normalizeApiEvent)))
+      .catch(() => setEvents([]))
+      .finally(() => setLoading(false));
+  }, [musicSortActive, isLoggedIn]);
 
   const loadFavorites = useCallback(() => {
     loadFavoriteEventIds(isLoggedIn).then(setFavoriteIds).catch(() => setFavoriteIds(new Set()));
@@ -352,8 +383,13 @@ export default function PublicEventsPage() {
       });
     }
 
-    // Basic default ordering is by createdAt desc.
-    if (trending === 'all') {
+    // Music-preference sort takes priority over the (currently static) trending modes —
+    // the discover fetch already asked the backend to rank by match score when active,
+    // this client-side sort is a defensive re-application of that order.
+    if (musicSortActive && isLoggedIn) {
+      list.sort((a, b) => (b.musicMatchScore ?? -1) - (a.musicMatchScore ?? -1));
+    } else if (trending === 'all') {
+      // Basic default ordering is by createdAt desc.
       list.sort((a, b) => (b.createdAt?.getTime?.() ?? 0) - (a.createdAt?.getTime?.() ?? 0));
     } else if (trending === 'nearest') {
       list.sort((a, b) => (a.startDate?.getTime?.() ?? Number.MAX_SAFE_INTEGER) - (b.startDate?.getTime?.() ?? Number.MAX_SAFE_INTEGER));
@@ -370,7 +406,7 @@ export default function PublicEventsPage() {
     }
 
     return list;
-  }, [events, trending, timeFilter, cityFilter, searchQuery, favoritesOnly, favoriteIds]);
+  }, [events, trending, timeFilter, cityFilter, searchQuery, favoritesOnly, favoriteIds, musicSortActive, isLoggedIn]);
 
   // Paid featured slots pin first (labeled Sponsored); organic newest-first fills
   // the remaining hero slots, deduped by event id.
@@ -393,20 +429,22 @@ export default function PublicEventsPage() {
     if (featured?.__ad) queueAdImpression(featured.__ad);
   }, [featured]);
 
+  const musicSortEffective = musicSortActive && isLoggedIn;
+
   const rest = useMemo(() => {
-    const isFiltered = searchQuery || timeFilter !== 'all' || cityFilter !== 'All' || favoritesOnly || trending !== 'all';
+    const isFiltered = searchQuery || timeFilter !== 'all' || cityFilter !== 'All' || favoritesOnly || trending !== 'all' || musicSortEffective;
     if (!isFiltered) {
       return filteredSortedEvents.length > 1 ? filteredSortedEvents.slice(1) : [];
     }
     return filteredSortedEvents;
-  }, [filteredSortedEvents, searchQuery, timeFilter, cityFilter, favoritesOnly, trending]);
+  }, [filteredSortedEvents, searchQuery, timeFilter, cityFilter, favoritesOnly, trending, musicSortEffective]);
 
   // Sponsored discovery cards join the grid only in the unfiltered browse view.
   const restWithAds = useMemo(() => {
-    const isFiltered = searchQuery || timeFilter !== 'all' || cityFilter !== 'All' || favoritesOnly || trending !== 'all';
+    const isFiltered = searchQuery || timeFilter !== 'all' || cityFilter !== 'All' || favoritesOnly || trending !== 'all' || musicSortEffective;
     if (isFiltered) return rest;
     return interleaveGridAds(rest, gridAds);
-  }, [rest, gridAds, searchQuery, timeFilter, cityFilter, favoritesOnly, trending]);
+  }, [rest, gridAds, searchQuery, timeFilter, cityFilter, favoritesOnly, trending, musicSortEffective]);
 
   // Auto-advance carousel
   useEffect(() => {
@@ -545,14 +583,16 @@ export default function PublicEventsPage() {
             {user?.id ? (
               <>
                 <span className="h-5 w-px bg-white/10 mx-2" aria-hidden />
-                {/* Favorites heart */}
+                {/* Music-preference sort: re-rank the grid by music match score */}
                 <button
                   type="button"
-                  onClick={() => setFavoritesOnly((v) => !v)}
-                  className={`rounded-full p-2.5 transition-all ${favoritesOnly ? 'text-[#d946ef]' : 'text-white opacity-50 hover:opacity-100'}`}
-                  aria-label="Toggle favorites"
+                  onClick={() => setMusicSortActive((v) => !v)}
+                  className={`rounded-full p-2.5 transition-all ${musicSortActive ? 'bg-white text-black' : 'text-white opacity-50 hover:opacity-100'}`}
+                  aria-label="Sort by music match"
+                  aria-pressed={musicSortActive}
+                  title="Sort by music match"
                 >
-                  <HugeiconsIcon icon={FavouriteIcon} size={18} className={favoritesOnly ? 'fill-current' : ''} />
+                  <HugeiconsIcon icon={MusicNote01Icon} size={16} strokeWidth={2} />
                 </button>
               </>
             ) : null}
@@ -704,7 +744,25 @@ export default function PublicEventsPage() {
 
       {/* Grid */}
       <main className="mx-auto max-w-[1440px] px-4 pb-20 md:px-6">
-        <h2 className="hidden md:block mb-6 text-xl font-black uppercase tracking-widest text-white/60">Upcoming Events</h2>
+        <div className="hidden md:flex items-center justify-between mb-6">
+          <h2 className="text-xl font-black uppercase tracking-widest text-white/60">
+            {favoritesOnly ? 'Your Wishlist' : 'Upcoming Events'}
+          </h2>
+          {favoritesOnly ? (
+            <Link href="/events" className="text-xs font-black uppercase tracking-widest text-[#d946ef] hover:text-white">
+              Browse all events →
+            </Link>
+          ) : null}
+        </div>
+
+        {musicSortActive && isLoggedIn && musicConnected === false ? (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-3 text-sm text-zinc-400">
+            <p>Connect Spotify or Apple Music for personalized ranking.</p>
+            <Link href="/dashboard/account" className="shrink-0 text-xs font-black uppercase tracking-widest text-[#d946ef] hover:text-white">
+              Connect →
+            </Link>
+          </div>
+        ) : null}
 
         {/* Mobile Tab Views */}
         <div className="md:hidden">

@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "ZRZM6BR3Y5.com.pxistudio.PXIStudio",
+        "paths": [
+          "NOT /assets/*", "NOT /dashboard/*", "NOT /api/*",
+          "/album/*", "/join/*", "/events/*", "/event/*",
+          "/ticket/*", "/p/*", "/u/*", "/messages*", "/notifications"
+        ]
+      }
+    ]
+  },
+  "webcredentials": { "apps": ["ZRZM6BR3Y5.com.pxistudio.PXIStudio"] }
+}

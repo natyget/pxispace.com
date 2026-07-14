@@ -12,7 +12,7 @@ const SECTIONS = [
   {
     id: 'privacy',
     title: 'Privacy Policy',
-    tldr: "We collect only what we need to run the party. Raw face scans never leave your device — only an encrypted, irreversible vector used to find your photos. Your location is checked once at ticket scan, not tracked continuously. You own your photos. We use military-grade stateless tokens instead of passwords. We never sell your data.",
+    tldr: "We collect only what we need to run the party. Face Matching sends scan frames to our servers solely to create an irreversible FaceVector, then discards the images. Your location is checked when you use nearby/discover or check in — not tracked continuously. You own your photos. We never sell your data. Mobile numbers and SMS consent are never shared with third parties for their marketing.",
     content: (
       <div className="space-y-8">
         <div>
@@ -30,7 +30,7 @@ const SECTIONS = [
           <div className="space-y-6">
             <div>
               <h4 className="text-lg font-semibold text-white/90">2.1 Account & Identity Data</h4>
-              <p className="text-gray-400">When you create a PXI account, we collect: Phone number (E.164 format, used for OTP/SMS verification only; we do not store passwords), Display name and username, Date of birth (for age eligibility verification; birth year is never shared with other users), Optional: profile photo, biography, and social media handles, Optional: email address (for account recovery and legal notices).</p>
+              <p className="text-gray-400">When you create a PXI account, we collect: Phone number (E.164 format; used for OTP/account verification and, where you separately opt in, for the PXI SMS Program described in Section 2.8; we do not store passwords), Display name and username, Date of birth (for age eligibility verification; birth year is never shared with other users), Optional: profile photo, biography, and social media handles, Optional: email address (for account recovery and legal notices).</p>
               <div className="mt-3 p-4 bg-legal-hub-surface rounded-lg border border-legal-hub-border">
                 <p className="text-sm font-mono text-legal-hub-accent">Authentication: PXI uses PASETO v4 (public) tokens signed with Ed25519 for all session management. Tokens are cryptographically signed and encode your userId, role, and isVendor/isStaff status. No raw session UUIDs or passwords are stored server-side. Local encryption of sensitive payload data uses XChaCha20-Poly1305 with a 192-bit nonce.</p>
               </div>
@@ -38,7 +38,7 @@ const SECTIONS = [
 
             <div>
               <h4 className="text-lg font-semibold text-white/90">2.2 Location Data — The Event Lock</h4>
-              <p className="text-gray-400">To unlock event-specific photo albums, PXI uses a 4D spatial clustering algorithm (DBSCAN) that checks your latitude, longitude, altitude, and timestamp against a ~1km Haversine radius around the event venue. This location check occurs at ticket scan, optionally during Grace Time, and if you enable background mode, during a defined event window only (max 6 hours). We do NOT continuously track your background location. Aggregate spatial metadata may be retained for safety and fraud prevention for up to 90 days.</p>
+              <p className="text-gray-400">To unlock event-specific photo albums and show nearby events, PXI may request your location while you use the app (when-in-use). Location is used to check your latitude and longitude against a ~1km Haversine radius around the event venue (for example at ticket scan / check-in) and to rank nearby events in Discover. We do NOT request Always/background location permission and we do NOT continuously track your location when the app is closed. Aggregate spatial metadata may be retained for safety and fraud prevention for up to 90 days.</p>
             </div>
 
             <div className="bg-legal-hub-surface border border-legal-hub-border p-6 rounded-xl relative overflow-hidden">
@@ -47,15 +47,15 @@ const SECTIONS = [
                 <HugeiconsIcon icon={Shield01Icon} className="w-5 h-5" />
                 2.3 Biometric Data — BIPA Disclosure (Illinois)
               </h4>
-              <p className="text-gray-400 text-sm mb-4">PXI's "Find My Shots" feature uses facial geometry vector scanning ("FaceVector") to identify your photos within shared event albums. This feature is subject to the Illinois Biometric Information Privacy Act (BIPA), the California Consumer Privacy Act (CPRA Sensitive Data provisions), and analogous state laws.</p>
+              <p className="text-gray-400 text-sm mb-4">PXI&apos;s Face Matching feature (also called &quot;Find My Shots&quot;) uses facial geometry vector scanning (&quot;FaceVector&quot;) to identify your photos within shared event albums. This feature is subject to the Illinois Biometric Information Privacy Act (BIPA), the California Consumer Privacy Act (CPRA Sensitive Data provisions), and analogous state laws.</p>
               <ul className="list-disc pl-5 space-y-2 text-sm text-gray-400">
-                <li>Raw selfies and face images are processed on-device (in the app or in your browser) and permanently destroyed immediately. We never transmit or store raw biometric images.</li>
-                <li>On-device processing derives a mathematical face vector — an encrypted list of numbers that cannot be reversed into a photo. Only this vector is transmitted to and stored on PXI servers, encrypted in transit (TLS) and encrypted at rest.</li>
-                <li>The stored vector is used strictly to (a) match you in event photos you attend and (b) send you a "you're in a photo" alert. It is never used for advertising, identity verification, or any purpose beyond photo matching.</li>
+                <li>If you opt in, guided capture frames from your camera are transmitted securely (TLS) to PXI servers solely so we can derive your FaceVector. Frames are held in memory during processing and permanently discarded immediately after vector extraction — we do not store raw biometric images or face crops from enrollment.</li>
+                <li>The FaceVector is a mathematical list of numbers that cannot reasonably be reversed into a photo. Only this vector is retained on PXI servers, encrypted in transit (TLS) and encrypted at rest.</li>
+                <li>The stored vector is used strictly to (a) match you in event photos you attend and (b) send you a &quot;you&apos;re in a photo&quot; alert. It is never used for advertising, identity verification for login, law-enforcement watchlists, or any purpose beyond photo matching.</li>
                 <li>A distinct, upfront Biometric Consent Screen with plain-language explanation is required before this feature is activated — affirmative opt-in only.</li>
-                <li>Photos uploaded to event albums are scanned to derive per-face vectors so opted-in attendees can be matched to their photos. We store vectors only — never face crops or copies of the uploaded images from this matching process.</li>
-                <li>Web guests without the app can run a one-time face scan locally in their browser to find themselves in an event gallery. The raw scan never leaves the browser; the derived vector is sent once over an encrypted connection for that single gallery match and is never stored.</li>
-                <li>You may revoke consent at any time via Settings &gt; Permissions &gt; Face Recognition.</li>
+                <li>Photos uploaded to event albums are scanned to derive per-face vectors so opted-in attendees can be matched to their photos. We store vectors only — never face crops created solely for this matching process.</li>
+                <li>Web guests without the app may run a one-time face scan to find themselves in an event gallery. The scan frame is sent once over an encrypted connection for that single gallery match; the frame is discarded after embedding and is not stored as an enrollment profile unless you separately opt in to Face Matching in the app.</li>
+                <li>You may revoke consent at any time via Settings &gt; Apps &gt; Face Matching.</li>
                 <li>Upon revocation, your server-stored enrollment vector is deleted immediately; previously matched photo tags remain visible until manually removed by you.</li>
                 <li>We NEVER sell, lease, rent, trade, or profit from biometric data.</li>
                 <li>Biometric data is never shared with third parties except: (i) infrastructure and cloud storage providers strictly as necessary to store and process the encrypted vector, and (ii) as required by valid legal process.</li>
@@ -65,22 +65,61 @@ const SECTIONS = [
 
             <div>
               <h4 className="text-lg font-semibold text-white/90">2.4 Media & Content Data</h4>
-              <p className="text-gray-400">We collect content you actively create or upload: Photos and videos uploaded to Event Albums, The Wall, The Vault, or The Circle. Metadata: upload timestamp, event association, media type, file size. Analog Engine processing parameters: ZSL (Zero Shutter Lag), Halation, Film Grain shader settings applied at render time. These parameters are PXI's proprietary aesthetic layer; the underlying raw photo remains yours. Captions, comments, and reactions you post. Number of retakes before posting (used to improve camera experience, not stored permanently).</p>
+              <p className="text-gray-400">We collect content you actively create or upload: Photos and videos uploaded to Event Albums, The Wall, The Vault, or The Circle. Voice notes you record in direct messages, group chats, or event album threads (audio files and duration metadata; typically capped at about 60 seconds). Metadata: upload timestamp, event association, media type, file size. Analog Engine processing parameters: ZSL (Zero Shutter Lag), Halation, Film Grain shader settings applied at render time. These parameters are PXI&apos;s proprietary aesthetic layer; the underlying raw photo remains yours. Captions, comments, reactions, and text messages you post. Number of retakes before posting (used to improve camera experience, not stored permanently). Uploaded media may be scanned by automated systems (for example NSFW safety classifiers) to enforce Community Standards.</p>
             </div>
 
             <div>
               <h4 className="text-lg font-semibold text-white/90">2.5 Usage, Engagement & Gamification Data</h4>
-              <p className="text-gray-400">App interactions: album joins, ticket scans, photo uploads, reactions, shares, comment posts. Odyssey/Gamification data: XP earned per action, Stamp tier achieved, Leaderboard position, event attendance history. Event-specific behavior: Hype Gate activity, Grace Time uploads, Circle content views, check-in confirmations. Device and network data: device type, OS version, browser/app version, IP-based approximate location (city-level), device identifiers (IDFA/GAID, where consented). Crash logs, error diagnostics, and performance monitoring data. When you take a screenshot within the app (we may notify the relevant album host).</p>
+              <p className="text-gray-400">App interactions: album joins, ticket scans, photo uploads, reactions, shares, comment posts, messages sent. Odyssey/Gamification data: XP earned per action, Stamp tier achieved, Leaderboard position, event attendance history. Event-specific behavior: Hype Gate activity, Grace Time uploads, Circle content views, check-in confirmations. Device and network data: device type, OS version, browser/app version, IP-based approximate location (city-level), and push notification tokens. PXI does not use the advertising identifier (IDFA/GAID) for tracking. Crash logs, error diagnostics, and performance monitoring data. When you take a screenshot within the app (we may notify the relevant album host).</p>
             </div>
 
             <div>
               <h4 className="text-lg font-semibold text-white/90">2.6 Event & Ticketing Data (Attendees)</h4>
-              <p className="text-gray-400">Ticket purchase records and order history. RSVP and attendance status. Payment confirmation numbers (NOT full card details — those are held by Stripe). Event check-in timestamp and location confirmation. Contact book information: ONLY the specific contacts you choose to invite to events. We do NOT access or store your full address book.</p>
+              <p className="text-gray-400">Ticket purchase records and order history. RSVP and attendance status. Payment confirmation numbers (NOT full card details — those are held by Stripe). Event check-in timestamp and location confirmation. Contacts: with your permission, we may read your device contacts on-device to suggest people you may already know on PXI (Circle suggestions) and to help you invite friends. We do not upload or permanently store your full address book on PXI servers; only the connections or invites you choose to act on create server-side records.</p>
             </div>
 
             <div>
               <h4 className="text-lg font-semibold text-white/90">2.7 Vendor, Host & Organizer Data</h4>
               <p className="text-gray-400">If you register as a Tier 3 Vendor/Host, we additionally collect: Legal name, business name (DBA), address, EIN/tax identification number. Bank account/payout information (processed via Stripe Connect; PXI does not store raw bank details). Government-issued ID (when required for identity verification for high-volume payouts). Event proceeds history, fee records, chargeback history. Staff delegation records (who you assigned as Co-host, Photographer, Promoter, or Bouncer). Messaging Service communication logs (for SMS/event blast compliance).</p>
+            </div>
+
+            <div className="p-6 bg-legal-hub-surface border border-legal-hub-border rounded-xl">
+              <h4 className="text-lg font-semibold text-white/90 mb-2">2.8 SMS / Mobile Messaging Data (A2P 10DLC)</h4>
+              <p className="text-gray-400 mb-3">
+                If you provide a mobile number and opt in to text messages, we collect and process: your mobile phone number; SMS/MMS opt-in and opt-out status and timestamps; message delivery logs (sent, delivered, failed); and keyword replies such as STOP and HELP. This data is used solely to operate the PXI SMS Program (transactional event notifications, account/security alerts, and — only with separate marketing consent — promotional messages from PXI or on behalf of Event Hosts).
+              </p>
+              <ul className="list-disc pl-5 space-y-2 text-sm text-gray-400">
+                <li><strong className="text-white">Non-sharing of mobile information:</strong> We do not sell, rent, or share your mobile phone number or SMS opt-in consent with third parties, affiliates, or partners for their own marketing or promotional purposes. Mobile numbers are shared only with our SMS delivery provider (currently Twilio) as a processor necessary to send messages you consented to receive, or as required by law.</li>
+                <li><strong className="text-white">Message frequency:</strong> Message frequency varies. You may receive recurring messages related to events you join or host; typical volume is up to several messages per event you attend or organize, plus occasional account or marketing messages if you opted in. Exact frequency depends on your activity and preferences.</li>
+                <li><strong className="text-white">Rates:</strong> Message and data rates may apply. Your carrier&apos;s standard messaging rates apply to messages sent to you and from you.</li>
+                <li><strong className="text-white">Consent:</strong> Providing a phone number for account verification is not the same as SMS marketing consent. Marketing texts require a separate affirmative opt-in. Consent to receive texts is not a condition of any purchase.</li>
+                <li><strong className="text-white">Opt-out:</strong> Reply <strong className="text-white">STOP</strong> to any PXI SMS to unsubscribe, or manage SMS preferences in Settings. Reply <strong className="text-white">HELP</strong> for assistance, or email support@pxispace.com. Full program terms are in Terms of Service §12.</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-semibold text-white/90">2.9 In-App Messaging & Voice Notes</h4>
+              <p className="text-gray-400 mb-3">
+                PXI includes direct messages, group chats, and event album threads. When you use these features we process: message text; voice notes (audio recordings you create with the microphone, typically up to about 60 seconds) and their duration; shared media, GIFs, stickers, and event cards you attach; conversation participant IDs; delivery/read metadata; and report/block actions.
+              </p>
+              <ul className="list-disc pl-5 space-y-2 text-sm text-gray-400">
+                <li>Voice notes and chat media are stored on our cloud storage providers (for example Cloudflare R2) so recipients can play them, subject to the retention rules in Section 5.</li>
+                <li>Messages are visible to conversation participants. Event album threads may be visible to other attendees of that event.</li>
+                <li>You can block or report users. We review reports under our Community Standards and may remove content or restrict accounts. Automated classifiers may scan uploaded images for prohibited content; voice notes and text are primarily moderated reactively via user reports.</li>
+                <li>This section covers in-app chat. SMS/text messages with carriers are covered separately in Section 2.8 and Terms §12.</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-semibold text-white/90">2.10 Music Match (Spotify / Apple Music)</h4>
+              <p className="text-gray-400 mb-3">
+                Music Match is an optional feature. If you connect Spotify or Apple Music, we receive listening-history and taste signals (for example artists, genres, and related metadata available via that provider&apos;s APIs) solely to score how well your music taste overlaps with events and to help rank or recommend matches. We do not post to your music accounts.
+              </p>
+              <ul className="list-disc pl-5 space-y-2 text-sm text-gray-400">
+                <li>Connection is affirmative opt-in via the provider&apos;s OAuth flow.</li>
+                <li>You may disconnect at any time; disconnecting deletes your Music Match profile/taste data stored by PXI.</li>
+                <li>Music providers process your account data under their own privacy policies when you authorize the connection.</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -91,13 +130,15 @@ const SECTIONS = [
           <ul className="list-disc pl-5 space-y-2 text-gray-400">
             <li>Providing and operating the Services (account creation, event access, album grouping, photo matching, ticketing, payouts).</li>
             <li>Running the Event Lock: computing your Haversine proximity to an event venue to unlock albums.</li>
-            <li>Biometric photo matching: identifying photos you appear in at events you attend (opt-in only; vectors only, never raw images).</li>
+            <li>Biometric photo matching: identifying photos you appear in at events you attend (opt-in only; enrollment frames processed to create vectors that are stored; raw enrollment images discarded after processing).</li>
+            <li>Operating in-app messaging, including voice notes you send to other users.</li>
+            <li>Music Match: ranking events and social matches from listening taste you optionally connect (Spotify / Apple Music).</li>
             <li>Running the Odyssey gamification system: awarding XP, Stamps, and Leaderboard rankings.</li>
             <li>Processing ticket purchases, distributing payouts to vendors via Stripe Connect.</li>
             <li>Personalizing your feed, event recommendations, and suggested connections based on attendance history.</li>
             <li>Safety, fraud prevention, and abuse detection (e.g., detecting spoofed GPS, fake tickets, account manipulation).</li>
-            <li>Sending transactional communications: ticket confirmations, event reminders, payout notifications.</li>
-            <li>Sending marketing communications (only with your explicit opt-in; unsubscribe available at any time).</li>
+            <li>Sending transactional communications: ticket confirmations, event reminders, payout notifications, and (where consented) SMS/MMS event and account alerts.</li>
+            <li>Sending marketing communications by email or SMS (only with your explicit opt-in for that channel; unsubscribe available at any time via email Unsubscribe links or by replying STOP to SMS).</li>
             <li>Complying with legal obligations, responding to law enforcement requests, enforcing our Terms.</li>
             <li>Improving the platform through aggregated, anonymized analytics and A/B testing.</li>
           </ul>
@@ -133,12 +174,20 @@ const SECTIONS = [
 
             <div>
               <h4 className="text-lg font-semibold text-white/90">4.4 With Service Providers</h4>
-              <p className="text-gray-400">Stripe, Inc. (payments), Cloudflare (Edge middleware, CDN, R2 storage), on-device ML frameworks (facial geometry processing), Analytics providers (aggregated, non-PII data only), SMS/Push notification providers.</p>
+              <p className="text-gray-400">Stripe, Inc. (payments), Cloudflare (Edge middleware, CDN, R2 storage for photos, videos, and voice notes), facial geometry processing on PXI servers for Face Matching, Analytics providers (aggregated, non-PII data only), music platform APIs when you connect Music Match (Spotify / Apple Music), and SMS/Push notification providers (including Twilio, Inc., which processes mobile numbers and message content solely to deliver messages on our behalf).</p>
+              <p className="text-gray-400 mt-3 text-sm border-l-2 border-legal-hub-accent pl-4">
+                <strong className="text-white">SMS consent &amp; mobile numbers — no third-party marketing sharing:</strong> Mobile phone numbers collected for SMS/text messaging, and the associated opt-in consent records, will not be shared, sold, rented, or otherwise disclosed to third parties, affiliates, or any other entities for those parties&apos; marketing or promotional purposes. We share mobile numbers only with our SMS delivery provider as a data processor necessary to transmit messages you requested, or when required by applicable law.
+              </p>
             </div>
 
             <div>
               <h4 className="text-lg font-semibold text-white/90">4.5 Legal Obligations & Business Transfers</h4>
               <p className="text-gray-400">We may disclose your information: (i) as required by law, court order, or valid legal process; (ii) to protect the safety of users or the public; (iii) in connection with a merger, acquisition, or sale of assets (with reasonable prior notice to users).</p>
+            </div>
+
+            <div className="p-4 bg-legal-hub-surface/30 border border-legal-hub-border rounded-lg">
+              <h4 className="text-white font-semibold mb-2">4.6 No Sale of Personal Data; Mobile Information</h4>
+              <p className="text-sm text-gray-400">We do not sell personal information. We do not sell, rent, or share mobile phone numbers or SMS consent data with third parties or affiliates for marketing or promotional purposes. Message and data rates may apply to SMS communications. Message frequency varies as described in Section 2.8.</p>
             </div>
           </div>
         </div>
@@ -152,7 +201,9 @@ const SECTIONS = [
             <li><strong className="text-white">The Vault content:</strong> Until manually deleted by user.</li>
             <li><strong className="text-white">Hype Gate content:</strong> Deleted at event start time.</li>
             <li><strong className="text-white">Biometric vectors:</strong> Until consent revoked, account deletion, or 3 years from last interaction — whichever is earliest.</li>
-            <li><strong className="text-white">Location data (Event Lock):</strong> Deleted after DBSCAN clustering computation; aggregate metadata up to 90 days.</li>
+            <li><strong className="text-white">In-app messages &amp; voice notes:</strong> Retained for the life of the conversation or until deleted by participants / account deletion, subject to legal holds and safety investigations.</li>
+            <li><strong className="text-white">Music Match taste profiles:</strong> Until you disconnect Music Match or delete your account.</li>
+            <li><strong className="text-white">Location data (Event Lock):</strong> Deleted after proximity / clustering computation; aggregate metadata up to 90 days.</li>
             <li><strong className="text-white">Payment and ticketing records:</strong> 7 years (tax/legal/compliance requirements).</li>
             <li><strong className="text-white">Usage and analytics data:</strong> 24 months rolling.</li>
             <li><strong className="text-white">Odyssey/XP/Stamp data:</strong> For the life of your account; deleted upon account deletion.</li>
@@ -166,7 +217,7 @@ const SECTIONS = [
           <div className="space-y-4">
             <div>
               <h4 className="text-lg font-semibold text-white/90">6.1 All Users</h4>
-              <p className="text-gray-400">Access and download a copy of your data: Settings &gt; Privacy &gt; Download My Data. Correct inaccurate profile data at any time within Settings. Delete your account and associated data: Settings &gt; Account &gt; Delete Account. Revoke biometric consent: Settings &gt; Permissions &gt; Face Recognition. Opt out of marketing communications: Settings &gt; Notifications &gt; Marketing, or click Unsubscribe in any email. Report content or request removal of tagged photos: In-app report button or privacy@pxispace.com.</p>
+              <p className="text-gray-400">Access and download a copy of your data: Settings &gt; Privacy &gt; Download My Data. Correct inaccurate profile data at any time within Settings. Delete your account and associated data: Settings &gt; Account &gt; Delete Account. Revoke biometric consent: Settings &gt; Apps &gt; Face Matching. Disconnect Music Match from the Music Match / music connect screen or Settings. Opt out of marketing email: Settings &gt; Notifications &gt; Marketing, or click Unsubscribe in any email. Opt out of SMS at any time by replying <strong className="text-white">STOP</strong> to a PXI text message, or via Settings &gt; Notifications &gt; SMS; reply <strong className="text-white">HELP</strong> for SMS help. Report content or request removal of tagged photos: In-app report button or privacy@pxispace.com.</p>
             </div>
             <div>
               <h4 className="text-lg font-semibold text-white/90">6.2 California Residents (CCPA / CPRA)</h4>
@@ -244,7 +295,7 @@ const SECTIONS = [
 
         <div>
           <h3 className="text-xl font-bold mb-3 text-white">6. Your Content & The License You Grant PXI</h3>
-          <p className="leading-relaxed mb-4">You own your content. PXI does not claim ownership of photos, videos, captions, or other original media you upload.</p>
+          <p className="leading-relaxed mb-4">You own your content. PXI does not claim ownership of photos, videos, captions, voice notes, or other original media you upload or send.</p>
           <p className="leading-relaxed mb-4">By uploading content, you grant PXI a worldwide, non-exclusive, royalty-free, perpetual, transferable, and sub-licensable license to: use, store, display, reproduce, modify (including applying Analog Engine filters), distribute, and make available your content, solely for operating the Services, improving the Services, and promoting PXI (with attribution; opt-out available).</p>
           <p className="leading-relaxed">Analog Engine: PXI applies proprietary shader filters. The original unprocessed image remains yours. The rendered output incorporating PXI's Analog Engine aesthetic layer embeds PXI's IP in the filter processing only.</p>
         </div>
@@ -292,37 +343,79 @@ const SECTIONS = [
         </div>
 
         <div>
-          <h3 className="text-xl font-bold mb-3 text-white">11. The Messaging Service</h3>
-          <p className="leading-relaxed">Hosts may use the Messaging Service to communicate with attendees. Must comply with TCPA, CAN-SPAM, and CASL. Informational messages may be sent to all registered attendees; marketing requires separate opt-in. PXI may monitor usage for compliance.</p>
+          <h3 className="text-xl font-bold mb-3 text-white">11. In-App Messaging &amp; Voice Notes</h3>
+          <p className="leading-relaxed mb-4">
+            PXI provides direct messages, group chats, and event album threads. By sending messages you agree that recipients (and, for event threads, other event attendees with access) may view that content. Voice notes are user-generated audio recordings stored so recipients can play them.
+          </p>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>Do not send illegal, harassing, exploitative, or non-consensual intimate content. Community Standards apply to all chat and voice notes.</li>
+            <li>You can block and report users. We may remove content, suspend accounts, and preserve data for safety or legal process.</li>
+            <li>PXI is not responsible for messages sent by other users. Report abuse in-app or contact trust@pxispace.com.</li>
+            <li>This section covers in-app chat. Carrier SMS is governed by Section 12 below.</li>
+          </ul>
         </div>
 
         <div>
-          <h3 className="text-xl font-bold mb-3 text-white">12. Prohibited Conduct</h3>
+          <h3 className="text-xl font-bold mb-3 text-white">12. The Messaging Service (SMS Program Terms)</h3>
+          <p className="leading-relaxed mb-4">
+            Hosts may use the Messaging Service to communicate with attendees. All use must comply with the Telephone Consumer Protection Act (TCPA), CAN-SPAM, CASL, carrier A2P 10DLC rules, and these Terms. Informational and transactional messages may be sent to registered attendees in connection with an event they joined; marketing or promotional SMS requires a separate affirmative opt-in. PXI may monitor, throttle, or suspend Messaging Service usage for compliance, abuse prevention, or carrier requirements.
+          </p>
+          <div className="space-y-4 p-5 bg-legal-hub-surface border border-legal-hub-border rounded-xl text-sm">
+            <p>
+              <strong className="text-white">Program name:</strong> PXI SMS Program (operated by PXI LABS LLC / PXIStudio).
+            </p>
+            <p>
+              <strong className="text-white">Description:</strong> By providing your mobile number and opting in, you agree to receive SMS and/or MMS messages from PXI and, where applicable, on behalf of Event Hosts. Message types may include: account verification (OTP), ticket and event confirmations, check-in and schedule alerts, host announcements related to events you joined, customer support replies, and — only if you separately opt in to marketing — promotional or campaign messages. Consent is not a condition of any purchase.
+            </p>
+            <p>
+              <strong className="text-white">How to opt in:</strong> You opt in by affirmatively agreeing to SMS disclosures in the PXI app or on pxispace.com (for example, checking an unchecked consent box or enabling SMS in Settings), or by other methods we describe at the point of collection. Pre-checked boxes are not used. Providing a number solely for account verification does not constitute marketing consent.
+            </p>
+            <p>
+              <strong className="text-white">Opt-out:</strong> You can cancel the SMS Program at any time. Reply <strong className="text-white">STOP</strong> to any message you receive from us. After you send STOP, we will send one confirmation SMS that you have been unsubscribed, and you will no longer receive SMS messages from the PXI SMS Program. You may also disable SMS in Settings &gt; Notifications. To re-join, opt in again through the app or website.
+            </p>
+            <p>
+              <strong className="text-white">Help:</strong> For assistance with the messaging program, reply <strong className="text-white">HELP</strong> to any PXI SMS, or contact support@pxispace.com. Supported carriers include major US wireless carriers; delivery is not guaranteed on all networks.
+            </p>
+            <p>
+              <strong className="text-white">Rates &amp; frequency:</strong> Message and data rates may apply for any messages sent to you from us and to us from you. Message frequency varies based on your account activity, events joined or hosted, and marketing selections. If you have questions about your text or data plan, contact your wireless provider.
+            </p>
+            <p>
+              <strong className="text-white">Privacy:</strong> Mobile information will not be shared with third parties or affiliates for their marketing or promotional purposes. See our Privacy Policy (Section 2.8 and Section 4.4) at{' '}
+              <Link href="/privacy" className="text-legal-hub-accent underline underline-offset-2">pxispace.com/privacy</Link>.
+            </p>
+            <p>
+              <strong className="text-white">Host obligations:</strong> Event Hosts who use the Messaging Service must only message attendees with a lawful basis (transactional for the event, or marketing only with documented opt-in), must not send prohibited content, and must honor STOP immediately. Hosts may not export attendee phone numbers for off-platform SMS marketing.
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-xl font-bold mb-3 text-white">13. Prohibited Conduct</h3>
           <p className="mb-4">Strictly prohibited: GPS spoofing, fake accounts, ticket fraud, uploading content you don't own, botting, reverse-engineering shaders, and sending unsolicited marketing messages.</p>
         </div>
 
         <div>
-          <h3 className="text-xl font-bold mb-3 text-white">13. Enforcement & Termination</h3>
+          <h3 className="text-xl font-bold mb-3 text-white">14. Enforcement & Termination</h3>
           <p className="leading-relaxed">PXI reserves the right to remove content, issue warnings, suspend or ban accounts, and report illegal activity to law enforcement. Appeals must be submitted within 30 days to legal@pxispace.com.</p>
         </div>
 
         <div>
-          <h3 className="text-xl font-bold mb-3 text-white">14. Disclaimers & Limitation of Liability</h3>
+          <h3 className="text-xl font-bold mb-3 text-white">15. Disclaimers & Limitation of Liability</h3>
           <p className="leading-relaxed">Services provided "AS IS". PXI disclaims all warranties. Total liability shall not exceed the greater of $100 USD or the amount you paid PXI in the preceding 12 months.</p>
         </div>
 
         <div>
-          <h3 className="text-xl font-bold mb-3 text-white">15. Indemnification</h3>
+          <h3 className="text-xl font-bold mb-3 text-white">16. Indemnification</h3>
           <p className="leading-relaxed">You agree to defend and indemnify PXI from claims arising from your violation of these Terms, your content, or your operation of events.</p>
         </div>
 
         <div>
-          <h3 className="text-xl font-bold mb-3 text-white">16. Dispute Resolution & Arbitration</h3>
+          <h3 className="text-xl font-bold mb-3 text-white">17. Dispute Resolution & Arbitration</h3>
           <p className="leading-relaxed">Binding individual arbitration via JAMS. You waive your right to a jury trial or class action. Governing law: Commonwealth of Massachusetts. Venue: Suffolk County, Massachusetts.</p>
         </div>
 
         <div>
-          <h3 className="text-xl font-bold mb-3 text-white">17. General Provisions</h3>
+          <h3 className="text-xl font-bold mb-3 text-white">18. General Provisions</h3>
           <p className="leading-relaxed">Entire agreement, severability, no waiver, and force majeure clauses apply.</p>
         </div>
       </div>
@@ -348,7 +441,7 @@ const SECTIONS = [
 
         <div>
           <h3 className="text-xl font-bold mb-3 text-white">3. Privacy & Consent</h3>
-          <p>No doxxing (sharing non-public personal info). No photos in private spaces (bathrooms, changing rooms). No sharing Circle content outside PXI. No surveillance or tracking of others' location without knowledge.</p>
+          <p>No doxxing (sharing non-public personal info). No photos in private spaces (bathrooms, changing rooms). No sharing Circle content outside PXI. No surveillance or tracking of others&apos; location without knowledge. Do not record or send voice notes that capture private conversations without consent of the people involved.</p>
         </div>
 
         <div>
@@ -471,7 +564,7 @@ const SECTIONS = [
 
         <div>
           <h3 className="text-xl font-bold mb-3 text-white">4. Updates to This Cookie Policy</h3>
-          <p className="leading-relaxed">We may update this policy periodically. Significant changes will be notified on the platform. Last Updated: March 23, 2026.</p>
+          <p className="leading-relaxed">We may update this policy periodically. Significant changes will be notified on the platform. Last Updated: July 13, 2026.</p>
         </div>
       </div>
     )
@@ -605,7 +698,14 @@ const SECTIONS = [
         <div>
           <h3 className="text-xl font-bold mb-3 text-white">5. Staffing Delegation & Permissions</h3>
           <p className="leading-relaxed mb-4">Roles: Co-Host (full admin), Photographer (media upload/download), Promoter (marketing tools), Bouncer (moderation — requires Staff token).</p>
-          <p className="leading-relaxed"><strong>5.1 Host Liability:</strong> Event Hosts are fully responsible for all actions taken by delegated staff. PXI is not liable for staff behavior.</p>
+          <p className="leading-relaxed mb-4"><strong>5.1 Host Liability:</strong> Event Hosts are fully responsible for all actions taken by delegated staff. PXI is not liable for staff behavior.</p>
+          <p className="leading-relaxed mb-3"><strong>5.2 Messaging Service &amp; SMS Compliance:</strong> If you use PXI email or SMS campaigns / host messaging tools:</p>
+          <ul className="list-disc pl-5 space-y-2 text-sm">
+            <li>You may only message attendees who registered for your event (or who separately opted in), and only for that event&apos;s transactional purpose unless marketing opt-in is documented.</li>
+            <li>You must comply with TCPA, CAN-SPAM, CASL, and carrier A2P rules. PXI appends STOP language to SMS; you must not remove or circumvent opt-out mechanisms.</li>
+            <li>You may not sell, rent, or transfer attendee phone numbers or SMS consent records to third parties for marketing.</li>
+            <li>PXI may suspend Messaging Service access for complaints, carrier blocks, or suspected consent violations.</li>
+          </ul>
         </div>
 
         <div>
@@ -641,7 +741,7 @@ const SECTIONS = [
 
         <div className="pt-8 border-t border-legal-hub-border">
           <p className="text-gray-500 text-sm">
-            Last Updated: March 23, 2026<br />
+            Last Updated: July 13, 2026<br />
             Contact: legal@pxispace.com | support@pxispace.com | trust@pxispace.com
           </p>
         </div>
@@ -650,8 +750,10 @@ const SECTIONS = [
   }
 ];
 
-export default function LegalHubPage() {
-  const [activeSection, setActiveSection] = useState(SECTIONS[0].id);
+export default function LegalHubPage({ initialSection } = {}) {
+  const [activeSection, setActiveSection] = useState(
+    SECTIONS.some((s) => s.id === initialSection) ? initialSection : SECTIONS[0].id
+  );
 
   const scrollToSection = useCallback((id) => {
     const element = document.getElementById(id);
@@ -695,8 +797,12 @@ export default function LegalHubPage() {
 
   useEffect(() => {
     const scrollFromHash = () => {
-      const id = window.location.hash.replace(/^#/, '');
-      if (id && SECTIONS.some((s) => s.id === id)) {
+      const hashId = window.location.hash.replace(/^#/, '');
+      const id =
+        (hashId && SECTIONS.some((s) => s.id === hashId) && hashId) ||
+        (initialSection && SECTIONS.some((s) => s.id === initialSection) && initialSection) ||
+        null;
+      if (id) {
         scrollToSection(id);
       }
     };
@@ -708,7 +814,7 @@ export default function LegalHubPage() {
       window.clearTimeout(t2);
       window.removeEventListener('hashchange', scrollFromHash);
     };
-  }, [scrollToSection]);
+  }, [scrollToSection, initialSection]);
 
   return (
     <div className="legal-hub min-h-screen bg-legal-hub-bg text-legal-hub-text selection:bg-legal-hub-accent selection:text-black">
@@ -726,7 +832,7 @@ export default function LegalHubPage() {
             Transparent. Secure. Stateless.
           </p>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-mono text-[#AAAAAA] uppercase tracking-widest">
-            <span>Effective Date: 03/23/2026</span>
+            <span>Effective Date: 07/13/2026</span>
             <span>Jurisdiction: Frisco, Texas, USA</span>
             <span>Contact: legal@pxispace.com</span>
           </div>

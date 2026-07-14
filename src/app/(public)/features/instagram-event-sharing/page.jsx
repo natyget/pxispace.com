@@ -7,7 +7,7 @@ const TITLE = 'Share Event Photos to Instagram in One Tap';
 const DESCRIPTION =
   'Turn any shot from your event scrapbook into a framed, captioned post card and share it to Instagram in one tap — for trips and organizer promo. No screenshots, no cropping.';
 const URL = 'https://pxispace.com/features/instagram-event-sharing';
-const OG = '/og?title=Your%20night%2C%20ready%20to%20post&eyebrow=Share%20to%20Instagram';
+const OG = '/og-hero.png';
 
 export const metadata = {
   title: TITLE,

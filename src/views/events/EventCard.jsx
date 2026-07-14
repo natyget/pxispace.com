@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { FavouriteIcon } from '@hugeicons/core-free-icons';
-import { displayImageSrc } from '@/lib/mediaUrl';
 
 const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/events', sponsored = false, onSponsoredClick }) => {
   const router = useRouter();
@@ -19,10 +18,8 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
       ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
       : null);
 
-  const organizer = event.organizer || null;
-  const organizerAvatarUrl = organizer?.avatarUrl || event.organizerAvatar || null;
-  const organizerDisplayName = organizer?.name || organizer?.username || event.organizerName || null;
-  const organizerInitial = (organizerDisplayName || event.title || '?').charAt(0).toUpperCase();
+  const matchScore =
+    event.musicMatchScore != null && event.musicMatchScore > 0 ? event.musicMatchScore : null;
 
   return (
     <div
@@ -36,25 +33,17 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
         <img
           src={event.coverImage || event.image}
           alt={event.title || ''}
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          className="h-full w-full object-cover"
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
 
-        {/* Organizer avatar top-left */}
-        <div className="absolute left-4 top-4" title={organizerDisplayName || undefined}>
-          {displayImageSrc(organizerAvatarUrl) ? (
-            <img
-              src={displayImageSrc(organizerAvatarUrl)}
-              alt={organizerDisplayName || 'Organizer'}
-              className="h-10 w-10 rounded-full object-cover shadow-lg shadow-black/40"
-            />
-          ) : (
-            <div className="h-10 w-10 rounded-full shadow-lg shadow-black/40 bg-zinc-800 grid place-items-center text-xs font-black text-white">
-              {organizerInitial}
-            </div>
-          )}
-        </div>
+        {/* Top-left: music match % when scored — otherwise nothing */}
+        {matchScore != null ? (
+          <span className="absolute left-4 top-4 inline-flex items-center rounded-full bg-black/50 px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-sm">
+            ★ {matchScore}%
+          </span>
+        ) : null}
 
         {/* Favorite toggle button top-right */}
         <button
@@ -64,12 +53,12 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
             onToggleFavorite?.(event.id);
           }}
           className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-black/40 border-0 text-white hover:bg-black/60 transition-colors backdrop-blur-sm"
-          aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
+          aria-label={favorited ? 'Remove from wishlist' : 'Add to wishlist'}
         >
           <HugeiconsIcon
             icon={FavouriteIcon}
             size={14}
-            className={favorited ? 'fill-current text-[#d946ef]' : 'text-white/70'}
+            className={favorited ? 'fill-current text-[#d84aff]' : 'text-white/70'}
           />
         </button>
 
@@ -88,18 +77,11 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
           </h3>
           <p className="text-sm font-bold text-zinc-300 mb-2">{event.location || event.venue}</p>
 
-          {(event.musicMatchScore != null && event.musicMatchScore > 0) || event.distanceKm != null ? (
+          {event.distanceKm != null ? (
             <div className="flex flex-wrap items-center gap-2">
-              {event.musicMatchScore != null && event.musicMatchScore > 0 ? (
-                <span className="inline-flex items-center rounded-full border border-pxi-purple/40 bg-pxi-purple/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-pxi-purple">
-                  ★ {event.musicMatchScore}% match
-                </span>
-              ) : null}
-              {event.distanceKm != null ? (
-                <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-zinc-300">
-                  {Math.round(event.distanceKm * 10) / 10} km
-                </span>
-              ) : null}
+              <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-zinc-300">
+                {Math.round(event.distanceKm * 10) / 10} km
+              </span>
             </div>
           ) : null}
         </div>

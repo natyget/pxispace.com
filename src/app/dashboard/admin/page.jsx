@@ -22,8 +22,8 @@ function totalEvents(events = {}) {
 function SummaryTile({ label, value, hint }) {
     return (
         <div className="rounded-2xl bg-white/[0.04] p-5">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/40">{label}</p>
-            <p className="mt-3 text-[28px] font-black leading-none tracking-normal text-white tabular-nums">{value}</p>
+            <p className="text-[11px] font-medium tracking-[0.02em] text-white/40">{label}</p>
+            <p className="mt-3 text-[28px] font-bold leading-none tracking-normal text-white tabular-nums">{value}</p>
             {hint ? <p className="mt-2 text-xs font-semibold leading-5 text-white/45">{hint}</p> : null}
         </div>
     );
@@ -31,13 +31,13 @@ function SummaryTile({ label, value, hint }) {
 
 function StatBlock({ title, rows }) {
     return (
-        <div className="rounded-[1.75rem] bg-white/[0.04] p-5">
-            <h2 className="mb-4 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">{title}</h2>
+        <div className="rounded-[1.25rem] bg-white/[0.04] p-5">
+            <h2 className="mb-4 text-[11px] font-medium tracking-[0.02em] text-zinc-500">{title}</h2>
             <dl className="space-y-2">
                 {rows.map(({ label, value }) => (
                     <div key={label} className="flex items-center justify-between gap-4 rounded-2xl bg-white/[0.035] px-4 py-3">
                         <dt className="min-w-0 truncate text-sm font-semibold text-white/55">{label}</dt>
-                        <dd className="shrink-0 text-lg font-black tabular-nums text-white">{formatInteger(value)}</dd>
+                        <dd className="shrink-0 text-lg font-bold tabular-nums text-white">{formatInteger(value)}</dd>
                     </div>
                 ))}
             </dl>
@@ -52,15 +52,15 @@ function AdminOverviewHero({ stats, isLiveAdmin }) {
     const openSupport = Number(stats?.support?.open || 0);
 
     return (
-        <section className="dashboard-surface-b relative overflow-hidden rounded-[2rem] px-5 py-7 md:px-8 md:py-8">
+        <section className="dashboard-surface-b relative overflow-hidden rounded-[1.25rem] px-5 py-7 md:px-8 md:py-8">
             <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                 <div className="max-w-2xl">
                     <div className="mb-3 flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">PXI Admin</span>
+                        <span className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">PXI Admin</span>
                         <span className="text-zinc-700">/</span>
                         <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
                     </div>
-                    <h1 className="max-w-xl text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">
+                    <h1 className="max-w-xl text-2xl font-semibold tracking-tight text-white md:text-[28px]">
                         Admin overview
                     </h1>
                     <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-300 md:text-base">
@@ -125,8 +125,8 @@ export default function AdminOverviewPage() {
             )}
             {!resolvedLoading && !error && resolvedStats && (
                 <>
-                <div className="rounded-[1.75rem] bg-white/[0.04] p-5">
-                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/35">Operating mode</p>
+                <div className="rounded-[1.25rem] bg-white/[0.04] p-5">
+                    <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Operating mode</p>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
                         {isLiveAdmin
                             ? 'Live admin data is enabled for this account. Use the sidebar to manage users, events, safety, support, promos, and moderation.'

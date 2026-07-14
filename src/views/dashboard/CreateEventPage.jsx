@@ -91,6 +91,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   const [location, setLocation] = useState('');
   const [venueName, setVenueName] = useState('');
   const [recurrence, setRecurrence] = useState('');
+  const [spotifyPlaylistUrl, setSpotifyPlaylistUrl] = useState('');
   const [stampImage, setStampImage] = useState(null);
   const [isStampUploading, setIsStampUploading] = useState(false);
   const [geoLat, setGeoLat] = useState(null);
@@ -427,6 +428,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         venueName: venueName.trim() || undefined,
         recurrenceRule: recurrence || undefined,
         stampImageUrl: stampImage || undefined,
+        spotifyPlaylistUrl: spotifyPlaylistUrl.trim() || undefined,
       });
 
       if (created.token && user) {
@@ -665,6 +667,18 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                 <option value="MONTHLY">Monthly</option>
               </select>
             </div>
+          </div>
+          <div>
+            <label className={labelClass}>DJ playlist (optional)</label>
+            <input
+              className={inputClass}
+              value={spotifyPlaylistUrl}
+              onChange={(e) => setSpotifyPlaylistUrl(e.target.value)}
+              placeholder="Spotify or Apple Music playlist/album URL"
+            />
+            <p className="mt-1 text-xs text-white/40">
+              Shown on the event page and matched against attendees&apos; listening taste.
+            </p>
           </div>
           {recurrence ? (
             <div>

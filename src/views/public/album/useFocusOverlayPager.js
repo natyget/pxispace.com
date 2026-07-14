@@ -65,9 +65,21 @@ export function useFocusOverlayPager({ index, itemCount, onIndexChange, onBefore
   }, [syncIndexFromScroll]);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      scrollToIndex(index, { smooth: false });
-    });
+    // The overlay renders null on its first pass (portal mount gate), so the pager
+    // element may not exist yet when this effect fires — retry until it's measurable,
+    // otherwise the initial position is silently skipped and the pager opens on slide 0.
+    let frame = 0;
+    let attempts = 0;
+    const attempt = () => {
+      const el = pagerRef.current;
+      if ((!el || el.clientWidth <= 0) && attempts < 120) {
+        attempts += 1;
+        frame = window.requestAnimationFrame(attempt);
+        return;
+      }
+      scrollToIndex(indexRef.current, { smooth: false });
+    };
+    frame = window.requestAnimationFrame(attempt);
     return () => window.cancelAnimationFrame(frame);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- initial position only
 

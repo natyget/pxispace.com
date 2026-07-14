@@ -213,19 +213,16 @@ function ReturnTooltip({ active, payload, label }) {
 }
 
 
-function RevenueTableRow({ title, value, unit, subheading, fluctuation, isPositive }) {
+function RevenueTableRow({ title, value, unit, subheading }) {
     return (
-        <div className="flex items-center justify-between rounded-2xl bg-white/[0.03] px-3 py-3">
+        <div className="flex items-center justify-between border-b border-white/[0.05] py-3.5 last:border-b-0">
             <div>
-                <p className="text-sm font-bold text-white">{title}</p>
-                <p className="text-xs text-zinc-500">{subheading}</p>
+                <p className="text-sm font-semibold text-white">{title}</p>
+                <p className="mt-0.5 text-xs text-zinc-500">{subheading}</p>
             </div>
-            <div className="text-right">
-                <p className="text-sm font-mono font-bold text-white">{value}<span className="text-[10px] text-zinc-400 ml-1">{unit}</span></p>
-                <p className={`text-[11px] font-bold ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {isPositive ? '+' : ''}{fluctuation}
-                </p>
-            </div>
+            <p className="text-sm font-semibold tabular-nums text-white">
+                {value}<span className="ml-1 text-[11px] font-medium text-zinc-500">{unit}</span>
+            </p>
         </div>
     );
 }
@@ -235,15 +232,21 @@ function EarningsHero({ netAfterCosts, gross, retainedPct, timeframe, setTimefra
     const statusLabel = sseStatus === 'connected' ? 'Connected' : sseStatus === 'connecting' ? 'Connecting' : 'Offline';
 
     return (
-        <section className="dashboard-surface-b relative overflow-hidden rounded-[2rem] px-5 py-7 md:px-8">
-            <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+        <section className="px-1">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                 <div className="max-w-2xl">
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Business</p>
-                    <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">Earnings</h1>
-                    <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-400">
+                    <p className="flex items-center gap-2.5 text-[13px] font-medium text-zinc-500">
+                        Business
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">
+                            <span className={`h-1.5 w-1.5 rounded-full ${sseStatus === 'connected' ? 'bg-emerald-400' : sseStatus === 'connecting' ? 'bg-amber-400' : 'bg-zinc-600'}`} />
+                            {statusLabel}
+                        </span>
+                    </p>
+                    <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Earnings</h1>
+                    <p className="mt-1.5 max-w-xl text-sm leading-6 text-zinc-500">
                         Gross sales, platform fees, event costs, payouts, and profit in one clean read.
                     </p>
-                    <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
                         <SegmentedToggle
                             value={timeframe}
                             onChange={setTimeframe}
@@ -259,32 +262,23 @@ function EarningsHero({ netAfterCosts, gross, retainedPct, timeframe, setTimefra
                             type="button"
                             onClick={onRefresh}
                             disabled={loading}
-                            className="inline-flex items-center justify-center gap-2 rounded-full bg-white/[0.06] px-4 py-2 text-xs font-bold uppercase tracking-widest text-zinc-300 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-40"
+                            className="inline-flex items-center justify-center gap-2 rounded-full bg-white/[0.06] px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-40"
                         >
                             {loading ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" /> : <HugeiconsIcon icon={RefreshIcon} size={14} />}
                             Refresh
                         </button>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 xl:w-[520px]">
-                    <div className="col-span-2 rounded-2xl bg-white/[0.04] p-5">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Net after costs</p>
-                        <p className="mt-3 text-5xl font-black leading-none tracking-normal text-white">
-                            ${netMoney.whole}<span className="text-2xl text-white/45">.{netMoney.dec}</span>
-                        </p>
-                    </div>
-                    <div className="rounded-2xl bg-white/[0.04] p-4">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Gross</p>
-                        <p className="mt-2 text-2xl font-black text-white">{fmtCompact(gross)}</p>
-                    </div>
-                    <div className="rounded-2xl bg-white/[0.04] p-4">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Retained</p>
-                        <p className="mt-2 text-2xl font-black text-white">{retainedPct.toFixed(0)}%</p>
-                    </div>
-                    <div className="col-span-2 rounded-2xl bg-white/[0.035] px-4 py-3">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Live payout stream</p>
-                        <p className="mt-1 text-sm font-bold text-white/70">{statusLabel}</p>
-                    </div>
+                <div className="shrink-0 xl:pb-1 xl:text-right">
+                    <p className="text-[12px] font-medium text-zinc-500">Net after costs</p>
+                    <p className="mt-2 text-5xl font-semibold leading-none tracking-tight text-white md:text-6xl">
+                        ${netMoney.whole}<span className="text-2xl text-white/40">.{netMoney.dec}</span>
+                    </p>
+                    <p className="mt-3 text-sm text-zinc-500">
+                        <span className="font-semibold text-zinc-300">{fmtCompact(gross)}</span> gross
+                        <span className="mx-2 text-zinc-700">·</span>
+                        <span className="font-semibold text-zinc-300">{retainedPct.toFixed(0)}%</span> retained
+                    </p>
                 </div>
             </div>
         </section>
@@ -478,19 +472,19 @@ export default function EarningsPage() {
     if (!user?.isVendor) {
         return (
             <div className="mx-auto max-w-4xl space-y-6 md:space-y-8">
-                <section className="dashboard-surface-b relative overflow-hidden rounded-[2rem] px-5 py-10 text-center md:px-8">
+                <section className="dashboard-surface-b relative overflow-hidden rounded-[1.25rem] px-5 py-10 text-center md:px-8">
                     <div className="relative mx-auto max-w-xl">
                         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.055]">
                             <HugeiconsIcon icon={HelpCircleIcon} size={28} className="text-white opacity-75" />
                         </div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Business</p>
-                        <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">Earnings</h1>
-                        <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-zinc-400">
+                        <p className="text-[13px] font-medium text-zinc-500">Business</p>
+                        <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Earnings</h1>
+                        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500">
                             Your finance dashboard appears here once hosting and payouts are enabled.
                         </p>
                         <Link
                             href="/dashboard/vendor-upgrade"
-                            className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-black uppercase tracking-widest text-black transition hover:bg-zinc-200"
+                            className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-bold tracking-[0.02em] text-black transition hover:bg-zinc-200"
                         >
                             <HugeiconsIcon icon={StarIcon} size={14} />
                             Start hosting
@@ -543,26 +537,26 @@ export default function EarningsPage() {
                 <div className="lg:col-span-1 space-y-6">
                     <SectionCard title="Key Metrics">
                         <div className="px-5 py-2">
-                            <RevenueTableRow 
+                            <RevenueTableRow
                                 title="Gross Revenue" value={fmtCompact(gross)} unit="USD"
-                                subheading="Total sales volume" fluctuation="12.4%" isPositive={true}
+                                subheading="Total sales volume"
                             />
-                            <RevenueTableRow 
+                            <RevenueTableRow
                                 title="Net Earned" value={fmtCompact(netAfterCosts)} unit="USD"
-                                subheading="After platform & marketing fees" fluctuation="8.1%" isPositive={true}
+                                subheading="After platform & marketing fees"
                             />
-                            <RevenueTableRow 
+                            <RevenueTableRow
                                 title="Total Costs" value={fmtCompact(costTotal)} unit="USD"
-                                subheading="Platform, ads, and processing" fluctuation="2.3%" isPositive={false}
+                                subheading="Platform, ads, and processing"
                             />
                         </div>
                     </SectionCard>
                     
                     <SectionCard title="ROI">
                         <div className="px-5 py-6 text-center">
-                            <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-2">Return on Investment</p>
-                            <p className="text-5xl font-black text-white">{((netAfterCosts / (costTotal || 1)) * 100).toFixed(0)}%</p>
-                            <p className="text-sm text-emerald-400 font-bold mt-2">+14% vs last period</p>
+                            <p className="text-xs tracking-[0.02em] text-zinc-500 font-bold mb-2">Return on Investment</p>
+                            <p className="text-5xl font-bold text-white">{((netAfterCosts / (costTotal || 1)) * 100).toFixed(0)}%</p>
+                            <p className="text-sm text-zinc-500 font-semibold mt-2">Net after costs vs. tracked costs</p>
                         </div>
                     </SectionCard>
                 </div>
@@ -581,7 +575,7 @@ export default function EarningsPage() {
                                         createElement(charts.XAxis, { dataKey: 'month', axisLine: false, tickLine: false, tick: { fill: 'rgba(255,255,255,0.45)', fontSize: 11 } }),
                                         createElement(charts.YAxis, { axisLine: false, tickLine: false, tickFormatter: fmtChartMoney, tick: { fill: 'rgba(255,255,255,0.35)', fontSize: 10 }, width: 54 }),
                                         createElement(charts.Tooltip, { cursor: { fill: 'rgba(255,255,255,0.03)' }, content: createElement(MoneyTooltip) }),
-                                        createElement(charts.Area, { type: 'monotone', dataKey: 'revenue', name: 'Revenue', stroke: getDashboardChartShade(1), fill: 'rgba(212,212,216,0.18)', strokeWidth: 2, connectNulls: true }),
+                                        createElement(charts.Area, { type: 'monotone', dataKey: 'revenue', name: 'Revenue', stroke: getDashboardChartShade(1), fill: 'rgba(13,148,136,0.14)', strokeWidth: 2, connectNulls: true }),
                                         createElement(charts.Line, { type: 'monotone', dataKey: 'previousRevenue', name: 'Previous', stroke: 'rgba(255,255,255,0.2)', strokeWidth: 2, strokeDasharray: '4 4', dot: false }),
                                         includeEventCost ? createElement(charts.Line, { type: 'monotone', dataKey: 'profit', name: 'Profit', stroke: getDashboardChartShade(0), strokeWidth: 2, dot: false }) : null
                                     )
@@ -610,7 +604,7 @@ export default function EarningsPage() {
                                     { margin: { top: 0, right: 0, bottom: 0, left: 0 } },
                                     createElement(
                                         charts.Pie,
-                                        { data: breakdownData, dataKey: 'value', nameKey: 'name', cx: '50%', cy: '50%', innerRadius: 70, outerRadius: 100, stroke: 'none' },
+                                        { data: breakdownData, dataKey: 'value', nameKey: 'name', cx: '50%', cy: '50%', innerRadius: 70, outerRadius: 100, stroke: '#0e0e13', strokeWidth: 2, paddingAngle: breakdownData.length > 1 ? 2 : 0 },
                                         breakdownData.map((entry, index) => createElement(charts.Cell, { key: entry.name, fill: getDashboardChartShade(index) }))
                                     ),
                                     createElement(charts.Tooltip, { content: createElement(MoneyTooltip) })
@@ -650,10 +644,10 @@ export default function EarningsPage() {
 
                         <div className="flex flex-col gap-3 rounded-2xl bg-white/[0.035] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">CSV import</p>
+                                <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">CSV import</p>
                                 <p className="mt-1 text-xs text-zinc-500">Use columns named name and amount.</p>
                             </div>
-                            <label className="pill-ghost inline-flex cursor-pointer items-center justify-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest">
+                            <label className="pill-ghost inline-flex cursor-pointer items-center justify-center gap-2 px-4 py-2 text-xs font-bold tracking-[0.02em]">
                                 <HugeiconsIcon icon={Upload01Icon} size={14} />
                                 Upload CSV
                                 <input type="file" accept=".csv" className="hidden" onChange={(event) => handleImportCosts(event.target.files?.[0])} />
@@ -674,7 +668,7 @@ export default function EarningsPage() {
                                         <button
                                             type="button"
                                             onClick={() => saveEventCosts(eventCosts.filter((item) => item.id !== cost.id))}
-                                            className="text-xs font-bold uppercase tracking-widest text-red-400 transition hover:text-red-300"
+                                            className="text-xs font-bold tracking-[0.02em] text-red-400 transition hover:text-red-300"
                                         >
                                             Remove
                                         </button>
@@ -716,11 +710,11 @@ export default function EarningsPage() {
                                             </p>
                                         </div>
                                     </div>
-                                    <p className="font-mono text-sm font-black text-white md:text-right">{fmt(payout.amount)}</p>
+                                    <p className="font-mono text-sm font-bold text-white md:text-right">{fmt(payout.amount)}</p>
                                     <p className="truncate text-xs font-semibold text-zinc-500 md:text-right">
                                         {payout.stripePayoutId ? `Destination ${String(payout.stripePayoutId).slice(-6)}` : 'Default payout rail'}
                                     </p>
-                                    <span className={`w-fit rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest md:justify-self-end ${
+                                    <span className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] md:justify-self-end ${
                                         payout.status === 'paid'
                                             ? 'bg-white/10 text-white'
                                             : 'bg-red-500/10 text-red-300'

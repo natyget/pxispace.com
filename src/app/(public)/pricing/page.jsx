@@ -7,7 +7,7 @@ const TITLE = 'Pricing — Free Tool, $0.99 Per Paid Ticket';
 const DESCRIPTION =
   'PXI is free. Free events cost nothing; paid tickets carry a flat $0.99 platform fee and your revenue is paid straight to your Stripe account. No monthly fees, no percentage cuts.';
 const URL = 'https://pxispace.com/pricing';
-const OG = '/og?title=Free.%20%240.99%20per%20paid%20ticket.&eyebrow=Pricing';
+const OG = '/og-hero.png';
 
 export const metadata = {
   title: TITLE,

@@ -6,15 +6,12 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
-import { ALBUM_MEDIA_FRAME_COLOR } from './albumLayoutConstants';
 import { mediaDisplayUrl, mediaFullUrl } from './albumMediaLayout';
 import {
   COMMENT_SHIFT_X,
   COMMENT_STACK_OVERLAP,
   COMMENT_TILTS_DEG,
   FOCUS_MEDIA_ZONE_PADDING_Y,
-  FOCUS_MODAL_WIDTH,
-  FOCUS_SHEET_MEDIA_BORDER_PX,
   formatFocusRelativeTime,
   getFocusModalLayout,
   sortFocusComments,
@@ -77,6 +74,8 @@ export default function PublicAlbumFocusSlide({
   manuallyPausedIds,
   setManuallyPausedIds,
   playbackPositionsRef,
+  viewportW,
+  viewportH,
 }) {
   const commentsRef = useRef(null);
   const { videoRef: focusVideoRef, videoEl: focusVideoEl, setVideoRef: setFocusVideoRef } =
@@ -98,7 +97,10 @@ export default function PublicAlbumFocusSlide({
   const shouldPlayFocusVideo = Boolean(isActive && isVideo && !isManuallyPaused);
   const initialPlaybackTime = mediaId ? playbackPositionsRef.current.get(mediaId) : undefined;
 
-  const layout = useMemo(() => (item ? getFocusModalLayout(item) : null), [item]);
+  const layout = useMemo(
+    () => (item ? getFocusModalLayout(item, viewportW, viewportH) : null),
+    [item, viewportW, viewportH],
+  );
   const isPortraitMedia =
     layout != null && layout.mediaDisplay.height > layout.mediaDisplay.width;
 
@@ -246,92 +248,83 @@ export default function PublicAlbumFocusSlide({
             paddingBottom: FOCUS_MEDIA_ZONE_PADDING_Y,
           }}
         >
+          {/* Immersive full-bleed view — no polaroid/photo-frame border (that's grid-only styling). */}
           <div
-            className="relative overflow-hidden rounded-[23px]"
-            style={{
-              width: layout.outerW,
-              maxWidth: FOCUS_MODAL_WIDTH - 32,
-              backgroundColor: ALBUM_MEDIA_FRAME_COLOR,
-              padding: FOCUS_SHEET_MEDIA_BORDER_PX,
-            }}
+            className="relative overflow-hidden rounded-2xl bg-black"
+            style={{ width: layout.mediaDisplay.width, height: layout.mediaDisplay.height, maxWidth: '100%' }}
           >
-            <div
-              className="relative overflow-hidden rounded-2xl bg-black"
-              style={{ width: layout.mediaDisplay.width, height: layout.mediaDisplay.height }}
+            <button
+              type="button"
+              className="relative block size-full"
+              onClick={isVideo ? toggleVideoPause : undefined}
+              aria-label={isVideo && isManuallyPaused ? 'Play video' : undefined}
             >
+              {isVideo && fullVideoSrc ? (
+                <video
+                  ref={setFocusVideoRef}
+                  src={fullVideoSrc}
+                  poster={previewSrc || undefined}
+                  className="size-full object-cover"
+                  loop
+                  playsInline
+                  preload={isActive ? 'auto' : 'metadata'}
+                  onLoadedMetadata={handleVideoMetadata}
+                  onTimeUpdate={handleVideoTimeUpdate}
+                />
+              ) : previewSrc ? (
+                <Image
+                  src={previewSrc}
+                  alt=""
+                  width={layout.mediaDisplay.width}
+                  height={layout.mediaDisplay.height}
+                  unoptimized
+                  className="size-full object-cover"
+                />
+              ) : (
+                <div className="flex size-full min-h-[160px] min-w-[200px] items-center justify-center bg-zinc-900 text-xs text-zinc-500">
+                  Media unavailable
+                </div>
+              )}
+              <div
+                className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/30"
+                aria-hidden
+              />
+
+              {isVideo && isManuallyPaused ? (
+                <span className="pointer-events-none absolute inset-0 z-[24] bg-black/28" aria-hidden />
+              ) : null}
+
+              {isVideo && isManuallyPaused ? (
+                <span className="pointer-events-none absolute left-1/2 top-1/2 z-[25] flex size-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-3xl text-white">
+                  ▶
+                </span>
+              ) : null}
+
+              {isVideo && progressLabel ? (
+                <span className="pointer-events-none absolute bottom-1.5 left-1.5 z-[26] rounded-full bg-black/65 px-2 py-0.5 text-[11px] font-bold tabular-nums tracking-wide text-white">
+                  {progressLabel}
+                </span>
+              ) : null}
+            </button>
+
+            {isVideo ? (
               <button
                 type="button"
-                className="relative block size-full"
-                onClick={isVideo ? toggleVideoPause : undefined}
-                aria-label={isVideo && isManuallyPaused ? 'Play video' : undefined}
+                onClick={toggleVideoMute}
+                className="absolute bottom-1.5 right-1.5 z-[27] flex size-9 items-center justify-center rounded-full bg-black/65 text-white"
+                aria-label={isVideoMuted ? 'Unmute video' : 'Mute video'}
               >
-                {isVideo && fullVideoSrc ? (
-                  <video
-                    ref={setFocusVideoRef}
-                    src={fullVideoSrc}
-                    poster={previewSrc || undefined}
-                    className="size-full object-cover"
-                    loop
-                    playsInline
-                    preload={isActive ? 'auto' : 'metadata'}
-                    onLoadedMetadata={handleVideoMetadata}
-                    onTimeUpdate={handleVideoTimeUpdate}
-                  />
-                ) : previewSrc ? (
-                  <Image
-                    src={previewSrc}
-                    alt=""
-                    width={layout.mediaDisplay.width}
-                    height={layout.mediaDisplay.height}
-                    unoptimized
-                    className="size-full object-cover"
-                  />
-                ) : (
-                  <div className="flex size-full min-h-[160px] min-w-[200px] items-center justify-center bg-zinc-900 text-xs text-zinc-500">
-                    Media unavailable
-                  </div>
-                )}
-                <div
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/30"
-                  aria-hidden
-                />
-
-                {isVideo && isManuallyPaused ? (
-                  <span className="pointer-events-none absolute inset-0 z-[24] bg-black/28" aria-hidden />
-                ) : null}
-
-                {isVideo && isManuallyPaused ? (
-                  <span className="pointer-events-none absolute left-1/2 top-1/2 z-[25] flex size-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-3xl text-white">
-                    ▶
-                  </span>
-                ) : null}
-
-                {isVideo && progressLabel ? (
-                  <span className="pointer-events-none absolute bottom-1.5 left-1.5 z-[26] rounded-full bg-black/65 px-2 py-0.5 text-[11px] font-bold tabular-nums tracking-wide text-white">
-                    {progressLabel}
-                  </span>
-                ) : null}
+                <HugeiconsIcon icon={isVideoMuted ? VolumeOffIcon : VolumeHighIcon} size={20} />
               </button>
-
-              {isVideo ? (
-                <button
-                  type="button"
-                  onClick={toggleVideoMute}
-                  className="absolute bottom-1.5 right-1.5 z-[27] flex size-9 items-center justify-center rounded-full bg-black/65 text-white"
-                  aria-label={isVideoMuted ? 'Unmute video' : 'Mute video'}
-                >
-                  <HugeiconsIcon icon={isVideoMuted ? VolumeOffIcon : VolumeHighIcon} size={20} />
-                </button>
-              ) : null}
-            </div>
+            ) : null}
           </div>
 
           <div className={isPortraitMedia ? 'shrink-0 self-center' : 'mt-1 flex w-full justify-center self-center'}>
             <PublicAlbumReactionBar
               item={item}
               layout={isPortraitMedia ? 'vertical' : 'horizontal'}
-              maxWidth={isPortraitMedia ? 48 : layout.outerW}
-              maxHeight={isPortraitMedia ? layout.outerH : undefined}
+              maxWidth={isPortraitMedia ? 48 : layout.mediaDisplay.width}
+              maxHeight={isPortraitMedia ? layout.mediaDisplay.height : undefined}
               openInAppUrl={openInAppUrl}
             />
           </div>
@@ -339,13 +332,15 @@ export default function PublicAlbumFocusSlide({
       </div>
 
       <div
-        className="relative shrink-0 overflow-hidden border-t border-white/10"
+        className="relative shrink-0 overflow-hidden"
         style={{ height: layout.commentsSectionHeight }}
       >
         <div
           ref={commentsRef}
           data-focus-comments-scroll
+          onPointerDown={(e) => e.stopPropagation()}
           className="no-scrollbar flex h-full flex-col items-center overflow-y-auto px-6 pb-3 pt-3"
+          style={{ touchAction: 'pan-y' }}
         >
           {comments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-6 text-center">

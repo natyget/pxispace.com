@@ -23,6 +23,15 @@ export const musicService = {
 
   disconnect: () => api.delete('/api/music/profile'),
 
+  /** GET /api/music/apple/developer-token — { developerToken } for MusicKit JS (503 when unconfigured). */
+  getAppleDeveloperToken: () => api.get('/api/music/apple/developer-token'),
+
+  /** POST /api/music/apple/connect — { musicUserToken } from MusicKit authorize(). */
+  connectAppleMusic: (musicUserToken) => api.post('/api/music/apple/connect', { musicUserToken }),
+
+  /** GET /api/music/events/:eventId/match (auth) — { connected, score, matchedArtists, sharedGenres } */
+  getEventMatch: (eventId) => api.get(`/api/music/events/${eventId}/match`),
+
   /**
    * Event lineup playlist (Spotify/Apple Music) — dashboard management + public DJ submission flow.
    */
@@ -41,4 +50,10 @@ export const musicService = {
 
   /** POST /api/music/playlist-link/:token (public) — DJ submits a playlist URL */
   submitPlaylistLink: (token, url) => api.post(`/api/music/playlist-link/${token}`, { url }),
+
+  /** GET /api/music/lineup-playlist/:token (public) — shared lineup playlist landing { playlist, event } */
+  getLineupPlaylistLanding: (token) => api.get(`/api/music/lineup-playlist/${token}`),
+
+  /** GET /api/music/events/:eventId/playlists (public/auth) — { playlists, averageScore } */
+  getLineupPlaylists: (eventId) => api.get(`/api/music/events/${eventId}/playlists`),
 };

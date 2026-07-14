@@ -13,7 +13,6 @@ export async function generateMetadata({ params }) {
   const story = getEditorialStory(slug);
   if (!story) return {};
   const url = `${SITE_URL}/editorial/${slug}`;
-  const og = `/og?title=${encodeURIComponent(story.title)}&eyebrow=Editorial`;
   return {
     title: story.title,
     description: story.dek,
@@ -25,7 +24,7 @@ export async function generateMetadata({ params }) {
       url,
       images: [{ url: story.cover, width: 1200, height: 630, alt: story.title }],
     },
-    twitter: { card: 'summary_large_image', title: story.title, description: story.dek, images: [og] },
+    twitter: { card: 'summary_large_image', title: story.title, description: story.dek, images: [story.cover] },
   };
 }
 

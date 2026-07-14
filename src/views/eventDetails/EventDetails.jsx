@@ -5,12 +5,13 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Calendar01Icon, Location01Icon, UserGroupIcon, TagIcon, Alert01Icon, Loading02Icon, FavouriteIcon, InstagramIcon, GlobeIcon, SmartPhone01Icon, SparklesIcon, HelpCircleIcon } from '@hugeicons/core-free-icons';
+import { Calendar01Icon, Location01Icon, UserGroupIcon, TagIcon, Alert01Icon, Loading02Icon, FavouriteIcon, InstagramIcon, GlobeIcon, SmartPhone01Icon, SparklesIcon, HelpCircleIcon, MusicNote01Icon } from '@hugeicons/core-free-icons';
 import Button from '../../components/ui/Button';
 import { PxiSpinner } from '@/components/loading/PxiLoading';
 import { eventsService } from '../../services/events';
 import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket } from '../../services/tickets';
 import { spotifyEmbedSrc } from '@/lib/spotify';
+import { musicService } from '../../services/music';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
@@ -93,10 +94,29 @@ const EventDetails = ({ basePath = '/events' }) => {
   const [favoriteIds, setFavoriteIds] = useState(() => new Set());
   const [eulaAccepted, setEulaAccepted] = useState(false);
   const [selectedTierId, setSelectedTierId] = useState(null);
+  /** Caller's compatibility with the lineup playlist — { connected, score, matchedArtists, sharedGenres } */
+  const [musicMatch, setMusicMatch] = useState(null);
+  const [lineupPlaylist, setLineupPlaylist] = useState(null);
 
   useEffect(() => {
     loadFavoriteEventIds(isLoggedIn).then(setFavoriteIds).catch(() => setFavoriteIds(new Set()));
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (!id) return;
+    musicService
+      .getEventPlaylist(id)
+      .then((data) => setLineupPlaylist(data?.playlist ?? null))
+      .catch(() => setLineupPlaylist(null));
+    if (isLoggedIn) {
+      musicService
+        .getEventMatch(id)
+        .then(setMusicMatch)
+        .catch(() => setMusicMatch(null));
+    } else {
+      setMusicMatch(null);
+    }
+  }, [id, isLoggedIn]);
 
   useEffect(() => {
     if (!id) {
@@ -270,10 +290,10 @@ const EventDetails = ({ basePath = '/events' }) => {
               <button
                 type="button"
                 onClick={handleToggleFavorite}
-                className="glass px-4 py-2 rounded-full text-xs uppercase inline-flex items-center gap-2 border border-white/10"
+                className="glass px-4 py-2 rounded-full text-xs uppercase inline-flex items-center gap-2"
               >
-                <HugeiconsIcon icon={FavouriteIcon} size={16} className={favorited ? 'fill-pink-500 text-pink-500' : ''} />
-                {favorited ? 'Saved' : 'Favorite'}
+                <HugeiconsIcon icon={FavouriteIcon} size={16} className={favorited ? 'fill-[#d84aff] text-[#d84aff]' : ''} />
+                {favorited ? 'On wishlist' : 'Wishlist'}
               </button>
             </div>
             <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter mt-2 leading-[0.9]">
@@ -453,50 +473,109 @@ const EventDetails = ({ basePath = '/events' }) => {
               </section>
             ) : null}
 
-            {/* Diplomat passport (host) */}
-            {host ? (
-              <section className="glass-dark rounded-[2rem] border border-white/10 p-10">
-                <h2 className="text-3xl font-black uppercase tracking-tighter mb-1">Diplomat passport</h2>
-                <p className="text-zinc-500 text-sm mb-8">
-                  Host credentials — scrapbook stamps represent events organized, not places visited.
-                </p>
+            {/* Music match — replaces the old host passport block; host stays as a compact row */}
+            <section className="glass-dark rounded-[2rem] border border-white/10 p-10">
+              <h2 className="text-3xl font-black uppercase tracking-tighter mb-1 flex items-center gap-3">
+                <HugeiconsIcon icon={MusicNote01Icon} className="text-pxi-purple" />
+                Your music match
+              </h2>
+              <p className="text-zinc-500 text-sm mb-8">
+                How this event&apos;s lineup playlist compares to what you actually listen to.
+              </p>
+
+              {!lineupPlaylist ? (
+                <p className="text-zinc-400">No lineup playlist yet — check back closer to the event.</p>
+              ) : !isLoggedIn || !musicMatch?.connected ? (
+                <div className="space-y-4">
+                  <p className="text-zinc-400 leading-relaxed">
+                    Connect Spotify or Apple Music and we&apos;ll score this lineup against your taste.
+                  </p>
+                  <Link
+                    href={isLoggedIn ? '/dashboard/account' : '/login'}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-pxi-purple text-white text-xs font-black uppercase tracking-widest hover:opacity-90 transition-opacity"
+                  >
+                    {isLoggedIn ? 'Connect your music' : 'Sign in to match'}
+                  </Link>
+                </div>
+              ) : (
                 <div className="flex flex-col md:flex-row gap-8 items-start">
-                  <UserAvatar
-                    user={{ avatarUrl: host.avatarUrl }}
-                    size={112}
-                    rounded="lg"
-                    alt=""
-                    className="shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-2xl font-black">{host.name || host.username || 'Host'}</p>
-                    {host.username ? <p className="text-zinc-500">@{host.username}</p> : null}
-                    {host.city ? <p className="text-zinc-400 text-sm mt-2">{host.city}</p> : null}
-                    <p className="text-zinc-400 mt-4 leading-relaxed">{host.bio?.trim() ? host.bio.trim() : '—'}</p>
-                    <div className="flex flex-wrap gap-3 mt-6">
-                      {host.instagramHandle ? (
-                        <a
-                          href={igHref(host.instagramHandle)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-bold text-pxi-purple hover:text-white inline-flex items-center gap-2"
-                        >
-                          <HugeiconsIcon icon={InstagramIcon} size={16} /> Instagram
-                        </a>
-                      ) : null}
-                      {apiEvent.websiteUrl ? (
-                        <a
-                          href={apiEvent.websiteUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-bold text-pxi-purple hover:text-white inline-flex items-center gap-2"
-                        >
-                          <Glob size={16} /> Event site
-                        </a>
-                      ) : null}
-                    </div>
+                  <div className="shrink-0 w-28 h-28 rounded-2xl border border-pxi-purple/40 bg-pxi-purple/10 flex flex-col items-center justify-center">
+                    <span className="text-4xl font-black text-pxi-purple">{musicMatch.score ?? 0}%</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mt-1">match</span>
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-4">
+                    {musicMatch.matchedArtists?.length ? (
+                      <p className="text-zinc-300 leading-relaxed">
+                        You listen to{' '}
+                        <span className="font-bold text-white">{musicMatch.matchedArtists.slice(0, 5).join(', ')}</span>
+                        {musicMatch.matchedArtists.length > 5 ? ` +${musicMatch.matchedArtists.length - 5} more` : ''} — they&apos;re
+                        in this lineup.
+                      </p>
+                    ) : (
+                      <p className="text-zinc-400 leading-relaxed">
+                        None of your top artists are in this lineup yet, but the genres may still be your thing.
+                      </p>
+                    )}
+                    {musicMatch.sharedGenres?.length ? (
+                      <div className="flex flex-wrap gap-2">
+                        {musicMatch.sharedGenres.map((g) => (
+                          <span
+                            key={g}
+                            className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-pxi-purple/20 text-pxi-purple border border-pxi-purple/30"
+                          >
+                            {g}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                    {lineupPlaylist?.sourceUrl ? (
+                      <a
+                        href={lineupPlaylist.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm font-bold text-pxi-purple hover:text-white transition-colors"
+                      >
+                        Open the lineup playlist ({lineupPlaylist.trackCount} tracks)
+                      </a>
+                    ) : null}
                   </div>
                 </div>
+              )}
+
+              {host ? (
+                <div className="flex items-center gap-4 mt-10 pt-6 border-t border-white/10">
+                  <UserAvatar user={{ avatarUrl: host.avatarUrl }} size={44} alt="" className="shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Hosted by</p>
+                    <p className="font-black text-white truncate">
+                      {host.name || host.username || 'Host'}
+                      {host.username ? <span className="text-zinc-500 font-normal"> · @{host.username}</span> : null}
+                    </p>
+                  </div>
+                  <div className="ml-auto flex gap-3 shrink-0">
+                    {host.instagramHandle ? (
+                      <a
+                        href={igHref(host.instagramHandle)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-bold text-pxi-purple hover:text-white inline-flex items-center gap-2"
+                      >
+                        <HugeiconsIcon icon={InstagramIcon} size={16} />
+                      </a>
+                    ) : null}
+                    {apiEvent.websiteUrl ? (
+                      <a
+                        href={apiEvent.websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-bold text-pxi-purple hover:text-white inline-flex items-center gap-2"
+                      >
+                        <Glob size={16} />
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
                 {apiEvent.scrapbookThumbnails?.length ? (
                   <div className="mt-10">
                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3">
@@ -520,8 +599,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                     </div>
                   </div>
                 ) : null}
-              </section>
-            ) : null}
+            </section>
           </div>
 
           {/* Sidebar tickets */}

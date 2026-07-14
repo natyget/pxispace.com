@@ -101,10 +101,10 @@ html, body {
 
 /* Tailwind v4 @theme: custom colors for utilities (bg-pxi-purple, text-pxi-dark, etc.) */
 @theme {
-  --color-pxi-purple: #f01fff;
-  --color-newpurple-base: #f01fff;
-  /** `#f01fff` at 80% opacity */
-  --color-newpurple: rgb(240 31 255 / 0.8);
+  --color-pxi-purple: #d84aff;
+  --color-newpurple-base: #d84aff;
+  /** `#d84aff` at 80% opacity */
+  --color-newpurple: rgb(216 74 255 / 0.8);
   --color-pxi-dark: #050505;
   --color-pxi-charcoal: #121212;
   --color-pxi-violet: #2d1b4e;
@@ -149,14 +149,14 @@ html, body {
     --glow-pink: rgba(236, 72, 153, 0.4);
     --glow-purple: rgba(168, 85, 247, 0.4);
     --glow-cyan: rgba(6, 182, 212, 0.4);
-    --pxi-purple: #f01fff;
-    --newpurple-base: #f01fff;
-    --newpurple: rgb(240 31 255 / 0.8);
+    --pxi-purple: #d84aff;
+    --newpurple-base: #d84aff;
+    --newpurple: rgb(216 74 255 / 0.8);
     --pxi-dark: #050505;
     --pxi-charcoal: #121212;
     --pxi-violet: #2d1b4e;
     /* Dashboard tokens */
-    --dashboard-bg-base: #050506;
+    --dashboard-bg-base: #08080b;
     --dashboard-bg-elev-1: #0d0d11;
     --dashboard-bg-elev-2: #14141a;
     --dashboard-bg-elev-3: #1a1a22;
@@ -175,11 +175,11 @@ html, body {
     --dashboard-text-primary: #f2f2f4;
     --dashboard-text-secondary: #bbbcc3;
     --dashboard-text-muted: #8b8d98;
-    --dashboard-accent: #f01fff;
-    --dashboard-accent-soft: rgba(240, 31, 255, 0.2);
-    --dashboard-brand-neon: #f01fff;
-    --dashboard-brand-glow: 0 0 10px rgba(240, 31, 255, 0.75), 0 0 24px rgba(240, 31, 255, 0.42);
-    --dashboard-blur-gradient: radial-gradient(circle at 20% 0%, rgba(240, 31, 255, 0.12), transparent 48%),
+    --dashboard-accent: #d84aff;
+    --dashboard-accent-soft: rgba(216, 74, 255, 0.2);
+    --dashboard-brand-neon: #d84aff;
+    --dashboard-brand-glow: 0 0 10px rgba(216, 74, 255, 0.75), 0 0 24px rgba(216, 74, 255, 0.42);
+    --dashboard-blur-gradient: radial-gradient(circle at 20% 0%, rgba(216, 74, 255, 0.12), transparent 48%),
       radial-gradient(circle at 85% 18%, rgba(115, 119, 255, 0.1), transparent 42%);
     --dashboard-space-1: 0.25rem;
     --dashboard-space-2: 0.5rem;
@@ -260,25 +260,30 @@ html, body {
 }
 
 @layer utilities {
+  /* Afterhours chrome: crisp bordered surfaces on a deep plane. Depth comes from
+     the hairline + inset top-light, not from floating shadow blobs. */
   .surface-a,
   .dashboard-surface-a,
   .matte-surface,
   .dashboard-surface {
-    background: rgba(15, 15, 18, 0.82);
-    border: none;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 18px 54px rgba(0, 0, 0, 0.28);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0) 42%), #0e0e13;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 12px 32px rgba(0, 0, 0, 0.32);
   }
 
   .dashboard-page-surface {
-    background: var(--dashboard-bg-base);
+    background:
+      radial-gradient(900px 420px at 12% -6%, rgba(216, 74, 255, 0.05), transparent 62%),
+      radial-gradient(720px 380px at 96% 4%, rgba(99, 102, 241, 0.035), transparent 60%),
+      var(--dashboard-bg-base);
     color: var(--dashboard-text-primary);
   }
 
   .dashboard-page-surface :is(h1, h2, h3, h4, h5, h6) {
     font-family: var(--font-inter);
-    letter-spacing: 0;
+    letter-spacing: -0.01em;
     text-transform: none;
   }
 
@@ -286,35 +291,35 @@ html, body {
   .dashboard-surface-b,
   .dashboard-glass-surface,
   .dashboard-surface-frosted {
-    background: rgba(16, 16, 18, 0.78);
-    border: none;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    box-shadow: 0 18px 46px rgba(0, 0, 0, 0.26);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0) 46%), #0e0e13;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 14px 36px rgba(0, 0, 0, 0.34);
   }
 
   .dashboard-popover-surface {
-    background: rgba(10, 10, 12, 0.94);
-    border: none;
+    background: rgba(12, 12, 16, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.09);
     backdrop-filter: blur(var(--dashboard-surface-b-blur));
     -webkit-backdrop-filter: blur(var(--dashboard-surface-b-blur));
     box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
   }
 
   .glass-panel {
-    background: rgba(14, 14, 16, 0.82);
-    border: none;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0) 42%), #0e0e13;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 12px 32px rgba(0, 0, 0, 0.32);
   }
 
   .glass-panel-strong {
-    background: rgba(20, 20, 22, 0.9);
-    border: none;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    box-shadow: 0 20px 52px rgba(0, 0, 0, 0.34);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 48%), #111117;
+    border: 1px solid rgba(255, 255, 255, 0.085);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 16px 40px rgba(0, 0, 0, 0.36);
   }
 
   .glass-field {
@@ -417,9 +422,10 @@ html, body {
     justify-content: center;
     border-radius: 9999px;
     background: #fff;
-    color: #050506;
-    font-weight: 900;
-    box-shadow: none;
+    color: #08080b;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.24) inset, 0 8px 24px rgba(255, 255, 255, 0.07);
     transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
   }
 
@@ -466,7 +472,7 @@ html, body {
   }
 
   .dashboard-input:focus {
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 1.5px rgba(216, 74, 255, 0.45);
     background: rgba(255, 255, 255, 0.055);
   }
 
@@ -516,13 +522,12 @@ html, body {
     justify-content: center;
     white-space: nowrap;
     border-radius: 9999px;
-    padding: 0.55rem 1rem;
-    color: rgba(255, 255, 255, 0.52);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
+    padding: 0.5rem 1rem;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
     line-height: 1;
-    text-transform: uppercase;
     transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
   }
 
@@ -595,7 +600,7 @@ html, body {
 
   .text-neon {
     color: var(--pxi-purple);
-    text-shadow: 0 0 10px rgba(240, 31, 255, 0.6), 0 0 25px rgba(240, 31, 255, 0.4);
+    text-shadow: 0 0 10px rgba(216, 74, 255, 0.6), 0 0 25px rgba(216, 74, 255, 0.4);
   }
 
   .text-neon-orange {
@@ -610,7 +615,7 @@ html, body {
   }
 
   .bloom-purple {
-    box-shadow: 0 0 25px 2px rgba(240, 31, 255, 0.12);
+    box-shadow: 0 0 25px 2px rgba(216, 74, 255, 0.12);
   }
 
   .glass {
@@ -667,7 +672,7 @@ html, body {
   .pxi-home-purple {
     background-color: var(--color-pxi-purple);
     color: #fff;
-    box-shadow: 0 0 20px rgba(240, 31, 255, 0.4);
+    box-shadow: 0 0 20px rgba(216, 74, 255, 0.4);
   }
 
   /* Legal hub page — neon TL;DR / CTA cards (from pxi-legal-hub) */
@@ -777,16 +782,18 @@ html, body {
   width: 100%;
   height: 3.5rem;
   padding: 0 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 9999px;
+  background: rgba(26, 26, 26, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: none;
+  border-radius: 20px;
   --PhoneInput-color--focus: #B026FF;
   --PhoneInputCountryFlag-borderColor: rgba(255, 255, 255, 0.2);
 }
 
 .verify-phone-input-wrapper .PhoneInput:focus-within {
-  border-color: #B026FF;
   outline: none;
+  box-shadow: 0 0 0 1.5px rgba(216, 74, 255, 0.55);
 }
 
 .verify-phone-input-wrapper .PhoneInputInput {
@@ -1122,11 +1129,11 @@ html, body {
 }
 
 /* Desktop: X-style full-width split — edge-to-edge thread on the left, a fixed
-   ~420px mobile-format pane on the right rendering the album details modal inline. */
+   ~530px pane on the right rendering the album details modal card inline. */
 @media (min-width: 1024px) {
   .public-album-page {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 420px;
+    grid-template-columns: minmax(0, 1fr) 414px;
     align-items: stretch;
     height: calc(100dvh - 80px);
     max-height: calc(100dvh - 80px);
@@ -1438,7 +1445,7 @@ html, body {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(240, 31, 255, 0.5),
+    rgba(216, 74, 255, 0.5),
     rgba(255, 90, 31, 0.35),
     transparent
   );
@@ -1453,13 +1460,13 @@ html, body {
   background: #ffffff;
   color: #050505;
   font-weight: 700;
-  box-shadow: 0 0 24px rgba(240, 31, 255, 0.25);
+  box-shadow: 0 0 24px rgba(216, 74, 255, 0.25);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .glow-cta:hover {
   transform: translateY(-1px);
-  box-shadow: 0 0 34px rgba(240, 31, 255, 0.45);
+  box-shadow: 0 0 34px rgba(216, 74, 255, 0.45);
   background: #f4f4f5;
 }
 

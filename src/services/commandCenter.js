@@ -153,7 +153,7 @@ export function listMarketingPipeline({ events = [], notifications = [] } = {}) 
     channel: index === 0 ? 'SMS + feed' : 'Email + discovery',
     detail: `${eventTimeLabel(event)} - ${soldTickets(event)} ticket${soldTickets(event) === 1 ? '' : 's'} sold`,
     action: index === 0 ? 'Check Schedule' : 'Continue Draft',
-    href: '/dashboard/audience?view=campaigns',
+    href: '/dashboard/campaigns',
   }));
 
   if (campaigns.length === 0) {
@@ -165,7 +165,7 @@ export function listMarketingPipeline({ events = [], notifications = [] } = {}) 
         channel: 'Email + feed',
         detail: 'Saved segments are ready for a reactivation send.',
         action: 'Build Draft',
-        href: '/dashboard/audience?view=campaigns',
+        href: '/dashboard/campaigns',
       },
       {
         id: 'campaign-discovery',
@@ -174,7 +174,7 @@ export function listMarketingPipeline({ events = [], notifications = [] } = {}) 
         channel: 'Discovery page',
         detail: 'Promote next public drop once an event is hosted.',
         action: 'Review Mix',
-        href: '/dashboard/audience?view=campaigns',
+        href: '/dashboard/ads',
       }
     );
   }
@@ -297,7 +297,7 @@ export function buildCommandCenterUpdates({ events = [], unreadCount = 0, vendor
       id: 'new-features',
       title: 'New dashboard features',
       detail: 'Gallery controls, invite status, and campaign reporting are being tightened around the new glass UI.',
-      href: '/dashboard/audience?view=campaigns',
+      href: '/dashboard/campaigns',
       action: 'Preview',
       group: 'product',
     },

@@ -46,6 +46,11 @@ export const authStorage = {
         if (typeof window !== 'undefined') {
             localStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem(USER_KEY);
+            // Role hints must not survive the session that earned them.
+            try {
+                const { clearStaffAccessHints } = await import('@/lib/dashboardCapabilities');
+                clearStaffAccessHints();
+            } catch { /* ignore */ }
             await clearPasetoCookie();
         }
     },

@@ -13,6 +13,10 @@ function formatUsd(cents) {
     return `$${(Number(cents || 0) / 100).toFixed(2)}`;
 }
 
+function formatNumber(value) {
+    return Number(value || 0).toLocaleString('en-US');
+}
+
 function formatDate(iso) {
     if (!iso) return '—';
     try {
@@ -30,9 +34,6 @@ const statusStyle = {
     FAILED: 'bg-red-500/10 text-red-300',
     CANCELLED: 'bg-white/5 text-white/40',
 };
-
-const inputCls =
-    'dashboard-input min-h-12 w-full px-4 py-3 text-sm font-semibold text-white placeholder:text-white/35';
 
 function campaignErrorMessage(error, fallback = 'Campaign tools are unavailable right now.') {
     const raw = error?.data?.error || error?.data?.message || error?.message || '';
@@ -52,12 +53,15 @@ export default function CampaignsPage() {
     const [error, setError] = useState(null);
 
     const [name, setName] = useState('');
+    const [channel, setChannel] = useState('EMAIL');
     const [subject, setSubject] = useState('');
     const [body, setBody] = useState('');
     const [audience, setAudience] = useState('ALL_PAST');
     const [eventId, setEventId] = useState('');
     const [quote, setQuote] = useState(null);
     const [busy, setBusy] = useState(false);
+    const isSms = channel === 'SMS';
+    const bodyMaxLength = isSms ? 320 : 10000;
 
     const [payState, setPayState] = useState(null); // { campaignId, clientSecret }
 
@@ -82,10 +86,10 @@ export default function CampaignsPage() {
         return () => clearTimeout(timer);
     }, [load]);
 
-    // Live quote as the audience selection changes.
+    // Live quote as the audience/channel selection changes.
     useEffect(() => {
         let cancelled = false;
-        const params = new URLSearchParams({ audience });
+        const params = new URLSearchParams({ audience, channel });
         if (audience === 'ATTENDEES' && eventId) params.set('eventId', eventId);
         if (audience === 'ATTENDEES' && !eventId) {
             const timer = setTimeout(() => setQuote(null), 0);
@@ -100,7 +104,7 @@ export default function CampaignsPage() {
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [audience, eventId]);
+    }, [audience, eventId, channel]);
 
     const createAndPay = async () => {
         setBusy(true);
@@ -108,7 +112,8 @@ export default function CampaignsPage() {
         try {
             const { campaign } = await api.post('/api/campaigns', {
                 name: name.trim(),
-                subject: subject.trim(),
+                channel,
+                ...(isSms ? {} : { subject: subject.trim() }),
                 body: body.trim(),
                 audience,
                 ...(audience === 'ATTENDEES' ? { eventId } : {}),
@@ -122,36 +127,35 @@ export default function CampaignsPage() {
         }
     };
 
-    const canSubmit = name.trim() && subject.trim() && body.trim() && quote?.recipientCount > 0
-        && (audience !== 'ATTENDEES' || eventId);
+    const smsNotReady = isSms && quote?.smsChannelReady === false;
+    const canSubmit = name.trim() && (isSms || subject.trim()) && body.trim() && quote?.recipientCount > 0
+        && (audience !== 'ATTENDEES' || eventId) && !smsNotReady;
 
     return (
         <div className="mx-auto max-w-7xl space-y-6">
-            <section className="dashboard-surface-b rounded-[1.75rem] px-5 py-6 md:px-7">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                    <div className="max-w-2xl">
-                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Campaigns</p>
-                        <h1 className="mt-2 text-4xl font-black leading-none text-white md:text-5xl">Email Campaigns</h1>
-                        <p className="mt-2 text-sm leading-6 text-zinc-400">
-                            Send to opted-in attendees with pricing, consent, and unsubscribe handling managed by PXI.
-                            Want sponsored feed, discovery, or featured placements?{' '}
-                            <a href="/dashboard/ads" className="font-bold text-white underline decoration-white/30 underline-offset-2">
-                                Promote with Ads →
-                            </a>
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[360px]">
-                        {[
-                            { label: 'Reach', value: quote?.recipientCount ?? '—' },
-                            { label: 'Cost', value: quote ? formatUsd(quote.priceCents) : '—' },
-                            { label: 'History', value: loading ? '—' : campaigns.length },
-                        ].map((item) => (
-                            <div key={item.label} className="rounded-2xl bg-white/[0.045] px-3 py-3">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{item.label}</p>
-                                <p className="mt-1 truncate text-lg font-black tabular-nums text-white">{item.value}</p>
-                            </div>
-                        ))}
-                    </div>
+            <section className="flex flex-col gap-5 px-1 lg:flex-row lg:items-end lg:justify-between">
+                <div className="max-w-2xl">
+                    <p className="text-[13px] font-medium text-zinc-500">Campaigns</p>
+                    <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Reach your attendees</h1>
+                    <p className="mt-1.5 text-sm leading-6 text-zinc-500">
+                        Email and SMS to opted-in attendees — pricing, consent, and unsubscribe handled by PXI.
+                        Want sponsored placements?{' '}
+                        <a href="/dashboard/ads" className="font-medium text-zinc-300 underline decoration-white/25 underline-offset-2 transition hover:text-white">
+                            Promote with Ads →
+                        </a>
+                    </p>
+                </div>
+                <div className="grid shrink-0 grid-cols-3 gap-px overflow-hidden rounded-2xl bg-white/[0.06] ring-1 ring-white/[0.07] sm:min-w-[330px]">
+                    {[
+                        { label: 'Reach', value: quote?.recipientCount ?? '—' },
+                        { label: 'Cost', value: quote ? formatUsd(quote.priceCents) : '—' },
+                        { label: 'Sent', value: loading ? '—' : campaigns.length },
+                    ].map((item) => (
+                        <div key={item.label} className="bg-[#0e0e13] px-4 py-3">
+                            <p className="text-[12px] font-medium text-zinc-500">{item.label}</p>
+                            <p className="mt-1 truncate text-lg font-semibold tabular-nums tracking-tight text-white">{item.value}</p>
+                        </div>
+                    ))}
                 </div>
             </section>
 
@@ -161,48 +165,118 @@ export default function CampaignsPage() {
 
             <SectionCard title="Compose send" dense className="dashboard-surface-b !shadow-[0_22px_70px_rgba(0,0,0,0.28)]">
                 <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <label className="space-y-2">
-                            <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Internal name</span>
-                            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Summer kickoff blast" className={inputCls} />
-                        </label>
-                        <label className="space-y-2">
-                            <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Subject line</span>
-                            <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Tonight's details are live" className={inputCls} />
-                        </label>
-                        <label className="space-y-2">
-                            <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Audience</span>
-                            <select value={audience} onChange={(e) => setAudience(e.target.value)} className={`${inputCls} appearance-none`}>
-                                <option value="ALL_PAST">All past attendees (opted-in)</option>
-                                <option value="ATTENDEES">One event's attendees (opted-in)</option>
-                            </select>
-                        </label>
-                        {audience === 'ATTENDEES' ? (
-                            <label className="space-y-2">
-                                <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Event</span>
-                                <select value={eventId} onChange={(e) => setEventId(e.target.value)} className={`${inputCls} appearance-none`}>
-                                    <option value="">Choose event...</option>
-                                    {events.map((ev) => (
-                                        <option key={ev.id} value={ev.id}>{ev.name}</option>
-                                    ))}
-                                </select>
-                            </label>
-                        ) : <div className="hidden sm:block" />}
-                        <label className="space-y-2 sm:col-span-2">
-                            <span className="px-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">Message</span>
+                    <div className="space-y-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="dashboard-segmented-toggle" role="tablist" aria-label="Send channel">
+                                {[{ id: 'EMAIL', label: 'Email' }, { id: 'SMS', label: 'SMS' }].map((c) => (
+                                    <button
+                                        key={c.id}
+                                        type="button"
+                                        className="dashboard-segmented-toggle__item"
+                                        data-active={channel === c.id}
+                                        aria-pressed={channel === c.id}
+                                        onClick={() => setChannel(c.id)}
+                                    >
+                                        {c.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <input
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Internal name (only you see this)"
+                                aria-label="Internal campaign name"
+                                className="dashboard-input min-h-10 w-full px-4 py-2 text-sm font-semibold text-white placeholder:text-white/35 sm:max-w-[280px]"
+                            />
+                        </div>
+
+                        {/* The message itself, framed like the email/SMS the attendee receives. */}
+                        <div className="overflow-hidden rounded-[1.25rem] bg-white/[0.03] ring-1 ring-white/[0.06]">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.06] px-4 py-3 sm:px-5">
+                                <span className="w-14 shrink-0 text-[11px] font-medium tracking-[0.02em] text-zinc-500">To</span>
+                                <span className="relative min-w-0 flex-1">
+                                    <select
+                                        value={audience}
+                                        onChange={(e) => setAudience(e.target.value)}
+                                        aria-label="Audience"
+                                        className="w-full cursor-pointer appearance-none rounded-lg bg-transparent py-1 pl-1 pr-7 text-sm font-bold text-white outline-none transition focus-visible:ring-1 focus-visible:ring-white/20 [&>option]:bg-zinc-950"
+                                    >
+                                        <option value="ALL_PAST">All past attendees (opted-in)</option>
+                                        <option value="ATTENDEES">One event&apos;s attendees (opted-in)</option>
+                                    </select>
+                                    <svg viewBox="0 0 10 10" className="pointer-events-none absolute right-2 top-1/2 h-2.5 w-2.5 -translate-y-1/2 text-zinc-500" aria-hidden="true">
+                                        <path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </span>
+                                {quote?.recipientCount > 0 ? (
+                                    <span className="shrink-0 rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium tabular-nums text-zinc-300">
+                                        {formatNumber(quote.recipientCount)}
+                                    </span>
+                                ) : null}
+                            </div>
+                            {audience === 'ATTENDEES' ? (
+                                <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3 sm:px-5">
+                                    <span className="w-14 shrink-0 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Event</span>
+                                    <span className="relative min-w-0 flex-1">
+                                        <select
+                                            value={eventId}
+                                            onChange={(e) => setEventId(e.target.value)}
+                                            aria-label="Event"
+                                            className="w-full cursor-pointer appearance-none rounded-lg bg-transparent py-1 pl-1 pr-7 text-sm font-bold text-white outline-none transition focus-visible:ring-1 focus-visible:ring-white/20 [&>option]:bg-zinc-950"
+                                        >
+                                            <option value="">Choose event...</option>
+                                            {events.map((ev) => (
+                                                <option key={ev.id} value={ev.id}>{ev.name}</option>
+                                            ))}
+                                        </select>
+                                        <svg viewBox="0 0 10 10" className="pointer-events-none absolute right-2 top-1/2 h-2.5 w-2.5 -translate-y-1/2 text-zinc-500" aria-hidden="true">
+                                            <path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </span>
+                                </div>
+                            ) : null}
+                            {!isSms ? (
+                                <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3 sm:px-5">
+                                    <span className="w-14 shrink-0 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Subject</span>
+                                    <input
+                                        value={subject}
+                                        onChange={(e) => setSubject(e.target.value)}
+                                        placeholder="Tonight's details are live"
+                                        aria-label="Subject line"
+                                        className="min-w-0 flex-1 bg-transparent py-1 pl-1 text-sm font-bold text-white outline-none placeholder:font-semibold placeholder:text-white/30"
+                                    />
+                                </div>
+                            ) : null}
                             <textarea
                                 value={body}
-                                onChange={(e) => setBody(e.target.value)}
-                                rows={8}
-                                placeholder={'Write your message...\n\nBlank lines become paragraphs. An unsubscribe link is added automatically.'}
-                                className={`${inputCls} resize-y rounded-[1.25rem]`}
+                                onChange={(e) => setBody(e.target.value.slice(0, bodyMaxLength))}
+                                rows={isSms ? 5 : 9}
+                                placeholder={isSms
+                                    ? "Tonight's set starts at 9. See you there!"
+                                    : 'Write your message...\n\nBlank lines become paragraphs. An unsubscribe link is added automatically.'}
+                                aria-label="Message body"
+                                className="block w-full resize-y bg-transparent px-4 py-4 text-sm font-medium leading-6 text-white outline-none placeholder:text-white/30 sm:px-5"
                             />
-                        </label>
+                            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.06] bg-white/[0.02] px-4 py-2.5 sm:px-5">
+                                <span className="text-[11px] font-semibold text-zinc-500">
+                                    {isSms ? '"Reply STOP to unsubscribe." is appended automatically.' : 'An unsubscribe link is added automatically.'}
+                                </span>
+                                <span className={`text-[11px] font-bold tabular-nums ${body.length >= bodyMaxLength ? 'text-amber-300' : 'text-zinc-500'}`}>
+                                    {formatNumber(body.length)}/{formatNumber(bodyMaxLength)}
+                                </span>
+                            </div>
+                        </div>
+
+                        {smsNotReady ? (
+                            <div className="rounded-2xl bg-amber-500/10 px-4 py-3 text-xs font-semibold leading-5 text-amber-200">
+                                SMS is pending carrier registration — this channel isn&apos;t sendable yet. Draft here; it&apos;ll unlock once a live number is configured.
+                            </div>
+                        ) : null}
                     </div>
-                    <aside className="flex flex-col justify-between rounded-[1.35rem] bg-white/[0.045] p-5">
+                    <aside className="flex flex-col justify-between rounded-[1rem] bg-white/[0.045] p-5">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Send quote</p>
-                            <p className="mt-2 text-3xl font-black tabular-nums text-white">
+                            <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Send quote</p>
+                            <p className="mt-2 text-3xl font-bold tabular-nums text-white">
                                 {quote ? formatUsd(quote.priceCents) : '—'}
                             </p>
                             <p className="mt-2 text-sm leading-6 text-zinc-400">
@@ -218,12 +292,12 @@ export default function CampaignsPage() {
                         <div className="mt-6 space-y-3">
                             <div className="grid grid-cols-2 gap-2 text-sm">
                                 <div className="rounded-2xl bg-white/[0.04] px-3 py-3">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Consent</p>
-                                    <p className="mt-1 font-black text-white">Enforced</p>
+                                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Consent</p>
+                                    <p className="mt-1 font-bold text-white">Enforced</p>
                                 </div>
                                 <div className="rounded-2xl bg-white/[0.04] px-3 py-3">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Unsubscribe</p>
-                                    <p className="mt-1 font-black text-white">Automatic</p>
+                                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Unsubscribe</p>
+                                    <p className="mt-1 font-bold text-white">Automatic</p>
                                 </div>
                             </div>
                             <button
@@ -269,7 +343,7 @@ export default function CampaignsPage() {
                                         {c.subject} · {c.recipientCount} recipients · {formatUsd(c.priceCents)} · {formatDate(c.sentAt || c.createdAt)}
                                     </p>
                                 </div>
-                                <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${statusStyle[c.status] || statusStyle.DRAFT}`}>
+                                <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${statusStyle[c.status] || statusStyle.DRAFT}`}>
                                     {String(c.status).replaceAll('_', ' ')}
                                 </span>
                             </div>

@@ -1,8 +1,8 @@
 'use client';
 
-// "Find yourself" — guest face scan for public web albums.
-// The selfie is processed locally in the browser (pxi-face-v1); only the derived
-// vector is sent for one match query and the gallery is filtered client-side.
+// "Find yourself" — guest face scan for public web albums (pxi-face-v2).
+// One selfie frame is sent for a single in-memory match query server-side; the
+// image is never stored and the gallery is filtered client-side.
 // Nothing biometric is persisted for guests.
 
 import React, { useEffect, useState } from 'react';
@@ -28,10 +28,10 @@ export default function FindMyselfModal({ open, onClose, albumId, onMatches }) {
 
   if (!open) return null;
 
-  const handleVector = async (vector, modelId) => {
+  const handleFrames = async (images) => {
     setStep('matching');
     try {
-      const res = await faceService.matchAlbum(albumId, vector, modelId);
+      const res = await faceService.matchAlbum(albumId, images[0]);
       const mediaIds = Array.isArray(res?.mediaIds) ? res.mediaIds : [];
       setMatchCount(mediaIds.length);
       // Photos the server hasn't face-scanned yet (it starts processing them now).
@@ -89,7 +89,7 @@ export default function FindMyselfModal({ open, onClose, albumId, onMatches }) {
             <h2 className="mb-6 text-center text-xl font-black uppercase tracking-[0.18em] text-white">
               Center your face
             </h2>
-            <FaceScanCapture onVector={handleVector} onCancel={onClose} ctaLabel="Find my shots" />
+            <FaceScanCapture onFrames={handleFrames} onCancel={onClose} ctaLabel="Find my shots" poseCount={1} />
           </div>
         ) : null}
 
