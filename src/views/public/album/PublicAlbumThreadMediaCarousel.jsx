@@ -1,9 +1,9 @@
 'use client';
 
 // Instagram-style carousel card for a burst of media posted by the same member
-// (grouped in buildPublicAlbumTimeline). One polaroid frame, swipeable snap
-// slides, bottom progress dots; the reaction bar targets the ACTIVE slide.
-// Visual language mirrors PublicAlbumThreadMediaCard.
+// (grouped in buildPublicAlbumTimeline). One polaroid frame per slide, swipeable
+// snap slides sized from each item's own orientation, bottom progress dots;
+// the reaction bar targets each slide. Visual language mirrors PublicAlbumThreadMediaCard.
 
 import Image from 'next/image';
 import { VolumeHighIcon, VolumeOffIcon } from '@hugeicons/core-free-icons';
@@ -20,7 +20,6 @@ import {
 } from './albumMediaLayout';
 import {
   ALBUM_MEDIA_FRAME_COLOR,
-  THREAD_CARD_MEDIA_ROW_GAP,
   THREAD_REACTION_BAR_MIN_WIDTH,
   THREAD_SCRAPBOOK_BORDER_PX,
 } from './albumLayoutConstants';
@@ -35,6 +34,7 @@ import {
 import { publicAlbumMediaId } from './useAlbumThreadActiveVideo';
 
 const MAX_VISIBLE_DOTS = 10;
+const SLIDE_GAP = 16;
 
 function CarouselDots({ count, active }) {
   if (count <= 1) return null;
@@ -135,6 +135,33 @@ function CarouselVideoSlide({ item, posterSrc, isPlaybackActive, playbackKey }) 
   );
 }
 
+function buildSlideBoxes(items, metrics) {
+  let offset = 0;
+  return items.map((item, i) => {
+    const intrinsic = resolveIntrinsicSize(item, { forThread: true });
+    const box = threadMediaBox(intrinsic.width, intrinsic.height, metrics);
+    const layout = { ...box, offset };
+    offset += box.outerW + (i < items.length - 1 ? SLIDE_GAP : 0);
+    return layout;
+  });
+}
+
+function indexFromScrollLeft(scrollLeft, slideBoxes, clientWidth, spacerLeft) {
+  if (!slideBoxes.length || clientWidth <= 0) return 0;
+  const viewportCenter = scrollLeft + clientWidth / 2;
+  let best = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < slideBoxes.length; i++) {
+    const slideCenter = spacerLeft + slideBoxes[i].offset + slideBoxes[i].outerW / 2;
+    const d = Math.abs(slideCenter - viewportCenter);
+    if (d < bestDist) {
+      bestDist = d;
+      best = i;
+    }
+  }
+  return best;
+}
+
 export default function PublicAlbumThreadMediaCarousel({
   items,
   rotation = 0,
@@ -147,27 +174,24 @@ export default function PublicAlbumThreadMediaCarousel({
   const scrollRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
+  const slideBoxes = useMemo(() => buildSlideBoxes(items, metrics), [items, metrics]);
+  const firstBox = slideBoxes[0];
+  const lastBox = slideBoxes[slideBoxes.length - 1] || firstBox;
+
   const first = items[0];
-  const intrinsic = resolveIntrinsicSize(first, { forThread: true });
-  const box = threadMediaBox(intrinsic.width, intrinsic.height, metrics);
   const timeLabel = formatAlbumThreadPostTime(first?.createdAt);
-  const timestampOnRight = rotation > 0;
-  const posterOnRight = rotation < 0;
 
   const activeItem = items[Math.min(activeIndex, items.length - 1)] || first;
   const activeMediaId = publicAlbumMediaId(activeItem);
   const activeIsVideo = String(activeItem?.type || '').toUpperCase() === 'VIDEO';
 
-  const reactionBarWidth = box.outerW;
-  const reactionBarMinWidth = Math.min(THREAD_REACTION_BAR_MIN_WIDTH, reactionBarWidth);
-
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
-    if (!el || el.clientWidth <= 0) return;
-    const slideW = box.outerW + 16; // width + gap
-    const next = Math.max(0, Math.min(items.length - 1, Math.round(el.scrollLeft / slideW)));
+    if (!el || el.clientWidth <= 0 || !firstBox) return;
+    const spacerLeft = Math.max(0, el.clientWidth / 2 - firstBox.outerW / 2);
+    const next = indexFromScrollLeft(el.scrollLeft, slideBoxes, el.clientWidth, spacerLeft);
     setActiveIndex((prev) => (prev === next ? prev : next));
-  }, [items.length, box.outerW]);
+  }, [items.length, slideBoxes, firstBox]);
 
   const handleSlideKeyDown = useCallback(
     (e, index) => {
@@ -178,6 +202,8 @@ export default function PublicAlbumThreadMediaCarousel({
     },
     [onPressSlide],
   );
+
+  if (!items.length || !firstBox || !lastBox) return null;
 
   return (
     <article
@@ -195,7 +221,6 @@ export default function PublicAlbumThreadMediaCarousel({
         ) : null}
 
         <div className="relative w-full max-w-full">
-          {/* Slide count chip for the whole carousel, or we can use dots */}
           <div className="mb-3 flex w-full justify-center">
             <CarouselDots count={items.length} active={activeIndex} />
           </div>
@@ -205,13 +230,11 @@ export default function PublicAlbumThreadMediaCarousel({
             onScroll={handleScroll}
             className="no-scrollbar flex w-full snap-x snap-mandatory items-start overflow-x-auto overflow-y-hidden py-4"
           >
-            {/* 
-              To allow peeking and centering of cards, we add spacer blocks or rely on margin auto 
-              but since we have snap-center, we just need padding on the container.
-            */}
-            <div className="shrink-0" style={{ width: `calc(50% - ${box.outerW / 2}px)` }} />
-            
+            <div className="shrink-0" style={{ width: `calc(50% - ${firstBox.outerW / 2}px)` }} />
+
             {items.map((item, index) => {
+              const box = slideBoxes[index];
+              if (!box) return null;
               const isVideo = String(item.type || '').toUpperCase() === 'VIDEO';
               const mediaId = publicAlbumMediaId(item);
               const posterSrc = displayImageSrc(mediaDisplayUrl(item), null);
@@ -219,14 +242,15 @@ export default function PublicAlbumThreadMediaCarousel({
               const isLast = index === items.length - 1;
               const tilt = index % 2 === 0 ? rotation : -rotation;
               const slideLastComment = getLastThreadComment(item);
-              
+              const reactionBarMinWidth = Math.min(THREAD_REACTION_BAR_MIN_WIDTH, box.outerW);
+
               return (
                 <div
                   key={mediaId || index}
                   className="flex shrink-0 snap-center flex-col items-center focus:outline-none"
                   style={{
                     width: box.outerW,
-                    marginRight: isLast ? 0 : 16,
+                    marginRight: isLast ? 0 : SLIDE_GAP,
                     transform: `rotate(${tilt}deg)`,
                   }}
                 >
@@ -242,7 +266,10 @@ export default function PublicAlbumThreadMediaCarousel({
                       border: `${THREAD_SCRAPBOOK_BORDER_PX}px solid ${ALBUM_MEDIA_FRAME_COLOR}`,
                     }}
                   >
-                    <div className="relative overflow-hidden rounded-[9px]" style={{ width: box.width, height: box.height }}>
+                    <div
+                      className="relative overflow-hidden rounded-[9px]"
+                      style={{ width: box.width, height: box.height }}
+                    >
                       {isVideo ? (
                         <CarouselVideoSlide
                           item={item}
@@ -262,12 +289,12 @@ export default function PublicAlbumThreadMediaCarousel({
                           className="size-full object-cover"
                         />
                       ) : null}
-                      
+
                       <div
                         className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/30"
                         aria-hidden
                       />
-                      
+
                       {item.author ? (
                         <>
                           <div
@@ -313,8 +340,7 @@ export default function PublicAlbumThreadMediaCarousel({
                       ) : null}
                     </div>
                   </div>
-                  
-                  {/* Reaction bar directly below each card */}
+
                   <div className="mt-3 flex w-full justify-center px-2">
                     <PublicAlbumReactionBar
                       key={mediaId || index}
@@ -327,8 +353,8 @@ export default function PublicAlbumThreadMediaCarousel({
                 </div>
               );
             })}
-            
-            <div className="shrink-0" style={{ width: `calc(50% - ${box.outerW / 2}px)` }} />
+
+            <div className="shrink-0" style={{ width: `calc(50% - ${lastBox.outerW / 2}px)` }} />
           </div>
         </div>
       </div>

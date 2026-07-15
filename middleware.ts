@@ -148,7 +148,10 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
   if (!token) {
     const login = new URL('/login', request.url);
-    login.searchParams.set('from', pathname);
+    // Full return path (path + query) for EmailAuthPage `redirect`. Keep query
+    // params like create=1 / from=mobile / events=… intact through login.
+    const returnPath = `${pathname}${request.nextUrl.search}`;
+    login.searchParams.set('redirect', returnPath);
     return NextResponse.redirect(login);
   }
 
@@ -162,7 +165,8 @@ export async function middleware(request: NextRequest) {
   const claims = await verifyPasetoV4(token, publicKey);
   if (!claims) {
     const login = new URL('/login', request.url);
-    login.searchParams.set('from', pathname);
+    const returnPath = `${pathname}${request.nextUrl.search}`;
+    login.searchParams.set('redirect', returnPath);
     login.searchParams.set('reason', 'invalid_token');
     return NextResponse.redirect(login);
   }

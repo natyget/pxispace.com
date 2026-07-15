@@ -64,24 +64,26 @@ function MetaRow({ icon, primary, secondary }) {
   );
 }
 
-/** Playlist section — embeds a direct Spotify URL, or fetches the event's lineup
- * playlist by id (mirrors the album flow's music-match ingest). Renders nothing
- * when there's no playlist data to show at all. */
+/** Playlist section — multi-playlist lineup with per-row scores (mobile album parity). */
 function PlaylistSection({ playlist }) {
   const eventId = playlist?.eventId || null;
-  const [fetched, setFetched] = useState(null);
+  const [playlists, setPlaylists] = useState([]);
+  const [averageScore, setAverageScore] = useState(null);
+  const [matchDetail, setMatchDetail] = useState(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (!eventId) return undefined;
     let alive = true;
-    musicService
-      .getEventPlaylist(eventId)
-      .then((res) => {
-        if (alive) setFetched(res?.playlist || null);
-      })
-      .catch(() => {
-        if (alive) setFetched(null);
+    Promise.all([
+      musicService.getLineupPlaylists(eventId).catch(() => ({ playlists: [], averageScore: null })),
+      musicService.getEventMatch(eventId).catch(() => null),
+    ])
+      .then(([lineupRes, matchRes]) => {
+        if (!alive) return;
+        setPlaylists(Array.isArray(lineupRes?.playlists) ? lineupRes.playlists : []);
+        setAverageScore(lineupRes?.averageScore ?? matchRes?.score ?? null);
+        setMatchDetail(matchRes);
       })
       .finally(() => {
         if (alive) setLoaded(true);
@@ -93,46 +95,92 @@ function PlaylistSection({ playlist }) {
 
   if (eventId) {
     if (!loaded) return null;
-    const provider = fetched ? PROVIDER_META[fetched.provider] : null;
     return (
       <section className="space-y-2">
-        <SectionHeading>Lineup playlist</SectionHeading>
-        {fetched ? (
-          <div className="space-y-2 rounded-2xl bg-white/[0.05] px-3 py-3 text-left">
-            <div className="flex items-center justify-between gap-2">
-              <span
-                className="inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wide"
-                style={{ backgroundColor: provider?.bg || '#666', color: provider?.text || '#fff' }}
-              >
-                {provider?.label || fetched.provider}
-              </span>
-              <span className="shrink-0 text-[10px] font-semibold text-white/45">{fetched.trackCount} tracks</span>
-            </div>
-            <p className="truncate text-sm font-bold text-white">{fetched.title}</p>
-            {fetched.topGenres?.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {fetched.topGenres.slice(0, 4).map((genre) => (
-                  <span key={genre} className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-semibold text-zinc-300">
-                    {genre}
-                  </span>
-                ))}
-              </div>
+        <div className="flex items-center justify-between gap-2">
+          <SectionHeading>Lineup playlists</SectionHeading>
+          {averageScore != null && averageScore > 0 ? (
+            <span className="inline-flex items-center gap-1 text-xs font-black text-pxi-purple">
+              <HugeiconsIcon icon={MusicNote01Icon} size={12} />
+              {averageScore}%
+            </span>
+          ) : null}
+        </div>
+        {playlists.length > 0 ? (
+          <div className="space-y-2">
+            {playlists.map((row) => {
+              const provider = PROVIDER_META[row.provider];
+              return (
+                <div
+                  key={row.id || row.sourceUrl}
+                  className="flex items-center gap-3 rounded-2xl bg-white/[0.05] px-3 py-3 text-left"
+                >
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className="inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wide"
+                        style={{ backgroundColor: provider?.bg || '#666', color: provider?.text || '#fff' }}
+                      >
+                        {provider?.label || row.provider}
+                      </span>
+                      <span className="shrink-0 text-[10px] font-semibold text-white/45">
+                        {row.trackCount} tracks
+                      </span>
+                    </div>
+                    <p className="truncate text-sm font-bold text-white">
+                      {row.ownerLabel ? `${row.ownerLabel} · ` : ''}
+                      {row.title || 'Untitled playlist'}
+                    </p>
+                    {row.topGenres?.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {row.topGenres.slice(0, 4).map((genre) => (
+                          <span
+                            key={genre}
+                            className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-semibold text-zinc-300"
+                          >
+                            {genre}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                    <a
+                      href={
+                        row.shareToken
+                          ? `/playlist/${row.shareToken}`
+                          : row.sourceUrl
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex text-[11px] font-bold text-pxi-purple transition-colors hover:text-white"
+                    >
+                      Open playlist ↗
+                    </a>
+                  </div>
+                  {row.matchScore != null && row.matchScore > 0 ? (
+                    <span className="shrink-0 text-sm font-black text-[#d84aff]">{row.matchScore}%</span>
+                  ) : null}
+                </div>
+              );
+            })}
+            {matchDetail?.matchedArtists?.length ? (
+              <p className="text-xs leading-relaxed text-white/55">
+                You listen to{' '}
+                <span className="font-bold text-[#d84aff]">
+                  {matchDetail.matchedArtists.slice(0, 4).join(', ')}
+                </span>
+                {matchDetail.matchedArtists.length > 4
+                  ? ` +${matchDetail.matchedArtists.length - 4} more`
+                  : ''}
+                — they&apos;re in this lineup
+              </p>
             ) : null}
-            <a
-              href={fetched.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex text-[11px] font-bold text-pxi-purple transition-colors hover:text-white"
-            >
-              Open playlist ↗
-            </a>
           </div>
         ) : (
           <div className="flex items-center gap-3 rounded-2xl bg-white/[0.05] px-3 py-3 text-left">
             <HugeiconsIcon icon={MusicNote01Icon} size={18} className="shrink-0 text-zinc-500" aria-hidden />
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-zinc-400">No lineup playlist yet.</p>
-              <p className="text-[10px] text-zinc-600">The host can add one from their dashboard.</p>
+              <p className="text-xs font-semibold text-zinc-400">No lineup playlists yet.</p>
+              <p className="text-[10px] text-zinc-600">The host can add them from mobile or their dashboard.</p>
             </div>
           </div>
         )}

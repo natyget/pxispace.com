@@ -2,7 +2,7 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { authStorage, authService } from '../services/auth';
+import { authStorage, authService, ensurePasetoCookie } from '../services/auth';
 import { faceService } from '../services/face';
 
 const AuthContext = createContext(null);
@@ -41,32 +41,39 @@ export function AuthProvider({ children }) {
         };
     }, [token, user?.id]);
 
-    // Hydrate from localStorage and immediately refresh role-sensitive fields.
+    // Hydrate from localStorage, re-sync HttpOnly cookie, then refresh role fields.
+    // Cookie sync must finish before authReady so login auto-redirects hit middleware with a valid cookie.
     useEffect(() => {
         let cancelled = false;
         const frame = requestAnimationFrame(() => {
-            const storedToken = authStorage.getToken();
-            const storedUser = authStorage.getUser();
-            if (cancelled) return;
+            void (async () => {
+                const storedToken = authStorage.getToken();
+                const storedUser = authStorage.getUser();
+                if (cancelled) return;
 
-            setUser(storedUser);
-            setToken(storedToken);
+                if (!storedToken || !storedUser?.id) {
+                    setUser(storedUser);
+                    setToken(storedToken);
+                    setAuthReady(true);
+                    setAuthRefreshing(false);
+                    return;
+                }
 
-            if (!storedToken || !storedUser?.id) {
-                setAuthReady(true);
-                setAuthRefreshing(false);
-                return;
-            }
+                setAuthRefreshing(true);
+                // Re-bridge localStorage → HttpOnly cookie before exposing isAuthenticated.
+                await ensurePasetoCookie(storedToken);
+                if (cancelled) return;
 
-            setAuthRefreshing(true);
-            authService.getMe(storedUser.id)
-                .then(({ user: fresh }) => {
+                setUser(storedUser);
+                setToken(storedToken);
+
+                try {
+                    const { user: fresh } = await authService.getMe(storedUser.id);
                     if (cancelled) return;
                     const merged = { ...storedUser, ...fresh };
                     localStorage.setItem('pxi_user', JSON.stringify(merged));
                     setUser(merged);
-                })
-                .catch(async (error) => {
+                } catch (error) {
                     if (cancelled) return;
                     if (shouldClearAuth(error)) {
                         await authStorage.clear();
@@ -74,13 +81,13 @@ export function AuthProvider({ children }) {
                         setToken(null);
                         setUser(null);
                     }
-                })
-                .finally(() => {
+                } finally {
                     if (!cancelled) {
                         setAuthReady(true);
                         setAuthRefreshing(false);
                     }
-                });
+                }
+            })();
         });
         return () => {
             cancelled = true;
