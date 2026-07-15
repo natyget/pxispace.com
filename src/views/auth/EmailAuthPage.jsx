@@ -28,7 +28,40 @@ import {
     PROFILE_USERNAME_MAX_LENGTH,
     USERNAME_RULES_HINT,
 } from '../../utils/username';
-const APPLE_SERVICE_ID = globalThis.process?.env?.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
+const APPLE_SERVICE_ID = (globalThis.process?.env?.NEXT_PUBLIC_APPLE_SERVICE_ID || '').trim();
+/** Must match a Return URL registered on the Apple Services ID (HTTPS in production). */
+const APPLE_REDIRECT_URI = (
+    globalThis.process?.env?.NEXT_PUBLIC_APPLE_REDIRECT_URI
+    || globalThis.process?.env?.NEXT_PUBLIC_SITE_URL
+    || ''
+).trim().replace(/\/$/, '');
+
+function safeReturnPath(value) {
+    if (!value || typeof value !== 'string') return null;
+    // Paths only — reject open redirects and non-path tokens like from=mobile.
+    if (!value.startsWith('/') || value.startsWith('//')) return null;
+    return value;
+}
+
+function appleErrorMessage(err) {
+    if (!err) return 'Apple sign-in failed. Please try again.';
+    const code = err.code || err.error || err.data?.code;
+    const detail = err.data?.error || err.message;
+    if (code === 'popup_closed_by_user' || err.error === 'popup_closed_by_user') return null;
+    if (code === 'INVALID_APPLE_TOKEN') {
+        return detail || 'Apple token was rejected. Check Service ID / audience configuration.';
+    }
+    if (code === 'APPLE_MISCONFIGURED' || code === 'APPLE_SDK_UNAVAILABLE') {
+        return detail || 'Apple Sign In is not configured correctly.';
+    }
+    if (typeof detail === 'string' && detail && detail !== 'Apple sign-in failed. Please try again.') {
+        return code ? `${detail} (${code})` : detail;
+    }
+    if (typeof code === 'string' && code !== 'popup_closed_by_user') {
+        return `Apple sign-in failed (${code}). Please try again.`;
+    }
+    return 'Apple sign-in failed. Please try again.';
+}
 
 function shouldClearAuth(error) {
     const status = error?.status;
@@ -57,12 +90,15 @@ function useDebounce(value, delay) {
 export default function EmailAuthPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user, saveAuth, isAuthenticated, updateUser, logout } = useAuth();
+    const { user, saveAuth, isAuthenticated, authReady, updateUser, logout } = useAuth();
 
     const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login');
     const showVerifiedMessage = searchParams.get('verified') === '1';
+    // Prefer `redirect` (middleware contract). Fall back to path-shaped `from` for older links.
+    // Do not treat from=mobile as a return path — that flag is for DashboardLayout chrome.
     const redirectPath = searchParams.get('redirect');
-    const safeRedirect = redirectPath && redirectPath.startsWith('/') && !redirectPath.startsWith('//') ? redirectPath : null;
+    const fromPath = searchParams.get('from');
+    const safeRedirect = safeReturnPath(redirectPath) || safeReturnPath(fromPath);
 
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
@@ -95,7 +131,8 @@ export default function EmailAuthPage() {
 
     const hasRedirected = useRef(false);
     useEffect(() => {
-        if (!isAuthenticated || !user?.id || hasRedirected.current) return;
+        // Wait for AuthContext cookie re-sync so middleware accepts the session.
+        if (!authReady || !isAuthenticated || !user?.id || hasRedirected.current) return;
         hasRedirected.current = true;
         authService.getMe(user.id)
             .then(({ user: fresh }) => {
@@ -111,7 +148,7 @@ export default function EmailAuthPage() {
                 }
                 router.replace(safeRedirect || defaultPostLoginPath(user));
             });
-    }, [isAuthenticated, user, user?.id, safeRedirect, router, updateUser, logout]);
+    }, [authReady, isAuthenticated, user, user?.id, safeRedirect, router, updateUser, logout]);
 
     const loginWithGoogle = useGoogleLogin({
         flow: 'implicit',
@@ -132,24 +169,78 @@ export default function EmailAuthPage() {
         },
     });
 
+    const appleInitRef = useRef(false);
+    const appleReadyRef = useRef(false);
+
     useEffect(() => {
+        if (appleInitRef.current) return undefined;
+        appleInitRef.current = true;
+
+        if (!APPLE_SERVICE_ID) {
+            console.warn('[Apple Sign In] NEXT_PUBLIC_APPLE_SERVICE_ID is not set');
+            return undefined;
+        }
+
+        const redirectURI = APPLE_REDIRECT_URI || (typeof window !== 'undefined' ? window.location.origin : '');
+        if (!redirectURI || (typeof window !== 'undefined' && window.location.protocol === 'https:' && !redirectURI.startsWith('https://'))) {
+            console.warn('[Apple Sign In] NEXT_PUBLIC_APPLE_REDIRECT_URI must be an HTTPS Return URL registered for the Services ID');
+        }
+
+        const initApple = () => {
+            if (!window.AppleID?.auth || appleReadyRef.current) return;
+            try {
+                window.AppleID.auth.init({
+                    clientId: APPLE_SERVICE_ID,
+                    scope: 'name email',
+                    redirectURI,
+                    usePopup: true,
+                });
+                appleReadyRef.current = true;
+            } catch (err) {
+                console.error('[Apple Sign In] init failed', err);
+                appleInitRef.current = false;
+            }
+        };
+
+        if (window.AppleID?.auth) {
+            initApple();
+            return undefined;
+        }
+
+        const existing = document.querySelector('script[data-pxi-apple-auth]');
+        if (existing) {
+            existing.addEventListener('load', initApple);
+            return () => existing.removeEventListener('load', initApple);
+        }
+
         const script = document.createElement('script');
         script.src =
             'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
         script.async = true;
-        script.onload = () => {
-            window.AppleID?.auth.init({
-                clientId: APPLE_SERVICE_ID,
-                scope: 'name email',
-                redirectURI: window.location.origin,
-                usePopup: true,
-            });
+        script.dataset.pxiAppleAuth = '1';
+        script.onload = initApple;
+        script.onerror = () => {
+            appleInitRef.current = false;
+            console.error('[Apple Sign In] failed to load Apple JS SDK');
         };
         document.head.appendChild(script);
+        return undefined;
     }, []);
 
     const handleApple = async () => {
         try {
+            if (!APPLE_SERVICE_ID) {
+                const msg = 'Apple Sign In is not configured (missing NEXT_PUBLIC_APPLE_SERVICE_ID).';
+                setError(msg);
+                toast.error(msg);
+                return;
+            }
+            if (!window.AppleID?.auth || !appleReadyRef.current) {
+                const msg = 'Apple Sign In is still loading. Please try again in a moment.';
+                setError(msg);
+                toast.error(msg);
+                return;
+            }
             const response = await window.AppleID.auth.signIn();
             const identityToken = response.authorization.id_token;
             const fullName = response.user?.name
@@ -158,10 +249,10 @@ export default function EmailAuthPage() {
             const result = await authService.appleAuth(identityToken, fullName);
             handleAuthSuccess(result);
         } catch (err) {
-            if (err?.error !== 'popup_closed_by_user') {
-                setError('Apple sign-in failed. Please try again.');
-                toast.error('Apple sign-in failed. Please try again.');
-            }
+            const msg = appleErrorMessage(err);
+            if (!msg) return; // user closed popup
+            setError(msg);
+            toast.error(msg);
         }
     };
 
@@ -624,7 +715,7 @@ function AuthInput({ focusColor, style = {}, ...props }) {
             className="auth-glass-input w-full text-sm font-semibold text-white outline-none backdrop-blur-xl transition-all placeholder:text-sm placeholder:font-semibold placeholder:text-white/30 placeholder:uppercase placeholder:tracking-[0.5px]"
             style={{
                 height: AUTH_INPUT_HEIGHT_PX,
-                borderRadius: 20,
+                borderRadius: 16,
                 background: 'rgba(26,26,26,0.6)',
                 border: 0,
                 boxShadow: focused ? `0 0 0 1.5px ${activeFocus}, 0 0 16px ${activeFocus}` : 'none',

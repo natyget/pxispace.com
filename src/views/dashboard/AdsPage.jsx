@@ -100,6 +100,83 @@ function ChipPicker({ options, selected, onToggle }) {
     );
 }
 
+/** Cover-art event cards for Ads Manager step 0 (upcoming events only). */
+function EventCoverPicker({ events, selected, onToggle }) {
+    return (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {events.map((ev) => {
+                const id = String(ev.id);
+                const active = selected.includes(id);
+                const dateLabel = (() => {
+                    try {
+                        return new Date(ev.startDate).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                        });
+                    } catch {
+                        return '—';
+                    }
+                })();
+                return (
+                    <button
+                        key={id}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => onToggle(id)}
+                        className={`group overflow-hidden rounded-2xl text-left transition ${
+                            active
+                                ? 'ring-2 ring-white ring-offset-2 ring-offset-black'
+                                : 'ring-1 ring-white/10 hover:ring-white/25'
+                        }`}
+                    >
+                        <div className="relative aspect-[3/4] bg-zinc-900">
+                            {ev.coverImage ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    src={ev.coverImage}
+                                    alt=""
+                                    className="h-full w-full object-cover"
+                                    loading="lazy"
+                                />
+                            ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-white/[0.04] text-xs font-bold text-zinc-600">
+                                    No cover
+                                </div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                            {active ? (
+                                <span className="absolute right-2 top-2 rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-black">
+                                    Selected
+                                </span>
+                            ) : null}
+                            <div className="absolute bottom-0 left-0 right-0 p-3">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-300">
+                                    {dateLabel}
+                                </p>
+                                <p className="mt-0.5 line-clamp-2 text-sm font-black uppercase leading-tight text-white">
+                                    {ev.name}
+                                </p>
+                            </div>
+                        </div>
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
+function isUpcomingAdEvent(ev, now = Date.now()) {
+    if (!ev) return false;
+    const status = String(ev.status || ev.effectiveStatus || '').toUpperCase();
+    if (status === 'ARCHIVED' || status === 'CANCELLED') return false;
+    const endMs = ev.endDate ? new Date(ev.endDate).getTime() : NaN;
+    const startMs = ev.startDate ? new Date(ev.startDate).getTime() : NaN;
+    if (Number.isFinite(endMs)) return endMs >= now;
+    if (Number.isFinite(startMs)) return startMs >= now;
+    return false;
+}
+
 /** Free-text tag input (cities, genres): Enter/comma adds a chip. */
 function TagInput({ tags, onChange, placeholder }) {
     const [draft, setDraft] = useState('');
@@ -183,6 +260,18 @@ export default function AdsPage() {
     const { campaigns, loading, refresh, invalidate } = useAdCampaigns();
     const { events } = useEvents();
 
+    const upcomingEvents = useMemo(
+        () =>
+            (events || [])
+                .filter((ev) => isUpcomingAdEvent(ev))
+                .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()),
+        [events],
+    );
+    const upcomingIds = useMemo(
+        () => new Set(upcomingEvents.map((ev) => String(ev.id))),
+        [upcomingEvents],
+    );
+
     const [error, setError] = useState(null);
     const [wizardOpen, setWizardOpen] = useState(false);
     const [step, setStep] = useState(0);
@@ -198,11 +287,13 @@ export default function AdsPage() {
 
     const patchDraft = useCallback((patch) => setDraft((prev) => ({ ...prev, ...patch })), []);
 
-    // Deep-link prefill from the AudiencePage planner: ?create=1&mix=feed,email&budget=…&events=a,b
+    // Deep-link prefill from the AudiencePage planner / mobile boost:
+    // ?create=1&mix=feed,email&budget=…&events=a,b — preserve preselection until
+    // events load, then drop stale (past/archived) IDs.
     useEffect(() => {
         if (searchParams.get('create') !== '1') return;
         const mix = (searchParams.get('mix') || '').split(',').filter(Boolean);
-        const eventIds = (searchParams.get('events') || '').split(',').filter(Boolean);
+        const requestedIds = (searchParams.get('events') || '').split(',').filter(Boolean);
         const placements = {};
         if (mix.includes('feedPosts') || mix.includes('feed')) placements.FEED = 'STANDARD';
         if (mix.includes('discoveryRanking') || mix.includes('discovery')) {
@@ -212,13 +303,24 @@ export default function AdsPage() {
         if (mix.includes('featured')) placements.WEB_FEATURED = 'STANDARD';
         setDraft((prev) => ({
             ...prev,
-            eventIds,
+            // Keep raw IDs for now; the cleanup effect filters once events are known.
+            eventIds: requestedIds.length > 0 ? requestedIds : prev.eventIds,
             emailEnabled: mix.includes('email'),
             placements: Object.keys(placements).length > 0 ? placements : prev.placements,
         }));
         setWizardOpen(true);
         router.replace('/dashboard/ads', { scroll: false });
     }, [router, searchParams]);
+
+    // Drop stale selected IDs once events load (past / archived / deleted).
+    useEffect(() => {
+        if (!events?.length) return;
+        setDraft((prev) => {
+            const next = prev.eventIds.filter((id) => upcomingIds.has(id));
+            if (next.length === prev.eventIds.length) return prev;
+            return { ...prev, eventIds: next };
+        });
+    }, [events, upcomingIds]);
 
     // Live reach estimate while targeting changes (debounced).
     useEffect(() => {
@@ -455,13 +557,14 @@ export default function AdsPage() {
                                         <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">
                                             Events to promote ({draft.eventIds.length} selected)
                                         </span>
-                                        {events.length === 0 ? (
+                                        {upcomingEvents.length === 0 ? (
                                             <p className="rounded-2xl bg-white/[0.035] px-4 py-4 text-sm text-zinc-500">
-                                                No events yet — create an event first, then promote it here.
+                                                No upcoming events to promote — create a future event first, or wait
+                                                until one is scheduled.
                                             </p>
                                         ) : (
-                                            <ChipPicker
-                                                options={events.map((ev) => ({ id: String(ev.id), label: ev.name }))}
+                                            <EventCoverPicker
+                                                events={upcomingEvents}
                                                 selected={draft.eventIds}
                                                 onToggle={toggleListValue('eventIds')}
                                             />

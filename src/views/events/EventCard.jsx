@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { FavouriteIcon } from '@hugeicons/core-free-icons';
+import { FavouriteIcon, MusicNote01Icon } from '@hugeicons/core-free-icons';
 
 const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/events', sponsored = false, onSponsoredClick }) => {
   const router = useRouter();
@@ -40,8 +40,9 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
 
         {/* Top-left: music match % when scored — otherwise nothing */}
         {matchScore != null ? (
-          <span className="absolute left-4 top-4 inline-flex items-center rounded-full bg-black/50 px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-sm">
-            ★ {matchScore}%
+          <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-sm">
+            <HugeiconsIcon icon={MusicNote01Icon} size={12} className="text-white" />
+            {matchScore}%
           </span>
         ) : null}
 
