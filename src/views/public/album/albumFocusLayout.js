@@ -1,17 +1,23 @@
-/** Layout math from mobile `ThreadFocusOverlay.tsx` — fixed centered modal on web. */
+/**
+ * Layout math for the full-bleed public focus/immersive media view.
+ * Mirrors mobile `FocusOverlay.tsx` proportions (header + media + comments +
+ * footer stacked in a full-viewport sheet) but sizes off the actual browser
+ * viewport instead of a fixed iPhone box — the overlay is full-bleed on web,
+ * not a centered phone-sized dialog.
+ */
 
-import { IPHONE_VIEWPORT_HEIGHT, IPHONE_VIEWPORT_WIDTH } from './albumLayoutConstants';
 import { resolveIntrinsicSize } from './albumMediaLayout';
 
-export const FOCUS_MODAL_WIDTH = IPHONE_VIEWPORT_WIDTH;
-/** ~86% of iPhone logical height — matches mobile `SHEET_HEIGHT_RATIO`. */
-export const FOCUS_MODAL_HEIGHT = Math.round(IPHONE_VIEWPORT_HEIGHT * 0.86);
-export const FOCUS_MODAL_RADIUS_PX = 26;
-export const FOCUS_MODAL_COMMENTS_HEIGHT = 140;
+/** Design-law corner radius — top corners only (sheet is flush to the viewport edges). */
+export const FOCUS_SHEET_RADIUS_PX = 20;
+export const FOCUS_HEADER_ROW_H = 56;
 export const FOCUS_MODAL_CTA_HEIGHT = 72;
-export const FOCUS_HEADER_ROW_H = 64;
-export const FOCUS_SHEET_MEDIA_BORDER_PX = 7;
 export const FOCUS_MEDIA_ZONE_PADDING_Y = 12;
+export const FOCUS_MEDIA_HORIZONTAL_PADDING = 12;
+
+const COMMENTS_HEIGHT_RATIO = 0.16;
+const COMMENTS_MIN_H = 120;
+const COMMENTS_MAX_H = 210;
 
 export const COMMENT_TILTS_DEG = [1.1, -1.25, 0.85, -1.0, 1.35, -0.75, 1.0, -1.15];
 export const COMMENT_SHIFT_X = [5, -8, 6, -5, 4, -7, 7, -4];
@@ -37,27 +43,29 @@ export function fitMediaToMaxBox(srcW, srcH, maxW, maxH) {
   return { width: w, height: h };
 }
 
-export function getFocusModalLayout(item) {
-  const modalH = FOCUS_MODAL_HEIGHT;
-  const commentsSectionHeight = FOCUS_MODAL_COMMENTS_HEIGHT;
+/**
+ * @param {object} item media item
+ * @param {number} viewportW live browser viewport width (`window.innerWidth`)
+ * @param {number} viewportH live browser viewport height (`window.innerHeight` / `dvh`)
+ */
+export function getFocusModalLayout(item, viewportW, viewportH) {
+  const vw = Math.max(280, viewportW || 390);
+  const vh = Math.max(480, viewportH || 844);
+
+  const commentsSectionHeight = Math.min(
+    COMMENTS_MAX_H,
+    Math.max(COMMENTS_MIN_H, Math.round(vh * COMMENTS_HEIGHT_RATIO)),
+  );
   const focusMediaColumnBudget =
-    modalH -
-    commentsSectionHeight -
-    FOCUS_MODAL_CTA_HEIGHT -
-    2 * FOCUS_MEDIA_ZONE_PADDING_Y -
-    FOCUS_HEADER_ROW_H;
-  const maxMediaHeight = Math.max(188, focusMediaColumnBudget * 0.96);
-  const maxMediaWidth = Math.min(FOCUS_MODAL_WIDTH - 32, 420);
-  const maxMediaInnerW = Math.max(1, maxMediaWidth - 2 * FOCUS_SHEET_MEDIA_BORDER_PX);
-  const maxMediaInnerH = Math.max(1, maxMediaHeight - 2 * FOCUS_SHEET_MEDIA_BORDER_PX);
+    vh - commentsSectionHeight - FOCUS_MODAL_CTA_HEIGHT - 2 * FOCUS_MEDIA_ZONE_PADDING_Y - FOCUS_HEADER_ROW_H;
+  const maxMediaHeight = Math.max(160, focusMediaColumnBudget * 0.96);
+  const maxMediaWidth = Math.max(240, vw - 2 * FOCUS_MEDIA_HORIZONTAL_PADDING);
 
   const intrinsic = resolveIntrinsicSize(item);
-  const mediaDisplay = fitMediaToMaxBox(intrinsic.width, intrinsic.height, maxMediaInnerW, maxMediaInnerH);
+  const mediaDisplay = fitMediaToMaxBox(intrinsic.width, intrinsic.height, maxMediaWidth, maxMediaHeight);
 
   return {
     mediaDisplay,
-    outerW: mediaDisplay.width + 2 * FOCUS_SHEET_MEDIA_BORDER_PX,
-    outerH: mediaDisplay.height + 2 * FOCUS_SHEET_MEDIA_BORDER_PX,
     commentsSectionHeight,
     focusMediaZoneMinHeight: focusMediaColumnBudget,
   };

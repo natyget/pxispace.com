@@ -25,10 +25,18 @@ export const eventsService = {
 
   /**
    * Public discover for web — same event set as mobile Discovery (GET /api/events?discover=1)
-   * @param {string} sort 'vendor' | 'date' | 'tickets'
+   * @param {string} sort 'vendor' | 'date' | 'tickets' | 'distance' | 'match'
+   * @param {{ lat?: number, lng?: number, radiusKm?: number, includeMatch?: boolean }} opts
    */
-  getDiscoverEvents: (limit = 48, offset = 0, sort = 'vendor') =>
-    api.get(`/api/events?discover=1&limit=${limit}&offset=${offset}&sort=${encodeURIComponent(sort)}`),
+  getDiscoverEvents: (limit = 48, offset = 0, sort = 'vendor', opts = {}) => {
+    const q = new URLSearchParams({ discover: '1', limit, offset, sort });
+    const { lat, lng, radiusKm, includeMatch } = opts;
+    if (lat != null) q.set('lat', lat);
+    if (lng != null) q.set('lng', lng);
+    if (radiusKm != null) q.set('radiusKm', radiusKm);
+    if (includeMatch) q.set('includeMatch', '1');
+    return api.get(`/api/events?${q}`);
+  },
 
   /** @deprecated use getDiscoverEvents for web */
   getPublicEvents: (limit = 20, offset = 0) =>

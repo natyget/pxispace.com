@@ -22,6 +22,8 @@ export default function PublicAlbumJoinEventButton({ album, albumId, className =
     const ticketLabel = formatTicketPrice(album?.event);
     const buttonLabel = ticketLabel ? `Join Event · ${ticketLabel}` : 'Join Event';
     const fallbackDeepLink = albumId ? `pxi://album/${albumId}` : null;
+    // Finalized scrapbook (event passed + grace over): joining is closed server-side.
+    const isFinalized = album?.event?.effectiveStatus === 'ARCHIVED';
 
     const wrapperClass = [
         'album-thread-chatbar shrink-0 border-t border-white/10 bg-black/90 backdrop-blur-md',
@@ -43,7 +45,11 @@ export default function PublicAlbumJoinEventButton({ album, albumId, className =
                     paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))',
                 }}
             >
-                {eventId ? (
+                {isFinalized ? (
+                    <div className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-6 text-[12px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                        Scrapbook — finalized
+                    </div>
+                ) : eventId ? (
                     <Link
                         href={`/events/${eventId}/checkout`}
                         className="flex h-12 w-full items-center justify-center rounded-full bg-[#d946ef] px-6 text-[13px] font-black uppercase tracking-[0.18em] text-white shadow-[0_0_20px_rgba(217,70,239,0.5)] transition hover:opacity-90"

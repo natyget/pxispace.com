@@ -1,21 +1,15 @@
 'use client';
 
-import DataSourceBadge from './DataSourceBadge';
-
-export default function SectionCard({ title, subtitle, source, actions, children }) {
+export default function SectionCard({ id, title, actions, children, dense = false, className = '', bodyClassName = '' }) {
     return (
-        <section className="rounded-2xl border border-white/10 bg-zinc-900/40 overflow-hidden">
-            <header className="px-6 py-5 border-b border-white/5 flex items-center justify-between gap-3">
-                <div>
-                    <h2 className="text-[18px] font-bold text-white tracking-tight">{title}</h2>
-                    {subtitle ? <p className="text-zinc-500 text-sm mt-1">{subtitle}</p> : null}
+        <section id={id} className={`glass-panel overflow-hidden rounded-[1.25rem] ${className}`.trim()}>
+            <header className={`${dense ? 'px-5 pb-1 pt-5' : 'px-6 pb-1 pt-6'} flex flex-col items-start justify-between gap-3 md:flex-row md:items-center`}>
+                <div className="min-w-0">
+                    <h2 className="text-[15px] font-semibold tracking-tight text-white">{title}</h2>
                 </div>
-                <div className="flex items-center gap-2">
-                    {source ? <DataSourceBadge source={source} /> : null}
-                    {actions}
-                </div>
+                {actions ? <div className="flex min-w-0 w-full items-center gap-2 md:w-auto md:shrink-0">{actions}</div> : null}
             </header>
-            <div className="p-6">{children}</div>
+            <div className={`${dense ? 'p-5' : 'p-6'} ${bodyClassName}`.trim()}>{children}</div>
         </section>
     );
 }

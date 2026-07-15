@@ -1,118 +1,852 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
     Area,
     AreaChart,
-    Bar,
-    BarChart,
-    Cell,
-    Pie,
-    PieChart,
+    CartesianGrid,
     ResponsiveContainer,
     Tooltip,
     XAxis,
     YAxis,
 } from 'recharts';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Alert02Icon, Image02Icon, Location01Icon } from '@hugeicons/core-free-icons';
 import SectionCard from '@/components/dashboard/SectionCard';
-import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
+import { TimeSeriesChartShell, ChartSkeleton } from '@/components/dashboard/ChartFrame';
+import MetricCard, { MicroChart, StatRow } from '@/components/dashboard/MetricCard';
+import FunnelChart from '@/components/dashboard/FunnelChart';
+import SpatialHeatMap from '@/components/dashboard/SpatialHeatMap';
+import {
+    DASHBOARD_BRAND_COLOR,
+    DASHBOARD_GRID_STROKE,
+    DASHBOARD_MUTED_COLOR,
+    DASHBOARD_TOOLTIP_PROPS,
+    getDashboardChartShade,
+} from '@/components/dashboard/chartStyles';
 import { eventsService } from '@/services/events';
-import { loadOrganizerAnalytics } from '@/services/organizerAnalytics';
+import { organizerAnalyticsService } from '@/services/organizerAnalytics';
+import { deleteFeedItem } from '@/services/feed';
+import { useDashboardShellStore } from '@/lib/dashboardShellStore';
+import LiveScanDashboard from '@/views/dashboard/LiveScanDashboard';
 
-const TIER_COLORS = ['#d4d4d8', '#c084fc', '#60a5fa', '#f59e0b', '#34d399'];
-
-function buildHypeSeries(seed = 0) {
-    return Array.from({ length: 24 }, (_, i) => {
-        const hour = String((18 + i) % 24).padStart(2, '0');
-        const chat = 22 + ((i * 5 + seed) % 18);
-        const reactions = 30 + ((i * 7 + seed) % 22);
-        const scans = 18 + ((i * 3 + seed) % 24);
-        const hype = Math.min(100, Math.round((chat * 0.35) + (reactions * 0.4) + (scans * 0.25)));
-        return {
-            time: `${hour}:00`,
-            hype,
-            chat,
-            reactions,
-            scans,
-        };
-    });
+function formatNumber(value) {
+    return Number(value || 0).toLocaleString('en-US');
 }
 
-const FUNNEL_STAGES = [
-    { stage: 'Ticket Purchased', value: 1000 },
-    { stage: 'Intent To Attend', value: 840 },
-    { stage: 'Gate Scan', value: 690 },
-    { stage: 'Retained', value: 522 },
+function formatMoney(cents = 0) {
+    return `$${(Math.max(0, Number(cents) || 0) / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
+
+function formatEventDate(value) {
+    if (!value) return 'Date TBD';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Date TBD';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+/** 'YYYY-MM-DD' -> 'Jun 7' (parsed as UTC so day boundaries match the backend's UTC buckets). */
+function formatDayTick(value) {
+    if (!value) return '';
+    const [y, m, d] = String(value).split('-').map(Number);
+    if (!y || !m || !d) return '';
+    const date = new Date(Date.UTC(y, m - 1, d));
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+function tickInterval(length, maxTicks = 8) {
+    if (length <= maxTicks) return 0;
+    return Math.ceil(length / maxTicks) - 1;
+}
+
+function round1(value) {
+    return Math.round((Number(value) || 0) * 10) / 10;
+}
+
+function percent(value) {
+    return `${Math.round((Number(value) || 0) * 100)}%`;
+}
+
+function clampPercent(value, max) {
+    if (!max) return 0;
+    return Math.max(2, Math.min(100, (Number(value) / max) * 100));
+}
+
+/** '2026-07-04T22:00:00.000Z' -> '10 PM' for the hype chart axis. */
+function formatHourTick(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', timeZone: 'UTC' });
+}
+
+const HYPE_CHANNELS = [
+    { id: 'all', label: 'All activity' },
+    { id: 'messages', label: 'Chat' },
+    { id: 'reactions', label: 'Reactions' },
+    { id: 'media', label: 'Uploads' },
 ];
 
-const CLUSTER_BASE = [
-    { id: 'c-1', zone: 'Main Stage', peakTime: '11:20 PM', noiseRatio: '4.8%', uploads: 314 },
-    { id: 'c-2', zone: 'VIP Bar', peakTime: '10:45 PM', noiseRatio: '3.2%', uploads: 204 },
-    { id: 'c-3', zone: 'Entry Corridor', peakTime: '9:32 PM', noiseRatio: '7.4%', uploads: 118 },
+const HYPE_SERIES = {
+    messages: { label: 'Messages', color: getDashboardChartShade(0) },
+    reactions: { label: 'Reactions', color: getDashboardChartShade(1) },
+    media: { label: 'Uploads', color: getDashboardChartShade(2) },
+};
+
+const HYPE_MODES = [
+    { id: 'stacked', label: 'Stacked' },
+    { id: 'lines', label: 'Lines' },
 ];
 
-const WILSON_TOP_MOMENTS = [
-    { id: 'm-1', title: 'Headliner Drop', score: 0.91, hearts: 482, cluster: 'Main Stage' },
-    { id: 'm-2', title: 'VIP Toast', score: 0.87, hearts: 301, cluster: 'VIP Bar' },
-    { id: 'm-3', title: 'Gate Surge', score: 0.79, hearts: 188, cluster: 'Entry Corridor' },
-    { id: 'm-4', title: 'Encore Crowd', score: 0.76, hearts: 166, cluster: 'Main Stage' },
-];
+/**
+ * Hype: engagement-per-attendee composite + chat/reaction/upload velocity.
+ * Data comes from `eventDetail.behavior` (real Mongo aggregates, not samples).
+ */
+function HypePanel({ behavior, isMobile }) {
+    const [channel, setChannel] = useState('all');
+    const [mode, setMode] = useState('stacked');
+    if (!behavior) return null;
+    const series = (behavior.byHour || []).map((d) => ({
+        hourIso: d.hourIso,
+        messages: d.messages,
+        reactions: d.reactions,
+        media: d.media,
+    }));
+    const activeKeys = channel === 'all' ? ['messages', 'reactions', 'media'] : [channel];
+    const hasActivity = series.some((d) => activeKeys.some((key) => Number(d[key]) > 0));
+    const totalsByKey = Object.keys(HYPE_SERIES).map((key) => ({
+        key,
+        ...HYPE_SERIES[key],
+        value: Number(behavior.totals?.[key]) || 0,
+        active: activeKeys.includes(key),
+    }));
+    const activeTotal = totalsByKey
+        .filter((item) => item.active)
+        .reduce((sum, item) => sum + item.value, 0);
+    const maxHypeChannelTotal = Math.max(1, ...totalsByKey.map((entry) => entry.value));
+    const peakHour = series.reduce((peak, point) => {
+        const pointTotal = activeKeys.reduce((sum, key) => sum + (Number(point[key]) || 0), 0);
+        return pointTotal > peak.total ? { hourIso: point.hourIso, total: pointTotal } : peak;
+    }, { hourIso: null, total: 0 });
 
-function AnalyticsTooltip({ active, payload, label }) {
-    if (!active || !payload || !payload.length) return null;
-    const point = payload[0].payload;
-    return (
-        <div className="bg-zinc-950 border border-white/15 p-3.5 rounded-2xl shadow-2xl min-w-[220px]">
-            <p className="text-[11px] text-zinc-300 font-semibold tracking-wide">{label}</p>
-            <p className="text-white font-black text-base mt-1">Hype Index {point.hype}</p>
-            <p className="text-zinc-200 text-xs mt-1.5">Chat {point.chat} · Reactions {point.reactions} · Gate scans {point.scans}</p>
+    const actions = (
+        <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
+            <div className="dashboard-segmented-toggle max-w-full" aria-label="Hype activity channel">
+                {HYPE_CHANNELS.map((item) => (
+                    <button
+                        key={item.id}
+                        type="button"
+                        className="dashboard-segmented-toggle__item"
+                        data-active={channel === item.id}
+                        aria-pressed={channel === item.id}
+                        onClick={() => setChannel(item.id)}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+            </div>
+            <div className="dashboard-segmented-toggle max-w-full" aria-label="Hype chart mode">
+                {HYPE_MODES.map((item) => (
+                    <button
+                        key={item.id}
+                        type="button"
+                        className="dashboard-segmented-toggle__item"
+                        data-active={mode === item.id}
+                        aria-pressed={mode === item.id}
+                        onClick={() => setMode(item.id)}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+            </div>
         </div>
+    );
+
+    return (
+        <SectionCard
+            title="Hype index"
+            actions={actions}
+            className="!rounded-[1.25rem]"
+            bodyClassName="!p-0"
+        >
+            <div className="relative overflow-hidden px-5 py-5 md:px-6 md:py-6">
+                <div className="relative grid grid-cols-1 gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+                    <div className="rounded-[1.25rem] bg-white/[0.035] p-5 md:p-6">
+                        <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Engagement pulse</p>
+                        <p className="mt-3 text-6xl font-bold leading-none tracking-normal text-white md:text-7xl">{formatNumber(behavior.hypeIndex)}</p>
+                        <p className="mt-1 text-sm font-bold text-zinc-400">out of 100</p>
+                        <p className="mt-4 text-sm leading-6 text-zinc-400">
+                            A blended signal from chat, reactions, comments, and uploads per attendee.
+                        </p>
+                        <div className="mt-6 grid grid-cols-2 gap-2">
+                            <div className="rounded-2xl bg-white/[0.045] p-3">
+                                <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Selected volume</p>
+                                <p className="mt-1 text-sm font-bold text-white">{formatNumber(activeTotal)}</p>
+                            </div>
+                            <div className="rounded-2xl bg-white/[0.045] p-3">
+                                <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Peak hour</p>
+                                <p className="mt-1 text-sm font-bold text-white">
+                                    {peakHour.hourIso ? formatHourTick(peakHour.hourIso) : 'No activity'}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="mt-2 rounded-2xl bg-white/[0.045] p-3">
+                            <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Peak volume</p>
+                            <p className="mt-1 text-sm font-bold text-white">{formatNumber(peakHour.total)}</p>
+                        </div>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {totalsByKey.map((item) => (
+                            <div key={item.key} className="rounded-2xl bg-white/[0.045] p-3">
+                                <div className="flex items-center justify-between gap-3">
+                                    <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">{item.label}</p>
+                                    <span className={`h-2 w-2 rounded-full ${item.active ? 'opacity-100' : 'opacity-35'}`} style={{ backgroundColor: item.color }} />
+                                </div>
+                                <p className="mt-3 text-3xl font-bold tracking-normal text-white">{formatNumber(item.value)}</p>
+                                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.055]">
+                                    <div
+                                        className="h-full rounded-full bg-white/70"
+                                        style={{ width: `${clampPercent(item.value, maxHypeChannelTotal)}%` }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                        <div className="rounded-2xl bg-white/[0.045] p-3">
+                            <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Comments</p>
+                            <p className="mt-3 text-3xl font-bold tracking-normal text-white">{formatNumber(behavior.totals?.comments)}</p>
+                            <p className="mt-3 text-xs font-semibold leading-5 text-zinc-500">Conversation depth outside quick reactions.</p>
+                        </div>
+                    </div>
+                </div>
+                {hasActivity ? (
+                    <div className="relative mt-5 h-[380px] rounded-[1.25rem] bg-white/[0.025] p-3 md:h-[520px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={series} margin={{ top: 12, right: 14, bottom: 0, left: isMobile ? -18 : 0 }}>
+                                <defs>
+                                    {Object.entries(HYPE_SERIES).map(([key, config]) => (
+                                        <linearGradient key={key} id={`hypeGradient-${key}`} x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor={config.color} stopOpacity={0.18} />
+                                            <stop offset="100%" stopColor={config.color} stopOpacity={0.02} />
+                                        </linearGradient>
+                                    ))}
+                                </defs>
+                                <CartesianGrid stroke={DASHBOARD_GRID_STROKE} vertical={false} />
+                                <XAxis
+                                    dataKey="hourIso"
+                                    tickFormatter={formatHourTick}
+                                    interval={tickInterval(series.length, isMobile ? 5 : 10)}
+                                    tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 11 }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <YAxis
+                                    allowDecimals={false}
+                                    tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 11 }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <Tooltip {...DASHBOARD_TOOLTIP_PROPS} labelFormatter={formatHourTick} />
+                                {activeKeys.map((key) => (
+                                    <Area
+                                        key={key}
+                                        type="monotone"
+                                        dataKey={key}
+                                        name={HYPE_SERIES[key].label}
+                                        stackId={channel === 'all' && mode === 'stacked' ? 'hype' : undefined}
+                                        stroke={HYPE_SERIES[key].color}
+                                        fill={`url(#hypeGradient-${key})`}
+                                        fillOpacity={mode === 'lines' ? 0.18 : 1}
+                                        strokeWidth={2.4}
+                                        dot={false}
+                                        activeDot={{ r: 4, fill: '#fff', stroke: '#09090b' }}
+                                        isAnimationActive={false}
+                                    />
+                                ))}
+                            </AreaChart>
+                        </ResponsiveContainer>
+                        <div className="absolute bottom-3 left-4 flex flex-wrap items-center gap-4 text-[11px] font-bold text-zinc-500">
+                            {activeKeys.map((key) => (
+                                <span key={key} className="inline-flex items-center gap-1.5">
+                                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: HYPE_SERIES[key].color }} />
+                                    {HYPE_SERIES[key].label}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="relative mt-5 rounded-2xl bg-white/[0.035] p-6 text-sm text-zinc-500">
+                        No {channel === 'all' ? 'chat, reaction, or upload' : HYPE_CHANNELS.find((item) => item.id === channel)?.label.toLowerCase()} activity in the event window yet.
+                    </div>
+                )}
+            </div>
+        </SectionCard>
     );
 }
 
-function SurfaceTooltip({ active, payload, label }) {
-    if (!active || !payload || !payload.length) return null;
+/** Most-reacted media with host moderation (remove = backend Bouncer endpooint permissions). */
+function TopMomentsPanel({ moments, onRemoved }) {
+    const [busyId, setBusyId] = useState(null);
+    const [error, setError] = useState(null);
+
+    if (!moments?.length) {
+        return (
+            <SectionCard title="Top moments">
+                <p className="text-sm text-zinc-500">No reacted media yet — top moments appear as guests react.</p>
+            </SectionCard>
+        );
+    }
+
+    const remove = async (mediaId) => {
+        if (!window.confirm('Remove this media from the event for everyone? This cannot be undone.')) return;
+        setBusyId(mediaId);
+        setError(null);
+        try {
+            await deleteFeedItem(mediaId);
+            onRemoved?.(mediaId);
+        } catch (err) {
+            setError(err.message || 'Failed to remove media');
+        } finally {
+            setBusyId(null);
+        }
+    };
+
     return (
-        <div className="bg-zinc-950 border border-white/15 p-3.5 rounded-2xl shadow-2xl min-w-[170px]">
-            {label ? <p className="text-[11px] text-zinc-300 font-semibold tracking-wide">{label}</p> : null}
-            <p className="text-white text-sm font-bold mt-1">
-                {payload[0].name || payload[0].dataKey}: {payload[0].value}
+        <SectionCard title="Top moments">
+            <p className="mb-4 text-xs text-zinc-500">
+                The most-reacted media at this event — your best marketing content, and your moderation queue.
             </p>
+            {error ? <p className="mb-3 text-xs text-red-400">{error}</p> : null}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {moments.map((m) => (
+                    <div key={m.mediaId} className="group relative overflow-hidden rounded-2xl bg-white/[0.035]">
+                        <img
+                            src={m.thumbnailUrl || m.r2Url}
+                            alt=""
+                            className="aspect-[3/4] w-full object-cover"
+                            loading="lazy"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/85 to-transparent p-3 pt-8">
+                            <div className="min-w-0">
+                                <p className="truncate text-[11px] font-bold text-white">
+                                    {m.author?.username ? `@${m.author.username}` : m.author?.name || 'Guest'}
+                                </p>
+                                <p className="text-[11px] text-zinc-400">{formatNumber(m.reactions)} reactions</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => remove(m.mediaId)}
+                                disabled={busyId === m.mediaId}
+                                className="shrink-0 rounded-full bg-red-500/15 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-red-300 opacity-0 transition group-hover:opacity-100 disabled:opacity-60"
+                            >
+                                {busyId === m.mediaId ? '...' : 'Remove'}
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </SectionCard>
+    );
+}
+
+function avgLast7(series = [], key = 'count') {
+    const last7 = series.slice(-7);
+    if (!last7.length) return 0;
+    return last7.reduce((sum, point) => sum + (Number(point[key]) || 0), 0) / last7.length;
+}
+
+function SalesTooltip({ active, payload, label }) {
+    if (!active || !payload?.length) return null;
+    const point = payload[0]?.payload || {};
+    return (
+        <div className="dashboard-glow-popover min-w-[180px] rounded-2xl bg-zinc-950 p-3.5 shadow-2xl">
+            <p className="text-[11px] font-semibold tracking-wide text-zinc-300">{formatDayTick(label)}</p>
+            <p className="mt-1 text-base font-bold text-white">{formatNumber(point.count)} tickets</p>
+            {point.cumulative != null ? (
+                <p className="mt-1 text-xs font-semibold text-zinc-400">{formatNumber(point.cumulative)} cumulative</p>
+            ) : null}
         </div>
     );
 }
 
-export default function AnalyticsPage() {
+/**
+ * Sales velocity: daily tickets sold (hero area chart, its own axis) with a compact
+ * cumulative-total strip beneath (its own axis) — two single-axis charts sharing an
+ * x-domain rather than one dual-axis chart, since cumulative and daily magnitudes
+ * differ by orders of magnitude.
+ */
+function SalesVelocityChart({ byDay, velocityPerDay7d, totalSold, isMobile }) {
+    const heroShade = DASHBOARD_BRAND_COLOR;
+    const cumulativeShade = DASHBOARD_MUTED_COLOR;
+    const interval = tickInterval(byDay.length, isMobile ? 5 : 9);
+
+    return (
+        <TimeSeriesChartShell
+            title="Sales Velocity"
+            subheading="Tickets sold per day, with the running total tracked beneath."
+            liveValue={formatNumber(round1(velocityPerDay7d))}
+            unit="tickets/day (7d avg)"
+            change={{ label: `${formatNumber(totalSold)} sold total`, tone: 'neutral' }}
+            chartClassName="relative h-[300px] md:h-[360px]"
+        >
+            <div className="flex h-full flex-col gap-2">
+                <div className="min-h-0 flex-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={byDay} margin={{ top: 14, right: 12, left: isMobile ? -18 : 0, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="salesVelocityGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor={heroShade} stopOpacity={0.34} />
+                                    <stop offset="100%" stopColor={heroShade} stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid stroke={DASHBOARD_GRID_STROKE} vertical={false} />
+                            <XAxis
+                                dataKey="date"
+                                tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: isMobile ? 9 : 10 }}
+                                tickFormatter={formatDayTick}
+                                interval={interval}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <YAxis
+                                tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 10 }}
+                                width={isMobile ? 28 : 36}
+                                allowDecimals={false}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <Tooltip content={<SalesTooltip />} />
+                            <Area
+                                type="monotone"
+                                dataKey="count"
+                                name="Tickets/day"
+                                stroke={heroShade}
+                                fill="url(#salesVelocityGradient)"
+                                strokeWidth={2.2}
+                                dot={false}
+                                activeDot={{ r: 4, fill: '#ffffff', stroke: '#09090b' }}
+                                isAnimationActive={false}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+                <div className="flex h-20 shrink-0 flex-col gap-1 rounded-2xl bg-black/15 px-2 py-2">
+                    <p className="shrink-0 text-[11px] font-medium tracking-[0.02em] text-white/35">Cumulative</p>
+                    {/* The label above sits in normal flow, so the chart needs its own
+                        flex-1/min-h-0 box — a bare height:100% ResponsiveContainer here
+                        would size itself off the parent's full height and get clipped
+                        by the label instead of only using the space left beneath it. */}
+                    <div className="min-h-0 flex-1">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={byDay} margin={{ top: 0, right: 12, left: isMobile ? -18 : 0, bottom: 0 }}>
+                                <Tooltip content={<SalesTooltip />} />
+                                <Area
+                                    type="monotone"
+                                    dataKey="cumulative"
+                                    name="Cumulative tickets"
+                                    stroke={cumulativeShade}
+                                    fill={cumulativeShade}
+                                    fillOpacity={0.14}
+                                    strokeWidth={1.6}
+                                    dot={false}
+                                    isAnimationActive={false}
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+        </TimeSeriesChartShell>
+    );
+}
+
+function AnalyticsHero({ totals, last30d, velocity7d, loading, isLiveEvent }) {
+    const heroMetrics = [
+        {
+            label: 'Net revenue',
+            value: formatMoney(totals?.netCents),
+            detail: 'After platform fees',
+            sparkline: (last30d?.revenueByDay || []).map((d) => d.netCents ?? d.grossCents),
+        },
+        {
+            label: 'Tickets sold',
+            value: formatNumber(totals?.ticketsSold),
+            detail: `${formatNumber(round1(velocity7d))}/day over 7 days`,
+            sparkline: (last30d?.ticketsByDay || []).map((d) => d.count),
+        },
+        {
+            label: 'Attendees',
+            value: formatNumber(totals?.attendees),
+            detail: 'Distinct ticket holders',
+            sparkline: null,
+        },
+        {
+            label: 'Media uploads',
+            value: formatNumber(totals?.mediaCount),
+            detail: 'Guest generated content',
+            sparkline: (last30d?.mediaByDay || []).map((d) => d.count),
+        },
+    ];
+
+    return (
+        <section>
+            <div className="flex flex-wrap items-end justify-between gap-4 px-1">
+                <div className="max-w-2xl">
+                    <p className="flex items-center gap-2.5 text-[13px] font-medium text-zinc-500">
+                        Analytics
+                        {isLiveEvent ? (
+                            <Link
+                                href="/dashboard/analytics?view=live-ops"
+                                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-200 transition hover:bg-emerald-400/15"
+                            >
+                                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300" />
+                                Live now
+                            </Link>
+                        ) : null}
+                    </p>
+                    <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">
+                        See what moved the room
+                    </h1>
+                    <p className="mt-1.5 text-sm leading-6 text-zinc-500">
+                        Revenue, attendance, hype, and shareable moments in one clean read.
+                    </p>
+                </div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-[1.25rem] bg-white/[0.06] ring-1 ring-white/[0.07] lg:grid-cols-4">
+                {heroMetrics.map((metric) => (
+                    <div key={metric.label} className="bg-[#0e0e13] px-5 py-4">
+                        <p className="text-[12px] font-medium text-zinc-500">{metric.label}</p>
+                        {loading ? (
+                            <div className="mt-3 h-8 w-20 animate-pulse rounded-lg bg-white/10" />
+                        ) : (
+                            <p className="mt-2 truncate text-[26px] font-semibold leading-none tracking-tight text-white">{metric.value}</p>
+                        )}
+                        <p className="mt-2 text-xs leading-4 text-zinc-500">{metric.detail}</p>
+                        {metric.sparkline?.length ? (
+                            <MicroChart points={metric.sparkline} className="mt-3 opacity-80" />
+                        ) : null}
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+function EventPicker({ events, selectedEventId, comparisonIds = [], onSelect, onToggleCompare, loading }) {
+    return (
+        <div className="rounded-[1.25rem] bg-white/[0.035] p-4">
+            <div className="flex flex-col gap-1 pb-4 md:flex-row md:items-end md:justify-between">
+                <div>
+                    <p className="text-xs font-bold tracking-[0.02em] text-white/40">Choose events</p>
+                    <p className="mt-1 text-sm text-zinc-500">Open one event for detail, or compare up to four at once.</p>
+                </div>
+                {loading ? <span className="text-xs font-semibold text-zinc-500">Syncing events</span> : null}
+            </div>
+            {events.length === 0 && !loading ? (
+                <p className="text-sm text-zinc-400">Create an event to see its analytics here.</p>
+            ) : (
+                <div className="dashboard-scrollbar-none flex gap-2 overflow-x-auto pb-1">
+                    {events.map((event) => {
+                        const selected = event.id === selectedEventId;
+                        const comparing = comparisonIds.includes(event.id);
+                        return (
+                            <div
+                                key={event.id}
+                                className={`min-w-[190px] rounded-2xl p-2 transition ${
+                                    selected
+                                        ? 'bg-white text-black shadow-[0_14px_36px_rgba(255,255,255,0.12)]'
+                                        : 'bg-white/[0.055] text-zinc-300 hover:bg-white/[0.09] hover:text-white'
+                                }`}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => onSelect(event.id)}
+                                    aria-pressed={selected}
+                                    className="block w-full rounded-xl px-2 py-1.5 text-left text-xs font-bold"
+                                >
+                                    <span className="block truncate">{event.name}</span>
+                                    <span className={`mt-1 block text-[10px] tracking-[0.02em] ${selected ? 'text-black/55' : 'text-zinc-500'}`}>{event.dateLabel}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => onToggleCompare(event.id)}
+                                    aria-pressed={comparing}
+                                    className={`mt-1 w-full rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] transition ${
+                                        comparing
+                                            ? selected ? 'bg-black text-white' : 'bg-white text-black'
+                                            : selected ? 'bg-black/10 text-black/60 hover:bg-black/15' : 'bg-white/[0.06] text-white/45 hover:bg-white/[0.1] hover:text-white'
+                                    }`}
+                                >
+                                    {comparing ? 'Comparing' : 'Compare'}
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function CompareMetric({ label, value, barValue, maxValue }) {
+    return (
+        <div className="rounded-2xl bg-white/[0.035] px-3 py-3">
+            <div className="flex items-center justify-between gap-3">
+                <p className="truncate text-[11px] font-medium tracking-[0.02em] text-white/35">{label}</p>
+                <p className="shrink-0 text-sm font-bold text-white tabular-nums">{value}</p>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.055]" aria-hidden="true">
+                <div className="h-full rounded-full bg-white/70" style={{ width: `${clampPercent(barValue, maxValue)}%` }} />
+            </div>
+        </div>
+    );
+}
+
+function EventComparisonPanel({ details = [], loading }) {
+    if (loading) {
+        return (
+            <div className="rounded-[1.25rem] bg-white/[0.035] p-5">
+                <p className="text-xs font-bold tracking-[0.02em] text-white/35">Comparison</p>
+                <div className="mt-4 grid gap-3 lg:grid-cols-3">
+                    {[0, 1, 2].map((item) => (
+                        <div key={item} className="h-32 animate-pulse rounded-2xl bg-white/[0.035]" />
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (!details.length) {
+        return (
+            <div className="rounded-[1.25rem] bg-white/[0.035] p-5">
+                <p className="text-xs font-bold tracking-[0.02em] text-white/35">Comparison</p>
+                <p className="mt-2 text-sm leading-6 text-zinc-500">Select Compare on one or more event chips to build a side-by-side read.</p>
+            </div>
+        );
+    }
+
+    const rows = details.map((detail) => ({
+        id: detail.event?.id,
+        name: detail.event?.name || 'Event',
+        tickets: Number(detail.sales?.total || detail.funnel?.sold || 0),
+        gross: Number(detail.sales?.revenue?.grossCents || 0),
+        scanRate: Number(detail.attendance?.scanRate || 0),
+        hype: Number(detail.behavior?.hypeIndex || 0),
+    }));
+    const maxTickets = Math.max(1, ...rows.map((row) => row.tickets));
+    const maxGross = Math.max(1, ...rows.map((row) => row.gross));
+    const maxHype = Math.max(100, ...rows.map((row) => row.hype));
+
+    return (
+        <section className="rounded-[1.25rem] bg-white/[0.035] p-5">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <p className="text-xs font-bold tracking-[0.02em] text-white/35">Comparison</p>
+                    <h2 className="mt-2 text-xl font-bold tracking-normal text-white">Event side-by-side</h2>
+                </div>
+                <p className="text-xs font-semibold text-zinc-500">{rows.length} selected</p>
+            </div>
+            <div className="mt-5 grid gap-3 xl:grid-cols-2">
+                {rows.map((row) => (
+                    <article key={row.id || row.name} className="rounded-[1.25rem] bg-white/[0.035] p-4">
+                        <h3 className="truncate text-base font-bold text-white">{row.name}</h3>
+                        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                            <CompareMetric label="Tickets" value={formatNumber(row.tickets)} barValue={row.tickets} maxValue={maxTickets} />
+                            <CompareMetric label="Gross" value={formatMoney(row.gross)} barValue={row.gross} maxValue={maxGross} />
+                            <CompareMetric label="Scan rate" value={percent(row.scanRate)} barValue={row.scanRate} maxValue={1} />
+                            <CompareMetric label="Hype" value={formatNumber(row.hype)} barValue={row.hype} maxValue={maxHype} />
+                        </div>
+                    </article>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+function InsightMetric({ label, value, detail, sparkline, tone = 'default' }) {
+    const toneClass = tone === 'muted' ? 'text-zinc-300' : 'text-white';
+    return (
+        <div className="rounded-2xl bg-white/[0.045] p-4">
+            <p className="text-[11px] font-medium tracking-[0.02em] text-white/40">{label}</p>
+            <p className={`mt-2 truncate text-2xl font-bold tracking-normal ${toneClass}`}>{value}</p>
+            {detail ? <p className="mt-1 text-xs font-semibold leading-5 text-zinc-500">{detail}</p> : null}
+            {sparkline ? <MicroChart points={sparkline} className="mt-3 opacity-80" /> : null}
+        </div>
+    );
+}
+
+function EventSummaryPanel({ eventDetail }) {
+    const scanRate = percent(eventDetail.attendance.scanRate);
+    return (
+        <SectionCard title="Event snapshot" className="!rounded-[1.25rem]" bodyClassName="!p-4 md:!p-5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <InsightMetric
+                    label="Gross revenue"
+                    value={formatMoney(eventDetail.sales.revenue.grossCents)}
+                    detail="Total ticket revenue"
+                    sparkline={eventDetail.sales.revenue.byDay.map((d) => d.grossCents)}
+                    tone="warm"
+                />
+                <InsightMetric
+                    label="Net revenue"
+                    value={formatMoney(eventDetail.sales.revenue.netCents)}
+                    detail="After platform fees"
+                    sparkline={eventDetail.sales.revenue.byDay.map((d) => d.netCents)}
+                />
+                <InsightMetric
+                    label="Scan rate"
+                    value={scanRate}
+                    detail={`${formatNumber(eventDetail.attendance.scanned)} of ${formatNumber(eventDetail.attendance.sold)} scanned`}
+                    sparkline={eventDetail.attendance.scansByHour.map((d) => d.count)}
+                    tone="good"
+                />
+                <InsightMetric
+                    label="Media uploads"
+                    value={formatNumber(eventDetail.media.count)}
+                    detail={`${formatNumber(eventDetail.media.reactions)} reactions`}
+                    sparkline={eventDetail.media.byHour.map((d) => d.count)}
+                />
+            </div>
+        </SectionCard>
+    );
+}
+
+function MediaPanel({ media }) {
+    return (
+        <SectionCard title="Content engine" className="h-full !rounded-[1.25rem]">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                <div className="space-y-3">
+                    <InsightMetric
+                        label="Uploads"
+                        value={formatNumber(media.count)}
+                        detail="Photos and videos posted"
+                        sparkline={media.byHour.map((d) => d.count)}
+                    />
+                    <StatRow
+                        className="!rounded-2xl"
+                        items={[
+                            { label: 'Reactions', value: formatNumber(media.reactions) },
+                            { label: 'Comments', value: formatNumber(media.comments) },
+                            { label: 'Face tags', value: formatNumber(media.faceTags) },
+                        ]}
+                    />
+                </div>
+                <TopUploadersList uploaders={media.topUploaders} />
+            </div>
+        </SectionCard>
+    );
+}
+
+function AnalyticsSectionLabel({ eyebrow, title, copy }) {
+    return (
+        <div className="px-1">
+            <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">{eyebrow}</p>
+            <h2 className="mt-2 text-xl font-bold tracking-normal text-white normal-case md:text-2xl">{title}</h2>
+            {copy ? <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-500">{copy}</p> : null}
+        </div>
+    );
+}
+
+function TopUploadersList({ uploaders = [] }) {
+    if (!uploaders.length) {
+        return <div className="rounded-2xl bg-white/[0.035] p-4 text-sm text-zinc-400">No uploads yet.</div>;
+    }
+    return (
+        <div className="space-y-2">
+            <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-white/35">Top uploaders</p>
+            {uploaders.map((uploader) => (
+                <div key={uploader.userId} className="glass-field flex items-center gap-3 rounded-2xl p-3">
+                    {uploader.avatarUrl ? (
+                        <img src={uploader.avatarUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+                    ) : (
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-xs font-bold text-white">
+                            {(uploader.name || uploader.username || '?').slice(0, 1).toUpperCase()}
+                        </span>
+                    )}
+                    <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-white">{uploader.name || uploader.username || 'Guest'}</p>
+                        {uploader.username ? <p className="truncate text-xs text-zinc-500">@{uploader.username}</p> : null}
+                    </div>
+                    <span className="shrink-0 text-xs font-bold text-zinc-300">{formatNumber(uploader.count)}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+/** Non-map list rendering of the per-event DBSCAN photo-location clusters. */
+function LocationClustersCard({ clusters = [], noise = 0, totalGeotagged = 0 }) {
+    if (!totalGeotagged) {
+        return (
+            <div className="rounded-2xl bg-white/[0.035] p-6 text-sm text-zinc-400">
+                No geotagged photos yet for this event.
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-3">
+            {clusters.length === 0 ? (
+                <div className="rounded-2xl bg-white/[0.035] p-4 text-sm text-zinc-400">
+                    No hotspots detected yet — photos are too spread out to cluster.
+                </div>
+            ) : (
+                clusters.map((cluster, index) => (
+                    <div
+                        key={`${cluster.centroidLat}-${cluster.centroidLng}-${index}`}
+                        className="glass-field flex items-center justify-between gap-4 rounded-2xl p-4"
+                    >
+                        <div className="min-w-0">
+                            <p className="text-sm font-bold text-white">Cluster of {formatNumber(cluster.count)} photos</p>
+                            <p className="mt-1 text-xs font-semibold text-zinc-500">~{formatNumber(cluster.radiusM)} m radius</p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-white/[0.07] px-3 py-1 text-[11px] font-medium tracking-[0.02em] text-zinc-300">
+                            Hotspot {index + 1}
+                        </span>
+                    </div>
+                ))
+            )}
+            {noise > 0 ? (
+                <p className="px-1 text-xs font-semibold text-zinc-500">
+                    {formatNumber(noise)} photo{noise === 1 ? '' : 's'} outside hotspots
+                </p>
+            ) : null}
+        </div>
+    );
+}
+
+function AnalyticsPageContent() {
+    const searchParams = useSearchParams();
+    const viewMode = searchParams.get('view') === 'live-ops' ? 'live-ops' : 'analytics';
+    const isLiveEvent = useDashboardShellStore((store) => store.isLiveEvent);
+
     const [events, setEvents] = useState([]);
-    const [selectedEventId, setSelectedEventId] = useState('');
-    const [eventMode, setEventMode] = useState('live');
+    const [eventsLoading, setEventsLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [analyticsLoading, setAnalyticsLoading] = useState(false);
-    const [analyticsPayload, setAnalyticsPayload] = useState(null);
-    const [heatmapOpen, setHeatmapOpen] = useState(false);
+
+    const [overview, setOverview] = useState(null);
+    const [overviewLoading, setOverviewLoading] = useState(true);
+
+    const [selectedEventId, setSelectedEventId] = useState(null);
+    const [comparisonEventIds, setComparisonEventIds] = useState([]);
+    const [comparisonDetails, setComparisonDetails] = useState([]);
+    const [comparisonLoading, setComparisonLoading] = useState(false);
+    const [eventDetail, setEventDetail] = useState(null);
+    const [eventDetailLoading, setEventDetailLoading] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
         (async () => {
-            setLoading(true);
+            setEventsLoading(true);
             try {
                 const res = await eventsService.getMyEvents({ limit: 100, offset: 0 });
-                if (cancelled) return;
-                const nextEvents = res?.events || [];
-                setEvents(nextEvents);
-                if (nextEvents.length > 0) setSelectedEventId(nextEvents[0].id);
+                if (!cancelled) setEvents(res?.events || []);
             } catch {
                 if (!cancelled) setEvents([]);
             } finally {
-                if (!cancelled) setLoading(false);
+                if (!cancelled) setEventsLoading(false);
             }
         })();
-        return () => {
-            cancelled = true;
-        };
+        return () => { cancelled = true; };
     }, []);
 
     useEffect(() => {
@@ -124,301 +858,256 @@ export default function AnalyticsPage() {
         return () => mq.removeEventListener('change', onChange);
     }, []);
 
-    const selectedEvent = useMemo(
-        () => events.find((event) => event.id === selectedEventId) || events[0] || null,
-        [events, selectedEventId]
+    useEffect(() => {
+        let cancelled = false;
+        const timer = setTimeout(() => {
+            setOverviewLoading(true);
+            organizerAnalyticsService
+                .getOverview()
+                .then((res) => { if (!cancelled) setOverview(res); })
+                .catch(() => { if (!cancelled) setOverview(null); })
+                .finally(() => { if (!cancelled) setOverviewLoading(false); });
+        }, 0);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, []);
+
+    const eventOptions = useMemo(
+        () => events.map((event) => ({
+            id: event.id,
+            name: event.name || 'Untitled event',
+            dateLabel: formatEventDate(event.startDate),
+        })),
+        [events]
     );
 
     useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            if (!selectedEvent?.id) return;
-            setAnalyticsLoading(true);
-            const payload = await loadOrganizerAnalytics(selectedEvent.id);
-            if (!cancelled) {
-                setAnalyticsPayload(payload);
-                setAnalyticsLoading(false);
+        if (eventsLoading || selectedEventId || !eventOptions.length) return;
+        const timer = setTimeout(() => {
+            setSelectedEventId(eventOptions[0].id);
+            setComparisonEventIds([eventOptions[0].id]);
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [eventOptions, eventsLoading, selectedEventId]);
+
+    const handleSelectEvent = (eventId) => {
+        setSelectedEventId(eventId);
+        setComparisonEventIds((current) => (current.length ? current : [eventId]));
+    };
+
+    const handleToggleCompare = (eventId) => {
+        setComparisonEventIds((current) => {
+            if (current.includes(eventId)) {
+                const next = current.filter((id) => id !== eventId);
+                return next.length ? next : [eventId];
             }
-        })();
+            return [...current, eventId].slice(-4);
+        });
+    };
+
+    useEffect(() => {
+        if (!selectedEventId) {
+            const timer = setTimeout(() => setEventDetail(null), 0);
+            return () => clearTimeout(timer);
+        }
+        let cancelled = false;
+        const timer = setTimeout(() => {
+            setEventDetailLoading(true);
+            organizerAnalyticsService
+                .getEventAnalytics(selectedEventId)
+                .then((res) => { if (!cancelled) setEventDetail(res); })
+                .catch(() => { if (!cancelled) setEventDetail(null); })
+                .finally(() => { if (!cancelled) setEventDetailLoading(false); });
+        }, 0);
         return () => {
             cancelled = true;
+            clearTimeout(timer);
         };
-    }, [selectedEvent?.id]);
+    }, [selectedEventId]);
 
-    const eventOptions = useMemo(() => {
-        const live = [];
-        const archived = [];
-        events.forEach((event) => {
-            const status = String(event?.status || '').toUpperCase();
-            if (status === 'LIVE' || status === 'ACTIVE') {
-                live.push(event);
-            } else {
-                archived.push(event);
-            }
-        });
-        return { live, archived };
-    }, [events]);
+    useEffect(() => {
+        const ids = comparisonEventIds.filter(Boolean).slice(0, 4);
+        if (!ids.length) {
+            const timer = setTimeout(() => setComparisonDetails([]), 0);
+            return () => clearTimeout(timer);
+        }
+        let cancelled = false;
+        const timer = setTimeout(() => {
+            setComparisonLoading(true);
+            Promise.allSettled(ids.map((id) => organizerAnalyticsService.getEventAnalytics(id)))
+                .then((results) => {
+                    if (cancelled) return;
+                    setComparisonDetails(results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : [])));
+                })
+                .finally(() => {
+                    if (!cancelled) setComparisonLoading(false);
+                });
+        }, 0);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [comparisonEventIds]);
 
-    const visibleEventOptions = eventMode === 'live' ? eventOptions.live : eventOptions.archived;
-    const hypeSeries = useMemo(() => buildHypeSeries(selectedEvent?.id?.length || 1), [selectedEvent?.id]);
-    const clusterData = analyticsPayload?.clusters || CLUSTER_BASE;
-    const funnelData = analyticsPayload?.funnel || FUNNEL_STAGES;
-    const momentsData = analyticsPayload?.moments || WILSON_TOP_MOMENTS;
-    const moduleSource = analyticsPayload?.source === 'live' ? 'Live' : 'Mock';
+    const totals = overview?.totals;
+    const last30d = overview?.last30d;
+    const overviewVelocity7d = useMemo(() => avgLast7(last30d?.ticketsByDay || [], 'count'), [last30d]);
 
-    const tierMix = useMemo(() => {
-        const soldTickets = Math.max(50, selectedEvent?._count?.tickets || 0);
+    const funnelData = useMemo(() => {
+        if (!eventDetail) return [];
+        const id = eventDetail.event.id;
         return [
-            { name: 'Wanderers', value: Math.round(soldTickets * 0.34) },
-            { name: 'Pathfinders', value: Math.round(soldTickets * 0.28) },
-            { name: 'Voyagers', value: Math.round(soldTickets * 0.2) },
-            { name: 'Sentinels', value: Math.round(soldTickets * 0.12) },
-            { name: 'Legends', value: Math.round(soldTickets * 0.06) },
+            {
+                stage: 'Sold',
+                value: eventDetail.funnel.sold,
+                cta: 'View event',
+                href: `/dashboard/events/${id}`,
+                suggestions: ['Every ticket sold for this event, paid and free.'],
+            },
+            {
+                stage: 'Scanned',
+                value: eventDetail.funnel.scanned,
+                cta: 'View attendees',
+                href: `/dashboard/events/${id}/members`,
+                suggestions: ['Attendees whose ticket was scanned at the door.'],
+            },
+            {
+                stage: 'Posted media',
+                value: eventDetail.funnel.postedMedia,
+                cta: 'View gallery',
+                href: `/dashboard/events/${id}/upload`,
+                suggestions: ['Distinct attendees who posted at least one photo or video.'],
+            },
         ];
-    }, [selectedEvent?._count?.tickets]);
+    }, [eventDetail]);
+
+    if (viewMode === 'live-ops') {
+        return <LiveScanDashboard isLiveEvent={isLiveEvent} />;
+    }
 
     return (
-        <div className="max-w-6xl mx-auto space-y-7 md:space-y-8">
-            <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                <div>
-                    <p className="text-xs font-bold tracking-widest uppercase text-pxi-purple">Organizer Intelligence</p>
-                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mt-1">Analytics Command Center</h1>
-                    <p className="text-zinc-500 text-sm mt-1">Behavioral + spatial insights for live and archived events.</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <DataSourceBadge source={events.length > 0 ? 'Live' : 'Mock'} />
-                    <DataSourceBadge source={moduleSource} />
-                    <DataSourceBadge source="Derived" />
-                </div>
-            </header>
+        <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
+            <AnalyticsHero
+                totals={totals}
+                last30d={last30d}
+                velocity7d={overviewVelocity7d}
+                loading={overviewLoading}
+                isLiveEvent={isLiveEvent}
+            />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                <div className="rounded-[1.6rem] border border-white/10 bg-zinc-950/80 px-5 py-4">
-                    <p className="text-[11px] uppercase tracking-widest font-bold text-zinc-400">Current Context</p>
-                    <p className="text-white font-black text-base md:text-lg mt-1 line-clamp-2">{selectedEvent?.name || 'No event selected'}</p>
-                    <p className="text-zinc-300 text-xs mt-1">{eventMode === 'live' ? 'Live event mode' : 'Archived event mode'}</p>
-                </div>
-                <div className="rounded-[1.6rem] border border-white/10 bg-zinc-950/80 px-5 py-4">
-                    <p className="text-[11px] uppercase tracking-widest font-bold text-zinc-400">Peak Hype Window</p>
-                    <p className="text-white font-black text-lg mt-1">{hypeSeries.reduce((best, point) => point.hype > best.hype ? point : best, hypeSeries[0] || { time: '—', hype: 0 }).time}</p>
-                    <p className="text-zinc-300 text-xs mt-1">Composite chat + reactions + scans</p>
-                </div>
-                <div className="rounded-[1.6rem] border border-white/10 bg-zinc-950/80 px-5 py-4">
-                    <p className="text-[11px] uppercase tracking-widest font-bold text-zinc-400">Noise Filtered</p>
-                    <p className="text-white font-black text-lg mt-1">{clusterData[0]?.noiseRatio || '0%'}</p>
-                    <p className="text-zinc-300 text-xs mt-1">Primary DBSCAN cluster ratio</p>
-                </div>
-            </div>
-
-            <SectionCard
-                title="Event Context"
-                subtitle="Switch between live and archived events."
-                source={events.length > 0 ? 'Live' : 'Mock'}
-            >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <select
-                        value={eventMode}
-                        onChange={(event) => setEventMode(event.target.value)}
-                        className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white"
-                    >
-                        <option value="live">Live Events</option>
-                        <option value="archived">Archived Events</option>
-                    </select>
-                    <select
-                        value={selectedEventId}
-                        onChange={(event) => setSelectedEventId(event.target.value)}
-                        className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white"
-                    >
-                        {visibleEventOptions.map((event) => (
-                            <option key={event.id} value={event.id}>
-                                {event.name} ({eventMode === 'live' ? 'Live' : 'Archived'})
-                            </option>
-                        ))}
-                        {visibleEventOptions.length === 0 && <option value="">No events in this scope</option>}
-                    </select>
-                </div>
-            </SectionCard>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SectionCard
-                    title="4D Spatial Intelligence (DBSCAN)"
-                    subtitle="Density clusters, peak times, and filtered noise."
-                    source={moduleSource}
-                    actions={(
-                        <button
-                            type="button"
-                            onClick={() => setHeatmapOpen(true)}
-                            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-white/10"
-                        >
-                            View Heatmap Map
-                        </button>
-                    )}
-                >
-                    <ul className="space-y-3">
-                        {clusterData.map((cluster) => (
-                            <li key={cluster.id} className="rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-                                <p className="text-sm font-semibold text-white flex items-center gap-2">
-                                    <HugeiconsIcon icon={Location01Icon} size={14} className="text-pxi-purple" />
-                                    {cluster.zone}
-                                </p>
-                                <p className="text-xs text-zinc-400 mt-1">Peak {cluster.peakTime} · Noise {cluster.noiseRatio}</p>
-                                <p className="text-xs text-zinc-500 mt-1">{cluster.uploads} uploads sourced from cluster</p>
-                            </li>
-                        ))}
-                    </ul>
-                </SectionCard>
-
-                <SectionCard
-                    title="Attendance Lifecycle Funnel"
-                    subtitle="Drop-off from purchase through retained engagement."
-                    source={moduleSource}
-                >
-                    <div className="h-[280px] md:h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={funnelData} layout="vertical" margin={{ top: 6, right: 10, left: isMobile ? 4 : 20, bottom: 6 }}>
-                                <XAxis type="number" stroke="rgba(255,255,255,0.28)" tick={{ fill: 'rgba(255,255,255,0.75)', fontSize: isMobile ? 10 : 11 }} />
-                                <YAxis type="category" dataKey="stage" stroke="rgba(255,255,255,0.28)" tick={{ fill: 'rgba(255,255,255,0.85)', fontSize: isMobile ? 10 : 11 }} width={isMobile ? 95 : 130} />
-                                <Tooltip content={<SurfaceTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                                <Bar dataKey="value" radius={[8, 8, 8, 8]} fill="#c084fc" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </SectionCard>
-            </div>
-
-            <SectionCard
-                title="Temporal Hype Index"
-                subtitle="Composite of chat volume, reaction velocity, and gate scans."
-                source="Derived"
-            >
-                <div className="h-[300px] md:h-[360px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={hypeSeries}>
-                            <defs>
-                                <linearGradient id="hypeGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#a855f7" stopOpacity={0.45} />
-                                    <stop offset="100%" stopColor="#000000" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <XAxis
-                                dataKey="time"
-                                stroke="rgba(255,255,255,0.28)"
-                                tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: isMobile ? 10 : 11 }}
-                                interval={isMobile ? 3 : 1}
-                                minTickGap={isMobile ? 18 : 10}
-                            />
-                            <YAxis
-                                stroke="rgba(255,255,255,0.28)"
-                                tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: isMobile ? 10 : 11 }}
-                                width={isMobile ? 28 : 40}
-                            />
-                            <Tooltip content={<AnalyticsTooltip />} />
-                            <Area type="monotone" dataKey="hype" stroke="#ffffff" strokeWidth={2} fill="url(#hypeGradient)" />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-            </SectionCard>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SectionCard
-                    title="Audience Composition (Odyssey Tier Mix)"
-                    subtitle="Crowd split by global passport tiers."
-                    source="Derived"
-                >
-                    <div className="h-[280px] md:h-[320px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={tierMix} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={isMobile ? 88 : 105} innerRadius={isMobile ? 44 : 55}>
-                                    {tierMix.map((tier, idx) => (
-                                        <Cell key={tier.name} fill={TIER_COLORS[idx % TIER_COLORS.length]} />
-                                    ))}
-                                </Pie>
-                            <Tooltip content={<SurfaceTooltip />} />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
-                        {tierMix.map((tier, idx) => (
-                            <p key={tier.name} className="text-xs text-zinc-200 flex items-center gap-2">
-                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: TIER_COLORS[idx % TIER_COLORS.length] }} />
-                                {tier.name}: {tier.value}
-                            </p>
-                        ))}
-                    </div>
-                </SectionCard>
-
-                <SectionCard
-                    title="Top Moments (Wilson Score)"
-                    subtitle="Best UGC moments ranked by Wilson confidence."
-                    source={moduleSource}
-                    actions={(
-                        <button
-                            type="button"
-                            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-white/10"
-                        >
-                            Export ZIP
-                        </button>
-                    )}
-                >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {momentsData.map((moment) => (
-                            <div key={moment.id} className="rounded-xl border border-white/10 bg-black/30 p-3">
-                                <div className="w-full h-24 rounded-lg bg-zinc-800/80 border border-white/10 flex items-center justify-center">
-                                    <HugeiconsIcon icon={Image02Icon} size={20} className="text-zinc-500" />
-                                </div>
-                                <p className="text-sm font-semibold text-white mt-2">{moment.title}</p>
-                                <p className="text-xs text-zinc-400 mt-1">
-                                    Score {moment.score.toFixed(2)} · {moment.hearts} hearts
-                                </p>
-                                <p className="text-xs text-zinc-500 mt-1">Cluster {moment.cluster}</p>
+            <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+                <EventPicker
+                    events={eventOptions}
+                    selectedEventId={selectedEventId}
+                    comparisonIds={comparisonEventIds}
+                    onSelect={handleSelectEvent}
+                    onToggleCompare={handleToggleCompare}
+                    loading={eventsLoading}
+                />
+                <div className="rounded-[1.25rem] bg-white/[0.035] p-4">
+                    <p className="text-xs font-bold tracking-[0.02em] text-white/40">Portfolio totals</p>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                        {[
+                            { label: 'Events', value: formatNumber(totals?.events) },
+                            { label: 'Scanned', value: formatNumber(totals?.ticketsScanned) },
+                            { label: 'Gross', value: formatMoney(totals?.grossCents) },
+                            { label: 'Velocity', value: `${formatNumber(round1(overviewVelocity7d))}/day` },
+                        ].map((item) => (
+                            <div key={item.label} className="rounded-2xl bg-white/[0.045] px-3 py-3">
+                                <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">{item.label}</p>
+                                <p className="mt-1 truncate text-lg font-bold text-white">{overviewLoading ? '...' : item.value}</p>
                             </div>
                         ))}
                     </div>
-                </SectionCard>
+                </div>
             </div>
 
-            {(loading || analyticsLoading) && (
-                <div className="rounded-xl border border-white/10 bg-zinc-900/40 p-4 text-sm text-zinc-400">
-                    Loading analytics context...
-                </div>
-            )}
+            <EventComparisonPanel details={comparisonDetails} loading={comparisonLoading} />
 
-            {heatmapOpen && (
-                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/70">
-                    <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-zinc-950 p-6">
-                        <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                            <HugeiconsIcon icon={Location01Icon} size={18} className="text-pxi-purple" />
-                            Heatmap Overlay
-                        </h3>
-                        <p className="text-zinc-400 text-sm mt-2">
-                            Map integration is staged. This modal reserves the interaction flow for Mapbox/venue overlay wiring.
-                        </p>
-                        <div className="mt-5 flex justify-end gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setHeatmapOpen(false)}
-                                className="rounded-xl border border-white/10 px-4 py-2 text-sm text-zinc-300 hover:bg-white/5"
-                            >
-                                Close
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setHeatmapOpen(false)}
-                                className="rounded-xl bg-pxi-purple px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-                            >
-                                Continue
-                            </button>
-                        </div>
+            {!selectedEventId ? (
+                <div className="rounded-2xl bg-white/[0.035] p-6 text-sm text-zinc-400">Select an event above to see its full analytics.</div>
+            ) : eventDetailLoading || !eventDetail ? (
+                <div className="space-y-4">
+                    <ChartSkeleton className="h-[300px] md:h-[360px]" />
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        {[0, 1, 2].map((item) => (
+                            <div key={item} className="h-28 rounded-2xl bg-white/[0.035] animate-pulse" />
+                        ))}
                     </div>
                 </div>
-            )}
+            ) : (
+                <>
+                    <AnalyticsSectionLabel
+                        eyebrow="Selected event"
+                        title={eventDetail.event?.name || 'Event performance'}
+                        copy="Start with sales and revenue, then move through attendance, engagement, content, and location signals."
+                    />
 
-            <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4">
-                <p className="text-sm text-red-200 flex items-center gap-2">
-                    <HugeiconsIcon icon={Alert02Icon} size={15} />
-                    Wilson/DBSCAN metrics are surfaced as intelligent mock outputs until backend aggregates are finalized.
-                </p>
-            </div>
+                    <SalesVelocityChart
+                        byDay={eventDetail.sales.byDay}
+                        velocityPerDay7d={eventDetail.sales.velocityPerDay7d}
+                        totalSold={eventDetail.sales.total}
+                        isMobile={isMobile}
+                    />
+
+                    <EventSummaryPanel eventDetail={eventDetail} />
+
+                    <HypePanel behavior={eventDetail.behavior} isMobile={isMobile} />
+
+                    <SectionCard title="Attendance path" className="!rounded-[1.25rem]">
+                        <FunnelChart data={funnelData} singleSelection />
+                    </SectionCard>
+
+                    <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+                        <MediaPanel media={eventDetail.media} />
+                        <TopMomentsPanel
+                            moments={eventDetail.behavior?.topMoments}
+                            onRemoved={(mediaId) =>
+                                setEventDetail((prev) =>
+                                    prev
+                                        ? {
+                                              ...prev,
+                                              behavior: {
+                                                  ...prev.behavior,
+                                                  topMoments: (prev.behavior?.topMoments || []).filter((m) => m.mediaId !== mediaId),
+                                              },
+                                          }
+                                        : prev
+                                )
+                            }
+                        />
+                    </div>
+
+                    <SectionCard title="Where the night happened" className="!rounded-[1.25rem]">
+                        <LocationClustersCard {...eventDetail.locationClusters} />
+                    </SectionCard>
+
+                    <SectionCard title="Spatial intelligence" className="!rounded-[1.25rem]">
+                        {/* Built to take real room-by-room hype data (rooms + timeSlices), but no
+                            backend endpoint publishes a venue floor plan or per-room readings yet —
+                            only the photo-location DBSCAN clusters above are wired to real geodata.
+                            Mounting it here (instead of leaving it unimported) so the feature is
+                            reachable and its own disabled state explains the gap honestly rather
+                            than faking room coordinates. */}
+                        <SpatialHeatMap
+                            rooms={[]}
+                            timeSlices={[]}
+                            eventComparisons={[]}
+                            disabledReason="Room-level heat mapping needs a venue floor plan wired to this event — add zone coordinates and per-room hype tracking on the backend to unlock this view."
+                        />
+                    </SectionCard>
+                </>
+            )}
         </div>
+    );
+}
+
+export default function AnalyticsPage() {
+    return (
+        <Suspense fallback={<div className="mx-auto max-w-6xl p-8 text-zinc-500">Loading analytics...</div>}>
+            <AnalyticsPageContent />
+        </Suspense>
     );
 }

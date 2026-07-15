@@ -5,7 +5,15 @@ import { fetchAdminEvents } from '@/services/admin';
 import AdminPagination from '@/components/admin/AdminPagination';
 import { useAuth } from '@/contexts/AuthContext';
 import { adminMockEvents } from '@/lib/adminMockData';
-import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
+import {
+    AdminError,
+    AdminPageShell,
+    AdminTableShell,
+    adminTableClass,
+    adminTdClass,
+    adminThClass,
+} from '@/components/admin/AdminPageShell';
+import { adminErrorMessage } from '@/components/admin/adminFormat';
 
 function formatDate(iso) {
     if (!iso) return '—';
@@ -49,7 +57,7 @@ export default function AdminEventsPage() {
             setTotalPages(data.totalPages || 1);
             setTotal(data.total ?? 0);
         } catch (err) {
-            setError(err.message || 'Failed to load events');
+            setError(adminErrorMessage(err, 'Failed to load events'));
             setRows([]);
         } finally {
             setLoading(false);
@@ -57,68 +65,61 @@ export default function AdminEventsPage() {
     }, [isLiveAdmin]);
 
     useEffect(() => {
-        load(page);
+        const timer = setTimeout(() => load(page), 0);
+        return () => clearTimeout(timer);
     }, [load, page]);
 
     return (
-        <div className="max-w-6xl space-y-6">
-            <div>
-                <h1 className="text-xl font-bold text-white mb-2">Event management</h1>
-                <p className="text-white/60 text-sm leading-relaxed">
-                    All studio events. {total > 0 ? `${total} total.` : null}
-                </p>
-            </div>
-            <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
+        <AdminPageShell
+            title="Events"
+            copy="A platform-wide view of hosted events, organizers, visibility state, and schedule."
+            source={isLiveAdmin ? 'Live' : 'Mock'}
+            metrics={[
+                { label: 'Total', value: total.toLocaleString(), hint: 'Events tracked' },
+                { label: 'Rows', value: rows.length.toLocaleString(), hint: `Page ${page}` },
+            ]}
+        >
+            <AdminError>{error}</AdminError>
 
-            {error && (
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-4 text-red-300 text-sm">{error}</div>
-            )}
-
-            <div className="rounded-2xl border border-white/10 bg-zinc-900/40 overflow-x-auto">
-                {loading ? (
-                    <div className="px-6 py-12 text-center text-white/45 text-sm">Loading…</div>
-                ) : rows.length === 0 ? (
-                    <div className="px-6 py-12 text-center text-white/45 text-sm">No events yet.</div>
-                ) : (
-                    <table className="w-full text-left border-collapse min-w-[900px]">
+            <AdminTableShell loading={loading} emptyMessage={rows.length === 0 ? 'No events yet.' : null}>
+                    <table className={`${adminTableClass} min-w-[900px]`}>
                         <thead>
-                            <tr className="border-b border-white/5">
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Name</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Start</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">End</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Status</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Visibility</th>
-                                <th className="px-6 py-4 text-[11px] font-bold tracking-widest text-white/40 uppercase">Host email</th>
+                            <tr>
+                                <th className={adminThClass}>Name</th>
+                                <th className={adminThClass}>Start</th>
+                                <th className={adminThClass}>End</th>
+                                <th className={adminThClass}>Status</th>
+                                <th className={adminThClass}>Visibility</th>
+                                <th className={adminThClass}>Host email</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody>
                             {rows.map((ev) => (
                                 <tr key={ev.id} className="hover:bg-white/[0.02] transition-colors">
-                                    <td className="px-6 py-4 text-[14px] font-semibold text-white max-w-[220px]">
+                                    <td data-label="Event" className="admin-table-primary px-6 py-4 text-[14px] font-semibold text-white max-w-[220px]">
                                         <div className="line-clamp-2">{ev.name}</div>
                                         {ev.location ? (
                                             <div className="text-[12px] font-normal text-white/45 mt-1 line-clamp-1">{ev.location}</div>
                                         ) : null}
                                     </td>
-                                    <td className="px-6 py-4 text-[13px] text-white/60 whitespace-nowrap">{formatDate(ev.startDate)}</td>
-                                    <td className="px-6 py-4 text-[13px] text-white/60 whitespace-nowrap">{formatDate(ev.endDate)}</td>
-                                    <td className="px-6 py-4">
-                                        <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    <td data-label="Start" className={`${adminTdClass} whitespace-nowrap`}>{formatDate(ev.startDate)}</td>
+                                    <td data-label="End" className={`${adminTdClass} whitespace-nowrap`}>{formatDate(ev.endDate)}</td>
+                                    <td data-label="Status" className="px-6 py-4">
+                                        <span className="inline-flex rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-emerald-300">
                                             {ev.status}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-[13px] text-white/60">{ev.visibility}</td>
-                                    <td className="px-6 py-4 text-[13px] text-white/55 break-all max-w-[180px]">
+                                    <td data-label="Visibility" className={adminTdClass}>{ev.visibility}</td>
+                                    <td data-label="Organizer" className="px-6 py-4 text-[13px] text-white/55 break-all max-w-[180px]">
                                         {ev.creator?.email || '—'}
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                )}
-            </div>
+            </AdminTableShell>
 
             <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={loading} />
-        </div>
+        </AdminPageShell>
     );
 }

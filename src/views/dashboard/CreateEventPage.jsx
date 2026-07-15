@@ -1,10 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+/* global process */
+/* eslint-disable no-unused-vars */
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowLeft01Icon, Loading02Icon, ImageIcon, HelpCircleIcon, Cancel01Icon, Search01Icon, UserGroupIcon, Location01Icon } from '@hugeicons/core-free-icons';
+import { ArrowLeft01Icon, Loading02Icon, ImageIcon, HelpCircleIcon, Cancel01Icon, Search01Icon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import Cropper from 'react-easy-crop';
 import { GeoapifyContext, GeoapifyGeocoderAutocomplete } from '@geoapify/react-geocoder-autocomplete';
 import { toast } from 'sonner';
@@ -12,6 +15,15 @@ import { eventsService, searchUsers } from '../../services/events';
 import { uploadImageToR2 } from '../../services/media';
 import { authService, authStorage } from '../../services/auth';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEvents } from '@/lib/dashboardStore';
+import { PxiSpinner } from '@/components/loading/PxiLoading';
+import {
+  assignRosterToEvent,
+  clearCreateEventTeamAssignments,
+  getCreateEventTeamAssignments,
+  listTeamRosters,
+  setCreateEventTeamAssignments,
+} from '@/services/teamRosters';
 import {
   buildTicketPricingPayload,
   createEmptyTier,
@@ -46,6 +58,10 @@ async function getCroppedBlob(imageSrc, croppedAreaPixels) {
 const GEOAPIFY_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || '';
 const LINEUP_ROLE_MAX = 80;
 
+function memberDisplayName(member) {
+  return member?.name || member?.handle || member?.contact || 'Team member';
+}
+
 function toDatetimeLocalValue(d) {
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -63,19 +79,25 @@ function fromDatetimeLocalValue(v) {
   return new Date(v);
 }
 
-export default function CreateEventPage() {
+export default function CreateEventPage({ embedded = false, onCancel, onCreated }) {
   const router = useRouter();
   const { user, updateUser } = useAuth();
-  const defaults = useRef(defaultStartEnd());
+  const { invalidate } = useEvents({ limit: 100, offset: 0 });
+  const defaults = useMemo(() => defaultStartEnd(), []);
   const searchTimerRef = useRef(null);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [venueName, setVenueName] = useState('');
+  const [recurrence, setRecurrence] = useState('');
+  const [spotifyPlaylistUrl, setSpotifyPlaylistUrl] = useState('');
+  const [stampImage, setStampImage] = useState(null);
+  const [isStampUploading, setIsStampUploading] = useState(false);
   const [geoLat, setGeoLat] = useState(null);
   const [geoLon, setGeoLon] = useState(null);
-  const [startLocal, setStartLocal] = useState(defaults.current.start);
-  const [endLocal, setEndLocal] = useState(defaults.current.end);
+  const [startLocal, setStartLocal] = useState(() => defaults.start);
+  const [endLocal, setEndLocal] = useState(() => defaults.end);
 
   const [coverImage, setCoverImage] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
@@ -107,6 +129,9 @@ export default function CreateEventPage() {
   const [featuredLoading, setFeaturedLoading] = useState(false);
   /** @type {Array<{ id: string; username: string; name?: string; avatarUrl?: string; kind: 'lineup' | 'member' | 'cohost' | 'bouncer'; lineupSubrole?: string }>} */
   const [pendingInvites, setPendingInvites] = useState([]);
+  const [teamRosters, setTeamRosters] = useState([]);
+  const [teamAssignments, setTeamAssignments] = useState([]);
+  const [teamAssignmentsLoading, setTeamAssignmentsLoading] = useState(true);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
@@ -119,10 +144,32 @@ export default function CreateEventPage() {
   }, [coverPreview]);
 
   useEffect(() => {
+    let alive = true;
+    Promise.all([listTeamRosters(), getCreateEventTeamAssignments()])
+      .then(([rosters, assignments]) => {
+        if (!alive) return;
+        const rosterIds = new Set(rosters.map((roster) => roster.id));
+        setTeamRosters(rosters);
+        setTeamAssignments(assignments.filter((assignment) => rosterIds.has(assignment.rosterId)));
+      })
+      .catch(() => {
+        if (!alive) return;
+        setTeamRosters([]);
+        setTeamAssignments([]);
+      })
+      .finally(() => {
+        if (alive) setTeamAssignmentsLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
     const q = featuredQuery.trim();
     if (q.length < 2) {
-      setFeaturedResults([]);
-      return;
+      const timer = setTimeout(() => setFeaturedResults([]), 0);
+      return () => clearTimeout(timer);
     }
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(() => {
@@ -176,6 +223,46 @@ export default function CreateEventPage() {
   const removePendingInvite = (id) => {
     setPendingInvites((prev) => prev.filter((p) => p.id !== id));
   };
+
+  const persistTeamAssignments = useCallback((updater) => {
+    setTeamAssignments((current) => {
+      const next = typeof updater === 'function' ? updater(current) : updater;
+      void setCreateEventTeamAssignments(next);
+      return next;
+    });
+  }, []);
+
+  const toggleTeamRoster = useCallback(
+    (rosterId) => {
+      persistTeamAssignments((current) => {
+        if (current.some((assignment) => assignment.rosterId === rosterId)) {
+          return current.filter((assignment) => assignment.rosterId !== rosterId);
+        }
+        return [...current, { rosterId, memberIds: [] }];
+      });
+    },
+    [persistTeamAssignments]
+  );
+
+  const setTeamRosterMembers = useCallback(
+    (rosterId, memberIds) => {
+      persistTeamAssignments((current) => {
+        const existing = current.find((assignment) => assignment.rosterId === rosterId);
+        if (!existing) return [...current, { rosterId, memberIds }];
+        return current.map((assignment) =>
+          assignment.rosterId === rosterId ? { ...assignment, memberIds } : assignment
+        );
+      });
+    },
+    [persistTeamAssignments]
+  );
+
+  const assignmentByRosterId = useMemo(
+    () => new Map(teamAssignments.map((assignment) => [assignment.rosterId, assignment])),
+    [teamAssignments]
+  );
+
+  const assignedTeamCount = teamAssignments.length;
 
   const formatPendingLabel = (p) => {
     if (p.kind === 'lineup') return `Line-up • ${p.lineupSubrole || 'Line up'}`;
@@ -270,8 +357,8 @@ export default function CreateEventPage() {
       setFormError('You must be signed in.');
       return;
     }
-    if (!name.trim() || !location.trim() || !startLocal || !endLocal) {
-      setFormError('Event name, venue / location, start, and end are required.');
+    if (!name.trim() || !startLocal || !endLocal) {
+      setFormError('Event name, start, and end are required.');
       return;
     }
     if (!coverImage) {
@@ -306,7 +393,6 @@ export default function CreateEventPage() {
       setFormError(pricingCheck.error);
       return;
     }
-    const pricing = buildTicketPricingPayload({ isPaid, useTierList, price, tiers: ticketTiers });
 
     setIsSubmitting(true);
     try {
@@ -315,6 +401,7 @@ export default function CreateEventPage() {
         : await tryGetGeo();
       const graceTime =
         (parseInt(graceTimeHours, 10) || 0) * 60 + (parseInt(graceTimeMinutes, 10) || 0);
+      const pricing = buildTicketPricingPayload({ isPaid, useTierList, price, tiers: ticketTiers });
 
       const lineupOnly = pendingInvites
         .filter((p) => p.kind === 'lineup')
@@ -323,7 +410,7 @@ export default function CreateEventPage() {
       const created = await eventsService.createEvent({
         name: name.trim(),
         description: description.trim() || undefined,
-        location: location.trim(),
+        location: location.trim() || undefined,
         latitude: typeof geo.latitude === 'number' ? geo.latitude : undefined,
         longitude: typeof geo.longitude === 'number' ? geo.longitude : undefined,
         startDate: startDate.toISOString(),
@@ -332,13 +419,16 @@ export default function CreateEventPage() {
         visibility: isPrivate ? 'PRIVATE' : 'PUBLIC',
         ticketType: pricing.ticketType,
         ticketPrice: pricing.ticketPrice,
-        ...(pricing.ticketTiersJson ? { ticketTiersJson: pricing.ticketTiersJson } : {}),
         currency: 'USD',
         graceTime,
         maxImages: parseInt(maxImages, 10) || 100,
         capacity: capacity.trim() !== '' && parseInt(capacity, 10) > 0 ? parseInt(capacity, 10) : undefined,
         createdBy: user.id,
         featuredPeople: lineupOnly,
+        venueName: venueName.trim() || undefined,
+        recurrenceRule: recurrence || undefined,
+        stampImageUrl: stampImage || undefined,
+        spotifyPlaylistUrl: spotifyPlaylistUrl.trim() || undefined,
       });
 
       if (created.token && user) {
@@ -350,6 +440,35 @@ export default function CreateEventPage() {
       if (!eventId) {
         setFormError('Event created but no id returned.');
         return;
+      }
+
+      // Ticket tiers aren't accepted by POST /api/events; persist them with an
+      // immediate follow-up PUT (same shape EventEditPageView uses). Non-fatal:
+      // the event itself is already created with the correct base ticketPrice.
+      if (pricing.ticketTiersJson) {
+        try {
+          await eventsService.updateEvent(eventId, { ticketTiersJson: pricing.ticketTiersJson });
+        } catch {
+          /* non-fatal; organizer can retry tier setup from Edit event */
+        }
+      }
+
+      if (teamAssignments.length > 0) {
+        let staffInvited = 0;
+        let staffFailed = 0;
+        for (const assignment of teamAssignments) {
+          try {
+            const result = await assignRosterToEvent(assignment.rosterId, eventId, { memberIds: assignment.memberIds });
+            staffInvited += result?.staffInvites?.invited.length || 0;
+            staffFailed += result?.staffInvites?.failed.length || 0;
+          } catch {
+            /* non-fatal; teams can be adjusted from Teams & Security */
+          }
+        }
+        if (staffInvited) toast.success(`Invited ${staffInvited} team member${staffInvited === 1 ? '' : 's'} as event staff.`);
+        if (staffFailed) toast.error(`${staffFailed} team member${staffFailed === 1 ? '' : 's'} couldn't be invited — check their PXI username in Teams & Security.`);
+        await clearCreateEventTeamAssignments();
+        setTeamAssignments([]);
       }
 
       const postInvites = pendingInvites.filter((p) => p.kind !== 'lineup');
@@ -370,6 +489,8 @@ export default function CreateEventPage() {
       }
 
       toast.success('Event created!');
+      invalidate();
+      onCreated?.(created.event || created);
       router.push(`/dashboard/events/${eventId}`);
     } catch (err) {
       const msg = err.message || 'Failed to create event.';
@@ -380,10 +501,10 @@ export default function CreateEventPage() {
   };
 
   const inputClass =
-    'w-full rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 px-3 py-2.5 text-sm focus:border-pxi-purple/50 focus:outline-none';
-  const labelClass = 'block text-[11px] font-bold text-pxi-purple uppercase tracking-widest mb-1.5';
-  const sectionCardClass = 'rounded-2xl border border-white/10 bg-zinc-900/50 p-5';
-  const sectionTitleClass = 'text-sm font-semibold text-white/90 border-b border-white/5 pb-4 mb-2';
+    'glass-field min-h-[44px] w-full rounded-2xl px-4 py-3 text-sm text-white';
+  const labelClass = 'mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-white/45';
+  const sectionClass = 'glass-panel rounded-[1.75rem] p-5';
+  const footerClass = 'glass-panel rounded-[1.75rem] p-4';
 
   return (
     <>
@@ -400,11 +521,11 @@ export default function CreateEventPage() {
             onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
           />
         </div>
-        <div className="flex items-center justify-between px-5 py-4 bg-zinc-900 border-t border-white/10">
+        <div className="glass-panel flex items-center justify-between px-5 py-4 rounded-none">
           <button
             type="button"
             onClick={() => setCropSrc(null)}
-            className="px-5 py-2.5 rounded-xl text-sm text-zinc-400 hover:text-white transition-colors"
+            className="pill-ghost px-5 py-2.5 text-sm"
           >
             Cancel
           </button>
@@ -417,151 +538,220 @@ export default function CreateEventPage() {
               step={0.01}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
-              className="flex-1 accent-pxi-purple"
+              className="flex-1 accent-white"
             />
           </div>
           <button
             type="button"
             onClick={handleCropConfirm}
-            className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-pxi-purple hover:bg-pxi-purple/80 transition-colors"
+            className="pill-solid px-5 py-2.5 text-sm"
           >
             Use photo
           </button>
         </div>
       </div>
     )}
-    <div className="max-w-5xl mx-auto space-y-6 pb-16">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/dashboard/events"
-          className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5"
-        >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
-        </Link>
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Create event</h1>
-          <p className="text-zinc-500 text-sm mt-0.5">Same fields as the PXI mobile studio flow.</p>
+    <div className={`${embedded ? 'space-y-6 pb-6' : 'max-w-4xl mx-auto space-y-6 pb-16'}`}>
+      {!embedded && (
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/events"
+            className="pill-ghost p-2 text-zinc-400 hover:text-white"
+          >
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
+          </Link>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black text-white">Create event</h1>
+          </div>
         </div>
-      </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,380px)_1fr] gap-8">
-          {/* Left column: cover, then basics */}
-          <div className="flex flex-col gap-8">
-            <label className="relative block w-full max-w-[340px] mx-auto cursor-pointer" style={{ aspectRatio: '3/4' }}>
-              <input type="file" accept="image/*" className="hidden" onChange={onCoverFile} disabled={isCoverUploading} />
-              <div className={`w-full h-full rounded-2xl overflow-hidden border ${coverImage || coverPreview ? 'border-white/10' : 'border-dashed border-white/20'} bg-white/5 flex items-center justify-center`}>
-                {(coverImage || coverPreview) ? (
-                  <img
-                    src={coverImage || coverPreview}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                ) : !isCoverUploading ? (
-                  <div className="flex flex-col items-center gap-3">
-                    <HugeiconsIcon icon={ImageIcon} size={36} className="text-white/30" />
-                    <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.15em]">Add cover image</span>
-                  </div>
-                ) : null}
-                {isCoverUploading && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 rounded-2xl">
-                    <HugeiconsIcon icon={Loading02Icon} size={32} className="animate-spin text-white" />
-                    <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover…</span>
-                  </div>
-                )}
-              </div>
-              {(coverImage || coverPreview) && !isCoverUploading && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); setCoverImage(null); setCoverPreview(null); }}
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
-                >
-                  <HugeiconsIcon icon={Cancel01Icon} size={16} />
-                </button>
-              )}
-            </label>
-
-            <section className={`${sectionCardClass} space-y-4`}>
-              <h2 className={sectionTitleClass}>Basics</h2>
-              <div>
-                <label className={labelClass}>Event name *</label>
-                <input
-                  className={inputClass}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Name your event..."
-                  required
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Description</label>
-                <textarea
-                  className={`${inputClass} min-h-[88px] resize-y`}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe the experience..."
-                />
-              </div>
-              <div className="space-y-2">
-                <label className={labelClass}>Venue / location *</label>
-                <div
-                  className={`${inputClass} !py-0 px-0 overflow-visible relative create-event-location-field`}
-                  onChange={(e) => {
-                    if (e.target.tagName === 'INPUT') setLocation(e.target.value);
-                  }}
-                >
-                  <HugeiconsIcon
-                    icon={Location01Icon}
-                    size={18}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 shrink-0 pointer-events-none z-10"
-                  />
-                  <div className="w-full create-event-location-geocoder">
-                    <GeoapifyContext apiKey={GEOAPIFY_KEY}>
-                      <GeoapifyGeocoderAutocomplete
-                        value={location}
-                        placeholder="Search venue or address..."
-                        placeSelect={(result) => {
-                          const props = result?.properties;
-                          setLocation(props?.formatted || '');
-                          setGeoLat(typeof props?.lat === 'number' ? props.lat : null);
-                          setGeoLon(typeof props?.lon === 'number' ? props.lon : null);
-                        }}
-                      />
-                    </GeoapifyContext>
-                  </div>
-                </div>
-              </div>
-            </section>
+        {formError && (
+          <div className="glass-panel rounded-2xl px-4 py-3 text-sm text-red-200">
+            {formError}
           </div>
+        )}
 
-          {/* Right column: configuration, then actions */}
-          <div className="flex flex-col gap-8">
-            <section className={`${sectionCardClass} space-y-5 flex-1`}>
-              <h2 className={sectionTitleClass}>Configuration</h2>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>Start date & time *</label>
-                  <input
-                    type="datetime-local"
-                    className={inputClass}
-                    value={startLocal}
-                    onChange={(e) => setStartLocal(e.target.value)}
-                    required
-                  />
+        <section className={`${sectionClass} space-y-4`}>
+          <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/60">
+            <HugeiconsIcon icon={ImageIcon} size={16} />
+            Cover image *
+          </h2>
+          <label className="relative block w-full sm:w-[300px] sm:mx-auto cursor-pointer" style={{ aspectRatio: '3/4' }}>
+            <input type="file" accept="image/*" className="hidden" onChange={onCoverFile} disabled={isCoverUploading} />
+            <div className="glass-field flex h-full w-full items-center justify-center overflow-hidden rounded-2xl">
+              {(coverImage || coverPreview) ? (
+                <img
+                  src={coverImage || coverPreview}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : !isCoverUploading ? (
+                <div className="flex flex-col items-center gap-3">
+                  <HugeiconsIcon icon={ImageIcon} size={36} className="text-white opacity-30" />
+                  <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.15em]">Add cover image</span>
                 </div>
-                <div>
-                  <label className={labelClass}>End date & time *</label>
-                  <input
-                    type="datetime-local"
-                    className={inputClass}
-                    value={endLocal}
-                    onChange={(e) => setEndLocal(e.target.value)}
-                    required
-                  />
+              ) : null}
+              {isCoverUploading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 rounded-2xl">
+                  <PxiSpinner size="md" />
+                  <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover...</span>
                 </div>
+              )}
+            </div>
+            {(coverImage || coverPreview) && !isCoverUploading && (
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); setCoverImage(null); setCoverPreview(null); }}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+              >
+                <HugeiconsIcon icon={Cancel01Icon} size={16} />
+              </button>
+            )}
+          </label>
+        </section>
+
+        <section className={`${sectionClass} space-y-4`}>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Basics</h2>
+          <div>
+            <label className={labelClass}>Event name *</label>
+            <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
+          <div>
+            <label className={labelClass}>Description</label>
+            <textarea
+              className={`${inputClass} min-h-[88px] resize-y`}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className={labelClass}>Venue / location</label>
+            <div
+              className={`${inputClass} overflow-visible p-0`}
+              onChange={(e) => {
+                if (e.target.tagName === 'INPUT') setLocation(e.target.value);
+              }}
+            >
+              <GeoapifyContext apiKey={GEOAPIFY_KEY}>
+                <GeoapifyGeocoderAutocomplete
+                  value={location}
+                  placeholder=""
+                  placeSelect={(result) => {
+                    const props = result?.properties;
+                    setLocation(props?.formatted || '');
+                    setGeoLat(typeof props?.lat === 'number' ? props.lat : null);
+                    setGeoLon(typeof props?.lon === 'number' ? props.lon : null);
+                  }}
+                />
+              </GeoapifyContext>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Venue name</label>
+              <input
+                className={inputClass}
+                value={venueName}
+                onChange={(e) => setVenueName(e.target.value)}
+                placeholder="e.g. The Grand Hall"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Repeats</label>
+              <select className={inputClass} value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
+                <option value="">One-off event</option>
+                <option value="WEEKLY">Weekly</option>
+                <option value="BIWEEKLY">Every two weeks</option>
+                <option value="MONTHLY">Monthly</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>DJ playlist (optional)</label>
+            <input
+              className={inputClass}
+              value={spotifyPlaylistUrl}
+              onChange={(e) => setSpotifyPlaylistUrl(e.target.value)}
+              placeholder="Spotify or Apple Music playlist/album URL"
+            />
+            <p className="mt-1 text-xs text-white/40">
+              Shown on the event page and matched against attendees&apos; listening taste.
+            </p>
+          </div>
+          {recurrence ? (
+            <div>
+              <label className={labelClass}>Custom passport stamp (recurring series)</label>
+              <p className="mb-2 text-xs text-white/40">
+                Optional square artwork attendees collect as this event&apos;s stamp — shared by every recurrence.
+              </p>
+              <div className="flex items-center gap-3">
+                {stampImage ? (
+                  <img src={stampImage} alt="Custom stamp" className="h-16 w-16 rounded-xl object-cover" />
+                ) : null}
+                <label className="pill-ghost cursor-pointer px-4 py-2 text-xs font-bold uppercase tracking-widest">
+                  {isStampUploading ? 'Uploading...' : stampImage ? 'Replace stamp' : 'Upload stamp'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isStampUploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setIsStampUploading(true);
+                      try {
+                        const url = await uploadImageToR2(file);
+                        setStampImage(url);
+                      } catch {
+                        setFormError('Stamp upload failed — try another image.');
+                      } finally {
+                        setIsStampUploading(false);
+                      }
+                    }}
+                  />
+                </label>
+                {stampImage ? (
+                  <button
+                    type="button"
+                    onClick={() => setStampImage(null)}
+                    className="text-xs font-semibold uppercase tracking-widest text-white/40 hover:text-white"
+                  >
+                    Remove
+                  </button>
+                ) : null}
               </div>
+            </div>
+          ) : null}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Start *</label>
+              <input
+                type="datetime-local"
+                className={inputClass}
+                value={startLocal}
+                onChange={(e) => setStartLocal(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className={labelClass}>End *</label>
+              <input
+                type="datetime-local"
+                className={inputClass}
+                value={endLocal}
+                onChange={(e) => setEndLocal(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+        </section>
 
-          <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
+        <section className={`${sectionClass} space-y-5`}>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Configuration</h2>
+
+          <div className="glass-field flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Public event</p>
               <p className="text-xs text-zinc-500">Anyone can discover this event.</p>
@@ -574,35 +764,35 @@ export default function CreateEventPage() {
                 if (isPrivate) setShowPublicConsent(true);
                 else setIsPrivate(true);
               }}
-              className={`relative w-12 h-7 rounded-full transition-colors ${!isPrivate ? 'bg-pxi-purple' : 'bg-zinc-600'}`}
+              className={`relative h-7 w-12 rounded-full transition-colors ${!isPrivate ? 'bg-white/25' : 'bg-white/10'}`}
             >
               <span
-                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${!isPrivate ? 'left-6' : 'left-1'}`}
+                className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${!isPrivate ? 'left-6' : 'left-1'}`}
               />
             </button>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
+          <div className="glass-field flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Paid ticket</p>
-              <p className="text-xs text-zinc-500">Requires verified vendor / Stripe.</p>
+              <p className="text-xs text-zinc-500">Requires completed hosting payment setup.</p>
             </div>
             <button
               type="button"
               role="switch"
               aria-checked={isPaid}
               onClick={() => handlePaidToggle(!isPaid)}
-              className={`relative w-12 h-7 rounded-full transition-colors ${isPaid ? 'bg-pxi-purple' : 'bg-zinc-600'}`}
+              className={`relative h-7 w-12 rounded-full transition-colors ${isPaid ? 'bg-white/25' : 'bg-white/10'}`}
             >
               <span
-                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${isPaid ? 'left-6' : 'left-1'}`}
+                className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${isPaid ? 'left-6' : 'left-1'}`}
               />
             </button>
           </div>
 
           {isPaid && (
             <>
-              <div className="rounded-xl border border-white/10 bg-zinc-800/40 px-4 py-3 flex items-center justify-between gap-4">
+              <div className="glass-field flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
                 <div>
                   <p className="text-sm font-bold text-white">Ticket tiers</p>
                   <p className="text-xs text-zinc-500">VVIP, VIP, general admission, and more.</p>
@@ -618,10 +808,10 @@ export default function CreateEventPage() {
                       setTicketTiers([createEmptyTier()]);
                     }
                   }}
-                  className={`relative w-12 h-7 rounded-full transition-colors ${useTierList ? 'bg-pxi-purple' : 'bg-zinc-600'}`}
+                  className={`relative h-7 w-12 rounded-full transition-colors ${useTierList ? 'bg-white/25' : 'bg-white/10'}`}
                 >
                   <span
-                    className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${useTierList ? 'left-6' : 'left-1'}`}
+                    className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${useTierList ? 'left-6' : 'left-1'}`}
                   />
                 </button>
               </div>
@@ -631,7 +821,7 @@ export default function CreateEventPage() {
                   {ticketTiers.map((tier, index) => (
                     <div
                       key={tier.id}
-                      className="rounded-xl border border-white/10 bg-zinc-800/30 p-4 space-y-3"
+                      className="glass-field rounded-xl p-4 space-y-3"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
@@ -701,21 +891,24 @@ export default function CreateEventPage() {
                   <button
                     type="button"
                     onClick={() => setTicketTiers((prev) => [...prev, createEmptyTier()])}
-                    className="w-full rounded-xl border border-dashed border-white/15 py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white hover:border-white/25 transition-colors"
+                    className="w-full rounded-xl bg-white/[0.045] py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
                   >
                     + Add tier
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 rounded-xl bg-zinc-800/80 border border-white/10 px-3 py-2">
-                  <HugeiconsIcon icon={HelpCircleIcon} size={18} className="text-zinc-500 shrink-0" />
-                  <input
-                    className="flex-1 bg-transparent text-white text-sm outline-none placeholder-zinc-500"
-                    placeholder="Price in USD"
-                    inputMode="numeric"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ''))}
-                  />
+                <div>
+                  <label className={labelClass}>Price in USD</label>
+                  <div className="glass-field flex items-center gap-2 rounded-2xl px-3 py-2">
+                    <HugeiconsIcon icon={HelpCircleIcon} size={18} className="shrink-0 text-zinc-500" />
+                    <input
+                      aria-label="Price in USD"
+                      className="flex-1 bg-transparent text-sm text-white outline-none"
+                      inputMode="numeric"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ''))}
+                    />
+                  </div>
                 </div>
               )}
             </>
@@ -758,56 +951,138 @@ export default function CreateEventPage() {
                   className={inputClass}
                   value={capacity}
                   onChange={(e) => setCapacity(e.target.value.replace(/[^\d]/g, ''))}
-                  placeholder="Unlimited"
                 />
               </div>
             </div>
           </div>
-            </section>
+        </section>
 
-            {paidGate && (
-              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 space-y-2">
-                {paidGate === 'no-account' ? (
-                  <p>To sell tickets, complete vendor setup with Stripe.</p>
-                ) : (
-                  <p>Stripe is still verifying your account. You can create a free event now or check status from vendor setup.</p>
-                )}
-                <Link href="/dashboard/vendor-upgrade" className="inline-block text-pxi-purple font-bold hover:underline">
-                  Vendor setup →
-                </Link>
-              </div>
-            )}
-
-            <div className="pt-2 mt-auto space-y-3">
-              {formError ? (
-                <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                  {formError}
-                </div>
-              ) : null}
-              <div className="flex items-center justify-end gap-6">
-                <Link
-                  href="/dashboard/events"
-                  className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
-                >
-                  Cancel
-                </Link>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || isCoverUploading || !coverImage}
-                  className="inline-flex items-center justify-center gap-2 min-h-[48px] px-8 rounded-full bg-white text-black text-xs font-bold uppercase tracking-wider disabled:opacity-45 hover:bg-white/90 transition-all"
-                >
-                  {isSubmitting ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin" /> : null}
-                  {isSubmitting ? 'Creating…' : isCoverUploading ? 'Uploading cover…' : 'Create event'}
-                </button>
-              </div>
+        <section className={`${sectionClass} space-y-4`}>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Event team</h2>
+              <p className="mt-1 text-xs text-zinc-500">
+                {assignedTeamCount ? `${assignedTeamCount} team${assignedTeamCount === 1 ? '' : 's'} selected` : 'Optional'}
+              </p>
             </div>
+            <Link href="/dashboard/team" className="pill-ghost shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest">
+              Manage teams
+            </Link>
+          </div>
+
+          {teamAssignmentsLoading ? (
+            <div className="h-20 rounded-2xl bg-white/[0.035] animate-pulse" />
+          ) : teamRosters.length ? (
+            <div className="space-y-3">
+              {teamRosters.map((roster) => {
+                const assignment = assignmentByRosterId.get(roster.id);
+                const selectedMemberIds = assignment?.memberIds || [];
+                const wholeTeam = Boolean(assignment && selectedMemberIds.length === 0);
+
+                return (
+                  <div key={roster.id} className={`rounded-2xl px-4 py-4 transition ${assignment ? 'glass-panel-strong' : 'glass-panel'}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <button type="button" onClick={() => toggleTeamRoster(roster.id)} className="min-w-0 flex-1 text-left">
+                        <p className="truncate text-sm font-bold text-white">{roster.name}</p>
+                        <p className="mt-1 text-xs text-zinc-500">
+                          {roster.members.length} member{roster.members.length === 1 ? '' : 's'}
+                        </p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleTeamRoster(roster.id)}
+                        className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${assignment ? 'pill-solid' : 'pill-ghost'}`}
+                      >
+                        {assignment ? 'Selected' : 'Choose'}
+                      </button>
+                    </div>
+
+                    {assignment && roster.members.length ? (
+                      <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto dashboard-scrollbar-none">
+                        <button
+                          type="button"
+                          onClick={() => setTeamRosterMembers(roster.id, [])}
+                          className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${wholeTeam ? 'pill-solid' : 'pill-ghost'}`}
+                        >
+                          Whole team
+                        </button>
+                        {roster.members.map((member) => {
+                          const active = selectedMemberIds.includes(member.id);
+                          return (
+                            <button
+                              type="button"
+                              key={member.id}
+                              onClick={() => {
+                                const memberIds = active
+                                  ? selectedMemberIds.filter((memberId) => memberId !== member.id)
+                                  : [...selectedMemberIds, member.id];
+                                setTeamRosterMembers(roster.id, memberIds);
+                              }}
+                              className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${active ? 'pill-solid' : 'pill-ghost'}`}
+                            >
+                              {memberDisplayName(member)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="glass-field rounded-2xl px-4 py-5 text-sm text-zinc-500">
+              Create a team in Teams &amp; Security, then return here to attach it.
+            </div>
+          )}
+        </section>
+
+        {paidGate && (
+          <div className="glass-panel rounded-2xl px-4 py-3 text-sm text-amber-200 space-y-2">
+            {paidGate === 'no-account' ? (
+              <p>To sell tickets, complete hosting setup with Stripe.</p>
+            ) : (
+              <p>Stripe is still verifying your account. You can create a free event now or check status from hosting setup.</p>
+            )}
+            <Link href="/dashboard/vendor-upgrade" className="inline-block font-bold text-white hover:text-zinc-200">
+              Hosting setup
+            </Link>
+          </div>
+        )}
+
+        <div className={footerClass}>
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3">
+            {embedded ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="pill-ghost inline-flex min-h-[48px] items-center justify-center px-5 text-sm font-semibold"
+              >
+                Cancel
+              </button>
+            ) : (
+              <Link
+                href="/dashboard/events"
+                className="pill-ghost inline-flex min-h-[48px] items-center justify-center px-5 text-sm font-semibold"
+              >
+                Cancel
+              </Link>
+            )}
+            <button
+              type="submit"
+              disabled={isSubmitting || isCoverUploading || !coverImage}
+              className="pill-solid flex-1 inline-flex min-h-[48px] items-center justify-center gap-2 px-6 text-sm font-bold uppercase tracking-widest disabled:opacity-45"
+            >
+              {isSubmitting ? <PxiSpinner size="sm" /> : null}
+              {isSubmitting ? 'Creating...' : isCoverUploading ? 'Uploading cover...' : 'Create event'}
+            </button>
           </div>
         </div>
       </form>
 
       {showPublicConsent && (
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900 p-5 space-y-4">
+          <div className="glass-panel-strong w-full max-w-md rounded-2xl p-5 space-y-4">
             <h3 className="text-lg font-bold text-white">Public event</h3>
             <p className="text-sm text-zinc-300 leading-relaxed">
               By making this event public, you agree that photos and content from this event may be curated into public
@@ -817,7 +1092,7 @@ export default function CreateEventPage() {
               <button
                 type="button"
                 onClick={() => setShowPublicConsent(false)}
-                className="px-4 py-2.5 rounded-xl border border-white/10 text-sm text-zinc-300 hover:bg-white/5"
+                className="pill-ghost px-4 py-2.5 text-sm"
               >
                 Keep private
               </button>
@@ -827,7 +1102,7 @@ export default function CreateEventPage() {
                   setIsPrivate(false);
                   setShowPublicConsent(false);
                 }}
-                className="px-4 py-2.5 rounded-xl bg-pxi-purple text-sm font-bold text-white"
+                className="pill-solid px-4 py-2.5 text-sm font-bold"
               >
                 I understand, make public
               </button>

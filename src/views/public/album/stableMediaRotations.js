@@ -15,15 +15,18 @@ export function syncStableMediaRotations(timeline, rotationById) {
   const lookup = new Map();
 
   for (const row of timeline) {
-    if (row.type !== 'MEDIA') continue;
-    const id = publicAlbumMediaId(row.data);
-    if (id && !rotationById.has(id)) {
-      rotationById.set(id, threadMediaTiltForOrdinal(mediaOrdinal));
+    if (row.type !== 'MEDIA' && row.type !== 'MEDIA_GROUP') continue;
+    const items = row.type === 'MEDIA_GROUP' ? row.data.items : [row.data];
+    for (const item of items) {
+      const id = publicAlbumMediaId(item);
+      if (id && !rotationById.has(id)) {
+        rotationById.set(id, threadMediaTiltForOrdinal(mediaOrdinal));
+      }
+      const rotation =
+        id && rotationById.has(id) ? rotationById.get(id) : threadMediaTiltForOrdinal(mediaOrdinal);
+      if (id) lookup.set(id, rotation);
+      mediaOrdinal += 1;
     }
-    const rotation =
-      id && rotationById.has(id) ? rotationById.get(id) : threadMediaTiltForOrdinal(mediaOrdinal);
-    if (id) lookup.set(id, rotation);
-    mediaOrdinal += 1;
   }
 
   return lookup;

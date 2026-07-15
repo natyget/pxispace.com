@@ -14,6 +14,7 @@ export function resolveDisplayImageUrl(url) {
   if (t.startsWith('//')) return `https:${t}`;
   if (t.startsWith('data:image/')) return t;
   if (/^file:/i.test(t)) return null;
+  if (t.startsWith('/images/') || t.startsWith('/landing/')) return t;
 
   const path = t.replace(/^\/+/, '');
   if (r2Base && (path.startsWith('albums/') || path.startsWith('uploads/'))) {

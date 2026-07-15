@@ -1,5 +1,5 @@
-import EventInvitePageView from '@/views/dashboard/event-manage/EventInvitePageView';
+import EventMembersPageView from '@/views/dashboard/event-manage/EventMembersPageView';
 
 export default function DashboardEventInvitePage() {
-  return <EventInvitePageView />;
+  return <EventMembersPageView />;
 }

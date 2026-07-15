@@ -1,5 +1,7 @@
 /** Pure helpers aligned with mobile `AlbumDetailsModal` / web dashboard event UI. */
 
+/* global process */
+
 export function coverImageUrl(ev) {
   const u = ev?.coverImage;
   if (!u || typeof u !== 'string') return null;

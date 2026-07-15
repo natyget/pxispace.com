@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable react-refresh/only-export-components */
+
 import {
   createContext,
   useContext,
@@ -54,7 +56,8 @@ export function EventManageProvider({ children }) {
   }, [albumId]);
 
   useEffect(() => {
-    loadEvent();
+    const timer = setTimeout(() => loadEvent(), 0);
+    return () => clearTimeout(timer);
   }, [loadEvent]);
 
   useEffect(() => {

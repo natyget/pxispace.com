@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon } from '@hugeicons/core-free-icons';
 import { PXI_IOS_DOWNLOAD_HREF, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
+import { createBranchInstallLink } from '@/lib/branchLinks';
 
 /**
  * Dismissible "Open in PXI" banner.
@@ -75,6 +76,16 @@ export default function AppOpenBanner({
                 window.localStorage.setItem(PENDING_DEEPLINK_KEY, deepLinkUrl);
             } catch {}
             const store = storeUrlForPlatform(platform);
+            // Kick off a Branch install link in parallel with the deep-link
+            // attempt so the store handoff carries the deep link through
+            // install (deferred deep linking). Resolves null on any
+            // error/timeout; the plain store URL below stays the fallback.
+            let branchLink = null;
+            createBranchInstallLink({ url: deepLinkUrl, feature: 'app-open-banner' })
+                .then((link) => {
+                    branchLink = link;
+                })
+                .catch(() => {});
             const start = Date.now();
             let fallbackTimer = null;
             const cleanup = () => {
@@ -91,7 +102,7 @@ export default function AppOpenBanner({
             fallbackTimer = setTimeout(() => {
                 cleanup();
                 if (Date.now() - start < 2500 && document.visibilityState === 'visible') {
-                    window.location.href = store;
+                    window.location.href = branchLink || store;
                 }
             }, 1500);
             window.location.href = deepLinkUrl;

@@ -16,7 +16,7 @@ const PENDING_SIGNUP_KEY = 'pxi_pending_signup';
 const RESEND_COOLDOWN_SEC = 60;
 
 function pillButtonClass(enabled) {
-    return `relative z-[2] h-14 w-full rounded-full border border-white/15 font-black uppercase text-[13px] tracking-[0.15em] transition-all ${
+    return `relative z-[2] h-14 w-full rounded-full border-0 font-black uppercase text-[13px] tracking-[0.15em] transition-all ${
         enabled
             ? 'cursor-pointer bg-pxi-purple text-white shadow-[0_0_20px_rgba(216,74,255,0.4)] hover:brightness-110'
             : 'cursor-not-allowed bg-pxi-purple/30 text-white/30'
@@ -200,7 +200,10 @@ export default function VerifyPhonePage() {
     };
 
     return (
-        <div className="min-h-screen bg-black flex flex-col relative overflow-hidden">
+        <div className="min-h-screen bg-[#050505] flex flex-col relative overflow-hidden">
+            <div className="pointer-events-none fixed inset-0">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.13),transparent_28%),radial-gradient(circle_at_78%_18%,rgba(216,74,255,0.18),transparent_26%),linear-gradient(180deg,#070707,#000)]" />
+            </div>
             <button
                 type="button"
                 onClick={handleBack}

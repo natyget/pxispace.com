@@ -17,10 +17,14 @@ export async function getTicketQuote(eventId, albumId, tierId) {
  * Create a PaymentIntent for a paid ticket. Returns clientSecret for Stripe.
  * POST /api/tickets/purchase (auth required)
  */
-export async function purchaseTicket(eventId, tierId) {
+export async function purchaseTicket(eventId, tierId, opts = {}) {
   return api.post('/api/tickets/purchase', {
     eventId,
     ...(tierId ? { tierId } : {}),
+    ...(opts.applyCredits ? { applyCredits: true } : {}),
+    ...(opts.promoCode ? { promoCode: opts.promoCode } : {}),
+    ...(opts.emailOptIn ? { emailOptIn: true } : {}),
+    ...(opts.smsOptIn ? { smsOptIn: true } : {}),
   });
 }
 
@@ -31,21 +35,35 @@ export async function purchaseTicket(eventId, tierId) {
  * @param {string} successUrl - e.g. `${origin}/events?payment=success`
  * @param {string} cancelUrl - e.g. `${origin}/events?payment=cancelled`
  */
-export async function createCheckoutSession(eventId, successUrl, cancelUrl, tierId) {
+export async function createCheckoutSession(eventId, successUrl, cancelUrl, tierId, opts = {}) {
   return api.post('/api/tickets/checkout-session', {
     eventId,
     successUrl,
     cancelUrl,
     ...(tierId ? { tierId } : {}),
+    ...(opts.applyCredits ? { applyCredits: true } : {}),
+    ...(opts.promoCode ? { promoCode: opts.promoCode } : {}),
+    ...(opts.emailOptIn ? { emailOptIn: true } : {}),
+    ...(opts.smsOptIn ? { smsOptIn: true } : {}),
   });
+}
+
+/** GET /api/promos/credits — the caller's credit balance + recent ledger. */
+export async function getMyCredits() {
+  return api.get('/api/promos/credits');
 }
 
 /**
  * Generate a free ticket for an event.
  * POST /api/tickets/generate
  */
-export async function generateTicket(userId, eventId) {
-  const data = await api.post('/api/tickets/generate', { userId, eventId });
+export async function generateTicket(userId, eventId, opts = {}) {
+  const data = await api.post('/api/tickets/generate', {
+    userId,
+    eventId,
+    ...(opts.emailOptIn ? { emailOptIn: true } : {}),
+    ...(opts.smsOptIn ? { smsOptIn: true } : {}),
+  });
   return data;
 }
 
@@ -62,52 +80,30 @@ export async function getUserTickets(userId) {
   }
 }
 
-// ─── Ticket Delivery: email + Apple/Google Wallet ────────────────────────────
+// ─── Ticket delivery ─────────────────────────────────────────────────────────
+// Ticket emails are sent automatically on issue (free tickets on generate, paid
+// via the Stripe webhook). These endpoints power wallet buttons + email resend;
+// Apple/Google availability is env-gated server-side (hide buttons when false).
 
-/**
- * GET /api/tickets/:id/delivery-options
- * Returns `{ email, appleWallet, googleWallet }` availability flags so the UI
- * knows which buttons to render (Apple/Google return `available: false` when
- * the backend env isn't configured).
- */
-export async function getTicketDeliveryOptions(ticketId) {
+export function getTicketDeliveryOptions(ticketId) {
   return api.get(`/api/tickets/${ticketId}/delivery-options`);
 }
 
-/**
- * POST /api/tickets/:id/email
- * Send (or resend) the ticket email. Optional `to` override sends to a
- * different address than the account email.
- */
-export async function sendTicketEmail(ticketId, toOverride) {
+export function resendTicketEmail(ticketId, toOverride) {
   return api.post(`/api/tickets/${ticketId}/email`, toOverride ? { to: toOverride } : {});
 }
 
-/**
- * Apple Wallet add-URL — auth-bearing fetch returns a `.pkpass` blob.
- * Use as an object URL so browsers route to Wallet via the MIME type.
- */
-export async function downloadAppleWalletPass(ticketId) {
-  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('pxi_token') : null;
-  const res = await fetch(`${BASE_URL}/api/tickets/${ticketId}/apple-wallet`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    const err = new Error(data.error || `Apple Wallet pass failed (${res.status})`);
-    err.status = res.status;
-    err.code = data.code;
-    throw err;
-  }
-  const blob = await res.blob();
-  return blob;
+export function getGoogleWalletSaveUrl(ticketId) {
+  return api.get(`/api/tickets/${ticketId}/google-wallet`);
 }
 
-/**
- * GET /api/tickets/:id/google-wallet
- * Returns `{ saveUrl }` — open in a new tab / window.location to add to Google Wallet.
- */
-export async function getGoogleWalletSaveUrl(ticketId) {
-  return api.get(`/api/tickets/${ticketId}/google-wallet`);
+/** Authenticated .pkpass download — fetch as blob and hand to the browser. */
+export async function downloadApplePass(ticketId) {
+  const token = typeof window !== 'undefined' ? window.localStorage.getItem('pxi_token') : null;
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+  const res = await fetch(`${base}/api/tickets/${ticketId}/apple-wallet`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new Error(`Pass download failed (${res.status})`);
+  return res.blob();
 }

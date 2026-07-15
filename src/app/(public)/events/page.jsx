@@ -1,22 +1,43 @@
+import { Suspense } from 'react';
 import PublicEventsPage from '@/views/publicEvents/PublicEventsPage';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { buildItemListJsonLd } from '@/lib/seo/schemas';
+import { CITIES } from '@/lib/seo/cities';
+
+const TITLE = 'Discover Events Near You';
+const DESCRIPTION =
+  'Browse parties, concerts, and social gatherings on PXI. See who’s going, buy tickets, and find your next night out — then keep the night in a shared scrapbook.';
 
 export const metadata = {
-  title: 'Discover Events',
-  description:
-    'Browse trending events near you — concerts, parties, and social gatherings on PXI. Find your next night out.',
+  title: TITLE,
+  description: DESCRIPTION,
   alternates: { canonical: 'https://pxispace.com/events' },
   openGraph: {
-    title: 'Discover Events on PXI',
-    description: 'Browse trending events near you on PXI.',
+    title: TITLE,
+    description: DESCRIPTION,
     url: 'https://pxispace.com/events',
+    images: [{ url: '/og-hero.png', width: 1200, height: 630, alt: 'Discover events on PXI' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ['/og-hero.png'],
   },
 };
 
 export default function Page() {
+  const cityList = Object.values(CITIES).map((c) => ({
+    name: `Events in ${c.name}`,
+    url: `/discover/${c.slug}`,
+  }));
   return (
     <>
       <h1 className="sr-only">Discover Events on PXI</h1>
-      <PublicEventsPage />
+      <Suspense fallback={<div className="min-h-screen bg-black" />}>
+        <PublicEventsPage />
+      </Suspense>
+      <JsonLd data={buildItemListJsonLd(cityList, 'Discover events by city')} />
     </>
   );
 }

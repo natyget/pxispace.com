@@ -9,7 +9,7 @@ export default function AnonymousAvatarSilhouette({ size = 40, className = '', r
 
   return (
     <div
-      className={`relative overflow-hidden bg-[#0a0a0a] border border-white/[0.08] ${radiusClass} ${className}`}
+      className={`relative overflow-hidden bg-[#0a0a0a] ${radiusClass} ${className}`}
       style={{ width: size, height: size }}
       aria-hidden
     >

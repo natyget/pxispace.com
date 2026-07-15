@@ -8,6 +8,7 @@ import { Shield01Icon, HelpCircleIcon, UserRemove01Icon, UserGroupIcon } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { eventsService } from '@/services/events';
 import { useEventManage } from './EventManageContext';
+import EventInvitePageView from './EventInvitePageView';
 
 const ROLE_OPTIONS = ['MEMBER', 'BOUNCER', 'ADMIN'];
 
@@ -16,6 +17,7 @@ export default function EventMembersPageView() {
   const { event, eventId, albumId, participants, reloadParticipants } = useEventManage();
   const [busyByUserId, setBusyByUserId] = useState({});
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('attending');
 
   const myAlbumRole = participants.find((p) => p.userId === user?.id)?.role;
   const isOwner = myAlbumRole === 'OWNER';
@@ -70,10 +72,10 @@ export default function EventMembersPageView() {
 
   if (!albumId) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-6 text-sm text-zinc-400">
+      <div className="rounded-2xl bg-white/[0.04] p-6 text-sm text-zinc-400">
         <p>No album linked to this event.</p>
-        <Link href={`/dashboard/events/${eventId}`} className="inline-block mt-4 text-pxi-purple font-bold uppercase text-xs">
-          ← Details
+        <Link href={`/dashboard/events/${eventId}`} className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white">
+          Details
         </Link>
       </div>
     );
@@ -81,18 +83,59 @@ export default function EventMembersPageView() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
-        <div className="p-5 border-b border-white/5 flex items-center justify-between gap-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
-            {event?.name || 'Event'} · {participants.length} members
-          </p>
-          {!canManageMembers ? (
-            <p className="text-[11px] text-zinc-500">Role updates + block are owner-only.</p>
-          ) : null}
+      <div className="dashboard-segmented-toggle w-full">
+        {[
+          { id: 'attending', label: 'Attending' },
+          { id: 'send', label: 'Send invites' },
+          { id: 'status', label: 'Invite status' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className="dashboard-segmented-toggle__item flex-1"
+            data-active={activeTab === tab.id}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'send' ? <EventInvitePageView initialTab="send" showTabs={false} /> : null}
+      {activeTab === 'status' ? <EventInvitePageView initialTab="status" showTabs={false} /> : null}
+
+      {activeTab === 'attending' ? (
+      <section className="dashboard-surface overflow-hidden rounded-2xl">
+        <div className="grid gap-4 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Access list</p>
+            <h2 className="mt-2 truncate text-xl font-black text-white">{event?.name || 'Event'} members</h2>
+            <p className="mt-1 text-sm leading-6 text-zinc-500">
+              Review attendance, promote gate staff, and remove people from this event album.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:min-w-[260px]">
+            <div className="rounded-2xl bg-white/[0.045] px-3 py-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Members</p>
+              <p className="mt-1 text-xl font-black text-white">{participants.length.toLocaleString()}</p>
+            </div>
+            <div className="rounded-2xl bg-white/[0.045] px-3 py-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Control</p>
+              <p className="mt-1 truncate text-sm font-black text-white">{canManageMembers ? 'Owner' : 'View only'}</p>
+            </div>
+          </div>
         </div>
-        <div className="p-5 space-y-2">
+        {!canManageMembers ? (
+          <div className="mx-5 rounded-2xl bg-white/[0.035] px-4 py-3 text-xs font-semibold text-zinc-500">
+            Role updates and removals are available to the album owner.
+          </div>
+        ) : null}
+        <div className="space-y-2 p-5">
           {sortedParticipants.length === 0 ? (
-            <p className="text-sm text-zinc-500">No album members yet.</p>
+            <div className="rounded-2xl bg-white/[0.025] px-5 py-8 text-center">
+              <p className="text-sm font-semibold text-white">No album members yet.</p>
+              <p className="mt-1 text-xs text-zinc-500">Send invites to start building the access list.</p>
+            </div>
           ) : (
             sortedParticipants.map((member) => {
               const isBusy = Boolean(busyByUserId[member.userId]);
@@ -101,14 +144,14 @@ export default function EventMembersPageView() {
               return (
                 <div
                   key={member.userId}
-                  className="rounded-xl border border-white/10 bg-zinc-900/40 p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-3 rounded-2xl bg-white/[0.035] p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <UserAvatar
                       user={{ avatarUrl: member.avatarUrl }}
                       size={40}
                       alt={handle || ''}
-                      className="shrink-0 border border-white/15"
+                      className="shrink-0"
                     />
                     <div className="min-w-0">
                       <p className="text-sm text-white truncate">
@@ -131,7 +174,7 @@ export default function EventMembersPageView() {
                         value={member.role || 'MEMBER'}
                         disabled={!canManageMembers || isOwnerRow || isBusy}
                         onChange={(e) => void handleRoleChange(member, e.target.value)}
-                        className="rounded-lg bg-zinc-800 border border-white/10 text-white text-xs px-2.5 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="glass-field rounded-full px-2.5 py-2 text-xs text-white disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {isOwnerRow ? (
                           <option value="OWNER">OWNER</option>
@@ -148,7 +191,7 @@ export default function EventMembersPageView() {
                       type="button"
                       disabled={!canManageMembers || isOwnerRow || isBusy}
                       onClick={() => void handleBlock(member)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-500/40 bg-red-500/10 text-red-300 text-xs font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-500/20"
+                      className="pill-ghost inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-widest text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <HugeiconsIcon icon={UserRemove01Icon} size={13} />
                       {isBusy ? 'Working...' : 'Block'}
@@ -162,6 +205,7 @@ export default function EventMembersPageView() {
           {error ? <p className="text-sm text-red-400 pt-1">{error}</p> : null}
         </div>
       </section>
+      ) : null}
     </div>
   );
 }

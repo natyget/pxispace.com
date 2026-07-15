@@ -1,5 +1,7 @@
 'use client';
 
+/* global process */
+
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -51,13 +53,13 @@ function formatInviteWhen(iso) {
   }
 }
 
-export default function EventInvitePageView() {
+export default function EventInvitePageView({ initialTab = 'send', showTabs = true }) {
   const { user } = useAuth();
   const { event, eventId, albumId, participants, reloadParticipants, reloadFeaturedPeople } =
     useEventManage();
 
   // Tabs
-  const [invitePageTab, setInvitePageTab] = useState('send');
+  const [invitePageTab, setInvitePageTab] = useState(initialTab);
 
   // Search
   const [inviteQuery, setInviteQuery] = useState('');
@@ -126,12 +128,15 @@ export default function EventInvitePageView() {
   }, [albumId]);
 
   useEffect(() => {
-    if (!albumId) return;
-    loadDirectInvites();
+    if (!albumId) return undefined;
+    const timer = setTimeout(() => loadDirectInvites(), 0);
+    return () => clearTimeout(timer);
   }, [albumId, loadDirectInvites]);
 
   useEffect(() => {
-    if (invitePageTab === 'status' && albumId) loadDirectInvites();
+    if (invitePageTab !== 'status' || !albumId) return undefined;
+    const timer = setTimeout(() => loadDirectInvites(), 0);
+    return () => clearTimeout(timer);
   }, [invitePageTab, albumId, loadDirectInvites]);
 
   const statusCounts = useMemo(() => {
@@ -156,7 +161,10 @@ export default function EventInvitePageView() {
   // ── Search debounce ────────────────────────────────────────────────────────
   useEffect(() => {
     const q = inviteQuery.trim();
-    if (q.length < 2) { setInviteResults([]); return; }
+    if (q.length < 2) {
+      const timer = setTimeout(() => setInviteResults([]), 0);
+      return () => clearTimeout(timer);
+    }
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => {
       setInviteSearching(true);
@@ -379,10 +387,10 @@ export default function EventInvitePageView() {
 
   if (!albumId) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-6 text-sm text-zinc-400">
+      <div className="rounded-2xl bg-white/[0.04] p-6 text-sm text-zinc-400">
         <p>No album linked to this event.</p>
-        <Link href={`/dashboard/events/${eventId}`} className="inline-block mt-4 text-pxi-purple font-bold uppercase text-xs">
-          ← Details
+        <Link href={`/dashboard/events/${eventId}`} className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white">
+          Details
         </Link>
       </div>
     );
@@ -392,40 +400,48 @@ export default function EventInvitePageView() {
   const displayUrl = publicUrl.replace(/^https?:\/\//, '');
   const currentRoleLabel = roleLabel(inviteRoleKind, lineupSubDraft);
 
+  // Finalized scrapbook (event passed + grace over): inviting is closed server-side,
+  // so hide the send affordances and keep the read-only status view.
+  const isFinalized = event?.effectiveStatus === 'ARCHIVED';
+  const activeInviteTab = isFinalized ? 'status' : invitePageTab;
+
   return (
     <div className="space-y-5">
       {/* Page tabs */}
-      <div role="tablist" className="flex flex-wrap gap-2">
+      {showTabs ? <div role="tablist" className="dashboard-segmented-toggle w-full">
         {[
-          { id: 'send', icon: <HugeiconsIcon icon={SentIcon} size={14} />, label: 'Send invites' },
+          ...(isFinalized ? [] : [{ id: 'send', icon: <HugeiconsIcon icon={SentIcon} size={14} />, label: 'Send invites' }]),
           { id: 'status', icon: <HugeiconsIcon icon={HelpCircleIcon} size={14} />, label: 'Invite status' },
         ].map((t) => (
           <button
             key={t.id}
             type="button"
             role="tab"
-            aria-selected={invitePageTab === t.id}
+            aria-selected={activeInviteTab === t.id}
             onClick={() => setInvitePageTab(t.id)}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border transition-colors ${
-              invitePageTab === t.id
-                ? 'border-pxi-purple bg-pxi-purple/15 text-white'
-                : 'border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
-            }`}
+            className="dashboard-segmented-toggle__item"
+            data-active={activeInviteTab === t.id}
           >
             {t.icon}
             {t.label}
           </button>
         ))}
-      </div>
+      </div> : null}
+
+      {isFinalized ? (
+        <p className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+          Scrapbook — finalized · this event has ended, invites are closed
+        </p>
+      ) : null}
 
       {/* ── Send tab ─────────────────────────────────────────────────────── */}
-      {invitePageTab === 'send' && (
-        <section role="tabpanel" className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
+      {activeInviteTab === 'send' && !isFinalized && (
+        <section role="tabpanel" className="glass-panel overflow-hidden rounded-2xl">
 
           {/* Event hero */}
           {event && (
-            <div className="px-5 pt-5 pb-4 border-b border-white/[0.07]">
-              <h2 className="text-3xl font-black italic text-white leading-tight mb-2">
+            <div className="px-5 pt-5 pb-4">
+              <h2 className="mb-2 text-3xl font-black leading-tight text-white">
                 {event.name}
               </h2>
               <div className="flex flex-wrap gap-4">
@@ -447,12 +463,12 @@ export default function EventInvitePageView() {
 
           {/* Share row */}
           {eventId && (
-            <div className="flex gap-2 px-4 py-3 border-b border-white/[0.07]">
+            <div className="flex gap-2 px-4 py-3">
               {/* Share link */}
               <button
                 type="button"
                 onClick={handleShareLink}
-                className="flex-1 flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border border-white/20 hover:border-white/35 transition-colors text-left"
+                className="flex flex-1 items-center justify-between gap-2 rounded-xl bg-white/[0.045] px-3.5 py-2.5 text-left transition-colors hover:bg-white/[0.07]"
               >
                 <div className="min-w-0">
                   <p className="text-[9px] font-black tracking-widest uppercase text-zinc-500 mb-0.5">TAP TO SHARE</p>
@@ -482,7 +498,7 @@ export default function EventInvitePageView() {
               <button
                 type="button"
                 onClick={() => setShowQR(true)}
-                className="w-[68px] flex flex-col items-center justify-center gap-1 rounded-xl border border-white/20 hover:border-white/35 transition-colors py-2.5 shrink-0"
+                className="flex w-[68px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-white/[0.045] py-2.5 transition-colors hover:bg-white/[0.07]"
               >
                 <span className="text-[9px] font-black tracking-widest uppercase text-white">SCAN</span>
                 <HugeiconsIcon icon={QrCodeIcon} size={20} className="text-white" />
@@ -498,10 +514,10 @@ export default function EventInvitePageView() {
                   key={key}
                   type="button"
                   onClick={() => setInviteRoleKind(key)}
-                  className={`flex-1 py-2 rounded-full text-xs font-bold border transition-colors ${
+                  className={`flex-1 py-2 rounded-full text-xs font-bold transition-colors ${
                     inviteRoleKind === key
-                      ? 'border-pxi-purple bg-pxi-purple/20 text-white'
-                      : 'border-white/15 bg-white/5 text-zinc-400 hover:text-zinc-200 hover:bg-white/8'
+                      ? 'bg-white text-black'
+                      : 'bg-white/[0.055] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.08]'
                   }`}
                 >
                   {label}
@@ -515,8 +531,8 @@ export default function EventInvitePageView() {
                 type="text"
                 value={lineupSubDraft}
                 onChange={(e) => setLineupSubDraft(e.target.value.slice(0, LINEUP_ROLE_MAX_LEN))}
-                placeholder="Line-up label (e.g. DJ, MC…)"
-                className="w-full rounded-full bg-transparent border border-white/25 text-white text-sm px-4 py-2.5 placeholder-white/35 focus:border-pxi-purple/60 focus:outline-none"
+                placeholder="Line-up label (e.g. DJ, MC...)"
+                className="glass-field w-full rounded-full px-4 py-2.5 text-sm text-white placeholder-white/35"
                 autoComplete="off"
               />
             )}
@@ -528,8 +544,8 @@ export default function EventInvitePageView() {
                 type="text"
                 value={inviteQuery}
                 onChange={(e) => setInviteQuery(e.target.value)}
-                placeholder="Search username…"
-                className="w-full pl-10 pr-4 py-2.5 rounded-full bg-transparent border border-white/25 text-white placeholder-white/35 focus:border-pxi-purple/60 focus:outline-none text-sm"
+                placeholder="Search username..."
+                className="glass-field w-full rounded-full py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/35"
                 autoComplete="off"
               />
               {inviteSearching && (
@@ -549,10 +565,10 @@ export default function EventInvitePageView() {
                   key={f.id}
                   type="button"
                   onClick={() => setListFilter(listFilter === f.id ? 'all' : f.id)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
                     listFilter === f.id
-                      ? 'border-pxi-purple/60 bg-pxi-purple/20 text-white'
-                      : 'border-white/15 text-zinc-400 hover:text-zinc-200'
+                      ? 'bg-white text-black'
+                      : 'bg-white/[0.055] text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   {f.label}
@@ -587,13 +603,13 @@ export default function EventInvitePageView() {
               </div>
             ) : filteredCandidates.length === 0 ? (
               <p className="py-8 text-center text-sm text-zinc-500">
-                {inviteSearching ? 'Searching…'
+                {inviteSearching ? 'Searching...'
                   : listFilter === 'attendees' ? 'No past attendees found.'
                   : listFilter === 'friends' ? 'No friends found.'
                   : 'No users found.'}
               </p>
             ) : (
-              <div className="space-y-0 divide-y divide-white/[0.06]">
+              <div className="space-y-1">
                 {filteredCandidates.slice(0, 20).map((c) => {
                   const selected = selectedIds.has(c.id);
                   const rsvpState = resolveInviteRsvpState(c.id, memberUserIds, inviteByUserId);
@@ -618,15 +634,15 @@ export default function EventInvitePageView() {
                           type="button"
                           disabled={busy}
                           onClick={() => handleInviteAction(c, rsvpState)}
-                          className={`shrink-0 px-3 py-2 rounded-full text-[11px] font-bold border transition-colors ${
+                          className={`shrink-0 rounded-full px-3 py-2 text-[11px] font-bold transition-colors ${
                             rsvpState === 'pending'
-                              ? 'border-amber-500/50 bg-amber-500/10 text-amber-100'
+                              ? 'bg-amber-500/10 text-amber-100'
                               : rsvpState === 'coming'
-                                ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-100'
-                                : 'border-white/25 bg-white/8 text-zinc-200'
+                                ? 'bg-emerald-500/10 text-emerald-100'
+                                : 'bg-white/[0.08] text-zinc-200'
                           } disabled:opacity-50`}
                         >
-                          {busy ? '…' : `${tagLabel} · ${actionLabel}`}
+                          {busy ? '...' : `${tagLabel} · ${actionLabel}`}
                         </button>
                       </div>
                     );
@@ -644,8 +660,8 @@ export default function EventInvitePageView() {
                         <p className="text-sm text-white font-semibold truncate">{c.name || c.username}</p>
                         <p className="text-xs text-zinc-500 truncate">@{c.username}</p>
                       </div>
-                      <div className={`w-7 h-7 rounded-full border-[1.5px] flex items-center justify-center shrink-0 transition-colors ${
-                        selected ? 'bg-white border-white' : 'border-zinc-600'
+                      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
+                        selected ? 'bg-white' : 'bg-white/[0.075]'
                       }`}>
                         {selected
                           ? <HugeiconsIcon icon={CheckmarkBadge01Icon} size={14} strokeWidth={3} className="text-black" />
@@ -663,7 +679,7 @@ export default function EventInvitePageView() {
 
           {/* Floating send bar — appears when ≥1 user selected */}
           {selectedIds.size > 0 && (
-            <div className="sticky bottom-0 left-0 right-0 p-4 bg-zinc-900/95 border-t border-white/[0.08] backdrop-blur">
+            <div className="sticky bottom-0 left-0 right-0 bg-zinc-950/95 p-4 backdrop-blur">
               <button
                 type="button"
                 disabled={sending}
@@ -671,7 +687,7 @@ export default function EventInvitePageView() {
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-white text-black text-sm font-black uppercase tracking-wide disabled:opacity-50 hover:brightness-95 transition-all"
               >
                 {sending
-                  ? <><HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin" /> Sending…</>
+                  ? <><HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin" /> Sending...</>
                   : `Send Invite${selectedIds.size > 1 ? 's' : ''} · ${selectedIds.size}`
                 }
               </button>
@@ -681,21 +697,21 @@ export default function EventInvitePageView() {
       )}
 
       {/* ── Status tab ───────────────────────────────────────────────────── */}
-      {invitePageTab === 'status' && (
-        <section role="tabpanel" className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
-          <div className="p-5 border-b border-white/5 flex flex-wrap items-center justify-between gap-3">
+      {activeInviteTab === 'status' && (
+        <section role="tabpanel" className="glass-panel overflow-hidden rounded-2xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-5">
             <h2 className="font-bold text-white uppercase tracking-widest text-sm">Direct invites</h2>
             <button
               type="button"
               disabled={directInvitesLoading}
               onClick={loadDirectInvites}
-              className="px-3 py-2 rounded-xl border border-white/10 text-xs font-bold uppercase tracking-widest text-zinc-300 hover:bg-white/5 disabled:opacity-50"
+              className="rounded-xl bg-white/[0.055] px-3 py-2 text-xs font-bold uppercase tracking-widest text-zinc-300 hover:bg-white/[0.08] disabled:opacity-50"
             >
               Refresh
             </button>
           </div>
 
-          <div className="p-5 border-b border-white/5 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 px-5 pb-5">
             {[
               { id: 'pending', label: 'Pending', count: statusCounts.pending },
               { id: 'accepted', label: 'Accepted', count: statusCounts.accepted },
@@ -705,10 +721,10 @@ export default function EventInvitePageView() {
                 key={seg.id}
                 type="button"
                 onClick={() => setInviteStatusSegment(seg.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border transition-colors ${
+                className={`rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest transition-colors ${
                   inviteStatusSegment === seg.id
-                    ? 'border-violet-500/60 bg-violet-950/40 text-white'
-                    : 'border-white/10 text-zinc-400 hover:bg-white/5'
+                    ? 'bg-white text-black'
+                    : 'bg-white/[0.055] text-zinc-400 hover:bg-white/[0.08]'
                 }`}
               >
                 {seg.label} <span className="tabular-nums text-zinc-500">({seg.count})</span>
@@ -732,7 +748,7 @@ export default function EventInvitePageView() {
                 {filteredByStatusSegment.map((inv) => {
                   const handle = String(inv.user?.username || '').trim();
                   return (
-                    <li key={inv.id} className="rounded-xl border border-white/10 bg-zinc-900/40 px-4 py-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <li key={inv.id} className="flex flex-col gap-2 rounded-xl bg-white/[0.04] px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex items-center gap-3 min-w-0">
                         <UserAvatar user={inv.user} size={34} />
                         <div className="min-w-0">
@@ -740,7 +756,7 @@ export default function EventInvitePageView() {
                             {handle ? `@${handle}` : inv.user?.id}
                             {inv.user?.name && <span className="text-zinc-500 font-normal"> · {inv.user.name}</span>}
                           </p>
-                          <p className="text-xs text-violet-300/80 mt-0.5">
+                          <p className="mt-0.5 text-xs text-zinc-400">
                             {formatStoredInviteRole(inv.inviteRole, inv.lineupSubrole)}
                           </p>
                         </div>
@@ -784,8 +800,7 @@ export default function EventInvitePageView() {
           >
             <p className="text-2xl font-black text-white text-center leading-tight">{event?.name}</p>
             <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-500">Scan to RSVP</p>
-            <div className="bg-white p-5 rounded-3xl shadow-[0_0_60px_rgba(255,255,255,0.12)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+            <div className="rounded-3xl bg-white p-5">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(publicUrl)}&bgcolor=ffffff&color=000000&margin=0`}
                 alt="QR code"
@@ -797,7 +812,7 @@ export default function EventInvitePageView() {
             <button
               type="button"
               onClick={handleShareQr}
-              className="flex items-center gap-2 px-5 py-3 rounded-full border border-white/20 bg-white/6 text-sm font-bold text-white hover:bg-white/10 transition-colors"
+              className="flex items-center gap-2 rounded-full bg-white/[0.06] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10"
             >
               <HugeiconsIcon icon={Share01Icon} size={14} /> Share QR
             </button>
@@ -815,7 +830,7 @@ export default function EventInvitePageView() {
       {/* ── Confirm modal ────────────────────────────────────────────────── */}
       {confirmOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-white/12 bg-zinc-900 p-5 space-y-4">
+          <div className="dashboard-popover-surface w-full max-w-sm space-y-4 rounded-2xl p-5">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-black text-white uppercase tracking-widest">Send Invitations</h3>
               <button
@@ -828,7 +843,7 @@ export default function EventInvitePageView() {
             </div>
 
             <p className="text-sm text-zinc-300">
-              Send <span className="text-pxi-purple font-bold">{currentRoleLabel}</span> invite{selectedUsers.length > 1 ? 's' : ''} to {selectedUsers.length} {selectedUsers.length === 1 ? 'person' : 'people'}?
+              Send <span className="font-bold text-white">{currentRoleLabel}</span> invite{selectedUsers.length > 1 ? 's' : ''} to {selectedUsers.length} {selectedUsers.length === 1 ? 'person' : 'people'}?
             </p>
 
             {/* Avatar stack */}
@@ -849,7 +864,7 @@ export default function EventInvitePageView() {
               <button
                 type="button"
                 onClick={() => setConfirmOpen(false)}
-                className="flex-1 py-3.5 rounded-xl border border-white/20 text-sm text-zinc-300 font-bold hover:bg-white/5"
+                className="pill-ghost flex-1 py-3.5 text-sm font-bold text-zinc-300"
               >
                 Cancel
               </button>
@@ -859,7 +874,7 @@ export default function EventInvitePageView() {
                 onClick={handleSend}
                 className="flex-1 py-3.5 rounded-xl bg-white text-black text-sm font-black disabled:opacity-50 hover:brightness-95 transition-all"
               >
-                {sending ? 'Sending…' : 'Send'}
+                {sending ? 'Sending...' : 'Send'}
               </button>
             </div>
           </div>

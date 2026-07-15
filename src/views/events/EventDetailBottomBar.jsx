@@ -2,10 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 
-const ACCENT = '#c44d54';
-
 /**
- * Mobile: "Continue to checkout" first, then "Open in PXI" (when album) on the next line.
+ * Mobile: "Join event" first, then "Open in PXI" (when album) on the next line.
  * Desktop: checkout only (open-in-app is mobile-only).
  */
 export default function EventDetailBottomBar({ albumId, eventId }) {
@@ -18,10 +16,9 @@ export default function EventDetailBottomBar({ albumId, eventId }) {
         <button
           type="button"
           onClick={() => router.push(`/events/${eventId}/checkout`)}
-          className="inline-flex h-[3.375rem] w-full min-w-0 items-center justify-center rounded-full px-8 text-sm font-semibold uppercase tracking-wide text-white shadow-md shadow-black/40 transition hover:opacity-90"
-          style={{ backgroundColor: ACCENT }}
+          className="pxi-orange-pill inline-flex h-[3.375rem] w-full min-w-0 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-wide text-white transition hover:scale-[1.01]"
         >
-          Continue to checkout
+          Join event
         </button>
         {openInAppUrl ? (
           <a

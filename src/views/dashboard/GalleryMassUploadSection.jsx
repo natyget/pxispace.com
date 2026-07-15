@@ -48,7 +48,7 @@ function galleryJpgFilename(originalName) {
 
 /**
  * Decode image (EXIF-aware when supported), cover-crop to fixed frame, export JPEG.
- * Portrait or square (width <= height): 1200×1600. Landscape (width > height): 1600×1200.
+ * Portrait or square (width <= height): 1200x1600. Landscape (width > height): 1600x1200.
  * @returns {{ file: File; width: number; height: number }}
  */
 async function resizeImageForGalleryUpload(file) {
@@ -253,7 +253,7 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
       setBusy(true);
       setLastError(null);
       setLastOk(null);
-      setProgress({ done: 0, total: files.length, label: 'Starting…' });
+      setProgress({ done: 0, total: files.length, label: 'Starting...' });
 
       let completed = 0;
       const errors = [];
@@ -293,7 +293,7 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
             await putToPresigned(thumbPresign.uploadUrl, thumb.file, 'image/jpeg');
             thumbnailUrl = thumbPresign.publicUrl;
           } catch {
-            /* poster optional — notification may lack thumb until re-upload */
+            /* poster optional; notification may lack thumb until re-upload */
           }
         }
 
@@ -342,7 +342,7 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
       setBusy(false);
       setProgress({ done: completed, total: files.length, label: '' });
       if (errors.length) {
-        setLastError(errors.slice(0, 5).join(' · ') + (errors.length > 5 ? ` … +${errors.length - 5} more` : ''));
+      setLastError(errors.slice(0, 5).join(' / ') + (errors.length > 5 ? ` ... +${errors.length - 5} more` : ''));
       } else {
         setLastOk(`Uploaded ${files.length} file${files.length === 1 ? '' : 's'} to the album gallery.`);
       }
@@ -365,17 +365,17 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
     progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-zinc-900/50 overflow-hidden">
-      <div className="p-5 border-b border-white/5 flex items-center gap-2">
-        <HugeiconsIcon icon={ImageAdd02Icon} size={18} className="text-pxi-purple" />
-        <h2 className="font-bold text-white uppercase tracking-widest text-sm">Gallery · Mass upload</h2>
+    <section className="overflow-hidden rounded-2xl bg-white/[0.035]">
+      <div className="flex items-center gap-2 px-5 pb-2 pt-5">
+        <HugeiconsIcon icon={ImageAdd02Icon} size={18} className="text-white opacity-70" />
+        <h2 className="font-bold text-white tracking-[0.02em] text-sm">Gallery / Mass upload</h2>
       </div>
       <div className="p-5 space-y-4">
         <p className="text-xs text-zinc-500 leading-relaxed">
           Add many photos or videos to the <strong className="text-zinc-300">album gallery</strong> (the same grid
-          guests see — not the side thread). Photos are normalized to{' '}
-          <strong className="text-zinc-300">1200×1600</strong> (portrait or square) or{' '}
-          <strong className="text-zinc-300">1600×1200</strong> (landscape), center-cropped and saved as JPEG, before
+          guests see, not the side thread. Photos are normalized to{' '}
+          <strong className="text-zinc-300">1200x1600</strong> (portrait or square) or{' '}
+          <strong className="text-zinc-300">1600x1200</strong> (landscape), center-cropped and saved as JPEG, before
           upload. For large batches, keep this tab open until the progress bar completes.
         </p>
         <input
@@ -391,21 +391,21 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
           type="button"
           disabled={disabled || busy}
           onClick={() => inputRef.current?.click()}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+          className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold tracking-[0.02em] text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy ? <HugeiconsIcon icon={Loading02Icon} className="animate-spin" size={18} /> : <HugeiconsIcon icon={ImageAdd02Icon} size={18} />}
-          {busy ? 'Uploading…' : 'Choose files'}
+          {busy ? 'Uploading...' : 'Choose files'}
         </button>
         {busy && progress.total > 0 && (
           <div className="space-y-1">
-            <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+            <div className="h-2 overflow-hidden rounded-full bg-white/[0.08]">
               <div
-                className="h-full bg-pxi-purple transition-all duration-300"
+                className="h-full bg-white transition-all duration-300"
                 style={{ width: `${pct}%` }}
               />
             </div>
             <p className="text-xs text-zinc-400">
-              {progress.done}/{progress.total} · {pct}% · {progress.label}
+              {progress.done}/{progress.total} / {pct}% / {progress.label}
             </p>
           </div>
         )}

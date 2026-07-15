@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+import { env } from 'node:process';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Script from 'next/script';
 import { Toaster } from 'sonner';
@@ -22,7 +24,7 @@ export const metadata = {
     type: 'website',
     siteName: 'PXI',
     locale: 'en_US',
-    images: [{ url: '/favicon.svg', width: 512, height: 512, alt: 'PXI' }],
+    images: [{ url: '/og-hero.png', width: 1200, height: 630, alt: 'PXI' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -57,7 +59,7 @@ export default function RootLayout({ children }) {
           `}
         </Script>
       </head>
-      <body>
+      <body className="theme-matte density-compact">
         <GoogleOAuthProvider clientId={googleClientId} locale="en">
           <AuthProvider>
             <GlobalCursorLayer>{children}</GlobalCursorLayer>

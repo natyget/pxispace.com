@@ -3,8 +3,19 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowLeft01Icon, ViewIcon, ViewOffIcon, CheckmarkCircle02Icon, CancelCircleIcon, Loading02Icon } from '@hugeicons/core-free-icons';
+import FloatingAuthElements from '../../components/auth/FloatingAuthElements';
+import {
+    ArrowLeft01Icon,
+    ViewIcon,
+    ViewOffIcon,
+    CheckmarkCircle02Icon,
+    CancelCircleIcon,
+    Loading02Icon,
+    Shield01Icon,
+    Ticket01Icon,
+} from '@hugeicons/core-free-icons';
 import { FaApple, FaGoogle } from 'react-icons/fa';
 import { useGoogleLogin } from '@react-oauth/google';
 import { toast } from 'sonner';
@@ -17,7 +28,40 @@ import {
     PROFILE_USERNAME_MAX_LENGTH,
     USERNAME_RULES_HINT,
 } from '../../utils/username';
-const APPLE_SERVICE_ID = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '';
+const APPLE_SERVICE_ID = (globalThis.process?.env?.NEXT_PUBLIC_APPLE_SERVICE_ID || '').trim();
+/** Must match a Return URL registered on the Apple Services ID (HTTPS in production). */
+const APPLE_REDIRECT_URI = (
+    globalThis.process?.env?.NEXT_PUBLIC_APPLE_REDIRECT_URI
+    || globalThis.process?.env?.NEXT_PUBLIC_SITE_URL
+    || ''
+).trim().replace(/\/$/, '');
+
+function safeReturnPath(value) {
+    if (!value || typeof value !== 'string') return null;
+    // Paths only — reject open redirects and non-path tokens like from=mobile.
+    if (!value.startsWith('/') || value.startsWith('//')) return null;
+    return value;
+}
+
+function appleErrorMessage(err) {
+    if (!err) return 'Apple sign-in failed. Please try again.';
+    const code = err.code || err.error || err.data?.code;
+    const detail = err.data?.error || err.message;
+    if (code === 'popup_closed_by_user' || err.error === 'popup_closed_by_user') return null;
+    if (code === 'INVALID_APPLE_TOKEN') {
+        return detail || 'Apple token was rejected. Check Service ID / audience configuration.';
+    }
+    if (code === 'APPLE_MISCONFIGURED' || code === 'APPLE_SDK_UNAVAILABLE') {
+        return detail || 'Apple Sign In is not configured correctly.';
+    }
+    if (typeof detail === 'string' && detail && detail !== 'Apple sign-in failed. Please try again.') {
+        return code ? `${detail} (${code})` : detail;
+    }
+    if (typeof code === 'string' && code !== 'popup_closed_by_user') {
+        return `Apple sign-in failed (${code}). Please try again.`;
+    }
+    return 'Apple sign-in failed. Please try again.';
+}
 
 function shouldClearAuth(error) {
     const status = error?.status;
@@ -46,12 +90,15 @@ function useDebounce(value, delay) {
 export default function EmailAuthPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user, saveAuth, isAuthenticated, updateUser, logout } = useAuth();
+    const { user, saveAuth, isAuthenticated, authReady, updateUser, logout } = useAuth();
 
     const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login');
     const showVerifiedMessage = searchParams.get('verified') === '1';
+    // Prefer `redirect` (middleware contract). Fall back to path-shaped `from` for older links.
+    // Do not treat from=mobile as a return path — that flag is for DashboardLayout chrome.
     const redirectPath = searchParams.get('redirect');
-    const safeRedirect = redirectPath && redirectPath.startsWith('/') && !redirectPath.startsWith('//') ? redirectPath : null;
+    const fromPath = searchParams.get('from');
+    const safeRedirect = safeReturnPath(redirectPath) || safeReturnPath(fromPath);
 
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
@@ -84,7 +131,8 @@ export default function EmailAuthPage() {
 
     const hasRedirected = useRef(false);
     useEffect(() => {
-        if (!isAuthenticated || !user?.id || hasRedirected.current) return;
+        // Wait for AuthContext cookie re-sync so middleware accepts the session.
+        if (!authReady || !isAuthenticated || !user?.id || hasRedirected.current) return;
         hasRedirected.current = true;
         authService.getMe(user.id)
             .then(({ user: fresh }) => {
@@ -100,7 +148,7 @@ export default function EmailAuthPage() {
                 }
                 router.replace(safeRedirect || defaultPostLoginPath(user));
             });
-    }, [isAuthenticated, user?.id, safeRedirect, router, updateUser, logout]);
+    }, [authReady, isAuthenticated, user, user?.id, safeRedirect, router, updateUser, logout]);
 
     const loginWithGoogle = useGoogleLogin({
         flow: 'implicit',
@@ -121,24 +169,78 @@ export default function EmailAuthPage() {
         },
     });
 
+    const appleInitRef = useRef(false);
+    const appleReadyRef = useRef(false);
+
     useEffect(() => {
+        if (appleInitRef.current) return undefined;
+        appleInitRef.current = true;
+
+        if (!APPLE_SERVICE_ID) {
+            console.warn('[Apple Sign In] NEXT_PUBLIC_APPLE_SERVICE_ID is not set');
+            return undefined;
+        }
+
+        const redirectURI = APPLE_REDIRECT_URI || (typeof window !== 'undefined' ? window.location.origin : '');
+        if (!redirectURI || (typeof window !== 'undefined' && window.location.protocol === 'https:' && !redirectURI.startsWith('https://'))) {
+            console.warn('[Apple Sign In] NEXT_PUBLIC_APPLE_REDIRECT_URI must be an HTTPS Return URL registered for the Services ID');
+        }
+
+        const initApple = () => {
+            if (!window.AppleID?.auth || appleReadyRef.current) return;
+            try {
+                window.AppleID.auth.init({
+                    clientId: APPLE_SERVICE_ID,
+                    scope: 'name email',
+                    redirectURI,
+                    usePopup: true,
+                });
+                appleReadyRef.current = true;
+            } catch (err) {
+                console.error('[Apple Sign In] init failed', err);
+                appleInitRef.current = false;
+            }
+        };
+
+        if (window.AppleID?.auth) {
+            initApple();
+            return undefined;
+        }
+
+        const existing = document.querySelector('script[data-pxi-apple-auth]');
+        if (existing) {
+            existing.addEventListener('load', initApple);
+            return () => existing.removeEventListener('load', initApple);
+        }
+
         const script = document.createElement('script');
         script.src =
             'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
         script.async = true;
-        script.onload = () => {
-            window.AppleID?.auth.init({
-                clientId: APPLE_SERVICE_ID,
-                scope: 'name email',
-                redirectURI: window.location.origin,
-                usePopup: true,
-            });
+        script.dataset.pxiAppleAuth = '1';
+        script.onload = initApple;
+        script.onerror = () => {
+            appleInitRef.current = false;
+            console.error('[Apple Sign In] failed to load Apple JS SDK');
         };
         document.head.appendChild(script);
+        return undefined;
     }, []);
 
     const handleApple = async () => {
         try {
+            if (!APPLE_SERVICE_ID) {
+                const msg = 'Apple Sign In is not configured (missing NEXT_PUBLIC_APPLE_SERVICE_ID).';
+                setError(msg);
+                toast.error(msg);
+                return;
+            }
+            if (!window.AppleID?.auth || !appleReadyRef.current) {
+                const msg = 'Apple Sign In is still loading. Please try again in a moment.';
+                setError(msg);
+                toast.error(msg);
+                return;
+            }
             const response = await window.AppleID.auth.signIn();
             const identityToken = response.authorization.id_token;
             const fullName = response.user?.name
@@ -147,15 +249,17 @@ export default function EmailAuthPage() {
             const result = await authService.appleAuth(identityToken, fullName);
             handleAuthSuccess(result);
         } catch (err) {
-            if (err?.error !== 'popup_closed_by_user') {
-                setError('Apple sign-in failed. Please try again.');
-                toast.error('Apple sign-in failed. Please try again.');
-            }
+            const msg = appleErrorMessage(err);
+            if (!msg) return; // user closed popup
+            setError(msg);
+            toast.error(msg);
         }
     };
 
     // Email availability check (signup mode only)
     useEffect(() => {
+        let cancelled = false;
+        const timer = setTimeout(() => {
         if (mode !== 'signup') { setEmailStatus('idle'); return; }
         const normalized = debouncedEmail.trim().toLowerCase();
         if (!normalized) { setEmailStatus('idle'); return; }
@@ -163,19 +267,31 @@ export default function EmailAuthPage() {
         setEmailStatus('checking');
         authService
             .checkEmail(normalized)
-            .then((result) => setEmailStatus(result))
-            .catch(() => setEmailStatus('error'));
+            .then((result) => { if (!cancelled) setEmailStatus(result); })
+            .catch(() => { if (!cancelled) setEmailStatus('error'); });
+        }, 0);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
     }, [debouncedEmail, mode]);
 
     // Username availability check (signup mode only)
     useEffect(() => {
+        let cancelled = false;
+        const timer = setTimeout(() => {
         if (mode !== 'signup' || !debouncedUsername) { setUsernameStatus('idle'); return; }
         if (!isValidUsername(debouncedUsername)) { setUsernameStatus('invalid'); return; }
         setUsernameStatus('checking');
         authService
             .checkUsername(debouncedUsername)
-            .then(({ available }) => setUsernameStatus(available ? 'available' : 'taken'))
-            .catch(() => setUsernameStatus('idle'));
+            .then(({ available }) => { if (!cancelled) setUsernameStatus(available ? 'available' : 'taken'); })
+            .catch(() => { if (!cancelled) setUsernameStatus('idle'); });
+        }, 0);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
     }, [debouncedUsername, mode]);
 
     // Reset fields when mode changes
@@ -273,10 +389,11 @@ export default function EmailAuthPage() {
     const isLogin = mode === 'login';
 
     return (
-        <div className="flex flex-1 flex-col min-h-0 bg-black relative overflow-hidden">
+        <div className="relative flex min-h-screen flex-1 flex-col overflow-hidden bg-[#050505]">
+            <FloatingAuthElements />
             {showVerifiedMessage && (
                 <div
-                    className="relative z-20 mx-4 mt-6 rounded-xl px-4 py-3 text-center text-sm font-semibold"
+                    className="relative z-20 mx-4 mt-6 rounded-2xl px-4 py-3 text-center text-sm font-semibold"
                     style={{
                         background: 'rgba(255,255,255,0.05)',
                         border: '1px solid rgba(255,255,255,0.1)',
@@ -287,58 +404,52 @@ export default function EmailAuthPage() {
                 </div>
             )}
 
-            {/* Back button */}
+            {/* Back button — the only top chrome on this page */}
             <button
                 onClick={() => router.push('/')}
-                className="absolute top-20 left-5 z-20 flex items-center justify-center md:top-24"
-                style={{
-                    padding: 10,
-                    color: 'rgba(255,255,255,0.6)',
-                    borderRadius: 9999,
-                    background: 'transparent',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
+                className="absolute left-5 top-5 z-20 flex items-center justify-center rounded-full bg-[rgba(26,26,26,0.6)] p-2.5 text-white/60 backdrop-blur-xl transition hover:bg-white/10 hover:text-white md:left-8 md:top-8"
+                aria-label="Back to home"
             >
-                <HugeiconsIcon icon={ArrowLeft01Icon} size={28} />
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={22} />
             </button>
 
             {/* Scrollable content */}
-            <div className="relative z-10 flex-1 overflow-y-auto flex flex-col items-center px-0 md:px-4">
-                <div className="w-full max-w-[400px] px-4 pt-[5.5rem] pb-12 flex flex-col md:px-0 md:pt-[5.5rem]">
+            <div className="relative z-10 flex flex-1 items-center justify-center overflow-y-auto px-4 py-20 md:px-6 md:py-16">
 
-                    {/* Header */}
-                    <div className="mb-5 flex justify-center">
-                        <img
-                            src="/favicon.png"
-                            alt="PXI"
-                            width={200}
-                            height={120}
-                            className="h-[120px] w-[200px] object-contain"
-                        />
-                    </div>
+                    <motion.div 
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                        className="mx-auto flex w-full max-w-[430px] flex-col"
+                    >
+                        <div className="mb-6 text-center lg:text-left">
+                            <p className="mt-3 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">
+                                {isLogin ? 'Welcome back' : 'Create your PXI'}
+                            </p>
+                            <h1 className="mt-1 text-3xl font-black leading-none tracking-normal text-white">
+                                {isLogin ? 'Log in to continue.' : 'Start with your account.'}
+                            </h1>
+                        </div>
 
                     {/* Auth card — panel chrome on md+ only (mobile matches app: no card wrapper) */}
                     <div
-                        className="flex flex-col p-0 md:rounded-2xl md:border md:border-white/12 md:bg-white/[0.03] md:p-6 md:shadow-[0_0_40px_rgba(216,74,255,0.08)]"
+                        className="flex flex-col rounded-[2rem] bg-black/40 p-5 backdrop-blur-[40px] md:p-7"
                     >
-                    {/* Mode toggle */}
-                    <div className="flex mb-6 border-b border-white/10">
+                    {/* Mode toggle — glass segmented control, matches mobile */}
+                    <div className="relative mb-6 grid grid-cols-2 gap-0 overflow-hidden rounded-full bg-[rgba(26,26,26,0.6)] p-1 backdrop-blur-xl">
+                        <div
+                            className="absolute inset-y-1 w-[calc(50%-4px)] rounded-full bg-white transition-transform duration-300 ease-out"
+                            style={{ transform: mode === 'signup' ? 'translateX(calc(100% + 8px))' : 'translateX(0)' }}
+                        />
                         {['login', 'signup'].map((m) => (
                             <button
                                 key={m}
                                 type="button"
                                 onClick={() => switchMode(m)}
-                                className="flex-1 font-black uppercase transition-colors"
-                                style={{
-                                    paddingTop: 12,
-                                    paddingBottom: 12,
-                                    fontSize: 12,
-                                    letterSpacing: '0.15em',
-                                    color: mode === m ? '#fff' : 'rgba(255,255,255,0.4)',
-                                    borderBottom: mode === m ? '2px solid var(--color-pxi-purple)' : '2px solid transparent',
-                                    marginBottom: -1,
-                                }}
+                                className={`relative z-[1] rounded-xl py-3 text-xs font-black uppercase tracking-[0.15em] transition-colors ${
+                                    mode === m ? 'text-black' : 'text-white/45 hover:text-white'
+                                }`}
+                                style={{ border: 0 }}
                             >
                                 {m === 'login' ? 'LOG IN' : 'SIGN UP'}
                             </button>
@@ -366,12 +477,13 @@ export default function EmailAuthPage() {
 
                         {/* Email */}
                         <AuthField>
+                            <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2 pl-4">Email Address</label>
                             <div className="relative">
                                 <AuthInput
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="EMAIL ADDRESS"
+                                    placeholder="e.g. hello@example.com"
                                     required
                                     style={!isLogin ? { paddingRight: 48 } : undefined}
                                 />
@@ -402,6 +514,7 @@ export default function EmailAuthPage() {
                         {/* Username (signup only) */}
                         {!isLogin && (
                             <AuthField>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2 pl-4">Username</label>
                                 <div className="relative">
                                     <AuthInput
                                         type="text"
@@ -409,7 +522,7 @@ export default function EmailAuthPage() {
                                         onChange={(e) =>
                                             setUsername(sanitizeUsernameInput(e.target.value))
                                         }
-                                        placeholder="USERNAME"
+                                        placeholder="e.g. nightowl99"
                                         maxLength={PROFILE_USERNAME_MAX_LENGTH}
                                     />
                                     <div className="absolute right-6 top-1/2 -translate-y-1/2">
@@ -426,12 +539,13 @@ export default function EmailAuthPage() {
 
                         {/* Password */}
                         <AuthField>
+                            <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2 pl-4">Password</label>
                             <div className="relative">
                                 <AuthInput
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="PASSWORD"
+                                    placeholder="e.g. •••••••••••"
                                     required
                                     style={{ paddingRight: 48 }}
                                 />
@@ -470,11 +584,12 @@ export default function EmailAuthPage() {
                         {/* Confirm password — signup only */}
                         {!isLogin && (
                             <AuthField>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2 pl-4">Confirm Password</label>
                                 <AuthInput
                                     type={showPassword ? 'text' : 'password'}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="CONFIRM PASSWORD"
+                                    placeholder="e.g. •••••••••••"
                                     required
                                     focusColor={
                                         confirmPassword
@@ -490,15 +605,15 @@ export default function EmailAuthPage() {
                             </AuthField>
                         )}
 
-                        {/* Submit button */}
+                        {/* Submit button — matches mobile PillButton primary */}
                         <div className="relative mt-2 mb-2">
                             <button
                                 type="submit"
                                 disabled={!canSubmit}
-                                className={`relative z-[2] h-14 w-full rounded-full border border-white/15 font-black uppercase text-[13px] tracking-[0.15em] transition-all ${
+                                className={`relative z-[2] h-14 w-full rounded-full border-0 font-black uppercase text-[13px] tracking-[0.15em] transition-all ${
                                     canSubmit
-                                        ? 'cursor-pointer bg-pxi-purple text-white shadow-[0_0_20px_rgba(216,74,255,0.4)] hover:brightness-110'
-                                        : 'cursor-not-allowed bg-pxi-purple/30 text-white/30'
+                                        ? 'cursor-pointer text-black bg-white shadow-xl'
+                                        : 'cursor-not-allowed bg-white/10 text-white/30'
                                 }`}
                             >
                                 {loading ? (
@@ -512,24 +627,6 @@ export default function EmailAuthPage() {
                                     'CREATE ACCOUNT'
                                 )}
                             </button>
-
-                            {/* Glow strip below button — matches mobile effect */}
-                            {canSubmit && (
-                                <div
-                                    style={{
-                                        position: 'absolute',
-                                        bottom: -4,
-                                        left: '10%',
-                                        right: '10%',
-                                        height: 10,
-                                        background: '#B026FF',
-                                        opacity: 0.35,
-                                        filter: 'blur(8px)',
-                                        borderRadius: 8,
-                                        zIndex: 1,
-                                    }}
-                                />
-                            )}
                         </div>
 
                         <p
@@ -544,15 +641,15 @@ export default function EmailAuthPage() {
                             }}
                         >
                             {isLogin ? 'By signing in, you agree to our ' : 'By signing up, you agree to our '}
-                            <Link href="/terms_of_service" className="text-pxi-purple underline">
+                            <Link href="/legal#terms" className="text-white underline decoration-white/30 underline-offset-4">
                                 Terms of Service
                             </Link>
                             {', '}
-                            <Link href="/privacy_policy" className="text-pxi-purple underline">
+                            <Link href="/legal#privacy" className="text-white underline decoration-white/30 underline-offset-4">
                                 Privacy Policy
                             </Link>
                             {', and '}
-                            <Link href="/legal#cookie" className="text-pxi-purple underline">
+                            <Link href="/legal#cookie" className="text-white underline decoration-white/30 underline-offset-4">
                                 Cookie Policy
                             </Link>
                             .
@@ -589,7 +686,7 @@ export default function EmailAuthPage() {
                         </FooterPill>
                     </div>
                     </div>
-                </div>
+                    </motion.div>
             </div>
         </div>
     );
@@ -607,7 +704,7 @@ function AuthField({ children }) {
 
 function AuthInput({ focusColor, style = {}, ...props }) {
     const [focused, setFocused] = useState(false);
-    const defaultFocus = 'rgba(168,85,247,0.5)';
+    const defaultFocus = 'rgba(216,74,255,0.55)';
     const activeFocus = focusColor || defaultFocus;
 
     return (
@@ -615,15 +712,13 @@ function AuthInput({ focusColor, style = {}, ...props }) {
             {...props}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            className="auth-glass-input w-full text-sm font-semibold text-white outline-none transition-all placeholder:text-sm placeholder:font-semibold placeholder:text-white/30 placeholder:uppercase placeholder:tracking-[0.5px]"
+            className="auth-glass-input w-full text-sm font-semibold text-white outline-none backdrop-blur-xl transition-all placeholder:text-sm placeholder:font-semibold placeholder:text-white/30 placeholder:uppercase placeholder:tracking-[0.5px]"
             style={{
                 height: AUTH_INPUT_HEIGHT_PX,
-                borderRadius: 9999,
-                background: focused ? '#252525' : '#1c1c1c',
-                border: `1px solid ${focused ? activeFocus : 'rgba(255,255,255,0.05)'}`,
-                boxShadow: focused
-                    ? '0 0 10px rgba(168, 85, 247, 0.2)'
-                    : 'none',
+                borderRadius: 16,
+                background: 'rgba(26,26,26,0.6)',
+                border: 0,
+                boxShadow: focused ? `0 0 0 1.5px ${activeFocus}, 0 0 16px ${activeFocus}` : 'none',
                 fontSize: 14,
                 fontWeight: 600,
                 letterSpacing: '0.5px',
@@ -653,14 +748,28 @@ function FieldHint({ color, children }) {
     );
 }
 
+function AuthFeature({ icon, title, body }) {
+    return (
+        <div className="flex items-start gap-3 rounded-[1.5rem] bg-white/[0.045] p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/35 text-white">
+                <HugeiconsIcon icon={icon} size={18} />
+            </div>
+            <div>
+                <p className="text-sm font-black text-white">{title}</p>
+                <p className="mt-1 text-xs leading-5 text-zinc-500">{body}</p>
+            </div>
+        </div>
+    );
+}
+
 function FooterPill({ onClick, icon, children }) {
     return (
         <button
             type="button"
             onClick={onClick}
-            className="auth-social-pill flex-1 min-h-12 rounded-full border-0 bg-white/[0.06] px-4 py-3 text-[10px] font-bold uppercase tracking-[2px] text-white/[0.55] transition-all hover:text-white/70 active:bg-white/10"
-        >
-            <span className="flex items-center justify-center gap-2">
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-white/10 backdrop-blur-xl font-bold uppercase tracking-widest text-white transition-all hover:bg-white/15 active:scale-95"
+            style={{ fontSize: 11 }}
+        ><span className="flex items-center justify-center gap-2">
                 {icon}
                 {children}
             </span>

@@ -5,15 +5,26 @@ const USER_KEY = 'pxi_user';
 
 /** Sync PASETO to HttpOnly cookie so Edge middleware can verify (Next.js only). */
 async function setPasetoCookie(token) {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !token) return false;
     try {
-        await fetch('/api/auth/set-cookie', {
+        const res = await fetch('/api/auth/set-cookie', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token }),
             credentials: 'same-origin',
         });
-    } catch { /* ignore */ }
+        return res.ok;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Re-sync HttpOnly cookie from a localStorage session token.
+ * Closes the stale-localStorage / missing-cookie loop that bounces login ↔ dashboard.
+ */
+export async function ensurePasetoCookie(token) {
+    return setPasetoCookie(token);
 }
 
 /** Clear HttpOnly PASETO cookie on logout (Next.js only). */
@@ -46,6 +57,11 @@ export const authStorage = {
         if (typeof window !== 'undefined') {
             localStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem(USER_KEY);
+            // Role hints must not survive the session that earned them.
+            try {
+                const { clearStaffAccessHints } = await import('@/lib/dashboardCapabilities');
+                clearStaffAccessHints();
+            } catch { /* ignore */ }
             await clearPasetoCookie();
         }
     },
@@ -124,6 +140,10 @@ export const authService = {
 
     getMe: (userId) =>
         api.get(`/api/auth/user/${userId}`),
+
+    /** Update own profile fields (name, bio, city, instagramHandle, …). Returns { user }. */
+    updateProfile: (userId, fields) =>
+        api.put(`/api/auth/user/${userId}`, fields),
 
     vendorOnboard: (opts = {}) => {
         const base = `${window.location.origin}/dashboard/vendor-upgrade`;

@@ -62,12 +62,61 @@ export function buildPublicAlbumTimeline(mediaItems, messages, participants = []
     data: m,
   }));
 
-  return [...mediaRows, ...chatRows, ...mergedJoinEvents].sort((a, b) => rowTime(a) - rowTime(b));
+  const sorted = [...mediaRows, ...chatRows, ...mergedJoinEvents].sort(
+    (a, b) => rowTime(a) - rowTime(b),
+  );
+  return groupAdjacentMediaBursts(sorted);
+}
+
+/** Same uploader posting media within this window renders as ONE carousel card. */
+const MEDIA_BURST_WINDOW_MS = 10 * 60 * 1000;
+
+function mediaAuthorKey(item) {
+  return String(item?.author?.userId || item?.author?.username || '');
+}
+
+/**
+ * Collapse ADJACENT media rows from the same author (posted within a short window)
+ * into a MEDIA_GROUP row — the Instagram-style carousel card. Adjacency is
+ * preserved so group items keep their contiguous indices into the media list.
+ */
+function groupAdjacentMediaBursts(rows) {
+  const out = [];
+  for (const row of rows) {
+    if (row.type === 'MEDIA') {
+      const prev = out[out.length - 1];
+      const prevItems = prev?.type === 'MEDIA_GROUP' ? prev.data.items : prev?.type === 'MEDIA' ? [prev.data] : null;
+      if (prevItems) {
+        const last = prevItems[prevItems.length - 1];
+        const sameAuthor =
+          mediaAuthorKey(last) && mediaAuthorKey(last) === mediaAuthorKey(row.data);
+        const gap =
+          new Date(row.data.createdAt || '').getTime() -
+          new Date(last.createdAt || '').getTime();
+        if (sameAuthor && Number.isFinite(gap) && gap >= 0 && gap <= MEDIA_BURST_WINDOW_MS) {
+          if (prev.type === 'MEDIA_GROUP') {
+            prev.data.items.push(row.data);
+          } else {
+            out[out.length - 1] = {
+              type: /** @type {const} */ ('MEDIA_GROUP'),
+              data: { id: `group-${String(prev.data.id || '')}`, items: [prev.data, row.data] },
+            };
+          }
+          continue;
+        }
+      }
+    }
+    out.push(row);
+  }
+  return out;
 }
 
 export function timelineRowKey(item, index) {
   if (item.type === 'MEDIA') {
     return `MEDIA-${String(item.data.id || '').trim() || index}`;
+  }
+  if (item.type === 'MEDIA_GROUP') {
+    return `MEDIA_GROUP-${String(item.data.items[0]?.id || '').trim() || index}`;
   }
   return `${item.type}-${item.data.id ?? index}`;
 }

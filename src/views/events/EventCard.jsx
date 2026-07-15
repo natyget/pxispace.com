@@ -1,100 +1,92 @@
 'use client';
 
-import React from 'react';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Calendar01Icon, Location01Icon, Ticket01Icon, FavouriteIcon, Maximize01Icon } from '@hugeicons/core-free-icons';
-import Button from '../../components/ui/Button';
 import { useRouter } from 'next/navigation';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { FavouriteIcon, MusicNote01Icon } from '@hugeicons/core-free-icons';
 
-const EventCard = ({ event, favorited, onToggleFavorite, onQuickView, detailBasePath = '/events' }) => {
+const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/events', sponsored = false, onSponsoredClick }) => {
   const router = useRouter();
-  const detailHref = `${String(detailBasePath).replace(/\/$/, '')}/${event.id}`;
+  const href = `${String(detailBasePath).replace(/\/$/, '')}/${event.id}`;
+  const open = () => {
+    if (sponsored) onSponsoredClick?.();
+    router.push(href);
+  };
+
+  const dateStr =
+    event.date ||
+    (event.startDate
+      ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      : null);
+
+  const matchScore =
+    event.musicMatchScore != null && event.musicMatchScore > 0 ? event.musicMatchScore : null;
 
   return (
-    <div className="group relative flex flex-col glass-dark rounded-[3rem] border border-white/5 hover:border-pxi-purple/30 transition-all duration-500 overflow-hidden">
-      <div className="relative h-72 overflow-hidden">
+    <div
+      onClick={open}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && open()}
+      className="group relative cursor-pointer overflow-hidden rounded-lg bloom-purple transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+    >
+      <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-zinc-900">
         <img
-          src={event.image}
-          alt=""
-          className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
+          src={event.coverImage || event.image}
+          alt={event.title || ''}
+          className="h-full w-full object-cover"
+          loading="lazy"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+        {/* Top-left: music match % when scored — otherwise nothing */}
+        {matchScore != null ? (
+          <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-sm">
+            <HugeiconsIcon icon={MusicNote01Icon} size={12} className="text-white" />
+            {matchScore}%
+          </span>
+        ) : null}
 
+        {/* Favorite toggle button top-right */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onToggleFavorite?.(event.id);
           }}
-          className={`absolute top-6 right-6 p-3 rounded-full border text-white backdrop-blur-md transition-colors ${
-            favorited
-              ? 'bg-newpurple-base/20 border-newpurple-base/30 text-newpurple-base hover:bg-newpurple-base/30'
-              : 'bg-black/40 border-white/10 hover:bg-black/60'
-          }`}
-          aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
+          className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-black/40 border-0 text-white hover:bg-black/60 transition-colors backdrop-blur-sm"
+          aria-label={favorited ? 'Remove from wishlist' : 'Add to wishlist'}
         >
           <HugeiconsIcon
             icon={FavouriteIcon}
-            size={20}
-            className={favorited ? 'fill-newpurple text-newpurple-base' : ''}
+            size={14}
+            className={favorited ? 'fill-current text-[#d84aff]' : 'text-white/70'}
           />
         </button>
 
-        <div className="absolute top-8 left-8 px-4 py-1.5 glass rounded-full border-white/10 backdrop-blur-xl">
-          <span className="text-[10px] font-black tracking-widest text-white uppercase">{event.status}</span>
-        </div>
+        {/* Bottom overlay: time / title / location */}
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          {sponsored ? (
+            <span className="mb-2 inline-flex rounded-full border border-white/20 bg-black/50 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white/90 backdrop-blur-sm">
+              Sponsored
+            </span>
+          ) : null}
+          {dateStr ? (
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-widest text-zinc-300">{dateStr}</p>
+          ) : null}
+          <h3 className="text-white mb-1 text-2xl font-black uppercase leading-none tracking-tighter">
+            {event.title}
+          </h3>
+          <p className="text-sm font-bold text-zinc-300 mb-2">{event.location || event.venue}</p>
 
-        <div className="absolute bottom-8 right-8 px-5 py-2.5 glass rounded-2xl border-white/20 backdrop-blur-md shadow-2xl">
-          <span className="text-xl font-black text-white">{event.price}</span>
-        </div>
-      </div>
-
-      <div className="p-10 flex-1 flex flex-col">
-        <div className="flex items-center gap-3 mb-5">
-          <HugeiconsIcon icon={Calendar01Icon} size={16} className="text-pxi-purple" />
-          <span className="text-[11px] font-black tracking-[0.2em] text-zinc-500 uppercase">{event.date}</span>
-        </div>
-
-        <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-5 leading-none group-hover:text-[#e070ff] group-hover:drop-shadow-[0_0_12px_rgba(224,112,255,0.6)] transition-all">
-          {event.title}
-        </h3>
-
-        <div className="flex items-center gap-2 mb-6">
-          <HugeiconsIcon icon={Location01Icon} size={16} className="text-zinc-500 shrink-0" />
-          <span className="text-sm font-bold text-zinc-400">{event.location}</span>
-        </div>
-
-        {event.vendorHint ? (
-          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-6">{event.vendorHint}</p>
-        ) : null}
-
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-4">
-          <span className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">{event.members} attending</span>
-
-          <div className="flex flex-wrap gap-2 justify-end">
-            {/* Preview — desktop only */}
-            <Button
-              variant="glass"
-              className="!px-5 !py-3 !text-[10px] uppercase tracking-widest border-white/10 hidden sm:inline-flex"
-              icon={<HugeiconsIcon icon={Maximize01Icon} size={14} />}
-              onClick={() => onQuickView?.(event)}
-            >
-              Preview
-            </Button>
-            <Button
-              variant="primary"
-              className="!px-6 !py-3 !text-[11px] uppercase tracking-widest"
-              icon={<HugeiconsIcon icon={Ticket01Icon} size={16} />}
-              onClick={() => router.push(detailHref)}
-            >
-              RSVP
-            </Button>
-          </div>
+          {event.distanceKm != null ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-zinc-300">
+                {Math.round(event.distanceKm * 10) / 10} km
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
-
-      <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-pxi-purple/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
     </div>
   );
 };

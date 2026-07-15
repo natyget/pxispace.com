@@ -5,9 +5,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Loading02Icon, LockIcon, MoreHorizontalCircle02Icon } from '@hugeicons/core-free-icons';
 import { albumsService } from '@/services/albums';
+import { faceService } from '@/services/face';
+import { useAuth } from '@/contexts/AuthContext';
 import PublicAlbumBottomBar from '@/views/public/PublicAlbumBottomBar';
 import PublicAlbumMasonryGrid from './PublicAlbumMasonryGrid';
 import PublicAlbumThreadMediaCard from './PublicAlbumThreadMediaCard';
+import PublicAlbumThreadMediaCarousel from './PublicAlbumThreadMediaCarousel';
 import PublicAlbumThreadMessage from './PublicAlbumThreadMessage';
 import PublicAlbumThreadJoinEvent from './PublicAlbumThreadJoinEvent';
 import PublicAlbumThreadFocusOverlay from './PublicAlbumThreadFocusOverlay';
@@ -16,11 +19,12 @@ import {
   mergeOlderPublicThreadPage,
   timelineRowKey,
 } from './buildPublicAlbumTimeline';
-import PublicAlbumDetailsPanel from './PublicAlbumDetailsPanel';
-import PublicAlbumDetailsSheet from './PublicAlbumDetailsSheet';
+import EventDetailsModal from '@/components/events/EventDetailsModal';
+import EventDetailClient from '@/views/events/EventDetailClient';
+import { buildAlbumEventDetails } from './albumEventDetailsAdapter';
 import PublicAlbumJoinEventButton from './PublicAlbumJoinEventButton';
-import PublicAlbumParticipants from './PublicAlbumParticipants';
 import IphonePane from './IphonePane';
+import FindMyselfModal from './FindMyselfModal';
 import { mediaDisplayUrl } from './albumMediaLayout';
 import {
   PUBLIC_ALBUM_THREAD_LIST_HORIZONTAL_INSET,
@@ -55,6 +59,11 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [threadHasMore, setThreadHasMore] = useState(false);
   const [loadingMoreThread, setLoadingMoreThread] = useState(false);
+  const [findMyselfOpen, setFindMyselfOpen] = useState(false);
+  const [myMatchIds, setMyMatchIds] = useState(null); // Set<string> after a scan
+  const [onlyMyShots, setOnlyMyShots] = useState(false);
+  const { isAuthenticated, authReady, faceEnrolled } = useAuth();
+  const myMatchesLoadedForRef = useRef(null);
   const threadShellRef = useRef(null);
   const threadListRef = useRef(null);
   const threadEndRef = useRef(null);
@@ -77,6 +86,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
     [threadTimeline],
   );
   const openInAppUrl = albumId ? `pxi://album/${albumId}` : null;
+  const albumDetails = useMemo(() => buildAlbumEventDetails(album, albumId), [album, albumId]);
   const threadScrollActive = tab === 'thread' && !contentLoading;
   const activeThreadVideoId = useAlbumThreadActiveVideo({
     scrollRef: threadListRef,
@@ -232,6 +242,53 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
     if (tab !== 'gallery') setLightboxOpen(false);
   }, [tab]);
 
+  // Face scan prompt: offer "find yourself" once per album per session, as soon as
+  // the gallery has content to match against — but NEVER re-prompt a signed-in user
+  // who already enrolled (their tags load server-side instead).
+  useEffect(() => {
+    if (!albumId || !album || denied || contentLoading || galleryMedia.length === 0) return;
+    if (!authReady) return;
+
+    if (isAuthenticated) {
+      // Enrollment status unknown (still loading / errored) — skip rather than nag.
+      if (faceEnrolled !== false) {
+        if (faceEnrolled === true && myMatchesLoadedForRef.current !== albumId) {
+          // Enrolled: hydrate "My shots" from the server-side face tags, no scan needed.
+          myMatchesLoadedForRef.current = albumId;
+          faceService
+            .myAlbumMatches(albumId)
+            .then((res) => {
+              const ids = Array.isArray(res?.mediaIds) ? res.mediaIds : [];
+              if (ids.length > 0) setMyMatchIds(new Set(ids.map(String)));
+            })
+            .catch(() => {});
+        }
+        return;
+      }
+    }
+
+    let prompted = false;
+    try {
+      const key = `pxi_findme_prompted_${albumId}`;
+      prompted = window.sessionStorage.getItem(key) === '1';
+      if (!prompted) window.sessionStorage.setItem(key, '1');
+    } catch {
+      /* sessionStorage unavailable — still show once for this mount */
+    }
+    if (!prompted) setFindMyselfOpen(true);
+  }, [albumId, album, denied, contentLoading, galleryMedia.length, authReady, isAuthenticated, faceEnrolled]);
+
+  const handleFaceMatches = useCallback((mediaIds) => {
+    setMyMatchIds(new Set(mediaIds.map(String)));
+    setOnlyMyShots(mediaIds.length > 0);
+    if (mediaIds.length > 0) setTab('gallery');
+  }, []);
+
+  const visibleGalleryMedia = useMemo(() => {
+    if (!onlyMyShots || !myMatchIds) return galleryMedia;
+    return galleryMedia.filter((m) => myMatchIds.has(String(publicAlbumMediaId(m) || '')));
+  }, [galleryMedia, onlyMyShots, myMatchIds]);
+
   if (loading) {
     return (
       <div className="public-album-page flex min-h-[100dvh] items-center justify-center">
@@ -287,7 +344,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
         >
         <div className="album-thread-chrome relative z-[5] w-full shrink-0 bg-black max-lg:border-b max-lg:border-white/5">
           <div
-            className="relative flex h-14 items-center justify-center"
+            className="relative flex h-14 items-center justify-center lg:hidden"
             style={{ paddingLeft: THREAD_PAGE_HORIZONTAL_GUTTER, paddingRight: THREAD_PAGE_HORIZONTAL_GUTTER }}
           >
             <h1 className="truncate px-10 text-center text-xl font-black uppercase tracking-[0.24em] text-white">
@@ -362,10 +419,37 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
             <p className="py-16 text-center text-sm text-zinc-500">No photos yet. Open the app to see more.</p>
           ) : tab === 'gallery' ? (
             <div className="album-gallery-layout flex min-h-0 w-full flex-1 flex-col overflow-hidden">
-              <div className="album-gallery-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-                <PublicAlbumMasonryGrid items={galleryMedia} onPressItem={openLightbox} />
+              <div className="flex shrink-0 items-center gap-2 pb-3">
+                {myMatchIds ? (
+                  <button
+                    type="button"
+                    onClick={() => setOnlyMyShots((v) => !v)}
+                    className={`rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition ${
+                      onlyMyShots
+                        ? 'border-pxi-purple bg-pxi-purple/20 text-white shadow-[0_0_20px_rgba(216,74,255,0.3)]'
+                        : 'border-white/10 bg-white/[0.03] text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    My shots ({myMatchIds.size})
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => setFindMyselfOpen(true)}
+                  className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 transition hover:border-pxi-purple/50 hover:text-white"
+                >
+                  {myMatchIds ? 'Rescan' : 'Find my shots'}
+                </button>
               </div>
-              <PublicAlbumParticipants participants={participants} pinned />
+              <div className="album-gallery-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+                {onlyMyShots && myMatchIds && visibleGalleryMedia.length === 0 ? (
+                  <p className="py-16 text-center text-sm text-zinc-500">
+                    No matches in this album yet — new uploads are matched as they land.
+                  </p>
+                ) : (
+                  <PublicAlbumMasonryGrid items={visibleGalleryMedia} onPressItem={openLightbox} />
+                )}
+              </div>
             </div>
           ) : (
             <>
@@ -384,6 +468,25 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
                         key={key}
                         message={row.data}
                         rotation={chatTilt}
+                      />
+                    );
+                  }
+                  if (row.type === 'MEDIA_GROUP') {
+                    // Same-member media burst → one carousel card (progress dots,
+                    // reactions/focus target the active slide).
+                    const groupStartIndex = mediaIndex;
+                    mediaIndex += row.data.items.length;
+                    const firstId = publicAlbumMediaId(row.data.items[0]);
+                    const groupTilt = mediaRotationById.get(firstId) ?? THREAD_MEDIA_TILT_DEG;
+                    return (
+                      <PublicAlbumThreadMediaCarousel
+                        key={key}
+                        items={row.data.items}
+                        rotation={groupTilt}
+                        paneWidth={threadPaneWidth}
+                        openInAppUrl={openInAppUrl}
+                        activeVideoId={effectiveThreadVideoId}
+                        onPressSlide={(offset) => openThreadFocus(groupStartIndex + offset)}
                       />
                     );
                   }
@@ -421,29 +524,55 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
 
       </div>
 
-      {/* Right: album details — desktop only; mobile uses three-dot sheet */}
-      <div className="album-details-pane">
-        <div className="album-pane-scroll min-h-0 flex-1">
-          <PublicAlbumDetailsPanel album={album} albumId={albumId} />
-        </div>
+      {/* Right: album details — desktop only; mobile uses three-dot sheet. Renders the
+         full EventDetailClient layout constrained to the pane. */}
+      <div className="album-details-pane relative bg-[#0a0a0a]">
+        {album?.event?.id || album?.eventId ? (
+          <EventDetailClient
+            eventIdOverride={album?.event?.id || album?.eventId}
+            initialEvent={album?.event}
+            presentation="pane"
+          />
+        ) : (
+          <div className="album-details-shell items-center justify-center p-6">
+            <div className="flex h-full max-h-[860px] w-full max-w-[480px] flex-col overflow-hidden">
+              <EventDetailsModal
+                open
+                presentation="inline"
+                event={albumDetails.event}
+                primaryAction={albumDetails.primaryAction}
+                secondaryAction={albumDetails.secondaryAction}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
-      <PublicAlbumDetailsSheet
+      <EventDetailsModal
         open={detailsOpen}
         onClose={() => setDetailsOpen(false)}
-        album={album}
-        albumId={albumId}
+        presentation="sheet"
+        event={albumDetails.event}
+        primaryAction={albumDetails.primaryAction}
+        secondaryAction={albumDetails.secondaryAction}
       />
 
       {lightboxOpen && tab === 'gallery' ? (
         <PublicAlbumThreadFocusOverlay
-          items={galleryMedia}
+          items={visibleGalleryMedia}
           index={lightboxIndex}
           albumId={albumId}
           onClose={() => setLightboxOpen(false)}
           onIndexChange={setLightboxIndex}
         />
       ) : null}
+
+      <FindMyselfModal
+        open={findMyselfOpen}
+        onClose={() => setFindMyselfOpen(false)}
+        albumId={albumId}
+        onMatches={handleFaceMatches}
+      />
       {threadFocusOpen && tab === 'thread' ? (
         <PublicAlbumThreadFocusOverlay
           items={threadMedia}

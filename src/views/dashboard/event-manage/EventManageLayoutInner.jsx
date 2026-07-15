@@ -5,13 +5,12 @@ import { usePathname } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { useEventManage } from './EventManageContext';
+import { PxiSpinner } from '@/components/loading/PxiLoading';
 
 const TABS = [
   { label: 'Details',  segment: null },
-  { label: 'Invite',   segment: 'invite' },
   { label: 'Members',  segment: 'members' },
-  { label: 'Upload',   segment: 'upload' },
-  { label: 'Edit',     segment: 'edit' },
+  { label: 'Gallery',  segment: 'upload' },
 ];
 
 export default function EventManageLayoutInner({ children }) {
@@ -21,7 +20,7 @@ export default function EventManageLayoutInner({ children }) {
   if (loading && !event) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="w-8 h-8 border-2 border-pxi-purple border-t-transparent rounded-full animate-spin" />
+        <PxiSpinner size="md" />
       </div>
     );
   }
@@ -30,8 +29,8 @@ export default function EventManageLayoutInner({ children }) {
     return (
       <div>
         <p className="text-red-400">{error || 'Event not found'}</p>
-        <Link href="/dashboard/events" className="text-pxi-purple mt-4 inline-block">
-          ← Back to events
+        <Link href="/dashboard/events" className="mt-4 inline-block text-sm font-semibold text-white/60 hover:text-white">
+          Back to events
         </Link>
       </div>
     );
@@ -44,20 +43,7 @@ export default function EventManageLayoutInner({ children }) {
     return pathname === `${base}/${segment}`;
   };
 
-  const isPast = (() => {
-    const status = String(event?.status || '').toLowerCase();
-    if (status === 'ended' || status === 'past' || status === 'completed') return true;
-    const end = event?.endDate ? new Date(event.endDate).getTime() : null;
-    if (end) return end < Date.now();
-    const start = event?.startDate ? new Date(event.startDate).getTime() : null;
-    if (start) return start < Date.now();
-    return false;
-  })();
-
-  const tabs = TABS.filter(({ segment }) => {
-    if (!isPast) return true;
-    return segment !== 'invite' && segment !== 'edit';
-  });
+  const tabs = TABS;
 
   return (
     <>
@@ -65,20 +51,20 @@ export default function EventManageLayoutInner({ children }) {
         <div className="flex items-center gap-3 mb-4">
           <Link
             href="/dashboard/events"
-            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 shrink-0"
+            className="pill-ghost shrink-0 p-2 text-zinc-400 hover:text-white"
             aria-label="Back to events"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} size={22} />
           </Link>
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-0.5">Event</p>
-            <h1 className="text-xl md:text-2xl font-black text-white tracking-tight leading-tight truncate">
+            <h1 className="text-xl md:text-2xl font-black text-white tracking-normal leading-tight truncate">
               {event.name?.trim() || 'Untitled event'}
             </h1>
           </div>
         </div>
         <div className="flex justify-center py-6">
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none bg-white/5 rounded-full p-2 w-full">
+          <div className="dashboard-segmented-toggle w-full">
             {tabs.map(({ label, segment }) => {
               const href = segment ? `${base}/${segment}` : base;
               const active = isActive(segment);
@@ -86,11 +72,8 @@ export default function EventManageLayoutInner({ children }) {
                 <Link
                   key={label}
                   href={href}
-                  className={`flex-1 text-center px-4 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-colors ${
-                    active
-                      ? 'bg-white text-black'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
+                  className="dashboard-segmented-toggle__item flex-1"
+                  data-active={active}
                 >
                   {label}
                 </Link>

@@ -1,5 +1,5 @@
-import OrganizerCampaignsPage from '@/views/dashboard/organizer/OrganizerCampaignsPage';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-    return <OrganizerCampaignsPage />;
+    redirect('/dashboard/campaigns');
 }
