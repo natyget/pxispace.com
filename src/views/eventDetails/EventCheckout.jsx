@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -23,6 +23,7 @@ import TicketEmailPreview from '@/components/tickets/TicketEmailPreview';
 import TicketDeliveryActions from '@/components/tickets/TicketDeliveryActions';
 import { buildTicketEmailPreviewInput } from '@/lib/ticketEmailPreview';
 import { createBranchInstallLink } from '@/lib/branchLinks';
+import { trackBeginCheckout } from '@/lib/analytics';
 
 /** Branded gradient stand-in for events without cover art (no external fallback image). */
 const COVER_PLACEHOLDER_BG =
@@ -253,6 +254,18 @@ export default function EventCheckout({ basePath = '/events' }) {
 
   const isPaidEvent = apiEvent?.ticketType === 'PAID' && tiers.length > 0;
   const isFreeEvent = apiEvent && apiEvent.ticketType !== 'PAID';
+
+  const beginCheckoutTracked = useRef(false);
+  useEffect(() => {
+    if (!apiEvent?.id || !isPaidEvent || beginCheckoutTracked.current) return;
+    beginCheckoutTracked.current = true;
+    const t = tiers.find((x) => x.id === selectedTierId) || tiers[0];
+    trackBeginCheckout({
+      id: apiEvent.id,
+      name: apiEvent.name,
+      priceUsd: t?.priceUsd != null ? Number(t.priceUsd) : Number(apiEvent.ticketPrice),
+    });
+  }, [apiEvent, isPaidEvent, tiers, selectedTierId]);
 
   useEffect(() => {
     if (!apiEvent?.id || !isPaidEvent) {

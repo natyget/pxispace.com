@@ -8,6 +8,7 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
+import { trackSignUp } from '../../lib/analytics';
 import VerificationCodeInput from '../../components/auth/VerificationCodeInput';
 import { defaultPostLoginPath } from '../../lib/dashboardPaths';
 import { toast } from 'sonner';
@@ -143,6 +144,7 @@ export default function VerifyPhonePage() {
                     fullPhone
                 );
                 sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+                trackSignUp('email');
                 const { token, user: newUser } = registerResult;
                 await saveAuth({ token, user: newUser });
 

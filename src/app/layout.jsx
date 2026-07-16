@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import { env } from 'node:process';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import Script from 'next/script';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
+import AnalyticsProvider from '@/components/analytics/AnalyticsProvider';
+import AnalyticsScripts from '@/components/analytics/AnalyticsScripts';
 import GlobalCursorLayer from '@/components/layout/GlobalCursorLayer';
 import './globals.css';
 
@@ -46,23 +47,14 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Codystar&family=Inter:wght@400;500;600;700;800;900&family=Stack+Sans+Notch:wght@200..700&display=swap"
           rel="stylesheet"
         />
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-RZLHV91C5S"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-RZLHV91C5S');
-          `}
-        </Script>
+        <AnalyticsScripts />
       </head>
       <body className="theme-matte density-compact">
         <GoogleOAuthProvider clientId={googleClientId} locale="en">
           <AuthProvider>
-            <GlobalCursorLayer>{children}</GlobalCursorLayer>
+            <AnalyticsProvider>
+              <GlobalCursorLayer>{children}</GlobalCursorLayer>
+            </AnalyticsProvider>
           </AuthProvider>
         </GoogleOAuthProvider>
         <Toaster

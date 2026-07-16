@@ -21,6 +21,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
+import { trackLogin, trackSignUp } from '../../lib/analytics';
 import { defaultPostLoginPath } from '../../lib/dashboardPaths';
 import {
     isValidUsername,
@@ -157,6 +158,8 @@ export default function EmailAuthPage() {
         onSuccess: async (tokenResponse) => {
             try {
                 const result = await authService.googleTokenAuth(tokenResponse.access_token);
+                if (result.isNewUser) trackSignUp('google');
+                else trackLogin('google');
                 handleAuthSuccess(result);
             } catch {
                 setError('Google sign-in failed. Please try again.');
@@ -247,6 +250,8 @@ export default function EmailAuthPage() {
                 ? { givenName: response.user.name.firstName, familyName: response.user.name.lastName }
                 : undefined;
             const result = await authService.appleAuth(identityToken, fullName);
+            if (result.isNewUser) trackSignUp('apple');
+            else trackLogin('apple');
             handleAuthSuccess(result);
         } catch (err) {
             const msg = appleErrorMessage(err);
@@ -328,6 +333,7 @@ export default function EmailAuthPage() {
         try {
             if (mode === 'login') {
                 const result = await authService.login(email, password);
+                trackLogin('email');
                 toast.success('Welcome back!');
                 handleAuthSuccess(result);
             } else {

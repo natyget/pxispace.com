@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,7 @@ import Button from '../../components/ui/Button';
 import { PxiSpinner } from '@/components/loading/PxiLoading';
 import { eventsService } from '../../services/events';
 import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket } from '../../services/tickets';
+import { trackViewItem } from '../../lib/analytics';
 import { spotifyEmbedSrc } from '@/lib/spotify';
 import { musicService } from '../../services/music';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
@@ -130,6 +131,17 @@ const EventDetails = ({ basePath = '/events' }) => {
       .catch(() => setApiEvent(null))
       .finally(() => setEventLoading(false));
   }, [id]);
+
+  const viewItemTracked = useRef(false);
+  useEffect(() => {
+    if (!apiEvent?.id || viewItemTracked.current) return;
+    viewItemTracked.current = true;
+    trackViewItem({
+      id: apiEvent.id,
+      name: apiEvent.name,
+      priceUsd: apiEvent.ticketType === 'PAID' ? Number(apiEvent.ticketPrice) : undefined,
+    });
+  }, [apiEvent]);
 
   const tiers = useMemo(() => (apiEvent ? parseTicketTiers(apiEvent) : []), [apiEvent]);
 
