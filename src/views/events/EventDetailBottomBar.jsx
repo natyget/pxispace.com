@@ -1,6 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { SPRING_SOFT } from '@/components/motion/motionTokens';
 
 /**
  * Mobile: "Join event" first, then "Open in PXI" (when album) on the next line.
@@ -12,7 +14,12 @@ export default function EventDetailBottomBar({ albumId, eventId }) {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
-      <div className="pointer-events-auto flex w-full max-w-[25.5rem] flex-col gap-2">
+      <motion.div
+        className="pointer-events-auto flex w-full max-w-[25.5rem] flex-col gap-2"
+        initial={{ opacity: 0, y: 56 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...SPRING_SOFT, delay: 0.25 }}
+      >
         <button
           type="button"
           onClick={() => router.push(`/events/${eventId}/checkout`)}
@@ -29,7 +36,7 @@ export default function EventDetailBottomBar({ albumId, eventId }) {
             Open in PXI
           </a>
         ) : null}
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import AnalyticsProvider from '@/components/analytics/AnalyticsProvider';
 import AnalyticsScripts from '@/components/analytics/AnalyticsScripts';
 import GlobalCursorLayer from '@/components/layout/GlobalCursorLayer';
+import MotionProvider from '@/components/motion/MotionProvider';
 import './globals.css';
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
@@ -53,7 +54,9 @@ export default function RootLayout({ children }) {
         <GoogleOAuthProvider clientId={googleClientId} locale="en">
           <AuthProvider>
             <AnalyticsProvider>
-              <GlobalCursorLayer>{children}</GlobalCursorLayer>
+              <MotionProvider>
+                <GlobalCursorLayer>{children}</GlobalCursorLayer>
+              </MotionProvider>
             </AnalyticsProvider>
           </AuthProvider>
         </GoogleOAuthProvider>

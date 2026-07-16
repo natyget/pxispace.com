@@ -10,6 +10,8 @@ import Button from '../../components/ui/Button';
 import { PxiSpinner } from '@/components/loading/PxiLoading';
 import { eventsService } from '../../services/events';
 import { getTicketQuote, createCheckoutSession, generateTicket, purchaseTicket } from '../../services/tickets';
+import { motion } from 'framer-motion';
+import { EASE_APPLE } from '@/components/motion/motionTokens';
 import { trackViewItem } from '../../lib/analytics';
 import { spotifyEmbedSrc } from '@/lib/spotify';
 import { musicService } from '../../services/music';
@@ -287,16 +289,24 @@ const EventDetails = ({ basePath = '/events' }) => {
         </div>
 
         {/* HERO */}
-        <section className="relative min-h-[70vh] flex items-end">
-          <img
+        <section className="relative min-h-[70vh] flex items-end overflow-hidden">
+          <motion.img
             src={displayImageSrc(apiEvent.coverImage, DEFAULT_IMG)}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
             onError={onImageErrorToDefault}
             referrerPolicy="no-referrer-when-downgrade"
+            initial={{ scale: 1.06, opacity: 0.4 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 1.1, ease: EASE_APPLE }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
-          <div className="relative z-10 container mx-auto px-6 pb-16 pt-32 w-full">
+          <motion.div
+            className="relative z-10 container mx-auto px-6 pb-16 pt-32 w-full"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE_APPLE, delay: 0.15 }}
+          >
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <span className="glass px-4 py-2 rounded-full text-xs uppercase">{apiEvent.effectiveStatus || 'Event'}</span>
               <button
@@ -339,7 +349,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                 </a>
               ) : null}
             </div>
-          </div>
+          </motion.div>
         </section>
 
         <div className="container mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-3 gap-16">

@@ -27,13 +27,13 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && open()}
-      className="group relative cursor-pointer overflow-hidden rounded-lg bloom-purple transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+      className="group relative cursor-pointer overflow-hidden rounded-lg bloom-purple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
     >
       <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-zinc-900">
         <img
           src={event.coverImage || event.image}
           alt={event.title || ''}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />

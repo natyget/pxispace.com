@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { eventsService } from '@/services/events';
 import EventCard from '@/views/events/EventCard';
+import { StaggerGroup, RevealItem, HoverLift } from '@/components/motion/Reveal';
 import SectionShell from '@/components/marketing/SectionShell';
 
 const DEFAULT_IMG = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
@@ -92,11 +93,15 @@ export default function CityEventsView({ city }) {
             ))}
           </div>
         ) : cityEvents.length ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <StaggerGroup className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {cityEvents.map((ev) => (
-              <EventCard key={ev.id} event={ev} />
+              <RevealItem key={ev.id}>
+                <HoverLift>
+                  <EventCard event={ev} />
+                </HoverLift>
+              </RevealItem>
             ))}
-          </div>
+          </StaggerGroup>
         ) : (
           <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-10 text-center">
             <h2 className="display-3">No live events in {city.name} yet.</h2>
