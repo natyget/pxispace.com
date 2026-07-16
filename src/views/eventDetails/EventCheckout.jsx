@@ -22,7 +22,7 @@ import { StripePaymentModal } from '@/components/checkout/StripePaymentModal';
 import TicketEmailPreview from '@/components/tickets/TicketEmailPreview';
 import TicketDeliveryActions from '@/components/tickets/TicketDeliveryActions';
 import { buildTicketEmailPreviewInput } from '@/lib/ticketEmailPreview';
-import { createBranchInstallLink } from '@/lib/branchLinks';
+import { playStoreUrlWithDeepLink } from '@/lib/appStoreLinks';
 import { trackBeginCheckout } from '@/lib/analytics';
 
 /** Branded gradient stand-in for events without cover art (no external fallback image). */
@@ -366,18 +366,13 @@ export default function EventCheckout({ basePath = '/events' }) {
         }
         const ua = navigator.userAgent || '';
         if (/iPhone|iPad|iPod|Android/i.test(ua)) {
-          // Branch install handoff: mint a Branch link in parallel with the
-          // pxi:// attempt. If the app doesn't open (page still visible after
-          // ~1.5s → not installed), redirect through the Branch link so the
-          // post-install open deep-links back to this album/event. If Branch
-          // fails or times out (resolves null), nothing extra happens — the
-          // user stays on the success page exactly as today.
-          let branchLink = null;
-          createBranchInstallLink({ url: successDeepLinkUrl, feature: 'post-checkout' })
-            .then((link) => {
-              branchLink = link;
-            })
-            .catch(() => {});
+          // Install handoff: try the pxi:// deep link; if the app doesn't
+          // open (page still visible after ~1.5s → not installed), send
+          // Android through a Play Store URL whose Install Referrer carries
+          // this album/event so the first post-install open deep-links back.
+          // iOS stays on the success page (no free deferred-link mechanism).
+          const isAndroid = /Android/i.test(ua);
+          const storeHandoff = isAndroid ? playStoreUrlWithDeepLink(successDeepLinkUrl) : null;
           const start = Date.now();
           let handoffTimer = null;
           const cleanup = () => {
@@ -393,8 +388,8 @@ export default function EventCheckout({ basePath = '/events' }) {
           window.addEventListener('pagehide', onPageHide);
           handoffTimer = setTimeout(() => {
             cleanup();
-            if (branchLink && Date.now() - start < 2500 && document.visibilityState === 'visible') {
-              window.location.href = branchLink;
+            if (storeHandoff && Date.now() - start < 2500 && document.visibilityState === 'visible') {
+              window.location.href = storeHandoff;
             }
           }, 1500);
           window.location.href = successDeepLinkUrl;
