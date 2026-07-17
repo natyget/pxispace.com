@@ -83,7 +83,7 @@ const Vision = () => {
                             <img
                                 src={teamImage}
                                 alt="PXI team"
-                                className="w-full h-80 md:h-112 object-cover hover:scale-105 transition-transform duration-300"
+                                className="w-full h-80 md:h-112 object-cover"
                             />
                         </div>
                     </div>

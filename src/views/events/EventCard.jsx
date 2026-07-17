@@ -33,7 +33,7 @@ const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/even
         <img
           src={event.coverImage || event.image}
           alt={event.title || ''}
-          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          className="h-full w-full object-cover"
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
