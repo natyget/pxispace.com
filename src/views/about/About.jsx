@@ -5,16 +5,6 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 import SectionShell from '@/components/marketing/SectionShell';
-import ScrubReveal from '@/components/motion/ScrubReveal';
-import {
-  ScrollStory,
-  StoryStep,
-  StoryDots,
-  StepItem,
-  ScrubWords,
-  ScrollFadeOut,
-  useStepProgress,
-} from '@/components/motion/ScrollStory';
 
 const PRINCIPLES = [
   {
@@ -30,26 +20,6 @@ const PRINCIPLES = [
     body: 'One shared camera per night. The memory belongs to the room, not to whoever remembered to post.',
   },
 ];
-
-function PrinciplesIntroStep() {
-  const local = useStepProgress();
-  return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center px-6 text-center">
-      <StepItem start={0} end={0.3}>
-        <p className="text-xs font-black uppercase tracking-[0.3em] text-pxi-purple">
-          What we believe
-        </p>
-      </StepItem>
-      <ScrubWords
-        as="h2"
-        text="Three things we will not compromise."
-        className="display-2 mt-6 max-w-3xl"
-        progress={local}
-        range={[0.06, 0.7]}
-      />
-    </div>
-  );
-}
 
 const AboutPage = () => {
   return (
@@ -81,32 +51,33 @@ const AboutPage = () => {
       </section>
 
       {/* 2 — Origin */}
-      <ScrollFadeOut>
       <SectionShell pad="loose">
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
-          <ScrubReveal
-            distance={40}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            <ScrubWords as="h2" text="Built from lost moments." className="display-3 mt-5" />
+            <h2 className="display-3 mt-5">Built from lost moments.</h2>
             <div className="mt-6 space-y-5 text-base leading-relaxed text-zinc-400">
               <p>
                 Before we built infrastructure, we were operators, hosting the nights people talked
                 about for months. But the memory of them always scattered across dozens of phones,
                 and the tools we used were built for broadcasting, not for being there.
               </p>
-              <ScrubWords
-                as="p"
-                baseOpacity={0.3}
-                text="So we stepped back from the noise and built the antidote: an event platform where the night compiles itself, the organizer keeps the money, and the memory is the point."
-                className="text-white"
-              />
+              <p className="text-white">
+                So we stepped back from the noise and built the antidote: an event platform where the
+                night compiles itself, the organizer keeps the money, and the memory is the point.
+              </p>
             </div>
-          </ScrubReveal>
+          </motion.div>
 
-          <ScrubReveal
-            as="figure"
-            distance={60}
-            scaleStart={0.96}
+          <motion.figure
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="group relative"
           >
             <video
@@ -117,35 +88,28 @@ const AboutPage = () => {
               playsInline
               className="aspect-square w-full rounded-3xl object-cover"
             />
-          </ScrubReveal>
+          </motion.figure>
         </div>
       </SectionShell>
-      </ScrollFadeOut>
 
-      {/* 3 — Principles — pinned scroll story: each swipe brings the next one */}
-      <ScrollStory steps={PRINCIPLES.length + 1} perStep={70} className="bg-black">
-        <StoryDots />
-        <StoryStep index={0} className="flex items-center justify-center">
-          <PrinciplesIntroStep />
-        </StoryStep>
-        {PRINCIPLES.map((p, i) => (
-          <StoryStep key={p.title} index={i + 1} className="flex items-center justify-center">
-            <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center px-6 text-center">
-              <StepItem start={0} end={0.4}>
-                <p className="text-xs font-black uppercase tracking-[0.3em] text-pxi-purple">
-                  {`0${i + 1} / 0${PRINCIPLES.length}`}
-                </p>
-              </StepItem>
-              <StepItem start={0.1} end={0.5}>
-                <h3 className="display-2 mt-5 max-w-3xl">{p.title}</h3>
-              </StepItem>
-              <StepItem start={0.22} end={0.65}>
-                <p className="body-lead mt-6 max-w-xl">{p.body}</p>
-              </StepItem>
-            </div>
-          </StoryStep>
-        ))}
-      </ScrollStory>
+      {/* 3 — Principles */}
+      <SectionShell eyebrow="What we believe" pad="loose">
+        <div className="mt-10 divide-y divide-white/[0.08] border-y border-white/[0.08]">
+          {PRINCIPLES.map((p) => (
+            <motion.div
+              key={p.title}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="grid grid-cols-1 gap-3 py-8 md:grid-cols-[1fr_1.2fr] md:gap-12"
+            >
+              <h3 className="display-3 text-2xl md:text-3xl">{p.title}</h3>
+              <p className="self-center text-base leading-relaxed text-zinc-400">{p.body}</p>
+            </motion.div>
+          ))}
+        </div>
+      </SectionShell>
 
       {/* 4 — Close */}
       <SectionShell pad="loose">
@@ -153,11 +117,7 @@ const AboutPage = () => {
           <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">
             Built by operators, since 2024.
           </p>
-          <ScrubWords
-            as="h2"
-            text="We build the tools. You own the night."
-            className="display-2 mt-6 max-w-2xl"
-          />
+          <h2 className="display-2 mt-6 max-w-2xl">We build the tools. You own the night.</h2>
           <div className="mt-10">
             <AppStoreCtaPair className="justify-center" />
           </div>

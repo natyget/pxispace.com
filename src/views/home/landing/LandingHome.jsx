@@ -21,9 +21,7 @@ import Footer from '@/components/layout/Footer';
  */
 export default function LandingHome() {
   return (
-    // overflow-x-clip, NOT -hidden: hidden makes <main> a scroll container,
-    // which silently breaks the position:sticky pinning in ScrollStory.
-    <main className="landing-v2 w-full overflow-x-clip bg-black text-white selection:bg-fuchsia-500/30">
+    <main className="landing-v2 w-full overflow-x-hidden bg-black text-white selection:bg-fuchsia-500/30">
       <HeroEditorial />
       <StoryIntro />
       <ChapterFind />
