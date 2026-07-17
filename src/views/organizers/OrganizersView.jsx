@@ -18,9 +18,105 @@ import VenueMapMock from '@/components/marketing/DashboardMockup/VenueMapMock';
 import CreateEventMock from '@/components/marketing/DashboardMockup/CreateEventMock';
 import SanaaTicketShowcase from '@/components/marketing/SanaaTicketShowcase';
 import PlatformComparison from './PlatformComparison';
+import ScrubReveal from '@/components/motion/ScrubReveal';
+import {
+  ScrollStory,
+  StoryStep,
+  StoryDots,
+  StepItem,
+  ScrubWords,
+  ScrollFadeOut,
+  useStepProgress,
+} from '@/components/motion/ScrollStory';
 
 const CREATE_HREF = '/login?redirect=/dashboard/events/new';
 const DEMO_HREF = '/book';
+
+const MEMORY_STEPS = [
+  {
+    k: 'Scrapbooks',
+    title: 'Promo that makes itself.',
+    body: 'The morning-after scrapbook is your next campaign — real nights, real people, shot by the crowd. No photographers required.',
+  },
+  {
+    k: 'Stamps',
+    title: 'Turnout you can prove.',
+    body: 'Cryptographic attendance stamps turn "trust me" into a verifiable track record for venues, sponsors, and partners.',
+  },
+  {
+    k: 'Behavior',
+    title: 'Targeting that converts.',
+    body: 'Attendance, spend, and taste build segments of people who actually show up — and you can reach them over SMS, email, and the feed.',
+  },
+];
+
+function MemoryIntroStep() {
+  const local = useStepProgress();
+  return (
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center px-6 text-center">
+      <StepItem start={0} end={0.3}>
+        <div className="flex flex-col items-center gap-4">
+          <Layers className="h-6 w-6 text-pxi-purple" />
+          <p className="text-xs font-black uppercase tracking-[0.3em] text-pxi-purple">
+            The memory layer
+          </p>
+        </div>
+      </StepItem>
+      <ScrubWords
+        as="h2"
+        text="Every night makes the next one smarter."
+        className="display-2 mt-6 max-w-3xl"
+        progress={local}
+        range={[0.06, 0.7]}
+      />
+      <StepItem start={0.45} end={0.85}>
+        <p className="body-lead mt-8 max-w-xl">
+          Photos, stamps, tastes, and spend accumulate with every event you run — and the layer
+          compounds.
+        </p>
+      </StepItem>
+    </div>
+  );
+}
+
+/** The compounding-data pitch as a pinned scroll story: each swipe reveals one layer. */
+function MemoryLayerStory() {
+  return (
+    <ScrollStory steps={4} perStep={75} className="bg-black">
+      <StoryDots />
+      <StoryStep index={0} className="flex items-center justify-center">
+        <MemoryIntroStep />
+      </StoryStep>
+      {MEMORY_STEPS.map((s, i) => (
+        <StoryStep key={s.k} index={i + 1} className="flex items-center justify-center">
+          <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center px-6 text-center">
+            <StepItem start={0} end={0.4}>
+              <p className="text-xs font-black uppercase tracking-[0.3em] text-pxi-purple">
+                {`${s.k} · 0${i + 1} / 03`}
+              </p>
+            </StepItem>
+            <StepItem start={0.1} end={0.5}>
+              <h3 className="display-2 mt-5 max-w-3xl">{s.title}</h3>
+            </StepItem>
+            <StepItem start={0.22} end={0.65}>
+              <p className="body-lead mt-6 max-w-xl">{s.body}</p>
+            </StepItem>
+            {i === MEMORY_STEPS.length - 1 ? (
+              <StepItem start={0.35} end={0.8}>
+                <Link
+                  href="/features/digital-event-passport"
+                  className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-pxi-purple transition-colors hover:text-white"
+                >
+                  Verified turnout, explained <ArrowRight className="h-4 w-4" />
+                </Link>
+              </StepItem>
+            ) : null}
+          </div>
+        </StoryStep>
+      ))}
+    </ScrollStory>
+  );
+}
 
 export default function OrganizersView() {
   return (
@@ -66,32 +162,38 @@ export default function OrganizersView() {
           </motion.div>
 
           {/* command center on display */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          <ScrubReveal
+            distance={50}
+            scaleStart={0.97}
             className="mt-16 md:mt-20"
           >
             <div className="mx-auto max-w-3xl">
               <CommandCenterShowcase />
             </div>
-          </motion.div>
+          </ScrubReveal>
         </div>
       </section>
 
 
       {/* ── Chapter: Launch ── */}
+      <ScrollFadeOut>
       <SectionShell eyebrow="Launch" pad="default">
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
-          <div>
-            <h2 className="display-2 mt-5 max-w-2xl">Sell out under your own name.</h2>
+          <ScrubReveal distance={40}>
+            <ScrubWords
+              as="h2"
+              text="Sell out under your own name."
+              className="display-2 mt-5 max-w-2xl"
+            />
             <p className="body-lead mt-6 max-w-xl">
               Checkout, tickets, tiers and guest lists, and a live event thread from ticket number
               one — all wearing your brand. Your covers, your colors, your own stamps when you
               choose to customize.
             </p>
-          </div>
-          <SanaaTicketShowcase />
+          </ScrubReveal>
+          <ScrubReveal distance={60} scaleStart={0.96}>
+            <SanaaTicketShowcase />
+          </ScrubReveal>
         </div>
         <div className="mt-14 flex flex-col gap-16">
           <FeatureRow
@@ -109,14 +211,22 @@ export default function OrganizersView() {
           />
         </div>
       </SectionShell>
+      </ScrollFadeOut>
 
       {/* ── Chapter: Run the night ── */}
+      <ScrollFadeOut>
       <SectionShell eyebrow="Run the night" pad="default">
-        <h2 className="display-2 mt-5 max-w-2xl">Command the door. Read the room.</h2>
-        <p className="body-lead mt-6 max-w-xl">
-          Real time scanning across every gate, and spatial intel on how the room is actually
-          moving. This is where the command center earns its name.
-        </p>
+        <ScrubReveal distance={40}>
+          <ScrubWords
+            as="h2"
+            text="Command the door. Read the room."
+            className="display-2 mt-5 max-w-2xl"
+          />
+          <p className="body-lead mt-6 max-w-xl">
+            Real time scanning across every gate, and spatial intel on how the room is actually
+            moving. This is where the command center earns its name.
+          </p>
+        </ScrubReveal>
         <div className="mt-14 flex flex-col gap-16">
           <FeatureRow
             title="Live scan and gates"
@@ -133,14 +243,22 @@ export default function OrganizersView() {
           />
         </div>
       </SectionShell>
+      </ScrollFadeOut>
 
       {/* ── Chapter: Know your crowd ── */}
+      <ScrollFadeOut>
       <SectionShell eyebrow="Know your crowd" pad="default">
-        <h2 className="display-2 mt-5 max-w-2xl">A behavioral database on every guest.</h2>
-        <p className="body-lead mt-6 max-w-xl">
-          Attendance history, spend, music taste, who brings friends. Build segments from real
-          behavior and reach them over SMS, email, and the feed.
-        </p>
+        <ScrubReveal distance={40}>
+          <ScrubWords
+            as="h2"
+            text="A behavioral database on every guest."
+            className="display-2 mt-5 max-w-2xl"
+          />
+          <p className="body-lead mt-6 max-w-xl">
+            Attendance history, spend, music taste, who brings friends. Build segments from real
+            behavior and reach them over SMS, email, and the feed.
+          </p>
+        </ScrubReveal>
         <div className="mt-14 flex flex-col gap-16">
           <FeatureRow
             title="Analytics that mean something"
@@ -159,51 +277,22 @@ export default function OrganizersView() {
           />
         </div>
       </SectionShell>
+      </ScrollFadeOut>
 
-      {/* ── The memory layer ── */}
-      <SectionShell pad="default">
-        <div className="overflow-hidden rounded-3xl border border-pxi-purple/20 bg-gradient-to-b from-pxi-purple/[0.06] to-transparent p-8 md:p-12">
-          <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-2">
-            <div>
-              <div className="flex items-center gap-3">
-                <Layers className="h-6 w-6 text-pxi-purple" />
-              </div>
-              <h2 className="display-3 mt-5">Every night makes the next one smarter.</h2>
-              <p className="mt-4 max-w-md text-base leading-relaxed text-zinc-400">
-                Photos, stamps, tastes, and spend accumulate with every event you run. That layer
-                compounds: the scrapbook markets the next drop, the passport proves real turnout,
-                and the audience data targets people who actually show up.
-              </p>
-              <Link
-                href="/features/digital-event-passport"
-                className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-pxi-purple transition-colors hover:text-white"
-              >
-                Verified turnout, explained <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-3 gap-3 text-center">
-              {[
-                { k: 'Scrapbooks', v: 'promo that makes itself' },
-                { k: 'Stamps', v: 'turnout you can prove' },
-                { k: 'Behavior', v: 'targeting that converts' },
-              ].map((cell) => (
-                <div key={cell.k} className="rounded-2xl border border-white/[0.08] bg-black/40 p-4">
-                  <p className="text-sm font-black uppercase tracking-wide text-white">{cell.k}</p>
-                  <p className="mt-2 text-[11px] leading-snug text-zinc-500">{cell.v}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </SectionShell>
+      {/* ── The memory layer — pinned scroll story ── */}
+      <MemoryLayerStory />
 
       {/* ── Security beat ── */}
+      <ScrollFadeOut>
       <SectionShell pad="default">
-        <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-8 md:p-12">
+        <ScrubReveal
+          distance={40}
+          className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-8 md:p-12"
+        >
           <div className="flex items-start gap-4">
             <ShieldCheck className="mt-1 h-6 w-6 shrink-0 text-pxi-purple" />
             <div>
-              <h2 className="display-3">Tickets that can't be forged.</h2>
+              <ScrubWords as="h2" text="Tickets that can't be forged." className="display-3" />
               <p className="body-lead mt-4 max-w-2xl">
                 Every pass is cryptographically signed with a modern token standard, meaningfully
                 harder to fake than the aging formats most platforms still rely on. Attendance is
@@ -211,8 +300,9 @@ export default function OrganizersView() {
               </p>
             </div>
           </div>
-        </div>
+        </ScrubReveal>
       </SectionShell>
+      </ScrollFadeOut>
 
       {/* ── Comparison ── */}
       <PlatformComparison />

@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import SectionShell from '@/components/marketing/SectionShell';
 import CameraDemo, { SHOT } from '@/components/marketing/CameraDemo';
+import ScrubReveal from '@/components/motion/ScrubReveal';
+import { ScrubWords, ScrollFadeOut } from '@/components/motion/ScrollStory';
 
 const MOODS = ['Regular', 'Snap', 'Dispo', 'Noir', 'Flash', 'Retro'];
 
@@ -12,6 +14,7 @@ export default function ChapterShoot() {
   const [activeFilter, setActiveFilter] = useState(null);
 
   return (
+    <ScrollFadeOut>
     <div className="relative overflow-hidden">
       {/* Full-section blurred background that changes with the camera filter */}
       <AnimatePresence mode="sync">
@@ -37,32 +40,28 @@ export default function ChapterShoot() {
       <div className="relative z-10">
         <SectionShell eyebrow="Shoot it" pad="default" className="!border-none">
           <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
-            <Motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            <ScrubReveal
+              distance={40}
               className="md:order-2"
             >
-              <h2 className="display-2 mt-5">Six film moods. One camera.</h2>
+              <ScrubWords as="h2" text="Six film moods. One camera." className="display-2 mt-5" />
               <p className="body-lead mt-6 max-w-md">
                 The event album opens at the doors. Swipe through the looks, shoot, and it's already
                 where it belongs.
               </p>
-            </Motion.div>
+            </ScrubReveal>
 
-            <Motion.div
-              initial={{ opacity: 0, y: 32 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            <ScrubReveal
+              distance={60}
+              scaleStart={0.97}
               className="md:order-1"
             >
               <CameraDemo onFilterChange={setActiveFilter} />
-            </Motion.div>
+            </ScrubReveal>
           </div>
         </SectionShell>
       </div>
     </div>
+    </ScrollFadeOut>
   );
 }

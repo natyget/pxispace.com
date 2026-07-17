@@ -1,13 +1,21 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { QrCode, Aperture } from 'lucide-react';
-import SectionShell from '@/components/marketing/SectionShell';
+import { QrCode } from 'lucide-react';
+import {
+  ScrollStory,
+  StoryStep,
+  StoryDots,
+  StepItem,
+  ScrubWords,
+  useStepProgress,
+} from '@/components/motion/ScrollStory';
 
 /**
- * The whole product in three beats, each with a small visual. Attendee
- * focused: no organizer stats, minimal reading.
+ * The whole product in three beats — a pinned scroll story: the stage locks
+ * to the viewport and each swipe sweeps the next beat in (visual first, then
+ * headline, then the line). Attendee focused: no organizer stats, minimal
+ * reading.
  */
 function TicketVisual() {
   return (
@@ -58,37 +66,37 @@ function CameraVisual() {
     <div className="flex h-24 items-center justify-center relative" aria-hidden>
       {/* Far Left: Noir (B&W) */}
       <CameraPill 
-        colorClass="bg-black" 
-        offsetClass="-translate-x-20 -rotate-12 scale-75"
-        zIndex="z-10"
+      colorClass="bg-black" 
+      offsetClass="-translate-x-20 -rotate-12 scale-75"
+      zIndex="z-10"
       />
       {/* Mid Left: Retro (Orange/Warm) */}
       <CameraPill 
-        colorClass="bg-gradient-to-r from-[#5a2c1a] via-[#8a4a2b] to-[#d9955f]" 
-        offsetClass="-translate-x-10 -rotate-6 scale-90"
-        zIndex="z-20"
+      colorClass="bg-gradient-to-r from-[#5a2c1a] via-[#8a4a2b] to-[#d9955f]" 
+      offsetClass="-translate-x-10 -rotate-6 scale-90"
+      zIndex="z-20"
       />
       {/* Center: Snap (Purple/Dark) */}
       <CameraPill 
-        colorClass="bg-[#1c120a] shadow-[0_0_26px_rgba(255,120,40,0.45)]" 
-        stripeColor="bg-pxi-orange"
-        offsetClass="translate-x-0 rotate-0 scale-100"
-        zIndex="z-30"
-        hasFlash="normal"
+      colorClass="bg-[#1c120a] shadow-[0_0_26px_rgba(255,120,40,0.45)]" 
+      stripeColor="bg-pxi-orange"
+      offsetClass="translate-x-0 rotate-0 scale-100"
+      zIndex="z-30"
+      hasFlash="normal"
       />
       {/* Mid Right: Flash/Regular (Dark) */}
       <CameraPill 
-        colorClass="bg-[#101408]/90" 
-        offsetClass="translate-x-10 rotate-6 scale-90"
-        zIndex="z-20"
-        hasFlash={false}
+      colorClass="bg-[#101408]/90" 
+      offsetClass="translate-x-10 rotate-6 scale-90"
+      zIndex="z-20"
+      hasFlash={false}
       />
       {/* Far Right: Dispo (Green) */}
       <CameraPill 
-        colorClass="bg-[#6f9f7c]" 
-        stripeColor="bg-red-500"
-        offsetClass="translate-x-20 rotate-12 scale-75"
-        zIndex="z-10"
+      colorClass="bg-[#6f9f7c]" 
+      stripeColor="bg-red-500"
+      offsetClass="translate-x-20 rotate-12 scale-75"
+      zIndex="z-10"
       />
     </div>
   );
@@ -135,27 +143,52 @@ const BEATS = [
   { title: 'Wake up to it all.', line: 'Every photo from every phone, in one thread.', visual: <MorningVisual /> },
 ];
 
+function IntroStep() {
+  const local = useStepProgress();
+  return (
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center px-6 text-center">
+      <StepItem start={0} end={0.3}>
+        <p className="text-xs font-black uppercase tracking-[0.3em] text-pxi-purple">The idea</p>
+      </StepItem>
+      <ScrubWords
+        as="h2"
+        text="Built around the memory."
+        className="display-2 mt-6 max-w-3xl"
+        progress={local}
+        range={[0.06, 0.7]}
+      />
+      <StepItem start={0.45} end={0.85}>
+        <p className="body-lead mt-8 max-w-md">One night, three beats. Keep scrolling.</p>
+      </StepItem>
+    </div>
+  );
+}
+
 export default function StoryIntro() {
   return (
-    <SectionShell eyebrow="The idea" pad="default">
-      <h2 className="display-3 mt-5 max-w-xl">Built around the memory.</h2>
-
-      <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
-        {BEATS.map((beat, i) => (
-          <motion.div
-            key={beat.title}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.6, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="rounded-2xl bg-white/[0.04] p-6 backdrop-blur-md"
-          >
-            {beat.visual}
-            <h3 className="mt-4 text-lg font-semibold text-white">{beat.title}</h3>
-            <p className="mt-1 text-sm text-zinc-400">{beat.line}</p>
-          </motion.div>
-        ))}
-      </div>
-    </SectionShell>
+    <ScrollStory steps={4} perStep={80} className="bg-black">
+      <StoryDots />
+      <StoryStep index={0} className="flex items-center justify-center">
+        <IntroStep />
+      </StoryStep>
+      {BEATS.map((beat, i) => (
+        <StoryStep key={beat.title} index={i + 1} className="flex items-center justify-center">
+          <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center px-6 text-center">
+            <StepItem start={0} end={0.4} className="flex h-44 items-center justify-center md:h-60">
+              <div className="scale-[1.25] md:scale-150">{beat.visual}</div>
+            </StepItem>
+            <StepItem start={0.12} end={0.55}>
+              <p className="mt-6 text-xs font-black uppercase tracking-[0.3em] text-pxi-purple">
+                {`0${i + 1} / 03`}
+              </p>
+              <h3 className="display-2 mt-4">{beat.title}</h3>
+            </StepItem>
+            <StepItem start={0.24} end={0.68}>
+              <p className="body-lead mt-5 max-w-md">{beat.line}</p>
+            </StepItem>
+          </div>
+        </StoryStep>
+      ))}
+    </ScrollStory>
   );
 }
