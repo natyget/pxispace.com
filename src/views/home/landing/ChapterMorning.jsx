@@ -1,20 +1,15 @@
-'use client';
-
 import React from 'react';
-import { motion } from 'framer-motion';
 import SectionShell from '@/components/marketing/SectionShell';
 import PhoneMockup from '@/components/ui/PhoneMockup';
+import ScrubReveal from '@/components/motion/ScrubReveal';
 
 /** Chapter four: the scrapbook builds itself overnight; keepers go in the vault. */
 export default function ChapterMorning() {
   return (
     <SectionShell eyebrow="The morning after" pad="default">
       <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        <ScrubReveal
+          distance={40}
         >
           <h2 className="display-2 mt-5">Wake up to the whole night.</h2>
           <p className="body-lead mt-6 max-w-md">
@@ -24,13 +19,11 @@ export default function ChapterMorning() {
           <p className="mt-8 text-lg font-bold leading-snug text-white max-w-md sm:text-xl" style={{ textShadow: '0 0 20px rgba(255,255,255,0.15)' }}>
             No chasing the group chat. No begging for pics. It&apos;s all already there.
           </p>
-        </motion.div>
+        </ScrubReveal>
 
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+        <ScrubReveal
+          distance={60}
+          scaleStart={0.96}
           className="flex items-center justify-center"
         >
           <PhoneMockup
@@ -82,7 +75,7 @@ export default function ChapterMorning() {
             imgUrl="/landing/assets/thread_frame1.png"
             className="z-10 mt-10 rotate-3 scale-[0.92]"
           />
-        </motion.div>
+        </ScrubReveal>
       </div>
     </SectionShell>
   );
