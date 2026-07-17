@@ -1,10 +1,8 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import UiChip from './UiChip';
+import ScrubReveal from '../motion/ScrubReveal';
 
 /**
  * Feature row: bold caption + a short sentence on one side, a visual on the
@@ -26,11 +24,8 @@ export default function FeatureRow({
   className = '',
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-80px' }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+    <ScrubReveal
+      distance={40}
       className={[
         'grid grid-cols-1 items-center gap-6 md:grid-cols-2 md:gap-12',
         reverse ? 'md:[&>*:first-child]:order-2' : '',
@@ -60,6 +55,6 @@ export default function FeatureRow({
           </UiChip>
         )}
       </div>
-    </motion.div>
+    </ScrubReveal>
   );
 }

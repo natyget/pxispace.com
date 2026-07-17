@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { PxiPassportCard } from '@/components/passport/PxiPassportCard';
+import ScrubReveal from '@/components/motion/ScrubReveal';
 
 /**
  * The real dashboard passport card rendered with a showcase profile:
@@ -36,15 +36,13 @@ const SHOWCASE_EVENTS = [
 
 export default function PassportShowcase({ className = '' }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 32, rotate: -1.5 }}
-      whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-      viewport={{ once: true, margin: '-80px' }}
-      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+    <ScrubReveal
+      distance={45}
+      scaleStart={0.96}
       className={['flex w-full items-center justify-center', className].filter(Boolean).join(' ')}
       aria-label="Example PXI passport"
     >
       <PxiPassportCard user={SHOWCASE_USER} attendedEvents={SHOWCASE_EVENTS} />
-    </motion.div>
+    </ScrubReveal>
   );
 }
