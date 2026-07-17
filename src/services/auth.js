@@ -1,7 +1,15 @@
 import { api } from './api';
+import { getAttribution } from '@/lib/attribution';
 
 const TOKEN_KEY = 'pxi_token';
 const USER_KEY = 'pxi_user';
+
+/** Campaign attribution rider for account-creating auth calls (backend only
+ *  persists it on first-time user creation; ignored for existing accounts). */
+const withAttribution = () => {
+    const attribution = getAttribution();
+    return attribution ? { signupAttribution: attribution } : {};
+};
 
 /** Sync PASETO to HttpOnly cookie so Edge middleware can verify (Next.js only). */
 async function setPasetoCookie(token) {
@@ -70,7 +78,7 @@ export const authStorage = {
 
 export const authService = {
     register: (email, password, username, phone) =>
-        api.post('/api/auth/register', { email, password, username, ...(phone && { phone }) }),
+        api.post('/api/auth/register', { email, password, username, ...(phone && { phone }), ...withAttribution() }),
 
     /** Send OTP to phone via SMS (signup). Returns { message }. */
     sendVerification: (phone) =>
@@ -126,16 +134,17 @@ export const authService = {
         api.post('/api/auth/login', { identifier, password }),
 
     googleAuth: (idToken) =>
-        api.post('/api/auth/google', { idToken }),
+        api.post('/api/auth/google', { idToken, ...withAttribution() }),
 
     /** Web OAuth2 token flow (shows account selection + consent). Use access_token from useGoogleLogin. */
     googleTokenAuth: (accessToken) =>
-        api.post('/api/auth/google-token', { access_token: accessToken }),
+        api.post('/api/auth/google-token', { access_token: accessToken, ...withAttribution() }),
 
     appleAuth: (identityToken, fullName) =>
         api.post('/api/auth/apple', {
             identityToken,
             ...(fullName && { fullName }),
+            ...withAttribution(),
         }),
 
     getMe: (userId) =>

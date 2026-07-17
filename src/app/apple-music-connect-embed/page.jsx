@@ -1,26 +1,52 @@
 'use client';
 
-// Chrome-free Apple Music authorization page loaded inside the PXI mobile app's
-// WebView. Loads MusicKit JS, authorizes with the user's Apple Music account and
-// hands the resulting Music-User-Token back to the native app via postMessage.
+// Chrome-free Apple Music authorization page loaded by the PXI mobile app.
+// Loads MusicKit JS, authorizes with the user's Apple Music account and hands
+// the resulting Music-User-Token back to the native app. Two return channels:
+//   - default: postMessage to the app WebView (legacy embed)
+//   - ?redirect=1: deep-link redirect to pxi://apple-music-connect — used with
+//     ASWebAuthenticationSession so iCloud passkeys/password autofill work
+//     (iOS blocks passkeys inside plain WebViews).
 // The app then calls POST /api/music/apple/connect with its own auth token.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import { api } from '@/services/api';
 
+const APP_REDIRECT_TARGET = 'pxi://apple-music-connect';
+
 export default function AppleMusicConnectEmbedPage() {
   const [state, setState] = useState('loading'); // loading | ready | authorizing | done | error
   const [errorMsg, setErrorMsg] = useState('');
   const musicKitReadyRef = useRef(false);
 
-  const postToApp = useCallback((payload) => {
+  const isRedirectMode = useCallback(() => {
     try {
-      window.ReactNativeWebView?.postMessage(JSON.stringify(payload));
+      return new URLSearchParams(window.location.search).get('redirect') === '1';
     } catch {
-      /* not inside the app WebView */
+      return false;
     }
   }, []);
+
+  const postToApp = useCallback(
+    (payload) => {
+      if (isRedirectMode()) {
+        // Fixed literal target — never redirect to a caller-supplied URL.
+        const params =
+          payload?.type === 'PXI_APPLE_MUSIC_TOKEN'
+            ? `?musicUserToken=${encodeURIComponent(payload.musicUserToken)}`
+            : '?cancelled=1';
+        window.location.replace(`${APP_REDIRECT_TARGET}${params}`);
+        return;
+      }
+      try {
+        window.ReactNativeWebView?.postMessage(JSON.stringify(payload));
+      } catch {
+        /* not inside the app WebView */
+      }
+    },
+    [isRedirectMode],
+  );
 
   const configure = useCallback(async () => {
     try {

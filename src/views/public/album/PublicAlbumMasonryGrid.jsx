@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { Reveal } from '@/components/motion/Reveal';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { mediaDisplayUrl } from './albumMediaLayout';
@@ -29,7 +30,7 @@ function GalleryGridTile({ item, index, onPressItem }) {
     <button
       type="button"
       onClick={() => onPressItem(index)}
-      className="group relative aspect-square overflow-hidden border-[0.5px] border-white/5 bg-[#111] focus:outline-none focus-visible:ring-2 focus-visible:ring-pxi-purple"
+      className="group relative block aspect-square w-full overflow-hidden border-[0.5px] border-white/5 bg-[#111] focus:outline-none focus-visible:ring-2 focus-visible:ring-pxi-purple"
     >
       <Image
         src={src}
@@ -60,15 +61,15 @@ function GalleryGridTile({ item, index, onPressItem }) {
 }
 
 export default function PublicAlbumMasonryGrid({ items, onPressItem }) {
+  // Per-tile viewport reveals (not a group stagger): long albums would queue
+  // seconds of delay on the last tiles; independent reveals cascade naturally
+  // as the user scrolls.
   return (
     <div className="grid grid-cols-3">
       {items.map((item, index) => (
-        <GalleryGridTile
-          key={item.id || index}
-          item={item}
-          index={index}
-          onPressItem={onPressItem}
-        />
+        <Reveal key={item.id || index}>
+          <GalleryGridTile item={item} index={index} onPressItem={onPressItem} />
+        </Reveal>
       ))}
     </div>
   );

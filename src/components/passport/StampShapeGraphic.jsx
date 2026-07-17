@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { useId, useState, useEffect } from 'react';
 import {
     ARCH_GATE_INNER_PATH,
     ARCH_GATE_OUTER_PATH,
@@ -334,7 +334,7 @@ function StampFace({ shape, color, seedInt, date, name, city, role, grungeRadius
 }
 
 /** Passport stamp artwork — 12 level-based templates (passport-stamp-studio). Travel-visa art direction on the 9 "stamp" shapes; the 3 label shapes stay printed-document styled. */
-export function StampShapeGraphic({ shape, color, textColor, name, date, city, role, seed }) {
+function StampShapeGraphicImpl({ shape, color, textColor, name, date, city, role, seed }) {
     const ink = textColor || color;
     const uid = useId().replace(/[:]/g, '');
     const seedInt = seedToInt(seed ?? name);
@@ -534,6 +534,17 @@ export function StampShapeGraphic({ shape, color, textColor, name, date, city, r
         default:
             return null;
     }
+}
+
+export function StampShapeGraphic(props) {
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (!isMounted) return null;
+
+    return <StampShapeGraphicImpl {...props} />;
 }
 
 /** Alias for legacy imports from passportVisualParts. */

@@ -1,7 +1,10 @@
 import { isAdminTierUser } from '@/lib/accountTier';
 
 const PXI_DOMAIN = 'pxispace.com';
-const SUPER_ADMIN_EMAIL = 'natan@pxispace.com';
+// Must match the backend's SUPER_ADMIN_EMAIL (utils/accountTier.ts); overridable per-env.
+const SUPER_ADMIN_EMAIL = (process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL || 'natan@pxispace.com')
+    .trim()
+    .toLowerCase();
 
 /** Control-room role hierarchy (mirrors backend utils/accountTier.ts). */
 const ROLE_RANK = { NONE: 0, SUPPORT: 1, MODERATOR: 2, ADMIN: 3, SUPER_ADMIN: 4 };

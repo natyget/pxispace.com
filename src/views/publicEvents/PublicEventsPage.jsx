@@ -516,14 +516,16 @@ export default function PublicEventsPage() {
       {portalTarget
         ? createPortal(
           <div ref={filterTrayRef} className="flex flex-nowrap items-center justify-center gap-0 rounded-full bg-white/[0.04] px-2.5 py-1 md:px-3.5 md:py-1.5 backdrop-blur-2xl border-0 shadow-lg max-w-[92vw]">
+            <span className="text-sm md:text-base font-semibold text-white/40 px-1.5 select-none leading-none flex items-center h-full" aria-hidden="true">at</span>
+
             {/* Time */}
             <div className="relative flex items-center" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
                 onClick={() => setOpenMenu((m) => (m === 'time' ? null : 'time'))}
-                className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm md:text-base font-semibold text-white opacity-80 transition-opacity hover:opacity-100"
+                className="flex items-center gap-1 rounded-full px-2 md:px-3 py-1.5 text-sm md:text-base font-semibold text-white opacity-80 transition-opacity hover:opacity-100 whitespace-nowrap"
               >
-                {timeLabel}
+                {timeLabel === 'All' ? 'Time' : timeLabel}
                 <HugeiconsIcon icon={ArrowDown01Icon} size={13} />
               </button>
               {openMenu === 'time' ? (
@@ -549,7 +551,7 @@ export default function PublicEventsPage() {
               <button
                 type="button"
                 onClick={() => setOpenMenu((m) => (m === 'city' ? null : 'city'))}
-                className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm md:text-base font-semibold text-white opacity-80 transition-opacity hover:opacity-100"
+                className="flex items-center gap-1 rounded-full px-2 md:px-3 py-1.5 text-sm md:text-base font-semibold text-white opacity-80 transition-opacity hover:opacity-100 whitespace-nowrap"
               >
                 {cityLabel === 'All' ? 'City' : cityLabel}
                 <HugeiconsIcon icon={ArrowDown01Icon} size={13} />
