@@ -18,6 +18,7 @@ import VenueMapMock from '@/components/marketing/DashboardMockup/VenueMapMock';
 import CreateEventMock from '@/components/marketing/DashboardMockup/CreateEventMock';
 import SanaaTicketShowcase from '@/components/marketing/SanaaTicketShowcase';
 import PlatformComparison from './PlatformComparison';
+import ScrubReveal from '@/components/motion/ScrubReveal';
 
 const CREATE_HREF = '/login?redirect=/dashboard/events/new';
 const DEMO_HREF = '/book';
@@ -66,16 +67,15 @@ export default function OrganizersView() {
           </motion.div>
 
           {/* command center on display */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          <ScrubReveal
+            distance={50}
+            scaleStart={0.97}
             className="mt-16 md:mt-20"
           >
             <div className="mx-auto max-w-3xl">
               <CommandCenterShowcase />
             </div>
-          </motion.div>
+          </ScrubReveal>
         </div>
       </section>
 
@@ -83,15 +83,17 @@ export default function OrganizersView() {
       {/* ── Chapter: Launch ── */}
       <SectionShell eyebrow="Launch" pad="default">
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
-          <div>
+          <ScrubReveal distance={40}>
             <h2 className="display-2 mt-5 max-w-2xl">Sell out under your own name.</h2>
             <p className="body-lead mt-6 max-w-xl">
               Checkout, tickets, tiers and guest lists, and a live event thread from ticket number
               one — all wearing your brand. Your covers, your colors, your own stamps when you
               choose to customize.
             </p>
-          </div>
-          <SanaaTicketShowcase />
+          </ScrubReveal>
+          <ScrubReveal distance={60} scaleStart={0.96}>
+            <SanaaTicketShowcase />
+          </ScrubReveal>
         </div>
         <div className="mt-14 flex flex-col gap-16">
           <FeatureRow
@@ -112,11 +114,13 @@ export default function OrganizersView() {
 
       {/* ── Chapter: Run the night ── */}
       <SectionShell eyebrow="Run the night" pad="default">
-        <h2 className="display-2 mt-5 max-w-2xl">Command the door. Read the room.</h2>
-        <p className="body-lead mt-6 max-w-xl">
-          Real time scanning across every gate, and spatial intel on how the room is actually
-          moving. This is where the command center earns its name.
-        </p>
+        <ScrubReveal distance={40}>
+          <h2 className="display-2 mt-5 max-w-2xl">Command the door. Read the room.</h2>
+          <p className="body-lead mt-6 max-w-xl">
+            Real time scanning across every gate, and spatial intel on how the room is actually
+            moving. This is where the command center earns its name.
+          </p>
+        </ScrubReveal>
         <div className="mt-14 flex flex-col gap-16">
           <FeatureRow
             title="Live scan and gates"
@@ -136,11 +140,13 @@ export default function OrganizersView() {
 
       {/* ── Chapter: Know your crowd ── */}
       <SectionShell eyebrow="Know your crowd" pad="default">
-        <h2 className="display-2 mt-5 max-w-2xl">A behavioral database on every guest.</h2>
-        <p className="body-lead mt-6 max-w-xl">
-          Attendance history, spend, music taste, who brings friends. Build segments from real
-          behavior and reach them over SMS, email, and the feed.
-        </p>
+        <ScrubReveal distance={40}>
+          <h2 className="display-2 mt-5 max-w-2xl">A behavioral database on every guest.</h2>
+          <p className="body-lead mt-6 max-w-xl">
+            Attendance history, spend, music taste, who brings friends. Build segments from real
+            behavior and reach them over SMS, email, and the feed.
+          </p>
+        </ScrubReveal>
         <div className="mt-14 flex flex-col gap-16">
           <FeatureRow
             title="Analytics that mean something"
@@ -162,7 +168,11 @@ export default function OrganizersView() {
 
       {/* ── The memory layer ── */}
       <SectionShell pad="default">
-        <div className="overflow-hidden rounded-3xl border border-pxi-purple/20 bg-gradient-to-b from-pxi-purple/[0.06] to-transparent p-8 md:p-12">
+        <ScrubReveal
+          distance={50}
+          scaleStart={0.97}
+          className="overflow-hidden rounded-3xl border border-pxi-purple/20 bg-gradient-to-b from-pxi-purple/[0.06] to-transparent p-8 md:p-12"
+        >
           <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-2">
             <div>
               <div className="flex items-center gap-3">
@@ -194,12 +204,15 @@ export default function OrganizersView() {
               ))}
             </div>
           </div>
-        </div>
+        </ScrubReveal>
       </SectionShell>
 
       {/* ── Security beat ── */}
       <SectionShell pad="default">
-        <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-8 md:p-12">
+        <ScrubReveal
+          distance={40}
+          className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-8 md:p-12"
+        >
           <div className="flex items-start gap-4">
             <ShieldCheck className="mt-1 h-6 w-6 shrink-0 text-pxi-purple" />
             <div>
@@ -211,7 +224,7 @@ export default function OrganizersView() {
               </p>
             </div>
           </div>
-        </div>
+        </ScrubReveal>
       </SectionShell>
 
       {/* ── Comparison ── */}

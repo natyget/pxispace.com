@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import ShareSheet from './ShareSheet';
 import PostCard from './PostCard';
+import ScrubReveal from '@/components/motion/ScrubReveal';
 
 /**
  * "Your night, ready to post." A live DOM rebuild of the app's share sheet
@@ -76,15 +76,12 @@ export default function InstaShareShowcase({ compact = false }) {
   return (
     <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
       {/* copy + four framed cards, matching the four dashes in the sheet */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      <ScrubReveal
+        distance={40}
       >
         <h2 className="display-2">Your night, ready to post.</h2>
         <p className="body-lead mt-6 max-w-md">
-          One tap turns any scrapbook shot into a framed postcard.
+          One tap turns any scrapbook scrapbook shot into a framed postcard.
         </p>
         <ul className="mt-4 max-w-md space-y-2.5 text-sm leading-relaxed text-zinc-400">
           <li className="flex items-start gap-2.5">
@@ -125,18 +122,16 @@ export default function InstaShareShowcase({ compact = false }) {
         >
           See how it works <ArrowRight className="h-4 w-4" />
         </Link>
-      </motion.div>
+      </ScrubReveal>
 
       {/* the sheet */}
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.96 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      <ScrubReveal
+        distance={60}
+        scaleStart={0.96}
         className="flex justify-center"
       >
         <ShareSheet photos={PHOTOS} index={index} />
-      </motion.div>
+      </ScrubReveal>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 import SectionShell from '@/components/marketing/SectionShell';
+import ScrubReveal from '@/components/motion/ScrubReveal';
 
 const PRINCIPLES = [
   {
@@ -53,11 +54,8 @@ const AboutPage = () => {
       {/* 2 — Origin */}
       <SectionShell pad="loose">
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          <ScrubReveal
+            distance={40}
           >
             <h2 className="display-3 mt-5">Built from lost moments.</h2>
             <div className="mt-6 space-y-5 text-base leading-relaxed text-zinc-400">
@@ -71,13 +69,12 @@ const AboutPage = () => {
                 night compiles itself, the organizer keeps the money, and the memory is the point.
               </p>
             </div>
-          </motion.div>
+          </ScrubReveal>
 
-          <motion.figure
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          <ScrubReveal
+            as="figure"
+            distance={60}
+            scaleStart={0.96}
             className="group relative"
           >
             <video
@@ -88,7 +85,7 @@ const AboutPage = () => {
               playsInline
               className="aspect-square w-full rounded-3xl object-cover"
             />
-          </motion.figure>
+          </ScrubReveal>
         </div>
       </SectionShell>
 
@@ -96,17 +93,14 @@ const AboutPage = () => {
       <SectionShell eyebrow="What we believe" pad="loose">
         <div className="mt-10 divide-y divide-white/[0.08] border-y border-white/[0.08]">
           {PRINCIPLES.map((p) => (
-            <motion.div
+            <ScrubReveal
               key={p.title}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              distance={30}
               className="grid grid-cols-1 gap-3 py-8 md:grid-cols-[1fr_1.2fr] md:gap-12"
             >
               <h3 className="display-3 text-2xl md:text-3xl">{p.title}</h3>
               <p className="self-center text-base leading-relaxed text-zinc-400">{p.body}</p>
-            </motion.div>
+            </ScrubReveal>
           ))}
         </div>
       </SectionShell>

@@ -4,8 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon } from '@hugeicons/core-free-icons';
-import { PXI_IOS_DOWNLOAD_HREF, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
-import { createBranchInstallLink } from '@/lib/branchLinks';
+import { PXI_IOS_DOWNLOAD_HREF, playStoreUrlWithDeepLink } from '@/lib/appStoreLinks';
 
 /**
  * Dismissible "Open in PXI" banner.
@@ -34,8 +33,11 @@ function detectPlatform() {
     return 'desktop';
 }
 
-function storeUrlForPlatform(platform) {
-    if (platform === 'android') return PXI_PLAY_STORE_URL;
+function storeUrlForPlatform(platform, deepLinkUrl) {
+    // Android: the store URL carries the deep link through install via the
+    // Play Install Referrer (deferred deep linking without Branch). iOS has
+    // no free equivalent — the target page's invite code covers that flow.
+    if (platform === 'android') return playStoreUrlWithDeepLink(deepLinkUrl);
     return PXI_IOS_DOWNLOAD_HREF;
 }
 
@@ -75,17 +77,7 @@ export default function AppOpenBanner({
             try {
                 window.localStorage.setItem(PENDING_DEEPLINK_KEY, deepLinkUrl);
             } catch {}
-            const store = storeUrlForPlatform(platform);
-            // Kick off a Branch install link in parallel with the deep-link
-            // attempt so the store handoff carries the deep link through
-            // install (deferred deep linking). Resolves null on any
-            // error/timeout; the plain store URL below stays the fallback.
-            let branchLink = null;
-            createBranchInstallLink({ url: deepLinkUrl, feature: 'app-open-banner' })
-                .then((link) => {
-                    branchLink = link;
-                })
-                .catch(() => {});
+            const store = storeUrlForPlatform(platform, deepLinkUrl);
             const start = Date.now();
             let fallbackTimer = null;
             const cleanup = () => {
@@ -102,7 +94,7 @@ export default function AppOpenBanner({
             fallbackTimer = setTimeout(() => {
                 cleanup();
                 if (Date.now() - start < 2500 && document.visibilityState === 'visible') {
-                    window.location.href = branchLink || store;
+                    window.location.href = store;
                 }
             }, 1500);
             window.location.href = deepLinkUrl;

@@ -1,4 +1,16 @@
 import { api } from './api';
+import { getGaIds } from '@/lib/analytics';
+
+/** GA client/session ids rider — lets the backend fire the server-side GA4
+ *  `purchase` from the Stripe webhook, attributed to this browser session.
+ *  getGaIds resolves nulls fast when analytics is off/blocked. */
+async function gaCheckoutFields() {
+  const { clientId, sessionId } = await getGaIds();
+  return {
+    ...(clientId ? { gaClientId: clientId, gaPlatform: 'web' } : {}),
+    ...(sessionId ? { gaSessionId: sessionId } : {}),
+  };
+}
 
 /**
  * Get ticket quote (total for buyer = ticket + service fee + processing fee) for display in EULA.
@@ -25,6 +37,7 @@ export async function purchaseTicket(eventId, tierId, opts = {}) {
     ...(opts.promoCode ? { promoCode: opts.promoCode } : {}),
     ...(opts.emailOptIn ? { emailOptIn: true } : {}),
     ...(opts.smsOptIn ? { smsOptIn: true } : {}),
+    ...(await gaCheckoutFields()),
   });
 }
 
@@ -45,6 +58,7 @@ export async function createCheckoutSession(eventId, successUrl, cancelUrl, tier
     ...(opts.promoCode ? { promoCode: opts.promoCode } : {}),
     ...(opts.emailOptIn ? { emailOptIn: true } : {}),
     ...(opts.smsOptIn ? { smsOptIn: true } : {}),
+    ...(await gaCheckoutFields()),
   });
 }
 

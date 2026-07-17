@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { QrCode, Aperture } from 'lucide-react';
 import SectionShell from '@/components/marketing/SectionShell';
+import ScrubReveal from '@/components/motion/ScrubReveal';
 
 /**
  * The whole product in three beats, each with a small visual. Attendee
@@ -15,7 +16,7 @@ function TicketVisual() {
       <div className="flex w-56 overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-transparent shadow-2xl relative">
         <div className="absolute -left-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#101010]" />
         <div className="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#101010]" />
-        
+
         <div className="flex-1 p-4 pl-5">
           <p className="text-[7px] font-black uppercase tracking-[0.2em] text-pxi-purple">PXI Ticket</p>
           <p className="mt-1 text-sm font-black text-white">NUIT TROPICALE</p>
@@ -57,38 +58,38 @@ function CameraVisual() {
   return (
     <div className="flex h-24 items-center justify-center relative" aria-hidden>
       {/* Far Left: Noir (B&W) */}
-      <CameraPill 
-        colorClass="bg-black" 
-        offsetClass="-translate-x-20 -rotate-12 scale-75"
-        zIndex="z-10"
+      <CameraPill
+      colorClass="bg-black"
+      offsetClass="-translate-x-20 -rotate-12 scale-75"
+      zIndex="z-10"
       />
       {/* Mid Left: Retro (Orange/Warm) */}
-      <CameraPill 
-        colorClass="bg-gradient-to-r from-[#5a2c1a] via-[#8a4a2b] to-[#d9955f]" 
-        offsetClass="-translate-x-10 -rotate-6 scale-90"
-        zIndex="z-20"
+      <CameraPill
+      colorClass="bg-gradient-to-r from-[#5a2c1a] via-[#8a4a2b] to-[#d9955f]"
+      offsetClass="-translate-x-10 -rotate-6 scale-90"
+      zIndex="z-20"
       />
       {/* Center: Snap (Purple/Dark) */}
-      <CameraPill 
-        colorClass="bg-[#1c120a] shadow-[0_0_26px_rgba(255,120,40,0.45)]" 
-        stripeColor="bg-pxi-orange"
-        offsetClass="translate-x-0 rotate-0 scale-100"
-        zIndex="z-30"
-        hasFlash="normal"
+      <CameraPill
+      colorClass="bg-[#1c120a] shadow-[0_0_26px_rgba(255,120,40,0.45)]"
+      stripeColor="bg-pxi-orange"
+      offsetClass="translate-x-0 rotate-0 scale-100"
+      zIndex="z-30"
+      hasFlash="normal"
       />
       {/* Mid Right: Flash/Regular (Dark) */}
-      <CameraPill 
-        colorClass="bg-[#101408]/90" 
-        offsetClass="translate-x-10 rotate-6 scale-90"
-        zIndex="z-20"
-        hasFlash={false}
+      <CameraPill
+      colorClass="bg-[#101408]/90"
+      offsetClass="translate-x-10 rotate-6 scale-90"
+      zIndex="z-20"
+      hasFlash={false}
       />
       {/* Far Right: Dispo (Green) */}
-      <CameraPill 
-        colorClass="bg-[#6f9f7c]" 
-        stripeColor="bg-red-500"
-        offsetClass="translate-x-20 rotate-12 scale-75"
-        zIndex="z-10"
+      <CameraPill
+      colorClass="bg-[#6f9f7c]"
+      stripeColor="bg-red-500"
+      offsetClass="translate-x-20 rotate-12 scale-75"
+      zIndex="z-10"
       />
     </div>
   );
@@ -142,18 +143,16 @@ export default function StoryIntro() {
 
       <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
         {BEATS.map((beat, i) => (
-          <motion.div
+          <ScrubReveal
             key={beat.title}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.6, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+            distance={40}
+            scaleStart={0.96}
             className="rounded-2xl bg-white/[0.04] p-6 backdrop-blur-md"
           >
             {beat.visual}
             <h3 className="mt-4 text-lg font-semibold text-white">{beat.title}</h3>
             <p className="mt-1 text-sm text-zinc-400">{beat.line}</p>
-          </motion.div>
+          </ScrubReveal>
         ))}
       </div>
     </SectionShell>

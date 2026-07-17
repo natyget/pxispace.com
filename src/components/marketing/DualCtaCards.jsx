@@ -31,7 +31,7 @@ export default function DualCtaCards({ cards = [], className = '' }) {
             alt=""
             aria-hidden
             loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+            className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/20" />
           {/* purple hairline top, reveals on hover */}
