@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
+import CountUpNumber from '@/components/motion/CountUpNumber';
 import {
   Calendar01Icon,
   Cancel01Icon,
@@ -84,7 +85,9 @@ function StageSpot() {
 
       {/* Taste match top-right */}
       <div className="absolute right-4 top-4 z-20 flex items-center rounded-full bg-black/40 px-2.5 py-1.5 backdrop-blur-sm">
-        <span className="text-[9px] font-black uppercase tracking-[0.14em] text-white">92% Match</span>
+        <span className="text-[9px] font-black uppercase tracking-[0.14em] text-white">
+          <CountUpNumber to={92} duration={0.9} suffix="% Match" />
+        </span>
       </div>
 
       {/* Bottom overlay: time / title / location */}
@@ -217,19 +220,46 @@ function StageTicket() {
 }
 
 const STAGE_VIEWS = [StageSpot, StageJoin, StageTicket];
+// The cut, not a slide: stage changes happen behind a held black frame — the
+// card swaps while hidden, then the black lifts on the new stage. Reads like
+// a shutter closing between shots rather than a carousel dragging sideways.
+const BLACKOUT_MS = 150;
 
 export default function DiscoveryFlow() {
   const [stage, setStage] = useState(0);
-  const [swipeDir, setSwipeDir] = useState(1); // 1 = forward, -1 = back
+  const [blackout, setBlackout] = useState(false);
   const touchRef = useRef(null);
+  const pendingRef = useRef(null);
+  const cardRef = useRef(null);
+  // The auto-advance clock only starts once this card is actually on screen —
+  // otherwise "Spot it" can burn most of its 4.5s while still off-screen
+  // during scroll, and swap the instant the user arrives.
+  const isInView = useInView(cardRef, { margin: '-10% 0px -10% 0px' });
+
+  const goToStage = useCallback((next) => {
+    if (next === stage || pendingRef.current !== null) return;
+    pendingRef.current = next;
+    setBlackout(true);
+    setTimeout(() => {
+      setStage(pendingRef.current);
+      // Small extra beat so the new stage is fully mounted before the cut lifts.
+      setTimeout(() => {
+        setBlackout(false);
+        pendingRef.current = null;
+      }, 40);
+    }, BLACKOUT_MS);
+  }, [stage]);
 
   useEffect(() => {
+    // Not on screen yet (or scrolled away) — don't burn the clock, and don't
+    // let a stale timer fire while it's out of view. Becoming visible always
+    // starts a fresh full-length countdown for the current stage.
+    if (!isInView) return;
     const id = setTimeout(() => {
-      setSwipeDir(1);
-      setStage((s) => (s + 1) % STAGES.length);
+      goToStage((stage + 1) % STAGES.length);
     }, STAGE_MS[stage]);
     return () => clearTimeout(id);
-  }, [stage]);
+  }, [stage, goToStage, isInView]);
 
   const handleTouchStart = useCallback((e) => {
     touchRef.current = e.touches[0].clientX;
@@ -240,15 +270,13 @@ export default function DiscoveryFlow() {
     const diff = touchRef.current - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 50) {
       if (diff > 0 && stage < STAGES.length - 1) {
-        setSwipeDir(1);
-        setStage((s) => s + 1);
+        goToStage(stage + 1);
       } else if (diff < 0 && stage > 0) {
-        setSwipeDir(-1);
-        setStage((s) => s - 1);
+        goToStage(stage - 1);
       }
     }
     touchRef.current = null;
-  }, [stage]);
+  }, [stage, goToStage]);
 
   const View = STAGE_VIEWS[stage];
 
@@ -256,22 +284,19 @@ export default function DiscoveryFlow() {
     <div className="mx-auto w-full max-w-[380px]">
       {/* Floating card frame, mirroring EventPreviewModal's dialog shell */}
       <div
-        className="h-[540px] overflow-hidden rounded-[2rem] bg-zinc-950 shadow-2xl touch-pan-y"
+        ref={cardRef}
+        className="relative h-[540px] overflow-hidden rounded-[2rem] bg-zinc-950 shadow-2xl touch-pan-y"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <AnimatePresence mode="wait">
-          <MotionDiv
-            key={stage}
-            initial={{ opacity: 0, x: swipeDir * 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: swipeDir * -24 }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="h-full w-full"
-          >
-            <View />
-          </MotionDiv>
-        </AnimatePresence>
+        <View />
+        <MotionDiv
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-30 bg-black"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: blackout ? 1 : 0 }}
+          transition={{ duration: BLACKOUT_MS / 1000, ease: 'easeInOut' }}
+        />
       </div>
 
       {/* stage indicator */}
@@ -280,10 +305,7 @@ export default function DiscoveryFlow() {
           <button
             key={label}
             type="button"
-            onClick={() => {
-              setSwipeDir(i > stage ? 1 : -1);
-              setStage(i);
-            }}
+            onClick={() => goToStage(i)}
             className={`text-[10px] font-bold uppercase tracking-[0.18em] transition-colors ${
               i === stage ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'
             }`}

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { QRCode } from 'antd';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { QrCodeIcon } from '@hugeicons/core-free-icons';
@@ -41,9 +42,15 @@ const TICKET_CLIP = zigzagPolygon();
 
 export function SanaaCheckoutCard({ className = '' }) {
   return (
-    <div
+    // "Printed": the pass slides up out of a slot, like a wallet pass being
+    // generated after checkout.
+    <motion.div
       aria-hidden
       className={`relative overflow-hidden rounded-[2rem] border border-white/10 bg-black p-4 shadow-[0_24px_80px_rgba(0,0,0,0.55)] ${className}`}
+      initial={{ clipPath: 'inset(100% 0 0 0)', y: 24, opacity: 0 }}
+      whileInView={{ clipPath: 'inset(0% 0 0 0)', y: 0, opacity: 1 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <img
@@ -107,16 +114,22 @@ export function SanaaCheckoutCard({ className = '' }) {
           </p>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 export function SanaaAppTicket({ className = '' }) {
   return (
-    <div
+    // "Torn off": follows the checkout card in, settling with a slight
+    // overshoot rotation like a stub just torn free.
+    <motion.div
       aria-hidden
       className={`relative ${className}`}
       style={{ filter: `drop-shadow(0 0 22px ${ROSE}66)` }}
+      initial={{ y: -18, opacity: 0, rotate: -3 }}
+      whileInView={{ y: 0, opacity: 1, rotate: [-3, 1.5, 0] }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.6, delay: 0.45, ease: 'easeOut' }}
     >
       {/* zigzag border layer */}
       <div className="p-[3px]" style={{ clipPath: TICKET_CLIP, background: ROSE }}>
@@ -185,7 +198,7 @@ export function SanaaAppTicket({ className = '' }) {
       {/* perforation notches at the stub divider */}
       <span className="absolute -top-[5px] right-[104px] h-3 w-3 rounded-full bg-black" />
       <span className="absolute -bottom-[5px] right-[104px] h-3 w-3 rounded-full bg-black" />
-    </div>
+    </motion.div>
   );
 }
 

@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
+import CountUpNumber from '@/components/motion/CountUpNumber';
 
 /** Stylized live door-scan scene: gates, orange velocity sparkline, admitted
  *  counter, one incident row. Orange = the "live" signal color. */
@@ -24,24 +26,42 @@ export default function LiveScanMock() {
             <span className="h-2 w-2 animate-pulse rounded-full bg-pxi-orange shadow-[0_0_8px_var(--pxi-orange)]" />
             <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-pxi-orange">Live</span>
           </div>
-          <p className="mt-1 text-3xl font-black md:text-4xl">1,122</p>
+          <p className="mt-1 text-3xl font-black md:text-4xl">
+            <CountUpNumber to={1122} />
+          </p>
           <p className="text-xs text-zinc-500">admitted · 78% of capacity</p>
         </div>
-        {/* velocity sparkline */}
+        {/* velocity sparkline — draws in left to right like a live trace */}
         <svg viewBox="0 0 100 40" className="h-12 w-32" preserveAspectRatio="none">
-          <polyline points={pts} fill="none" stroke="var(--pxi-orange)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          <motion.polyline
+            points={pts}
+            fill="none"
+            stroke="var(--pxi-orange)"
+            strokeWidth="2"
+            vectorEffect="non-scaling-stroke"
+            initial={{ pathLength: 0, pathOffset: 0 }}
+            whileInView={{ pathLength: 1 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 1.1, delay: 0.2, ease: 'easeOut' }}
+          />
         </svg>
       </div>
 
       <div className="space-y-2.5">
-        {GATES.map((g) => (
+        {GATES.map((g, i) => (
           <div key={g.name} className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
             <div className="mb-1.5 flex items-center justify-between text-xs">
               <span className="font-medium text-white/80">{g.name}</span>
               <span className="text-zinc-500">{g.scanned} scanned</span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
-              <div className="h-full rounded-full bg-pxi-orange/80" style={{ width: `${g.pct}%` }} />
+              <motion.div
+                className="h-full rounded-full bg-pxi-orange/80"
+                initial={{ width: '0%' }}
+                whileInView={{ width: `${g.pct}%` }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.7, delay: 0.15 + i * 0.12, ease: 'easeOut' }}
+              />
             </div>
           </div>
         ))}

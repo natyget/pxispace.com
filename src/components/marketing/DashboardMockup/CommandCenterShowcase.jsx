@@ -38,17 +38,21 @@ export default function CommandCenterShowcase() {
   const Active = TABS[idx].view;
 
   return (
-    <MockFrame label="PXI Command Center">
-      {/* tabs */}
+    <MockFrame label="PXI Command Center" bootIn>
+      {/* tabs — populate left to right right after the frame powers on */}
       <div className="mb-5 flex flex-wrap gap-1.5">
         {TABS.map((tab, i) => (
-          <button
+          <motion.button
             key={tab.id}
             type="button"
             onClick={() => {
               setIdx(i);
               setPinnedUntil(Date.now() + 12000);
             }}
+            initial={{ opacity: 0, y: 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.35, delay: 0.5 + i * 0.07, ease: 'easeOut' }}
             className={`rounded-full px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] transition-colors ${
               i === idx
                 ? 'bg-white text-black'
@@ -56,7 +60,7 @@ export default function CommandCenterShowcase() {
             }`}
           >
             {tab.label}
-          </button>
+          </motion.button>
         ))}
       </div>
 

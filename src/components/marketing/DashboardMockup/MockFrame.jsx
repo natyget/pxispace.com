@@ -1,12 +1,38 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 
-/** Browser-chrome card wrapping a stylized dashboard scene. Non-interactive. */
-export default function MockFrame({ label, children, className = '', tilt = false }) {
+/**
+ * Browser-chrome card wrapping a stylized dashboard scene. Non-interactive.
+ * `bootIn`: "boot the command center" — the panel powers on (dark → brand
+ * glow → steady) the first time it scrolls into view, like a screen switching
+ * on, before its content (tabs/mock) plays its own entrance.
+ */
+export default function MockFrame({ label, children, className = '', tilt = false, bootIn = false }) {
+  const Frame = bootIn ? motion.div : 'div';
+  const bootProps = bootIn
+    ? {
+        initial: { opacity: 0.25, filter: 'brightness(0.25)' },
+        whileInView: {
+          opacity: [0.25, 1, 0.7, 1],
+          filter: ['brightness(0.25)', 'brightness(1.6)', 'brightness(0.8)', 'brightness(1)'],
+          boxShadow: [
+            '0 30px 80px -20px rgba(0,0,0,0.8), 0 0 0px rgba(240,31,255,0)',
+            '0 30px 80px -20px rgba(0,0,0,0.8), 0 0 46px rgba(240,31,255,0.35)',
+            '0 30px 80px -20px rgba(0,0,0,0.8), 0 0 0px rgba(240,31,255,0)',
+            '0 30px 80px -20px rgba(0,0,0,0.8), 0 0 0px rgba(240,31,255,0)',
+          ],
+        },
+        viewport: { once: true, margin: '-60px' },
+        transition: { duration: 0.9, times: [0, 0.4, 0.62, 1], ease: 'easeOut' },
+      }
+    : {};
+
   return (
-    <div
+    <Frame
       aria-hidden
+      {...bootProps}
       className={[
         'glass-panel relative overflow-hidden rounded-2xl border border-white/10 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)]',
         tilt ? 'md:rotate-[-3deg]' : '',
@@ -27,6 +53,6 @@ export default function MockFrame({ label, children, className = '', tilt = fals
         ) : null}
       </div>
       <div className="p-5 md:p-6">{children}</div>
-    </div>
+    </Frame>
   );
 }

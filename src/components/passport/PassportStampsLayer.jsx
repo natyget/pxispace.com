@@ -70,6 +70,10 @@ export function PassportStampsLayer({
     seasonPillsPointerEvents = true,
     dragX: dragXProp,
     onDragStateChange,
+    // Marketing showcase only: stamps drop in and "stamp on" (big → 1 with a
+    // settle) on first view. OFF by default so the live dashboard passport is
+    // untouched.
+    animateEntrance = false,
 }) {
     const containerRef = useRef(null);
     const [stampArea, setStampArea] = useState(() => ({
@@ -183,19 +187,60 @@ export function PassportStampsLayer({
                     if (!layout) return null;
                     const color = getStampColor(event.xp);
 
+                    const stampStyle = {
+                        left: layout.left,
+                        top: layout.top,
+                        width: layout.width,
+                        height: layout.height,
+                        zIndex: index + 1,
+                        pointerEvents: 'none',
+                        filter: `drop-shadow(0 0 6px ${color})`,
+                    };
+
+                    if (animateEntrance) {
+                        // "Stamped on": each stamp drops from big + faint and lands
+                        // at rest with a short ink settle (the one intentional
+                        // bounce), staggered stamp-by-stamp. Rotation lives in the
+                        // motion transform here so it composes with scale.
+                        return (
+                            <motion.div
+                                key={event.id}
+                                className="absolute"
+                                style={stampStyle}
+                                initial={{ scale: 2.3, opacity: 0, rotate: layout.rotation }}
+                                whileInView={{
+                                    scale: [2.3, 0.9, 1.04, 1],
+                                    opacity: [0, 1, 0.98, 0.98],
+                                    rotate: layout.rotation,
+                                }}
+                                viewport={{ once: false, margin: '-40px' }}
+                                transition={{
+                                    duration: 0.5,
+                                    delay: 0.15 + index * 0.13,
+                                    times: [0, 0.55, 0.8, 1],
+                                    ease: 'easeOut',
+                                }}
+                            >
+                                <StampShapeGraphic
+                                    shape={shape}
+                                    color={color}
+                                    name={formatStampName(event.name)}
+                                    date={formatStampDate(event.startDate)}
+                                    city={formatStampCity(event.location)}
+                                    role={formatStampRole(event.albumRole)}
+                                    seed={event.id}
+                                />
+                            </motion.div>
+                        );
+                    }
+
                     return (
                         <div
                             key={event.id}
                             className="absolute opacity-[0.98]"
                             style={{
-                                left: layout.left,
-                                top: layout.top,
-                                width: layout.width,
-                                height: layout.height,
+                                ...stampStyle,
                                 transform: `rotate(${layout.rotation}deg)`,
-                                zIndex: index + 1,
-                                pointerEvents: 'none',
-                                filter: `drop-shadow(0 0 6px ${color})`,
                             }}
                         >
                             <StampShapeGraphic

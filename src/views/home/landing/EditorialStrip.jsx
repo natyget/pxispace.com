@@ -74,10 +74,13 @@ export default function EditorialStrip() {
         {[lead, ...rest].slice(0, 3).map((story, i) => (
           <MotionDiv
             key={story.slug}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+            // "Fan the deck": each cover is dealt in from a tilted, stacked
+            // position and straightens as it lands in its slot, like fanning out
+            // printed editorial covers.
+            initial={{ opacity: 0, y: 44, rotate: (i - 1) * 8, scale: 0.92 }}
+            whileInView={{ opacity: 1, y: 0, rotate: 0, scale: 1 }}
+            viewport={{ once: false, margin: '-80px' }}
+            transition={{ duration: 1.15, delay: 0.15 + i * 0.22, ease: [0.16, 1, 0.3, 1] }}
           >
             <Link href={`/story/${story.slug}`} className="group block">
               <StoryCardMedia

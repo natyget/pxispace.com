@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 
 /**
  * Spatial intel demo: a venue floor plan with live density. The kind of
@@ -52,8 +53,9 @@ export default function VenueMapMock() {
             }}
             aria-hidden
           />
-          {ZONES.map((z) => (
-            <div
+          {ZONES.map((z, i) => (
+            // Density blooms in zone by zone, like the read is coming online.
+            <motion.div
               key={z.name}
               className="absolute rounded-lg border border-white/10"
               style={{
@@ -63,6 +65,10 @@ export default function VenueMapMock() {
                 height: z.h,
                 background: `radial-gradient(ellipse at center, rgba(${z.color},${0.14 + z.heat * 0.38}), rgba(${z.color},0.05))`,
               }}
+              initial={{ opacity: 0, scale: 0.7 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.45, delay: 0.1 + i * 0.09, ease: 'easeOut' }}
             >
               <span className="absolute left-1.5 top-1 text-[8px] font-bold uppercase tracking-wider text-white/75">
                 {z.name}
@@ -70,7 +76,7 @@ export default function VenueMapMock() {
               <span className="absolute bottom-1 right-1.5 text-[9px] font-black text-white">
                 {Math.round(z.heat * 100)}%
               </span>
-            </div>
+            </motion.div>
           ))}
         </div>
 
@@ -90,12 +96,18 @@ export default function VenueMapMock() {
         Set engagement · time-stamped
       </p>
       <div className="space-y-1.5">
-        {SETS.map((s) => (
+        {SETS.map((s, i) => (
           <div key={s.dj} className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] px-2.5 py-2">
             <span className="w-14 shrink-0 text-[9px] text-zinc-500">{s.time}</span>
             <span className="w-20 shrink-0 truncate text-[11px] font-semibold text-white">{s.dj}</span>
             <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
-              <span className={`block h-full rounded-full bg-gradient-to-r ${s.from} ${s.to}`} style={{ width: `${s.pct}%` }} />
+              <motion.span
+                className={`block h-full rounded-full bg-gradient-to-r ${s.from} ${s.to}`}
+                initial={{ width: '0%' }}
+                whileInView={{ width: `${s.pct}%` }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.6, delay: 0.5 + i * 0.12, ease: 'easeOut' }}
+              />
             </span>
             {s.peak ? (
               <span className="shrink-0 text-[9px] font-black uppercase tracking-wider text-pxi-purple">Peak</span>
