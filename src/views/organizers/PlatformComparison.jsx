@@ -76,12 +76,22 @@ export default function PlatformComparison() {
                     {has ? <Check /> : <Dash />}
                   </td>
                 ))}
+                {/* "Check the boxes": the PXI column pops in row by row, since
+                    it's the one column that's checked all the way down. */}
                 <td className="border-l border-pxi-purple/20 bg-pxi-purple/[0.08] px-3 py-3 text-center md:px-5">
-                  <HugeiconsIcon
-                    icon={CheckmarkCircle02Icon}
-                    size={22}
-                    className="inline-block text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.5)]"
-                  />
+                  <motion.span
+                    className="inline-block"
+                    initial={{ opacity: 0, scale: 0.3 }}
+                    whileInView={{ opacity: 1, scale: [0.3, 1.2, 1] }}
+                    viewport={{ once: true, margin: '-40px' }}
+                    transition={{ duration: 0.35, delay: 0.15 + i * 0.045, times: [0, 0.7, 1], ease: 'easeOut' }}
+                  >
+                    <HugeiconsIcon
+                      icon={CheckmarkCircle02Icon}
+                      size={22}
+                      className="inline-block text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.5)]"
+                    />
+                  </motion.span>
                 </td>
               </tr>
             ))}

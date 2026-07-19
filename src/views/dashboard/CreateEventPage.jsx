@@ -124,9 +124,15 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
 
   const [inviteRoleKind, setInviteRoleKind] = useState('lineup');
   const [lineupSubDraft, setLineupSubDraft] = useState('');
+  // Single free-form role input (mirrors mobile). "Co-host"/"Bouncer" resolve to
+  // staff; anything else is a display lineup role (DJ, MC…). No "Host" — the
+  // creator is the host.
+  const [lineupRoleDraft, setLineupRoleDraft] = useState('');
   const [featuredQuery, setFeaturedQuery] = useState('');
   const [featuredResults, setFeaturedResults] = useState([]);
   const [featuredLoading, setFeaturedLoading] = useState(false);
+  /** People tapped from search but NOT yet added — committed together on ADD. */
+  const [selectedPeople, setSelectedPeople] = useState([]);
   /** @type {Array<{ id: string; username: string; name?: string; avatarUrl?: string; kind: 'lineup' | 'member' | 'cohost' | 'bouncer'; lineupSubrole?: string }>} */
   const [pendingInvites, setPendingInvites] = useState([]);
   const [teamRosters, setTeamRosters] = useState([]);
@@ -188,12 +194,13 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   }, [featuredQuery, user?.id]);
 
   const addPendingInvite = useCallback(
-    (candidate) => {
+    (candidate, override) => {
       const normalizedUsername = String(candidate.username || '').replace(/^@/, '').trim();
       if (!normalizedUsername) return;
+      const kind = override?.kind ?? inviteRoleKind;
       const lineupSubrole =
-        inviteRoleKind === 'lineup'
-          ? (lineupSubDraft.trim() || 'Line up').slice(0, LINEUP_ROLE_MAX)
+        kind === 'lineup'
+          ? ((override?.lineupSubrole ?? lineupSubDraft).trim() || 'Line up').slice(0, LINEUP_ROLE_MAX)
           : undefined;
       setPendingInvites((prev) => {
         const exists = prev.find(
@@ -204,7 +211,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           username: normalizedUsername,
           name: candidate.name,
           avatarUrl: candidate.avatarUrl,
-          kind: inviteRoleKind,
+          kind,
           lineupSubrole,
         };
         if (exists) {
@@ -214,14 +221,44 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         }
         return [...prev, entry];
       });
-      setFeaturedQuery('');
-      setFeaturedResults([]);
     },
     [inviteRoleKind, lineupSubDraft]
   );
 
   const removePendingInvite = (id) => {
     setPendingInvites((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  /** Map a free-form role string onto the invite model. "Co-host"/"Bouncer" are
+   *  staff; everything else is a display lineup subrole (DJ, MC…). No host. */
+  const deriveInvite = (roleText) => {
+    const t = roleText.trim().toLowerCase();
+    if (t === 'co-host' || t === 'cohost') return { kind: 'cohost', lineupSubrole: undefined };
+    if (t === 'bouncer') return { kind: 'bouncer', lineupSubrole: undefined };
+    return { kind: 'lineup', lineupSubrole: roleText.trim() };
+  };
+
+  // The flow: choose a role → search and STAGE one or more people (clicking a
+  // profile only selects, never adds) → ADD commits them all under that role.
+  const canAddLineup = lineupRoleDraft.trim().length > 0 && selectedPeople.length > 0;
+
+  const toggleSelectPerson = (person) => {
+    setSelectedPeople((prev) =>
+      prev.some((p) => p.id === person.id)
+        ? prev.filter((p) => p.id !== person.id)
+        : [...prev, person]
+    );
+  };
+
+  const commitLineup = () => {
+    const role = lineupRoleDraft.trim();
+    if (!role || selectedPeople.length === 0) return;
+    const invite = deriveInvite(role);
+    selectedPeople.forEach((person) => addPendingInvite(person, invite));
+    setSelectedPeople([]);
+    setLineupRoleDraft('');
+    setFeaturedQuery('');
+    setFeaturedResults([]);
   };
 
   const persistTeamAssignments = useCallback((updater) => {
@@ -678,6 +715,121 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             />
             <p className="mt-1 text-xs text-white/40">
               Shown on the event page and matched against attendees&apos; listening taste.
+            </p>
+          </div>
+
+          {/* Line up — role first, then search & stage people, then Add. Clicking
+              a profile only stages it; nothing is added until Add (mirrors the
+              mobile CreateEventSheet flow). Multiple people can be staged under
+              one role and added at once. */}
+          <div>
+            <label className={labelClass}>Line up (invited as performers, not members)</label>
+            <div className="flex gap-2">
+              <input
+                className={`${inputClass} sm:w-40`}
+                value={lineupRoleDraft}
+                onChange={(e) => setLineupRoleDraft(e.target.value)}
+                placeholder="Role (DJ, MC…)"
+              />
+              <input
+                className={inputClass}
+                value={featuredQuery}
+                onChange={(e) => setFeaturedQuery(e.target.value)}
+                placeholder="Search @username"
+              />
+              <button
+                type="button"
+                disabled={!canAddLineup}
+                onClick={commitLineup}
+                className="shrink-0 rounded-2xl bg-white px-5 text-xs font-black uppercase tracking-widest text-black transition-opacity disabled:opacity-40"
+              >
+                Add
+              </button>
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-2">
+              {['Co-host', 'Bouncer'].map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setLineupRoleDraft(r)}
+                  className="rounded-full bg-white/[0.06] px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-white/60 hover:text-white"
+                >
+                  {r} · staff
+                </button>
+              ))}
+            </div>
+
+            {selectedPeople.length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {selectedPeople.map((person) => (
+                  <button
+                    key={person.id}
+                    type="button"
+                    onClick={() => toggleSelectPerson(person)}
+                    className="rounded-full border border-fuchsia-400/50 bg-fuchsia-500/20 px-3 py-1 text-xs font-semibold text-fuchsia-100"
+                  >
+                    @{person.username}
+                    {lineupRoleDraft.trim() ? ` · ${lineupRoleDraft.trim()}` : ''} ✕
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            {featuredLoading || featuredResults.length > 0 ? (
+              <div className="mt-2 overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                {featuredLoading && featuredResults.length === 0 ? (
+                  <div className="px-4 py-3 text-xs text-white/40">Searching…</div>
+                ) : (
+                  featuredResults.map((person) => {
+                    const isSelected = selectedPeople.some((p) => p.id === person.id);
+                    return (
+                      <button
+                        key={person.id}
+                        type="button"
+                        onClick={() => toggleSelectPerson(person)}
+                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                          isSelected ? 'bg-fuchsia-500/15' : 'hover:bg-white/[0.05]'
+                        }`}
+                      >
+                        {person.avatarUrl ? (
+                          <img src={person.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+                        ) : (
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white/70">
+                            {(person.name || person.username || '?').charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm text-white">{person.name || person.username}</span>
+                          {person.username ? (
+                            <span className="block truncate text-xs text-white/40">@{person.username}</span>
+                          ) : null}
+                        </span>
+                        {isSelected ? <span className="text-fuchsia-300">✓</span> : null}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            ) : null}
+
+            {pendingInvites.length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {pendingInvites.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => removePendingInvite(p.id)}
+                    className="rounded-full bg-white/[0.08] px-3 py-1 text-xs font-semibold text-white/75"
+                  >
+                    @{p.username} · {formatPendingLabel(p)} ✕
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            <p className="mt-1 text-xs text-white/40">
+              Pick a role, click the people for it, then Add. You&apos;re the host — Co-host and Bouncer are staff and don&apos;t appear on the public lineup.
             </p>
           </div>
           {recurrence ? (

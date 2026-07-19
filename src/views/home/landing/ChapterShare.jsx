@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import SectionShell from '@/components/marketing/SectionShell';
 import InstaShareShowcase from '@/components/marketing/InstaShareShowcase';

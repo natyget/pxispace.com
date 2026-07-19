@@ -1,16 +1,33 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import MockFrame from './MockFrame';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ImageIcon } from '@hugeicons/core-free-icons';
+
+/** Each form block fades/settles in top to bottom, like the event page
+ *  filling itself out section by section. */
+function FormBlock({ delay, children }) {
+  return (
+    <motion.div
+      className="p-4 space-y-3"
+      initial={{ opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.45, delay, ease: 'easeOut' }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 export default function CreateEventMock() {
   return (
     <div className="w-full">
       <div className="space-y-4 text-left">
         {/* Mock Cover Upload */}
-        <div className="p-4 space-y-3">
+        <FormBlock delay={0.05}>
           <h2 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/60">
             <HugeiconsIcon icon={ImageIcon} size={14} />
             Cover image *
@@ -21,10 +38,10 @@ export default function CreateEventMock() {
               <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">Add cover</span>
             </div>
           </div>
-        </div>
+        </FormBlock>
 
         {/* Mock Basics */}
-        <div className="p-4 space-y-3">
+        <FormBlock delay={0.16}>
           <h2 className="text-[10px] font-bold uppercase tracking-widest text-white/60">Basics</h2>
           <div>
             <label className="mb-1 block text-[9px] font-bold uppercase tracking-widest text-white/45">Event name *</label>
@@ -46,10 +63,10 @@ export default function CreateEventMock() {
               </div>
             </div>
           </div>
-        </div>
+        </FormBlock>
 
         {/* Mock Configuration */}
-        <div className="p-4 space-y-3">
+        <FormBlock delay={0.27}>
           <h2 className="text-[10px] font-bold uppercase tracking-widest text-white/60">Configuration</h2>
           
           <div className="flex items-center justify-between gap-4 rounded-xl px-3 py-2.5 bg-black/20">
@@ -79,10 +96,10 @@ export default function CreateEventMock() {
               <span className="text-xs text-white opacity-50">0.00</span>
             </div>
           </div>
-        </div>
+        </FormBlock>
 
         {/* Mock Tiers */}
-        <div className="p-4 space-y-3">
+        <FormBlock delay={0.38}>
           <div className="flex items-center justify-between">
             <h2 className="text-[10px] font-bold uppercase tracking-widest text-white/60">Ticket Tiers</h2>
             <span className="text-[9px] font-bold uppercase text-white bg-white/10 px-2 py-1 rounded-md">Add tier</span>
@@ -108,7 +125,7 @@ export default function CreateEventMock() {
             </div>
             <p className="text-[11px] font-bold text-white">$15.00</p>
           </div>
-        </div>
+        </FormBlock>
 
       </div>
     </div>

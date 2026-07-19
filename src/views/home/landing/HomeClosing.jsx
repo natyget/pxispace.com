@@ -15,7 +15,7 @@ export default function HomeClosing() {
       <motion.div
         initial={{ opacity: 0, y: 32 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-80px' }}
+        viewport={{ once: false, margin: '-80px' }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="relative overflow-hidden rounded-3xl border border-white/10"
       >
@@ -45,15 +45,25 @@ export default function HomeClosing() {
           </p>
 
           <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-            <a
+            {/* "Ignite": the glow CTA flickers on like a neon sign switching on
+                (two quick flickers into steady). Only opacity/brightness animate,
+                so the glow-cta box-shadow styling is left intact. */}
+            <motion.a
               href={PXI_IOS_DOWNLOAD_HREF}
               target="_blank"
               rel="noopener noreferrer"
               className="glow-cta px-8 py-4 text-sm"
+              initial={{ opacity: 0.35, filter: 'brightness(0.55)' }}
+              whileInView={{
+                opacity: [0.35, 1, 0.65, 1],
+                filter: ['brightness(0.55)', 'brightness(1.5)', 'brightness(0.85)', 'brightness(1)'],
+              }}
+              viewport={{ once: false, margin: '-60px' }}
+              transition={{ duration: 0.75, delay: 0.35, times: [0, 0.35, 0.6, 1], ease: 'easeOut' }}
             >
               <FaApple className="h-5 w-5" />
               Get the app
-            </a>
+            </motion.a>
             <Link href="/events" className="pill-ghost px-8 py-4 text-sm font-semibold">
               Explore events
             </Link>

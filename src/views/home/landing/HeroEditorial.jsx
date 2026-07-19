@@ -11,6 +11,8 @@ import { PXI_IOS_DOWNLOAD_HREF } from '@/lib/appStoreLinks';
 /**
  * Hero: one statement, a drifting cluster of real night photos around the
  * edges, and a scroll cue that tees up the chapters below. No marquee.
+ * Photos load in clean and fast (plain fade+scale) — no flash/develop here;
+ * that effect is reserved for "Built around the memory" below.
  */
 const DRIFT_CARDS = [
   {
@@ -43,7 +45,7 @@ const DRIFT_CARDS = [
 
 export default function HeroEditorial() {
   return (
-    <section className="relative flex min-h-[92dvh] w-full flex-col items-center justify-center overflow-hidden px-6 pt-24">
+    <section className="relative flex min-h-[100svh] w-full flex-col items-center justify-center overflow-hidden px-6 pb-20 pt-24">
       {/* faint purple bloom */}
       <div
         className="pointer-events-none absolute left-1/2 top-1/4 -z-10 h-[70vh] w-[85vw] max-w-[950px] -translate-x-1/2 rounded-full bg-pxi-purple/[0.07] blur-[160px]"
@@ -62,7 +64,11 @@ export default function HeroEditorial() {
         >
           <div className={`${card.drift} rounded-sm bg-white p-2 pb-8 shadow-[0_20px_60px_rgba(0,0,0,0.6)]`}>
             <div className="overflow-hidden aspect-[3/4] w-full relative">
-              <img src={card.src} alt="" className={`absolute inset-0 h-full w-full object-cover ${card.imgClassName || ''}`} />
+              <img
+                src={card.src}
+                alt=""
+                className={`absolute inset-0 h-full w-full object-cover ${card.imgClassName || ''}`}
+              />
             </div>
           </div>
         </motion.div>
