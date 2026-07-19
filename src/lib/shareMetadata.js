@@ -1,8 +1,12 @@
 import { resolveDisplayImageUrl } from '@/lib/mediaUrl';
 import { toOpenGraphImageUrl } from '@/lib/ogImageUrl';
 
-/** PNG fallback — iMessage / Instagram do not reliably preview SVG OG images. */
-export const OG_FALLBACK_PATH = '/favicon.png';
+/**
+ * Branded 1200×630 fallback when a share target has no content image of its own.
+ * PNG (not SVG — iMessage / Instagram don't reliably preview SVG), and the full
+ * hero card rather than a bare favicon so coverless links still look intentional.
+ */
+export const OG_FALLBACK_PATH = '/og-hero.png';
 
 export function getOgFallbackUrl(site) {
   const base = String(site).replace(/\/$/, '');

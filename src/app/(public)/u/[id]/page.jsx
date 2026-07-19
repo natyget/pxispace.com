@@ -2,6 +2,7 @@ import PublicProfileClient from '@/views/public/PublicProfileClient';
 import { getPublicProfile } from '@/lib/publicProfile';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { resolveDisplayImageUrl } from '@/lib/mediaUrl';
+import { getOgFallbackUrl } from '@/lib/shareMetadata';
 
 /** Netlify/SSR: always run profile fetch at request time with runtime env (see `API_BASE_URL`). */
 export const dynamic = 'force-dynamic';
@@ -48,7 +49,7 @@ export async function generateMetadata({ params }) {
         profile.isPassportIssued && profile.bio && String(profile.bio).trim()
             ? String(profile.bio).trim().slice(0, 200)
             : `View ${displayName}'s PXI Passport`;
-    const ogImage = resolveDisplayImageUrl(profile.avatarUrl) || `${site}/favicon.svg`;
+    const ogImage = resolveDisplayImageUrl(profile.avatarUrl) || getOgFallbackUrl(site);
 
     return {
         title: `${displayName} — PXI Passport`,

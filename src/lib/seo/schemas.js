@@ -7,7 +7,11 @@ export const ORGANIZATION_JSONLD = {
   '@type': 'Organization',
   name: 'PXI',
   url: SITE_URL,
-  logo: `${SITE_URL}/favicon.svg`,
+  // Full-bleed brand mark (square) for Google's org logo slot.
+  logo: `${SITE_URL}/favicon-mark.png`,
+  // Branded 1200×630 card so Google prefers it for the search thumbnail
+  // instead of scraping a prominent in-page content photo.
+  image: `${SITE_URL}/og-hero.png`,
   sameAs: [
     'https://www.instagram.com/pxilabs/',
     'https://www.tiktok.com/@pxi.labs',
@@ -30,6 +34,7 @@ export const HOMEPAGE_JSONLD = {
       '@type': 'WebSite',
       name: 'PXI',
       url: SITE_URL,
+      image: `${SITE_URL}/og-hero.png`,
       description:
         'PXI is a privacy-first event operating system spanning ticketing in the organizer\'s own brand, shared event photo galleries, and digital scrapbooks.',
       potentialAction: {
@@ -44,6 +49,7 @@ export const HOMEPAGE_JSONLD = {
       operatingSystem: 'iOS',
       applicationCategory: ['BusinessApplication', 'EntertainmentApplication'],
       url: SITE_URL,
+      image: `${SITE_URL}/og-hero.png`,
       description:
         'PXI is a dual-sided event operating system for organizers and attendees, combining ticketing in the organizer\'s own brand with privacy-first social scrapbooks.',
       featureList: [
@@ -72,6 +78,7 @@ export function buildAboutJsonLd() {
     '@type': 'AboutPage',
     name: 'About PXI',
     url: `${SITE_URL}/about`,
+    image: `${SITE_URL}/og-hero.png`,
     description:
       'PXI is an event platform built by operators, where the night compiles itself, the organizer keeps the money, and the memory is the point.',
     mainEntity: ORGANIZATION_JSONLD,
