@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import SectionShell from '@/components/marketing/SectionShell';
 import CameraDemo, { SHOT } from '@/components/marketing/CameraDemo';
-import ScrubReveal from '@/components/motion/ScrubReveal';
+
+const EASE = [0.16, 1, 0.3, 1];
 
 const MOODS = ['Regular', 'Snap', 'Dispo', 'Noir', 'Flash', 'Retro'];
 
@@ -38,8 +39,11 @@ export default function ChapterShoot() {
       <div className="relative z-10">
         <SectionShell eyebrow="Shoot it" pad="default" className="!border-none">
           <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
-            <ScrubReveal
-              distance={40}
+            <Motion.div
+              initial={{ opacity: 0, x: 28 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: false, margin: '-80px' }}
+              transition={{ duration: 0.7, ease: EASE }}
               className="md:order-2"
             >
               <h2 className="display-2 mt-5">Six film moods. One camera.</h2>
@@ -47,15 +51,32 @@ export default function ChapterShoot() {
                 The event album opens at the doors. Swipe through the looks, shoot, and it's already
                 where it belongs.
               </p>
-            </ScrubReveal>
+            </Motion.div>
 
-            <ScrubReveal
-              distance={60}
-              scaleStart={0.97}
-              className="md:order-1"
+            {/* "The camera comes out and powers on": a clean confident rise,
+                then the black screen wakes to reveal the live viewfinder.
+                Deliberately minimal — CameraDemo already cycles its six film
+                moods with its own crossfades and flash-pops, so the wrapper
+                must not add competing motion (no iris wipe, no extra flash). */}
+            <Motion.div
+              initial={{ opacity: 0, y: 32, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, margin: '-80px' }}
+              transition={{ duration: 0.7, ease: EASE }}
+              className="relative md:order-1"
             >
               <CameraDemo onFilterChange={setActiveFilter} />
-            </ScrubReveal>
+              {/* screen-wake: black overlay matched to the viewfinder box
+                  (CameraDemo is mx-auto max-w-[330px]), lifts once as the
+                  phone settles. */}
+              <Motion.div
+                initial={{ opacity: 1 }}
+                whileInView={{ opacity: 0 }}
+                viewport={{ once: false, margin: '-80px' }}
+                transition={{ delay: 0.35, duration: 0.5, ease: 'easeOut' }}
+                className="pointer-events-none absolute inset-y-0 left-1/2 z-20 w-full max-w-[330px] -translate-x-1/2 rounded-[2.4rem] bg-black"
+              />
+            </Motion.div>
           </div>
         </SectionShell>
       </div>

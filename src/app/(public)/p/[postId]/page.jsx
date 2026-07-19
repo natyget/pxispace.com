@@ -3,6 +3,7 @@ import { getPublicPost } from '@/lib/publicPost';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { resolveDisplayImageUrl } from '@/lib/mediaUrl';
 import { toOpenGraphImageUrl } from '@/lib/ogImageUrl';
+import { getOgFallbackUrl } from '@/lib/shareMetadata';
 import PublicPostBottomBar from '@/views/public/PublicPostBottomBar';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }) {
 
   const ogImageRaw = post.isPrivateAccount ? null : post.ogImageUrl || post.imageUrl;
   const ogImageResolved = toOpenGraphImageUrl(site, ogImageRaw);
-  const ogImage = ogImageResolved || `${site}/favicon.svg`;
+  const ogImage = ogImageResolved || getOgFallbackUrl(site);
 
   const ogAlt = post.isPrivateAccount ? 'PXI' : titleBase;
 

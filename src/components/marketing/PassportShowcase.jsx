@@ -24,6 +24,12 @@ const SHOWCASE_USER = {
   createdAt: '2024-09-14T00:00:00.000Z',
 };
 
+// More stamps gives the shared farthest-point placement algorithm
+// (src/utils/stampLayout.js) more points to spread across the passport area.
+// MAX_VISIBLE_PASSPORT_STAMPS caps rendering at 14 — sitting right at that
+// cap gives the spread algorithm the most points it can ever use, filling
+// the area as densely as the real feature allows. All still 2026 (single
+// year, no extra year-row) — just a full season.
 const SHOWCASE_EVENTS = [
   { id: 'st-1', name: 'AFRODISIAC', location: 'Boston, MA', startDate: '2026-05-16', ticketPriceUsd: 30, albumRole: 'MEMBER' },
   { id: 'st-2', name: 'MAISON BLANCHE', location: 'Montréal, QC', startDate: '2026-02-21', ticketPriceUsd: 140, albumRole: 'OWNER' },
@@ -32,6 +38,13 @@ const SHOWCASE_EVENTS = [
   { id: 'st-5', name: 'SOUNDS OF EAST', location: 'Brooklyn, NY', startDate: '2026-01-24', ticketPriceUsd: 20, albumRole: 'MEMBER' },
   { id: 'st-6', name: 'GALA NOIR', location: 'Montréal, QC', startDate: '2026-03-14', ticketPriceUsd: 220, albumRole: 'OWNER' },
   { id: 'st-7', name: 'RUN CLUB 5AM', location: 'Montréal, QC', startDate: '2026-06-21', ticketPriceUsd: 0, albumRole: 'MEMBER' },
+  { id: 'st-8', name: 'WAREHOUSE 12', location: 'Brooklyn, NY', startDate: '2026-01-09', ticketPriceUsd: 45, albumRole: 'MEMBER' },
+  { id: 'st-9', name: 'SUNSET TERRACE', location: 'Montréal, QC', startDate: '2026-07-12', ticketPriceUsd: 0, albumRole: 'MEMBER' },
+  { id: 'st-10', name: 'VELVET HOUR', location: 'Boston, MA', startDate: '2026-08-08', ticketPriceUsd: 95, albumRole: 'ADMIN' },
+  { id: 'st-11', name: 'LOFT SESSIONS', location: 'Montréal, QC', startDate: '2026-03-28', ticketPriceUsd: 15, albumRole: 'MEMBER' },
+  { id: 'st-12', name: 'DIPLOMAT GALA', location: 'Montréal, QC', startDate: '2026-09-19', ticketPriceUsd: 180, albumRole: 'OWNER' },
+  { id: 'st-13', name: 'BASEMENT EDITS', location: 'Brooklyn, NY', startDate: '2026-10-03', ticketPriceUsd: 25, albumRole: 'MEMBER' },
+  { id: 'st-14', name: 'NEW YEAR EVE', location: 'Montréal, QC', startDate: '2026-12-31', ticketPriceUsd: 300, albumRole: 'OWNER' },
 ];
 
 export default function PassportShowcase({ className = '' }) {
@@ -42,7 +55,7 @@ export default function PassportShowcase({ className = '' }) {
       className={['flex w-full items-center justify-center', className].filter(Boolean).join(' ')}
       aria-label="Example PXI passport"
     >
-      <PxiPassportCard user={SHOWCASE_USER} attendedEvents={SHOWCASE_EVENTS} />
+      <PxiPassportCard user={SHOWCASE_USER} attendedEvents={SHOWCASE_EVENTS} animateStamps />
     </ScrubReveal>
   );
 }

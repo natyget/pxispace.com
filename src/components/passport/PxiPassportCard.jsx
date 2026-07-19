@@ -75,7 +75,7 @@ function PassportChipIcon({ filterId }) {
  * PXI Passport card (map, stamps, photo, fields, MRZ).
  * Use inside `PxiPassportSection` or standalone when you only need the card.
  */
-export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
+export function PxiPassportCard({ user, attendedEvents = [], className = '', animateStamps = false }) {
     const chipFilterId = useId().replace(/:/g, '');
     const fields = useMemo(() => getPassportDisplayFields(user), [user]);
     const { fullName, username, city, bio, instagram, age, passportNumber, passportType } = fields;
@@ -123,6 +123,7 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '' }) {
                             onSelectSeason={setSelectedSeason}
                             seasonPillsPointerEvents
                             dragX={topDragX}
+                            animateEntrance={animateStamps}
                         />
                     </div>
                 </>

@@ -2,10 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import ShareSheet from './ShareSheet';
 import PostCard from './PostCard';
-import ScrubReveal from '@/components/motion/ScrubReveal';
+
+const EASE = [0.16, 1, 0.3, 1];
 
 /**
  * "Your night, ready to post." A live DOM rebuild of the app's share sheet
@@ -76,8 +78,11 @@ export default function InstaShareShowcase({ compact = false }) {
   return (
     <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
       {/* copy + four framed cards, matching the four dashes in the sheet */}
-      <ScrubReveal
-        distance={40}
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, margin: '-80px' }}
+        transition={{ duration: 0.6, ease: EASE }}
       >
         <h2 className="display-2">Your night, ready to post.</h2>
         <p className="body-lead mt-6 max-w-md">
@@ -98,13 +103,19 @@ export default function InstaShareShowcase({ compact = false }) {
           </li>
         </ul>
 
+        {/* "Printed": each postcard pops in stamped-down, staggered left to
+            right — small, definite, matching the "framed postcard" copy. */}
         <div className="mt-10 grid grid-cols-4 gap-3">
           {PHOTOS.map((p, i) => (
-            <button
+            <motion.button
               key={p.src}
               type="button"
               onClick={() => setIndex(i)}
               aria-label={`Preview ${p.title}`}
+              initial={{ opacity: 0, scale: 0.5, rotate: (i % 2 === 0 ? -1 : 1) * 6 }}
+              whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+              viewport={{ once: false, margin: '-80px' }}
+              transition={{ duration: 0.4, delay: 0.15 + i * 0.09, ease: EASE }}
               className={`overflow-hidden rounded-xl transition-all duration-500 ${
                 i === index
                   ? 'opacity-100 shadow-[0_0_18px_rgba(240,31,255,0.25)]'
@@ -112,7 +123,7 @@ export default function InstaShareShowcase({ compact = false }) {
               }`}
             >
               <PostCard photo={p} mini />
-            </button>
+            </motion.button>
           ))}
         </div>
 
@@ -122,16 +133,19 @@ export default function InstaShareShowcase({ compact = false }) {
         >
           See how it works <ArrowRight className="h-4 w-4" />
         </Link>
-      </ScrubReveal>
+      </motion.div>
 
-      {/* the sheet */}
-      <ScrubReveal
-        distance={60}
-        scaleStart={0.96}
+      {/* The sheet: slides up from below like a real share sheet being
+          presented, rather than fading in place. */}
+      <motion.div
+        initial={{ opacity: 0, y: 90 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, margin: '-80px' }}
+        transition={{ duration: 0.6, delay: 0.1, ease: EASE }}
         className="flex justify-center"
       >
         <ShareSheet photos={PHOTOS} index={index} />
-      </ScrubReveal>
+      </motion.div>
     </div>
   );
 }

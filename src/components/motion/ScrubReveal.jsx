@@ -24,11 +24,12 @@ export function ScrubReveal({
   // Create a raw motion value for progress (0 to 1)
   const progress = useMotionValue(0);
 
-  // Apply a smooth spring transition for Canva-like fluid motion
+  // Snappier spring: tracks scroll tightly so reveals resolve with intent
+  // instead of the old floaty lag that read as "weird" drift.
   const smoothProgress = useSpring(progress, {
-    damping: 32,
-    stiffness: 180,
-    mass: 0.8,
+    damping: 38,
+    stiffness: 340,
+    mass: 0.55,
   });
 
   // Map the smooth progress to visual transformations
