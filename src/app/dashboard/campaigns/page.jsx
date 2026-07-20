@@ -3,11 +3,13 @@
 // Real email campaigns: draft → live recipient quote → pay (Stripe) → PXI sends
 // to the organizer's opted-in attendees. Consent is enforced server-side.
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import SectionCard from '@/components/dashboard/SectionCard';
 import { StripePaymentModal } from '@/components/checkout/StripePaymentModal';
 import { api } from '@/services/api';
 import { eventsService } from '@/services/events';
+import { listAudienceSegments } from '@/services/audienceSegments';
 
 function formatUsd(cents) {
     return `$${(Number(cents || 0) / 100).toFixed(2)}`;
@@ -46,9 +48,11 @@ function campaignErrorMessage(error, fallback = 'Campaign tools are unavailable 
     return raw || fallback;
 }
 
-export default function CampaignsPage() {
+function CampaignsPageContent() {
+    const searchParams = useSearchParams();
     const [campaigns, setCampaigns] = useState([]);
     const [events, setEvents] = useState([]);
+    const [segments, setSegments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -58,21 +62,35 @@ export default function CampaignsPage() {
     const [body, setBody] = useState('');
     const [audience, setAudience] = useState('ALL_PAST');
     const [eventId, setEventId] = useState('');
+    const [segmentId, setSegmentId] = useState('');
     const [quote, setQuote] = useState(null);
     const [busy, setBusy] = useState(false);
     const isSms = channel === 'SMS';
     const bodyMaxLength = isSms ? 320 : 10000;
 
     const [payState, setPayState] = useState(null); // { campaignId, clientSecret }
+    const [sentWithCredits, setSentWithCredits] = useState(false);
+
+    // Deep link from the Audience page's "Send campaign" chip: ?segmentId=...
+    useEffect(() => {
+        const fromUrl = searchParams.get('segmentId');
+        if (fromUrl) {
+            setAudience('SEGMENT');
+            setSegmentId(fromUrl);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const load = useCallback(async () => {
         try {
-            const [c, e] = await Promise.all([
+            const [c, e, s] = await Promise.all([
                 api.get('/api/campaigns'),
                 eventsService.getMyEvents ? eventsService.getMyEvents() : Promise.resolve({ events: [] }),
+                listAudienceSegments().catch(() => ({ segments: [] })),
             ]);
             setCampaigns(c.campaigns || []);
             setEvents(e.events || e || []);
+            setSegments(s.segments || []);
             setError(null);
         } catch (err) {
             setError(campaignErrorMessage(err, 'Failed to load campaigns'));
@@ -91,7 +109,8 @@ export default function CampaignsPage() {
         let cancelled = false;
         const params = new URLSearchParams({ audience, channel });
         if (audience === 'ATTENDEES' && eventId) params.set('eventId', eventId);
-        if (audience === 'ATTENDEES' && !eventId) {
+        if (audience === 'SEGMENT' && segmentId) params.set('segmentId', segmentId);
+        if ((audience === 'ATTENDEES' && !eventId) || (audience === 'SEGMENT' && !segmentId)) {
             const timer = setTimeout(() => setQuote(null), 0);
             return () => clearTimeout(timer);
         }
@@ -104,11 +123,12 @@ export default function CampaignsPage() {
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [audience, eventId, channel]);
+    }, [audience, eventId, segmentId, channel]);
 
     const createAndPay = async () => {
         setBusy(true);
         setError(null);
+        setSentWithCredits(false);
         try {
             const { campaign } = await api.post('/api/campaigns', {
                 name: name.trim(),
@@ -117,8 +137,19 @@ export default function CampaignsPage() {
                 body: body.trim(),
                 audience,
                 ...(audience === 'ATTENDEES' ? { eventId } : {}),
+                ...(audience === 'SEGMENT' ? { segmentId } : {}),
             });
             const pay = await api.post(`/api/campaigns/${campaign.id}/pay`, {});
+            if (pay.paid) {
+                // Fully covered by credits — settled and sending, no card step.
+                setSentWithCredits(true);
+                setName('');
+                setSubject('');
+                setBody('');
+                setLoading(true);
+                load();
+                return;
+            }
             setPayState({ campaignId: campaign.id, clientSecret: pay.clientSecret });
         } catch (err) {
             setError(campaignErrorMessage(err, 'Failed to create campaign'));
@@ -129,7 +160,10 @@ export default function CampaignsPage() {
 
     const smsNotReady = isSms && quote?.smsChannelReady === false;
     const canSubmit = name.trim() && (isSms || subject.trim()) && body.trim() && quote?.recipientCount > 0
-        && (audience !== 'ATTENDEES' || eventId) && !smsNotReady;
+        && (audience !== 'ATTENDEES' || eventId) && (audience !== 'SEGMENT' || segmentId) && !smsNotReady;
+    const creditApplied = quote?.creditAppliedCents || 0;
+    const cardRemainder = quote?.stripeRemainderCents ?? (quote ? quote.priceCents - creditApplied : 0);
+    const fullyCredits = Boolean(quote) && quote.priceCents > 0 && cardRemainder === 0;
 
     return (
         <div className="mx-auto max-w-7xl space-y-6">
@@ -161,6 +195,11 @@ export default function CampaignsPage() {
 
             {error && (
                 <div className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm font-semibold leading-6 text-red-100">{error}</div>
+            )}
+            {sentWithCredits && (
+                <div className="rounded-2xl bg-emerald-500/10 px-4 py-3 text-sm font-semibold leading-6 text-emerald-200">
+                    Sent with credits — no card needed. Delivery is underway; watch the status in History below.
+                </div>
             )}
 
             <SectionCard title="Compose send" dense className="dashboard-surface-b !shadow-[0_22px_70px_rgba(0,0,0,0.28)]">
@@ -203,6 +242,7 @@ export default function CampaignsPage() {
                                     >
                                         <option value="ALL_PAST">All past attendees (opted-in)</option>
                                         <option value="ATTENDEES">One event&apos;s attendees (opted-in)</option>
+                                        {segments.length ? <option value="SEGMENT">A saved segment</option> : null}
                                     </select>
                                     <svg viewBox="0 0 10 10" className="pointer-events-none absolute right-2 top-1/2 h-2.5 w-2.5 -translate-y-1/2 text-zinc-500" aria-hidden="true">
                                         <path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -227,6 +267,27 @@ export default function CampaignsPage() {
                                             <option value="">Choose event...</option>
                                             {events.map((ev) => (
                                                 <option key={ev.id} value={ev.id}>{ev.name}</option>
+                                            ))}
+                                        </select>
+                                        <svg viewBox="0 0 10 10" className="pointer-events-none absolute right-2 top-1/2 h-2.5 w-2.5 -translate-y-1/2 text-zinc-500" aria-hidden="true">
+                                            <path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </span>
+                                </div>
+                            ) : null}
+                            {audience === 'SEGMENT' ? (
+                                <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3 sm:px-5">
+                                    <span className="w-14 shrink-0 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Segment</span>
+                                    <span className="relative min-w-0 flex-1">
+                                        <select
+                                            value={segmentId}
+                                            onChange={(e) => setSegmentId(e.target.value)}
+                                            aria-label="Segment"
+                                            className="w-full cursor-pointer appearance-none rounded-lg bg-transparent py-1 pl-1 pr-7 text-sm font-bold text-white outline-none transition focus-visible:ring-1 focus-visible:ring-white/20 [&>option]:bg-zinc-950"
+                                        >
+                                            <option value="">Choose segment...</option>
+                                            {segments.map((seg) => (
+                                                <option key={seg.id} value={seg.id}>{seg.name}</option>
                                             ))}
                                         </select>
                                         <svg viewBox="0 0 10 10" className="pointer-events-none absolute right-2 top-1/2 h-2.5 w-2.5 -translate-y-1/2 text-zinc-500" aria-hidden="true">
@@ -288,6 +349,18 @@ export default function CampaignsPage() {
                                         ? 'Choose an event to price the send.'
                                         : 'Pricing audience...'}
                             </p>
+                            {quote && creditApplied > 0 ? (
+                                <p className="mt-3 rounded-xl bg-[#d84aff]/10 px-3 py-2 text-xs font-semibold leading-5 text-[#e9a1ff]">
+                                    {fullyCredits
+                                        ? `Credits cover the full ${formatUsd(quote.priceCents)} — no card needed.`
+                                        : `Credits cover ${formatUsd(creditApplied)} · ${formatUsd(cardRemainder)} on card.`}
+                                </p>
+                            ) : null}
+                            {quote && quote.creditBalanceCents > 0 && creditApplied === 0 ? (
+                                <p className="mt-3 text-xs font-semibold text-zinc-500">
+                                    Credit balance: {formatUsd(quote.creditBalanceCents)}
+                                </p>
+                            ) : null}
                         </div>
                         <div className="mt-6 space-y-3">
                             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -306,7 +379,13 @@ export default function CampaignsPage() {
                                 disabled={busy || !canSubmit}
                                 className="pill-solid min-h-12 w-full px-6 text-sm disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                                {busy ? 'Preparing...' : `Pay ${quote?.priceCents ? formatUsd(quote.priceCents) : ''} & send`}
+                                {busy
+                                    ? 'Preparing...'
+                                    : fullyCredits
+                                        ? 'Send with credits'
+                                        : cardRemainder > 0 && creditApplied > 0
+                                            ? `Pay ${formatUsd(cardRemainder)} & send`
+                                            : `Pay ${quote?.priceCents ? formatUsd(quote.priceCents) : ''} & send`}
                             </button>
                         </div>
                     </aside>
@@ -340,7 +419,8 @@ export default function CampaignsPage() {
                                 <div className="min-w-0">
                                     <p className="truncate text-sm font-bold text-white">{c.name}</p>
                                     <p className="truncate text-xs text-zinc-500">
-                                        {c.subject} · {c.recipientCount} recipients · {formatUsd(c.priceCents)} · {formatDate(c.sentAt || c.createdAt)}
+                                        {c.subject} · {c.recipientCount} recipients · {formatUsd(c.priceCents)}
+                                        {c.creditAppliedCents > 0 ? ` (${formatUsd(c.creditAppliedCents)} credits)` : ''} · {formatDate(c.sentAt || c.createdAt)}
                                     </p>
                                 </div>
                                 <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${statusStyle[c.status] || statusStyle.DRAFT}`}>
@@ -367,5 +447,13 @@ export default function CampaignsPage() {
                 onCancel={() => setPayState(null)}
             />
         </div>
+    );
+}
+
+export default function CampaignsPage() {
+    return (
+        <Suspense fallback={<div className="mx-auto max-w-7xl p-8 text-zinc-500">Loading campaigns...</div>}>
+            <CampaignsPageContent />
+        </Suspense>
     );
 }

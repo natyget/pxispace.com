@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import SectionCard from '@/components/dashboard/SectionCard';
 import { RechartsChart, SparkDonutChart } from '@/components/dashboard/ChartFrame';
 import { DASHBOARD_BRAND_COLOR, DASHBOARD_TOOLTIP_PROPS, getDashboardChartShade } from '@/components/dashboard/chartStyles';
@@ -32,26 +33,25 @@ function RealAudienceOverview() {
         const passport = Math.min(total, Number(data.tiers?.citizen) || 0);
         const repeatGuests = Math.min(passport, Math.round((Number(data.repeat?.repeatRate) || 0) * total));
         return [
-            {
-                stage: 'All attendees',
-                value: total,
-                cta: 'View audience list',
-                suggestions: ['Every distinct guest with a scanned or claimed ticket across your events.'],
-            },
-            {
-                stage: 'Passport holders',
-                value: passport,
-                cta: 'View Passport tiers',
-                suggestions: ['Created a PXI Passport — your most identifiable, most reachable audience.'],
-            },
-            {
-                stage: 'Repeat guests',
-                value: repeatGuests,
-                cta: 'Build a win-back campaign',
-                href: '/dashboard/campaigns',
-                suggestions: ['Came back for 2+ events — the highest-intent segment for your next drop.'],
-            },
+            { stage: 'All attendees', value: total },
+            { stage: 'Passport holders', value: passport },
+            { stage: 'Repeat guests', value: repeatGuests },
         ];
+    }, [data]);
+
+    // Plain-language read of the numbers — the "so what" before the charts.
+    const story = useMemo(() => {
+        if (!data || !data.totalAttendees) return [];
+        const items = [];
+        const topBracket = [...(data.ageBrackets || [])].sort((a, b) => b.count - a.count)[0];
+        if (topBracket?.count > 0) items.push(`Your crowd skews ${topBracket.label}.`);
+        const topCity = data.topCities?.[0];
+        if (topCity) items.push(`${topCity.city} is your strongest city (${topCity.count} attendees).`);
+        const emailPct = Math.round(((data.marketing?.emailOptIn || 0) / data.totalAttendees) * 100);
+        items.push(`${(data.marketing?.emailOptIn || 0).toLocaleString('en-US')} people (${emailPct}%) opted into email — reachable right now from Campaigns.`);
+        const repeatPct = Math.round((data.repeat?.repeatRate || 0) * 100);
+        items.push(`${repeatPct}% come back for another event${repeatPct >= 20 ? ' — strong loyalty.' : ' — a win-back send usually lifts this.'}`);
+        return items;
     }, [data]);
 
     if (failed || (data && data.totalAttendees === 0)) return null;
@@ -62,6 +62,22 @@ function RealAudienceOverview() {
                 <p className="px-2 py-3 text-sm text-zinc-500">Loading live demographics...</p>
             ) : (
                 <div className="space-y-4">
+                    {story.length ? (
+                        <div className="rounded-2xl bg-white/[0.035] px-4 py-3.5">
+                            <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">What this means</p>
+                            <ul className="mt-2 space-y-1.5">
+                                {story.map((line) => (
+                                    <li key={line} className="flex items-start gap-2 text-sm leading-6 text-zinc-300">
+                                        <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#d84aff]/70" aria-hidden="true" />
+                                        {line}
+                                    </li>
+                                ))}
+                            </ul>
+                            <p className="mt-2 text-xs leading-5 text-zinc-600">
+                                Includes attendees from events you host or co-host — co-hosting grows the network you can see.
+                            </p>
+                        </div>
+                    ) : null}
                     <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-white/[0.06] ring-1 ring-white/[0.07] sm:grid-cols-4">
                         {[
                             { label: 'Attendees', value: data.totalAttendees },
@@ -190,18 +206,17 @@ const AUDIENCE_SELECT_CLASS = `${AUDIENCE_INPUT_CLASS} appearance-none pr-10`;
 const AUDIENCE_SCROLLBAR_CLASS =
     '[scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.18)_transparent] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-thumb:hover]:bg-white/25';
 
-function formatUpdatedAt(value) {
-    if (!value) return 'Saved';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return 'Saved';
-    return `Updated ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-}
-
 function formatLastAttended(value) {
     if (!value) return '—';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '—';
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/** Deep-equal on the FILTER_DEFAULTS shape only — ignores unknown keys a segment might carry. */
+function filtersMatchSegment(filters, filterJson) {
+    const applied = { ...FILTER_DEFAULTS, ...(filterJson || {}) };
+    return Object.keys(FILTER_DEFAULTS).every((key) => filters[key] === applied[key]);
 }
 
 function parseTriState(value) {
@@ -277,9 +292,15 @@ export default function AudiencePage() {
 
     const [segments, setSegments] = useState([]);
     const [segmentsLoading, setSegmentsLoading] = useState(true);
-    const [segmentName, setSegmentName] = useState('');
+    const [savingSegment, setSavingSegment] = useState(false);
+    const [segmentNameDraft, setSegmentNameDraft] = useState('');
     const [segmentActionBusy, setSegmentActionBusy] = useState(false);
     const [statusMessage, setStatusMessage] = useState('');
+
+    const activeSegment = useMemo(
+        () => segments.find((seg) => filtersMatchSegment(filters, seg.filterJson)) || null,
+        [segments, filters]
+    );
 
     const totalPages = Math.max(1, Math.ceil(total / TAKE));
 
@@ -325,7 +346,8 @@ export default function AudiencePage() {
         setFilters(FILTER_DEFAULTS);
         setPage(1);
         setSelectedRowIds([]);
-        setSegmentName('');
+        setSavingSegment(false);
+        setSegmentNameDraft('');
         setStatusMessage('Filters reset.');
     }
 
@@ -346,17 +368,15 @@ export default function AudiencePage() {
     }
 
     async function handleSaveSegment() {
-        if (!segmentName.trim()) {
-            setStatusMessage('Add a segment name before saving.');
-            return;
-        }
+        if (!segmentNameDraft.trim()) return;
         setSegmentActionBusy(true);
         setStatusMessage('');
         try {
-            await saveAudienceSegment({ name: segmentName.trim(), filterJson: filters });
-            setSegmentName('');
+            await saveAudienceSegment({ name: segmentNameDraft.trim(), filterJson: filters });
+            setSegmentNameDraft('');
+            setSavingSegment(false);
             await loadSegments();
-            setStatusMessage('Segment saved.');
+            setStatusMessage('Segment saved — use it below or send a campaign to it.');
         } catch (error) {
             setStatusMessage(error?.data?.error || error?.message || 'Failed to save segment.');
         } finally {
@@ -364,11 +384,17 @@ export default function AudiencePage() {
         }
     }
 
-    function handleApplySegment(segment) {
-        setFilters({ ...FILTER_DEFAULTS, ...(segment.filterJson || {}) });
+    function handleToggleSegment(segment) {
+        // Click applies it; clicking the already-active segment clears back to no filters.
+        if (activeSegment?.id === segment.id) {
+            setFilters(FILTER_DEFAULTS);
+            setStatusMessage('');
+        } else {
+            setFilters({ ...FILTER_DEFAULTS, ...(segment.filterJson || {}) });
+            setStatusMessage(`Applied "${segment.name}".`);
+        }
         setPage(1);
         setSelectedRowIds([]);
-        setStatusMessage(`Applied "${segment.name}" — filters updated below.`);
     }
 
     async function handleDeleteSegment(segmentId) {
@@ -398,92 +424,6 @@ export default function AudiencePage() {
                 <RealAudienceOverview />
 
                 <SectionCard
-                    title="Segment Draft"
-                    className={AUDIENCE_SECTION_CLASS}
-                    bodyClassName={AUDIENCE_SECTION_BODY_CLASS}
-                >
-                    <div className="space-y-6">
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                            <div className="min-w-0 flex-1">
-                                <p className="max-w-2xl text-sm leading-6 text-zinc-400">
-                                    Segments save the filter bar below, not a frozen row list — apply one any time to
-                                    re-run it against your current, live audience.
-                                </p>
-                                <input
-                                    type="text"
-                                    value={segmentName}
-                                    onChange={(event) => setSegmentName(event.target.value)}
-                                    className={`${AUDIENCE_INPUT_CLASS} mt-4 max-w-xl`}
-                                    placeholder="Segment name"
-                                />
-                            </div>
-                            <div className="rounded-3xl px-4 py-3 text-sm glass-field text-zinc-400">
-                                <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Matching now</p>
-                                <p className="mt-1 font-semibold text-white">{total.toLocaleString()} attendees</p>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex flex-wrap gap-2.5">
-                                <button
-                                    type="button"
-                                    onClick={handleSaveSegment}
-                                    disabled={!segmentName.trim() || segmentActionBusy}
-                                    className="pill-solid px-5 py-2.5 text-xs font-bold tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-40"
-                                >
-                                    Save Segment
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={resetFilters}
-                                    className="pill-ghost px-5 py-2.5 text-xs font-bold tracking-[0.02em]"
-                                >
-                                    Reset Filters
-                                </button>
-                            </div>
-                            {statusMessage ? <p className="text-sm font-semibold text-zinc-400">{statusMessage}</p> : null}
-                        </div>
-
-                        <div className="space-y-3">
-                            <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Saved segments</p>
-                            {segmentsLoading ? (
-                                <p className="rounded-2xl glass-field px-4 py-3 text-sm leading-6 text-zinc-500">Loading segments...</p>
-                            ) : segments.length ? (
-                                <div className="grid gap-2.5 md:grid-cols-2">
-                                    {segments.map((segment) => (
-                                        <div
-                                            key={segment.id}
-                                            className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 glow-surface-soft"
-                                        >
-                                            <button
-                                                type="button"
-                                                onClick={() => handleApplySegment(segment)}
-                                                className="min-w-0 flex-1 text-left"
-                                            >
-                                                <p className="truncate text-sm font-bold text-zinc-100">{segment.name}</p>
-                                                <p className="mt-1 text-xs leading-5 text-zinc-500">{formatUpdatedAt(segment.updatedAt)}</p>
-                                            </button>
-                                            <div className="flex shrink-0 gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDeleteSegment(segment.id)}
-                                                    disabled={segmentActionBusy}
-                                                    className="rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-red-400 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-40"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="rounded-2xl glass-field px-4 py-3 text-sm leading-6 text-zinc-500">No segments saved.</p>
-                            )}
-                        </div>
-                    </div>
-                </SectionCard>
-
-                <SectionCard
                     title="Audience"
                     className={AUDIENCE_SECTION_CLASS}
                     bodyClassName={AUDIENCE_SECTION_BODY_CLASS}
@@ -492,16 +432,111 @@ export default function AudiencePage() {
                         {loadError ? (
                             <div className="rounded-2xl bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-200">{loadError}</div>
                         ) : null}
+
+                        {segments.length || segmentsLoading ? (
+                            <div className="space-y-2.5">
+                                <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Saved segments</p>
+                                {segmentsLoading ? (
+                                    <p className="rounded-2xl glass-field px-4 py-3 text-sm leading-6 text-zinc-500">Loading segments...</p>
+                                ) : (
+                                    <div className="flex flex-wrap gap-2">
+                                        {segments.map((segment) => {
+                                            const active = activeSegment?.id === segment.id;
+                                            return (
+                                                <div
+                                                    key={segment.id}
+                                                    className={`flex items-center gap-1.5 rounded-full py-1 pl-1 pr-1.5 transition ${
+                                                        active ? 'bg-[#d84aff]/15 ring-1 ring-[#d84aff]/40' : 'glass-field'
+                                                    }`}
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleToggleSegment(segment)}
+                                                        aria-pressed={active}
+                                                        className={`rounded-full px-3 py-1.5 text-xs font-bold tracking-[0.02em] ${active ? 'text-white' : 'text-zinc-300'}`}
+                                                    >
+                                                        {segment.name}
+                                                    </button>
+                                                    <Link
+                                                        href={`/dashboard/campaigns?segmentId=${segment.id}`}
+                                                        title={`Send a campaign to "${segment.name}"`}
+                                                        className="rounded-full px-2 py-1.5 text-[11px] font-semibold text-zinc-500 transition hover:bg-white/[0.08] hover:text-white"
+                                                    >
+                                                        Send →
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteSegment(segment.id)}
+                                                        disabled={segmentActionBusy}
+                                                        aria-label={`Delete ${segment.name}`}
+                                                        className="rounded-full px-2 py-1.5 text-xs font-bold text-zinc-500 transition hover:bg-red-500/15 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        ) : null}
+
                         <div className="dashboard-surface-b rounded-[1.25rem] !border-0 p-4 sm:p-5">
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                                 <div>
                                     <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Filter audience</p>
                                     <p className="mt-1 text-sm leading-6 text-zinc-400">Real per-attendee data — opt-in, Passport signal, and engagement.</p>
                                 </div>
-                                <p className="rounded-full bg-white/[0.06] px-3 py-1.5 text-xs font-bold tracking-[0.02em] text-zinc-300">
-                                    {total.toLocaleString()} attendees
-                                </p>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <p className="rounded-full bg-white/[0.06] px-3 py-1.5 text-xs font-bold tracking-[0.02em] text-zinc-300">
+                                        {total.toLocaleString()} attendees
+                                    </p>
+                                    {savingSegment ? (
+                                        <div className="flex items-center gap-1.5">
+                                            <input
+                                                type="text"
+                                                autoFocus
+                                                value={segmentNameDraft}
+                                                onChange={(event) => setSegmentNameDraft(event.target.value)}
+                                                onKeyDown={(event) => { if (event.key === 'Enter') handleSaveSegment(); if (event.key === 'Escape') setSavingSegment(false); }}
+                                                placeholder="Segment name"
+                                                className="dashboard-input min-h-9 w-40 rounded-full px-3.5 py-1.5 text-xs font-semibold text-white placeholder:text-zinc-500"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleSaveSegment}
+                                                disabled={!segmentNameDraft.trim() || segmentActionBusy}
+                                                className="pill-solid px-3.5 py-1.5 text-xs font-bold tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-40"
+                                            >
+                                                Save
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setSavingSegment(false); setSegmentNameDraft(''); }}
+                                                className="rounded-full px-2.5 py-1.5 text-xs font-bold text-zinc-500 hover:text-white"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSavingSegment(true)}
+                                            className="pill-ghost px-3.5 py-1.5 text-xs font-bold tracking-[0.02em]"
+                                        >
+                                            Save as segment
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={resetFilters}
+                                        className="rounded-full px-3.5 py-1.5 text-xs font-bold tracking-[0.02em] text-zinc-500 hover:text-white"
+                                    >
+                                        Reset
+                                    </button>
+                                </div>
                             </div>
+                            {statusMessage ? <p className="mt-2 text-xs font-semibold text-zinc-400">{statusMessage}</p> : null}
 
                             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                                 <div className="space-y-2 rounded-2xl glass-field p-3">

@@ -2,17 +2,17 @@
 
 import { createElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import Papa from 'papaparse';
 
 import { HugeiconsIcon } from '@hugeicons/react';
 import { HelpCircleIcon, Calendar01Icon, ArrowRight02Icon, Loading02Icon, RefreshIcon, StarIcon, Alert02Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService, authStorage } from '../../services/auth';
 import SectionCard from '@/components/dashboard/SectionCard';
+import BudgetPanel from '@/components/dashboard/BudgetPanel';
 import { RechartsChart } from '@/components/dashboard/ChartFrame';
 import { getDashboardChartShade } from '@/components/dashboard/chartStyles';
-import SegmentedToggle from '@/components/dashboard/SegmentedToggle';
-import { Upload01Icon } from '@hugeicons/core-free-icons';
+import { useEvents } from '@/lib/dashboardStore';
+import { getBudgetSummary } from '@/services/budget';
 
 const BASE_URL = globalThis.process?.env?.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
 
@@ -23,9 +23,10 @@ function fmt(cents) {
 }
 
 function splitMoney(cents) {
-    const n = ((cents ?? 0) / 100).toFixed(2);
+    const negative = (cents ?? 0) < 0;
+    const n = (Math.abs(cents ?? 0) / 100).toFixed(2);
     const [whole, dec] = n.split('.');
-    return { whole, dec };
+    return { whole: `${negative ? '-' : ''}${whole}`, dec };
 }
 
 function fmtDate(raw) {
@@ -55,132 +56,32 @@ function fmtChartMoney(value) {
     }).format(value ?? 0);
 }
 
-const FALLBACK_EVENT_ROWS = [
-    { id: 'future-001', name: 'Friday Night PXI', date: '2026-06-14', gross: 184000, fee: 21400, net: 162600, adSpend: 18000, otherRevenue: 26000 },
-    { id: 'future-002', name: 'Afrobeats Rooftop', date: '2026-06-21', gross: 142500, fee: 17100, net: 125400, adSpend: 14500, otherRevenue: 19500 },
-    { id: 'future-003', name: 'Latin Room Pop-Up', date: '2026-06-28', gross: 116800, fee: 13800, net: 103000, adSpend: 9800, otherRevenue: 13400 },
-    { id: 'future-004', name: 'After Hours Social', date: '2026-07-05', gross: 96400, fee: 11600, net: 84800, adSpend: 7200, otherRevenue: 10800 },
-];
+const CATEGORY_LABELS = {
+    STAFF: 'Staff',
+    VENUE: 'Venue',
+    VENDOR: 'Vendor',
+    MARKETING: 'Marketing (logged)',
+    EQUIPMENT: 'Equipment',
+    OTHER: 'Other',
+};
 
-const FALLBACK_TIMELINE = [
-    { month: 'Feb', revenue: 1840, projected: 1920 },
-    { month: 'Mar', revenue: 2140, projected: 2260 },
-    { month: 'Apr', revenue: 2360, projected: 2510 },
-    { month: 'May', revenue: 2820, projected: 3020 },
-    { month: 'Jun', revenue: 3160, projected: 3440 },
-    { month: 'Jul', revenue: null, projected: 3720 },
-];
-
-function estimateAdSpend(gross, index) {
-    if (!gross) return FALLBACK_EVENT_ROWS[index % FALLBACK_EVENT_ROWS.length].adSpend;
-    return Math.max(6500, Math.round(gross * (0.07 + (index % 3) * 0.015)));
-}
-
-function estimateOtherRevenue(gross, index) {
-    if (!gross) return FALLBACK_EVENT_ROWS[index % FALLBACK_EVENT_ROWS.length].otherRevenue;
-    return Math.round(gross * (0.08 + (index % 2) * 0.025));
-}
-
-function getMonthLabel(raw) {
-    const date = raw ? new Date(raw) : new Date();
-    return date.toLocaleDateString('en-US', { month: 'short' });
-}
-
-function buildRevenueTimeline(payments, fallbackTotalCents) {
-    if (!payments.length) return FALLBACK_TIMELINE;
-
+/** Real monthly gross/net series from payment timestamps — no projections, no estimates. */
+function buildMonthlySeries(payments) {
     const byMonth = new Map();
     for (const payment of payments) {
-        const key = getMonthLabel(payment.createdAt);
-        byMonth.set(key, (byMonth.get(key) || 0) + dollars(payment.netPayout ?? payment.grossAmount ?? 0));
+        const date = new Date(payment.createdAt);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const entry = byMonth.get(key) || { key, gross: 0, net: 0 };
+        entry.gross += dollars(payment.grossAmount);
+        entry.net += dollars(payment.netPayout);
+        byMonth.set(key, entry);
     }
-
-    const rows = [...byMonth.entries()].map(([month, revenue]) => ({
-        month,
-        revenue,
-        projected: Math.round(revenue * 1.12),
-    }));
-    const recentAverage = rows.reduce((sum, row) => sum + (row.revenue || 0), 0) / rows.length || dollars(fallbackTotalCents);
-    const futureMonth = new Date();
-    futureMonth.setMonth(futureMonth.getMonth() + 1);
-    rows.push({
-        month: futureMonth.toLocaleDateString('en-US', { month: 'short' }),
-        revenue: null,
-        projected: Math.round(recentAverage * 1.18),
-    });
-    return rows;
-}
-
-function buildFinanceModel(data, timeframe, eventCosts) {
-    const aggregates = data?.aggregates ?? {};
-    const payments = data?.payments ?? [];
-    const payouts = data?.payouts ?? [];
-    const liveEventRows = new Map();
-
-    for (const payment of payments) {
-        const key = payment.eventId || payment.eventName || payment.id;
-        if (!liveEventRows.has(key)) {
-            liveEventRows.set(key, {
-                id: key,
-                name: payment.eventName || payment.event?.name || 'Ticket Sale',
-                date: payment.createdAt,
-                gross: 0,
-                fee: 0,
-                net: 0,
-            });
-        }
-        const row = liveEventRows.get(key);
-        row.gross += payment.grossAmount ?? 0;
-        row.fee += (payment.consumerFee ?? 0) + (payment.vendorFlatFee ?? 0);
-        row.net += payment.netPayout ?? 0;
-    }
-
-    const eventRows = Array.from(liveEventRows.values()).map((row, index) => ({
-        ...row,
-        adSpend: estimateAdSpend(row.gross, index),
-        otherRevenue: estimateOtherRevenue(row.gross, index),
-    }));
-    const modeledEvents = eventRows.length ? eventRows : FALLBACK_EVENT_ROWS;
-
-    const gross = aggregates.grossRevenue ?? modeledEvents.reduce((sum, event) => sum + event.gross, 0);
-    const consumerFees = aggregates.consumerFeeDeducted ?? 0;
-    const vendorFees = aggregates.vendorFlatFeeTotal ?? 0;
-    const modeledFees = modeledEvents.reduce((sum, event) => sum + event.fee, 0);
-    const totalFees = consumerFees + vendorFees || modeledFees;
-    const net = aggregates.netPayout ?? modeledEvents.reduce((sum, event) => sum + event.net, 0);
-    const adSpend = modeledEvents.reduce((sum, event) => sum + event.adSpend, 0);
-    const otherRevenue = modeledEvents.reduce((sum, event) => sum + event.otherRevenue, 0);
-    const netAfterCosts = net + otherRevenue - adSpend;
-
-    const totalEventCostCents = eventCosts.reduce((sum, c) => sum + (c.amount || 0), 0);
-
-    const breakdownData = [
-        { name: 'Platform fee', value: dollars(totalFees) },
-        { name: 'Marketing (Email)', value: dollars(adSpend * 0.2) },
-        { name: 'Marketing (SMS)', value: dollars(adSpend * 0.3) },
-        { name: 'Marketing (In-app)', value: dollars(adSpend * 0.4) },
-        { name: 'Marketing (Discovery)', value: dollars(adSpend * 0.1) },
-        { name: 'Data', value: dollars(gross * 0.02) }
-    ];
-
-    const revenueTimelineChart = buildRevenueTimeline(payments, gross).map(item => ({
-        ...item,
-        previousRevenue: item.revenue ? item.revenue * 0.8 : null,
-        profit: item.revenue ? item.revenue - (totalEventCostCents/100 / 6) : null
-    }));
-
-    return {
-        payments,
-        payouts,
-        gross,
-        totalFees,
-        adSpend,
-        otherRevenue,
-        netAfterCosts,
-        revenueTimeline: revenueTimelineChart,
-        breakdownData,
-        totalEventCost: totalEventCostCents
-    };
+    return [...byMonth.values()]
+        .sort((a, b) => a.key.localeCompare(b.key))
+        .map((entry) => ({
+            ...entry,
+            month: new Date(`${entry.key}-01T00:00:00`).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+        }));
 }
 
 function MoneyTooltip({ active, payload, label }) {
@@ -202,33 +103,22 @@ function MoneyTooltip({ active, payload, label }) {
     );
 }
 
-function ReturnTooltip({ active, payload, label }) {
-    if (!active || !payload?.length) return null;
-    return (
-        <div className="rounded-xl bg-black/90 px-3 py-2 text-xs shadow-2xl">
-            <p className="mb-1 font-bold text-white">{label}</p>
-            <p className="font-mono font-bold text-white">{Number(payload[0].value).toFixed(1)}x</p>
-        </div>
-    );
-}
-
-
-function RevenueTableRow({ title, value, unit, subheading }) {
+function RevenueTableRow({ title, value, unit, subheading, emphasize = false }) {
     return (
         <div className="flex items-center justify-between border-b border-white/[0.05] py-3.5 last:border-b-0">
             <div>
                 <p className="text-sm font-semibold text-white">{title}</p>
                 <p className="mt-0.5 text-xs text-zinc-500">{subheading}</p>
             </div>
-            <p className="text-sm font-semibold tabular-nums text-white">
+            <p className={`text-sm font-semibold tabular-nums ${emphasize ? 'text-emerald-300' : 'text-white'}`}>
                 {value}<span className="ml-1 text-[11px] font-medium text-zinc-500">{unit}</span>
             </p>
         </div>
     );
 }
 
-function EarningsHero({ netAfterCosts, gross, retainedPct, timeframe, setTimeframe, sseStatus, loading, onRefresh }) {
-    const netMoney = splitMoney(netAfterCosts);
+function EarningsHero({ heroValue, heroLabel, gross, retainedPct, retainedLabel, sseStatus, loading, onRefresh, includeCosts, onToggleCosts }) {
+    const heroMoney = splitMoney(heroValue);
     const statusLabel = sseStatus === 'connected' ? 'Connected' : sseStatus === 'connecting' ? 'Connecting' : 'Offline';
 
     return (
@@ -244,20 +134,9 @@ function EarningsHero({ netAfterCosts, gross, retainedPct, timeframe, setTimefra
                     </p>
                     <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Earnings</h1>
                     <p className="mt-1.5 max-w-xl text-sm leading-6 text-zinc-500">
-                        Gross sales, platform fees, event costs, payouts, and profit in one clean read.
+                        Gross sales, platform fees, event costs, marketing spend, payouts, and profit — all real numbers.
                     </p>
-                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <SegmentedToggle
-                            value={timeframe}
-                            onChange={setTimeframe}
-                            items={[
-                                { id: '1d', label: '1D' },
-                                { id: '1w', label: '1W' },
-                                { id: '1m', label: '1M' },
-                                { id: '1y', label: '1Y' },
-                                { id: 'all', label: 'All' },
-                            ]}
-                        />
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
                         <button
                             type="button"
                             onClick={onRefresh}
@@ -267,17 +146,29 @@ function EarningsHero({ netAfterCosts, gross, retainedPct, timeframe, setTimefra
                             {loading ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" /> : <HugeiconsIcon icon={RefreshIcon} size={14} />}
                             Refresh
                         </button>
+                        <button
+                            type="button"
+                            onClick={onToggleCosts}
+                            role="switch"
+                            aria-checked={includeCosts}
+                            className="inline-flex items-center gap-2.5 rounded-full bg-white/[0.06] px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:bg-white/[0.09] hover:text-white"
+                        >
+                            Include costs
+                            <span className={`relative h-4 w-7 shrink-0 rounded-full transition ${includeCosts ? 'bg-[#d84aff]' : 'bg-white/[0.12]'}`}>
+                                <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${includeCosts ? 'left-[14px]' : 'left-0.5'}`} />
+                            </span>
+                        </button>
                     </div>
                 </div>
                 <div className="shrink-0 xl:pb-1 xl:text-right">
-                    <p className="text-[12px] font-medium text-zinc-500">Net after costs</p>
-                    <p className="mt-2 text-5xl font-semibold leading-none tracking-tight text-white md:text-6xl">
-                        ${netMoney.whole}<span className="text-2xl text-white/40">.{netMoney.dec}</span>
+                    <p className="text-[12px] font-medium text-zinc-500">{heroLabel}</p>
+                    <p className={`mt-2 text-5xl font-semibold leading-none tracking-tight md:text-6xl ${heroValue < 0 ? 'text-red-300' : 'text-white'}`}>
+                        ${heroMoney.whole}<span className={`text-2xl ${heroValue < 0 ? 'text-red-300/40' : 'text-white/40'}`}>.{heroMoney.dec}</span>
                     </p>
                     <p className="mt-3 text-sm text-zinc-500">
                         <span className="font-semibold text-zinc-300">{fmtCompact(gross)}</span> gross
                         <span className="mx-2 text-zinc-700">·</span>
-                        <span className="font-semibold text-zinc-300">{retainedPct.toFixed(0)}%</span> retained
+                        <span className="font-semibold text-zinc-300">{retainedPct.toFixed(0)}%</span> {retainedLabel}
                     </p>
                 </div>
             </div>
@@ -290,72 +181,23 @@ function EarningsHero({ netAfterCosts, gross, retainedPct, timeframe, setTimefra
 export default function EarningsPage() {
     const { user } = useAuth();
     const [mounted, setMounted] = useState(false);
-    const [data, setData] = useState(null);       // { aggregates, payments, payouts }
+    const [data, setData] = useState(null); // { aggregates, payments, payouts, costs, marketing }
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [sseStatus, setSseStatus] = useState('disconnected');
-    const [timeframe, setTimeframe] = useState('1m');
-    const [includeEventCost, setIncludeEventCost] = useState(true);
-    const [eventCosts, setEventCosts] = useState([]);
-    const [costName, setCostName] = useState('');
-    const [costAmount, setCostAmount] = useState('');
-    const [costError, setCostError] = useState('');
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            const saved = localStorage.getItem('pxi_event_costs_v1');
-            if (saved) setEventCosts(JSON.parse(saved));
-        }, 0);
-        return () => clearTimeout(timer);
-    }, []);
-    const saveEventCosts = (newCosts) => {
-        setEventCosts(newCosts);
-        localStorage.setItem('pxi_event_costs_v1', JSON.stringify(newCosts));
-    };
-
-    const handleAddEventCost = () => {
-        const label = costName.trim();
-        const amount = Number.parseFloat(costAmount);
-        if (!label || !Number.isFinite(amount) || amount <= 0) {
-            setCostError('Add a name and a positive dollar amount.');
-            return;
-        }
-        saveEventCosts([
-            ...eventCosts,
-            { id: globalThis.crypto?.randomUUID?.() || `${Date.now()}`, name: label, amount: Math.round(amount * 100), date: new Date().toISOString() },
-        ]);
-        setCostName('');
-        setCostAmount('');
-        setCostError('');
-    };
-
-    const handleImportCosts = (file) => {
-        if (!file) return;
-        setCostError('');
-        Papa.parse(file, {
-            header: true,
-            complete: (res) => {
-                const imported = res.data
-                    .filter((row) => row.name && row.amount)
-                    .map((row, index) => ({
-                        id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${index}`,
-                        name: String(row.name).trim(),
-                        amount: Math.round(Number.parseFloat(row.amount) * 100),
-                        date: row.date || new Date().toISOString(),
-                    }))
-                    .filter((row) => row.name && Number.isFinite(row.amount) && row.amount > 0);
-                if (!imported.length) {
-                    setCostError('No valid rows found. Use columns named name and amount.');
-                    return;
-                }
-                saveEventCosts([...eventCosts, ...imported]);
-            },
-            error: () => setCostError('Could not read that CSV.'),
-        });
-    };
-
+    const [budgetEventId, setBudgetEventId] = useState('');
+    const [budgetSummary, setBudgetSummary] = useState(null);
+    // Toggles whether logged event costs + cash marketing spend deduct from the headline figure.
+    const [includeCosts, setIncludeCosts] = useState(true);
 
     const esRef = useRef(null);
     const reconnectRef = useRef(null);
+
+    const { events } = useEvents({ limit: 100, offset: 0 });
+    const sortedEvents = useMemo(
+        () => [...(events || [])].sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0)),
+        [events]
+    );
 
     useEffect(() => {
         const frame = requestAnimationFrame(() => setMounted(true));
@@ -378,6 +220,26 @@ export default function EarningsPage() {
         const timeout = setTimeout(load, 0);
         return () => clearTimeout(timeout);
     }, [load]);
+
+    // ── budget panel (per-event, backend EventBudget/EventExpense) ─────────
+    useEffect(() => {
+        if (!budgetEventId && sortedEvents.length) {
+            setBudgetEventId(sortedEvents[0].id);
+        }
+    }, [sortedEvents, budgetEventId]);
+
+    const refreshBudget = useCallback(() => {
+        if (!budgetEventId) {
+            setBudgetSummary(null);
+            return;
+        }
+        getBudgetSummary(budgetEventId).then(setBudgetSummary).catch(() => setBudgetSummary(null));
+    }, [budgetEventId]);
+
+    useEffect(() => {
+        const timeout = setTimeout(refreshBudget, 0);
+        return () => clearTimeout(timeout);
+    }, [refreshBudget]);
 
     // ── SSE stream ────────────────────────────────────────────────────────
     useEffect(() => {
@@ -462,7 +324,41 @@ export default function EarningsPage() {
         };
     }, [user?.isVendor]);
 
-    const financeModel = useMemo(() => buildFinanceModel(data, timeframe, eventCosts), [data, timeframe, eventCosts]);
+    // ─── derived numbers (all real) ───────────────────────────────────────
+    const payments = data?.payments ?? [];
+    const payouts = data?.payouts ?? [];
+    const gross = data?.aggregates?.grossRevenue ?? 0;
+    const totalFees = (data?.aggregates?.consumerFeeDeducted ?? 0) + (data?.aggregates?.vendorFlatFeeTotal ?? 0);
+    const netPayout = data?.aggregates?.netPayout ?? 0;
+    const eventCostCents = data?.costs?.totalCents ?? 0;
+    // Only cash marketing spend deducts — credit-covered sends cost PXI, not you.
+    const marketingCashCents = data?.marketing?.cashCents ?? 0;
+    const marketingCreditCents = data?.marketing?.creditCents ?? 0;
+    const netProfit = netPayout - eventCostCents - marketingCashCents;
+    const spendTotal = eventCostCents + marketingCashCents;
+    const profitRetainedPct = gross > 0 ? Math.max(0, Math.min(100, (netProfit / gross) * 100)) : 0;
+    const payoutRetainedPct = gross > 0 ? Math.max(0, Math.min(100, (netPayout / gross) * 100)) : 0;
+
+    // "Include costs" off = pure revenue view (gross/fees/payout); on = full profit view.
+    const heroValue = includeCosts ? netProfit : netPayout;
+    const heroLabel = includeCosts ? 'Net profit' : 'Net payout';
+    const retainedPct = includeCosts ? profitRetainedPct : payoutRetainedPct;
+    const retainedLabel = includeCosts ? 'kept as profit' : 'kept after fees';
+
+    const monthlySeries = useMemo(() => buildMonthlySeries(payments), [payments]);
+
+    const breakdownData = useMemo(() => {
+        const slices = [];
+        if (totalFees > 0) slices.push({ name: 'Platform fees', value: dollars(totalFees) });
+        for (const row of data?.costs?.byCategory ?? []) {
+            if (row.amountCents > 0) slices.push({ name: CATEGORY_LABELS[row.category] || row.category, value: dollars(row.amountCents) });
+        }
+        if ((data?.marketing?.adCardCents ?? 0) > 0) slices.push({ name: 'Ad boosts (card)', value: dollars(data.marketing.adCardCents) });
+        if ((data?.marketing?.campaignCardCents ?? 0) > 0) slices.push({ name: 'Email & SMS (card)', value: dollars(data.marketing.campaignCardCents) });
+        return slices;
+    }, [data, totalFees]);
+
+    const eventRows = data?.costs?.byEvent ?? [];
 
     // ─── non-vendor gate ──────────────────────────────────────────────────
     if (!mounted) {
@@ -496,34 +392,20 @@ export default function EarningsPage() {
         );
     }
 
-    // ─── derived numbers ──────────────────────────────────────────────────
-    const {
-        payouts,
-        gross,
-        totalFees,
-        adSpend,
-        otherRevenue,
-        netAfterCosts,
-        revenueTimeline,
-        breakdownData,
-    } = financeModel;
-    const costTotal = totalFees + adSpend;
-    const retainedPct = gross + otherRevenue > 0
-        ? Math.max(0, Math.min(100, (netAfterCosts / (gross + otherRevenue)) * 100))
-        : 0;
-
     // ─── render ───────────────────────────────────────────────────────────
     return (
         <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
             <EarningsHero
-                netAfterCosts={netAfterCosts}
+                heroValue={heroValue}
+                heroLabel={heroLabel}
                 gross={gross}
                 retainedPct={retainedPct}
-                timeframe={timeframe}
-                setTimeframe={setTimeframe}
+                retainedLabel={retainedLabel}
                 sseStatus={sseStatus}
                 loading={loading}
                 onRefresh={load}
+                includeCosts={includeCosts}
+                onToggleCosts={() => setIncludeCosts((v) => !v)}
             />
 
             {error && (
@@ -542,148 +424,199 @@ export default function EarningsPage() {
                                 subheading="Total sales volume"
                             />
                             <RevenueTableRow
-                                title="Net Earned" value={fmtCompact(netAfterCosts)} unit="USD"
-                                subheading="After platform & marketing fees"
+                                title="Platform Fees" value={fmtCompact(totalFees)} unit="USD"
+                                subheading="PXI service + flat fees"
                             />
                             <RevenueTableRow
-                                title="Total Costs" value={fmtCompact(costTotal)} unit="USD"
-                                subheading="Platform, ads, and processing"
+                                title="Net Payout" value={fmtCompact(netPayout)} unit="USD"
+                                subheading="Transferred to you by Stripe"
                             />
+                            {includeCosts ? (
+                                <>
+                                    <RevenueTableRow
+                                        title="Event Costs" value={fmtCompact(eventCostCents)} unit="USD"
+                                        subheading="Expenses you logged per event"
+                                    />
+                                    <RevenueTableRow
+                                        title="Marketing Spend" value={fmtCompact(marketingCashCents)} unit="USD"
+                                        subheading={marketingCreditCents > 0
+                                            ? `Card only — ${fmtCompact(marketingCreditCents)} more covered by credits, no cash spent`
+                                            : 'Ad boosts + email/SMS campaigns (card)'}
+                                    />
+                                    <RevenueTableRow
+                                        title="Net Profit" value={fmtCompact(netProfit)} unit="USD"
+                                        subheading="Payout minus costs and cash marketing" emphasize
+                                    />
+                                </>
+                            ) : null}
                         </div>
                     </SectionCard>
-                    
-                    <SectionCard title="ROI">
-                        <div className="px-5 py-6 text-center">
-                            <p className="text-xs tracking-[0.02em] text-zinc-500 font-bold mb-2">Return on Investment</p>
-                            <p className="text-5xl font-bold text-white">{((netAfterCosts / (costTotal || 1)) * 100).toFixed(0)}%</p>
-                            <p className="text-sm text-zinc-500 font-semibold mt-2">Net after costs vs. tracked costs</p>
-                        </div>
-                    </SectionCard>
+
+                    {includeCosts ? (
+                        <SectionCard title="Return on spend">
+                            <div className="px-5 py-6 text-center">
+                                {spendTotal > 0 ? (
+                                    <>
+                                        <p className="text-xs tracking-[0.02em] text-zinc-500 font-bold mb-2">Profit vs. what you spent</p>
+                                        <p className={`text-5xl font-bold ${netProfit >= 0 ? 'text-white' : 'text-red-300'}`}>
+                                            {((netProfit / spendTotal) * 100).toFixed(0)}%
+                                        </p>
+                                        <p className="text-sm text-zinc-500 font-semibold mt-2">
+                                            {fmtCompact(netProfit)} profit on {fmtCompact(spendTotal)} of costs + cash marketing
+                                        </p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="text-5xl font-bold text-zinc-600">—</p>
+                                        <p className="text-sm text-zinc-500 font-semibold mt-2">
+                                            Log event costs or run a campaign to see your return on spend.
+                                        </p>
+                                    </>
+                                )}
+                            </div>
+                        </SectionCard>
+                    ) : null}
                 </div>
 
                 <div className="lg:col-span-2 space-y-6">
-                    <SectionCard title="Revenue & Profit">
-                        <RechartsChart className="h-[300px]">
-                            {(charts) =>
-                                createElement(
-                                    charts.ResponsiveContainer,
-                                    { width: '100%', height: '100%' },
+                    <SectionCard title="Revenue by month">
+                        {monthlySeries.length ? (
+                            <RechartsChart className="h-[300px]">
+                                {(charts) =>
                                     createElement(
-                                        charts.ComposedChart,
-                                        { data: revenueTimeline, margin: { top: 12, right: 8, bottom: 0, left: -12 } },
-                                        createElement(charts.CartesianGrid, { stroke: 'rgba(255,255,255,0.05)', vertical: false }),
-                                        createElement(charts.XAxis, { dataKey: 'month', axisLine: false, tickLine: false, tick: { fill: 'rgba(255,255,255,0.45)', fontSize: 11 } }),
-                                        createElement(charts.YAxis, { axisLine: false, tickLine: false, tickFormatter: fmtChartMoney, tick: { fill: 'rgba(255,255,255,0.35)', fontSize: 10 }, width: 54 }),
-                                        createElement(charts.Tooltip, { cursor: { fill: 'rgba(255,255,255,0.03)' }, content: createElement(MoneyTooltip) }),
-                                        createElement(charts.Area, { type: 'monotone', dataKey: 'revenue', name: 'Revenue', stroke: getDashboardChartShade(1), fill: 'rgba(13,148,136,0.14)', strokeWidth: 2, connectNulls: true }),
-                                        createElement(charts.Line, { type: 'monotone', dataKey: 'previousRevenue', name: 'Previous', stroke: 'rgba(255,255,255,0.2)', strokeWidth: 2, strokeDasharray: '4 4', dot: false }),
-                                        includeEventCost ? createElement(charts.Line, { type: 'monotone', dataKey: 'profit', name: 'Profit', stroke: getDashboardChartShade(0), strokeWidth: 2, dot: false }) : null
+                                        charts.ResponsiveContainer,
+                                        { width: '100%', height: '100%' },
+                                        createElement(
+                                            charts.ComposedChart,
+                                            { data: monthlySeries, margin: { top: 12, right: 8, bottom: 0, left: -12 } },
+                                            createElement(charts.CartesianGrid, { stroke: 'rgba(255,255,255,0.05)', vertical: false }),
+                                            createElement(charts.XAxis, { dataKey: 'month', axisLine: false, tickLine: false, tick: { fill: 'rgba(255,255,255,0.45)', fontSize: 11 } }),
+                                            createElement(charts.YAxis, { axisLine: false, tickLine: false, tickFormatter: fmtChartMoney, tick: { fill: 'rgba(255,255,255,0.35)', fontSize: 10 }, width: 54 }),
+                                            createElement(charts.Tooltip, { cursor: { fill: 'rgba(255,255,255,0.03)' }, content: createElement(MoneyTooltip) }),
+                                            createElement(charts.Area, { type: 'monotone', dataKey: 'gross', name: 'Gross', stroke: getDashboardChartShade(1), fill: 'rgba(13,148,136,0.14)', strokeWidth: 2 }),
+                                            createElement(charts.Line, { type: 'monotone', dataKey: 'net', name: 'Net to you', stroke: getDashboardChartShade(0), strokeWidth: 2, dot: false })
+                                        )
                                     )
-                                )
-                            }
-                        </RechartsChart>
-                        <div className="px-5 pb-5 pt-2 flex justify-end">
-                            <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-zinc-400 hover:text-white transition">
-                                <input type="checkbox" checked={includeEventCost} onChange={e => setIncludeEventCost(e.target.checked)} className="rounded bg-white/10 border-0 accent-zinc-300" />
-                                Include Event Costs
-                            </label>
+                                }
+                            </RechartsChart>
+                        ) : (
+                            <div className="px-5 py-16 text-center">
+                                <p className="text-sm font-semibold text-white">No sales yet.</p>
+                                <p className="mt-1 text-xs text-zinc-500">Monthly gross and net revenue appear here after your first ticket sale.</p>
+                            </div>
+                        )}
+                    </SectionCard>
+
+                    <SectionCard title="Event profitability">
+                        <div className="p-5">
+                            {eventRows.length ? (
+                                <div className="space-y-2">
+                                    {eventRows.map((row) => {
+                                        const profit = row.netCents - row.costCents;
+                                        return (
+                                            <div key={row.eventId} className="grid gap-3 rounded-2xl bg-white/[0.035] p-4 md:grid-cols-[1.4fr_110px_110px_110px] md:items-center">
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-sm font-bold text-white">{row.name}</p>
+                                                    <p className="mt-0.5 text-xs text-zinc-500">{fmtDate(row.startDate)}</p>
+                                                </div>
+                                                <div className="md:text-right">
+                                                    <p className="text-[11px] font-medium text-zinc-500">Gross</p>
+                                                    <p className="font-mono text-sm font-bold text-white">{fmt(row.grossCents)}</p>
+                                                </div>
+                                                <div className="md:text-right">
+                                                    <p className="text-[11px] font-medium text-zinc-500">Costs</p>
+                                                    <p className="font-mono text-sm font-bold text-white">{fmt(row.costCents)}</p>
+                                                </div>
+                                                <div className="md:text-right">
+                                                    <p className="text-[11px] font-medium text-zinc-500">Profit</p>
+                                                    <p className={`font-mono text-sm font-bold ${profit >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>{fmt(profit)}</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="rounded-2xl bg-white/[0.025] px-4 py-8 text-center">
+                                    <p className="text-sm font-semibold text-white">No event revenue or costs yet.</p>
+                                    <p className="mt-1 text-xs text-zinc-500">Sell tickets or log expenses in the budget below to see per-event profit.</p>
+                                </div>
+                            )}
                         </div>
                     </SectionCard>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SectionCard title="Cost Breakdown">
-                    <RechartsChart className="h-[280px]">
-                        {(charts) =>
-                            createElement(
-                                charts.ResponsiveContainer,
-                                { width: '100%', height: '100%' },
-                                createElement(
-                                    charts.PieChart,
-                                    { margin: { top: 0, right: 0, bottom: 0, left: 0 } },
-                                    createElement(
-                                        charts.Pie,
-                                        { data: breakdownData, dataKey: 'value', nameKey: 'name', cx: '50%', cy: '50%', innerRadius: 70, outerRadius: 100, stroke: '#0e0e13', strokeWidth: 2, paddingAngle: breakdownData.length > 1 ? 2 : 0 },
-                                        breakdownData.map((entry, index) => createElement(charts.Cell, { key: entry.name, fill: getDashboardChartShade(index) }))
-                                    ),
-                                    createElement(charts.Tooltip, { content: createElement(MoneyTooltip) })
-                                )
-                            )
-                        }
-                    </RechartsChart>
-                </SectionCard>
-
-                <SectionCard title="Cost planning">
-                    <div className="space-y-5 p-5">
-                        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_150px_auto]">
-                            <input
-                                type="text"
-                                value={costName}
-                                onChange={(event) => setCostName(event.target.value)}
-                                placeholder="Expense name, e.g. venue"
-                                className="dashboard-input min-h-12"
-                            />
-                            <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={costAmount}
-                                onChange={(event) => setCostAmount(event.target.value)}
-                                placeholder="$0.00"
-                                className="dashboard-input min-h-12"
-                            />
-                            <button
-                                type="button"
-                                onClick={handleAddEventCost}
-                                className="pill-solid min-h-12 justify-center px-5 text-sm"
-                            >
-                                Add cost
-                            </button>
-                        </div>
-
-                        <div className="flex flex-col gap-3 rounded-2xl bg-white/[0.035] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">CSV import</p>
-                                <p className="mt-1 text-xs text-zinc-500">Use columns named name and amount.</p>
+                {includeCosts ? (
+                    <SectionCard title="Cost breakdown">
+                        {breakdownData.length ? (
+                            <>
+                                <RechartsChart className="h-[280px]">
+                                    {(charts) =>
+                                        createElement(
+                                            charts.ResponsiveContainer,
+                                            { width: '100%', height: '100%' },
+                                            createElement(
+                                                charts.PieChart,
+                                                { margin: { top: 0, right: 0, bottom: 0, left: 0 } },
+                                                createElement(
+                                                    charts.Pie,
+                                                    { data: breakdownData, dataKey: 'value', nameKey: 'name', cx: '50%', cy: '50%', innerRadius: 70, outerRadius: 100, stroke: '#0e0e13', strokeWidth: 2, paddingAngle: breakdownData.length > 1 ? 2 : 0 },
+                                                    breakdownData.map((entry, index) => createElement(charts.Cell, { key: entry.name, fill: getDashboardChartShade(index) }))
+                                                ),
+                                                createElement(charts.Tooltip, { content: createElement(MoneyTooltip) })
+                                            )
+                                        )
+                                    }
+                                </RechartsChart>
+                                {marketingCreditCents > 0 ? (
+                                    <p className="px-5 pb-4 text-xs leading-5 text-zinc-500">
+                                        Cash costs only — {fmtCompact(marketingCreditCents)} more marketing was covered by credits and isn&apos;t counted here or deducted from profit.
+                                    </p>
+                                ) : null}
+                            </>
+                        ) : (
+                            <div className="px-5 py-16 text-center">
+                                <p className="text-sm font-semibold text-white">No cash costs tracked yet.</p>
+                                <p className="mt-1 text-xs text-zinc-500">Platform fees, logged expenses, and card-paid marketing spend break down here.</p>
                             </div>
-                            <label className="pill-ghost inline-flex cursor-pointer items-center justify-center gap-2 px-4 py-2 text-xs font-bold tracking-[0.02em]">
-                                <HugeiconsIcon icon={Upload01Icon} size={14} />
-                                Upload CSV
-                                <input type="file" accept=".csv" className="hidden" onChange={(event) => handleImportCosts(event.target.files?.[0])} />
-                            </label>
-                        </div>
-
-                        {costError ? <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-200">{costError}</p> : null}
-
-                        <div className="space-y-2">
-                            {eventCosts.map((cost) => (
-                                <div key={cost.id} className="flex flex-col gap-3 rounded-2xl bg-white/[0.035] p-3 sm:flex-row sm:items-center sm:justify-between">
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-bold text-white">{cost.name}</p>
-                                        <p className="mt-0.5 text-xs text-zinc-500">{fmtDate(cost.date)}</p>
-                                    </div>
-                                    <div className="flex items-center justify-between gap-4 sm:justify-end">
-                                        <span className="font-mono text-sm font-bold text-zinc-200">{fmt(cost.amount)}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => saveEventCosts(eventCosts.filter((item) => item.id !== cost.id))}
-                                            className="text-xs font-bold tracking-[0.02em] text-red-400 transition hover:text-red-300"
-                                        >
-                                            Remove
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                            {eventCosts.length === 0 ? (
-                                <div className="rounded-2xl bg-white/[0.025] px-4 py-8 text-center">
-                                    <p className="text-sm font-semibold text-white">No event costs added yet.</p>
-                                    <p className="mt-1 text-xs text-zinc-500">Add costs to see profit update in the chart.</p>
-                                </div>
-                            ) : null}
-                        </div>
+                        )}
+                    </SectionCard>
+                ) : (
+                    <div className="dashboard-surface rounded-[1.25rem] px-5 py-16 text-center">
+                        <p className="text-sm font-semibold text-white">Cost breakdown is hidden.</p>
+                        <p className="mt-1 text-xs text-zinc-500">Turn on &quot;Include costs&quot; above to see where the money went.</p>
                     </div>
-                </SectionCard>
+                )}
+
+                <div className="space-y-4">
+                    {sortedEvents.length ? (
+                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/[0.045] px-4 py-3">
+                            <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Budget for event</p>
+                            <select
+                                value={budgetEventId}
+                                onChange={(e) => setBudgetEventId(e.target.value)}
+                                className="glass-field max-w-[260px] rounded-xl px-3 py-2 text-sm text-white"
+                            >
+                                {sortedEvents.map((event) => (
+                                    <option key={event.id} value={event.id}>{event.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    ) : null}
+                    {budgetEventId && budgetSummary ? (
+                        <BudgetPanel
+                            eventId={budgetEventId}
+                            summary={budgetSummary}
+                            onChanged={() => { refreshBudget(); load(); }}
+                        />
+                    ) : (
+                        <div className="dashboard-surface rounded-[1.25rem] px-5 py-10 text-center">
+                            <p className="text-sm font-semibold text-white">No event selected.</p>
+                            <p className="mt-1 text-xs text-zinc-500">Create an event to plan budgets and log real costs against it.</p>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <SectionCard title="Payout history">

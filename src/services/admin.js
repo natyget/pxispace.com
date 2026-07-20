@@ -109,6 +109,26 @@ export function grantCredits(body) {
     return api.post('/api/admin/credits/grant', body);
 }
 
+// ————— Announcements (Command Center footer) —————
+
+export function listAdminAnnouncements() {
+    return api.get('/api/admin/announcements');
+}
+
+/** body: { title, body, ctaLabel?, ctaHref?, durationDays } — 409 code ANNOUNCEMENT_LIMIT at 5 active */
+export function createAdminAnnouncement(body) {
+    return api.post('/api/admin/announcements', body);
+}
+
+/** body: { active?, title?, body?, ctaLabel?, ctaHref?, durationDays? } */
+export function updateAdminAnnouncement(announcementId, body) {
+    return api.patch(`/api/admin/announcements/${announcementId}`, body);
+}
+
+export function deleteAdminAnnouncement(announcementId) {
+    return api.delete(`/api/admin/announcements/${announcementId}`);
+}
+
 // ————— Ads (W12) —————
 
 export function fetchAdminAdsOverview() {

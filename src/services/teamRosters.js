@@ -237,6 +237,10 @@ function normalizeAssignment(input = {}) {
   };
 }
 
+function normalizeVenueIds(venueIds) {
+  return Array.from(new Set((venueIds || []).map(String).filter(Boolean)));
+}
+
 function normalizeRoster(input = {}) {
   const fallbackPermissions = uniquePermissions(input.permissions);
   const oldEventAssignmentId = String(input.eventAssignmentId || '').trim();
@@ -255,6 +259,9 @@ function normalizeRoster(input = {}) {
     rolePermissions: normalizeRolePermissions(input.rolePermissions, fallbackPermissions),
     members: Array.isArray(input.members) ? input.members.map(normalizeMember) : [],
     eventAssignments,
+    // Venues (FloorPlan) this team is attached to — pure client-side many-to-many,
+    // no backend migration needed since dataJson is opaque JSON.
+    venueIds: normalizeVenueIds(input.venueIds),
   };
 }
 
@@ -372,6 +379,7 @@ export async function updateTeamRoster(rosterId, updates = {}) {
       members: updates.members ?? roster.members,
       rolePermissions: updates.rolePermissions ?? roster.rolePermissions,
       eventAssignments: updates.eventAssignments ?? roster.eventAssignments,
+      venueIds: updates.venueIds ?? roster.venueIds,
     })
   );
   return clone(updated);
@@ -385,6 +393,15 @@ export async function updateRosterRolePermissions(rosterId, role, permissions = 
       ...roster.rolePermissions,
       [safeRole]: uniquePermissions(permissions),
     },
+  }));
+  return clone(updated);
+}
+
+/** Attach/detach venues (FloorPlan) to a roster — many-to-many via the roster's own venueIds. */
+export async function setRosterVenues(rosterId, venueIds = []) {
+  const updated = updateRosterList(rosterId, (roster) => ({
+    ...roster,
+    venueIds: normalizeVenueIds(venueIds),
   }));
   return clone(updated);
 }
