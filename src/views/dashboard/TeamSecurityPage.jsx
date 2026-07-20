@@ -9,8 +9,10 @@ import {
     createTeamRoster,
     deleteTeamRoster,
     updateTeamRoster,
+    setRosterVenues,
     ROSTER_ROLE_OPTIONS,
 } from '@/services/teamRosters';
+import { listFloorPlans } from '@/services/floorPlans';
 
 function TeamHero({ rosterCount, memberCount }) {
     return (
@@ -43,6 +45,7 @@ export default function TeamSecurityPage() {
     const [selectedId, setSelectedId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [venues, setVenues] = useState([]);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
@@ -68,6 +71,18 @@ export default function TeamSecurityPage() {
             })
             .finally(() => {
                 if (alive) setLoading(false);
+            });
+        return () => { alive = false; };
+    }, []);
+
+    useEffect(() => {
+        let alive = true;
+        listFloorPlans()
+            .then((res) => {
+                if (alive) setVenues(res.floorPlans || []);
+            })
+            .catch(() => {
+                if (alive) setVenues([]);
             });
         return () => { alive = false; };
     }, []);
@@ -122,6 +137,16 @@ export default function TeamSecurityPage() {
         setRenaming(false);
     };
 
+    const handleToggleVenue = async (venueId) => {
+        if (!roster) return;
+        const current = roster.venueIds || [];
+        const next = current.includes(venueId)
+            ? current.filter((id) => id !== venueId)
+            : [...current, venueId];
+        const updated = await setRosterVenues(roster.id, next);
+        replaceRoster(updated);
+    };
+
     if (loading) {
         return (
             <div className="mx-auto max-w-6xl space-y-8">
@@ -161,6 +186,9 @@ export default function TeamSecurityPage() {
                     >
                         {r.name}
                         <span className="ml-1.5 opacity-60">{r.members?.length ?? 0}</span>
+                        {r.venueIds?.length ? (
+                            <span className="ml-1.5 opacity-40">· {r.venueIds.length} venue{r.venueIds.length === 1 ? '' : 's'}</span>
+                        ) : null}
                     </button>
                 ))}
                 {creating ? (
@@ -261,6 +289,28 @@ export default function TeamSecurityPage() {
                                 </div>
                             }
                         >
+                            <div className="px-1 pb-4">
+                                <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Venues</p>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {venues.length ? venues.map((venue) => {
+                                        const active = (roster.venueIds || []).includes(venue.id);
+                                        return (
+                                            <button
+                                                key={venue.id}
+                                                type="button"
+                                                onClick={() => handleToggleVenue(venue.id)}
+                                                className={`rounded-full px-3 py-1.5 text-[11px] font-bold tracking-[0.02em] transition ${
+                                                    active ? 'bg-white text-black' : 'bg-white/[0.055] text-zinc-400 hover:bg-white/[0.08] hover:text-white'
+                                                }`}
+                                            >
+                                                {venue.name}
+                                            </button>
+                                        );
+                                    }) : (
+                                        <p className="text-xs text-zinc-500">No saved venues yet.</p>
+                                    )}
+                                </div>
+                            </div>
                             <div className="space-y-3 px-1 py-1">
                                 {roster.members.map(member => (
                                     <div key={member.id} className="flex flex-col justify-between gap-4 rounded-[1.25rem] bg-white/[0.035] p-4 sm:flex-row sm:items-center">

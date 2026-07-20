@@ -28,6 +28,7 @@ import {
     quoteAd,
     resumeAdCampaign,
 } from '@/services/ads';
+import { api } from '@/services/api';
 
 const inputCls =
     'dashboard-input min-h-12 w-full px-4 py-3 text-sm font-semibold text-white placeholder:text-white/35';
@@ -322,6 +323,17 @@ export default function AdsPage() {
         });
     }, [events, upcomingIds]);
 
+    // Real audience intel for smart-targeting suggestions (fetched once per wizard open).
+    const [audienceIntel, setAudienceIntel] = useState(null);
+    useEffect(() => {
+        if (!wizardOpen) return undefined;
+        let cancelled = false;
+        api.get('/api/analytics/audience')
+            .then((res) => { if (!cancelled && res?.totalAttendees > 0) setAudienceIntel(res); })
+            .catch(() => {});
+        return () => { cancelled = true; };
+    }, [wizardOpen]);
+
     // Live reach estimate while targeting changes (debounced).
     useEffect(() => {
         if (!wizardOpen) return;
@@ -575,6 +587,46 @@ export default function AdsPage() {
 
                             {step === 1 ? (
                                 <>
+                                    {audienceIntel ? (
+                                        <div className="rounded-2xl bg-[#d84aff]/[0.07] p-4 ring-1 ring-[#d84aff]/15">
+                                            <p className="text-[11px] font-medium tracking-[0.02em] text-[#e9a1ff]">Smart targeting — built from your real attendees</p>
+                                            <p className="mt-1 text-xs leading-5 text-zinc-400">
+                                                Your money works hardest on people like the ones who already show up. One tap applies the profile.
+                                            </p>
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                {(() => {
+                                                    const topBracket = [...(audienceIntel.ageBrackets || [])].sort((a, b) => b.count - a.count)[0];
+                                                    const topCities = (audienceIntel.topCities || []).slice(0, 2);
+                                                    const chips = [];
+                                                    if (topBracket?.count > 0 && AD_AGE_BRACKETS.includes(topBracket.label)) {
+                                                        chips.push(
+                                                            <button
+                                                                key="bracket"
+                                                                type="button"
+                                                                onClick={() => patchDraft({ ageBrackets: [...new Set([...draft.ageBrackets, topBracket.label])] })}
+                                                                className="rounded-full bg-white/[0.07] px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-white/[0.14]"
+                                                            >
+                                                                Ages {topBracket.label} — your biggest group ({topBracket.count})
+                                                            </button>
+                                                        );
+                                                    }
+                                                    topCities.forEach((city) => {
+                                                        chips.push(
+                                                            <button
+                                                                key={`city-${city.city}`}
+                                                                type="button"
+                                                                onClick={() => patchDraft({ cities: [...new Set([...draft.cities, city.city])] })}
+                                                                className="rounded-full bg-white/[0.07] px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-white/[0.14]"
+                                                            >
+                                                                {city.city} — {city.count} of your attendees
+                                                            </button>
+                                                        );
+                                                    });
+                                                    return chips;
+                                                })()}
+                                            </div>
+                                        </div>
+                                    ) : null}
                                     <div className="space-y-2">
                                         <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Cities</span>
                                         <TagInput

@@ -1,10 +1,10 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
-    CreditCardIcon,
+    Camera01Icon,
     Delete02Icon,
     InstagramIcon,
     Loading02Icon,
@@ -20,6 +20,7 @@ import { authService } from '../../services/auth';
 import { musicService } from '@/services/music';
 import { api } from '@/services/api';
 import { listAdCampaigns } from '@/services/ads';
+import { uploadImageToR2 } from '@/services/media';
 import { getSingleShadeDonutCellProps } from '@/components/dashboard/chartStyles';
 
 const DELETION_ITEMS = [
@@ -36,7 +37,6 @@ const TABS = [
     { id: 'profile', label: 'Profile', icon: UserIcon },
     { id: 'billing', label: 'Payouts', icon: Wallet01Icon },
     { id: 'usage', label: 'Usage', icon: SecurityCheckIcon },
-    { id: 'payments', label: 'Cards', icon: CreditCardIcon },
 ];
 
 function UsageTooltip({ active, payload }) {
@@ -98,18 +98,113 @@ function SettingsHero({ user, activeTab }) {
     );
 }
 
-/** Editable profile fields (bio etc.) + save via PUT /api/auth/user/:id. */
+/** Editable profile fields (avatar, username, bio etc.) + save via PUT /api/auth/user/:id. */
 function ProfileEditor({ user, updateUser }) {
     const [name, setName] = useState(user?.name || '');
     const [bio, setBio] = useState(user?.bio || '');
-    const [city, setCity] = useState(user?.city || '');
+    // Strict city picker: free text is never submitted — only selections from the
+    // curated /api/meta/cities list are stored (canonical city + IATA cityCode).
+    const [cityPick, setCityPick] = useState(
+        user?.city ? { city: user.city, cityCode: user?.cityCode || null } : null
+    );
+    const [cityInput, setCityInput] = useState(
+        user?.city ? (user?.cityCode ? `${user.city} (${user.cityCode})` : user.city) : ''
+    );
+    const [cityDirty, setCityDirty] = useState(false);
+    const [citySuggestions, setCitySuggestions] = useState([]);
+    const [cityOpen, setCityOpen] = useState(false);
     const [instagramHandle, setInstagramHandle] = useState(user?.instagramHandle || '');
+    const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
+    const [username, setUsername] = useState(user?.username || '');
+    const [usernameStatus, setUsernameStatus] = useState(null); // null | 'checking' | 'available' | 'taken' | 'invalid'
+    const [birthdate, setBirthdate] = useState(user?.birthdate ? String(user.birthdate).slice(0, 10) : '');
+    const [showAge, setShowAge] = useState(Boolean(user?.showAge));
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState('');
+    const fileInputRef = useRef(null);
+
+    const usernameChanged = username.trim() !== (user?.username || '');
+
+    useEffect(() => {
+        if (!usernameChanged || !username.trim()) {
+            setUsernameStatus(null);
+            return undefined;
+        }
+        setUsernameStatus('checking');
+        const timer = setTimeout(() => {
+            api.get(`/api/auth/check-username?username=${encodeURIComponent(username.trim())}&userId=${encodeURIComponent(user?.id || '')}`)
+                .then((res) => {
+                    if (res.reason === 'invalid_format') setUsernameStatus('invalid');
+                    else setUsernameStatus(res.available ? 'available' : 'taken');
+                })
+                .catch(() => setUsernameStatus(null));
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [username, usernameChanged, user?.id]);
+
+    // Debounced typeahead against the curated city dataset. A locked selection
+    // (cityPick) or empty text means there is nothing to search.
+    useEffect(() => {
+        const q = cityInput.trim();
+        if (!q || cityPick) {
+            setCitySuggestions([]);
+            return undefined;
+        }
+        const timer = setTimeout(() => {
+            api.get(`/api/meta/cities?q=${encodeURIComponent(q)}`)
+                .then((res) => setCitySuggestions(res?.cities || []))
+                .catch(() => setCitySuggestions([]));
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [cityInput, cityPick]);
+
+    const onCityInputChange = (value) => {
+        setCityInput(value);
+        setCityDirty(true);
+        setCityPick(null);
+        setCityOpen(true);
+    };
+
+    const pickCity = (c) => {
+        setCityPick({ city: c.city, cityCode: c.code });
+        setCityInput(c.label);
+        setCityDirty(true);
+        setCitySuggestions([]);
+        setCityOpen(false);
+    };
+
+    const pickAvatar = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        setUploadingAvatar(true);
+        setError('');
+        try {
+            const publicUrl = await uploadImageToR2(file, {
+                filename: `avatar_${Date.now()}.${(file.name?.split('.').pop() || 'jpg').toLowerCase()}`,
+                contentType: file.type || 'image/jpeg',
+            });
+            setAvatarUrl(publicUrl);
+        } catch (err) {
+            setError(err?.message || 'Could not upload photo');
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
 
     const save = async () => {
         if (!user?.id) return;
+        if (usernameChanged && (usernameStatus === 'taken' || usernameStatus === 'invalid')) {
+            setError(usernameStatus === 'taken' ? 'That username is taken.' : 'That username has an invalid format.');
+            return;
+        }
+        // Strict picker: typed-but-unpicked city text is never submitted.
+        if (cityDirty && cityInput.trim() && !cityPick) {
+            setError('Pick a city from the list.');
+            return;
+        }
         setSaving(true);
         setError('');
         setSaved(false);
@@ -117,8 +212,19 @@ function ProfileEditor({ user, updateUser }) {
             const res = await authService.updateProfile(user.id, {
                 name: name.trim() || null,
                 bio: bio.trim() || null,
-                city: city.trim() || null,
+                // Only send city when the field was actually edited: a picked entry
+                // stores canonical city + code, a cleared field wipes both.
+                ...(cityDirty
+                    ? {
+                        city: cityPick ? cityPick.city : null,
+                        cityCode: cityPick ? cityPick.cityCode : null,
+                    }
+                    : {}),
                 instagramHandle: instagramHandle.trim() || null,
+                ...(avatarUrl && avatarUrl !== user?.avatarUrl ? { avatarUrl } : {}),
+                ...(usernameChanged && username.trim() ? { username: username.trim() } : {}),
+                birthdate: birthdate || null,
+                showAge,
             });
             if (res?.user) updateUser(res.user);
             setSaved(true);
@@ -129,17 +235,60 @@ function ProfileEditor({ user, updateUser }) {
         }
     };
 
+    const usernameHint =
+        usernameStatus === 'checking' ? { text: 'Checking availability...', cls: 'text-zinc-500' }
+        : usernameStatus === 'available' ? { text: 'Available', cls: 'text-emerald-400' }
+        : usernameStatus === 'taken' ? { text: 'Taken', cls: 'text-red-400' }
+        : usernameStatus === 'invalid' ? { text: 'Letters, numbers and underscores only', cls: 'text-red-400' }
+        : null;
+
     return (
         <SettingsSurface eyebrow="Identity" title="Profile">
+            <div className="mb-5 flex items-center gap-4">
+                <div className="relative">
+                    {avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={avatarUrl} alt="Profile" className="h-[72px] w-[72px] rounded-full object-cover ring-1 ring-white/10" />
+                    ) : (
+                        <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-white/[0.055] ring-1 ring-white/10">
+                            <HugeiconsIcon icon={UserIcon} size={28} className="text-zinc-500" />
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingAvatar}
+                        aria-label="Change profile photo"
+                        className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-lg transition hover:bg-zinc-200 disabled:opacity-50"
+                    >
+                        {uploadingAvatar
+                            ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
+                            : <HugeiconsIcon icon={Camera01Icon} size={14} />}
+                    </button>
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={pickAvatar} className="hidden" />
+                </div>
+                <div>
+                    <p className="text-sm font-semibold text-white">Profile photo</p>
+                    <p className="mt-0.5 text-xs text-zinc-500">Shown on your passport, events, and posts. Saved when you save the profile.</p>
+                </div>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
                 <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
                     <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Display name</span>
                     <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={profileInputCls} />
                 </label>
-                <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
-                    <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Username</p>
-                    <p className="mt-2 text-sm font-semibold text-white">@{user?.username || 'account'}</p>
-                </div>
+                <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
+                    <span className="flex items-center justify-between text-[11px] font-bold tracking-[0.02em] text-zinc-500">
+                        Username
+                        {usernameHint ? <span className={`font-medium ${usernameHint.cls}`}>{usernameHint.text}</span> : null}
+                    </span>
+                    <input
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value.replace(/^@/, ''))}
+                        placeholder="username"
+                        className={profileInputCls}
+                    />
+                </label>
                 <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3 sm:col-span-2">
                     <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Bio</span>
                     <textarea
@@ -163,11 +312,35 @@ function ProfileEditor({ user, updateUser }) {
                     </span>
                     <input value={instagramHandle} onChange={(e) => setInstagramHandle(e.target.value)} placeholder="@handle" className={profileInputCls} />
                 </label>
+                <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
+                    <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Birthday</span>
+                    <input
+                        type="date"
+                        value={birthdate}
+                        onChange={(e) => setBirthdate(e.target.value)}
+                        className={`${profileInputCls} [color-scheme:dark]`}
+                    />
+                </label>
+                <div className="flex items-center justify-between rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
+                    <div>
+                        <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Show age</p>
+                        <p className="mt-1 text-xs text-zinc-500">Display your age on your profile</p>
+                    </div>
+                    <button
+                        type="button"
+                        role="switch"
+                        aria-checked={showAge}
+                        onClick={() => setShowAge((v) => !v)}
+                        className={`relative h-6 w-11 shrink-0 rounded-full transition ${showAge ? 'bg-[#d84aff]' : 'bg-white/[0.08]'}`}
+                    >
+                        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${showAge ? 'left-[22px]' : 'left-0.5'}`} />
+                    </button>
+                </div>
                 <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3 sm:col-span-2">
                     <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Email</p>
                     <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-white">
                         <HugeiconsIcon icon={Mail01Icon} size={14} className="text-zinc-500" />
-                        {user?.email || 'Add email in mobile app'}
+                        {user?.email || 'Not set'}
                     </p>
                 </div>
             </div>
@@ -176,7 +349,7 @@ function ProfileEditor({ user, updateUser }) {
             <button
                 type="button"
                 onClick={save}
-                disabled={saving}
+                disabled={saving || uploadingAvatar}
                 className="mt-4 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:opacity-50"
             >
                 {saving ? 'Saving...' : 'Save profile'}
@@ -403,7 +576,7 @@ function AccountPageContent() {
     }, []);
 
     useEffect(() => {
-        if (activeTab === 'billing' || activeTab === 'payments') {
+        if (activeTab === 'billing') {
             authService.getVendorDashboard().then(setBilling).catch(() => setBilling(null));
         }
     }, [activeTab]);
@@ -440,7 +613,7 @@ function AccountPageContent() {
     );
     const availableBalanceCents = Math.max(0, (billing?.aggregates?.netPayout || 0) - paidOutCents);
     const lastPayout = billing?.payouts?.[0] || null;
-    const showSettingsAside = activeTab === 'usage' || activeTab === 'billing' || activeTab === 'payments';
+    const showSettingsAside = activeTab === 'usage' || activeTab === 'billing';
 
     const handleDelete = async () => {
         setDeleting(true);
@@ -549,30 +722,6 @@ function AccountPageContent() {
                         </SettingsSurface>
                     )}
 
-                    {activeTab === 'payments' && (
-                        <SettingsSurface eyebrow="Checkout" title="Payment methods">
-                            <div className="flex flex-wrap items-center justify-between gap-4 rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.055]">
-                                        <HugeiconsIcon icon={CreditCardIcon} size={20} className="text-white opacity-70" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-white">Cards are entered at checkout</p>
-                                        <p className="text-xs text-zinc-500">PXI doesn&apos;t store payment methods — Stripe handles each purchase securely.</p>
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    disabled
-                                    title="Saved payment methods are not available yet — cards are entered per purchase at checkout"
-                                    className="pill-ghost cursor-not-allowed px-3 py-1.5 text-xs font-bold tracking-[0.02em] opacity-40"
-                                >
-                                    Manage
-                                </button>
-                            </div>
-                        </SettingsSurface>
-                    )}
-
                     <SettingsSurface eyebrow="Security" title="Account controls">
                         {!showConfirm ? (
                             <>
@@ -641,7 +790,7 @@ function AccountPageContent() {
                                 centerValue={`$${usageTotal.toFixed(2)}`}
                             />
                         )}
-                        {(activeTab === 'billing' || activeTab === 'payments') && (
+                        {activeTab === 'billing' && (
                             <div className="dashboard-surface rounded-[1.25rem] p-5">
                                 <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Payout rail</p>
                                 <div className="mt-3 flex items-center gap-3">

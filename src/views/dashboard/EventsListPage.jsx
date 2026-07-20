@@ -39,12 +39,6 @@ import { HELP_REQUEST_STATUSES, HELP_REQUEST_TYPES, helpRequestsService } from '
 const PINNED_LIVE_EVENTS_KEY = 'pxi_pinned_live_events_v1';
 const TYPE_LABELS = Object.fromEntries(HELP_REQUEST_TYPES.map((item) => [item.value, item.label]));
 const STATUS_LABELS = Object.fromEntries(HELP_REQUEST_STATUSES.map((item) => [item.value, item.label]));
-const SORT_OPTIONS = [
-  { value: 'live-first', label: 'Live first' },
-  { value: 'soonest', label: 'Soonest' },
-  { value: 'latest', label: 'Latest' },
-  { value: 'name', label: 'Name' },
-];
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
   { value: 'live', label: 'Live' },
@@ -84,16 +78,6 @@ function coverImage(event) {
   return value.startsWith('http://') || value.startsWith('https://') || value.startsWith('data:image/') ? value : null;
 }
 
-function startsIn(value, now) {
-  if (!value) return 'Starting soon';
-  const ms = new Date(value).getTime() - now;
-  if (ms <= 0) return 'Starting soon';
-  const hours = Math.floor(ms / 3_600_000);
-  const days = Math.floor(hours / 24);
-  if (days >= 1) return `Starts in ${days} day${days > 1 ? 's' : ''}`;
-  return `Starts in ${hours}h ${Math.floor((ms % 3_600_000) / 60_000)}m`;
-}
-
 function matchesEvent(event, query) {
   const q = query.trim().toLowerCase();
   if (!q) return true;
@@ -105,7 +89,7 @@ function eventTime(event) {
   return Number.isNaN(time) ? Number.MAX_SAFE_INTEGER : time;
 }
 
-function sortEvents(items, sort, pinnedLiveIds, now) {
+function sortEvents(items, pinnedLiveIds, now) {
   const pinnedSet = new Set(pinnedLiveIds.map(String));
   return [...items].sort((a, b) => {
     const aSection = classifyEvent(a, now);
@@ -113,8 +97,7 @@ function sortEvents(items, sort, pinnedLiveIds, now) {
     const aRank = aSection === 'live' ? 0 : pinnedSet.has(String(a.id)) ? 1 : aSection === 'upcoming' ? 2 : 3;
     const bRank = bSection === 'live' ? 0 : pinnedSet.has(String(b.id)) ? 1 : bSection === 'upcoming' ? 2 : 3;
     if (aRank !== bRank) return aRank - bRank;
-    if (sort === 'name') return String(a.name || '').localeCompare(String(b.name || ''));
-    if (sort === 'latest') return eventTime(b) - eventTime(a);
+    if (aSection === 'past' && bSection === 'past') return eventTime(b) - eventTime(a);
     return eventTime(a) - eventTime(b);
   });
 }
@@ -136,14 +119,13 @@ function SelectControl({ ariaLabel, value, onChange, options }) {
   );
 }
 
-function EventControls({ query, onQueryChange, status, onStatusChange, sort, onSortChange }) {
+function EventControls({ query, onQueryChange, status, onStatusChange }) {
   return (
     <div className="rounded-[1.75rem] bg-white/[0.035] p-3">
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
         <SearchBox value={query} onChange={onQueryChange} placeholder="Search events" />
         <div className="flex flex-nowrap gap-2 overflow-x-auto dashboard-scrollbar-none">
           <SelectControl ariaLabel="Filter events" value={status} onChange={onStatusChange} options={STATUS_FILTERS} />
-          <SelectControl ariaLabel="Sort events" value={sort} onChange={onSortChange} options={SORT_OPTIONS} />
         </div>
       </div>
     </div>
@@ -256,11 +238,10 @@ function EventCard({ event, relation, now, pinned, requestCount = 0, onOpen, onN
             background: 'linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.78) 36%, rgba(0,0,0,0.28) 68%, rgba(0,0,0,0) 100%)',
           }}
         />
-        <div className="absolute left-4 top-4 flex max-w-[calc(100%-5.5rem)] flex-wrap items-start gap-2">
-          <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${isLive ? 'bg-emerald-400/18 text-emerald-200' : isPast ? 'bg-black/40 text-white/65' : 'bg-black/40 text-white/80'}`}>
-            {isLive ? 'Live' : isPast ? 'Past' : startsIn(event.startDate, now)}
+        <div className="absolute left-4 top-4 flex max-w-[calc(100%-5.5rem)] flex-wrap items-center gap-2">
+          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-black/40 ${isLive ? 'bg-emerald-400' : isPast ? 'bg-zinc-400' : 'bg-amber-400'}`}>
+            <span className="sr-only">{isLive ? 'Live' : isPast ? 'Past' : 'Upcoming'}</span>
           </span>
-          {isLive ? <span className="rounded-full bg-white/[0.14] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white">Live Pin</span> : null}
           {!isLive && pinned ? <span className="rounded-full bg-white/[0.14] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white">Pinned</span> : null}
           {requestCount > 0 ? <span className="rounded-full bg-white/[0.14] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white">{requestCount} request{requestCount === 1 ? '' : 's'}</span> : null}
         </div>
@@ -313,7 +294,7 @@ function HostedEventModal({ event, now, pinned, onClose, onNavigate, onTogglePin
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="glass-field rounded-2xl p-4">
               <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Status</p>
-              <p className="mt-1 text-sm font-semibold capitalize text-white">{isLive ? 'Live pin' : isPast ? 'Past' : pinned ? 'Pinned' : 'Upcoming'}</p>
+              <p className="mt-1 text-sm font-semibold capitalize text-white">{isLive ? 'Live' : isPast ? 'Past' : pinned ? 'Pinned' : 'Upcoming'}</p>
             </div>
             <div className="glass-field rounded-2xl p-4">
               <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Date</p>
@@ -461,8 +442,6 @@ export default function EventsListPage() {
   const [deletedEventIds, setDeletedEventIds] = useState([]);
   const [hostedFilter, setHostedFilter] = useState('all');
   const [attendedFilter, setAttendedFilter] = useState('all');
-  const [hostedSort, setHostedSort] = useState('live-first');
-  const [attendedSort, setAttendedSort] = useState('live-first');
   const [hostedQuery, setHostedQuery] = useState('');
   const [attendedQuery, setAttendedQuery] = useState('');
   const [pinnedLiveIds, setPinnedLiveIds] = useState([]);
@@ -532,16 +511,16 @@ export default function EventsListPage() {
       const section = classifyEvent(event, now);
       return (hostedFilter === 'all' || hostedFilter === section) && matchesEvent(event, hostedQuery);
     });
-    return sortEvents(filtered, hostedSort, pinnedLiveIds, now);
-  }, [hostedEvents, hostedFilter, hostedQuery, hostedSort, now, pinnedLiveIds]);
+    return sortEvents(filtered, pinnedLiveIds, now);
+  }, [hostedEvents, hostedFilter, hostedQuery, now, pinnedLiveIds]);
 
   const filteredAttendedEvents = useMemo(() => {
     const filtered = attendedEvents.filter((event) => {
       const section = classifyEvent(event, now);
       return (attendedFilter === 'all' || attendedFilter === section) && matchesEvent(event, attendedQuery);
     });
-    return sortEvents(filtered, attendedSort, [], now);
-  }, [attendedEvents, attendedFilter, attendedQuery, attendedSort, now]);
+    return sortEvents(filtered, [], now);
+  }, [attendedEvents, attendedFilter, attendedQuery, now]);
 
   const myRequestCountByEventId = useMemo(() => myHelpRequests.reduce((acc, request) => {
     acc[request.eventId] = (acc[request.eventId] || 0) + 1;
@@ -635,7 +614,7 @@ export default function EventsListPage() {
 
         {mode === 'hosted' ? (
           <div className="space-y-8">
-            <EventControls query={hostedQuery} onQueryChange={setHostedQuery} status={hostedFilter} onStatusChange={setHostedFilter} sort={hostedSort} onSortChange={setHostedSort} />
+            <EventControls query={hostedQuery} onQueryChange={setHostedQuery} status={hostedFilter} onStatusChange={setHostedFilter} />
             {hostedEvents.length === 0 ? (
               <EmptyState icon={Calendar01Icon} title="No hosted events yet" body="Create your first event." action={<button type="button" onClick={() => setCreateOpen(true)} className="mt-6 inline-flex h-11 w-11 items-center justify-center rounded-full glow-chip text-white transition-colors hover:bg-white/[0.12]" aria-label="Create event"><HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={2.5} /></button>} />
             ) : filteredHostedEvents.length === 0 ? (
@@ -660,7 +639,7 @@ export default function EventsListPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            <EventControls query={attendedQuery} onQueryChange={setAttendedQuery} status={attendedFilter} onStatusChange={setAttendedFilter} sort={attendedSort} onSortChange={setAttendedSort} />
+            <EventControls query={attendedQuery} onQueryChange={setAttendedQuery} status={attendedFilter} onStatusChange={setAttendedFilter} />
             {attendedError ? <div className="rounded-2xl bg-red-500/10 p-6 text-red-400">{attendedError.message || 'Failed to load attended events'}</div>
               : attendedLoading ? <GlowCard className="p-10 text-center"><PxiSpinner size="md" className="mx-auto" /><p className="mt-4 text-sm text-zinc-500">Loading attended events...</p></GlowCard>
                 : attendedEvents.length === 0 ? <EmptyState icon={Ticket01Icon} title="No attended events yet" body="Your tickets will appear here." action={<button type="button" onClick={() => invalidateAttended()} className="mt-6 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl glow-chip px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-white/[0.12]"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />Refresh</button>} />

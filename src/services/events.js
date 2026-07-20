@@ -17,6 +17,12 @@ export const eventsService = {
     return api.get(`/api/events?${q}`);
   },
 
+  /** Events the caller runs — created OR co-hosted (album OWNER/ADMIN). Lets venue accounts see events they staff. */
+  getManagedEvents: (params = {}) => {
+    const q = new URLSearchParams({ managed: '1', ...params });
+    return api.get(`/api/events?${q}`);
+  },
+
   /** Create event (same body as mobile CreateEventSheet → POST /api/events). */
   createEvent: (payload) => api.post('/api/events', payload),
 

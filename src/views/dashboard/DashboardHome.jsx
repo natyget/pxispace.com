@@ -5,17 +5,17 @@ import Link from 'next/link';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { eventsService } from '../../services/events';
-import { MicroChart, StatRow } from '@/components/dashboard/MetricCard';
+import { StatRow } from '@/components/dashboard/MetricCard';
 import { RechartsChart, ChartSkeleton } from '@/components/dashboard/ChartFrame';
-import { DASHBOARD_BRAND_COLOR, DASHBOARD_TOOLTIP_PROPS } from '@/components/dashboard/chartStyles';
+import { DASHBOARD_BRAND_COLOR, DASHBOARD_MUTED_COLOR, DASHBOARD_TOOLTIP_PROPS } from '@/components/dashboard/chartStyles';
 import { isVendorUser } from '@/lib/accountTier';
 import { useNotifications } from '@/lib/dashboardStore';
-import { buildCommandCenterUpdates } from '@/services/commandCenter';
+import { buildCommandCenterReminders } from '@/services/commandCenter';
 import { helpRequestsService } from '@/services/helpRequests';
 import { organizerAnalyticsService } from '@/services/organizerAnalytics';
+import { api } from '../../services/api';
 
 const DASHBOARD_RENDER_NOW = Date.now();
-const BASE_CHART_COLOR = DASHBOARD_BRAND_COLOR;
 
 /** 'YYYY-MM-DD' -> 'Jun 7'. Falls back to the raw value for non-date labels. */
 function formatDayTick(value) {
@@ -25,14 +25,6 @@ function formatDayTick(value) {
     const date = new Date(Date.UTC(y, m - 1, d));
     if (Number.isNaN(date.getTime())) return String(value);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-}
-
-/** Best-effort day label for a trailing-N-day series point that has no explicit date field. */
-function fallbackDayLabel(index, total, now = DASHBOARD_RENDER_NOW) {
-    const daysAgo = Math.max(0, total - index - 1);
-    const date = new Date(now);
-    date.setUTCDate(date.getUTCDate() - daysAgo);
-    return date.toISOString().slice(0, 10);
 }
 
 function formatRevenueTick(value) {
@@ -58,16 +50,16 @@ function eventState(event, now = DASHBOARD_RENDER_NOW) {
     const statusRaw = String(event.status || '').toUpperCase();
 
     if (statusRaw === 'ARCHIVED' || (endMs && endMs < now)) return 'Ended';
-    if (statusRaw === 'LIVE' || statusRaw === 'ACTIVE' || (startMs && startMs <= now && (!endMs || endMs >= now))) return 'Active';
-    if (startMs > now) return 'Scheduled';
+    if (statusRaw === 'LIVE' || statusRaw === 'ACTIVE' || (startMs && startMs <= now && (!endMs || endMs >= now))) return 'Live';
+    if (startMs > now) return 'Upcoming';
     return 'Draft';
 }
 
-function stateClassName(status) {
-    if (status === 'Active') return 'bg-emerald-500/[0.08] text-emerald-400/80 backdrop-blur-md';
-    if (status === 'Scheduled') return 'bg-white/[0.04] text-white/70 backdrop-blur-md';
-    if (status === 'Draft') return 'bg-amber-500/[0.08] text-amber-400/80 backdrop-blur-md';
-    return 'bg-white/[0.04] text-zinc-500 backdrop-blur-md';
+/** Color-coded status dot — green live, amber upcoming, zinc otherwise. */
+function stateDotClass(status) {
+    if (status === 'Live') return 'bg-emerald-400';
+    if (status === 'Upcoming') return 'bg-amber-400';
+    return 'bg-zinc-500';
 }
 
 export default function DashboardHome() {
@@ -80,6 +72,7 @@ export default function DashboardHome() {
     const [helpRequests, setHelpRequests] = useState([]);
     const [overview, setOverview] = useState(null);
     const [overviewLoading, setOverviewLoading] = useState(false);
+    const [announcements, setAnnouncements] = useState([]);
     const { unreadCount: notificationCount } = useNotifications(50);
 
     useEffect(() => {
@@ -162,6 +155,24 @@ export default function DashboardHome() {
         };
     }, [mounted]);
 
+    useEffect(() => {
+        if (!mounted) return;
+        let cancelled = false;
+        const timer = setTimeout(() => {
+            api.get('/api/announcements')
+                .then((data) => {
+                    if (!cancelled) setAnnouncements((data?.announcements || []).slice(0, 5));
+                })
+                .catch(() => {
+                    if (!cancelled) setAnnouncements([]);
+                });
+        }, 0);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [mounted]);
+
     const { eventRows, summary } = useMemo(() => {
         const now = DASHBOARD_RENDER_NOW;
         const totalEarnings = overview?.totals?.netCents ?? vendorData?.aggregates?.netPayout ?? 0;
@@ -176,7 +187,7 @@ export default function DashboardHome() {
             }
         }
 
-        const rank = { Active: 0, Scheduled: 1, Draft: 2, Ended: 3 };
+        const rank = { Live: 0, Upcoming: 1, Draft: 2, Ended: 3 };
         const rows = [...events]
             .sort((a, b) => {
                 const stateDelta = rank[eventState(a, now)] - rank[eventState(b, now)];
@@ -198,17 +209,15 @@ export default function DashboardHome() {
                     name: e.name || 'Untitled event',
                     dateLabel: formatEventDate(e.startDate),
                     status,
-                    statusClassName: stateClassName(status),
                     ticketsSold,
-                    revenue,
                     revenueLabel: formatMoney(revenue),
                     href: e.id ? `/dashboard/events/${e.id}` : '/dashboard/events',
                 };
             });
         const sales = overview?.totals?.ticketsSold ?? events.reduce((sum, e) => sum + soldTicketsExcludingOrganizer(e?._count?.tickets ?? 0), 0);
         const attendees = overview?.totals?.attendees ?? 0;
-        const activeCount = events.filter((event) => eventState(event, now) === 'Active').length;
-        const scheduledCount = events.filter((event) => eventState(event, now) === 'Scheduled').length;
+        const activeCount = events.filter((event) => eventState(event, now) === 'Live').length;
+        const scheduledCount = events.filter((event) => eventState(event, now) === 'Upcoming').length;
         const draftCount = events.filter((event) => eventState(event, now) === 'Draft').length;
 
         return {
@@ -220,25 +229,30 @@ export default function DashboardHome() {
                 activeCount,
                 scheduledCount,
                 draftCount,
-                salesTrend: (overview?.last30d?.ticketsByDay || []).map((d) => d.count),
-                mediaTrend: (overview?.last30d?.mediaByDay || []).map((d) => d.count),
             },
         };
     }, [events, vendorData, overview]);
+
     const revenueTrend = useMemo(() => {
         const revenueByDay = overview?.last30d?.revenueByDay || [];
-        return revenueByDay.map((d, index) => ({
-            date: d.date || d.day || fallbackDayLabel(index, revenueByDay.length),
+        return revenueByDay.map((d) => ({
+            date: d.date,
             value: (d.netCents ?? d.grossCents ?? 0) / 100,
         }));
     }, [overview]);
+    const ticketsTrend = useMemo(
+        () => (overview?.last30d?.ticketsByDay || []).map((d) => ({ date: d.date, value: d.count || 0 })),
+        [overview]
+    );
     const hasRevenueTrend = revenueTrend.some((point) => point.value > 0);
-    const updates = useMemo(
-        () => buildCommandCenterUpdates({ events, unreadCount: notificationCount, vendorDashboard: vendorData }),
+    const hasTicketsTrend = ticketsTrend.some((point) => point.value > 0);
+
+    const reminders = useMemo(
+        () => buildCommandCenterReminders({ events, unreadCount: notificationCount, vendorDashboard: vendorData }),
         [events, notificationCount, vendorData]
     );
     const upcomingAndLiveEvents = useMemo(
-        () => eventRows.filter((event) => event.status === 'Active' || event.status === 'Scheduled').slice(0, 4),
+        () => eventRows.filter((event) => event.status === 'Live' || event.status === 'Upcoming').slice(0, 4),
         [eventRows]
     );
     const urgentQueue = useMemo(() => {
@@ -255,15 +269,13 @@ export default function DashboardHome() {
                 href: request.eventId ? `/dashboard/events/${request.eventId}/members` : '/dashboard/events',
             }));
     }, [helpRequests]);
-    const reminderUpdates = updates.filter((update) => update.group !== 'product');
-    const productUpdates = updates.filter((update) => update.group === 'product');
     const metricsLoading = vendorLoading || eventsLoading || overviewLoading;
     const isVendorDashboard = mounted && authReady && !authRefreshing && isVendorUser(user);
     const dashboardHero = isVendorDashboard
         ? {
               eyebrow: 'Command center',
               title: 'Run the room',
-              copy: 'A focused read on live work, upcoming events, revenue, and anything that needs attention.',
+              copy: 'Live work, the next events, and the money — one read, no repeats.',
           }
         : {
               eyebrow: 'Workspace',
@@ -272,15 +284,15 @@ export default function DashboardHome() {
           };
     const commandMetrics = isVendorDashboard
         ? [
-              { label: 'Revenue', value: metricsLoading ? '-' : summary.revenue },
+              { label: 'Net revenue', value: metricsLoading ? '-' : summary.revenue },
               { label: 'Tickets', value: metricsLoading ? '-' : summary.sales.toLocaleString() },
               { label: 'Attendees', value: metricsLoading ? '-' : summary.attendees.toLocaleString() },
-              { label: 'Live', value: metricsLoading ? '-' : summary.activeCount },
+              { label: 'Live now', value: metricsLoading ? '-' : summary.activeCount },
           ]
         : [
               { label: 'Hosted', value: metricsLoading ? '-' : events.length.toLocaleString() },
               { label: 'Unread', value: notificationCount > 99 ? '99+' : notificationCount.toLocaleString() },
-              { label: 'Scheduled', value: metricsLoading ? '-' : summary.scheduledCount },
+              { label: 'Upcoming', value: metricsLoading ? '-' : summary.scheduledCount },
               { label: 'Drafts', value: metricsLoading ? '-' : summary.draftCount },
           ];
 
@@ -296,39 +308,42 @@ export default function DashboardHome() {
                         <p className="text-[13px] font-medium text-zinc-500">{dashboardHero.eyebrow}</p>
                         <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">{dashboardHero.title}</h1>
                         <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-500">{dashboardHero.copy}</p>
-                        <div className="mt-4 flex flex-wrap items-center gap-2">
-                            <Link
-                                href={isVendorDashboard ? '/dashboard/events' : '/dashboard/vendor-upgrade'}
-                                className="pill-solid px-4 py-2.5 text-xs tracking-[0.02em]"
-                            >
-                                {isVendorDashboard ? 'Manage events' : 'Start hosting'}
-                            </Link>
-                            <Link
-                                href="/dashboard/analytics"
-                                className="pill-ghost px-4 py-2.5 text-xs font-bold tracking-[0.02em]"
-                            >
-                                Analytics
-                            </Link>
-                            <Link
-                                href="/dashboard/notifications"
-                                className="pill-ghost relative px-4 py-2.5 text-xs font-bold tracking-[0.02em]"
-                            >
-                                Inbox
-                                {notificationCount > 0 ? (
-                                    <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-[11px] font-medium text-black">
-                                        {notificationCount > 99 ? '99+' : notificationCount}
-                                    </span>
-                                ) : null}
-                            </Link>
-                        </div>
                     </div>
                     <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[1.25rem] bg-white/[0.06] ring-1 ring-white/[0.07] sm:grid-cols-4">
                         {commandMetrics.map((metric) => (
-                            <CommandMetric key={metric.label} metric={metric} />
+                            <div key={metric.label} className="bg-[#0e0e13] px-4 py-3.5">
+                                <p className="text-[12px] font-medium text-zinc-500">{metric.label}</p>
+                                <p className="mt-1.5 truncate text-[22px] font-semibold leading-none tracking-tight text-white">{metric.value}</p>
+                            </div>
                         ))}
                     </div>
                 </div>
             </section>
+
+            {isVendorDashboard ? (
+                <div className="grid gap-5 lg:grid-cols-2">
+                    <TrendChartCard
+                        title="Revenue"
+                        subtitle="Net per day, last 30 days"
+                        data={revenueTrend}
+                        hasData={hasRevenueTrend}
+                        loading={metricsLoading}
+                        color={DASHBOARD_BRAND_COLOR}
+                        valueFormatter={formatRevenueTick}
+                        gradientId="commandRevenueGradient"
+                    />
+                    <TrendChartCard
+                        title="Tickets"
+                        subtitle="Sold per day, last 30 days"
+                        data={ticketsTrend}
+                        hasData={hasTicketsTrend}
+                        loading={metricsLoading}
+                        color={DASHBOARD_MUTED_COLOR}
+                        valueFormatter={(value) => Number(value || 0).toLocaleString('en-US')}
+                        gradientId="commandTicketsGradient"
+                    />
+                </div>
+            ) : null}
 
             <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
                 <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
@@ -363,36 +378,6 @@ export default function DashboardHome() {
 
                 <aside className="space-y-5">
                     <section className="dashboard-surface rounded-[1.25rem] p-5">
-                        <SurfaceHeader eyebrow="Pulse" title="Performance" />
-                        <div className="mt-4 space-y-4">
-                            <StatRow
-                                className="!rounded-[1.25rem] !p-3"
-                                items={[
-                                    { label: 'Revenue', value: metricsLoading ? '-' : summary.revenue },
-                                    { label: 'Tickets', value: metricsLoading ? '-' : summary.sales.toLocaleString() },
-                                    { label: 'Attendees', value: metricsLoading ? '-' : summary.attendees.toLocaleString() },
-                                ]}
-                            />
-                            <div className="grid grid-cols-2 gap-3">
-                                <MiniTrend label="Sales (30d)" points={summary.salesTrend} />
-                                <MiniTrend label="Media (30d)" points={summary.mediaTrend} />
-                            </div>
-                            <div className="grid grid-cols-3 gap-2">
-                                {[
-                                    ['Active', summary.activeCount],
-                                    ['Scheduled', summary.scheduledCount],
-                                    ['Draft', summary.draftCount],
-                                ].map(([label, value]) => (
-                                    <div key={label} className="rounded-[1rem] bg-white/[0.035] px-3 py-3">
-                                        <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">{label}</p>
-                                        <p className="mt-1 text-lg font-bold text-white">{metricsLoading ? '-' : value}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="dashboard-surface rounded-[1.25rem] p-5">
                         <SurfaceHeader eyebrow="Attention" title="Urgent notices" />
                         <div className="mt-4 space-y-3">
                             {urgentQueue.length ? (
@@ -405,102 +390,122 @@ export default function DashboardHome() {
                             )}
                         </div>
                     </section>
+
+                    {reminders.length ? (
+                        <section className="dashboard-surface rounded-[1.25rem] p-5">
+                            <SurfaceHeader eyebrow="Follow-ups" title="Reminders" />
+                            <div className="mt-4 space-y-3">
+                                {reminders.map((update) => (
+                                    <UpdateLink key={update.id} update={update} />
+                                ))}
+                            </div>
+                        </section>
+                    ) : null}
                 </aside>
             </div>
 
-            {isVendorDashboard ? (
-                <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
-                    <SurfaceHeader
-                        eyebrow="Trend"
-                        title="Revenue"
-                        action={<span className="text-[12px] font-bold tracking-wide text-white/45">Last 30 days</span>}
-                    />
-                    <div className="mt-5 h-[220px] md:h-[260px]">
-                        {metricsLoading ? (
-                            <ChartSkeleton />
-                        ) : !hasRevenueTrend ? (
-                            <div className="flex h-full items-center justify-center rounded-2xl bg-white/[0.03]">
-                                <p className="text-xs font-bold tracking-[0.02em] text-white/30">No revenue data yet</p>
-                            </div>
-                        ) : (
-                            <RechartsChart>
-                                {({ ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip }) => (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={revenueTrend} margin={{ top: 12, right: 12, left: -8, bottom: 0 }}>
-                                            <defs>
-                                                <linearGradient id="dashboardRevenueGradient" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor={DASHBOARD_BRAND_COLOR} stopOpacity={0.38} />
-                                                    <stop offset="100%" stopColor={DASHBOARD_BRAND_COLOR} stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-                                            <XAxis
-                                                dataKey="date"
-                                                tickFormatter={formatDayTick}
-                                                interval={revenueTrend.length > 8 ? Math.ceil(revenueTrend.length / 8) - 1 : 0}
-                                                tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 11 }}
-                                                axisLine={false}
-                                                tickLine={false}
-                                            />
-                                            <YAxis
-                                                tickFormatter={formatRevenueTick}
-                                                tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 11 }}
-                                                axisLine={false}
-                                                tickLine={false}
-                                                width={56}
-                                            />
-                                            <Tooltip
-                                                {...DASHBOARD_TOOLTIP_PROPS}
-                                                labelFormatter={formatDayTick}
-                                                formatter={(value) => [formatRevenueTick(value), 'Revenue']}
-                                            />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="value"
-                                                name="Revenue"
-                                                stroke={DASHBOARD_BRAND_COLOR}
-                                                strokeWidth={2.2}
-                                                fill="url(#dashboardRevenueGradient)"
-                                                dot={false}
-                                                activeDot={{ r: 4, fill: '#ffffff', stroke: '#09090b' }}
-                                                isAnimationActive={false}
-                                            />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                )}
-                            </RechartsChart>
-                        )}
-                    </div>
+            {announcements.length ? (
+                <section className="space-y-3" aria-label="Announcements">
+                    {announcements.map((announcement) => (
+                        <AnnouncementBanner key={announcement.id} announcement={announcement} />
+                    ))}
                 </section>
             ) : null}
-
-            <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
-                <SurfaceHeader eyebrow="Updates" title="PXI updates" />
-                <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                    <div className="space-y-3">
-                        <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-white/35">Reminders</p>
-                        {reminderUpdates.map((update) => (
-                            <UpdateLink key={update.id} update={update} />
-                        ))}
-                    </div>
-                    <div className="space-y-3">
-                        <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-white/35">Product + policy</p>
-                        {productUpdates.map((update) => (
-                            <UpdateLink key={update.id} update={update} />
-                        ))}
-                    </div>
-                </div>
-            </section>
         </div>
     );
 }
 
-function CommandMetric({ metric }) {
+/** Full-width admin-authored banner — Command Center footer. */
+function AnnouncementBanner({ announcement }) {
+    const hasCta = Boolean(
+        announcement.ctaLabel
+        && announcement.ctaHref
+        && announcement.ctaHref.startsWith('/')
+        && !announcement.ctaHref.startsWith('//')
+    );
     return (
-        <div className="bg-[#0e0e13] px-4 py-3.5">
-            <p className="text-[12px] font-medium text-zinc-500">{metric.label}</p>
-            <p className="mt-1.5 truncate text-[22px] font-semibold leading-none tracking-tight text-white">{metric.value}</p>
+        <div className="dashboard-surface relative overflow-hidden rounded-[1.25rem] p-5">
+            <span className="absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-[#d84aff]/70 via-[#d84aff]/35 to-transparent" aria-hidden="true" />
+            <div className="flex flex-col gap-3 pl-2 md:flex-row md:items-center md:justify-between md:gap-6">
+                <div className="min-w-0">
+                    <p className="text-sm font-bold text-white">{announcement.title}</p>
+                    <p className="mt-1 text-sm leading-6 text-zinc-400">{announcement.body}</p>
+                </div>
+                {hasCta ? (
+                    <Link
+                        href={announcement.ctaHref}
+                        className="shrink-0 self-start whitespace-nowrap rounded-full bg-[#d84aff]/10 px-4 py-2 text-[12px] font-bold tracking-[0.02em] text-[#e08bff] ring-1 ring-[#d84aff]/25 transition hover:bg-[#d84aff]/20 hover:text-white md:self-center"
+                    >
+                        {announcement.ctaLabel}
+                    </Link>
+                ) : null}
+            </div>
         </div>
+    );
+}
+
+function TrendChartCard({ title, subtitle, data, hasData, loading, color, valueFormatter, gradientId }) {
+    return (
+        <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
+            <SurfaceHeader eyebrow={subtitle} title={title} />
+            <div className="mt-4 h-[200px] md:h-[230px]">
+                {loading ? (
+                    <ChartSkeleton />
+                ) : !hasData ? (
+                    <div className="flex h-full items-center justify-center rounded-2xl bg-white/[0.03]">
+                        <p className="text-xs font-bold tracking-[0.02em] text-white/30">No data yet</p>
+                    </div>
+                ) : (
+                    <RechartsChart>
+                        {({ ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip }) => (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={data} margin={{ top: 12, right: 12, left: -8, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor={color} stopOpacity={0.34} />
+                                            <stop offset="100%" stopColor={color} stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                                    <XAxis
+                                        dataKey="date"
+                                        tickFormatter={formatDayTick}
+                                        interval={data.length > 8 ? Math.ceil(data.length / 8) - 1 : 0}
+                                        tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 11 }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                    />
+                                    <YAxis
+                                        tickFormatter={valueFormatter}
+                                        tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 11 }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        width={56}
+                                        allowDecimals={false}
+                                    />
+                                    <Tooltip
+                                        {...DASHBOARD_TOOLTIP_PROPS}
+                                        labelFormatter={formatDayTick}
+                                        formatter={(value) => [valueFormatter(value), title]}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="value"
+                                        name={title}
+                                        stroke={color}
+                                        strokeWidth={2.2}
+                                        fill={`url(#${gradientId})`}
+                                        dot={false}
+                                        activeDot={{ r: 4, fill: '#ffffff', stroke: '#09090b' }}
+                                        isAnimationActive={false}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        )}
+                    </RechartsChart>
+                )}
+            </div>
+        </section>
     );
 }
 
@@ -518,13 +523,12 @@ function SurfaceHeader({ eyebrow, title, action = null }) {
 
 function EventPriorityRow({ event }) {
     return (
-        <Link href={event.href} className="grid gap-4 rounded-[1.25rem] bg-white/[0.035] p-4 transition hover:bg-white/[0.055] md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-center">
+        <Link href={event.href} className="grid gap-4 rounded-[1.25rem] bg-white/[0.035] p-4 transition hover:bg-white/[0.055] md:grid-cols-[minmax(0,1fr)_220px] md:items-center">
             <div className="min-w-0">
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <div className="flex min-w-0 items-center gap-2.5">
+                    <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${stateDotClass(event.status)}`} aria-hidden="true" />
                     <h3 className="max-w-full truncate text-base font-bold text-white">{event.name}</h3>
-                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] whitespace-nowrap ${event.statusClassName}`}>
-                        {event.status}
-                    </span>
+                    <span className="sr-only">{event.status}</span>
                 </div>
                 <p className="mt-1 text-xs font-semibold tracking-[0.02em] text-white/35">{event.dateLabel}</p>
             </div>
@@ -535,7 +539,6 @@ function EventPriorityRow({ event }) {
                     { label: 'Tickets', value: event.ticketsSold.toLocaleString() },
                 ]}
             />
-            <span className="text-[11px] font-bold tracking-[0.02em] text-white/50 md:text-right">Open</span>
         </Link>
     );
 }
@@ -548,15 +551,6 @@ function EmptyPanel({ title, body, href, action }) {
             <Link href={href} className="pill-ghost mt-4 px-4 py-2 text-xs font-bold tracking-[0.02em] whitespace-nowrap">
                 {action}
             </Link>
-        </div>
-    );
-}
-
-function MiniTrend({ label, points }) {
-    return (
-        <div className="rounded-[1rem] bg-white/[0.035] p-3">
-            <p className="text-[11px] font-medium tracking-[0.02em] text-white/40">{label}</p>
-            <MicroChart points={points} color={BASE_CHART_COLOR} className="mt-2" />
         </div>
     );
 }

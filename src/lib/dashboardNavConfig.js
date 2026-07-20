@@ -4,8 +4,10 @@ import {
   DashboardSquare01Icon,
   FlagIcon,
   Megaphone01Icon,
+  Mail01Icon,
   Notification03Icon,
   QrCodeIcon,
+  FloorPlanIcon,
   Shield01Icon,
   StarIcon,
   UserCircleIcon,
@@ -26,6 +28,7 @@ export const adminNavItems = [
   { key: 'admin-ugc', label: 'Content', path: '/dashboard/admin/ugc', icon: Notification03Icon, end: true },
   { key: 'admin-promos', label: 'Promos & Credits', path: '/dashboard/admin/promos', icon: StarIcon, end: true },
   { key: 'admin-ads', label: 'Ads', path: '/dashboard/admin/ads', icon: Megaphone01Icon, end: true },
+  { key: 'admin-announcements', label: 'Announcements', path: '/dashboard/admin/announcements', icon: Megaphone01Icon, end: true },
 ];
 
 /**
@@ -50,10 +53,11 @@ export const dashboardNavConfig = [
   { key: 'command', label: 'Command Center', path: '/dashboard', icon: DashboardSquare01Icon, section: 'Hub', end: true },
   { key: 'events', label: 'My Events', path: '/dashboard/events', icon: Calendar01Icon, section: 'Hub', end: true },
   { key: 'analytics', label: 'Analytics', path: '/dashboard/analytics', icon: Activity01Icon, section: 'Intelligence', end: true, organizerOnly: true },
-  { key: 'operations', label: 'Operations', path: '/dashboard/analytics?view=live-ops', icon: QrCodeIcon, section: 'Intelligence', end: true, organizerOnly: true },
+  { key: 'operations', label: 'Live Operations', path: '/dashboard/analytics?view=live-ops', icon: QrCodeIcon, section: 'Intelligence', end: true, organizerOnly: true },
+  { key: 'floor-plans', label: 'Venues', path: '/dashboard/floor-plans', icon: FloorPlanIcon, section: 'Intelligence', end: true, organizerOnly: true },
   { key: 'audience', label: 'CRM', path: '/dashboard/audience', icon: UserGroupIcon, section: 'People', end: true, organizerOnly: true },
   { key: 'ads', label: 'Ads Manager', path: '/dashboard/ads', icon: Megaphone01Icon, section: 'People', end: true, organizerOnly: true },
-  { key: 'campaigns', label: 'Email Campaigns', path: '/dashboard/campaigns', icon: Megaphone01Icon, section: 'People', end: true, organizerOnly: true },
+  { key: 'campaigns', label: 'Email Campaigns', path: '/dashboard/campaigns', icon: Mail01Icon, section: 'People', end: true, organizerOnly: true },
   { key: 'earnings', label: 'Earnings', path: '/dashboard/earnings', icon: Wallet01Icon, section: 'Business', end: true, vendorOnly: true },
   { key: 'team', label: 'Teams & Security', path: '/dashboard/team', icon: Shield01Icon, section: 'Business', end: true, organizerOnly: true },
 ];
