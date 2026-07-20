@@ -24,6 +24,8 @@ import {
   listTeamRosters,
   setCreateEventTeamAssignments,
 } from '@/services/teamRosters';
+import { listFloorPlans, attachFloorPlan } from '@/services/floorPlans';
+import { listGates, updateGate } from '@/services/gates';
 import {
   buildTicketPricingPayload,
   createEmptyTier,
@@ -99,6 +101,13 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   const [startLocal, setStartLocal] = useState(() => defaults.start);
   const [endLocal, setEndLocal] = useState(() => defaults.end);
 
+  const [venues, setVenues] = useState([]);
+  const [venuesLoading, setVenuesLoading] = useState(true);
+  const [selectedVenueId, setSelectedVenueId] = useState(null);
+  /** { [gateName]: assignedPerson[] } — staged locally until the event (and its
+   *  auto-seeded EventGate rows) exist; flushed via updateGate after create. */
+  const [doorAssignments, setDoorAssignments] = useState({});
+
   const [coverImage, setCoverImage] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
   const [isCoverUploading, setIsCoverUploading] = useState(false);
@@ -165,6 +174,23 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
       })
       .finally(() => {
         if (alive) setTeamAssignmentsLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    listFloorPlans()
+      .then((res) => {
+        if (alive) setVenues(res.floorPlans || []);
+      })
+      .catch(() => {
+        if (alive) setVenues([]);
+      })
+      .finally(() => {
+        if (alive) setVenuesLoading(false);
       });
     return () => {
       alive = false;
@@ -300,6 +326,61 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   );
 
   const assignedTeamCount = teamAssignments.length;
+
+  const pickVenue = (venue) => {
+    setSelectedVenueId(venue.id);
+    setLocation(venue.address || '');
+    setVenueName(venue.name || '');
+    setGeoLat(typeof venue.venueLat === 'number' ? venue.venueLat : null);
+    setGeoLon(typeof venue.venueLng === 'number' ? venue.venueLng : null);
+  };
+
+  const selectedVenue = useMemo(
+    () => venues.find((venue) => venue.id === selectedVenueId) || null,
+    [venues, selectedVenueId]
+  );
+
+  // Teams already linked to this venue (Teams & Security "Venues" chips) — promoted
+  // to the top of the Event team picker below as a suggestion, never auto-selected.
+  const suggestedRosterIds = useMemo(() => {
+    if (!selectedVenue) return new Set();
+    return new Set(
+      teamRosters.filter((roster) => (roster.venueIds || []).includes(selectedVenue.id)).map((roster) => roster.id)
+    );
+  }, [selectedVenue, teamRosters]);
+
+  const orderedTeamRosters = useMemo(() => {
+    if (!suggestedRosterIds.size) return teamRosters;
+    const suggested = teamRosters.filter((roster) => suggestedRosterIds.has(roster.id));
+    const rest = teamRosters.filter((roster) => !suggestedRosterIds.has(roster.id));
+    return [...suggested, ...rest];
+  }, [teamRosters, suggestedRosterIds]);
+
+  // Flattened members of every team assigned in "Event team", in GateEditModal's
+  // assignedPeople shape — the pool Door assignments toggles staff from.
+  const assignedTeamMembers = useMemo(() => {
+    const assignedRosterIds = new Set(teamAssignments.map((assignment) => assignment.rosterId));
+    return teamRosters
+      .filter((roster) => assignedRosterIds.has(roster.id))
+      .flatMap((roster) => (roster.members || []).map((member) => ({
+        id: `${roster.id}:${member.id}`,
+        label: member.name || member.handle || member.contact || member.id,
+        rosterId: roster.id,
+        memberId: member.id,
+        role: member.role,
+      })));
+  }, [teamAssignments, teamRosters]);
+
+  const doorAssignmentsVisible = Boolean(selectedVenue && assignedTeamCount > 0);
+
+  const toggleDoorAssignment = (gateName, member) => {
+    setDoorAssignments((current) => {
+      const existing = current[gateName] || [];
+      const active = existing.some((person) => person.id === member.id);
+      const next = active ? existing.filter((person) => person.id !== member.id) : [...existing, member];
+      return { ...current, [gateName]: next };
+    });
+  };
 
   const formatPendingLabel = (p) => {
     if (p.kind === 'lineup') return `Line-up • ${p.lineupSubrole || 'Line up'}`;
@@ -508,6 +589,28 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         setTeamAssignments([]);
       }
 
+      if (selectedVenueId) {
+        try {
+          await attachFloorPlan(eventId, selectedVenueId);
+          const hasDoorAssignments = Object.values(doorAssignments).some((members) => members.length > 0);
+          if (hasDoorAssignments) {
+            const gatesRes = await listGates(eventId);
+            for (const gate of gatesRes.gates || []) {
+              const members = doorAssignments[gate.name];
+              if (members && members.length) {
+                try {
+                  await updateGate(eventId, gate.id, { staffJson: members });
+                } catch {
+                  /* non-fatal; door assignments can be adjusted from Live Ops */
+                }
+              }
+            }
+          }
+        } catch {
+          /* non-fatal; venue can be attached later from Floor Plans */
+        }
+      }
+
       const postInvites = pendingInvites.filter((p) => p.kind !== 'lineup');
       if (albumId && postInvites.length > 0) {
         for (const p of postInvites) {
@@ -662,6 +765,42 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
+          </div>
+          <div className="space-y-2">
+            <label className={labelClass}>Use a saved venue</label>
+            {venuesLoading ? (
+              <div className="h-16 animate-pulse rounded-2xl bg-white/[0.035]" />
+            ) : venues.length ? (
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedVenueId(null)}
+                  className={`rounded-2xl px-4 py-3 text-left transition ${
+                    !selectedVenueId ? 'glass-panel-strong' : 'glass-panel hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <span className="block text-sm font-bold text-white">One-off location</span>
+                  <span className="mt-0.5 block text-xs text-zinc-500">Search an address below.</span>
+                </button>
+                {venues.map((venue) => (
+                  <button
+                    key={venue.id}
+                    type="button"
+                    onClick={() => pickVenue(venue)}
+                    className={`rounded-2xl px-4 py-3 text-left transition ${
+                      selectedVenueId === venue.id ? 'glass-panel-strong' : 'glass-panel hover:bg-white/[0.05]'
+                    }`}
+                  >
+                    <span className="block truncate text-sm font-bold text-white">{venue.name}</span>
+                    {venue.address ? (
+                      <span className="mt-0.5 block truncate text-xs text-zinc-500">{venue.address}</span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-white/40">No saved venues yet — use a one-off location below, or add one from Floor Plans.</p>
+            )}
           </div>
           <div className="space-y-2">
             <label className={labelClass}>Venue / location</label>
@@ -1126,58 +1265,72 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             <div className="h-20 rounded-2xl bg-white/[0.035] animate-pulse" />
           ) : teamRosters.length ? (
             <div className="space-y-3">
-              {teamRosters.map((roster) => {
+              {orderedTeamRosters.map((roster, index) => {
                 const assignment = assignmentByRosterId.get(roster.id);
                 const selectedMemberIds = assignment?.memberIds || [];
                 const wholeTeam = Boolean(assignment && selectedMemberIds.length === 0);
+                const isSuggested = suggestedRosterIds.has(roster.id);
+                const showSuggestedLabel = isSuggested && index === 0;
+                const showAllTeamsLabel =
+                  !isSuggested && suggestedRosterIds.size > 0 && (index === 0 || suggestedRosterIds.has(orderedTeamRosters[index - 1]?.id));
 
                 return (
-                  <div key={roster.id} className={`rounded-2xl px-4 py-4 transition ${assignment ? 'glass-panel-strong' : 'glass-panel'}`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <button type="button" onClick={() => toggleTeamRoster(roster.id)} className="min-w-0 flex-1 text-left">
-                        <p className="truncate text-sm font-bold text-white">{roster.name}</p>
-                        <p className="mt-1 text-xs text-zinc-500">
-                          {roster.members.length} member{roster.members.length === 1 ? '' : 's'}
-                        </p>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => toggleTeamRoster(roster.id)}
-                        className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${assignment ? 'pill-solid' : 'pill-ghost'}`}
-                      >
-                        {assignment ? 'Selected' : 'Choose'}
-                      </button>
-                    </div>
-
-                    {assignment && roster.members.length ? (
-                      <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto dashboard-scrollbar-none">
+                  <div key={roster.id}>
+                    {showSuggestedLabel ? (
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-fuchsia-300/70">
+                        Suggested for this venue
+                      </p>
+                    ) : null}
+                    {showAllTeamsLabel ? (
+                      <p className="mb-2 mt-1 text-[10px] font-bold uppercase tracking-widest text-white/30">All teams</p>
+                    ) : null}
+                    <div className={`rounded-2xl px-4 py-4 transition ${assignment ? 'glass-panel-strong' : 'glass-panel'}`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <button type="button" onClick={() => toggleTeamRoster(roster.id)} className="min-w-0 flex-1 text-left">
+                          <p className="truncate text-sm font-bold text-white">{roster.name}</p>
+                          <p className="mt-1 text-xs text-zinc-500">
+                            {roster.members.length} member{roster.members.length === 1 ? '' : 's'}
+                          </p>
+                        </button>
                         <button
                           type="button"
-                          onClick={() => setTeamRosterMembers(roster.id, [])}
-                          className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${wholeTeam ? 'pill-solid' : 'pill-ghost'}`}
+                          onClick={() => toggleTeamRoster(roster.id)}
+                          className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${assignment ? 'pill-solid' : 'pill-ghost'}`}
                         >
-                          Whole team
+                          {assignment ? 'Selected' : 'Choose'}
                         </button>
-                        {roster.members.map((member) => {
-                          const active = selectedMemberIds.includes(member.id);
-                          return (
-                            <button
-                              type="button"
-                              key={member.id}
-                              onClick={() => {
-                                const memberIds = active
-                                  ? selectedMemberIds.filter((memberId) => memberId !== member.id)
-                                  : [...selectedMemberIds, member.id];
-                                setTeamRosterMembers(roster.id, memberIds);
-                              }}
-                              className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${active ? 'pill-solid' : 'pill-ghost'}`}
-                            >
-                              {memberDisplayName(member)}
-                            </button>
-                          );
-                        })}
                       </div>
-                    ) : null}
+
+                      {assignment && roster.members.length ? (
+                        <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto dashboard-scrollbar-none">
+                          <button
+                            type="button"
+                            onClick={() => setTeamRosterMembers(roster.id, [])}
+                            className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${wholeTeam ? 'pill-solid' : 'pill-ghost'}`}
+                          >
+                            Whole team
+                          </button>
+                          {roster.members.map((member) => {
+                            const active = selectedMemberIds.includes(member.id);
+                            return (
+                              <button
+                                type="button"
+                                key={member.id}
+                                onClick={() => {
+                                  const memberIds = active
+                                    ? selectedMemberIds.filter((memberId) => memberId !== member.id)
+                                    : [...selectedMemberIds, member.id];
+                                  setTeamRosterMembers(roster.id, memberIds);
+                                }}
+                                className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${active ? 'pill-solid' : 'pill-ghost'}`}
+                              >
+                                {memberDisplayName(member)}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 );
               })}
@@ -1188,6 +1341,47 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             </div>
           )}
         </section>
+
+        {doorAssignmentsVisible ? (
+          <section className={`${sectionClass} space-y-4`}>
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Door assignments</h2>
+              <p className="mt-1 text-xs text-zinc-500">
+                Assign your team to {selectedVenue.name}&apos;s gates. Applied once the event is created.
+              </p>
+            </div>
+            <div className="space-y-3">
+              {(selectedVenue.gatePinsJson || []).map((gate) => {
+                const assignedIds = new Set((doorAssignments[gate.gate] || []).map((person) => person.id));
+                return (
+                  <div key={gate.id || gate.gate} className="glass-field rounded-2xl px-4 py-3">
+                    <p className="text-sm font-bold text-white">{gate.gate}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {assignedTeamMembers.length ? assignedTeamMembers.map((member) => {
+                        const active = assignedIds.has(member.id);
+                        return (
+                          <button
+                            key={member.id}
+                            type="button"
+                            onClick={() => toggleDoorAssignment(gate.gate, member)}
+                            className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${active ? 'pill-solid' : 'pill-ghost'}`}
+                          >
+                            {member.label}
+                          </button>
+                        );
+                      }) : (
+                        <p className="text-xs text-zinc-500">Assign a team above to staff this gate.</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {!(selectedVenue.gatePinsJson || []).length ? (
+                <p className="text-xs text-zinc-500">This venue has no named gates yet.</p>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
 
         {paidGate && (
           <div className="glass-panel rounded-2xl px-4 py-3 text-sm text-amber-200 space-y-2">

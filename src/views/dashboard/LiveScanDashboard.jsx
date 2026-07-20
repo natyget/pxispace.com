@@ -1,14 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
     Alert02Icon,
     CheckmarkCircle02Icon,
     Megaphone01Icon,
-    QrCodeIcon,
-    Search01Icon,
-    UserGroupIcon,
 } from '@hugeicons/core-free-icons';
 import Modal from '@/components/ui/Modal';
 import { useDashboardShellStore } from '@/lib/dashboardShellStore';
@@ -16,22 +13,9 @@ import { useEvents } from '@/lib/dashboardStore';
 import { listTeamRosters } from '@/services/teamRosters';
 import { authStorage } from '@/services/auth';
 import { getLiveOpsSnapshot } from '@/services/liveOps';
-import { BUDGET_CATEGORIES, getBudgetSummary, setBudgets, createExpense } from '@/services/budget';
+import { listGates, createGate, updateGate, deleteGate } from '@/services/gates';
 
 const BASE_URL = globalThis.process?.env?.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-const GATES_STORAGE_KEY = 'pxi.live_ops.gates.v1';
-
-const initialGates = [];
-
-const teamMessages = [
-    { id: 'team-1', author: 'Floor Lead', body: 'Keep Main Gate open but slow manual checks.', at: '8:06 PM' },
-    { id: 'team-2', author: 'Security', body: 'VIP Desk has one duplicate scan under review.', at: '8:07 PM' },
-    { id: 'team-3', author: 'Ops', body: 'Capacity pacing looks stable.', at: '8:08 PM' },
-];
-
-function formatCents(cents) {
-    return `$${((Number(cents) || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 
 function formatClockTime(iso) {
     if (!iso) return '';
@@ -122,24 +106,41 @@ function CapacityIndicator({ isLive, capacity, scanned, sold }) {
     );
 }
 
-function RevenueCostPanel({ isLive, revenue, costCents, netProfitCents }) {
-    const tiles = [
-        { label: 'Revenue (net to you)', value: formatCents(revenue?.organizerNetCents) },
-        { label: 'PXI fees', value: formatCents(revenue?.platformFeesCents) },
-        { label: 'Costs logged', value: formatCents(costCents) },
-        { label: 'Net profit', value: formatCents(netProfitCents), emphasize: true },
-    ];
+/** Per-minute entry velocity over the last hour, from real TicketScanEvent buckets. */
+function EntryVelocityPanel({ isLive, velocity }) {
+    const bars = useMemo(() => {
+        const now = new Date();
+        now.setSeconds(0, 0);
+        const counts = new Map((velocity || []).map((bucket) => [bucket.minute, bucket.count]));
+        const series = [];
+        for (let i = 59; i >= 0; i--) {
+            const minute = new Date(now.getTime() - i * 60000).toISOString();
+            series.push(counts.get(minute) || 0);
+        }
+        return series;
+    }, [velocity]);
+    const max = Math.max(1, ...bars);
+    const lastFive = bars.slice(-5).reduce((sum, n) => sum + n, 0);
+
     return (
         <GlassPanel muted={!isLive}>
-            <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Revenue &amp; cost</p>
-            <div className="mt-3 grid grid-cols-2 gap-3">
-                {tiles.map((tile) => (
-                    <div key={tile.label} className="rounded-2xl bg-white/[0.045] px-4 py-3">
-                        <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">{tile.label}</p>
-                        <p className={cx('mt-1 text-xl font-bold tabular-nums', tile.emphasize ? (Number(netProfitCents) >= 0 ? 'text-emerald-300' : 'text-red-300') : 'text-white')}>
-                            {tile.value}
-                        </p>
-                    </div>
+            <div className="flex items-end justify-between gap-4">
+                <div>
+                    <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Entry velocity</p>
+                    <p className="mt-2 text-3xl font-bold text-white">
+                        {lastFive}
+                        <span className="text-base text-zinc-500"> entries / 5 min</span>
+                    </p>
+                </div>
+                <p className="text-xs font-semibold text-zinc-500">Last hour, per minute</p>
+            </div>
+            <div className="mt-4 flex h-14 items-end gap-[2px]">
+                {bars.map((count, index) => (
+                    <div
+                        key={index}
+                        className={cx('flex-1 rounded-t-sm', isLive ? 'bg-emerald-300/70' : 'bg-zinc-600/60')}
+                        style={{ height: `${Math.max(4, Math.round((count / max) * 100))}%`, opacity: count === 0 ? 0.18 : 1 }}
+                    />
                 ))}
             </div>
             {!isLive ? <p className="mt-3 text-xs font-semibold text-zinc-500">Goes live during active events.</p> : null}
@@ -147,61 +148,7 @@ function RevenueCostPanel({ isLive, revenue, costCents, netProfitCents }) {
     );
 }
 
-function TeamMessagePanel({ isLive, onOpenChat }) {
-    return (
-        <GlassPanel muted={!isLive} className="flex flex-col justify-between gap-4">
-            <div>
-                <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Team Message</p>
-                <p className="mt-2 text-sm text-zinc-300">Open the shared staff thread for floor, security, and gate leads.</p>
-            </div>
-            <button
-                type="button"
-                onClick={onOpenChat}
-                disabled={!isLive}
-                className={cx(
-                    'inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] transition',
-                    isLive ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed bg-white/5 text-zinc-500'
-                )}
-            >
-                <HugeiconsIcon icon={UserGroupIcon} size={15} />
-                Team Message
-            </button>
-        </GlassPanel>
-    );
-}
-
-function ScanActionPanel() {
-    // In-browser QR scanning isn't built yet — ticket scanning (POST /api/tickets/validate)
-    // happens in the PXI mobile app today. Keep this visible but honestly disabled rather
-    // than pretending a tap here scans anything.
-    return (
-        <GlassPanel muted>
-            <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                <button
-                    type="button"
-                    disabled
-                    title="Ticket scanning happens in the PXI mobile app today"
-                    className="inline-flex w-fit cursor-not-allowed items-center justify-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-bold tracking-[0.02em] text-zinc-500"
-                >
-                    <HugeiconsIcon icon={QrCodeIcon} size={15} />
-                    Scan Ticket
-                </button>
-                <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full glass-field px-4 py-2 opacity-60">
-                    <HugeiconsIcon icon={Search01Icon} size={15} className="text-zinc-500" />
-                    <input
-                        type="text"
-                        placeholder="Scan from PXI mobile; results sync here when connected"
-                        disabled
-                        readOnly
-                        className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500 disabled:cursor-not-allowed"
-                    />
-                </div>
-            </div>
-        </GlassPanel>
-    );
-}
-
-function RecentScansSection({ isLive, scans }) {
+function RecentScansSection({ isLive, scans, onIncident }) {
     return (
         <GlassPanel muted={!isLive}>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -224,10 +171,12 @@ function RecentScansSection({ isLive, scans }) {
                         </div>
                         <button
                             type="button"
-                            disabled={!isLive}
+                            disabled={!isLive || !scan.gateId}
+                            title={scan.gateId ? 'Log an incident for this scan on its gate' : 'Assign this scan’s gate on the board to log incidents'}
+                            onClick={() => onIncident(scan)}
                             className={cx(
                                 'rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] transition',
-                                isLive ? 'bg-red-500/10 text-red-200 hover:bg-red-500/20' : 'cursor-not-allowed bg-white/5 text-zinc-500'
+                                isLive && scan.gateId ? 'bg-red-500/10 text-red-200 hover:bg-red-500/20' : 'cursor-not-allowed bg-white/5 text-zinc-500'
                             )}
                         >
                             Incident Report
@@ -263,11 +212,11 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <div className="flex items-center gap-2">
-                        <span className={cx('h-3 w-3 rounded-full', gate.issue ? 'bg-red-400' : 'bg-emerald-300')} />
+                        <span className={cx('h-3 w-3 rounded-full', gate.paused ? 'bg-amber-300' : issueScans.length ? 'bg-red-400' : 'bg-emerald-300')} />
                         <h3 className="text-xl font-bold text-white">{gate.name}</h3>
                     </div>
                     <p className="mt-1 text-xs font-bold tracking-[0.02em] text-zinc-500">
-                        {isLive ? gate.velocity : 'Goes live during active events'}
+                        {isLive ? `${gate.scans.length} scan${gate.scans.length === 1 ? '' : 's'} recent` : 'Goes live during active events'}
                     </p>
                 </div>
                 <div className="relative">
@@ -311,7 +260,7 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
                 disabled={!isLive}
                 onClick={(event) => {
                     event.stopPropagation();
-                    onTogglePause(gate.id);
+                    onTogglePause(gate);
                 }}
                 className={cx(
                     'mt-5 rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] transition',
@@ -354,7 +303,7 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
     );
 }
 
-function GateEditModal({ open, gate, rosterMembers, onClose, onSave }) {
+function GateEditModal({ open, gate, rosterMembers, saving, onClose, onSave }) {
     const [name, setName] = useState('');
     const [assignedPeople, setAssignedPeople] = useState([]);
 
@@ -416,11 +365,11 @@ function GateEditModal({ open, gate, rosterMembers, onClose, onSave }) {
                     <button type="button" onClick={onClose} className="pill-ghost px-4 py-2 text-sm font-bold">Cancel</button>
                     <button
                         type="button"
-                        disabled={!name.trim()}
+                        disabled={!name.trim() || saving}
                         onClick={() => onSave({ ...gate, name: name.trim(), assignedPeople })}
                         className="pill-solid px-4 py-2 text-sm disabled:opacity-40"
                     >
-                        Save gate
+                        {saving ? 'Saving...' : 'Save gate'}
                     </button>
                 </div>
             </div>
@@ -474,12 +423,16 @@ function GateDetailsModal({ gate, open, onClose }) {
                     <div className="rounded-2xl glass-field p-4">
                         <h3 className="text-sm font-bold tracking-[0.02em] text-zinc-400">Incident Log</h3>
                         <div className="mt-3 space-y-2">
-                            {gate.incidentLog.map((entry) => (
-                                <div key={entry} className="flex gap-2 rounded-xl glass-field px-3 py-2 text-sm text-zinc-300">
+                            {(gate.incidentLog || []).map((entry, index) => (
+                                <div key={`${entry.at}-${index}`} className="flex gap-2 rounded-xl glass-field px-3 py-2 text-sm text-zinc-300">
                                     <span className="mt-2 h-1.5 w-1.5 rounded-full bg-white/45" />
-                                    <span>{entry}</span>
+                                    <span>
+                                        {entry.note}
+                                        {entry.at ? <span className="ml-2 text-xs text-zinc-500">{formatClockTime(entry.at)}</span> : null}
+                                    </span>
                                 </div>
                             ))}
+                            {!(gate.incidentLog || []).length ? <p className="text-sm text-zinc-500">No incidents logged.</p> : null}
                         </div>
                     </div>
                 </div>
@@ -488,207 +441,28 @@ function GateDetailsModal({ gate, open, onClose }) {
     );
 }
 
-function TeamChatModal({ open, onClose }) {
-    const [draft, setDraft] = useState('');
-
-    return (
-        <Modal
-            open={open}
-            title="Team Message"
-            description="Group chat for live event staff."
-            onClose={onClose}
-            maxWidth="max-w-2xl"
-        >
-            <div className="space-y-3">
-                {teamMessages.map((message) => (
-                    <div key={message.id} className="rounded-2xl glass-field px-4 py-3">
-                        <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm font-bold text-white">{message.author}</p>
-                            <p className="text-xs text-zinc-500">{message.at}</p>
-                        </div>
-                        <p className="mt-2 text-sm text-zinc-300">{message.body}</p>
-                    </div>
-                ))}
-            </div>
-            <div className="mt-4 flex gap-2">
-                <textarea
-                    value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
-                    placeholder="Message the operations team..."
-                    className="min-h-20 flex-1 rounded-2xl glass-field px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500"
-                />
-                <button
-                    type="button"
-                    disabled
-                    title="Team messaging is not connected to live chat yet"
-                    className="cursor-not-allowed self-end rounded-full bg-white/5 px-4 py-2 text-xs font-bold tracking-[0.02em] text-zinc-500"
-                >
-                    Send
-                </button>
-            </div>
-            <p className="mt-2 text-[11px] text-zinc-500">Draft only — team chat is not connected yet.</p>
-        </Modal>
-    );
-}
-
-function BudgetPanel({ eventId, isLive, summary, onChanged }) {
-    const [drafts, setDrafts] = useState({});
-    const [savingBudgets, setSavingBudgets] = useState(false);
-    const [expenseForm, setExpenseForm] = useState({ category: 'OTHER', amount: '', label: '' });
-    const [loggingExpense, setLoggingExpense] = useState(false);
-    const [error, setError] = useState('');
-
-    if (!summary) return null;
-    const byCategory = new Map(summary.byCategory.map((c) => [c.category, c]));
-
-    async function saveBudgets() {
-        const budgets = Object.entries(drafts)
-            .filter(([, value]) => value !== '' && value != null)
-            .map(([category, value]) => ({ category, amountCents: Math.round(Number(value) * 100) }));
-        if (!budgets.length) return;
-        setSavingBudgets(true);
-        setError('');
-        try {
-            await setBudgets(eventId, budgets);
-            setDrafts({});
-            onChanged?.();
-        } catch (err) {
-            setError(err?.data?.error || err?.message || 'Failed to save budgets');
-        } finally {
-            setSavingBudgets(false);
-        }
-    }
-
-    async function logExpense() {
-        const amount = Number(expenseForm.amount);
-        if (!expenseForm.label.trim() || !Number.isFinite(amount) || amount <= 0) {
-            setError('Enter a label and a positive amount');
-            return;
-        }
-        setLoggingExpense(true);
-        setError('');
-        try {
-            await createExpense(eventId, {
-                category: expenseForm.category,
-                amountCents: Math.round(amount * 100),
-                label: expenseForm.label.trim(),
-            });
-            setExpenseForm({ category: 'OTHER', amount: '', label: '' });
-            onChanged?.();
-        } catch (err) {
-            setError(err?.data?.error || err?.message || 'Failed to log expense');
-        } finally {
-            setLoggingExpense(false);
-        }
-    }
-
-    return (
-        <GlassPanel muted={!isLive}>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <h2 className="text-lg font-bold text-white">Budget</h2>
-                    <p className="mt-1 text-sm text-zinc-500">
-                        Set what you planned to spend per category, log real costs as they happen.
-                    </p>
-                </div>
-                <div className="text-right">
-                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Total spent / budgeted</p>
-                    <p className="mt-1 text-lg font-bold text-white">
-                        {formatCents(summary.totalSpentCents)} <span className="text-zinc-500">/ {formatCents(summary.totalBudgetedCents)}</span>
-                    </p>
-                </div>
-            </div>
-
-            <div className="mt-4 space-y-2">
-                {BUDGET_CATEGORIES.map(({ id, label }) => {
-                    const row = byCategory.get(id) || { budgetedCents: 0, spentCents: 0 };
-                    const pct = row.budgetedCents > 0 ? Math.min(100, Math.round((row.spentCents / row.budgetedCents) * 100)) : 0;
-                    return (
-                        <div key={id} className="grid grid-cols-[100px_1fr_120px] items-center gap-3 rounded-2xl bg-white/[0.035] px-4 py-3">
-                            <p className="text-sm font-bold text-white">{label}</p>
-                            <div className="space-y-1">
-                                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-                                    <div
-                                        className={cx('h-full rounded-full', row.spentCents > row.budgetedCents && row.budgetedCents > 0 ? 'bg-red-400' : 'bg-emerald-300')}
-                                        style={{ width: `${pct}%` }}
-                                    />
-                                </div>
-                                <p className="text-xs text-zinc-500">{formatCents(row.spentCents)} spent of {formatCents(row.budgetedCents)}</p>
-                            </div>
-                            <input
-                                type="number"
-                                min="0"
-                                placeholder={(row.budgetedCents / 100).toFixed(0)}
-                                value={drafts[id] ?? ''}
-                                onChange={(e) => setDrafts((cur) => ({ ...cur, [id]: e.target.value }))}
-                                className="glass-field rounded-xl px-3 py-2 text-sm text-white outline-none"
-                            />
-                        </div>
-                    );
-                })}
-            </div>
-            <button
-                type="button"
-                onClick={saveBudgets}
-                disabled={savingBudgets || !Object.keys(drafts).length}
-                className="pill-solid mt-3 px-4 py-2 text-xs disabled:opacity-40"
-            >
-                {savingBudgets ? 'Saving...' : 'Save budgets'}
-            </button>
-
-            <div className="mt-6 border-t border-white/10 pt-4">
-                <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Log an expense</p>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <select
-                        value={expenseForm.category}
-                        onChange={(e) => setExpenseForm((cur) => ({ ...cur, category: e.target.value }))}
-                        className="glass-field rounded-xl px-3 py-2 text-sm text-white"
-                    >
-                        {BUDGET_CATEGORIES.map(({ id, label }) => (
-                            <option key={id} value={id}>{label}</option>
-                        ))}
-                    </select>
-                    <input
-                        type="text"
-                        placeholder="What was it for?"
-                        value={expenseForm.label}
-                        onChange={(e) => setExpenseForm((cur) => ({ ...cur, label: e.target.value }))}
-                        className="glass-field min-w-[160px] flex-1 rounded-xl px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-500"
-                    />
-                    <input
-                        type="number"
-                        min="0"
-                        placeholder="Amount ($)"
-                        value={expenseForm.amount}
-                        onChange={(e) => setExpenseForm((cur) => ({ ...cur, amount: e.target.value }))}
-                        className="glass-field w-32 rounded-xl px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-500"
-                    />
-                    <button
-                        type="button"
-                        onClick={logExpense}
-                        disabled={loggingExpense}
-                        className="pill-solid px-4 py-2 text-xs disabled:opacity-40"
-                    >
-                        {loggingExpense ? 'Logging...' : 'Log expense'}
-                    </button>
-                </div>
-            </div>
-            {error ? <p className="mt-2 text-xs font-semibold text-red-300">{error}</p> : null}
-        </GlassPanel>
-    );
+/** Server EventGate → UI gate shape. */
+function toUiGate(gate) {
+    return {
+        id: gate.id,
+        name: gate.name,
+        paused: Boolean(gate.isPaused),
+        assignedPeople: Array.isArray(gate.staffJson) ? gate.staffJson : [],
+        incidentLog: Array.isArray(gate.incidentsJson) ? gate.incidentsJson : [],
+    };
 }
 
 export default function LiveScanDashboard({ isLiveEvent }) {
     const shellLiveEvent = useDashboardShellStore((store) => store.isLiveEvent);
     const eventIsLive = isLiveEvent ?? shellLiveEvent;
-    const [gates, setGates] = useState(initialGates);
+    const [gates, setGates] = useState([]);
+    const [gatesError, setGatesError] = useState('');
+    const [savingGate, setSavingGate] = useState(false);
     const [teamRosters, setTeamRosters] = useState([]);
     const [selectedGateId, setSelectedGateId] = useState(null);
     const [menuGateId, setMenuGateId] = useState(null);
-    const [chatOpen, setChatOpen] = useState(false);
     const [editingGate, setEditingGate] = useState(null);
     const [snapshot, setSnapshot] = useState(null);
-    const [budgetSummary, setBudgetSummary] = useState(null);
 
     const { events } = useEvents({ limit: 100, offset: 0 });
     const liveEvents = useMemo(() => {
@@ -701,8 +475,28 @@ export default function LiveScanDashboard({ isLiveEvent }) {
             return startMs && startMs <= nowMs && (!endMs || endMs >= nowMs);
         });
     }, [events]);
-    const selectedEvent = liveEvents[0] || null;
+    // Live event first; otherwise the next upcoming event so gates can be set up ahead of doors.
+    const upcomingEvent = useMemo(() => {
+        const nowMs = Date.now();
+        return [...(events || [])]
+            .filter((event) => event.startDate && new Date(event.startDate).getTime() > nowMs)
+            .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))[0] || null;
+    }, [events]);
+    const selectedEvent = liveEvents[0] || upcomingEvent || null;
     const selectedEventId = selectedEvent?.id || null;
+
+    const refreshGates = useCallback(() => {
+        if (!selectedEventId) {
+            setGates([]);
+            return;
+        }
+        listGates(selectedEventId)
+            .then((res) => {
+                setGates((res.gates || []).map(toUiGate));
+                setGatesError('');
+            })
+            .catch(() => setGatesError('Could not load gates for this event.'));
+    }, [selectedEventId]);
 
     const realRecentScans = useMemo(() => (snapshot?.recentScans || []).map((scan) => ({
         id: scan.id,
@@ -717,6 +511,11 @@ export default function LiveScanDashboard({ isLiveEvent }) {
         ...gate,
         scans: realRecentScans.filter((scan) => scan.gate.toLowerCase() === gate.name.toLowerCase()),
     })), [gates, realRecentScans]);
+
+    const scansWithGateIds = useMemo(() => realRecentScans.map((scan) => ({
+        ...scan,
+        gateId: gates.find((gate) => gate.name.toLowerCase() === scan.gate.toLowerCase())?.id || null,
+    })), [realRecentScans, gates]);
 
     const selectedGate = gatesWithRealScans.find((gate) => gate.id === selectedGateId);
     const flagCount = useMemo(
@@ -740,12 +539,6 @@ export default function LiveScanDashboard({ isLiveEvent }) {
     useEffect(() => {
         let alive = true;
         const timer = setTimeout(() => {
-            try {
-                const stored = JSON.parse(window.localStorage.getItem(GATES_STORAGE_KEY) || 'null');
-                if (alive && Array.isArray(stored)) setGates(stored);
-            } catch {
-                if (alive) setGates(initialGates);
-            }
             listTeamRosters()
                 .then((next) => {
                     if (alive) setTeamRosters(next);
@@ -760,18 +553,22 @@ export default function LiveScanDashboard({ isLiveEvent }) {
         };
     }, []);
 
-    // Real live-ops data: initial fetch + SSE for scan/expense/budget updates.
+    // Server-persisted gates for the selected event.
+    useEffect(() => {
+        const timer = setTimeout(refreshGates, 0);
+        return () => clearTimeout(timer);
+    }, [refreshGates]);
+
+    // Real live-ops data: initial fetch + SSE for scan updates.
     useEffect(() => {
         if (!selectedEventId) {
             setSnapshot(null);
-            setBudgetSummary(null);
             return undefined;
         }
         let alive = true;
 
         const refresh = () => {
             getLiveOpsSnapshot(selectedEventId).then((data) => { if (alive) setSnapshot(data); }).catch(() => {});
-            getBudgetSummary(selectedEventId).then((data) => { if (alive) setBudgetSummary(data); }).catch(() => {});
         };
         refresh();
 
@@ -782,8 +579,6 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                 `${BASE_URL}/api/analytics/events/${selectedEventId}/live-ops/stream?token=${encodeURIComponent(token)}`
             );
             es.addEventListener('scan', refresh);
-            es.addEventListener('expense', refresh);
-            es.addEventListener('budget', refresh);
         }
 
         return () => {
@@ -792,56 +587,69 @@ export default function LiveScanDashboard({ isLiveEvent }) {
         };
     }, [selectedEventId]);
 
-    const persistGates = (updater) => {
-        setGates((current) => {
-            const next = typeof updater === 'function' ? updater(current) : updater;
-            try {
-                window.localStorage.setItem(GATES_STORAGE_KEY, JSON.stringify(next));
-            } catch {
-                /* local persistence only */
-            }
-            return next;
-        });
-    };
-
     const addGate = () => {
-        if (!eventIsLive) return;
+        if (!selectedEventId) return;
         setEditingGate({
             id: '',
             name: `Gate ${gates.length + 1}`,
-            velocity: '0 scans/min',
             paused: false,
-            issue: false,
-            scans: [],
-            incidentLog: ['Gate added to operations board'],
             assignedPeople: [],
+            incidentLog: [],
         });
     };
 
-    const toggleGatePause = (gateId) => {
-        if (!eventIsLive) return;
-        persistGates((current) => current.map((gate) => (gate.id === gateId ? { ...gate, paused: !gate.paused } : gate)));
+    const toggleGatePause = async (gate) => {
+        if (!eventIsLive || !selectedEventId) return;
+        try {
+            await updateGate(selectedEventId, gate.id, { isPaused: !gate.paused });
+            refreshGates();
+        } catch {
+            setGatesError('Could not update the gate. Try again.');
+        }
     };
 
-    const deleteGate = (gateId) => {
-        persistGates((current) => current.filter((gate) => gate.id !== gateId));
+    const removeGate = async (gateId) => {
+        if (!selectedEventId) return;
+        try {
+            await deleteGate(selectedEventId, gateId);
+        } catch {
+            setGatesError('Could not delete the gate. Try again.');
+        }
         setMenuGateId(null);
         if (selectedGateId === gateId) setSelectedGateId(null);
+        refreshGates();
     };
 
-    const saveGate = (gate) => {
-        const savedGate = {
-            ...gate,
-            id: gate.id || `gate-${Date.now()}`,
-            scans: gate.scans || [],
-            incidentLog: gate.incidentLog?.length ? gate.incidentLog : ['Gate added to operations board'],
-        };
-        persistGates((current) => {
-            if (gate.id) return current.map((item) => (item.id === gate.id ? savedGate : item));
-            return [...current, savedGate];
-        });
-        setEditingGate(null);
-        setMenuGateId(null);
+    const saveGate = async (gate) => {
+        if (!selectedEventId) return;
+        setSavingGate(true);
+        setGatesError('');
+        try {
+            if (gate.id) {
+                await updateGate(selectedEventId, gate.id, { name: gate.name, staffJson: gate.assignedPeople });
+            } else {
+                await createGate(selectedEventId, { name: gate.name, staffJson: gate.assignedPeople });
+            }
+            setEditingGate(null);
+            setMenuGateId(null);
+            refreshGates();
+        } catch (err) {
+            setGatesError(err?.data?.error || err?.message || 'Could not save the gate.');
+        } finally {
+            setSavingGate(false);
+        }
+    };
+
+    const reportIncident = async (scan) => {
+        if (!selectedEventId || !scan.gateId) return;
+        try {
+            await updateGate(selectedEventId, scan.gateId, {
+                appendIncident: `Incident reported on ticket ${scan.ticket} (${scan.name}) at ${scan.gate}`,
+            });
+            refreshGates();
+        } catch {
+            setGatesError('Could not log the incident. Try again.');
+        }
     };
 
     return (
@@ -849,10 +657,10 @@ export default function LiveScanDashboard({ isLiveEvent }) {
             <section className="dashboard-surface-b rounded-[1.25rem] px-5 py-6 md:px-7">
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_440px] lg:items-end">
                     <div>
-                        <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Operations</p>
+                        <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Live Operations</p>
                         <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Live control room</h1>
                         <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
-                            Gate flow, scan review, team messages, and incident response in one operator-friendly view.
+                            Gate flow, entry velocity, and incident response — live from real scans. Money lives in Earnings.
                         </p>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -869,18 +677,21 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                     You have {liveEvents.length} events live right now — showing <span className="text-white">{selectedEvent?.name}</span>.
                 </div>
             ) : null}
-            {eventIsLive && !selectedEventId ? (
+            {eventIsLive && !liveEvents.length ? (
                 <div className="rounded-2xl bg-amber-500/10 px-4 py-3 text-xs font-semibold text-amber-200">
-                    Marked live, but no matching event was found to load real scan/revenue data for.
+                    Marked live, but no matching event was found to load real scan data for.
                 </div>
             ) : null}
+            {!eventIsLive && selectedEvent ? (
+                <div className="rounded-2xl bg-white/[0.045] px-4 py-3 text-xs font-semibold text-zinc-400">
+                    Setting up gates for <span className="text-white">{selectedEvent.name}</span> — scans go live when the event does.
+                </div>
+            ) : null}
+            {gatesError ? (
+                <div className="rounded-2xl bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-200">{gatesError}</div>
+            ) : null}
 
-            <div className="rounded-2xl bg-white/[0.045] px-4 py-3 text-xs font-semibold text-zinc-400">
-                Gate setup, incident notes, and team chat below are planning tools you configure — scans, capacity,
-                and revenue/cost are live from real ticket and budget data once an event is live.
-            </div>
-
-            {!eventIsLive ? <DormantMessage /> : null}
+            {!eventIsLive && !selectedEvent ? <DormantMessage /> : null}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <CapacityIndicator
@@ -889,40 +700,26 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                     scanned={snapshot?.ticketsScanned}
                     sold={snapshot?.ticketsSold}
                 />
-                <RevenueCostPanel
-                    isLive={eventIsLive}
-                    revenue={snapshot?.revenue}
-                    costCents={snapshot?.costCents}
-                    netProfitCents={snapshot?.netProfitCents}
-                />
+                <EntryVelocityPanel isLive={eventIsLive} velocity={snapshot?.velocity} />
             </div>
 
-            <TeamMessagePanel isLive={eventIsLive} onOpenChat={() => setChatOpen(true)} />
-
-            <ScanActionPanel />
-
-            {selectedEventId ? (
-                <BudgetPanel
-                    eventId={selectedEventId}
-                    isLive={eventIsLive}
-                    summary={budgetSummary}
-                    onChanged={() => getBudgetSummary(selectedEventId).then(setBudgetSummary).catch(() => {})}
-                />
-            ) : null}
-
-            <GlassPanel muted={!eventIsLive}>
+            <GlassPanel muted={!eventIsLive && !selectedEvent}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h2 className="text-lg font-bold text-white">Gate Control</h2>
-                        <p className="mt-1 text-sm text-zinc-500">{eventIsLive ? 'Tap a gate for scanned tickets, issues, and incident history.' : 'Goes live during active events.'}</p>
+                        <p className="mt-1 text-sm text-zinc-500">
+                            {selectedEvent
+                                ? 'Tap a gate for scanned tickets, issues, and incident history. Gates are shared with every operator.'
+                                : 'Create an event to configure its gates.'}
+                        </p>
                     </div>
                     <button
                         type="button"
                         onClick={addGate}
-                        disabled={!eventIsLive}
+                        disabled={!selectedEventId}
                         className={cx(
                             'flex h-10 w-10 items-center justify-center rounded-full text-2xl font-bold transition',
-                            eventIsLive ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed bg-white/5 text-zinc-500'
+                            selectedEventId ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed bg-white/5 text-zinc-500'
                         )}
                         aria-label="Add gate"
                     >
@@ -941,7 +738,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                             onEdit={setEditingGate}
                             onTogglePause={toggleGatePause}
                             onToggleMenu={(gateId) => setMenuGateId((current) => (current === gateId ? null : gateId))}
-                            onDelete={deleteGate}
+                            onDelete={removeGate}
                         />
                     ))}
                     {!gates.length ? (
@@ -952,13 +749,13 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                 </div>
             </GlassPanel>
 
-            <RecentScansSection isLive={eventIsLive} scans={realRecentScans} />
+            <RecentScansSection isLive={eventIsLive} scans={scansWithGateIds} onIncident={reportIncident} />
 
-            <GlassPanel muted={!eventIsLive}>
+            <GlassPanel muted={!eventIsLive && !selectedEvent}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h2 className="text-lg font-bold text-white">Incident Log</h2>
-                        <p className="mt-1 text-sm text-zinc-500">{eventIsLive ? 'Notes logged per gate.' : 'Goes live during active events.'}</p>
+                        <p className="mt-1 text-sm text-zinc-500">Notes logged per gate, shared with every operator.</p>
                     </div>
                     <HugeiconsIcon icon={Megaphone01Icon} size={20} className="text-zinc-500" />
                 </div>
@@ -967,14 +764,17 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                         <div key={`${gate.id}-${i}`} className="rounded-2xl bg-white/[0.045] p-4">
                             <HugeiconsIcon icon={Alert02Icon} size={18} className={eventIsLive ? 'text-amber-300' : 'text-zinc-500'} />
                             <p className="mt-3 text-sm font-bold text-white">{gate.name}</p>
-                            <p className="mt-1 text-xs text-zinc-500">{entry}</p>
+                            <p className="mt-1 text-xs text-zinc-500">
+                                {entry.note}
+                                {entry.at ? <span className="ml-2 text-zinc-600">{formatClockTime(entry.at)}</span> : null}
+                            </p>
                         </div>
                     )))}
                     {!gates.some((gate) => gate.incidentLog?.length) ? (
                         <div className="rounded-2xl bg-white/[0.045] p-4 md:col-span-3">
                             <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} className={eventIsLive ? 'text-emerald-300' : 'text-zinc-500'} />
                             <p className="mt-3 text-sm font-bold text-white">No incidents logged</p>
-                            <p className="mt-1 text-xs text-zinc-500">Add a gate and edit it to keep floor notes here.</p>
+                            <p className="mt-1 text-xs text-zinc-500">Report one from a recent scan, or add gates to keep floor notes here.</p>
                         </div>
                     ) : null}
                 </div>
@@ -985,10 +785,10 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                 open={!!editingGate}
                 gate={editingGate}
                 rosterMembers={rosterMembers}
+                saving={savingGate}
                 onClose={() => setEditingGate(null)}
                 onSave={saveGate}
             />
-            <TeamChatModal open={chatOpen} onClose={() => setChatOpen(false)} />
         </div>
     );
 }
