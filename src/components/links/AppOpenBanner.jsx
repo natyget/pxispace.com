@@ -4,16 +4,18 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon } from '@hugeicons/core-free-icons';
-import { PXI_IOS_DOWNLOAD_HREF, playStoreUrlWithDeepLink } from '@/lib/appStoreLinks';
+import { PXI_IOS_DOWNLOAD_HREF } from '@/lib/appStoreLinks';
 
 /**
- * Dismissible "Open in PXI" banner.
+ * Dismissible "Open in PXI" banner. iOS only — no Android app yet, so the
+ * banner doesn't render for Android visitors at all (nothing to open or
+ * install there).
  *
  * Behavior:
  * - On click of "Open", attempts the `deepLinkUrl` (e.g. `pxi://album/:id`).
  *   If the native app is installed, the tab visibility flips to `hidden` quickly
  *   and we abort the App Store fallback. Otherwise, after ~1.5s we redirect to
- *   the App Store / Play Store so the user can install and return.
+ *   the App Store so the user can install and return.
  * - Stores the desired deep-link target in `localStorage` under
  *   `pxi_pending_deeplink` so the page can re-trigger the deep link when the
  *   user returns after installing (handled by app's universal/app-links setup).
@@ -33,14 +35,6 @@ function detectPlatform() {
     return 'desktop';
 }
 
-function storeUrlForPlatform(platform, deepLinkUrl) {
-    // Android: the store URL carries the deep link through install via the
-    // Play Install Referrer (deferred deep linking without Branch). iOS has
-    // no free equivalent — the target page's invite code covers that flow.
-    if (platform === 'android') return playStoreUrlWithDeepLink(deepLinkUrl);
-    return PXI_IOS_DOWNLOAD_HREF;
-}
-
 export default function AppOpenBanner({
     deepLinkUrl,
     title = 'Open in PXI',
@@ -50,8 +44,10 @@ export default function AppOpenBanner({
     bottomOffset = '0px',
 }) {
     const [dismissed, setDismissed] = useState(true);
+    const [platform, setPlatform] = useState('unknown');
 
     useEffect(() => {
+        setPlatform(detectPlatform());
         if (typeof window === 'undefined') return;
         try {
             const isDismissed = window.sessionStorage.getItem(storageKey) === '1';
@@ -71,13 +67,12 @@ export default function AppOpenBanner({
     const handleOpen = useCallback(
         (event) => {
             if (!deepLinkUrl) return;
-            const platform = detectPlatform();
-            if (platform === 'desktop') return;
+            if (detectPlatform() !== 'ios') return;
             event.preventDefault();
             try {
                 window.localStorage.setItem(PENDING_DEEPLINK_KEY, deepLinkUrl);
             } catch {}
-            const store = storeUrlForPlatform(platform, deepLinkUrl);
+            const store = PXI_IOS_DOWNLOAD_HREF;
             const start = Date.now();
             let fallbackTimer = null;
             const cleanup = () => {
@@ -102,7 +97,7 @@ export default function AppOpenBanner({
         [deepLinkUrl],
     );
 
-    if (dismissed) return null;
+    if (dismissed || platform === 'android') return null;
 
     return (
         <div

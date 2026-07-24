@@ -22,7 +22,6 @@ import { StripePaymentModal } from '@/components/checkout/StripePaymentModal';
 import TicketEmailPreview from '@/components/tickets/TicketEmailPreview';
 import TicketDeliveryActions from '@/components/tickets/TicketDeliveryActions';
 import { buildTicketEmailPreviewInput } from '@/lib/ticketEmailPreview';
-import { playStoreUrlWithDeepLink } from '@/lib/appStoreLinks';
 import { trackBeginCheckout } from '@/lib/analytics';
 
 /** Branded gradient stand-in for events without cover art (no external fallback image). */
@@ -365,33 +364,11 @@ export default function EventCheckout({ basePath = '/events' }) {
           /* private browsing / storage disabled; deep link still attempted below */
         }
         const ua = navigator.userAgent || '';
+        // No store handoff either way: iOS has no free deferred-link mechanism to carry
+        // this album/event through install, and there's no Android app yet to hand off
+        // to — both platforms just try the deep link and stay on the success page if
+        // the app isn't installed.
         if (/iPhone|iPad|iPod|Android/i.test(ua)) {
-          // Install handoff: try the pxi:// deep link; if the app doesn't
-          // open (page still visible after ~1.5s → not installed), send
-          // Android through a Play Store URL whose Install Referrer carries
-          // this album/event so the first post-install open deep-links back.
-          // iOS stays on the success page (no free deferred-link mechanism).
-          const isAndroid = /Android/i.test(ua);
-          const storeHandoff = isAndroid ? playStoreUrlWithDeepLink(successDeepLinkUrl) : null;
-          const start = Date.now();
-          let handoffTimer = null;
-          const cleanup = () => {
-            if (handoffTimer) clearTimeout(handoffTimer);
-            document.removeEventListener('visibilitychange', onVisibility);
-            window.removeEventListener('pagehide', onPageHide);
-          };
-          const onVisibility = () => {
-            if (document.visibilityState === 'hidden') cleanup();
-          };
-          const onPageHide = () => cleanup();
-          document.addEventListener('visibilitychange', onVisibility);
-          window.addEventListener('pagehide', onPageHide);
-          handoffTimer = setTimeout(() => {
-            cleanup();
-            if (storeHandoff && Date.now() - start < 2500 && document.visibilityState === 'visible') {
-              window.location.href = storeHandoff;
-            }
-          }, 1500);
           window.location.href = successDeepLinkUrl;
         }
       }
@@ -451,38 +428,49 @@ export default function EventCheckout({ basePath = '/events' }) {
             </Link>
           </div>
 
-          <main className="mx-auto flex min-h-dvh w-full max-w-4xl items-center px-4 pb-12 pt-24 sm:px-6 lg:px-8">
+          <main className="mx-auto flex min-h-dvh w-full max-w-5xl items-center px-4 pb-12 pt-24 sm:px-6 lg:px-8">
             <div className="w-full">
               <section className="min-w-0">
-                <div className="overflow-hidden rounded-[2rem] bg-white/[0.045] shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:rounded-[2.5rem]">
-                  <div className="grid gap-0 md:grid-cols-[minmax(0,0.86fr)_minmax(320px,1fr)]">
-                    <div className="relative min-h-[360px] overflow-hidden md:min-h-[620px]">
-                      <CoverArt src={coverSrc} alt={apiEvent.name} className="absolute inset-0 h-full w-full" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                      <div className="absolute inset-x-0 bottom-0 p-5 md:p-7">
-                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/55">PXI checkout</p>
-                        <h1 className="mt-2 text-4xl font-black leading-[0.95] tracking-normal text-white md:text-5xl">
+                <div className="overflow-hidden rounded-[2rem] bg-white/[0.045] shadow-[0_30px_100px_rgba(0,0,0,0.55)] backdrop-blur-2xl border border-white/10 lg:rounded-[2.5rem]">
+                  <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] gap-6 p-5 md:p-8 items-start">
+                    {/* Left Column: 3:4 Cover Art & Event Details */}
+                    <div className="flex flex-col gap-4">
+                      <div className="relative group">
+                        {/* Ambient glow behind poster */}
+                        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-[#d84aff]/30 via-[#7c2ae8]/20 to-transparent blur-xl opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
+                        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-white/10 shadow-2xl bg-black">
+                          <CoverArt src={coverSrc} alt={apiEvent.name} className="h-full w-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+                          <span className="absolute left-3.5 top-3.5 rounded-full bg-black/60 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/80 backdrop-blur-md border border-white/10">
+                            PXI Checkout
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h1 className="text-2xl md:text-3xl font-black leading-tight text-white tracking-normal">
                           {apiEvent.name}
                         </h1>
-                        <div className="mt-5 grid gap-2 sm:grid-cols-2 md:grid-cols-1">
+                        <div className="mt-4 space-y-2">
                           <CheckoutMeta icon={Calendar03Icon} label="When" value={checkoutDate} />
                           <CheckoutMeta icon={Location01Icon} label="Where" value={checkoutLocation} />
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col justify-between p-5 md:p-7">
+                    {/* Right Column: Order Summary & Actions */}
+                    <div className="flex flex-col justify-between h-full pt-2 md:pt-0">
                       <div>
                         <div className="flex items-start justify-between gap-4">
                           <div>
                             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Order summary</p>
-                            <h2 className="mt-2 text-4xl font-black leading-none text-white">{priceDisplay}</h2>
+                            <h2 className="mt-1.5 text-4xl font-black leading-none text-white">{priceDisplay}</h2>
                           </div>
-                          <div className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-black">
+                          <div className="rounded-full bg-white px-3.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-black">
                             {isPaidEvent ? 'Paid' : 'Free'}
                           </div>
                         </div>
-                        <p className="mt-3 text-xs leading-relaxed text-zinc-500">
+                        <p className="mt-2.5 text-xs leading-relaxed text-zinc-400">
                           {isPaidEvent
                             ? 'Total includes PXI service and Stripe processing costs. Your ticket is issued after payment clears.'
                             : 'This event is free to join. PXI will issue your ticket immediately after confirmation.'}
@@ -502,8 +490,8 @@ export default function EventCheckout({ basePath = '/events' }) {
                                     aria-pressed={selected}
                                     className={`flex items-center justify-between gap-3 rounded-[20px] p-4 text-left backdrop-blur-xl transition-all duration-200 ${
                                       selected
-                                        ? 'bg-[rgba(216,74,255,0.16)] shadow-[0_0_32px_-6px_rgba(216,74,255,0.6)]'
-                                        : 'bg-[rgba(26,26,26,0.6)] hover:bg-[rgba(26,26,26,0.78)]'
+                                        ? 'bg-[rgba(216,74,255,0.16)] shadow-[0_0_32px_-6px_rgba(216,74,255,0.6)] border border-[#d84aff]/40'
+                                        : 'bg-[rgba(26,26,26,0.6)] hover:bg-[rgba(26,26,26,0.78)] border border-white/5'
                                     }`}
                                   >
                                     <span className="min-w-0">
@@ -528,13 +516,13 @@ export default function EventCheckout({ basePath = '/events' }) {
                           </div>
                         ) : null}
 
-                        <div className="mt-5 rounded-[20px] bg-white/[0.035] p-4">
+                        <div className="mt-5 rounded-[20px] bg-white/[0.035] p-4 border border-white/5">
                           <div className="flex items-center justify-between gap-4 text-sm">
-                            <span className="text-zinc-500">Ticket</span>
+                            <span className="text-zinc-400">Ticket</span>
                             <span className="font-bold text-white">{selectedTier?.label || 'General admission'}</span>
                           </div>
                           <div className="mt-3 flex items-center justify-between gap-4 text-sm">
-                            <span className="text-zinc-500">Face value</span>
+                            <span className="text-zinc-400">Face value</span>
                             <span className="font-bold text-white">{faceValue}</span>
                           </div>
                           <div className="mt-3 h-px w-full bg-white/10" />
@@ -607,11 +595,11 @@ export default function EventCheckout({ basePath = '/events' }) {
                           </Link>
                         </motion.div>
                       ) : (
-                        <div className="mt-6">
+                        <div className="mt-6 space-y-4">
                           {!isAuthenticated ? (
-                            <div className="space-y-4 rounded-[20px] bg-white/[0.045] p-5 backdrop-blur-xl">
+                            <div className="space-y-4 rounded-[20px] bg-white/[0.045] p-5 backdrop-blur-xl border border-white/5">
                               <p className="text-sm font-bold text-white">Sign in or create an account to continue</p>
-                              <p className="text-xs leading-relaxed text-zinc-500">
+                              <p className="text-xs leading-relaxed text-zinc-400">
                                 We need your PXI account to issue your ticket. After you log in, you can pay with Apple Pay, Google Pay, Link,
                                 or card.
                               </p>
@@ -635,26 +623,34 @@ export default function EventCheckout({ basePath = '/events' }) {
                           {joinError && <p className="text-sm text-red-400">{joinError}</p>}
 
                           {isAuthenticated ? (
-                            <div className="space-y-2 pb-2">
-                              <label className="flex cursor-pointer items-center gap-3 rounded-[16px] bg-white/[0.03] px-4 py-2.5">
+                            <div className="space-y-2.5 pb-2">
+                              <label className="flex cursor-pointer items-start gap-3 rounded-[16px] bg-white/[0.03] px-4 py-3 transition hover:bg-white/[0.05] border border-white/5">
                                 <input
                                   type="checkbox"
                                   checked={emailOptIn}
                                   onChange={(e) => setEmailOptIn(e.target.checked)}
-                                  className="h-4 w-4 accent-[#d84aff]"
+                                  className="mt-0.5 h-4 w-4 accent-[#d84aff]"
                                 />
-                                <span className="text-xs text-zinc-400">Email me about this host&apos;s future events</span>
+                                <span className="text-xs text-zinc-300">Email me about this host&apos;s future events</span>
                               </label>
                               {user?.phoneNumber ? (
-                                <label className="flex cursor-pointer items-center gap-3 rounded-[16px] bg-white/[0.03] px-4 py-2.5">
-                                  <input
-                                    type="checkbox"
-                                    checked={smsOptIn}
-                                    onChange={(e) => setSmsOptIn(e.target.checked)}
-                                    className="h-4 w-4 accent-[#d84aff]"
-                                  />
-                                  <span className="text-xs text-zinc-400">Text me about this host&apos;s future events</span>
-                                </label>
+                                <div className="rounded-[16px] bg-white/[0.03] p-4 border border-white/5 space-y-2.5">
+                                  <label className="flex cursor-pointer items-start gap-3">
+                                    <input
+                                      type="checkbox"
+                                      checked={smsOptIn}
+                                      onChange={(e) => setSmsOptIn(e.target.checked)}
+                                      className="mt-0.5 h-4 w-4 accent-[#d84aff]"
+                                    />
+                                    <span className="text-xs font-semibold text-zinc-200">Text me about this host&apos;s future events</span>
+                                  </label>
+                                  <p className="text-[11px] leading-relaxed text-zinc-400 pl-7">
+                                    By checking this box, you agree to receive promotional and event update text messages from PXI Space and event organizers at the number provided. Consent is not a condition of purchase. Message frequency varies. Message and data rates may apply. Reply STOP to cancel, HELP for info. View our{' '}
+                                    <Link href="/legal#privacy" className="text-white underline underline-offset-2 hover:text-zinc-300">Privacy Policy</Link>
+                                    {' and '}
+                                    <Link href="/legal#terms" className="text-white underline underline-offset-2 hover:text-zinc-300">Terms of Service</Link>.
+                                  </p>
+                                </div>
                               ) : null}
                             </div>
                           ) : null}
@@ -662,7 +658,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                           {isAuthenticated && isPaidEvent ? (
                             <div className="space-y-2 pt-2">
                               {creditBalanceCents > 0 ? (
-                                <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[20px] bg-white/[0.05] px-4 py-3 backdrop-blur-xl">
+                                <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[20px] bg-white/[0.05] px-4 py-3 backdrop-blur-xl border border-white/5">
                                   <span className="text-xs text-zinc-300">
                                     Use my PXI credits
                                     <span className="ml-1.5 font-bold text-white">
@@ -684,7 +680,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                                 value={promoCode}
                                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                                 placeholder="Promo / ambassador code (optional)"
-                                className="w-full rounded-[20px] bg-white/[0.05] px-4 py-3 text-xs font-semibold uppercase tracking-widest text-white outline-none backdrop-blur-xl transition-shadow placeholder:normal-case placeholder:tracking-normal placeholder:text-zinc-500 focus:shadow-[0_0_0_1.5px_rgba(216,74,255,0.5)]"
+                                className="w-full rounded-[20px] bg-white/[0.05] px-4 py-3 text-xs font-semibold uppercase tracking-widest text-white outline-none backdrop-blur-xl transition-shadow placeholder:normal-case placeholder:tracking-normal placeholder:text-zinc-500 focus:shadow-[0_0_0_1.5px_rgba(216,74,255,0.5)] border border-white/5"
                               />
                               <Button
                                 variant="neon"
