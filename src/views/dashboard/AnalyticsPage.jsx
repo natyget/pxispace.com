@@ -130,7 +130,7 @@ function HypePanel({ behavior, isMobile }) {
     const peakHour = activeSeries.reduce((peak, p) => (p.value > peak.value ? p : peak), { hourIso: null, value: 0 });
 
     const statStrip = [
-        { label: 'Hype index', value: `${formatNumber(behavior.hypeIndex)} / 100` },
+        { label: 'Hype score', value: `${formatNumber(behavior.hypeScore)} · ${behavior.hypeTierLabel || 'Quiet'}` },
         { label: 'Peak hour', value: peakHour.hourIso ? formatHourTick(peakHour.hourIso) : '—' },
         { label: 'Chat', value: formatNumber(behavior.totals?.messages) },
         { label: 'Reactions', value: formatNumber(behavior.totals?.reactions) },
@@ -581,7 +581,7 @@ function EventComparisonChart({ details = [], loading }) {
         tickets: Number(detail.sales?.total || detail.funnel?.sold || 0),
         gross: Number(detail.sales?.revenue?.grossCents || 0),
         scanRate: Number(detail.attendance?.scanRate || 0),
-        hype: Number(detail.behavior?.hypeIndex || 0),
+        hype: Number(detail.behavior?.hypeScore || 0),
         byDay: detail.sales?.byDay || [],
     }));
 

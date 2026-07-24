@@ -20,13 +20,14 @@ export const metadata = {
   description:
     'Plan the party, share the camera roll, relive the nostalgia. PXI is the event and social scrapbook app that unifies your best nights in one place.',
   icons: {
-    // Full-bleed square (neon mark on dark) so Google/browser circle-crops fill
-    // edge-to-edge instead of floating a small padded mark. The old transparent
+    // Full-bleed square (neon mark on brand-purple) so Google/browser circle-crops
+    // fill edge-to-edge instead of floating a small padded mark. The old transparent
     // favicon.svg is intentionally not declared — browsers prefer SVG and would
-    // reintroduce the padded look.
-    icon: [{ url: '/favicon-mark.png', type: 'image/png', sizes: '512x512' }],
-    shortcut: '/favicon-mark.png',
-    apple: { url: '/favicon-mark.png', sizes: '180x180' },
+    // reintroduce the padded look (and its transparency reads as white on light
+    // backgrounds, same reason favicon-mark.png — white bg — was replaced here).
+    icon: [{ url: '/app-icon.png', type: 'image/png', sizes: '512x512' }],
+    shortcut: '/app-icon.png',
+    apple: { url: '/app-icon.png', sizes: '180x180' },
   },
   openGraph: {
     type: 'website',

@@ -10,6 +10,11 @@ function FloorPlansPageContent() {
     const searchParams = useSearchParams();
     const attachEventId = searchParams.get('eventId');
     const openPlanId = searchParams.get('planId');
+    const seedLatParam = searchParams.get('seedLat');
+    const seedLngParam = searchParams.get('seedLng');
+    const seedLat = seedLatParam ? Number(seedLatParam) : null;
+    const seedLng = seedLngParam ? Number(seedLngParam) : null;
+    const hasSeed = Number.isFinite(seedLat) && Number.isFinite(seedLng);
 
     const [plans, setPlans] = useState(null);
     const [editing, setEditing] = useState(null); // null | 'new' | plan object
@@ -27,16 +32,17 @@ function FloorPlansPageContent() {
         return () => clearTimeout(timer);
     }, []);
 
-    // Deep links: ?planId= opens that plan's calibrator; ?eventId= with no plans jumps straight to "new".
+    // Deep links: ?planId= opens that venue for edit; ?eventId= with no venues (or a
+    // seeded lat/lng from "turn this into a venue") jumps straight to "new".
     useEffect(() => {
         if (!plans || editing) return;
         if (openPlanId) {
             const plan = plans.find((item) => item.id === openPlanId);
             if (plan) setEditing(plan);
-        } else if (attachEventId && plans.length === 0) {
+        } else if (hasSeed || (attachEventId && plans.length === 0)) {
             setEditing('new');
         }
-    }, [plans, openPlanId, attachEventId, editing]);
+    }, [plans, openPlanId, attachEventId, hasSeed, editing]);
 
     const handleSaved = async (plan) => {
         setEditing(null);
@@ -95,6 +101,8 @@ function FloorPlansPageContent() {
                 <VenueWizard
                     existingVenue={editing === 'new' ? null : editing}
                     eventId={attachEventId}
+                    seedLat={editing === 'new' && hasSeed ? seedLat : null}
+                    seedLng={editing === 'new' && hasSeed ? seedLng : null}
                     onSaved={handleSaved}
                     onCancel={() => setEditing(null)}
                 />

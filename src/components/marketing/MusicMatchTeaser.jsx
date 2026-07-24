@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { SiSpotify, SiApplemusic } from 'react-icons/si';
+import { SiSpotify } from 'react-icons/si';
 import ScanLockNumber from '@/components/motion/ScanLockNumber';
 import ReelPicker from '@/components/motion/ReelPicker';
 
@@ -244,7 +244,7 @@ export default function MusicMatchTeaser() {
           <span className="text-neon-orange">Events</span> that <span className="text-neon-orange">sound</span> <span className="text-white">like you.</span>
         </h3>
         <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-          PXI reads what you play and matches you to the nights that play it back. Connect your Spotify or Apple Music to get started.
+          PXI reads what you play and matches you to the nights that play it back. Connect your Spotify to get started.
         </p>
       </div>
 
@@ -256,16 +256,12 @@ export default function MusicMatchTeaser() {
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Your <span className="text-neon-orange">Music</span></p>
           </div>
           {/* This is the actual point of the section — connects to the real
-              Spotify/Apple Music linking in account settings that powers the
-              match score — so the brand marks lead, not a footnote caption. */}
+              Spotify linking in account settings that powers the match score
+              — so the brand mark leads, not a footnote caption. */}
           <div className="mb-3 flex items-center justify-center gap-2.5 sm:mb-4">
             <span className="flex items-center gap-2 rounded-full bg-[#1DB954]/15 px-3.5 py-2 ring-1 ring-[#1DB954]/40">
               <SiSpotify className="h-6 w-6 sm:h-7 sm:w-7" style={{ color: '#1ED760' }} />
               <span className="text-xs font-black uppercase tracking-wide text-white">Spotify</span>
-            </span>
-            <span className="flex items-center gap-2 rounded-full bg-[#FA586A]/15 px-3.5 py-2 ring-1 ring-[#FA586A]/40">
-              <SiApplemusic className="h-6 w-6 sm:h-7 sm:w-7" style={{ color: '#FA586A' }} />
-              <span className="text-xs font-black uppercase tracking-wide text-white">Apple Music</span>
             </span>
           </div>
           <p className="mb-2 text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-zinc-500 sm:mb-3">

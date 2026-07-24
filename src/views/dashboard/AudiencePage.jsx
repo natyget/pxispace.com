@@ -176,7 +176,6 @@ const TAKE = 50;
 const FILTER_DEFAULTS = {
     emailOptIn: null, // null | true | false
     smsOptIn: null,
-    faceEnrolled: null,
     city: '',
     accountTier: '',
     minOdysseyXp: '',
@@ -256,15 +255,10 @@ function AudienceAvatar({ row }) {
 }
 
 function PassportSignals({ row }) {
-    const hasAny = row.faceEnrolled || row.hasPaidTicket || (row.musicConnected && row.topGenres?.length);
+    const hasAny = row.hasPaidTicket || (row.musicConnected && row.topGenres?.length);
     if (!hasAny) return <span className="text-xs text-zinc-600">—</span>;
     return (
         <div className="flex flex-wrap items-center gap-1.5">
-            {row.faceEnrolled ? (
-                <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-fuchsia-300">
-                    Face match
-                </span>
-            ) : null}
             {row.hasPaidTicket ? (
                 <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-amber-300">
                     Paid
@@ -555,17 +549,6 @@ export default function AudiencePage() {
                                     <select
                                         value={triStateValue(filters.smsOptIn)}
                                         onChange={(event) => updateFilter('smsOptIn', parseTriState(event.target.value))}
-                                        className={AUDIENCE_SELECT_CLASS}
-                                    >
-                                        {TRI_STATE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                                    </select>
-                                </div>
-
-                                <div className="space-y-2 rounded-2xl glass-field p-3">
-                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Face-match enrolled</p>
-                                    <select
-                                        value={triStateValue(filters.faceEnrolled)}
-                                        onChange={(event) => updateFilter('faceEnrolled', parseTriState(event.target.value))}
                                         className={AUDIENCE_SELECT_CLASS}
                                     >
                                         {TRI_STATE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}

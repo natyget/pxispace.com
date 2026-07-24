@@ -759,7 +759,7 @@ export default function PublicEventsPage() {
 
         {musicSortActive && isLoggedIn && musicConnected === false ? (
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-3 text-sm text-zinc-400">
-            <p>Connect Spotify or Apple Music for personalized ranking.</p>
+            <p>Connect Spotify for personalized ranking.</p>
             <Link href="/dashboard/account" className="shrink-0 text-xs font-black uppercase tracking-widest text-[#d946ef] hover:text-white">
               Connect →
             </Link>
