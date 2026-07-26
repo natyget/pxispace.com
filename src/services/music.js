@@ -23,11 +23,9 @@ export const musicService = {
 
   disconnect: () => api.delete('/api/music/profile'),
 
-  /** GET /api/music/apple/developer-token — { developerToken } for MusicKit JS (503 when unconfigured). */
-  getAppleDeveloperToken: () => api.get('/api/music/apple/developer-token'),
-
-  /** POST /api/music/apple/connect — { musicUserToken } from MusicKit authorize(). */
-  connectAppleMusic: (musicUserToken) => api.post('/api/music/apple/connect', { musicUserToken }),
+  // Apple Music connect (developer-token + connect) was removed from the
+  // product; those backend endpoints now return 410 Gone. Historical
+  // 'APPLE_MUSIC' profiles are still readable via getProfile()/disconnect().
 
   /** GET /api/music/events/:eventId/match (auth) — { connected, score, matchedArtists, sharedGenres } */
   getEventMatch: (eventId) => api.get(`/api/music/events/${eventId}/match`),

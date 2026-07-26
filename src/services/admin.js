@@ -155,3 +155,15 @@ export function adminCancelAdCampaign(campaignId, reason) {
 export function adminToggleAdPlacement(placementId, disabled) {
     return api.patch(`/api/admin/ads/placements/${placementId}`, { disabled });
 }
+
+// ————— Organizers (hype score / tier ranking) —————
+
+/** params: { tier?, sort?, page?, take? } → { organizers, total, page, take } */
+export function listAdminOrganizers(params = {}) {
+    return api.get(`/api/admin/organizers${query(params)}`);
+}
+
+/** body: { userId?, username?, segmentId?, title, body, deepLink? } → { ok, sent } */
+export function sendAdminNotification(body) {
+    return api.post('/api/admin/notify', body);
+}

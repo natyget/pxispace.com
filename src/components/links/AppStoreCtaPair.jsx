@@ -1,19 +1,18 @@
 'use client';
 
-import { FaGooglePlay } from 'react-icons/fa';
-import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
+import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 import { APPLE_MARK } from '@/lib/landingAssets';
 
 const BTN_CLASS =
-  'flex w-full max-w-[320px] sm:w-auto sm:max-w-none items-center justify-center gap-3 px-6 py-4 md:px-10 md:py-5 rounded-full bg-white/10 border-0 backdrop-blur-[60px] hover:bg-white/20 transition-all cursor-pointer -translate-y-full md:translate-y-0';
+  'flex w-full max-w-[320px] sm:w-auto sm:max-w-none items-center justify-center gap-3 px-6 py-4 md:px-10 md:py-5 rounded-full bg-white/10 border-0 backdrop-blur-[60px] hover:bg-white/20 transition-all cursor-pointer';
 
 /** Compact side-by-side row (e.g. bottom of a blurred public preview on mobile). */
 const BTN_ROW_CLASS =
   'flex min-w-0 flex-1 items-center justify-center gap-2 px-3 py-2.5 rounded-full bg-white/5 backdrop-blur-3xl border-0 hover:bg-white/10 transition-colors cursor-pointer';
 
 /**
- * Matched to landing hero: “Download on App Store” (Google Play hidden).
+ * Matched to landing hero: “Download on App Store” — iOS only, no Android app yet.
  * @param {'default' | 'row'} [variant] — `row`: two equal columns with smaller copy (mobile blur footers).
  */
 export default function AppStoreCtaPair({ className = '', variant = 'default', dataCursorHover = false }) {

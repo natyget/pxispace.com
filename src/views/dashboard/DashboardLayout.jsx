@@ -18,13 +18,14 @@ import AccountCardPopover from '@/components/dashboard/AccountCardPopover';
 import SidebarIconTooltip from '@/components/dashboard/SidebarIconTooltip';
 import DashboardModalHost from '@/components/dashboard/DashboardModalHost';
 import { dashboardShellActions, useDashboardShellStore } from '@/lib/dashboardShellStore';
-import { prefetchDashboardRoutes } from '@/lib/dashboardPerformance';
+import { dashboardPrefetchRoutes, prefetchDashboardRoutes } from '@/lib/dashboardPerformance';
 import { useCapabilities, useEvents } from '@/lib/dashboardStore';
 import {
     ADMIN_SIDEBAR_MODE_KEY,
     adminNavItems,
     buildMemberNavItems,
     isNavItemActive,
+    isVendorOnlyRoute,
     dashboardNavConfig,
 } from '@/lib/dashboardNavConfig';
 
@@ -159,11 +160,6 @@ export default function DashboardLayout({ children }) {
     }, []);
 
     useEffect(() => {
-        if (!mounted) return;
-        prefetchDashboardRoutes(router);
-    }, [mounted, router]);
-
-    useEffect(() => {
         if (!mounted) return undefined;
         const initialTimer = setTimeout(() => setLiveNow(Date.now()), 0);
         const intervalTimer = setInterval(() => setLiveNow(Date.now()), 60_000);
@@ -239,15 +235,29 @@ export default function DashboardLayout({ children }) {
         dashboardShellActions.setIsLiveEvent(hasLiveEvent);
     }, [hasLiveEvent]);
 
-    const hasLiveOpsAccess = capabilities.hasBouncerAccess || (rolesReady && isVendorUser(user));
-    const hasOrganizerAccess = hasLiveOpsAccess;
+    const isVendor = rolesReady && isVendorUser(user);
+    const hasLiveOpsAccess = capabilities.hasBouncerAccess || isVendor;
+    // Live Operations rides on /dashboard/analytics?view=live-ops, so it has to be
+    // carved out of the vendor gate — bouncers are Citizens who still scan tickets.
+    const onLiveOpsSurface = pathname.startsWith('/dashboard/live-scan')
+        || (pathname === '/dashboard/analytics' && searchParams.get('view') === 'live-ops');
 
     useEffect(() => {
-        if (!rolesReady || capabilities.loading || !capabilities.determined) return;
-        if (pathname.startsWith('/dashboard/live-scan') && !hasLiveOpsAccess) {
-            router.replace('/dashboard');
+        if (!rolesReady) return;
+        prefetchDashboardRoutes(router, dashboardPrefetchRoutes({ isVendor }));
+    }, [rolesReady, isVendor, router]);
+
+    // Vendor status comes straight off the session, so the Citizen bounce is
+    // immediate. Live-ops has to wait for capabilities — bouncer access is only
+    // knowable after the events/notifications fetch resolves.
+    useEffect(() => {
+        if (!rolesReady) return;
+        if (onLiveOpsSurface) {
+            if (!capabilities.loading && capabilities.determined && !hasLiveOpsAccess) router.replace('/dashboard');
+            return;
         }
-    }, [rolesReady, pathname, capabilities.loading, capabilities.determined, hasLiveOpsAccess, router]);
+        if (!isVendor && isVendorOnlyRoute(pathname)) router.replace('/dashboard');
+    }, [rolesReady, pathname, capabilities.loading, capabilities.determined, hasLiveOpsAccess, isVendor, onLiveOpsSurface, router]);
 
     useEffect(() => {
         dashboardShellActions.setAccountPopoverOpen(false);
@@ -340,14 +350,13 @@ export default function DashboardLayout({ children }) {
             return adminNavItems;
         }
         const items = buildMemberNavItems({
-            hasOrganizerAccess,
             hasLiveOpsAccess,
             isLiveEvent: hasLiveEvent,
             mounted: rolesReady,
             user,
         });
         return items;
-    }, [isAdminNav, rolesReady, hasOrganizerAccess, hasLiveOpsAccess, hasLiveEvent, user]);
+    }, [isAdminNav, rolesReady, hasLiveOpsAccess, hasLiveEvent, user]);
     const navEntries = useMemo(() => {
         if (isAdminNav || sidebarCollapsed) {
             return navItems.map((item) => ({ type: 'item', key: item.key, item }));

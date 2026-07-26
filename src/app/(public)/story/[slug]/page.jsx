@@ -41,7 +41,7 @@ export default async function EditorialStoryPage({ params }) {
     image: `${SITE_URL}${story.cover}`,
     datePublished: story.date,
     author: { '@type': 'Organization', name: 'PXI' },
-    publisher: { '@type': 'Organization', name: 'PXI', logo: { '@type': 'ImageObject', url: `${SITE_URL}/favicon.svg` } },
+    publisher: { '@type': 'Organization', name: 'PXI', logo: { '@type': 'ImageObject', url: `${SITE_URL}/app-icon.png` } },
     mainEntityOfPage: `${SITE_URL}/editorial/${slug}`,
   };
 

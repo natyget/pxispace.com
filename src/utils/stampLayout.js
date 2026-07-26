@@ -169,12 +169,18 @@ function seededHash(id, salt) {
     return h / 0x100000000;
 }
 
+/**
+ * Stamp tier from XP earned *at a single event* — deliberately NOT the lifetime bands in
+ * `odysseyTier.js`. A stamp answers "how hard did you go that night", so it tops out at
+ * roughly one legendary night, where the lifetime ladder tops out at a year of them.
+ * Mirror any change in pxi-mobile-app/src/utils/stampLayout.ts.
+ */
 function xpToTierId(xp) {
-    if (xp <= 500)   return 'WANDERER';
-    if (xp <= 2500)  return 'SEEKER';
-    if (xp <= 7000)  return 'VOYAGER';
-    if (xp <= 15000) return 'PATHFINDER';
-    if (xp <= 30000) return 'LUMINARY';
+    if (xp <= 250)  return 'WANDERER';
+    if (xp <= 700)  return 'SEEKER';
+    if (xp <= 1500) return 'VOYAGER';
+    if (xp <= 3000) return 'PATHFINDER';
+    if (xp <= 6000) return 'LUMINARY';
     return 'ODYSSEY';
 }
 

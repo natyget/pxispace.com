@@ -2,12 +2,16 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { FloorPlanIcon, Image01Icon, PlusSignIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { eventsService } from '../../services/events';
 import { StatRow } from '@/components/dashboard/MetricCard';
 import { RechartsChart, ChartSkeleton } from '@/components/dashboard/ChartFrame';
 import { DASHBOARD_BRAND_COLOR, DASHBOARD_MUTED_COLOR, DASHBOARD_TOOLTIP_PROPS } from '@/components/dashboard/chartStyles';
+import SurfaceHeader from '@/components/dashboard/SurfaceHeader';
+import MemberCommandCenter from './MemberCommandCenter';
 import { isVendorUser } from '@/lib/accountTier';
 import { useNotifications } from '@/lib/dashboardStore';
 import { buildCommandCenterReminders } from '@/services/commandCenter';
@@ -62,8 +66,32 @@ function stateDotClass(status) {
     return 'bg-zinc-500';
 }
 
+/**
+ * The Command Center splits on ACCESS TIER (not passport level): Diplomats get
+ * the operations desk below, Partials and Citizens get the ladder + vendor-setup
+ * pitch. Splitting at the top also keeps the organizer-only fetches from firing
+ * for people who'd only get 403s back.
+ */
 export default function DashboardHome() {
     const { user, authReady, authRefreshing } = useAuth();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        const frame = requestAnimationFrame(() => setMounted(true));
+        return () => cancelAnimationFrame(frame);
+    }, []);
+
+    if (!mounted || !authReady || authRefreshing) {
+        return <div className="mx-auto max-w-7xl space-y-8" />;
+    }
+    if (!isVendorUser(user)) {
+        return <MemberCommandCenter user={user} />;
+    }
+    return <VendorCommandCenter />;
+}
+
+function VendorCommandCenter() {
+    const { user } = useAuth();
     const [mounted, setMounted] = useState(false);
     const [vendorData, setVendorData] = useState(null);
     const [vendorLoading, setVendorLoading] = useState(false);
@@ -216,6 +244,7 @@ export default function DashboardHome() {
             });
         const sales = overview?.totals?.ticketsSold ?? events.reduce((sum, e) => sum + soldTicketsExcludingOrganizer(e?._count?.tickets ?? 0), 0);
         const attendees = overview?.totals?.attendees ?? 0;
+        const scanned = overview?.totals?.ticketsScanned ?? 0;
         const activeCount = events.filter((event) => eventState(event, now) === 'Live').length;
         const scheduledCount = events.filter((event) => eventState(event, now) === 'Upcoming').length;
         const draftCount = events.filter((event) => eventState(event, now) === 'Draft').length;
@@ -226,6 +255,12 @@ export default function DashboardHome() {
                 revenue: formatMoney(totalEarnings),
                 sales,
                 attendees,
+                scanned,
+                // Turnout = scanned at the door / sold. The one headline number no
+                // other ticketing dashboard can produce honestly, because everyone
+                // else infers attendance from a check-in app staff skip at the door.
+                turnout: sales > 0 ? Math.round((scanned / sales) * 100) : null,
+                mediaCount: overview?.totals?.mediaCount ?? 0,
                 activeCount,
                 scheduledCount,
                 draftCount,
@@ -270,31 +305,19 @@ export default function DashboardHome() {
             }));
     }, [helpRequests]);
     const metricsLoading = vendorLoading || eventsLoading || overviewLoading;
-    const isVendorDashboard = mounted && authReady && !authRefreshing && isVendorUser(user);
-    const dashboardHero = isVendorDashboard
-        ? {
-              eyebrow: 'Command center',
-              title: 'Run the room',
-              copy: 'Live work, the next events, and the money — one read, no repeats.',
-          }
-        : {
-              eyebrow: 'Workspace',
-              title: 'Your PXI',
-              copy: 'Tickets, notifications, hosted events, and account tools in one clean place.',
-          };
-    const commandMetrics = isVendorDashboard
-        ? [
-              { label: 'Net revenue', value: metricsLoading ? '-' : summary.revenue },
-              { label: 'Tickets', value: metricsLoading ? '-' : summary.sales.toLocaleString() },
-              { label: 'Attendees', value: metricsLoading ? '-' : summary.attendees.toLocaleString() },
-              { label: 'Live now', value: metricsLoading ? '-' : summary.activeCount },
-          ]
-        : [
-              { label: 'Hosted', value: metricsLoading ? '-' : events.length.toLocaleString() },
-              { label: 'Unread', value: notificationCount > 99 ? '99+' : notificationCount.toLocaleString() },
-              { label: 'Upcoming', value: metricsLoading ? '-' : summary.scheduledCount },
-              { label: 'Drafts', value: metricsLoading ? '-' : summary.draftCount },
-          ];
+    // Tier 1 — "am I making money". This strip is the comparison an organizer is
+    // actually running against Eventbrite/Posh, so it leads and stays money-first.
+    // Turnout is the exception: it's the first number here they can't get anywhere
+    // else. See docs/DASHBOARD_POSITIONING.md.
+    const commandMetrics = [
+        { label: 'Net revenue', value: metricsLoading ? '-' : summary.revenue },
+        { label: 'Tickets sold', value: metricsLoading ? '-' : summary.sales.toLocaleString() },
+        {
+            label: 'Turnout',
+            value: metricsLoading ? '-' : summary.turnout == null ? '—' : `${summary.turnout}%`,
+        },
+        { label: 'Live now', value: metricsLoading ? '-' : summary.activeCount },
+    ];
 
     if (!mounted) {
         return <div className="mx-auto max-w-7xl space-y-8" />;
@@ -305,9 +328,20 @@ export default function DashboardHome() {
             <section className="px-1">
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,480px)] xl:items-end">
                     <div className="min-w-0">
-                        <p className="text-[13px] font-medium text-zinc-500">{dashboardHero.eyebrow}</p>
-                        <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">{dashboardHero.title}</h1>
-                        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-500">{dashboardHero.copy}</p>
+                        <p className="text-[13px] font-medium text-zinc-500">Command center</p>
+                        <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Run the room</h1>
+                        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-500">
+                            Live work, the next events, and the money — one read, no repeats.
+                        </p>
+                        <div className="mt-4 flex flex-wrap items-center gap-2.5">
+                            <Link href="/dashboard/events/new" className="pill-solid inline-flex items-center gap-2 px-5 py-2.5 text-sm tracking-[0.02em]">
+                                <HugeiconsIcon icon={PlusSignIcon} size={15} />
+                                Create event
+                            </Link>
+                            <Link href="/dashboard/analytics" className="pill-ghost inline-flex items-center px-5 py-2.5 text-sm font-bold tracking-[0.02em]">
+                                See what moved the room
+                            </Link>
+                        </div>
                     </div>
                     <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[1.25rem] bg-white/[0.06] ring-1 ring-white/[0.07] sm:grid-cols-4">
                         {commandMetrics.map((metric) => (
@@ -320,30 +354,28 @@ export default function DashboardHome() {
                 </div>
             </section>
 
-            {isVendorDashboard ? (
-                <div className="grid gap-5 lg:grid-cols-2">
-                    <TrendChartCard
-                        title="Revenue"
-                        subtitle="Net per day, last 30 days"
-                        data={revenueTrend}
-                        hasData={hasRevenueTrend}
-                        loading={metricsLoading}
-                        color={DASHBOARD_BRAND_COLOR}
-                        valueFormatter={formatRevenueTick}
-                        gradientId="commandRevenueGradient"
-                    />
-                    <TrendChartCard
-                        title="Tickets"
-                        subtitle="Sold per day, last 30 days"
-                        data={ticketsTrend}
-                        hasData={hasTicketsTrend}
-                        loading={metricsLoading}
-                        color={DASHBOARD_MUTED_COLOR}
-                        valueFormatter={(value) => Number(value || 0).toLocaleString('en-US')}
-                        gradientId="commandTicketsGradient"
-                    />
-                </div>
-            ) : null}
+            <div className="grid gap-5 lg:grid-cols-2">
+                <TrendChartCard
+                    title="Revenue"
+                    subtitle="Net per day, last 30 days"
+                    data={revenueTrend}
+                    hasData={hasRevenueTrend}
+                    loading={metricsLoading}
+                    color={DASHBOARD_BRAND_COLOR}
+                    valueFormatter={formatRevenueTick}
+                    gradientId="commandRevenueGradient"
+                />
+                <TrendChartCard
+                    title="Tickets"
+                    subtitle="Sold per day, last 30 days"
+                    data={ticketsTrend}
+                    hasData={hasTicketsTrend}
+                    loading={metricsLoading}
+                    color={DASHBOARD_MUTED_COLOR}
+                    valueFormatter={(value) => Number(value || 0).toLocaleString('en-US')}
+                    gradientId="commandTicketsGradient"
+                />
+            </div>
 
             <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
                 <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
@@ -362,7 +394,7 @@ export default function DashboardHome() {
                         ) : upcomingAndLiveEvents.length === 0 ? (
                             <EmptyPanel
                                 title="No live or upcoming events yet."
-                                body={isVendorDashboard ? 'Create or schedule an event to start filling this queue.' : 'Events you host will appear here once hosting is enabled.'}
+                                body="Create or schedule an event to start filling this queue."
                                 href="/dashboard/events"
                                 action="Open events"
                             />
@@ -404,6 +436,8 @@ export default function DashboardHome() {
                 </aside>
             </div>
 
+            <MoatBand summary={summary} loading={metricsLoading} />
+
             {announcements.length ? (
                 <section className="space-y-3" aria-label="Announcements">
                     {announcements.map((announcement) => (
@@ -412,6 +446,71 @@ export default function DashboardHome() {
                 </section>
             ) : null}
         </div>
+    );
+}
+
+/**
+ * Tier 3 — the moat. Deliberately BELOW the money and the queue: an organizer
+ * comparing us to Eventbrite reads the top of this page first, and if it opened
+ * with heat maps and face-tagging they'd file PXI as a social app and leave.
+ * It is not hidden, though — an organizer who has never seen a venue heat map
+ * will never go looking for one in a nav menu, so it gets named here with a
+ * live number attached. See docs/DASHBOARD_POSITIONING.md.
+ */
+function MoatBand({ summary, loading }) {
+    const items = [
+        {
+            icon: FloorPlanIcon,
+            title: 'Where the room was alive',
+            stat: loading ? '-' : summary.turnout == null ? 'Awaiting first scan' : `${summary.turnout}% turnout verified`,
+            body: 'Photo capture points across the night, projected onto your floor plan. No other ticketing platform can draw this.',
+            href: '/dashboard/floor-plans',
+            action: 'Open venues',
+        },
+        {
+            icon: Image01Icon,
+            title: 'Your crowd shot your marketing',
+            stat: loading ? '-' : `${summary.mediaCount.toLocaleString()} moments captured`,
+            body: 'Every album photo ranked by reaction. Pull a marketing kit instead of booking a photographer.',
+            href: '/dashboard/analytics',
+            action: 'See top moments',
+        },
+        {
+            icon: UserGroupIcon,
+            title: 'Guests you can prove came',
+            stat: loading ? '-' : `${summary.attendees.toLocaleString()} verified attendees`,
+            body: 'Scanned at the door, not self-reported. Segment by city, taste, and attendance history, then send.',
+            href: '/dashboard/audience',
+            action: 'Open CRM',
+        },
+    ];
+
+    return (
+        <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
+            <SurfaceHeader
+                eyebrow="Only on PXI"
+                title="What you get here and nowhere else"
+            />
+            <div className="mt-5 grid gap-3 lg:grid-cols-3">
+                {items.map((item) => (
+                    <Link
+                        key={item.title}
+                        href={item.href}
+                        className="group flex flex-col rounded-[1.25rem] bg-white/[0.035] p-4 transition hover:bg-white/[0.055]"
+                    >
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.055]">
+                            <HugeiconsIcon icon={item.icon} size={17} className="text-white opacity-60" />
+                        </div>
+                        <p className="mt-3.5 text-sm font-bold text-white">{item.title}</p>
+                        <p className="mt-1.5 text-[13px] font-semibold tabular-nums text-[#e08bff]">{item.stat}</p>
+                        <p className="mt-1.5 flex-1 text-xs leading-5 text-zinc-500">{item.body}</p>
+                        <p className="mt-3 text-[11px] font-bold tracking-[0.02em] text-white/45 transition group-hover:text-white/75">
+                            {item.action} →
+                        </p>
+                    </Link>
+                ))}
+            </div>
+        </section>
     );
 }
 
@@ -506,18 +605,6 @@ function TrendChartCard({ title, subtitle, data, hasData, loading, color, valueF
                 )}
             </div>
         </section>
-    );
-}
-
-function SurfaceHeader({ eyebrow, title, action = null }) {
-    return (
-        <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-                <p className="text-[12px] font-medium text-zinc-500">{eyebrow}</p>
-                <h2 className="mt-1 text-[17px] font-semibold tracking-tight text-white">{title}</h2>
-            </div>
-            {action ? <div className="shrink-0 pt-1">{action}</div> : null}
-        </div>
     );
 }
 

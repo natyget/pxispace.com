@@ -10,7 +10,7 @@ import { PxiSpinner } from '@/components/loading/PxiLoading';
 const TABS = [
   { label: 'Details',  segment: null },
   { label: 'Members',  segment: 'members' },
-  { label: 'Gallery',  segment: 'upload' },
+  { label: 'Configuration', segment: 'upload' },
 ];
 
 export default function EventManageLayoutInner({ children }) {
@@ -57,7 +57,7 @@ export default function EventManageLayoutInner({ children }) {
             <HugeiconsIcon icon={ArrowLeft01Icon} size={22} />
           </Link>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-0.5">Event</p>
+            <p className="text-[10px] font-bold tracking-[0.02em] text-zinc-500 mb-0.5">Event</p>
             <h1 className="text-xl md:text-2xl font-black text-white tracking-normal leading-tight truncate">
               {event.name?.trim() || 'Untitled event'}
             </h1>

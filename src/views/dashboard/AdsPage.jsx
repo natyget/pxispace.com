@@ -147,15 +147,15 @@ function EventCoverPicker({ events, selected, onToggle }) {
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
                             {active ? (
-                                <span className="absolute right-2 top-2 rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-black">
+                                <span className="absolute right-2 top-2 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold tracking-wide text-black">
                                     Selected
                                 </span>
                             ) : null}
                             <div className="absolute bottom-0 left-0 right-0 p-3">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-300">
+                                <p className="text-[10px] font-bold tracking-[0.02em] text-zinc-300">
                                     {dateLabel}
                                 </p>
-                                <p className="mt-0.5 line-clamp-2 text-sm font-black uppercase leading-tight text-white">
+                                <p className="mt-0.5 line-clamp-2 text-sm font-bold leading-tight text-white">
                                     {ev.name}
                                 </p>
                             </div>
@@ -232,6 +232,7 @@ const emptyDraft = () => ({
     genres: [],
     xpTiers: [],
     attendance: '',
+    lookalikeOfOwnAttendees: false,
     frequencyCapPerDay: 3,
     placements: { FEED: 'STANDARD' },
     emailEnabled: false,
@@ -248,6 +249,7 @@ function draftTargeting(draft) {
         genres: draft.genres,
         xpTiers: draft.xpTiers,
         attendance: draft.attendance === 'ANY_PAST' ? 'ANY_PAST' : null,
+        ...(draft.lookalikeOfOwnAttendees ? { lookalikeOfOwnAttendees: true } : {}),
     };
 }
 
@@ -351,7 +353,7 @@ export default function AdsPage() {
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [wizardOpen, draft.cities, draft.ageBrackets, draft.genres, draft.xpTiers, draft.attendance]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [wizardOpen, draft.cities, draft.ageBrackets, draft.genres, draft.xpTiers, draft.attendance, draft.lookalikeOfOwnAttendees]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Live quote while channels/schedule change (debounced).
     useEffect(() => {
@@ -376,7 +378,7 @@ export default function AdsPage() {
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [wizardOpen, draft.placements, draft.startAt, draft.endAt, draft.emailEnabled, draft.cities, draft.ageBrackets, draft.genres, draft.xpTiers, draft.attendance]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [wizardOpen, draft.placements, draft.startAt, draft.endAt, draft.emailEnabled, draft.cities, draft.ageBrackets, draft.genres, draft.xpTiers, draft.attendance, draft.lookalikeOfOwnAttendees]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Performance panel loads for the selected campaign.
     useEffect(() => {
@@ -593,6 +595,31 @@ export default function AdsPage() {
                                             <p className="mt-1 text-xs leading-5 text-zinc-400">
                                                 Your money works hardest on people like the ones who already show up. One tap applies the profile.
                                             </p>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setDraft((prev) => ({
+                                                        ...prev,
+                                                        lookalikeOfOwnAttendees: !prev.lookalikeOfOwnAttendees,
+                                                        ...(!prev.lookalikeOfOwnAttendees ? { cities: [], ageBrackets: [], genres: [] } : {}),
+                                                    }))
+                                                }
+                                                className={`mt-3 flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition ${
+                                                    draft.lookalikeOfOwnAttendees
+                                                        ? 'bg-[#d84aff] text-white'
+                                                        : 'bg-white/[0.07] text-zinc-100 hover:bg-white/[0.12]'
+                                                }`}
+                                            >
+                                                <span>
+                                                    <span className="block text-[13px] font-bold">Target people like my crowd</span>
+                                                    <span className={`block text-xs ${draft.lookalikeOfOwnAttendees ? 'text-white/80' : 'text-zinc-400'}`}>
+                                                        Cities, ages, and genres auto-derived from your real attendees — no manual picking
+                                                    </span>
+                                                </span>
+                                                <span className="shrink-0 text-[11px] font-bold tracking-[0.02em]">
+                                                    {draft.lookalikeOfOwnAttendees ? 'On' : 'Off'}
+                                                </span>
+                                            </button>
                                             <div className="mt-3 flex flex-wrap gap-2">
                                                 {(() => {
                                                     const topBracket = [...(audienceIntel.ageBrackets || [])].sort((a, b) => b.count - a.count)[0];
@@ -627,30 +654,39 @@ export default function AdsPage() {
                                             </div>
                                         </div>
                                     ) : null}
-                                    <div className="space-y-2">
-                                        <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Cities</span>
-                                        <TagInput
-                                            tags={draft.cities}
-                                            onChange={(cities) => patchDraft({ cities })}
-                                            placeholder="Add a city and press Enter (empty = everywhere)"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Age brackets</span>
-                                        <ChipPicker
-                                            options={AD_AGE_BRACKETS.map((b) => ({ id: b, label: b }))}
-                                            selected={draft.ageBrackets}
-                                            onToggle={toggleListValue('ageBrackets')}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Music genres</span>
-                                        <TagInput
-                                            tags={draft.genres}
-                                            onChange={(genres) => patchDraft({ genres })}
-                                            placeholder="e.g. house, afrobeats — matches listeners' taste profiles"
-                                        />
-                                    </div>
+                                    {draft.lookalikeOfOwnAttendees ? (
+                                        <p className="rounded-2xl bg-white/[0.035] px-4 py-4 text-xs leading-5 text-zinc-500">
+                                            Cities, age brackets, and genres are set automatically from your attendee base while
+                                            &ldquo;Target people like my crowd&rdquo; is on. Turn it off above to pick these by hand.
+                                        </p>
+                                    ) : (
+                                        <>
+                                            <div className="space-y-2">
+                                                <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Cities</span>
+                                                <TagInput
+                                                    tags={draft.cities}
+                                                    onChange={(cities) => patchDraft({ cities })}
+                                                    placeholder="Add a city and press Enter (empty = everywhere)"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Age brackets</span>
+                                                <ChipPicker
+                                                    options={AD_AGE_BRACKETS.map((b) => ({ id: b, label: b }))}
+                                                    selected={draft.ageBrackets}
+                                                    onToggle={toggleListValue('ageBrackets')}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Music genres</span>
+                                                <TagInput
+                                                    tags={draft.genres}
+                                                    onChange={(genres) => patchDraft({ genres })}
+                                                    placeholder="e.g. house, afrobeats — matches listeners' taste profiles"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                     <div className="space-y-2">
                                         <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Passport tier</span>
                                         <ChipPicker options={AD_XP_TIERS} selected={draft.xpTiers} onToggle={toggleListValue('xpTiers')} />
@@ -838,6 +874,12 @@ export default function AdsPage() {
                                                     .join(', ') || 'none'}
                                             </span>
                                             {draft.emailEnabled ? ' + Email blast' : ''}
+                                        </p>
+                                        <p className="mt-1">
+                                            Targeting:{' '}
+                                            <span className="font-bold text-white">
+                                                {draft.lookalikeOfOwnAttendees ? 'People like my crowd (auto)' : 'Custom'}
+                                            </span>
                                         </p>
                                         {quote ? (
                                             <p className="mt-1">

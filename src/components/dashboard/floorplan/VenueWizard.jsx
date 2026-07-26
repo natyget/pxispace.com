@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { GeoapifyContext, GeoapifyGeocoderAutocomplete } from '@geoapify/react-geocoder-autocomplete';
 import { createFloorPlan, updateFloorPlan } from '@/services/floorPlans';
 import { staticMapUrl } from './geo';
@@ -62,17 +62,43 @@ function StepIndicator({ step, maxStep, onJump }) {
  * Editing an existing venue shows every section on one page instead, since
  * all of it is already valid and any part may need a touch-up.
  */
-export default function VenueWizard({ existingVenue = null, eventId = null, onSaved, onCancel }) {
+export default function VenueWizard({ existingVenue = null, eventId = null, seedLat = null, seedLng = null, onSaved, onCancel }) {
     const isEdit = !!existingVenue?.id;
     const [originalHadPlan] = useState(!!existingVenue?.imageUrl);
+    const hasSeed = !isEdit && Number.isFinite(seedLat) && Number.isFinite(seedLng);
 
     const [step, setStep] = useState(1);
     const [maxStep, setMaxStep] = useState(1);
 
     const [name, setName] = useState(existingVenue?.name || '');
     const [address, setAddress] = useState(existingVenue?.address || '');
-    const [venueLat, setVenueLat] = useState(existingVenue?.venueLat ?? null);
-    const [venueLng, setVenueLng] = useState(existingVenue?.venueLng ?? null);
+    const [venueLat, setVenueLat] = useState(existingVenue?.venueLat ?? (hasSeed ? seedLat : null));
+    const [venueLng, setVenueLng] = useState(existingVenue?.venueLng ?? (hasSeed ? seedLng : null));
+    const [reverseGeocoding, setReverseGeocoding] = useState(hasSeed);
+
+    // Arriving from "turn this into a venue" (the analytics heat map): the
+    // coordinates are already the real centroid of where people were shooting
+    // — reverse-geocode a human-readable address so the user isn't stuck
+    // reading raw lat/lng, but they can still re-search if it's off.
+    useEffect(() => {
+        if (!hasSeed) return;
+        let cancelled = false;
+        fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${seedLat}&lon=${seedLng}&apiKey=${GEOAPIFY_KEY}`)
+            .then((res) => res.json())
+            .then((data) => {
+                if (cancelled) return;
+                const formatted = data?.features?.[0]?.properties?.formatted;
+                setAddress(formatted || `${seedLat.toFixed(5)}, ${seedLng.toFixed(5)}`);
+            })
+            .catch(() => {
+                if (!cancelled) setAddress(`${seedLat.toFixed(5)}, ${seedLng.toFixed(5)}`);
+            })
+            .finally(() => {
+                if (!cancelled) setReverseGeocoding(false);
+            });
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hasSeed]);
 
     const [gates, setGates] = useState(() => normalizeGates(existingVenue?.gatePinsJson || existingVenue?.gatePins || []));
     const [placingGateId, setPlacingGateId] = useState(null);
@@ -290,14 +316,18 @@ export default function VenueWizard({ existingVenue = null, eventId = null, onSa
                         <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Step 1 of 3</p>
                         <h3 className="mt-1 text-lg font-bold text-white">Find the venue</h3>
                         <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-500">
-                            Search its address — this anchors everything else, gates and the floor plan included.
+                            {hasSeed
+                                ? "Seeded from where your guests' photos were actually taken — confirm it, or search to correct it."
+                                : 'Search its address — this anchors everything else, gates and the floor plan included.'}
                         </p>
                         <div className="mt-4">{addressSearch('Search the venue address...')}</div>
                         {mapPreviewUrl ? (
                             <div className="mt-4 overflow-hidden rounded-2xl ring-1 ring-white/[0.07]">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={mapPreviewUrl} alt="" className="h-56 w-full bg-[#0b0b0f] object-cover" />
-                                <div className="bg-white/[0.035] px-4 py-2.5 text-xs font-semibold text-zinc-300">{address}</div>
+                                <div className="bg-white/[0.035] px-4 py-2.5 text-xs font-semibold text-zinc-300">
+                                    {reverseGeocoding ? 'Looking up the address...' : address}
+                                </div>
                             </div>
                         ) : (
                             <p className="mt-4 text-xs text-zinc-600">Pick a result from the search to continue.</p>

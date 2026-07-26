@@ -7,8 +7,8 @@ export const ORGANIZATION_JSONLD = {
   '@type': 'Organization',
   name: 'PXI',
   url: SITE_URL,
-  // Full-bleed brand mark (square) for Google's org logo slot.
-  logo: `${SITE_URL}/favicon-mark.png`,
+  // Full-bleed brand mark (square, purple) for Google's org logo slot.
+  logo: `${SITE_URL}/app-icon.png`,
   // Branded 1200×630 card so Google prefers it for the search thumbnail
   // instead of scraping a prominent in-page content photo.
   image: `${SITE_URL}/og-hero.png`,

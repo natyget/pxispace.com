@@ -148,7 +148,7 @@ function EventsHero({ mode, onModeChange, hostedCount, attendedCount, liveCount,
     <section className="dashboard-surface-b rounded-[2rem] px-5 py-6 md:px-7">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Events</p>
+          <p className="text-[10px] font-bold tracking-[0.02em] text-zinc-500">Events</p>
           <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-normal text-white normal-case md:text-6xl">
             Your nights.
           </h1>
@@ -165,7 +165,7 @@ function EventsHero({ mode, onModeChange, hostedCount, attendedCount, liveCount,
                 { value: 'attended', label: 'Attended' },
               ]}
             />
-            <button type="button" onClick={onCreate} className="pill-solid inline-flex w-fit items-center gap-2 px-5 py-2.5 text-xs uppercase tracking-widest">
+            <button type="button" onClick={onCreate} className="pill-solid inline-flex w-fit items-center gap-2 px-5 py-2.5 text-xs tracking-[0.02em]">
               <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2.5} />
               Create
             </button>
@@ -178,7 +178,7 @@ function EventsHero({ mode, onModeChange, hostedCount, attendedCount, liveCount,
             ['Live', liveCount],
           ].map(([label, value]) => (
             <div key={label} className="rounded-2xl bg-white/[0.045] p-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{label}</p>
+              <p className="text-[10px] font-bold tracking-[0.02em] text-white/35">{label}</p>
               <p className="mt-2 text-2xl font-black text-white tabular-nums">{value}</p>
             </div>
           ))}
@@ -213,6 +213,7 @@ function EventCard({ event, relation, now, pinned, requestCount = 0, onOpen, onN
   const menuItems = isHosted
     ? [
         !isLive && { id: 'pin', label: pinned ? 'Unpin' : 'Pin', onSelect: () => onTogglePin(eventId), icon: menuIcon(CheckmarkCircle02Icon) },
+        { id: 'manage', label: 'Manage event', onSelect: () => onNavigate(`/dashboard/events/${eventId}`), icon: menuIcon(ArrowRight02Icon) },
         !isPast && { id: 'edit', label: 'Edit', onSelect: () => onNavigate(`/dashboard/events/${eventId}/edit`), icon: menuIcon(PencilIcon) },
         { id: 'delete', label: 'Delete', onSelect: () => onDelete(eventId, event.name), icon: menuIcon(Delete02Icon), tone: 'danger' },
       ].filter(Boolean)
@@ -242,8 +243,8 @@ function EventCard({ event, relation, now, pinned, requestCount = 0, onOpen, onN
           <span className={`h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-black/40 ${isLive ? 'bg-emerald-400' : isPast ? 'bg-zinc-400' : 'bg-amber-400'}`}>
             <span className="sr-only">{isLive ? 'Live' : isPast ? 'Past' : 'Upcoming'}</span>
           </span>
-          {!isLive && pinned ? <span className="rounded-full bg-white/[0.14] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white">Pinned</span> : null}
-          {requestCount > 0 ? <span className="rounded-full bg-white/[0.14] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white">{requestCount} request{requestCount === 1 ? '' : 's'}</span> : null}
+          {!isLive && pinned ? <span className="rounded-full bg-white/[0.14] px-2.5 py-1 text-[10px] font-bold tracking-[0.02em] text-white">Pinned</span> : null}
+          {requestCount > 0 ? <span className="rounded-full bg-white/[0.14] px-2.5 py-1 text-[10px] font-bold tracking-[0.02em] text-white">{requestCount} request{requestCount === 1 ? '' : 's'}</span> : null}
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
           <h3 className="mb-3 line-clamp-2 text-[26px] font-[900] leading-none tracking-normal text-white md:text-[28px]">{event.name || 'Untitled event'}</h3>
@@ -293,19 +294,19 @@ function HostedEventModal({ event, now, pinned, onClose, onNavigate, onTogglePin
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="glass-field rounded-2xl p-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Status</p>
+              <p className="text-[10px] font-bold tracking-[0.02em] text-white/35">Status</p>
               <p className="mt-1 text-sm font-semibold capitalize text-white">{isLive ? 'Live' : isPast ? 'Past' : pinned ? 'Pinned' : 'Upcoming'}</p>
             </div>
             <div className="glass-field rounded-2xl p-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Date</p>
+              <p className="text-[10px] font-bold tracking-[0.02em] text-white/35">Date</p>
               <p className="mt-1 text-sm font-semibold text-white">{formatDate(event.startDate)}</p>
             </div>
             <div className="glass-field rounded-2xl p-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Location</p>
+              <p className="text-[10px] font-bold tracking-[0.02em] text-white/35">Location</p>
               <p className="mt-1 truncate text-sm font-semibold text-white">{event.location || event.venue || 'Location TBD'}</p>
             </div>
             <div className="glass-field rounded-2xl p-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/35">Attendance</p>
+              <p className="text-[10px] font-bold tracking-[0.02em] text-white/35">Attendance</p>
               <p className="mt-1 text-sm font-semibold text-white">{attendees}</p>
             </div>
           </div>
@@ -364,13 +365,13 @@ function SubmitHelpRequestModal({ open, event, initialType = 'other', title = 'H
           }
         }}
       >
-        <label className="block text-xs font-bold uppercase tracking-widest text-white/45">Request type</label>
+        <label className="block text-xs font-bold tracking-[0.02em] text-white/45">Request type</label>
         <select value={type} onChange={(inputEvent) => setType(inputEvent.target.value)} className="glass-field min-h-[44px] w-full rounded-2xl px-3 text-sm font-semibold text-white outline-none">
           {HELP_REQUEST_TYPES.map((item) => <option key={item.value} value={item.value} className="bg-zinc-950 text-white">{item.label}</option>)}
         </select>
-        <label className="block text-xs font-bold uppercase tracking-widest text-white/45">Subject</label>
+        <label className="block text-xs font-bold tracking-[0.02em] text-white/45">Subject</label>
         <input value={subject} onChange={(inputEvent) => setSubject(inputEvent.target.value)} className="glass-field min-h-[44px] w-full rounded-2xl px-3 text-sm text-white outline-none placeholder:text-white/30" />
-        <label className="block text-xs font-bold uppercase tracking-widest text-white/45">Details</label>
+        <label className="block text-xs font-bold tracking-[0.02em] text-white/45">Details</label>
         <textarea value={message} onChange={(inputEvent) => setMessage(inputEvent.target.value)} rows={5} className="glass-field w-full resize-none rounded-2xl px-3 py-3 text-sm leading-relaxed text-white outline-none placeholder:text-white/30" />
         <div className="flex justify-end gap-3 pt-2">
           <button type="button" onClick={onClose} className="pill-ghost px-4 py-2.5 text-sm font-semibold">Cancel</button>
@@ -395,9 +396,9 @@ function ParticipantEventModal({ event, requests, onClose, onSubmitHelp }) {
         <div className="space-y-5">
           <div className="glass-panel rounded-2xl p-5">
             <div className="grid gap-4 sm:grid-cols-3">
-              <div><p className="text-[10px] font-black uppercase tracking-widest text-white/35">Ticket</p><p className="mt-1 text-sm font-semibold text-white">{event.ticketId ? `#${String(event.ticketId).slice(-8)}` : 'Ticketed'}</p></div>
-              <div><p className="text-[10px] font-black uppercase tracking-widest text-white/35">Date</p><p className="mt-1 text-sm font-semibold text-white">{formatDate(event.startDate)}</p></div>
-              <div><p className="text-[10px] font-black uppercase tracking-widest text-white/35">Odyssey XP</p><p className="mt-1 text-sm font-semibold text-white">{Number(event.xp || 0).toLocaleString()}</p></div>
+              <div><p className="text-[10px] font-bold tracking-[0.02em] text-white/35">Ticket</p><p className="mt-1 text-sm font-semibold text-white">{event.ticketId ? `#${String(event.ticketId).slice(-8)}` : 'Ticketed'}</p></div>
+              <div><p className="text-[10px] font-bold tracking-[0.02em] text-white/35">Date</p><p className="mt-1 text-sm font-semibold text-white">{formatDate(event.startDate)}</p></div>
+              <div><p className="text-[10px] font-bold tracking-[0.02em] text-white/35">Odyssey XP</p><p className="mt-1 text-sm font-semibold text-white">{Number(event.xp || 0).toLocaleString()}</p></div>
             </div>
             <p className="mt-4 flex items-start gap-2 text-sm text-zinc-400"><HugeiconsIcon icon={Location01Icon} size={16} className="mt-0.5 shrink-0 text-white opacity-35" />{event.location || event.venue || 'Location'}</p>
           </div>
@@ -407,14 +408,14 @@ function ParticipantEventModal({ event, requests, onClose, onSubmitHelp }) {
             <button type="button" onClick={() => openHelp('other', 'Help request')} className="pill-ghost inline-flex min-h-[46px] items-center justify-center gap-2 whitespace-nowrap px-4 text-sm font-bold"><HugeiconsIcon icon={HelpCircleIcon} size={17} />Help request</button>
           </div>
           <div className="glass-panel rounded-[2rem] p-5">
-            <h3 className="text-sm font-black uppercase tracking-widest text-white/60">Your help requests</h3>
+            <h3 className="text-sm font-bold tracking-[0.02em] text-white/60">Your help requests</h3>
             {requests.length ? (
               <div className="mt-4 space-y-3">
                 {requests.map((request) => (
                   <div key={request.id} className="glass-field rounded-2xl p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div><p className="text-sm font-bold text-white">{request.subject}</p><p className="mt-1 text-xs text-zinc-500">{TYPE_LABELS[request.type] || request.type} • {formatDateTime(request.createdAt)}</p></div>
-                      <span className="rounded-full glow-chip px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white/70">{STATUS_LABELS[request.status] || request.status}</span>
+                      <span className="rounded-full glow-chip px-2.5 py-1 text-[10px] font-bold tracking-[0.02em] text-white/70">{STATUS_LABELS[request.status] || request.status}</span>
                     </div>
                     {request.message ? <p className="mt-3 text-sm leading-relaxed text-zinc-400">{request.message}</p> : null}
                   </div>
@@ -562,7 +563,7 @@ export default function EventsListPage() {
           <div className="dashboard-surface-b rounded-[2rem] p-6 md:p-8">
             <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
               <div className="max-w-xl">
-                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-200/70">Events</p>
+                <p className="text-[10px] font-bold tracking-[0.02em] text-red-200/70">Events</p>
                 <h2 className="mt-3 text-2xl font-black tracking-normal text-white">Event data is temporarily unavailable.</h2>
                 <p className="mt-3 text-sm leading-6 text-zinc-400">
                   We could not reach your hosted event list. You can try again, or keep building a new event while the connection settles.
@@ -642,7 +643,7 @@ export default function EventsListPage() {
             <EventControls query={attendedQuery} onQueryChange={setAttendedQuery} status={attendedFilter} onStatusChange={setAttendedFilter} />
             {attendedError ? <div className="rounded-2xl bg-red-500/10 p-6 text-red-400">{attendedError.message || 'Failed to load attended events'}</div>
               : attendedLoading ? <GlowCard className="p-10 text-center"><PxiSpinner size="md" className="mx-auto" /><p className="mt-4 text-sm text-zinc-500">Loading attended events...</p></GlowCard>
-                : attendedEvents.length === 0 ? <EmptyState icon={Ticket01Icon} title="No attended events yet" body="Your tickets will appear here." action={<button type="button" onClick={() => invalidateAttended()} className="mt-6 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl glow-chip px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-white/[0.12]"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />Refresh</button>} />
+                : attendedEvents.length === 0 ? <EmptyState icon={Ticket01Icon} title="No attended events yet" body="Your tickets will appear here." action={<button type="button" onClick={() => invalidateAttended()} className="mt-6 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl glow-chip px-5 py-2.5 text-xs font-bold tracking-[0.02em] text-white transition-colors hover:bg-white/[0.12]"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />Refresh</button>} />
                   : filteredAttendedEvents.length === 0 ? <EmptyState icon={Search01Icon} title="No attended events match your filters" body="Try clearing the search or changing the event status filter." />
                     : <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">{filteredAttendedEvents.map((event) => <EventCard key={`${event.id}-${event.ticketId || 'ticket'}`} event={event} relation="attended" now={now} requestCount={myRequestCountByEventId[String(event.id)] || 0} onOpen={setSelectedAttendedEvent} onNavigate={(href) => router.push(href)} />)}</div>}
           </div>
