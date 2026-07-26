@@ -17,7 +17,7 @@ import { spotifyEmbedSrc } from '@/lib/spotify';
 import { musicService } from '../../services/music';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { useAuth } from '@/contexts/AuthContext';
-import { PXI_APP_STORE_URL, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
+import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
@@ -268,15 +268,6 @@ const EventDetails = ({ basePath = '/events' }) => {
                 <HugeiconsIcon icon={SmartPhone01Icon} size={14} />
                 App Store
               </IosDownloadLink>
-              <a
-                href={PXI_PLAY_STORE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-colors"
-              >
-                <HugeiconsIcon icon={SmartPhone01Icon} size={14} />
-                Google Play
-              </a>
             </div>
             <Link
               href="/dashboard/events"
@@ -510,7 +501,7 @@ const EventDetails = ({ basePath = '/events' }) => {
               ) : !isLoggedIn || !musicMatch?.connected ? (
                 <div className="space-y-4">
                   <p className="text-zinc-400 leading-relaxed">
-                    Connect Spotify or Apple Music and we&apos;ll score this lineup against your taste.
+                    Connect Spotify and we&apos;ll score this lineup against your taste.
                   </p>
                   <Link
                     href={isLoggedIn ? '/dashboard/account' : '/login'}

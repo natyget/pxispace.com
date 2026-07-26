@@ -89,21 +89,34 @@ const HYPE_CHANNELS = [
     { id: 'all', label: 'All activity' },
     { id: 'messages', label: 'Chat' },
     { id: 'reactions', label: 'Reactions' },
-    { id: 'media', label: 'Uploads' },
+    { id: 'media', label: 'Captures' },
 ];
 
+// "Captures", not "Uploads": the series is bucketed on when the shot was taken
+// (`capturedAt ?? createdAt`), so a late upload still lands on the hour it happened.
 const HYPE_SERIES = {
     messages: { label: 'Messages', color: getDashboardChartShade(0) },
     reactions: { label: 'Reactions', color: getDashboardChartShade(1) },
-    media: { label: 'Uploads', color: getDashboardChartShade(2) },
+    media: { label: 'Captures', color: getDashboardChartShade(2) },
 };
+
+/** `+14m` / `+2h 10m` / `same minute` — capture→upload lag for the stat strip. */
+function formatCaptureLag(minutes) {
+    if (minutes == null) return '—';
+    if (minutes < 1) return 'Instant';
+    if (minutes < 60) return `+${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const rem = minutes % 60;
+    if (hours < 24) return rem ? `+${hours}h ${rem}m` : `+${hours}h`;
+    return `+${Math.round(hours / 24)}d`;
+}
 
 /**
  * Hype: engagement velocity through the night — chart first, one compact stat
  * strip, and spike markers flagging moments worth investigating (a song, a
  * shoutout, a drop — the chart can't know which, but it can point at when).
  */
-function HypePanel({ behavior, isMobile }) {
+function HypePanel({ behavior, capture, isMobile }) {
     const [channel, setChannel] = useState('all');
     if (!behavior) return null;
     const series = (behavior.byHour || []).map((d) => ({
@@ -130,12 +143,15 @@ function HypePanel({ behavior, isMobile }) {
     const peakHour = activeSeries.reduce((peak, p) => (p.value > peak.value ? p : peak), { hourIso: null, value: 0 });
 
     const statStrip = [
-        { label: 'Hype index', value: `${formatNumber(behavior.hypeIndex)} / 100` },
+        { label: 'Hype score', value: `${formatNumber(behavior.hypeScore)} · ${behavior.hypeTierLabel || 'Quiet'}` },
         { label: 'Peak hour', value: peakHour.hourIso ? formatHourTick(peakHour.hourIso) : '—' },
         { label: 'Chat', value: formatNumber(behavior.totals?.messages) },
         { label: 'Reactions', value: formatNumber(behavior.totals?.reactions) },
-        { label: 'Uploads', value: formatNumber(behavior.totals?.media) },
-        { label: 'Comments', value: formatNumber(behavior.totals?.comments) },
+        { label: 'Captures', value: formatNumber(behavior.totals?.media) },
+        // Only honest above ~20% coverage — below that the median is one phone's story.
+        ...(capture?.medianLagMinutes != null && capture.coverage >= 0.2
+            ? [{ label: 'Capture lag', value: formatCaptureLag(capture.medianLagMinutes) }]
+            : [{ label: 'Comments', value: formatNumber(behavior.totals?.comments) }]),
     ];
 
     return (
@@ -581,7 +597,7 @@ function EventComparisonChart({ details = [], loading }) {
         tickets: Number(detail.sales?.total || detail.funnel?.sold || 0),
         gross: Number(detail.sales?.revenue?.grossCents || 0),
         scanRate: Number(detail.attendance?.scanRate || 0),
-        hype: Number(detail.behavior?.hypeIndex || 0),
+        hype: Number(detail.behavior?.hypeScore || 0),
         byDay: detail.sales?.byDay || [],
     }));
 
@@ -940,7 +956,7 @@ function AnalyticsPageContent() {
                         copy="Energy through the hours and where it happened on the floor."
                     />
 
-                    <HypePanel behavior={eventDetail.behavior} isMobile={isMobile} />
+                    <HypePanel behavior={eventDetail.behavior} capture={eventDetail.media?.capture} isMobile={isMobile} />
 
                     <SectionCard title="Spatial intelligence" className="!rounded-[1.25rem]">
                         <VenueHeatMap eventId={selectedEventId} />

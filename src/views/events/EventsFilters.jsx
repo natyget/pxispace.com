@@ -82,7 +82,7 @@ const EventsFilters = ({
               {!isLoggedIn || musicConnected === false ? (
                 <div className="space-y-3">
                   <p className="text-sm text-zinc-400 leading-relaxed">
-                    Connect Spotify or Apple Music to match events to your taste.
+                    Connect Spotify to match events to your taste.
                   </p>
                   <Link
                     href={isLoggedIn ? '/dashboard/account' : '/login'}

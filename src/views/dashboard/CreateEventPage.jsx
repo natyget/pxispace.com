@@ -611,7 +611,14 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         }
       }
 
-      const postInvites = pendingInvites.filter((p) => p.kind !== 'lineup');
+      // Strongest role first: if the same person shows up twice, the server
+      // keeps the higher invite and drops the lesser one, so sending co-host
+      // ahead of member means no card ever appears and then disappears.
+      const inviteKindRank = { cohost: 3, bouncer: 2, lineup: 1, member: 0 };
+      const postInvites = pendingInvites
+        .filter((p) => p.kind !== 'lineup')
+        .slice()
+        .sort((a, b) => (inviteKindRank[b.kind] ?? 0) - (inviteKindRank[a.kind] ?? 0));
       if (albumId && postInvites.length > 0) {
         for (const p of postInvites) {
           try {
@@ -642,7 +649,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
 
   const inputClass =
     'glass-field min-h-[44px] w-full rounded-2xl px-4 py-3 text-sm text-white';
-  const labelClass = 'mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-white/45';
+  const labelClass = 'mb-1.5 block text-[11px] font-bold tracking-[0.02em] text-white/45';
   const sectionClass = 'glass-panel rounded-[1.75rem] p-5';
   const footerClass = 'glass-panel rounded-[1.75rem] p-4';
 
@@ -714,7 +721,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         )}
 
         <section className={`${sectionClass} space-y-4`}>
-          <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/60">
+          <h2 className="flex items-center gap-2 text-xs font-bold tracking-[0.02em] text-white/60">
             <HugeiconsIcon icon={ImageIcon} size={16} />
             Cover image *
           </h2>
@@ -730,13 +737,13 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               ) : !isCoverUploading ? (
                 <div className="flex flex-col items-center gap-3">
                   <HugeiconsIcon icon={ImageIcon} size={36} className="text-white opacity-30" />
-                  <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.15em]">Add cover image</span>
+                  <span className="text-[11px] font-bold text-white/30 tracking-[0.02em]">Add cover image</span>
                 </div>
               ) : null}
               {isCoverUploading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 rounded-2xl">
                   <PxiSpinner size="md" />
-                  <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover...</span>
+                  <span className="text-[11px] font-extrabold text-white/85 tracking-[0.02em]">Uploading cover...</span>
                 </div>
               )}
             </div>
@@ -753,7 +760,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         </section>
 
         <section className={`${sectionClass} space-y-4`}>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Basics</h2>
+          <h2 className="text-xs font-bold tracking-[0.02em] text-white/60">Basics</h2>
           <div>
             <label className={labelClass}>Event name *</label>
             <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />
@@ -880,7 +887,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                 type="button"
                 disabled={!canAddLineup}
                 onClick={commitLineup}
-                className="shrink-0 rounded-2xl bg-white px-5 text-xs font-black uppercase tracking-widest text-black transition-opacity disabled:opacity-40"
+                className="shrink-0 rounded-2xl bg-white px-5 text-xs font-bold tracking-[0.02em] text-black transition-opacity disabled:opacity-40"
               >
                 Add
               </button>
@@ -892,7 +899,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                   key={r}
                   type="button"
                   onClick={() => setLineupRoleDraft(r)}
-                  className="rounded-full bg-white/[0.06] px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-white/60 hover:text-white"
+                  className="rounded-full bg-white/[0.06] px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/60 hover:text-white"
                 >
                   {r} · staff
                 </button>
@@ -981,7 +988,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                 {stampImage ? (
                   <img src={stampImage} alt="Custom stamp" className="h-16 w-16 rounded-xl object-cover" />
                 ) : null}
-                <label className="pill-ghost cursor-pointer px-4 py-2 text-xs font-bold uppercase tracking-widest">
+                <label className="pill-ghost cursor-pointer px-4 py-2 text-xs font-bold tracking-[0.02em]">
                   {isStampUploading ? 'Uploading...' : stampImage ? 'Replace stamp' : 'Upload stamp'}
                   <input
                     type="file"
@@ -1007,7 +1014,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                   <button
                     type="button"
                     onClick={() => setStampImage(null)}
-                    className="text-xs font-semibold uppercase tracking-widest text-white/40 hover:text-white"
+                    className="text-xs font-semibold tracking-[0.02em] text-white/40 hover:text-white"
                   >
                     Remove
                   </button>
@@ -1040,7 +1047,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         </section>
 
         <section className={`${sectionClass} space-y-5`}>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Configuration</h2>
+          <h2 className="text-xs font-bold tracking-[0.02em] text-white/60">Configuration</h2>
 
           <div className="glass-field flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
             <div>
@@ -1115,7 +1122,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                       className="glass-field rounded-xl p-4 space-y-3"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                        <span className="text-[10px] font-bold tracking-[0.02em] text-zinc-500">
                           Tier {index + 1}
                         </span>
                         {ticketTiers.length > 1 ? (
@@ -1182,7 +1189,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                   <button
                     type="button"
                     onClick={() => setTicketTiers((prev) => [...prev, createEmptyTier()])}
-                    className="w-full rounded-xl bg-white/[0.045] py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
+                    className="w-full rounded-xl bg-white/[0.045] py-2.5 text-xs font-semibold tracking-wider text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
                   >
                     + Add tier
                   </button>
@@ -1251,12 +1258,12 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         <section className={`${sectionClass} space-y-4`}>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Event team</h2>
+              <h2 className="text-xs font-bold tracking-[0.02em] text-white/60">Event team</h2>
               <p className="mt-1 text-xs text-zinc-500">
                 {assignedTeamCount ? `${assignedTeamCount} team${assignedTeamCount === 1 ? '' : 's'} selected` : 'Optional'}
               </p>
             </div>
-            <Link href="/dashboard/team" className="pill-ghost shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest">
+            <Link href="/dashboard/team" className="pill-ghost shrink-0 px-3 py-1.5 text-[10px] font-bold tracking-[0.02em]">
               Manage teams
             </Link>
           </div>
@@ -1277,12 +1284,12 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                 return (
                   <div key={roster.id}>
                     {showSuggestedLabel ? (
-                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-fuchsia-300/70">
+                      <p className="mb-2 text-[10px] font-bold tracking-[0.02em] text-fuchsia-300/70">
                         Suggested for this venue
                       </p>
                     ) : null}
                     {showAllTeamsLabel ? (
-                      <p className="mb-2 mt-1 text-[10px] font-bold uppercase tracking-widest text-white/30">All teams</p>
+                      <p className="mb-2 mt-1 text-[10px] font-bold tracking-[0.02em] text-white/30">All teams</p>
                     ) : null}
                     <div className={`rounded-2xl px-4 py-4 transition ${assignment ? 'glass-panel-strong' : 'glass-panel'}`}>
                       <div className="flex items-center justify-between gap-3">
@@ -1295,7 +1302,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                         <button
                           type="button"
                           onClick={() => toggleTeamRoster(roster.id)}
-                          className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${assignment ? 'pill-solid' : 'pill-ghost'}`}
+                          className={`shrink-0 px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] ${assignment ? 'pill-solid' : 'pill-ghost'}`}
                         >
                           {assignment ? 'Selected' : 'Choose'}
                         </button>
@@ -1306,7 +1313,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                           <button
                             type="button"
                             onClick={() => setTeamRosterMembers(roster.id, [])}
-                            className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${wholeTeam ? 'pill-solid' : 'pill-ghost'}`}
+                            className={`shrink-0 px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] ${wholeTeam ? 'pill-solid' : 'pill-ghost'}`}
                           >
                             Whole team
                           </button>
@@ -1322,7 +1329,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                                     : [...selectedMemberIds, member.id];
                                   setTeamRosterMembers(roster.id, memberIds);
                                 }}
-                                className={`shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${active ? 'pill-solid' : 'pill-ghost'}`}
+                                className={`shrink-0 px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] ${active ? 'pill-solid' : 'pill-ghost'}`}
                               >
                                 {memberDisplayName(member)}
                               </button>
@@ -1345,7 +1352,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         {doorAssignmentsVisible ? (
           <section className={`${sectionClass} space-y-4`}>
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Door assignments</h2>
+              <h2 className="text-xs font-bold tracking-[0.02em] text-white/60">Door assignments</h2>
               <p className="mt-1 text-xs text-zinc-500">
                 Assign your team to {selectedVenue.name}&apos;s gates. Applied once the event is created.
               </p>
@@ -1364,7 +1371,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                             key={member.id}
                             type="button"
                             onClick={() => toggleDoorAssignment(gate.gate, member)}
-                            className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${active ? 'pill-solid' : 'pill-ghost'}`}
+                            className={`px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] ${active ? 'pill-solid' : 'pill-ghost'}`}
                           >
                             {member.label}
                           </button>
@@ -1417,7 +1424,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             <button
               type="submit"
               disabled={isSubmitting || isCoverUploading || !coverImage}
-              className="pill-solid flex-1 inline-flex min-h-[48px] items-center justify-center gap-2 px-6 text-sm font-bold uppercase tracking-widest disabled:opacity-45"
+              className="pill-solid flex-1 inline-flex min-h-[48px] items-center justify-center gap-2 px-6 text-sm font-bold tracking-[0.02em] disabled:opacity-45"
             >
               {isSubmitting ? <PxiSpinner size="sm" /> : null}
               {isSubmitting ? 'Creating...' : isCoverUploading ? 'Uploading cover...' : 'Create event'}

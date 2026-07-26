@@ -11,7 +11,6 @@ import { api } from './api';
  * {
  *   emailOptIn: boolean | null,
  *   smsOptIn: boolean | null,
- *   faceEnrolled: boolean | null,
  *   city: string,
  *   accountTier: 'PARTIAL' | 'CITIZEN' | 'ADMIN' | '',
  *   minOdysseyXp: number | string,
@@ -27,9 +26,6 @@ function buildAttendeeQuery(filters = {}, { skip = 0, take = 50 } = {}) {
 
   if (filters.smsOptIn === true) params.set('smsOptIn', 'true');
   else if (filters.smsOptIn === false) params.set('smsOptIn', 'false');
-
-  if (filters.faceEnrolled === true) params.set('faceEnrolled', 'true');
-  else if (filters.faceEnrolled === false) params.set('faceEnrolled', 'false');
 
   if (filters.city && String(filters.city).trim()) params.set('city', String(filters.city).trim());
   if (filters.accountTier) params.set('accountTier', filters.accountTier);

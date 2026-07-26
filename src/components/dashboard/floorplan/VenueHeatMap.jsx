@@ -76,6 +76,16 @@ export default function VenueHeatMap({ eventId }) {
     const plan = payload?.floorPlan || null;
     const bbox = payload?.media?.bbox || null;
 
+    // Auto-computed centroid of the event's own photo GPS — shared by the map
+    // view (below) and the "turn this into a venue" deep-link, which seeds
+    // VenueWizard's address step with this point instead of starting blind.
+    const autoMapCenter = useMemo(() => {
+        if (!payload || plan || !bbox) return null;
+        return payload.clusters?.clusters?.[0]
+            ? { lat: payload.clusters.clusters[0].centroidLat, lng: payload.clusters.clusters[0].centroidLng }
+            : { lat: (bbox.minLat + bbox.maxLat) / 2, lng: (bbox.minLng + bbox.maxLng) / 2 };
+    }, [payload, plan, bbox]);
+
     // ── the view: plan-space or map-space ───────────────────────────────────
     const view = useMemo(() => {
         if (!payload) return null;
@@ -91,10 +101,8 @@ export default function VenueHeatMap({ eventId }) {
                 metersToUnits: (m) => m / plan.metersPerPixel,
             };
         }
-        if (!bbox) return null;
-        const center = payload.clusters?.clusters?.[0]
-            ? { lat: payload.clusters.clusters[0].centroidLat, lng: payload.clusters.clusters[0].centroidLng }
-            : { lat: (bbox.minLat + bbox.maxLat) / 2, lng: (bbox.minLng + bbox.maxLng) / 2 };
+        if (!bbox || !autoMapCenter) return null;
+        const center = autoMapCenter;
         // Zoom to fit the photo footprint into ~60% of the frame.
         const cosLat = Math.cos((center.lat * Math.PI) / 180);
         const spanM = Math.max(
@@ -306,9 +314,9 @@ export default function VenueHeatMap({ eventId }) {
                     Attaching a calibrated floor plan upgrades it to room-level.
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <button type="button" onClick={openAttachPicker} className="pill-solid px-4 py-2 text-xs">Attach a saved plan</button>
+                    <button type="button" onClick={openAttachPicker} className="pill-solid px-4 py-2 text-xs">Attach a saved venue</button>
                     <Link href={`/dashboard/floor-plans?eventId=${eventId}`} className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em]">
-                        Calibrate a new floor plan
+                        Add a new venue
                     </Link>
                 </div>
                 {myPlans ? (
@@ -401,13 +409,23 @@ export default function VenueHeatMap({ eventId }) {
                             </button>
                         </>
                     ) : (
-                        <button
-                            type="button"
-                            onClick={openAttachPicker}
-                            className="rounded-full bg-white/[0.07] px-3.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-white/[0.12] hover:text-white"
-                        >
-                            Upgrade with a floor plan
-                        </button>
+                        <>
+                            <button
+                                type="button"
+                                onClick={openAttachPicker}
+                                className="rounded-full bg-white/[0.07] px-3.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-white/[0.12] hover:text-white"
+                            >
+                                Attach a saved venue
+                            </button>
+                            {autoMapCenter ? (
+                                <Link
+                                    href={`/dashboard/floor-plans?eventId=${eventId}&seedLat=${autoMapCenter.lat}&seedLng=${autoMapCenter.lng}`}
+                                    className="rounded-full bg-[#d84aff]/10 px-3.5 py-1.5 text-xs font-medium text-[#e9a1ff] transition hover:bg-[#d84aff]/20"
+                                >
+                                    Turn this into a venue →
+                                </Link>
+                            ) : null}
+                        </>
                     )}
                 </div>
             </div>

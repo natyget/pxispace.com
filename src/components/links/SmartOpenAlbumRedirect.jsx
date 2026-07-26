@@ -4,8 +4,6 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Loading02Icon } from '@hugeicons/core-free-icons';
-import { PXI_IOS_DOWNLOAD_HREF, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
-
 const PENDING_DEEPLINK_KEY = 'pxi_pending_deeplink';
 
 function detectPlatform() {
@@ -14,11 +12,6 @@ function detectPlatform() {
   if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
   if (/Android/i.test(ua)) return 'android';
   return 'desktop';
-}
-
-function storeUrlForPlatform(platform) {
-  if (platform === 'android') return PXI_PLAY_STORE_URL;
-  return PXI_IOS_DOWNLOAD_HREF;
 }
 
 /**

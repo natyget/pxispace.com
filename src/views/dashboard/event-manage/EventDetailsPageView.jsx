@@ -5,7 +5,7 @@ import Image from 'next/image';
 import UserAvatar from '@/components/ui/UserAvatar';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { UserGroupIcon, Share01Icon, ClockIcon, Location01Icon, PencilIcon } from '@hugeicons/core-free-icons';
+import { UserGroupIcon, Share01Icon, ClockIcon, Location01Icon, PencilIcon, ArrowRight02Icon } from '@hugeicons/core-free-icons';
 import { useEventManage } from './EventManageContext';
 import {
   coverImageUrl,
@@ -137,24 +137,7 @@ export default function EventDetailsPageView() {
         </div>
 
         <div className="space-y-6 px-5 pb-8 pt-6">
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                  isPublic
-                    ? 'bg-emerald-500/15 text-emerald-300'
-                    : 'bg-white/10 text-zinc-200'
-                }`}
-              >
-                {isPublic ? 'Public event' : 'Private album'}
-              </span>
-              {showPaidBadge ? (
-                <span className="inline-flex items-center rounded-full bg-amber-500/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-200">
-                  Paid event
-                </span>
-              ) : null}
-            </div>
-
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <UserAvatar
                 user={{ avatarUrl: host?.avatarUrl }}
@@ -166,43 +149,39 @@ export default function EventDetailsPageView() {
                 <span className="font-semibold text-white">{host?.name || 'Unknown host'}</span>
               </p>
             </div>
+            {albumId || eventId ? (
+              <Link
+                href={`/album/${albumId || eventId}`}
+                className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[var(--pxi-orange)]/15 px-4 text-xs font-black uppercase tracking-widest text-[var(--pxi-orange)] transition hover:bg-[var(--pxi-orange)]/25"
+              >
+                Open album
+              </Link>
+            ) : null}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="glass-field min-h-[6.5rem] rounded-2xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center shrink-0">
-                  <HugeiconsIcon icon={ClockIcon} size={14} className="text-white" />
-                </div>
-                <span className="text-[13px] font-bold text-white leading-tight line-clamp-2">
-                  {sched.primary}
-                </span>
-              </div>
-              {sched.secondary ? (
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400 leading-relaxed">
-                  {sched.secondary}
-                </p>
-              ) : null}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="glass-field rounded-2xl p-4">
+              <p className="text-[10px] font-bold tracking-[0.02em] text-white/35">Status</p>
+              <p className="mt-1 text-sm font-semibold capitalize text-white">
+                {event.status ? String(event.status).toLowerCase() : 'Active'}
+              </p>
             </div>
-            <div className="glass-field min-h-[6.5rem] rounded-2xl p-4">
-              <div className="flex gap-3">
-                <div className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center shrink-0 self-start mt-0.5">
-                  <HugeiconsIcon icon={Location01Icon} size={14} className="text-white" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[13px] font-semibold text-white leading-snug break-words">
-                    {loc.primary}
-                  </p>
-                  {loc.secondary ? (
-                    <p className="mt-1 text-[11px] text-zinc-500 leading-snug">{loc.secondary}</p>
-                  ) : null}
-                </div>
-              </div>
+            <div className="glass-field rounded-2xl p-4">
+              <p className="text-[10px] font-bold tracking-[0.02em] text-white/35">Date</p>
+              <p className="mt-1 text-sm font-semibold text-white">{sched.primary}</p>
+            </div>
+            <div className="glass-field rounded-2xl p-4">
+              <p className="text-[10px] font-bold tracking-[0.02em] text-white/35">Location</p>
+              <p className="mt-1 truncate text-sm font-semibold text-white">{loc.primary}</p>
+            </div>
+            <div className="glass-field rounded-2xl p-4">
+              <p className="text-[10px] font-bold tracking-[0.02em] text-white/35">Attendance</p>
+              <p className="mt-1 text-sm font-semibold text-white">{memberCount} attendees</p>
             </div>
           </div>
 
           <section>
-            <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">
+            <h2 className="text-[11px] font-bold tracking-[0.02em] text-zinc-500 mb-2">
               About
             </h2>
             <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
@@ -212,7 +191,7 @@ export default function EventDetailsPageView() {
 
           {ticketTiers.length > 0 ? (
             <section>
-              <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">
+              <h2 className="text-[11px] font-bold tracking-[0.02em] text-zinc-500 mb-2">
                 Ticket tiers
               </h2>
               <ul className="space-y-2">
@@ -237,7 +216,7 @@ export default function EventDetailsPageView() {
           ) : null}
 
           <section>
-            <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">
+            <h2 className="text-[11px] font-bold tracking-[0.02em] text-zinc-500 mb-2">
               Line up
             </h2>
             <p className="text-xs text-zinc-500 mb-3 leading-relaxed">{lineupHint}</p>
@@ -265,7 +244,7 @@ export default function EventDetailsPageView() {
                         ) : null}
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/60 shrink-0">
+                    <span className="text-[10px] font-bold tracking-wider text-white/60 shrink-0">
                       {lineupRoleDisplay(person.role)}
                     </span>
                   </li>
@@ -277,10 +256,10 @@ export default function EventDetailsPageView() {
           {albumId ? (
             <section id="event-going-preview" className="scroll-mt-6">
               <div className="flex items-center justify-between gap-2 mb-3">
-                <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500">
+                <h2 className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">
                   Who&apos;s going
                 </h2>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                <span className="text-[10px] font-bold tracking-[0.02em] text-zinc-500">
                   {memberCount} members
                 </span>
               </div>
@@ -303,7 +282,7 @@ export default function EventDetailsPageView() {
                     ))
                   )}
                 </div>
-                <span className="text-[11px] font-bold uppercase tracking-widest text-white/60 shrink-0">
+                <span className="text-[11px] font-bold tracking-[0.02em] text-white/60 shrink-0">
                   View members
                 </span>
               </Link>

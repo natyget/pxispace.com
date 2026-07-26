@@ -13,6 +13,7 @@ import {
     saveAudienceSegment,
 } from '@/services/audienceSegments';
 import { api } from '@/services/api';
+import { accessTierLabel, accessTierOf } from '@/lib/accountTier';
 
 /** Real attendee demographics from GET /api/analytics/audience (not sample data). */
 function RealAudienceOverview() {
@@ -176,7 +177,6 @@ const TAKE = 50;
 const FILTER_DEFAULTS = {
     emailOptIn: null, // null | true | false
     smsOptIn: null,
-    faceEnrolled: null,
     city: '',
     accountTier: '',
     minOdysseyXp: '',
@@ -188,14 +188,15 @@ const TRI_STATE_OPTIONS = [
     { value: 'false', label: 'No' },
 ];
 
+// The KYC ladder, not the passport LEVEL (Wanderer→Odyssey) — that's the
+// separate `minOdysseyXp` filter below. Diplomat resolves server-side to
+// isVendor, since it's a derived rung rather than a stored tier value.
 const ACCOUNT_TIER_OPTIONS = [
     { value: '', label: 'Any tier' },
-    { value: 'PARTIAL', label: 'Partial' },
-    { value: 'CITIZEN', label: 'Citizen' },
-    { value: 'ADMIN', label: 'Admin' },
+    { value: 'PARTIAL', label: 'Partial — web only' },
+    { value: 'CITIZEN', label: 'Citizen — has passport' },
+    { value: 'DIPLOMAT', label: 'Diplomat — verified seller' },
 ];
-
-const ACCOUNT_TIER_LABELS = { PARTIAL: 'Partial', CITIZEN: 'Citizen', ADMIN: 'Admin' };
 
 const AUDIENCE_SECTION_CLASS =
     'dashboard-surface-b !border-0 shadow-[0_22px_80px_rgba(0,0,0,0.28)] [&>header]:!border-0 [&>header]:pb-3';
@@ -256,15 +257,10 @@ function AudienceAvatar({ row }) {
 }
 
 function PassportSignals({ row }) {
-    const hasAny = row.faceEnrolled || row.hasPaidTicket || (row.musicConnected && row.topGenres?.length);
+    const hasAny = row.hasPaidTicket || (row.musicConnected && row.topGenres?.length);
     if (!hasAny) return <span className="text-xs text-zinc-600">—</span>;
     return (
         <div className="flex flex-wrap items-center gap-1.5">
-            {row.faceEnrolled ? (
-                <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-fuchsia-300">
-                    Face match
-                </span>
-            ) : null}
             {row.hasPaidTicket ? (
                 <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-amber-300">
                     Paid
@@ -561,17 +557,6 @@ export default function AudiencePage() {
                                     </select>
                                 </div>
 
-                                <div className="space-y-2 rounded-2xl glass-field p-3">
-                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Face-match enrolled</p>
-                                    <select
-                                        value={triStateValue(filters.faceEnrolled)}
-                                        onChange={(event) => updateFilter('faceEnrolled', parseTriState(event.target.value))}
-                                        className={AUDIENCE_SELECT_CLASS}
-                                    >
-                                        {TRI_STATE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                                    </select>
-                                </div>
-
                                 <label className="space-y-2 rounded-2xl glass-field p-3">
                                     <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">City</span>
                                     <input
@@ -642,7 +627,7 @@ export default function AudiencePage() {
                                                     <div className="min-w-0">
                                                         <p className="truncate text-base font-bold leading-6 text-white">{row.name || row.username || 'Unnamed'}</p>
                                                         <p className="mt-1 truncate text-xs leading-5 text-zinc-500">
-                                                            {row.city || 'Unknown city'} · {ACCOUNT_TIER_LABELS[row.accountTier] || row.accountTier}
+                                                            {row.city || 'Unknown city'} · {accessTierLabel(accessTierOf(row))}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -726,7 +711,7 @@ export default function AudiencePage() {
                                                     </td>
                                                     <td className="px-4 py-3.5 align-middle">
                                                         <span className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] font-medium text-zinc-300">
-                                                            {ACCOUNT_TIER_LABELS[row.accountTier] || row.accountTier}
+                                                            {accessTierLabel(accessTierOf(row))}
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3.5 align-middle">

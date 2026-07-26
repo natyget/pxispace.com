@@ -13,6 +13,8 @@ import {
 import { useParams } from 'next/navigation';
 import { eventsService } from '@/services/events';
 
+import { getEventsForWallet } from '@/services/events';
+
 const EventManageContext = createContext(null);
 
 export function EventManageProvider({ children }) {
@@ -26,6 +28,16 @@ export function EventManageProvider({ children }) {
 
   const albumId = useMemo(() => event?.albumId || event?.albums?.[0]?.id, [event]);
 
+  const isPast = useMemo(() => {
+    if (!event) return false;
+    const now = Date.now();
+    const status = String(event.status || '').toLowerCase();
+    if (['ended', 'past', 'completed', 'archived'].includes(status)) return true;
+    if (event.endDate && new Date(event.endDate).getTime() < now) return true;
+    if (!event.endDate && event.startDate && new Date(event.startDate).getTime() < now) return true;
+    return false;
+  }, [event]);
+
   const loadEvent = useCallback(() => {
     if (!eventId) return;
     setLoading(true);
@@ -35,7 +47,27 @@ export function EventManageProvider({ children }) {
         setEvent(data.event || data);
         setError(null);
       })
-      .catch(() => setError('Event not found'))
+      .catch(async () => {
+        try {
+          const managedRes = await eventsService.getManagedEvents({ limit: 100, offset: 0 });
+          const found = (managedRes?.events || []).find((e) => String(e.id) === String(eventId));
+          if (found) {
+            setEvent(found);
+            setError(null);
+            return;
+          }
+          const walletRes = await getEventsForWallet(100, 0);
+          const foundWallet = (walletRes?.events || []).find((e) => String(e.id) === String(eventId));
+          if (foundWallet) {
+            setEvent(foundWallet);
+            setError(null);
+            return;
+          }
+        } catch {
+          // ignore fallback error
+        }
+        setError('Event not found');
+      })
       .finally(() => setLoading(false));
   }, [eventId]);
 
@@ -77,6 +109,7 @@ export function EventManageProvider({ children }) {
       featuredPeople,
       loading,
       error,
+      isPast,
       reloadEvent: loadEvent,
       reloadParticipants: loadParticipants,
       reloadFeaturedPeople: loadFeaturedPeople,
@@ -89,6 +122,7 @@ export function EventManageProvider({ children }) {
       featuredPeople,
       loading,
       error,
+      isPast,
       loadEvent,
       loadParticipants,
       loadFeaturedPeople,

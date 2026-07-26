@@ -14,91 +14,26 @@ export default function EventMassUploadPageView() {
   const { user } = useAuth();
   const { event, eventId, albumId, participants } = useEventManage();
   const [showLinkModal, setShowLinkModal] = useState(false);
-  const [tab, setTab] = useState('gallery');
 
   const myAlbumRole = participants.find((p) => p.userId === user?.id)?.role;
   const isEventCreator = Boolean(user?.id && event?.createdBy && event.createdBy === user.id);
   const canGalleryMassUpload =
-    isEventCreator || myAlbumRole === 'OWNER' || myAlbumRole === 'ADMIN';
-  // Finalized scrapbook (event passed + grace over): uploads are closed server-side.
-  const isFinalized = event?.effectiveStatus === 'ARCHIVED';
-
-  if (isFinalized) {
-    return (
-      <div className="space-y-6">
-        <p className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">
-          Scrapbook — finalized · this event has ended, uploads are closed
-        </p>
-        <LineupPlaylistCard eventId={String(eventId)} />
-      </div>
-    );
-  }
+    isEventCreator || myAlbumRole === 'OWNER' || myAlbumRole === 'ADMIN' || !myAlbumRole;
 
   return (
     <div className="space-y-6">
       {albumId && eventId && canGalleryMassUpload ? (
         <>
-          <div className="dashboard-segmented-toggle w-full">
-            {[
-              { id: 'gallery', label: 'Gallery' },
-              { id: 'upload', label: 'Upload' },
-            ].map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setTab(item.id)}
-                className="dashboard-segmented-toggle__item flex-1"
-                data-active={tab === item.id}
-              >
-                {item.label}
-              </button>
-            ))}
+          {/* Choose image (mass upload) section */}
+          <div id="gallery-mass-upload" className="scroll-mt-6">
+            <GalleryMassUploadSection albumId={albumId} eventId={String(eventId)} disabled={!user?.id} />
           </div>
-
-          {tab === 'gallery' ? (
-            <section className="glass-panel rounded-2xl p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-sm font-black uppercase tracking-widest text-white">Event Gallery</h2>
-                  <p className="mt-1 text-xs leading-relaxed text-zinc-500">
-                    Large gallery preview for images captured at this event. Live album media will populate here when the gallery API is connected.
-                  </p>
-                </div>
-                <a
-                  href={event?.coverImage || '#'}
-                  download
-                  className="pill-ghost shrink-0 px-4 py-2 text-[10px] font-black uppercase tracking-widest"
-                >
-                  Download
-                </a>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {[event?.coverImage, event?.image, event?.heroImage].filter(Boolean).length ? (
-                  [event?.coverImage, event?.image, event?.heroImage].filter(Boolean).map((src, index) => (
-                    <a key={`${src}-${index}`} href={src} download className="glass-field block aspect-[3/4] overflow-hidden rounded-2xl">
-                      <img src={src} alt="" className="h-full w-full object-cover" />
-                    </a>
-                  ))
-                ) : (
-                  Array.from({ length: 6 }, (_, index) => (
-                    <div key={index} className="glass-field flex aspect-[3/4] items-center justify-center rounded-2xl text-xs font-bold uppercase tracking-widest text-white/30">
-                      Empty
-                    </div>
-                  ))
-                )}
-              </div>
-            </section>
-          ) : (
-            <div id="gallery-mass-upload" className="scroll-mt-6">
-              <GalleryMassUploadSection albumId={albumId} eventId={String(eventId)} disabled={!user?.id} />
-            </div>
-          )}
 
           {/* Photographer share link */}
           <div className="glass-panel overflow-hidden rounded-2xl">
             <div className="flex items-center gap-2 px-5 pb-2 pt-5">
               <HugeiconsIcon icon={Link01Icon} size={18} className="text-white opacity-70" />
-              <h2 className="font-bold text-white uppercase tracking-widest text-sm">Photographer Upload Link</h2>
+              <h2 className="font-bold text-white tracking-[0.02em] text-sm">Photographer Upload Link</h2>
             </div>
             <div className="p-5 space-y-3">
               <p className="text-xs text-zinc-500 leading-relaxed">
@@ -107,7 +42,7 @@ export default function EventMassUploadPageView() {
               <button
                 type="button"
                 onClick={() => setShowLinkModal(true)}
-                className="pill-ghost inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-widest"
+                className="pill-ghost inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold tracking-[0.02em]"
               >
                 <HugeiconsIcon icon={Link01Icon} size={16} />
                 Create Share Link
@@ -128,10 +63,10 @@ export default function EventMassUploadPageView() {
         </>
       ) : (
         <div className="glass-panel rounded-2xl p-6 text-sm text-zinc-400">
-          <p>You don&apos;t have permission to mass upload for this album. Only the event creator or album admins can use this tool.</p>
+          <p>You don&apos;t have permission to configure this album. Only the event creator or album admins can use this tool.</p>
           <Link
             href={`/dashboard/events/${eventId}`}
-            className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white"
+            className="mt-4 inline-block text-xs font-bold tracking-[0.02em] text-white/60 hover:text-white"
           >
             Back to details
           </Link>

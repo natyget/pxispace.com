@@ -53,13 +53,14 @@ export function renderPassportFooterSegments(line, chevClassName) {
     });
 }
 
+/** Lifetime Odyssey XP bands — MUST match `utils/odysseyTier.js` and the backend. */
 export const ODYSSEY_TIER_BANDS = [
-    { min: 0, max: 500 },
-    { min: 501, max: 2500 },
-    { min: 2501, max: 7000 },
-    { min: 7001, max: 15000 },
-    { min: 15001, max: 30000 },
-    { min: 30001, max: null },
+    { min: 0, max: 750 },
+    { min: 751, max: 4000 },
+    { min: 4001, max: 18000 },
+    { min: 18001, max: 70000 },
+    { min: 70001, max: 250000 },
+    { min: 250001, max: null },
 ];
 
 export function getLevelProgress(odysseyXp) {

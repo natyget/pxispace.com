@@ -1,7 +1,10 @@
 /**
  * Odyssey passport LEVEL tiers — MUST match pxi-backend/src/utils/odyssey-tier.ts
  *
- * Wanderer 0–500 · Seeker 501–2.5K · Voyager 2.5K–7K · Pathfinder 7K–15K · Luminary 15K–30K · Odyssey 30K+
+ * Wanderer 0–750 · Seeker 751–4K · Voyager 4K–18K · Pathfinder 18K–70K · Luminary 70K–250K · Odyssey 250K+
+ *
+ * Band widths grow ~4x per step, so each level costs roughly four times the last and
+ * Odyssey needs a year-plus of genuinely heavy event activity.
  */
 
 /** Passport level hex badge colors per tier — not stamp colors. Wanderer = brand purple. */
@@ -68,19 +71,19 @@ export function getPassportLevelBadgeTheme(tierId) {
 
 export function getOdysseyTierFromXp(odysseyXp) {
     const xp = Math.max(0, Math.floor(Number(odysseyXp) || 0));
-    if (xp <= 500) {
+    if (xp <= 750) {
         return { id: 'WANDERER', label: 'Wanderer', badgeLetter: 'W' };
     }
-    if (xp <= 2500) {
+    if (xp <= 4000) {
         return { id: 'SEEKER', label: 'Seeker', badgeLetter: 'S' };
     }
-    if (xp <= 7000) {
+    if (xp <= 18000) {
         return { id: 'VOYAGER', label: 'Voyager', badgeLetter: 'V' };
     }
-    if (xp <= 15000) {
+    if (xp <= 70000) {
         return { id: 'PATHFINDER', label: 'Pathfinder', badgeLetter: 'P' };
     }
-    if (xp <= 30000) {
+    if (xp <= 250000) {
         return { id: 'LUMINARY', label: 'Luminary', badgeLetter: 'L' };
     }
     return { id: 'ODYSSEY', label: 'Odyssey', badgeLetter: 'O' };
