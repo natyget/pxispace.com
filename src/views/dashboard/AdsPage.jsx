@@ -147,15 +147,15 @@ function EventCoverPicker({ events, selected, onToggle }) {
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
                             {active ? (
-                                <span className="absolute right-2 top-2 rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-black">
+                                <span className="absolute right-2 top-2 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold tracking-wide text-black">
                                     Selected
                                 </span>
                             ) : null}
                             <div className="absolute bottom-0 left-0 right-0 p-3">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-300">
+                                <p className="text-[10px] font-bold tracking-[0.02em] text-zinc-300">
                                     {dateLabel}
                                 </p>
-                                <p className="mt-0.5 line-clamp-2 text-sm font-black uppercase leading-tight text-white">
+                                <p className="mt-0.5 line-clamp-2 text-sm font-bold leading-tight text-white">
                                     {ev.name}
                                 </p>
                             </div>
@@ -616,7 +616,7 @@ export default function AdsPage() {
                                                         Cities, ages, and genres auto-derived from your real attendees — no manual picking
                                                     </span>
                                                 </span>
-                                                <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.08em]">
+                                                <span className="shrink-0 text-[11px] font-bold tracking-[0.02em]">
                                                     {draft.lookalikeOfOwnAttendees ? 'On' : 'Off'}
                                                 </span>
                                             </button>

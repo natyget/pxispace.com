@@ -4,24 +4,25 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Ticket01Icon, ArrowRight02Icon, Loading02Icon, CheckmarkCircle02Icon, CancelCircleIcon, RefreshIcon, Alert02Icon, SmartPhone01Icon, PercentIcon } from '@hugeicons/core-free-icons';
+import SurfaceHeader from '@/components/dashboard/SurfaceHeader';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService, authStorage } from '../../services/auth';
 
 const BENEFITS = [
     {
         icon: Ticket01Icon,
-        title: 'Sell Tickets',
+        title: 'Sell tickets',
         desc: 'Create paid events and sell tickets directly through PXI.',
     },
     {
         icon: PercentIcon,
-        title: 'Collect Revenue',
+        title: 'Collect revenue',
         desc: 'Payouts go straight to your connected bank account.',
     },
     {
         icon: CheckmarkCircle02Icon,
-        title: 'Secure Verification',
-        desc: 'Powered by Stripe for identity, banking, and payment verification.',
+        title: 'Secure verification',
+        desc: 'Stripe handles identity, banking, and payment verification.',
     },
 ];
 
@@ -53,17 +54,21 @@ function formatRequirement(key) {
 
 function StatusRow({ label, enabled, description }) {
     return (
-        <div className="flex items-start gap-3 rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
-            <div className="mt-0.5 flex-shrink-0">
-                {enabled
-                    ? <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="text-emerald-400" />
-                    : <HugeiconsIcon icon={CancelCircleIcon} size={16} className="text-red-400" />
-                }
+        <div className="flex items-start gap-3 rounded-[1.25rem] bg-white/[0.035] px-4 py-3.5">
+            <HugeiconsIcon
+                icon={enabled ? CheckmarkCircle02Icon : CancelCircleIcon}
+                size={16}
+                className={`mt-0.5 shrink-0 ${enabled ? 'text-emerald-400' : 'text-amber-400'}`}
+            />
+            <div className="min-w-0">
+                <p className="text-sm font-bold text-white">{label}</p>
+                <p className="mt-0.5 text-xs leading-5 text-zinc-500">{description}</p>
             </div>
-            <div>
-                <p className={`text-sm font-semibold ${enabled ? 'text-emerald-400' : 'text-red-400'}`}>{label}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">{description}</p>
-            </div>
+            <span className={`ml-auto shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${
+                enabled ? 'bg-emerald-500/[0.09] text-emerald-300/85' : 'bg-amber-500/[0.09] text-amber-300/85'
+            }`}>
+                {enabled ? 'Enabled' : 'Pending'}
+            </span>
         </div>
     );
 }
@@ -203,21 +208,21 @@ export default function VendorUpgradePage() {
     };
 
     if (!ready) {
-        return <div className="max-w-2xl mx-auto space-y-8" />;
+        return <div className="mx-auto max-w-7xl space-y-8" />;
     }
 
     if (step === 'done' || user?.isVendor) {
         return (
-            <div className="mx-auto max-w-xl py-12 text-center">
-                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.055]">
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={34} className="text-white opacity-80" />
+            <div className="mx-auto flex max-w-xl flex-col items-center py-12 text-center">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/[0.09]">
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={28} className="text-emerald-400" />
                 </div>
-                <h1 className="text-3xl font-bold text-white mb-3 tracking-normal">
+                <p className="text-[13px] font-medium text-zinc-500">Vendor setup</p>
+                <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">
                     Hosting is active
                 </h1>
-                <p className="text-zinc-400 mb-8">
-                    Your hosting access is active. You can now create paid
-                    events and collect revenue on PXI.
+                <p className="mt-3 mb-8 text-sm leading-6 text-zinc-400">
+                    Your command center is unlocked. Create paid events, sell tickets, and collect revenue on PXI.
                 </p>
                 {fromMobile ? (
                     <a
@@ -240,175 +245,184 @@ export default function VendorUpgradePage() {
         );
     }
 
+    const statusLabel = !hasSubmittedVerification
+        ? 'Not started'
+        : hasOutstandingRequirements
+            ? 'Action needed'
+            : 'Submitted';
+
     return (
-        <div className="mx-auto max-w-5xl space-y-6 md:space-y-8">
-            <section className="dashboard-surface-b rounded-[1.25rem] px-5 py-7 md:px-8">
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
-                    <div>
-                        <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Hosting access</p>
+        <div className="mx-auto max-w-7xl space-y-5 md:space-y-6">
+            <section className="px-1">
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] xl:items-end">
+                    <div className="min-w-0">
+                        <p className="text-[13px] font-medium text-zinc-500">Vendor setup</p>
                         <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">
-                            Start hosting on PXI.
+                            Start hosting on PXI
                         </h1>
-                        <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 md:text-base">
-                            Unlock paid events, ticket sales, payouts, and operating tools. Stripe handles identity and banking verification.
+                        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-500">
+                            One verification unlocks paid events, ticket sales, payouts, and the full operations desk.
                         </p>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                        <div className="rounded-2xl bg-white/[0.045] p-4">
-                            <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Status</p>
-                            <p className="mt-2 text-xl font-bold text-white">{hasSubmittedVerification ? 'Submitted' : 'Not started'}</p>
-                        </div>
-                        <div className="rounded-2xl bg-white/[0.045] p-4">
-                            <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Provider</p>
-                            <p className="mt-2 text-xl font-bold text-white">Stripe</p>
-                        </div>
+                    <div className="grid grid-cols-3 gap-px overflow-hidden rounded-[1.25rem] bg-white/[0.06] ring-1 ring-white/[0.07]">
+                        {[
+                            { label: 'Status', value: statusLabel },
+                            { label: 'Provider', value: 'Stripe' },
+                            { label: 'Takes', value: '2–5 min' },
+                        ].map((metric) => (
+                            <div key={metric.label} className="bg-[#0e0e13] px-4 py-3.5">
+                                <p className="text-[12px] font-medium text-zinc-500">{metric.label}</p>
+                                <p className="mt-1.5 truncate text-[19px] font-semibold leading-none tracking-tight text-white">
+                                    {metric.value}
+                                </p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
 
-            {/* Benefits */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {BENEFITS.map(({ icon: Icon, title, desc }) => (
-                    <div key={title} className="glass-panel rounded-[1.25rem] p-5">
-                        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.055]">
-                            <HugeiconsIcon icon={Icon} size={18} className="text-white opacity-75" />
-                        </div>
-                        <h3 className="text-white font-bold text-sm mb-1">{title}</h3>
-                        <p className="text-zinc-500 text-xs leading-relaxed">{desc}</p>
-                    </div>
-                ))}
-            </div>
-
-            {/* Error banner */}
             {step === 'error' && errorMsg && (
-                <div className="glass-panel flex items-start gap-3 rounded-[1.25rem] px-4 py-3 text-sm text-red-300">
-                    <HugeiconsIcon icon={Alert02Icon} size={16} className="mt-0.5 flex-shrink-0" />
+                <div className="dashboard-surface flex items-start gap-3 rounded-[1.25rem] px-4 py-3.5 text-sm leading-6 text-red-300">
+                    <HugeiconsIcon icon={Alert02Icon} size={16} className="mt-0.5 shrink-0" />
                     {errorMsg}
                 </div>
             )}
 
+            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+                <section className="dashboard-surface-b rounded-[1.25rem] p-5 md:p-6">
+                    <SurfaceHeader eyebrow="Step 1" title="Connect with Stripe" />
+                    <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400">
+                        You&apos;ll be redirected to Stripe to complete identity and banking verification. This typically takes
+                        2-5 minutes. After finishing, return here and check your status.
+                    </p>
+
+                    {step === 'redirecting' ? (
+                        <div className="mt-5 flex items-center gap-3 text-sm font-semibold text-zinc-400">
+                            <HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin text-white opacity-75" />
+                            Redirecting to Stripe...
+                        </div>
+                    ) : (
+                        <div className="mt-5 flex flex-wrap items-center gap-3">
+                            {hasSubmittedVerification && hasOutstandingRequirements && (
+                                <button
+                                    onClick={handleResubmitOnboarding}
+                                    disabled={step === 'loading'}
+                                    className="pill-solid inline-flex items-center gap-2 px-6 py-3 text-sm tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {step === 'loading' ? (
+                                        <><HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />Reopening...</>
+                                    ) : (
+                                        <>Resubmit verification<HugeiconsIcon icon={ArrowRight02Icon} size={14} /></>
+                                    )}
+                                </button>
+                            )}
+
+                            <button
+                                onClick={handleStartOnboarding}
+                                disabled={step === 'loading' || hasSubmittedVerification}
+                                title={hasSubmittedVerification ? 'Submitted hosting verification already' : undefined}
+                                className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold tracking-[0.02em] transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                                    hasSubmittedVerification && hasOutstandingRequirements
+                                        ? 'pill-ghost text-zinc-500'
+                                        : 'pill-solid'
+                                }`}
+                            >
+                                {step === 'loading' ? (
+                                    <><HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />Connecting...</>
+                                ) : (
+                                    <>Start Stripe verification<HugeiconsIcon icon={ArrowRight02Icon} size={14} /></>
+                                )}
+                            </button>
+
+                            {hasSubmittedVerification && !hasOutstandingRequirements && (
+                                <button
+                                    onClick={handleResubmitOnboarding}
+                                    disabled={step === 'loading'}
+                                    className="pill-ghost inline-flex items-center gap-2 px-5 py-3 text-sm font-bold tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    Resubmit verification
+                                    <HugeiconsIcon icon={ArrowRight02Icon} size={13} />
+                                </button>
+                            )}
+
+                            <button
+                                onClick={handleCheckStatus}
+                                disabled={checkingStatus}
+                                className="pill-ghost inline-flex items-center gap-2 px-5 py-3 text-sm font-bold tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {checkingStatus
+                                    ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
+                                    : <HugeiconsIcon icon={RefreshIcon} size={14} />}
+                                Check status
+                            </button>
+                        </div>
+                    )}
+
+                    {hasSubmittedVerification && hasOutstandingRequirements && (
+                        <p className="mt-4 rounded-[1rem] bg-amber-500/[0.07] px-4 py-3 text-xs leading-5 text-amber-300/90">
+                            Outstanding requirements found. Use <span className="font-bold">Resubmit verification</span> to update
+                            your Stripe information.
+                        </p>
+                    )}
+                </section>
+
+                <aside className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
+                    <SurfaceHeader eyebrow="Included" title="What you're unlocking" />
+                    <div className="mt-5 space-y-3">
+                        {BENEFITS.map(({ icon, title, desc }) => (
+                            <div key={title} className="flex items-start gap-3.5 rounded-[1.25rem] bg-white/[0.035] p-4">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.055]">
+                                    <HugeiconsIcon icon={icon} size={17} className="text-white opacity-60" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-sm font-bold text-white">{title}</p>
+                                    <p className="mt-1 text-xs leading-5 text-zinc-500">{desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </aside>
+            </div>
+
             {/* Stripe status breakdown — shown after a Check Status call returns PENDING */}
             {stripeStatus && (
-                <div className="glass-panel space-y-3 rounded-[1.25rem] p-5">
-                    <p className="text-xs font-bold text-zinc-400 tracking-[0.02em] mb-3">Payment status</p>
-
-                    <StatusRow
-                        label="Charges Enabled"
-                        enabled={stripeStatus.chargesEnabled}
-                        description="Your account can accept ticket payments from buyers."
-                    />
-                    <StatusRow
-                        label="Payouts Enabled"
-                        enabled={stripeStatus.payoutsEnabled}
-                        description="Stripe can transfer your earnings to your bank account."
-                    />
+                <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
+                    <SurfaceHeader eyebrow="Step 2" title="Verification status" />
+                    <div className="mt-5 space-y-3">
+                        <StatusRow
+                            label="Charges"
+                            enabled={stripeStatus.chargesEnabled}
+                            description="Your account can accept ticket payments from buyers."
+                        />
+                        <StatusRow
+                            label="Payouts"
+                            enabled={stripeStatus.payoutsEnabled}
+                            description="Stripe can transfer your earnings to your bank account."
+                        />
+                    </div>
 
                     {stripeStatus.currentlyDue?.length > 0 && (
-                        <div className="pt-1">
-                            <p className="text-xs font-bold text-amber-400 tracking-[0.02em] mb-2">
-                                Outstanding Requirements
+                        <div className="mt-4 rounded-[1.25rem] bg-white/[0.035] p-4">
+                            <p className="text-[12px] font-medium text-zinc-500">Outstanding requirements</p>
+                            <p className="mt-1 text-xs leading-5 text-zinc-500">
+                                Complete these items in Stripe to finish verification:
                             </p>
-                            <p className="text-xs text-zinc-500 mb-3">
-                                Complete these items in your Stripe dashboard to finish verification:
-                            </p>
-                            <ul className="space-y-1.5">
+                            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                                 {stripeStatus.currentlyDue.map((key) => (
-                                    <li key={key} className="flex items-center gap-2 text-xs text-zinc-300">
-                                        <HugeiconsIcon icon={CancelCircleIcon} size={13} className="text-amber-400 flex-shrink-0" />
+                                    <li key={key} className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
+                                        <HugeiconsIcon icon={CancelCircleIcon} size={13} className="shrink-0 text-amber-400" />
                                         {formatRequirement(key)}
                                     </li>
                                 ))}
                             </ul>
                         </div>
                     )}
-                </div>
+                </section>
             )}
 
-            {/* CTA Card */}
-            <div className="glass-panel rounded-[1.25rem] p-6">
-                <h2 className="text-white font-bold text-base mb-1">Connect with Stripe</h2>
-                <p className="text-zinc-500 text-sm mb-5 leading-relaxed">
-                    You'll be redirected to Stripe to complete identity and banking
-                    verification. This typically takes 2-5 minutes. After finishing,
-                    return here to check your status.
-                </p>
-
-                {step === 'redirecting' ? (
-                    <div className="flex items-center gap-3 text-zinc-400 text-sm">
-                        <HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin text-white opacity-75" />
-                        Redirecting to Stripe...
-                    </div>
-                ) : (
-                    <div className="flex flex-wrap items-center gap-3">
-                        {hasSubmittedVerification && hasOutstandingRequirements && (
-                            <button
-                                onClick={handleResubmitOnboarding}
-                                disabled={step === 'loading'}
-                                className="pill-solid inline-flex items-center gap-2 px-6 py-3 text-sm tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                {step === 'loading' ? (
-                                    <><HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />Reopening...</>
-                                ) : (
-                                    <>Resubmit Verification<HugeiconsIcon icon={ArrowRight02Icon} size={14} /></>
-                                )}
-                            </button>
-                        )}
-
-                        <button
-                            onClick={handleStartOnboarding}
-                            disabled={step === 'loading' || hasSubmittedVerification}
-                            title={hasSubmittedVerification ? 'Submitted hosting verification already' : undefined}
-                            className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm tracking-[0.02em] transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                                hasSubmittedVerification && hasOutstandingRequirements
-                                    ? 'pill-ghost text-zinc-500'
-                                    : 'pill-solid'
-                            }`}
-                        >
-                            {step === 'loading' ? (
-                                <><HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />Connecting...</>
-                            ) : (
-                                <>Start Stripe Verification<HugeiconsIcon icon={ArrowRight02Icon} size={14} /></>
-                            )}
-                        </button>
-
-                        {hasSubmittedVerification && !hasOutstandingRequirements && (
-                            <button
-                                onClick={handleResubmitOnboarding}
-                                disabled={step === 'loading'}
-                                className="pill-ghost inline-flex items-center gap-2 px-4 py-3 text-xs tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                Resubmit Verification
-                                <HugeiconsIcon icon={ArrowRight02Icon} size={13} />
-                            </button>
-                        )}
-                    </div>
-                )}
-                {hasSubmittedVerification && hasOutstandingRequirements && (
-                    <p className="text-amber-400 text-xs mt-3">
-                        Outstanding requirements found. Use <span className="font-semibold">Resubmit Verification</span> to update your Stripe information.
-                    </p>
-                )}
-            </div>
-
-            {/* Check Status */}
-            <div className="glass-panel rounded-[1.25rem] p-5">
-                <p className="text-zinc-500 text-sm mb-3">
-                    Already completed Stripe verification? Check if your account has been approved.
-                </p>
-                <button
-                    onClick={handleCheckStatus}
-                    disabled={checkingStatus}
-                    className="pill-ghost inline-flex items-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-50"
-                >
-                    {checkingStatus ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" /> : <HugeiconsIcon icon={RefreshIcon} size={14} />}
-                    Check Status
-                </button>
-            </div>
-
-            {/* Fine print */}
-            <p className="text-zinc-600 text-xs leading-relaxed">
-                By connecting with Stripe, you agree to Stripe's{' '}
-                <a href="https://stripe.com/connect-account/legal" target="_blank" rel="noopener noreferrer" className="underline hover:text-zinc-400 transition-colors">
+            <p className="px-1 text-xs leading-5 text-zinc-600">
+                By connecting with Stripe, you agree to Stripe&apos;s{' '}
+                <a href="https://stripe.com/connect-account/legal" target="_blank" rel="noopener noreferrer" className="underline transition-colors hover:text-zinc-400">
                     Connected Account Agreement
                 </a>
                 . PXI charges a 4.59% consumer fee and a $0.90 organizer flat fee per transaction.

@@ -63,7 +63,7 @@ function fromDatetimeLocalValue(v) {
 export default function EventEditPageView() {
   const router = useRouter();
   const { user, updateUser } = useAuth();
-  const { event, eventId, loading, reloadEvent } = useEventManage();
+  const { event, eventId, loading, reloadEvent, isPast } = useEventManage();
 
   const lastHydratedEventId = useRef(null);
 
@@ -506,7 +506,7 @@ export default function EventEditPageView() {
 
   const inputClass =
     'w-full rounded-xl bg-white/[0.045] text-white placeholder-zinc-500 px-3 py-2.5 text-sm outline-none focus:bg-white/[0.07]';
-  const labelClass = 'block text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5';
+  const labelClass = 'block text-[11px] font-bold text-zinc-500 tracking-[0.02em] mb-1.5';
 
   if (loading && !event) {
     return (
@@ -567,13 +567,14 @@ export default function EventEditPageView() {
     )}
     <div className="space-y-6 pb-16">
       <form onSubmit={handleSubmit} className="space-y-6">
+        <fieldset disabled={isPast} className="space-y-6 disabled:opacity-60">
         {formError && (
           <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">
             {formError}
           </div>
         )}
         <section className="dashboard-surface rounded-2xl p-5 space-y-4">
-          <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-zinc-500">
+          <h2 className="flex items-center gap-2 text-xs font-bold tracking-[0.02em] text-zinc-500">
             <HugeiconsIcon icon={ImageIcon} size={16} />
             Cover image
           </h2>
@@ -585,13 +586,13 @@ export default function EventEditPageView() {
               ) : !isCoverUploading ? (
                 <div className="flex flex-col items-center gap-3">
                   <HugeiconsIcon icon={ImageIcon} size={36} className="text-white opacity-30" />
-                  <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.15em]">Add cover image</span>
+                  <span className="text-[11px] font-bold text-white/30 tracking-[0.02em]">Add cover image</span>
                 </div>
               ) : null}
               {isCoverUploading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 rounded-2xl">
                   <PxiSpinner size="md" />
-                  <span className="text-[11px] font-extrabold text-white/85 uppercase tracking-widest">Uploading cover...</span>
+                  <span className="text-[11px] font-extrabold text-white/85 tracking-[0.02em]">Uploading cover...</span>
                 </div>
               )}
             </div>
@@ -613,7 +614,7 @@ export default function EventEditPageView() {
         </section>
 
         <section className="dashboard-surface rounded-2xl p-5 space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Basics</h2>
+          <h2 className="text-xs font-bold tracking-[0.02em] text-zinc-500">Basics</h2>
           <div>
             <label className={labelClass}>Event name *</label>
             <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />
@@ -644,7 +645,7 @@ export default function EventEditPageView() {
                       type="button"
                       disabled={venueSaving}
                       onClick={removeVenue}
-                      className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 disabled:opacity-40"
+                      className="shrink-0 text-[11px] font-bold tracking-[0.02em] text-red-400 hover:text-red-300 disabled:opacity-40"
                     >
                       Remove venue
                     </button>
@@ -725,7 +726,7 @@ export default function EventEditPageView() {
                 {stampImage ? (
                   <img src={stampImage} alt="Custom stamp" className="h-16 w-16 rounded-xl object-cover" />
                 ) : null}
-                <label className="pill-ghost cursor-pointer px-4 py-2 text-xs font-bold uppercase tracking-widest">
+                <label className="pill-ghost cursor-pointer px-4 py-2 text-xs font-bold tracking-[0.02em]">
                   {isStampUploading ? 'Uploading...' : stampImage ? 'Replace stamp' : 'Upload stamp'}
                   <input
                     type="file"
@@ -751,7 +752,7 @@ export default function EventEditPageView() {
                   <button
                     type="button"
                     onClick={() => setStampImage(null)}
-                    className="text-xs font-semibold uppercase tracking-widest text-white/40 hover:text-white"
+                    className="text-xs font-semibold tracking-[0.02em] text-white/40 hover:text-white"
                   >
                     Remove
                   </button>
@@ -784,7 +785,7 @@ export default function EventEditPageView() {
         </section>
 
         <section className="dashboard-surface rounded-2xl p-5 space-y-5">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Configuration</h2>
+          <h2 className="text-xs font-bold tracking-[0.02em] text-zinc-500">Configuration</h2>
 
           <div className="flex items-center justify-between gap-4 rounded-xl bg-white/[0.04] px-4 py-3">
             <div>
@@ -859,7 +860,7 @@ export default function EventEditPageView() {
                       className="space-y-3 rounded-xl bg-white/[0.035] p-4"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                        <span className="text-[10px] font-bold tracking-[0.02em] text-zinc-500">
                           Tier {index + 1}
                         </span>
                         {ticketTiers.length > 1 ? (
@@ -926,7 +927,7 @@ export default function EventEditPageView() {
                   <button
                     type="button"
                     onClick={() => setTicketTiers((prev) => [...prev, createEmptyTier()])}
-                    className="w-full rounded-xl bg-white/[0.045] py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
+                    className="w-full rounded-xl bg-white/[0.045] py-2.5 text-xs font-semibold tracking-wider text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
                   >
                     + Add tier
                   </button>
@@ -993,14 +994,14 @@ export default function EventEditPageView() {
         <section className="dashboard-surface rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Event team</h2>
+              <h2 className="text-xs font-bold tracking-[0.02em] text-zinc-500">Event team</h2>
               <p className="mt-1 text-xs text-zinc-500">
                 {assignedRosterIds.size ? `${assignedRosterIds.size} team${assignedRosterIds.size === 1 ? '' : 's'} assigned` : 'Optional'}
               </p>
             </div>
             <Link
               href="/dashboard/team"
-              className="shrink-0 rounded-full bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:bg-white/[0.1] hover:text-white"
+              className="shrink-0 rounded-full bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] text-zinc-400 hover:bg-white/[0.1] hover:text-white"
             >
               Manage teams
             </Link>
@@ -1027,7 +1028,7 @@ export default function EventEditPageView() {
                       <button
                         type="button"
                         onClick={() => toggleTeamRoster(roster)}
-                        className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition ${
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] transition ${
                           assignment ? 'bg-white text-black' : 'bg-white/[0.06] text-zinc-400 hover:bg-white/[0.1] hover:text-white'
                         }`}
                       >
@@ -1040,7 +1041,7 @@ export default function EventEditPageView() {
                         <button
                           type="button"
                           onClick={() => setTeamRosterMembers(roster, [])}
-                          className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition ${
+                          className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] transition ${
                             wholeTeam ? 'bg-white text-black' : 'bg-white/[0.06] text-zinc-400 hover:bg-white/[0.1] hover:text-white'
                           }`}
                         >
@@ -1058,7 +1059,7 @@ export default function EventEditPageView() {
                                   : [...selectedMemberIds, member.id];
                                 setTeamRosterMembers(roster, memberIds);
                               }}
-                              className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition ${
+                              className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] transition ${
                                 active ? 'bg-white text-black' : 'bg-white/[0.06] text-zinc-400 hover:bg-white/[0.1] hover:text-white'
                               }`}
                             >
@@ -1082,7 +1083,7 @@ export default function EventEditPageView() {
         {attachedVenue && assignedRosterIds.size > 0 ? (
           <section className="dashboard-surface rounded-2xl p-5 space-y-4">
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Door assignments</h2>
+              <h2 className="text-xs font-bold tracking-[0.02em] text-zinc-500">Door assignments</h2>
               <p className="mt-1 text-xs text-zinc-500">Assign your team to {attachedVenue.name}&apos;s gates.</p>
             </div>
             {gatesError ? <p className="text-xs text-red-300">{gatesError}</p> : null}
@@ -1104,7 +1105,7 @@ export default function EventEditPageView() {
                               type="button"
                               disabled={savingGateId === gate.id}
                               onClick={() => toggleGateMember(gate, member)}
-                              className={`rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition disabled:opacity-40 ${
+                              className={`rounded-full px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] transition disabled:opacity-40 ${
                                 active ? 'bg-white text-black' : 'bg-white/[0.06] text-zinc-400 hover:bg-white/[0.1] hover:text-white'
                               }`}
                             >
@@ -1138,6 +1139,7 @@ export default function EventEditPageView() {
           </div>
         )}
 
+        </fieldset>
         <div className="dashboard-surface flex flex-col-reverse gap-3 rounded-2xl p-4 sm:flex-row sm:items-center">
           <Link
             href={`/dashboard/events/${eventId}`}
@@ -1147,25 +1149,25 @@ export default function EventEditPageView() {
           </Link>
           <button
             type="submit"
-            disabled={isSaving || isCoverUploading}
-            className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] rounded-full bg-white px-6 text-sm font-bold uppercase tracking-widest text-black transition hover:bg-zinc-200 disabled:opacity-45"
+            disabled={isPast || isSaving || isCoverUploading}
+            className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] rounded-full bg-white px-6 text-sm font-bold tracking-[0.02em] text-black transition hover:bg-zinc-200 disabled:opacity-45"
           >
             {isSaving ? <PxiSpinner size="sm" /> : null}
-            {isSaving ? 'Saving...' : 'Save'}
+            {isSaving ? 'Saving...' : isPast ? 'Event ended (read-only)' : 'Save'}
           </button>
         </div>
       </form>
 
       <section className="overflow-hidden rounded-2xl bg-red-500/5">
         <div className="p-5">
-          <h2 className="text-xs font-bold text-red-400 uppercase tracking-widest">Danger zone</h2>
+          <h2 className="text-xs font-bold text-red-400 tracking-[0.02em]">Danger zone</h2>
         </div>
         <div className="p-5">
           <button
             type="button"
             onClick={handleDelete}
-            disabled={isDeleting}
-            className="inline-flex items-center gap-2 rounded-xl bg-red-500/10 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-red-300 transition-all hover:bg-red-500/20 disabled:opacity-50"
+            disabled={isPast || isDeleting}
+            className="inline-flex items-center gap-2 rounded-xl bg-red-500/10 px-5 py-2.5 text-xs font-bold tracking-[0.02em] text-red-300 transition-all hover:bg-red-500/20 disabled:opacity-50"
           >
             <HugeiconsIcon icon={Delete02Icon} size={14} />
             {isDeleting ? 'Deleting...' : 'Delete event'}

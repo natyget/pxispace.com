@@ -138,9 +138,11 @@ export default function AdminOverviewPage() {
                     <StatBlock
                         title="Accounts"
                         rows={[
+                            // Tier names, in ladder order. "Organizer"/"host"/"vendor"
+                            // are role words for prose — the rung is Diplomat.
                             { label: 'Partial', value: resolvedStats.users.partial },
                             { label: 'Citizen', value: resolvedStats.users.citizen },
-                            { label: 'Organizers', value: resolvedStats.users.vendor },
+                            { label: 'Diplomat', value: resolvedStats.users.vendor },
                             ...(resolvedStats.users.admin > 0 ? [{ label: 'Platform admin', value: resolvedStats.users.admin }] : []),
                         ]}
                     />

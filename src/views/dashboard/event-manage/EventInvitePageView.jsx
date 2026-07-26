@@ -55,7 +55,7 @@ function formatInviteWhen(iso) {
 
 export default function EventInvitePageView({ initialTab = 'send', showTabs = true }) {
   const { user } = useAuth();
-  const { event, eventId, albumId, participants, reloadParticipants, reloadFeaturedPeople } =
+  const { event, eventId, albumId, participants, reloadParticipants, reloadFeaturedPeople, isPast } =
     useEventManage();
 
   // Tabs
@@ -389,7 +389,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
     return (
       <div className="rounded-2xl bg-white/[0.04] p-6 text-sm text-zinc-400">
         <p>No album linked to this event.</p>
-        <Link href={`/dashboard/events/${eventId}`} className="mt-4 inline-block text-xs font-bold uppercase tracking-widest text-white/60 hover:text-white">
+        <Link href={`/dashboard/events/${eventId}`} className="mt-4 inline-block text-xs font-bold tracking-[0.02em] text-white/60 hover:text-white">
           Details
         </Link>
       </div>
@@ -429,7 +429,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
       </div> : null}
 
       {isFinalized ? (
-        <p className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+        <p className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[11px] font-bold tracking-[0.02em] text-zinc-500">
           Scrapbook — finalized · this event has ended, invites are closed
         </p>
       ) : null}
@@ -471,7 +471,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 className="flex flex-1 items-center justify-between gap-2 rounded-xl bg-white/[0.045] px-3.5 py-2.5 text-left transition-colors hover:bg-white/[0.07]"
               >
                 <div className="min-w-0">
-                  <p className="text-[9px] font-black tracking-widest uppercase text-zinc-500 mb-0.5">TAP TO SHARE</p>
+                  <p className="text-[9px] font-bold tracking-[0.02em] text-zinc-500 mb-0.5">TAP TO SHARE</p>
                   <p className="text-xs font-medium text-white truncate">{displayUrl}</p>
                 </div>
                 <HugeiconsIcon icon={Share01Icon} size={16} className="text-zinc-500 shrink-0" />
@@ -485,7 +485,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 style={{ background: 'linear-gradient(180deg, #833ab4, #fd1d1d, #fcb045)' }}
               >
                 <div className="flex flex-col items-center justify-center gap-1 px-3.5 py-2.5 h-full">
-                  <span className="text-[9px] font-black tracking-widest uppercase text-white">STORY</span>
+                  <span className="text-[9px] font-bold tracking-[0.02em] text-white">STORY</span>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                     <circle cx="12" cy="12" r="4" />
@@ -500,7 +500,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 onClick={() => setShowQR(true)}
                 className="flex w-[68px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-white/[0.045] py-2.5 transition-colors hover:bg-white/[0.07]"
               >
-                <span className="text-[9px] font-black tracking-widest uppercase text-white">SCAN</span>
+                <span className="text-[9px] font-bold tracking-[0.02em] text-white">SCAN</span>
                 <HugeiconsIcon icon={QrCodeIcon} size={20} className="text-white" />
               </button>
             </div>
@@ -586,7 +586,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
             </div>
 
             {/* Section label */}
-            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
+            <p className="text-xs font-bold text-zinc-500 tracking-[0.02em]">
               {isSearchMode
                 ? 'Search results'
                 : listFilter === 'attendees'
@@ -632,7 +632,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                         </div>
                         <button
                           type="button"
-                          disabled={busy}
+                          disabled={busy || isPast}
                           onClick={() => handleInviteAction(c, rsvpState)}
                           className={`shrink-0 rounded-full px-3 py-2 text-[11px] font-bold transition-colors ${
                             rsvpState === 'pending'
@@ -684,7 +684,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 type="button"
                 disabled={sending}
                 onClick={() => setConfirmOpen(true)}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-white text-black text-sm font-black uppercase tracking-wide disabled:opacity-50 hover:brightness-95 transition-all"
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-white text-black text-sm font-bold tracking-wide disabled:opacity-50 hover:brightness-95 transition-all"
               >
                 {sending
                   ? <><HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin" /> Sending...</>
@@ -700,12 +700,12 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
       {activeInviteTab === 'status' && (
         <section role="tabpanel" className="glass-panel overflow-hidden rounded-2xl">
           <div className="flex flex-wrap items-center justify-between gap-3 p-5">
-            <h2 className="font-bold text-white uppercase tracking-widest text-sm">Direct invites</h2>
+            <h2 className="font-bold text-white tracking-[0.02em] text-sm">Direct invites</h2>
             <button
               type="button"
               disabled={directInvitesLoading}
               onClick={loadDirectInvites}
-              className="rounded-xl bg-white/[0.055] px-3 py-2 text-xs font-bold uppercase tracking-widest text-zinc-300 hover:bg-white/[0.08] disabled:opacity-50"
+              className="rounded-xl bg-white/[0.055] px-3 py-2 text-xs font-bold tracking-[0.02em] text-zinc-300 hover:bg-white/[0.08] disabled:opacity-50"
             >
               Refresh
             </button>
@@ -721,7 +721,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 key={seg.id}
                 type="button"
                 onClick={() => setInviteStatusSegment(seg.id)}
-                className={`rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest transition-colors ${
+                className={`rounded-xl px-4 py-2 text-xs font-bold tracking-[0.02em] transition-colors ${
                   inviteStatusSegment === seg.id
                     ? 'bg-white text-black'
                     : 'bg-white/[0.055] text-zinc-400 hover:bg-white/[0.08]'
@@ -763,18 +763,18 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                       </div>
                       <dl className="text-xs text-zinc-500 sm:text-right shrink-0 space-y-0.5">
                         <div>
-                          <dt className="inline font-bold uppercase tracking-wider text-zinc-600 mr-1">Sent</dt>
+                          <dt className="inline font-bold tracking-wider text-zinc-600 mr-1">Sent</dt>
                           <dd className="inline">{formatInviteWhen(inv.createdAt)}</dd>
                         </div>
                         {inviteStatusSegment === 'accepted' && inv.acceptedAt && (
                           <div>
-                            <dt className="inline font-bold uppercase tracking-wider text-zinc-600 mr-1">Accepted</dt>
+                            <dt className="inline font-bold tracking-wider text-zinc-600 mr-1">Accepted</dt>
                             <dd className="inline">{formatInviteWhen(inv.acceptedAt)}</dd>
                           </div>
                         )}
                         {inviteStatusSegment === 'rejected' && inv.rejectedAt && (
                           <div>
-                            <dt className="inline font-bold uppercase tracking-wider text-zinc-600 mr-1">Declined</dt>
+                            <dt className="inline font-bold tracking-wider text-zinc-600 mr-1">Declined</dt>
                             <dd className="inline">{formatInviteWhen(inv.rejectedAt)}</dd>
                           </div>
                         )}
@@ -799,7 +799,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-2xl font-black text-white text-center leading-tight">{event?.name}</p>
-            <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-500">Scan to RSVP</p>
+            <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Scan to RSVP</p>
             <div className="rounded-3xl bg-white p-5">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(publicUrl)}&bgcolor=ffffff&color=000000&margin=0`}
@@ -819,7 +819,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
             <button
               type="button"
               onClick={() => setShowQR(false)}
-              className="text-xs font-bold tracking-widest uppercase text-zinc-500 hover:text-zinc-300 py-2"
+              className="text-xs font-bold tracking-[0.02em] text-zinc-500 hover:text-zinc-300 py-2"
             >
               Close
             </button>
@@ -832,7 +832,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
           <div className="dashboard-popover-surface w-full max-w-sm space-y-4 rounded-2xl p-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-black text-white uppercase tracking-widest">Send Invitations</h3>
+              <h3 className="text-xs font-bold text-white tracking-[0.02em]">Send Invitations</h3>
               <button
                 type="button"
                 onClick={() => setConfirmOpen(false)}
