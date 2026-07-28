@@ -407,9 +407,7 @@ function SalesVelocityChart({ byDay, velocityPerDay7d, totalSold, grossCents, ne
             liveValue={formatMoney(grossCents)}
             unit={`gross · ${formatMoney(netCents)} net`}
             change={{ label: `${formatNumber(totalSold)} sold total`, tone: 'neutral' }}
-            timeframe={range}
-            timeframes={SALES_RANGES}
-            onTimeframeChange={setRange}
+            timeframes={null}
             chartClassName="relative h-[300px] md:h-[360px]"
         >
             <div className="flex h-full flex-col gap-2">
@@ -491,7 +489,7 @@ function EventPickerCard({ event, selected, order, onToggle }) {
             onClick={() => onToggle(event.id)}
             aria-pressed={selected}
             className={`group relative aspect-[3/4] w-[168px] shrink-0 overflow-hidden rounded-2xl bg-[#0A0A0A] text-left transition ${
-                selected ? 'ring-2 ring-[#d84aff]' : 'opacity-80 hover:opacity-100'
+                selected ? 'ring-2 ring-inset ring-[#d84aff]' : 'opacity-80 hover:opacity-100'
             }`}
         >
             {event.coverImage ? (
@@ -556,7 +554,7 @@ function EventPicker({ events, selectedIds, onToggle, loading }) {
             ) : view === 'timeline' ? (
                 <EventTimelinePicker events={events} selectedIds={selectedIds} onToggle={onToggle} />
             ) : (
-                <div className="dashboard-scrollbar-none flex gap-3 overflow-x-auto pb-1">
+                <div className="dashboard-scrollbar-none -m-1.5 flex gap-3 overflow-x-auto p-1.5">
                     {events.map((event) => (
                         <EventPickerCard
                             key={event.id}

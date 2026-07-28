@@ -507,14 +507,17 @@ export default function AdsPage() {
                             targeted by city, age, music taste, and attendance. Credits apply first; cards cover the rest.
                         </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Link href="/dashboard/campaigns" className="pill-ghost px-4 py-2.5 text-xs font-bold text-zinc-300">
+                    <div className="flex flex-wrap items-center gap-3 shrink-0 sm:flex-nowrap">
+                        <Link
+                            href="/dashboard/campaigns"
+                            className="pill-ghost inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-bold text-zinc-200 transition hover:text-white"
+                        >
                             Email Campaigns →
                         </Link>
                         <button
                             type="button"
                             onClick={() => (wizardOpen ? closeWizard() : setWizardOpen(true))}
-                            className="pill-solid min-h-12 px-6 text-sm"
+                            className="pill-solid inline-flex h-11 items-center justify-center rounded-full px-6 text-sm font-bold transition"
                         >
                             {wizardOpen ? 'Close' : 'New campaign'}
                         </button>

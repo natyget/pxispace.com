@@ -35,7 +35,7 @@ export default function EventTimelinePicker({ events, selectedIds = [], onToggle
     }
 
     return (
-        <div className="dashboard-scrollbar-none flex gap-5 overflow-x-auto pb-1">
+        <div className="dashboard-scrollbar-none -m-1.5 flex gap-5 overflow-x-auto p-1.5">
             {months.map((month) => (
                 <div key={month.key} className="min-w-[230px] shrink-0">
                     <p className="flex items-center gap-2 px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">
@@ -56,7 +56,7 @@ export default function EventTimelinePicker({ events, selectedIds = [], onToggle
                                     onClick={() => onToggle(event.id)}
                                     aria-pressed={selected}
                                     className={`flex w-full items-center gap-2.5 rounded-2xl p-2 text-left transition ${
-                                        selected ? 'bg-white/[0.09] ring-1 ring-[#d84aff]' : 'bg-white/[0.045] text-zinc-300 hover:bg-white/[0.08] hover:text-white'
+                                        selected ? 'bg-white/[0.09] ring-2 ring-inset ring-[#d84aff]' : 'bg-white/[0.045] text-zinc-300 hover:bg-white/[0.08] hover:text-white'
                                     }`}
                                 >
                                     <span className="relative shrink-0">
