@@ -48,7 +48,7 @@ function PxiLoadingViewport({ className = '' }) {
       
       {/* Logo container with glassmorphism */}
       <div className="relative z-10 p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl shadow-[0_0_40px_rgba(176,38,255,0.2)] animate-fade-up">
-        <img src="/favicon.png" alt="PXI Logo" className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] animate-glitch" />
+        <img src="/logo-mark.png" alt="PXI Logo" className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] animate-glitch" />
       </div>
 
       {/* CRT Scan lines */}
@@ -97,7 +97,7 @@ export function PxiLoadingLanding() {
     return (
       <div className="fixed inset-0 z-[10000] bg-black flex flex-col items-center justify-center overflow-hidden">
         <div className="relative z-10 flex items-center justify-center">
-          <img src="/favicon.png" className="w-32 h-32 md:w-48 md:h-48 object-contain" alt="PXI" />
+          <img src="/logo-mark.png" className="w-32 h-32 md:w-48 md:h-48 object-contain" alt="PXI" />
         </div>
       </div>
     );
@@ -129,7 +129,7 @@ export function PxiLoadingLanding() {
                }}
                transition={{ duration: 1.8, ease: "linear" }}
              >
-               <img src="/favicon.png" className="w-32 h-32 md:w-48 md:h-48 object-contain" alt="PXI" />
+               <img src="/logo-mark.png" className="w-32 h-32 md:w-48 md:h-48 object-contain" alt="PXI" />
                {/* Red Glitch */}
                <motion.div 
                  className="absolute left-0 top-0 mix-blend-screen pointer-events-none"
@@ -141,7 +141,7 @@ export function PxiLoadingLanding() {
                  }}
                  transition={{ duration: 1.8, ease: "linear" }}
                >
-                 <img src="/favicon.png" className="w-32 h-32 md:w-48 md:h-48 object-contain" alt="" />
+                 <img src="/logo-mark.png" className="w-32 h-32 md:w-48 md:h-48 object-contain" alt="" />
                </motion.div>
                {/* Blue Glitch */}
                <motion.div 
@@ -154,7 +154,7 @@ export function PxiLoadingLanding() {
                  }}
                  transition={{ duration: 1.8, ease: "linear" }}
                >
-                 <img src="/favicon.png" className="w-32 h-32 md:w-48 md:h-48 object-contain" alt="" />
+                 <img src="/logo-mark.png" className="w-32 h-32 md:w-48 md:h-48 object-contain" alt="" />
                </motion.div>
                {/* Green Glitch */}
                <motion.div 
@@ -167,7 +167,7 @@ export function PxiLoadingLanding() {
                  }}
                  transition={{ duration: 1.8, ease: "linear" }}
                >
-                 <img src="/favicon.png" className="w-32 h-32 md:w-48 md:h-48 object-contain" alt="" />
+                 <img src="/logo-mark.png" className="w-32 h-32 md:w-48 md:h-48 object-contain" alt="" />
                </motion.div>
              </motion.div>
         </motion.div>

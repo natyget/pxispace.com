@@ -7,7 +7,7 @@ import { InstagramIcon } from '@hugeicons/core-free-icons';
 import { FaTiktok } from 'react-icons/fa';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 
-const LogoSVG = '/favicon.png';
+const LogoSVG = '/logo-mark.png';
 const linkClass = 'text-zinc-500 hover:text-white transition-colors';
 
 const ATTENDEE_LINKS = [

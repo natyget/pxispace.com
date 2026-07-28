@@ -393,19 +393,19 @@ export default function DashboardLayout({ children }) {
                     <div className="flex min-h-0 flex-col">
                         <div className={`flex items-center px-4 py-4 ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
                             <Link href="/" className={`flex items-center ${sidebarCollapsed ? 'hidden' : 'block'} md:block ${sidebarCollapsed ? 'md:hidden' : ''} min-w-0 transition-opacity hover:opacity-80`}>
-                                <img src="/favicon.png" alt="PXI" className="h-[38px] md:h-[44px] w-auto translate-y-[3px] object-contain" />
+                                <img src="/logo-mark.png" alt="PXI" className="h-[38px] md:h-[44px] w-auto translate-y-[3px] object-contain" />
                             </Link>
 
                             <button
                                 onClick={() => dashboardShellActions.toggleSidebar()}
-                                className={`group relative hidden items-center justify-center overflow-hidden rounded-full transition md:flex bg-white/[0.04] hover:bg-white/[0.08] text-white/70 hover:text-white ${sidebarCollapsed ? 'h-11 w-11' : 'h-9 w-9 shrink-0'}`}
+                                className={`group relative hidden items-center justify-center overflow-hidden rounded-full transition md:flex ${sidebarCollapsed ? 'bg-transparent hover:bg-white/[0.08]' : 'bg-white/[0.04] hover:bg-white/[0.08]'} text-white/70 hover:text-white ${sidebarCollapsed ? 'h-11 w-11' : 'h-9 w-9 shrink-0'}`}
                                 aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                                 type="button"
                             >
                                 {sidebarCollapsed ? (
-                                    <img src="/favicon.png" alt="PXI" className="absolute inset-0 m-auto h-[38px] w-auto translate-y-[3px] object-contain transition duration-200 group-hover:scale-75 group-hover:opacity-0" />
+                                    <img src="/logo-mark.png" alt="PXI" className="absolute inset-0 m-auto h-[38px] w-auto translate-y-[3px] object-contain transition duration-200 group-hover:scale-75 group-hover:opacity-0" />
                                 ) : null}
-                                <HugeiconsIcon icon={sidebarCollapsed ? PanelLeftOpenIcon : PanelLeftCloseIcon} size={sidebarCollapsed ? 26 : 18} className={sidebarCollapsed ? 'opacity-0 transition duration-200 group-hover:opacity-100' : ''} />
+                                <HugeiconsIcon icon={sidebarCollapsed ? PanelLeftCloseIcon : PanelLeftOpenIcon} size={sidebarCollapsed ? 26 : 18} className={sidebarCollapsed ? 'opacity-0 transition duration-200 group-hover:opacity-100' : ''} />
                             </button>
                             <button
                                 className="ml-auto text-zinc-600 hover:text-zinc-400 md:hidden"
@@ -510,7 +510,7 @@ export default function DashboardLayout({ children }) {
                     >
                         <HugeiconsIcon icon={Menu01Icon} size={22} />
                     </button>
-                    <img src="/favicon.png" alt="PXI" className="h-[38px] w-auto translate-y-[4px] object-contain" />
+                    <img src="/logo-mark.png" alt="PXI" className="h-[38px] w-auto translate-y-[4px] object-contain" />
                 </header>
 
                 <main className="flex-1 overflow-auto p-6 md:p-8">

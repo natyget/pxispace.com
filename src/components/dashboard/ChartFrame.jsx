@@ -71,23 +71,25 @@ export function TimeSeriesChartHeader({
                     ) : null}
                 </div>
             </div>
-            <div className="dashboard-segmented-toggle shrink-0" aria-label={`${title || 'Chart'} timeframe`}>
-                {timeframes.map((option) => {
-                    const active = option === timeframe;
-                    return (
-                        <button
-                            key={option}
-                            type="button"
-                            className="dashboard-segmented-toggle__item"
-                            data-active={active}
-                            onClick={() => onTimeframeChange?.(option)}
-                            aria-pressed={active}
-                        >
-                            {option}
-                        </button>
-                    );
-                })}
-            </div>
+            {timeframes && timeframes.length > 0 ? (
+                <div className="dashboard-segmented-toggle shrink-0" aria-label={`${title || 'Chart'} timeframe`}>
+                    {timeframes.map((option) => {
+                        const active = option === timeframe;
+                        return (
+                            <button
+                                key={option}
+                                type="button"
+                                className="dashboard-segmented-toggle__item"
+                                data-active={active}
+                                onClick={() => onTimeframeChange?.(option)}
+                                aria-pressed={active}
+                            >
+                                {option}
+                            </button>
+                        );
+                    })}
+                </div>
+            ) : null}
         </header>
     );
 }

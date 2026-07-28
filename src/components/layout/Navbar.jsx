@@ -86,7 +86,7 @@ const Navbar = () => {
                     className="flex min-w-0 items-center z-20"
                     onClick={() => setMobileMenuOpen(false)}
                 >
-                    <img src="/favicon.png" alt="PXI" className="h-[38px] md:h-[44px] translate-y-[4px] w-auto object-contain" />
+                    <img src="/logo-mark.png" alt="PXI" className="h-[38px] md:h-[44px] translate-y-[4px] w-auto object-contain" />
                 </Link>
 
                 {/* Center: Marketing nav (plain editorial links) */}
