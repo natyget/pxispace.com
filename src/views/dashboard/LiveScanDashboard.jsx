@@ -423,15 +423,19 @@ function GateDetailsModal({ gate, open, onClose }) {
                     <div className="rounded-2xl glass-field p-4">
                         <h3 className="text-sm font-bold tracking-[0.02em] text-zinc-400">Incident Log</h3>
                         <div className="mt-3 space-y-2">
-                            {(gate.incidentLog || []).map((entry, index) => (
-                                <div key={`${entry.at}-${index}`} className="flex gap-2 rounded-xl glass-field px-3 py-2 text-sm text-zinc-300">
-                                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-white/45" />
-                                    <span>
-                                        {entry.note}
-                                        {entry.at ? <span className="ml-2 text-xs text-zinc-500">{formatClockTime(entry.at)}</span> : null}
-                                    </span>
-                                </div>
-                            ))}
+                            {(gate.incidentLog || []).map((entry, index) => {
+                                const noteText = typeof entry === 'string' ? entry : (entry?.note || entry?.text || entry?.message || '');
+                                const timeVal = typeof entry === 'object' && entry?.at ? formatClockTime(entry.at) : null;
+                                return (
+                                    <div key={`${index}`} className="flex items-start gap-2 rounded-xl glass-field px-3 py-2 text-sm text-zinc-300 min-w-0 break-words">
+                                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-white/45" />
+                                        <span className="min-w-0 break-words flex-1">
+                                            {noteText}
+                                            {timeVal ? <span className="ml-2 text-xs text-zinc-500">{timeVal}</span> : null}
+                                        </span>
+                                    </div>
+                                );
+                            })}
                             {!(gate.incidentLog || []).length ? <p className="text-sm text-zinc-500">No incidents logged.</p> : null}
                         </div>
                     </div>
@@ -760,16 +764,20 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                     <HugeiconsIcon icon={Megaphone01Icon} size={20} className="text-zinc-500" />
                 </div>
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
-                    {gates.flatMap((gate) => (gate.incidentLog || []).map((entry, i) => (
-                        <div key={`${gate.id}-${i}`} className="rounded-2xl bg-white/[0.045] p-4">
-                            <HugeiconsIcon icon={Alert02Icon} size={18} className={eventIsLive ? 'text-amber-300' : 'text-zinc-500'} />
-                            <p className="mt-3 text-sm font-bold text-white">{gate.name}</p>
-                            <p className="mt-1 text-xs text-zinc-500">
-                                {entry.note}
-                                {entry.at ? <span className="ml-2 text-zinc-600">{formatClockTime(entry.at)}</span> : null}
-                            </p>
-                        </div>
-                    )))}
+                    {gates.flatMap((gate) => (gate.incidentLog || []).map((entry, i) => {
+                        const noteText = typeof entry === 'string' ? entry : (entry?.note || entry?.text || entry?.message || '');
+                        const timeVal = typeof entry === 'object' && entry?.at ? formatClockTime(entry.at) : null;
+                        return (
+                            <div key={`${gate.id}-${i}`} className="min-w-0 break-words rounded-2xl bg-white/[0.045] p-4">
+                                <HugeiconsIcon icon={Alert02Icon} size={18} className={eventIsLive ? 'text-amber-300' : 'text-zinc-500'} />
+                                <p className="mt-3 text-sm font-bold text-white">{gate.name}</p>
+                                <p className="mt-1 text-xs leading-relaxed text-zinc-400 min-w-0 break-words">
+                                    {noteText}
+                                    {timeVal ? <span className="ml-2 text-zinc-600">{timeVal}</span> : null}
+                                </p>
+                            </div>
+                        );
+                    }))}
                     {!gates.some((gate) => gate.incidentLog?.length) ? (
                         <div className="rounded-2xl bg-white/[0.045] p-4 md:col-span-3">
                             <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} className={eventIsLive ? 'text-emerald-300' : 'text-zinc-500'} />

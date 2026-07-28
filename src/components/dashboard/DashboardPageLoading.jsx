@@ -4,7 +4,7 @@ export default function DashboardPageLoading({ label = 'Loading workspace' }) {
       <div className="dashboard-surface-b w-full max-w-md rounded-[1.25rem] p-6">
         <div className="flex items-center gap-4">
           <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/[0.055]">
-            <img src="/favicon.png" alt="PXI" className="h-9 w-auto translate-y-[3px] object-contain" />
+            <img src="/logo-mark.png" alt="PXI" className="h-9 w-auto translate-y-[3px] object-contain" />
             <span className="absolute inset-0 rounded-full border border-white/10" />
           </div>
           <div className="min-w-0">
