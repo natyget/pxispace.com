@@ -1,6 +1,9 @@
-import { getSiteUrl } from '@/lib/siteUrl';
+import { getSiteUrl, canonicalUrl } from '@/lib/siteUrl';
 import { getPublicEvent } from '@/lib/publicEvent';
 import { buildShareMetadata, resolveShareOgImage } from '@/lib/shareMetadata';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { SITE_URL, buildEventJsonLd, buildBreadcrumbJsonLd } from '@/lib/seo/schemas';
+import { resolveEventCity } from '@/lib/seo/cities';
 import EventDetailClient from '@/views/events/EventDetailClient';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +23,8 @@ function fallbackEventMetadata(site, id) {
 export async function generateMetadata({ params }) {
   const { id } = await params;
   const site = getSiteUrl();
-  const canonical = `${site}/events/${id}`;
+  // Canonical always names the production origin, never a preview host.
+  const canonical = canonicalUrl(`/events/${id}`);
 
   try {
     const event = await getPublicEvent(id);
@@ -62,7 +66,59 @@ export async function generateMetadata({ params }) {
   }
 }
 
-/** Client fetches event data — keeps the route shell sync so Turbopack resolves it on first load. */
-export default function EventDetailPage() {
-  return <EventDetailClient />;
+/**
+ * Server-rendered structured data for the event.
+ *
+ * This is what makes a PXI event eligible for Google's free event listings, so it must be
+ * in the INITIAL HTML — the interactive page below still hydrates its own data client-side.
+ * `getPublicEvent` is React-cached, so this shares the fetch generateMetadata already made.
+ *
+ * PRIVATE events are noindex and get no Event markup: publishing Event structured data for
+ * a page we are asking Google not to index is a contradiction, and the offers on a private
+ * event are not publicly purchasable.
+ */
+async function EventStructuredData({ id }) {
+  let event = null;
+  try {
+    event = await getPublicEvent(id);
+  } catch (error) {
+    console.error('[events/[id]/jsonld]', { id, error });
+    return null;
+  }
+  if (!event || event.visibility === 'PRIVATE') return null;
+
+  const city = resolveEventCity(event);
+  const genres = Array.isArray(event.genres)
+    ? event.genres
+    : Array.isArray(event.playlist?.topGenres)
+      ? event.playlist.topGenres
+      : [];
+
+  const eventJsonLd = buildEventJsonLd(event, SITE_URL, { city, genres });
+  if (!eventJsonLd) return null;
+
+  const crumbs = [
+    { name: 'Home', path: '/' },
+    { name: 'Events', path: '/events' },
+    ...(city ? [{ name: city.name, path: `/discover/${city.slug}` }] : []),
+    { name: event.name || 'Event', path: `/events/${id}` },
+  ];
+
+  return (
+    <>
+      <JsonLd data={eventJsonLd} />
+      <JsonLd data={buildBreadcrumbJsonLd(crumbs)} />
+    </>
+  );
+}
+
+/** Client fetches event data — the interactive shell stays as it was. */
+export default async function EventDetailPage({ params }) {
+  const { id } = await params;
+  return (
+    <>
+      <EventStructuredData id={id} />
+      <EventDetailClient />
+    </>
+  );
 }

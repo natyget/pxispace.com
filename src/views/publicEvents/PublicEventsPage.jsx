@@ -145,32 +145,43 @@ const TIME_OPTIONS = [
   { id: 'this_week', label: 'This week' },
   { id: 'this_month', label: 'This month' },
 ];
-const CITY_PRESETS = [
-  'All',
-  'New York City',
-  'Miami',
-  'Los Angeles',
-  'Washington DC',
-  'Boston',
-  'Atlanta',
-];
+// PXI operates in New York and Boston only. Offering city filters we do not serve
+// produces empty result sets and advertises coverage that does not exist.
+// Keep this in step with src/lib/seo/cities.js — that registry drives /discover/[city].
+const CITY_PRESETS = ['All', 'New York City', 'Boston'];
 
+// Aliases for the operational cities only. These mirror the `match` arrays in
+// src/lib/seo/cities.js; keep the two in step so the filter and the /discover hub
+// agree on which events belong to a city.
 const CITY_ALIASES = {
-  'new york city': ['new york city', 'new york', 'nyc', 'manhattan', 'brooklyn', 'queens'],
-  miami: ['miami', 'miami fl'],
-  'los angeles': ['los angeles', 'los angeles ca', 'la', 'l a'],
-  'washington dc': [
-    'washington dc',
-    'washington d c',
-    'washington district columbia',
-    'washington district of columbia',
-    'district of columbia',
-    'district columbia',
-    'dc',
-    'd c',
+  'new york city': [
+    'new york city',
+    'new york',
+    'nyc',
+    'manhattan',
+    'brooklyn',
+    'queens',
+    'bronx',
+    'harlem',
+    'bushwick',
+    'williamsburg',
   ],
-  boston: ['boston', 'boston ma', 'cambridge', 'cambridge ma'],
-  atlanta: ['atlanta', 'atlanta ga'],
+  boston: [
+    'boston',
+    'boston ma',
+    'cambridge',
+    'cambridge ma',
+    'somerville',
+    'allston',
+    'brighton',
+    'dorchester',
+    'roxbury',
+    'jamaica plain',
+    'back bay',
+    'seaport',
+    'fenway',
+    'brookline',
+  ],
 };
 
 function normalizeCityText(value) {

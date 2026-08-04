@@ -1,0 +1,86 @@
+name: SEO checks
+
+# Guards the two SEO failure modes that are invisible until Google has already acted on them:
+#   1. a sitemap advertising URLs that 404 or redirect
+#   2. the retired analytics property leaking back into the bundle
+#
+# The sitemap check runs against a real `next start` server so it exercises the actual
+# rendered routes and the redirect table, not just the source.
+
+on:
+  pull_request:
+    branches: [main, dev, landing-ui-prod]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sitemap:
+    name: Sitemap has no 404s
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          # Analytics ids are deliberately absent: the tag must fail closed in CI.
+          NEXT_PUBLIC_SITE_URL: http://localhost:5173
+
+      - name: Start server
+        run: |
+          npm run start &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:5173/ >/dev/null && exit 0
+            sleep 1
+          done
+          echo "server did not become ready"
+          exit 1
+
+      - name: Check every sitemap URL returns 200
+        run: node scripts/check-sitemap.mjs http://localhost:5173
+
+  retired-ids:
+    name: Retired analytics ids are absent
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail if the dead GA property or its cookie reappears
+        run: |
+          # The dead GA4 property id and its cookie. Either one reappearing means a stale
+          # env value or a hardcoded id crept back in.
+          # Built from fragments so this guard does not match its own source and fail every run.
+          DEAD_GA="G-RZLHV""91C5S"
+          DEAD_COOKIE="_ga_KXR""80WB7QK"
+          if grep -rInE "${DEAD_GA}|${DEAD_COOKIE}" \
+              --exclude-dir=node_modules \
+              --exclude-dir=.next \
+              --exclude-dir=.git \
+              --exclude-dir=dist \
+              --exclude-dir=.restore-from-transcripts \
+              --exclude-dir=.github \
+              . ; then
+            echo "::error::Retired analytics identifier found. Use NEXT_PUBLIC_GA_MEASUREMENT_ID=G-7K7MSDZV47."
+            exit 1
+          fi
+          echo "clean"
+
+      - name: Fail if an analytics id is hardcoded outside env plumbing
+        run: |
+          # Ids must come from env vars so the tag fails closed when they are unset.
+          if grep -rInE "(gtag/js\?id=|config',\s*')(G-|GT-|AW-|GTM-)[A-Z0-9]+" \
+              --include='*.js' --include='*.jsx' --include='*.ts' --include='*.tsx' \
+              --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.git \
+              src/ ; then
+            echo "::error::Hardcoded Google tag id. Read it from NEXT_PUBLIC_* instead."
+            exit 1
+          fi
+          echo "clean"

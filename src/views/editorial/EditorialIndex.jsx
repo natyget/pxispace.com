@@ -71,7 +71,7 @@ export default function EditorialIndex() {
 
       {lead ? (
         <SectionShell pad="default" border={false}>
-          <Link href={`/story/${lead.slug}`} className="group grid grid-cols-1 gap-8 md:grid-cols-2 md:items-center">
+          <Link href={`/editorial/${lead.slug}`} className="group grid grid-cols-1 gap-8 md:grid-cols-2 md:items-center">
             <div className="relative aspect-square overflow-hidden rounded-3xl border border-white/10">
               <img
                 src={lead.cover}
@@ -104,7 +104,7 @@ export default function EditorialIndex() {
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
             >
-              <Link href={`/story/${story.slug}`} className="group block">
+              <Link href={`/editorial/${story.slug}`} className="group block">
                 <StoryCardMedia
                   story={story}
                   className={`${story.storyIndexCardAspectClass || story.cardAspectClass || 'aspect-square'} rounded-2xl border border-white/10`}

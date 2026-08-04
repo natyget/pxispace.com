@@ -27,7 +27,7 @@ const ORGANIZER_LINKS = [
 const EXPLORE_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'Platform', href: '/platform' },
-  { label: 'Story', href: '/story' },
+  { label: 'Story', href: '/editorial' },
   { label: 'About Us', href: '/about' },
 ];
 

@@ -50,7 +50,7 @@ const PHOTOS = [
   {
     src: '/landing/assets/media__1782966919272.jpg',
     title: 'PARTY 11',
-    location: 'Montréal',
+    location: 'Brooklyn',
     overlays: [
       { text: 'The energy is unmatched! 💃🏽', className: 'left-[2%] top-[12%]' },
       { text: '✨ x18', className: 'right-[4%] top-[25%]' },
