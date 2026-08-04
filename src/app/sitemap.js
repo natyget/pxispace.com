@@ -1,6 +1,8 @@
 import { EDITORIAL_STORIES } from '@/content/editorial';
 import { allCities } from '@/lib/seo/cities';
-import { getAllPublicEvents, eventsInCity } from '@/lib/publicEvents';
+import { allGenres, eventMatchesGenre } from '@/lib/seo/genres';
+import { buildArtistIndex, indexableArtists } from '@/lib/seo/artists';
+import { getAllPublicEvents, eventsInCity, eventGenres } from '@/lib/publicEvents';
 import { CANONICAL_ORIGIN } from '@/lib/siteUrl';
 
 /**
@@ -87,8 +89,59 @@ export default async function sitemap() {
     lastModified: e.updatedAt ? new Date(e.updatedAt) : (e.createdAt ? new Date(e.createdAt) : now),
   }));
 
-  return [...core, ...cities, ...editorial, ...eventPages].map((e) => ({
+  // ── Music matchmaking hubs ───────────────────────────────────────────────
+  // Only hubs that actually contain events are listed. The pages themselves stay reachable
+  // and carry `noindex` when empty, so an empty genre is not a 404 — it is simply not
+  // advertised. Listing the full cities × genres matrix regardless would be a doorway-page
+  // pattern and would put dozens of empty URLs in front of a crawler.
+  const genresWithEvents = allGenres().filter((genre) =>
+    events.some((e) => eventMatchesGenre(eventGenres(e), genre)),
+  );
+
+  const genrePages = genresWithEvents.map((genre) => ({
+    url: `${base}/genres/${genre.slug}`,
+    changeFrequency: 'daily',
+    priority: 0.6,
     lastModified: now,
-    ...e,
   }));
+
+  const cityGenrePages = allCities().flatMap((city) => {
+    const cityEvents = eventsInCity(events, city);
+    return allGenres()
+      .filter((genre) => cityEvents.some((e) => eventMatchesGenre(eventGenres(e), genre)))
+      .map((genre) => ({
+        url: `${base}/discover/${city.slug}/${genre.slug}`,
+        changeFrequency: 'daily',
+        // The long-tail intersection is the highest-intent surface we have.
+        priority: 0.65,
+        lastModified: now,
+      }));
+  });
+
+  const artists = indexableArtists(buildArtistIndex(events));
+  const artistPages = artists.map((artist) => ({
+    url: `${base}/artists/${artist.slug}`,
+    changeFrequency: 'weekly',
+    priority: 0.6,
+    lastModified: now,
+  }));
+
+  // Index pages only earn a slot once they have something to list.
+  const hubIndexes = [
+    ...(genresWithEvents.length
+      ? [{ url: `${base}/genres`, changeFrequency: 'weekly', priority: 0.6 }]
+      : []),
+    ...(artists.length ? [{ url: `${base}/artists`, changeFrequency: 'weekly', priority: 0.6 }] : []),
+  ];
+
+  return [
+    ...core,
+    ...cities,
+    ...hubIndexes,
+    ...genrePages,
+    ...cityGenrePages,
+    ...artistPages,
+    ...editorial,
+    ...eventPages,
+  ].map((e) => ({ lastModified: now, ...e }));
 }
