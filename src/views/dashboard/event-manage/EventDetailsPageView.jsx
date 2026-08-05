@@ -17,6 +17,7 @@ import {
 } from './eventDetailHelpers';
 import { eventShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
 import { formatTicketPrice, parseEventTicketTiers } from '@/lib/ticketTiers';
+import { trackShare } from '@/lib/analytics';
 
 export default function EventDetailsPageView() {
   const { event, eventId, albumId, participants, featuredPeople } = useEventManage();
@@ -75,18 +76,22 @@ export default function EventDetailsPageView() {
           text,
           url,
         });
+        trackShare({ method: 'native_share', contentType: 'event', itemId: eventId });
         return;
       }
       await navigator.clipboard.writeText(message);
       setShareHint('Link copied');
       setTimeout(() => setShareHint(null), 2500);
+      trackShare({ method: 'copy_link', contentType: 'event', itemId: eventId });
     } catch {
       try {
         await navigator.clipboard.writeText(message);
         setShareHint('Link copied');
         setTimeout(() => setShareHint(null), 2500);
+        trackShare({ method: 'copy_link', contentType: 'event', itemId: eventId });
       } catch {
         window.prompt('Copy event link:', message);
+        trackShare({ method: 'prompt_copy', contentType: 'event', itemId: eventId });
       }
     }
   };

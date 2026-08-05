@@ -11,19 +11,49 @@ import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 import { PxiPassportSection } from '@/components/passport/PxiPassportSection';
 import { getSiteUrl } from '@/lib/siteUrl';
+import { trackPassportLevelUp, trackShare } from '@/lib/analytics';
+import { getOdysseyTierFromXp } from '@/utils/odysseyTier';
+
+/** Odyssey bands, low → high. Mirrors the ladder in src/utils/odysseyTier.js. */
+const PASSPORT_LEVEL_ORDER = ['WANDERER', 'SEEKER', 'VOYAGER', 'PATHFINDER', 'LUMINARY', 'ODYSSEY'];
+
+/**
+ * Report a crossing into a higher Odyssey band, once per crossing per browser.
+ * The first sighting of an account only writes the baseline — otherwise every
+ * new device would report a level-up. Demotions (the band rework re-scored
+ * existing XP) are recorded silently, never reported.
+ */
+function trackPassportLevelChange(user) {
+    if (!user?.id) return;
+    const level = getOdysseyTierFromXp(user.odysseyXp ?? 0).id;
+    try {
+        const key = `pxi_passport_level_seen_${user.id}`;
+        const previous = window.localStorage.getItem(key);
+        window.localStorage.setItem(key, level);
+        if (!previous || previous === level) return;
+        if (PASSPORT_LEVEL_ORDER.indexOf(level) > PASSPORT_LEVEL_ORDER.indexOf(previous)) {
+            trackPassportLevelUp({ passportLevel: level });
+        }
+    } catch {
+        /* storage blocked — skip rather than risk a duplicate every render */
+    }
+}
 
 function ShareProfileLinkButton({ userId }) {
     const [copied, setCopied] = useState(false);
     const url = `${getSiteUrl()}/u/${userId}`;
 
     const onClick = async () => {
+        let method = 'copy_link';
         try {
             await navigator.clipboard.writeText(url);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
+            method = 'prompt_copy';
             window.prompt('Copy profile link:', url);
         }
+        trackShare({ method, contentType: 'profile', itemId: userId });
     };
 
     return (
@@ -45,6 +75,10 @@ export default function PassportPage() {
         const frame = requestAnimationFrame(() => setMounted(true));
         return () => cancelAnimationFrame(frame);
     }, []);
+
+    useEffect(() => {
+        if (authReady) trackPassportLevelChange(user);
+    }, [authReady, user]);
 
     if (!mounted || !authReady) return null;
     const rolesReady = authReady && !authRefreshing;

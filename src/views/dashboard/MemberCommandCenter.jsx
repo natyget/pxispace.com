@@ -226,7 +226,7 @@ export default function MemberCommandCenter({ user }) {
                     ))}
                 </div>
                 <p className="mt-5 text-xs leading-5 text-zinc-600">
-                    Free events stay free to host. PXI charges a 4.59% consumer fee and a $0.90 organizer flat fee on paid
+                    Free events stay free to host. PXI charges a 5.49% consumer fee and a $0.99 organizer flat fee per ticket on paid
                     transactions.
                 </p>
             </section>

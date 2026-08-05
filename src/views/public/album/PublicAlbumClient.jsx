@@ -36,6 +36,7 @@ import { useAlbumThreadScroll } from './useAlbumThreadScroll';
 import { publicAlbumMediaId, useAlbumThreadActiveVideo } from './useAlbumThreadActiveVideo';
 import { syncStableMediaRotations } from './stableMediaRotations';
 import { markAlbumVideoUserActivation } from './albumExclusivePlayback';
+import { trackScrapbookView } from '@/lib/analytics';
 
 function normalizeMediaList(raw) {
   if (!Array.isArray(raw)) return [];
@@ -212,6 +213,17 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   }, [album]);
 
   const eventId = album?.event?.id || null;
+
+  // One scrapbook_view per album actually opened — not for a denied or missing
+  // one, and not again when the album object is refetched.
+  const scrapbookViewedForRef = useRef(null);
+  useEffect(() => {
+    if (!albumId || !album || denied) return;
+    if (scrapbookViewedForRef.current === albumId) return;
+    scrapbookViewedForRef.current = albumId;
+    trackScrapbookView({ eventId, eventTitle: album?.event?.name });
+  }, [albumId, album, denied, eventId]);
+
   const openLightbox = (index) => {
     markAlbumVideoUserActivation();
     setLightboxIndex(index);
@@ -289,9 +301,13 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
     return galleryMedia.filter((m) => myMatchIds.has(String(publicAlbumMediaId(m) || '')));
   }, [galleryMedia, onlyMyShots, myMatchIds]);
 
+  // Loading/error states deliberately do NOT reuse .public-album-page: its
+  // desktop grid + 80px margin inside the overflow-hidden shell clipped the
+  // header, and the mobile shell reserves nothing for the fixed navbar.
+  // A plain centered wrapper with navbar padding renders clean on both.
   if (loading) {
     return (
-      <div className="public-album-page flex min-h-[100dvh] items-center justify-center">
+      <div className="flex h-full min-h-0 flex-1 items-center justify-center px-4 pt-20">
         <IphonePane className="items-center justify-center">
           <HugeiconsIcon icon={Loading02Icon} className="size-6 animate-spin text-zinc-400" />
         </IphonePane>
@@ -301,14 +317,17 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
 
   if (!album || denied) {
     return (
-      <div className="public-album-page flex min-h-[100dvh] items-center justify-center px-4">
+      <div className="flex h-full min-h-0 flex-1 items-center justify-center px-4 pt-20">
         <IphonePane className="items-center justify-center px-4 text-center text-white">
           <HugeiconsIcon icon={LockIcon} className="mb-4 size-8 text-zinc-500" />
-          <p className="text-lg font-semibold">{!album ? 'Album not found' : 'Private album'}</p>
+          {/* `denied` decides the copy — a 403 leaves `album` null, so checking
+              !album first made "Private album" unreachable and every private
+              album read "Album not found". */}
+          <p className="text-lg font-semibold">{denied ? 'Private album' : 'Album not found'}</p>
           <p className="mt-2 text-sm text-zinc-500">
-            {!album
-              ? 'This link may be invalid or the album was removed.'
-              : 'This album is private. Open the PXI app to request access.'}
+            {denied
+              ? 'This album is private. Open your invite link in the PXI app to see the night.'
+              : 'This link may be invalid or the album was removed.'}
           </p>
           {eventId ? (
             <Link href={`/events/${eventId}`} className="mt-6 text-sm font-medium text-pxi-purple hover:text-white">

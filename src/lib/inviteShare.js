@@ -12,7 +12,11 @@ export function qrImageUrlForEvent(eventId, size = 512) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=000000&margin=12`;
 }
 
-/** Share the QR code PNG (not a plain URL string). */
+/**
+ * Share the QR code PNG (not a plain URL string).
+ * @returns {Promise<'native_share'|'download'>} the path actually taken, so the
+ *   caller can report the real `method` on its GA4 `share` event.
+ */
 export async function shareEventQrImage(eventId, eventName) {
   const qrUrl = qrImageUrlForEvent(eventId, 512);
   const res = await fetch(qrUrl);
@@ -28,7 +32,7 @@ export async function shareEventQrImage(eventId, eventName) {
       title: eventName || 'Event QR',
       text: 'Scan to RSVP',
     });
-    return;
+    return 'native_share';
   }
 
   const objectUrl = URL.createObjectURL(blob);
@@ -37,9 +41,13 @@ export async function shareEventQrImage(eventId, eventName) {
   a.download = file.name;
   a.click();
   URL.revokeObjectURL(objectUrl);
+  return 'download';
 }
 
-/** Best-effort Stories share: native sheet with URL + title when available. */
+/**
+ * Best-effort Stories share: native sheet with URL + title when available.
+ * @returns {Promise<'native_share'|'copy_link'>} the path actually taken.
+ */
 export async function shareEventToInstagramStory(eventId, eventName, { coverImageUrl, scrapbookThumbUrl } = {}) {
   const url = getPublicEventUrl(eventId);
   const title = eventName || 'PXI Event';
@@ -62,15 +70,16 @@ export async function shareEventToInstagramStory(eventId, eventName, { coverImag
 
     if (files.length > 0 && navigator.canShare?.({ files, url })) {
       await navigator.share({ files, url, title, text: title });
-      return;
+      return 'native_share';
     }
     if (files.length > 0 && navigator.canShare?.({ files })) {
       await navigator.share({ files, title, text: `${title}\n${url}` });
-      return;
+      return 'native_share';
     }
     await navigator.share({ title, text: title, url });
-    return;
+    return 'native_share';
   }
 
   await navigator.clipboard.writeText(`${title}\n${url}`);
+  return 'copy_link';
 }

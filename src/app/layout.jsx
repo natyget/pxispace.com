@@ -55,6 +55,9 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Codystar&family=Inter:wght@400;500;600;700;800;900&family=Stack+Sans+Notch:wght@200..700&display=swap"
           rel="stylesheet"
         />
+        {/* The Google tag is fetched from googletagmanager.com by AnalyticsScripts;
+            warming the connection shaves the TLS handshake off first-hit latency. */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
         <AnalyticsScripts />
       </head>
       <body className="theme-matte density-compact">

@@ -5,8 +5,14 @@
 # Bot Fight / WAF). Allow `GET /api/*` from Netlify IPs or lower security for that path; check
 # Netlify function logs for `[getPublicProfile] upstream error` status (403/503).
 #
-# Analytics env (Netlify UI): NEXT_PUBLIC_GA_MEASUREMENT_ID, NEXT_PUBLIC_GTM_ID,
-# NEXT_PUBLIC_CONSENT_DEFAULT
+# Analytics env — set ALL FOUR in the Netlify UI (they are baked in at build time,
+# so a change needs a redeploy). Every one is fail-closed: a missing id means that
+# destination does not load. Never hardcode a fallback.
+#   NEXT_PUBLIC_GOOGLE_TAG_ID      GT-…  the single gtag.js loader
+#   NEXT_PUBLIC_GA_MEASUREMENT_ID  G-…   GA4 web stream (property 514139578)
+#   NEXT_PUBLIC_GOOGLE_ADS_ID      AW-…  Google Ads (enhanced conversions)
+#   NEXT_PUBLIC_GTM_ID             GTM-… ad-pixel container ONLY, no GA4 tag inside
+# NEXT_PUBLIC_CONSENT_DEFAULT is RETIRED — Consent Mode v2 is region-scoped in code.
 
 [build]
   command = "npm run build"
@@ -33,6 +39,18 @@
 # Formspree (pricing form), Spotify + OpenStreetMap embeds, backend API on
 # *.pxispace.com, presigned R2 PUTs. img/media stay broad (https:) — avatars/media
 # come from R2 + Unsplash + qrserver.
+#
+# ⚠ THE CSP BELOW IS CURRENTLY INERT ON HTML DOCUMENTS. With @netlify/plugin-nextjs
+# the pages are served by the Next runtime, so this [[headers]] block only reaches
+# static assets — a document response carries no Content-Security-Policy today.
+# The delivery fix belongs in next.config.js `headers()` and is owned elsewhere;
+# the POLICY here is kept correct so it is right the moment it starts applying.
+#
+# Analytics entries: googletagmanager (gtag.js + GTM), google-analytics /
+# analytics.google.com (GA4 collect), doubleclick (remarketing), and for Google
+# Ads specifically — www.googleadservices.com in script-src (conversion_async.js)
+# plus www.google.com + www.googleadservices.com in connect-src (the conversion
+# ping and the enhanced-conversions POST both land there).
 [[headers]]
   for = "/*"
   [headers.values]
@@ -41,4 +59,4 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "accelerometer=(), geolocation=(), gyroscope=(), camera=(self), microphone=(), usb=()"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://accounts.google.com https://appleid.cdn-apple.com https://js.stripe.com https://js-cdn.music.apple.com https://*.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.pxispace.com https://*.r2.cloudflarestorage.com https://accounts.google.com https://api.stripe.com https://js.stripe.com https://api.geoapify.com https://formspree.io https://*.music.apple.com https://appleid.apple.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://*.g.doubleclick.net; frame-src https://open.spotify.com https://www.openstreetmap.org https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://appleid.apple.com https://www.googletagmanager.com https://td.doubleclick.net; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://appleid.apple.com https://accounts.spotify.com https://checkout.stripe.com; frame-ancestors 'none'; upgrade-insecure-requests"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://accounts.google.com https://appleid.cdn-apple.com https://js.stripe.com https://js-cdn.music.apple.com https://*.googletagmanager.com https://www.googleadservices.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.pxispace.com https://*.r2.cloudflarestorage.com https://accounts.google.com https://api.stripe.com https://js.stripe.com https://api.geoapify.com https://formspree.io https://*.music.apple.com https://appleid.apple.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://*.g.doubleclick.net https://www.google.com https://www.googleadservices.com; frame-src https://open.spotify.com https://www.openstreetmap.org https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://appleid.apple.com https://www.googletagmanager.com https://td.doubleclick.net; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://appleid.apple.com https://accounts.spotify.com https://checkout.stripe.com; frame-ancestors 'none'; upgrade-insecure-requests"

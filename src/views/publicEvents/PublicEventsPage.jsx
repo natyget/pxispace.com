@@ -11,18 +11,31 @@ import { getAnonId, queueAdImpression, trackAdClick, useAdImpression } from '@/l
 import EventCard from '@/views/events/EventCard';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { useAuth } from '@/contexts/AuthContext';
+import { resolveEventCity } from '@/lib/seo/cities';
+import { trackSearchDebounced, trackSelectItem, trackViewItemList, trackViewSearchResults } from '@/lib/analytics';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowDown01Icon, MusicNote01Icon } from '@hugeicons/core-free-icons';
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
 
+// GA4 list identity. The SORT changes what the list is (a taste-ranked grid is a
+// different surface from newest-first browse), so it changes the id; the time /
+// city / text filters keep the id and just re-fire with a new item set.
+const LIST_BROWSE = { id: 'events_browse', name: 'Browse events' };
+const LIST_TASTE_MATCH = { id: 'events_taste_match', name: 'Browse events · music match' };
+const LIST_WISHLIST = { id: 'wishlist', name: 'Wishlist' };
+const LIST_FEATURED = { id: 'events_featured', name: 'Featured events' };
+// GA4 accepts at most 200 items per hit; the grid only ever fetches 48, so this is
+// a guard rather than a real truncation.
+const MAX_LIST_ITEMS = 50;
+
 function normalizeApiEvent(e) {
   const paid = e.ticketType === 'PAID';
   const sym = e.currency === 'EUR' ? '€' : '$';
-  const price =
-    paid && e.ticketPrice != null && Number(e.ticketPrice) > 0
-      ? `${sym}${Number(e.ticketPrice).toFixed(2)}`
-      : 'Free';
+  // Keep the NUMBER as well as the display string: GA4 items[].price needs a
+  // number and "$12.00" parses to NaN.
+  const priceUsd = paid && e.ticketPrice != null && Number(e.ticketPrice) > 0 ? Number(e.ticketPrice) : 0;
+  const price = priceUsd > 0 ? `${sym}${priceUsd.toFixed(2)}` : 'Free';
 
   const vs = e.vendorStats;
   const vendorHint =
@@ -61,6 +74,15 @@ function normalizeApiEvent(e) {
     vendorHint,
     organizerAvatar: e.host?.avatarUrl || e.user?.avatarUrl || null,
     organizerName: e.host?.name || e.host?.username || e.user?.name || e.user?.username || 'Host',
+
+    // GA4 taxonomy fields. Carried on the normalized event so every tracking call
+    // on this page has real values: the discover payload has all of these and the
+    // display shape used to throw them away.
+    hostId: e.createdBy || e.organizer?.id || null,
+    city: resolveEventCity(e)?.name || null,
+    // `playlist` is only returned when the discover fetch asks for match scores.
+    genre: e.playlist?.topGenres?.[0] || null,
+    value: priceUsd,
   };
 }
 
@@ -74,6 +96,7 @@ function normalizeAdEvent(ad) {
   const e = ad.event;
   const paid = e.ticketType === 'PAID';
   const sym = e.currency === 'EUR' ? '€' : '$';
+  const priceUsd = paid && Number(e.ticketPrice) > 0 ? Number(e.ticketPrice) : 0;
   return {
     id: e.id,
     title: e.name,
@@ -81,7 +104,7 @@ function normalizeAdEvent(ad) {
     venue: e.venueName || e.location || 'Location TBA',
     createdAt: null,
     startDate: e.startDate ? new Date(e.startDate) : null,
-    price: paid && Number(e.ticketPrice) > 0 ? `${sym}${Number(e.ticketPrice).toFixed(2)}` : 'Free',
+    price: priceUsd > 0 ? `${sym}${priceUsd.toFixed(2)}` : 'Free',
     attendees: 0,
     ticketType: e.ticketType || null,
     albumId: null,
@@ -95,12 +118,18 @@ function normalizeAdEvent(ad) {
     vendorHint: null,
     organizerAvatar: null,
     organizerName: 'Sponsored',
+
+    // GA4 taxonomy fields — the ad payload carries no creator, so host_id stays unset.
+    hostId: null,
+    city: resolveEventCity(e)?.name || null,
+    genre: null,
+    value: priceUsd,
     __ad: ad,
   };
 }
 
 /** Grid card that fires one viewable impression when sponsored. */
-function AdAwareEventCard({ event, favorited, onToggleFavorite }) {
+function AdAwareEventCard({ event, favorited, onToggleFavorite, listId, listName, index, recSource, recRank }) {
   const ad = event.__ad || null;
   const impressionRef = useAdImpression(ad);
   return (
@@ -112,6 +141,11 @@ function AdAwareEventCard({ event, favorited, onToggleFavorite }) {
         detailBasePath="/events"
         sponsored={Boolean(ad)}
         onSponsoredClick={ad ? () => trackAdClick(ad) : undefined}
+        listId={listId}
+        listName={listName}
+        index={index}
+        recSource={recSource}
+        recRank={recRank}
       />
     </div>
   );
@@ -457,6 +491,70 @@ export default function PublicEventsPage() {
     return interleaveGridAds(rest, gridAds);
   }, [rest, gridAds, searchQuery, timeFilter, cityFilter, favoritesOnly, trending, musicSortEffective]);
 
+  // ── Analytics ─────────────────────────────────────────────────────────────
+  // The grid renders TWICE (a md:hidden mobile copy and a hidden md:block desktop
+  // copy), so list tracking is driven off state, never off a render, or every hit
+  // would be doubled.
+  const activeList = favoritesOnly ? LIST_WISHLIST : musicSortEffective ? LIST_TASTE_MATCH : LIST_BROWSE;
+
+  // The text filter re-runs on every keystroke, so everything keyed off the search
+  // term waits for it to settle first — otherwise "techno" is six list impressions.
+  const [settledSearch, setSettledSearch] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setSettledSearch(searchQuery.trim()), 700);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  const listKeyRef = useRef(null);
+  useEffect(() => {
+    if (loading || restWithAds.length === 0) return;
+    // One view_item_list per list + filter combination — not per render, not per scroll.
+    const key = [activeList.id, trending, timeFilter, cityFilter, settledSearch].join('|');
+    if (listKeyRef.current === key) return;
+    listKeyRef.current = key;
+    trackViewItemList({
+      listId: activeList.id,
+      listName: activeList.name,
+      items: restWithAds.slice(0, MAX_LIST_ITEMS),
+    });
+  }, [loading, restWithAds, activeList, trending, timeFilter, cityFilter, settledSearch]);
+
+  const featuredKeyRef = useRef(null);
+  useEffect(() => {
+    if (heroEvents.length === 0) return;
+    const key = heroEvents.map((e) => e.id).join(',');
+    if (featuredKeyRef.current === key) return;
+    featuredKeyRef.current = key;
+    trackViewItemList({
+      listId: LIST_FEATURED.id,
+      listName: LIST_FEATURED.name,
+      items: heroEvents.slice(0, MAX_LIST_ITEMS),
+    });
+  }, [heroEvents]);
+
+  // The client-side filter is instant, so the shared 700ms debounce is the only
+  // thing standing between GA4 and one `search` hit per keystroke.
+  useEffect(() => {
+    const term = searchQuery.trim();
+    if (!term) return;
+    trackSearchDebounced({ searchTerm: term });
+  }, [searchQuery]);
+
+  const searchResultsCount = filteredSortedEvents.length;
+  const searchReportedRef = useRef(null);
+  useEffect(() => {
+    if (!settledSearch) {
+      searchReportedRef.current = null;
+      return;
+    }
+    if (loading || searchReportedRef.current === settledSearch) return;
+    searchReportedRef.current = settledSearch;
+    trackViewSearchResults({ searchTerm: settledSearch, resultsCount: searchResultsCount });
+  }, [settledSearch, searchResultsCount, loading]);
+
+  // Drop a pending debounced `search` when the page goes away.
+  useEffect(() => () => trackSearchDebounced.cancel(), []);
+
   // Auto-advance carousel
   useEffect(() => {
     if (heroEvents.length <= 1) return;
@@ -717,7 +815,16 @@ export default function PublicEventsPage() {
             {featured ? (
               <Link
                 href={featured.ticketType === 'PAID' ? `/events/${featured.id}/checkout` : `/events/${featured.id}`}
-                onClick={() => featured.__ad && trackAdClick(featured.__ad)}
+                onClick={() => {
+                  if (featured.__ad) trackAdClick(featured.__ad);
+                  // The hero CTA is the desktop equivalent of clicking the featured card.
+                  trackSelectItem({
+                    listId: LIST_FEATURED.id,
+                    listName: LIST_FEATURED.name,
+                    item: featured,
+                    index: heroIndex,
+                  });
+                }}
                 className="inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md px-7 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:scale-105 border-0"
               >
                 {featured.ticketType === 'PAID' ? 'Get tickets' : 'Join album'}
@@ -783,23 +890,31 @@ export default function PublicEventsPage() {
             <EventsGridSkeleton count={4} />
           ) : activeTab === 'featured' ? (
             <div className="grid gap-6 w-full justify-center py-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
-              {heroEvents.map((ev) => (
+              {heroEvents.map((ev, i) => (
                 <AdAwareEventCard
                   key={ev.__ad ? `ad-${ev.__ad.campaignId}-${ev.id}` : ev.id}
                   event={ev}
                   favorited={favoriteIds.has(String(ev.id))}
                   onToggleFavorite={handleToggleFavorite}
+                  listId={LIST_FEATURED.id}
+                  listName={LIST_FEATURED.name}
+                  index={i}
                 />
               ))}
             </div>
           ) : (
             <div className="grid gap-6 w-full justify-center py-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
-              {restWithAds.map((ev) => (
+              {restWithAds.map((ev, i) => (
                 <AdAwareEventCard
                   key={ev.__ad ? `ad-${ev.__ad.campaignId}-${ev.id}` : ev.id}
                   event={ev}
                   favorited={favoriteIds.has(String(ev.id))}
                   onToggleFavorite={handleToggleFavorite}
+                  listId={activeList.id}
+                  listName={activeList.name}
+                  index={i}
+                  recSource={musicSortEffective ? 'taste_match' : undefined}
+                  recRank={musicSortEffective ? i : undefined}
                 />
               ))}
             </div>
@@ -812,12 +927,17 @@ export default function PublicEventsPage() {
             <EventsGridSkeleton />
           ) : (
             <div className="grid gap-6 w-full justify-center" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
-              {restWithAds.map((ev) => (
+              {restWithAds.map((ev, i) => (
                 <AdAwareEventCard
                   key={ev.__ad ? `ad-${ev.__ad.campaignId}-${ev.id}` : ev.id}
                   event={ev}
                   favorited={favoriteIds.has(String(ev.id))}
                   onToggleFavorite={handleToggleFavorite}
+                  listId={activeList.id}
+                  listName={activeList.name}
+                  index={i}
+                  recSource={musicSortEffective ? 'taste_match' : undefined}
+                  recRank={musicSortEffective ? i : undefined}
                 />
               ))}
             </div>

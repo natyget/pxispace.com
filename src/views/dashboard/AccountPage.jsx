@@ -22,6 +22,7 @@ import { api } from '@/services/api';
 import { listAdCampaigns } from '@/services/ads';
 import { uploadImageToR2 } from '@/services/media';
 import { getSingleShadeDonutCellProps } from '@/components/dashboard/chartStyles';
+import { stashAttributionForRedirect, trackSpotifyConnectStart } from '@/lib/analytics';
 
 const DELETION_ITEMS = [
     'Your profile, name, username, and avatar',
@@ -409,6 +410,12 @@ function MusicConnectionsCard() {
         setError('');
         try {
             const { authorizeUrl } = await musicService.startSpotifyConnect();
+            trackSpotifyConnectStart({ entryPoint: 'account_settings' });
+            // Deliberately awaited (self-capped at ~800ms, button already reads
+            // "Opening..."): the stash has to reach sessionStorage BEFORE we leave,
+            // or the GA client_id and the ad click id do not survive the round-trip
+            // and Spotify becomes the referrer that acquired this user.
+            await stashAttributionForRedirect();
             window.location.href = authorizeUrl;
         } catch (err) {
             setError(err?.message || 'Could not start Spotify connect');

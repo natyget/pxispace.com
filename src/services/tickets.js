@@ -1,15 +1,52 @@
 import { api } from './api';
 import { getGaIds } from '@/lib/analytics';
+import { getAttribution } from '@/lib/attribution';
 
 /** GA client/session ids rider — lets the backend fire the server-side GA4
  *  `purchase` from the Stripe webhook, attributed to this browser session.
- *  getGaIds resolves nulls fast when analytics is off/blocked. */
+ *  getGaIds resolves nulls fast when analytics is off/blocked.
+ *
+ *  gaPlatform is sent UNCONDITIONALLY. It is what tells the backend which
+ *  Measurement Protocol target (web vs app) to dispatch to, so hanging it off
+ *  `clientId` meant a hit that resolved only a gaSessionId had no target: the
+ *  webhook silently dropped the purchase with no error on either side. */
 async function gaCheckoutFields() {
   const { clientId, sessionId } = await getGaIds();
   return {
-    ...(clientId ? { gaClientId: clientId, gaPlatform: 'web' } : {}),
+    gaPlatform: 'web',
+    ...(clientId ? { gaClientId: clientId } : {}),
     ...(sessionId ? { gaSessionId: sessionId } : {}),
   };
+}
+
+const ATTRIBUTION_KEYS = [
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_term',
+  'utm_content',
+  'gclid',
+  'fbclid',
+  'ttclid',
+];
+
+/** Last-touch campaign rider (falls back to first-touch), flattened one level so
+ *  the backend can pass it straight into Stripe metadata, which is flat
+ *  key/value only. Values are capped to stay inside Stripe's metadata limits. */
+function attributionFields() {
+  try {
+    const stored = getAttribution();
+    const touch = stored?.last ?? stored?.first;
+    if (!touch) return {};
+    const out = {};
+    for (const key of ATTRIBUTION_KEYS) {
+      const value = touch[key];
+      if (typeof value === 'string' && value) out[key] = value.slice(0, 200);
+    }
+    return out;
+  } catch {
+    return {};
+  }
 }
 
 /**
@@ -38,6 +75,7 @@ export async function purchaseTicket(eventId, tierId, opts = {}) {
     ...(opts.emailOptIn ? { emailOptIn: true } : {}),
     ...(opts.smsOptIn ? { smsOptIn: true } : {}),
     ...(await gaCheckoutFields()),
+    ...attributionFields(),
   });
 }
 
@@ -59,6 +97,7 @@ export async function createCheckoutSession(eventId, successUrl, cancelUrl, tier
     ...(opts.emailOptIn ? { emailOptIn: true } : {}),
     ...(opts.smsOptIn ? { smsOptIn: true } : {}),
     ...(await gaCheckoutFields()),
+    ...attributionFields(),
   });
 }
 
@@ -77,6 +116,9 @@ export async function generateTicket(userId, eventId, opts = {}) {
     eventId,
     ...(opts.emailOptIn ? { emailOptIn: true } : {}),
     ...(opts.smsOptIn ? { smsOptIn: true } : {}),
+    // Free RSVPs fire the authoritative `join_event` server-side; without these
+    // ids the backend has no Measurement Protocol target and skips the hit.
+    ...(await gaCheckoutFields()),
   });
   return data;
 }
