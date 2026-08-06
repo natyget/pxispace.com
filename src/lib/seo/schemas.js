@@ -11,6 +11,7 @@
  */
 
 import { CANONICAL_ORIGIN } from '@/lib/siteUrl';
+import { SOCIAL_SAME_AS } from '@/lib/seo/social';
 
 /**
  * Structured data always names the canonical production origin, never the origin of the
@@ -150,9 +151,21 @@ function buildPlace(event, city) {
  * Site-wide nodes
  * ────────────────────────────────────────────────────────────────────────── */
 
-export const ORGANIZATION_JSONLD = {
-  '@context': 'https://schema.org',
+/**
+ * Stable identifier for the PXI organization entity.
+ *
+ * Every node that mentions the company references THIS id instead of restating a
+ * partial copy. Before, `/about` nested a full Organization inside AboutPage while the
+ * homepage's WebSite.publisher declared a second, thinner one with no logo and no
+ * `sameAs` — two competing descriptions of the same company, which is precisely how an
+ * entity fails to consolidate and a Knowledge Panel never forms.
+ */
+export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+
+/** The Organization node WITHOUT `@context`, for embedding inside an `@graph`. */
+export const ORGANIZATION_NODE = {
   '@type': 'Organization',
+  '@id': ORGANIZATION_ID,
   name: 'PXI',
   url: SITE_URL,
   // Full-bleed brand mark (square, purple) for Google's org logo slot.
@@ -160,13 +173,16 @@ export const ORGANIZATION_JSONLD = {
   // Branded 1200×630 card so Google prefers it for the search thumbnail
   // instead of scraping a prominent in-page content photo.
   image: `${SITE_URL}/og-hero.png`,
-  sameAs: ['https://www.instagram.com/pxilabs/', 'https://www.tiktok.com/@pxi.labs'],
+  sameAs: SOCIAL_SAME_AS,
   contactPoint: {
     '@type': 'ContactPoint',
     email: 'support@pxispace.com',
     contactType: 'customer support',
   },
 };
+
+/** Standalone Organization document, for any page that emits it on its own. */
+export const ORGANIZATION_JSONLD = { '@context': 'https://schema.org', ...ORGANIZATION_NODE };
 
 /**
  * Homepage JSON-LD: dual-node @graph combining WebSite authority
@@ -175,14 +191,20 @@ export const ORGANIZATION_JSONLD = {
 export const HOMEPAGE_JSONLD = {
   '@context': 'https://schema.org',
   '@graph': [
+    // The full Organization lives HERE, on the homepage, because that is the URL Google
+    // treats as the site's entity home. `sameAs` is what ties pxispace.com to the
+    // Instagram / TikTok / X / YouTube accounts; emitting it only from /about (nested two
+    // levels inside an AboutPage) meant the link was never reliably made.
+    ORGANIZATION_NODE,
     {
       '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
       name: 'PXI',
       url: SITE_URL,
       image: `${SITE_URL}/og-hero.png`,
       description:
         "PXI is a privacy-first event operating system spanning ticketing in the organizer's own brand, shared event photo galleries, and digital scrapbooks.",
-      publisher: { '@type': 'Organization', name: 'PXI', url: SITE_URL },
+      publisher: { '@id': ORGANIZATION_ID },
       potentialAction: {
         '@type': 'SearchAction',
         target: {
@@ -226,7 +248,8 @@ export function buildAboutJsonLd() {
     image: `${SITE_URL}/og-hero.png`,
     description:
       'PXI is an event platform built by operators, where the night compiles itself, the organizer keeps the money, and the memory is the point.',
-    mainEntity: ORGANIZATION_JSONLD,
+    // Reference, not a second copy — the full node is emitted on the homepage.
+    mainEntity: { '@id': ORGANIZATION_ID },
   };
 }
 
