@@ -86,7 +86,16 @@ const Navbar = () => {
                     className="flex min-w-0 items-center z-20"
                     onClick={() => setMobileMenuOpen(false)}
                 >
-                    <img src="/logo-mark.png" alt="PXI" className="h-[38px] md:h-[44px] translate-y-[4px] w-auto object-contain" />
+                    {/* The circular badge. app-icon.png is the mark already inscribed in a
+                        circle on a transparent canvas, so it sits cleanly on the dark bar —
+                        the full-bleed icon-*.png variants are for favicons/share cards only. */}
+                    <img
+                        src="/app-icon.png"
+                        alt="PXI"
+                        width={44}
+                        height={44}
+                        className="h-[38px] w-[38px] md:h-[44px] md:w-[44px] translate-y-[4px] rounded-full object-contain"
+                    />
                 </Link>
 
                 {/* Center: Marketing nav (plain editorial links) */}

@@ -1,20 +1,15 @@
 import { JsonLd } from '@/components/seo/JsonLd';
 import AnalyticsView from '@/views/features/AnalyticsView';
+import { buildPageMetadata } from '@/lib/seo/pageMetadata';
 
-export const metadata = {
-  title: 'Event Promoter ROI Analytics',
+export const metadata = buildPageMetadata({
+  title: "Event Promoter ROI Analytics",
   description:
-    'Know your room before the baseline drops. Track attendance funnels, promoter ROI, hype index, and crowd behavior in real time with PXI analytics.',
-  alternates: {
-    canonical: 'https://pxispace.com/features/event-promoter-analytics',
-  },
-  openGraph: {
-    title: 'Event Promoter ROI Analytics | PXI',
-    description:
-      'Real-time predictive analytics and promoter attribution for event organizers.',
-    url: 'https://pxispace.com/features/event-promoter-analytics',
-  },
-};
+    "Know your room before the baseline drops. Track attendance funnels, promoter ROI, hype index, and crowd behavior in real time with PXI analytics.",
+  path: "/features/event-promoter-analytics",
+  eyebrow: "Feature",
+  ogTitle: "Know the room before the baseline drops.",
+});
 
 const PAGE_JSONLD = {
   '@context': 'https://schema.org',
