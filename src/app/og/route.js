@@ -1,6 +1,14 @@
 import { ImageResponse } from 'next/og';
 
-export const runtime = 'edge';
+// NODE, not edge. On Netlify an edge route runs as a Deno edge function, and next/og
+// needs the resvg WASM binary — that combination is the single most fragile thing we
+// could put behind EVERY page's og:image, because one failure blanks every share card
+// on the site at once. The Node runtime is a plain serverless function and is the
+// supported path for ImageResponse.
+export const runtime = 'nodejs';
+
+// Cards are pure functions of the query string, so let the CDN keep them.
+export const revalidate = 86400;
 
 /**
  * Brand-consistent dynamic Open Graph card (1200×630).
