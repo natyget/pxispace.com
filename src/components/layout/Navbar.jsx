@@ -86,15 +86,16 @@ const Navbar = () => {
                     className="flex min-w-0 items-center z-20"
                     onClick={() => setMobileMenuOpen(false)}
                 >
-                    {/* The circular badge. app-icon.png is the mark already inscribed in a
-                        circle on a transparent canvas, so it sits cleanly on the dark bar —
-                        the full-bleed icon-*.png variants are for favicons/share cards only. */}
+                    {/* The bare glowing mark on a transparent canvas — no purple disc behind
+                        it. The bar is already dark, so the badge treatment (app-icon.png) reads
+                        as a sticker pasted on top. That variant is for the favicon and the app
+                        icon, where a container shape is required; it is not the site nav mark. */}
                     <img
-                        src="/app-icon.png"
+                        src="/logo-mark.png"
                         alt="PXI"
                         width={44}
                         height={44}
-                        className="h-[38px] w-[38px] md:h-[44px] md:w-[44px] translate-y-[4px] rounded-full object-contain"
+                        className="h-[38px] w-[38px] md:h-[44px] md:w-[44px] translate-y-[4px] object-contain"
                     />
                 </Link>
 
