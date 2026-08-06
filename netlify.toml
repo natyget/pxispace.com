@@ -13,6 +13,15 @@
 #   NEXT_PUBLIC_GOOGLE_ADS_ID      AW-…  Google Ads (enhanced conversions)
 #   NEXT_PUBLIC_GTM_ID             GTM-… ad-pixel container ONLY, no GA4 tag inside
 # NEXT_PUBLIC_CONSENT_DEFAULT is RETIRED — Consent Mode v2 is region-scoped in code.
+#
+# Social ad pixels — OPTIONAL and fail-closed. Leave a variable unset and that network's
+# script is never injected. Google cannot buy Instagram/Facebook or TikTok inventory, so
+# without these there is no way to retarget a site visitor on those apps at all.
+#   NEXT_PUBLIC_META_PIXEL_ID     15-16 digits, Meta Events Manager (Instagram + Facebook)
+#   NEXT_PUBLIC_TIKTOK_PIXEL_ID   TikTok Ads Manager > Assets > Events > Web Events
+#   NEXT_PUBLIC_X_PIXEL_ID        X Ads > Tools > Conversion tracking (the "o..." tag id)
+# All three are consent-gated by isTrackingAllowed() and add cookies that are already
+# listed in NON_ESSENTIAL_COOKIES and must be listed in the Cookie Policy before launch.
 
 [build]
   command = "npm run build"
@@ -59,4 +68,4 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "accelerometer=(), geolocation=(), gyroscope=(), camera=(self), microphone=(), usb=()"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://accounts.google.com https://appleid.cdn-apple.com https://js.stripe.com https://js-cdn.music.apple.com https://*.googletagmanager.com https://www.googleadservices.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.pxispace.com https://*.r2.cloudflarestorage.com https://accounts.google.com https://api.stripe.com https://js.stripe.com https://api.geoapify.com https://formspree.io https://*.music.apple.com https://appleid.apple.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://*.g.doubleclick.net https://www.google.com https://www.googleadservices.com; frame-src https://open.spotify.com https://www.openstreetmap.org https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://appleid.apple.com https://www.googletagmanager.com https://td.doubleclick.net; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://appleid.apple.com https://accounts.spotify.com https://checkout.stripe.com; frame-ancestors 'none'; upgrade-insecure-requests"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://accounts.google.com https://appleid.cdn-apple.com https://js.stripe.com https://js-cdn.music.apple.com https://*.googletagmanager.com https://www.googleadservices.com https://connect.facebook.net https://analytics.tiktok.com https://static.ads-twitter.com https://analytics.twitter.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.pxispace.com https://*.r2.cloudflarestorage.com https://accounts.google.com https://api.stripe.com https://js.stripe.com https://api.geoapify.com https://formspree.io https://*.music.apple.com https://appleid.apple.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://*.g.doubleclick.net https://www.google.com https://www.googleadservices.com https://connect.facebook.net https://*.facebook.com https://analytics.tiktok.com https://*.tiktok.com https://analytics.twitter.com https://*.ads-twitter.com; frame-src https://open.spotify.com https://www.openstreetmap.org https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://appleid.apple.com https://www.googletagmanager.com https://td.doubleclick.net https://www.facebook.com https://analytics.tiktok.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://appleid.apple.com https://accounts.spotify.com https://checkout.stripe.com; frame-ancestors 'none'; upgrade-insecure-requests"

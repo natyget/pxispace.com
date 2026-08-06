@@ -27,6 +27,7 @@ import { EVENTS, CURRENCY, USER_TYPES } from './analyticsEvents';
 import { accessTierOf, isVendorUser } from './accountTier';
 import { clearEnhancedConversionData } from './enhancedConversions';
 import { getOdysseyTierFromXp } from '@/utils/odysseyTier';
+import { mirrorToSocialPixels } from './socialPixels';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 const TAG_ID = process.env.NEXT_PUBLIC_GOOGLE_TAG_ID;
@@ -102,6 +103,10 @@ export function track(eventName, params = {}) {
         const payload = compact(params);
         gtagSafe('event', eventName, payload);
         mirrorToDataLayer(eventName, payload);
+        // Fan out to Meta/TikTok/X here rather than at each call site, so a funnel
+        // step can never exist in GA4 while being invisible to the social networks.
+        // No-ops entirely when no social pixel id is configured.
+        mirrorToSocialPixels(eventName, payload);
     } catch {
         /* ignore */
     }

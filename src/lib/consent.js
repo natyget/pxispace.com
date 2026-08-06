@@ -104,6 +104,35 @@ const AMBIGUOUS_TZ_PREFIXES = ['Europe/', 'Atlantic/', 'Arctic/'];
 
 export const CONSENT_STORAGE_KEY = 'pxi_consent_v2';
 
+/**
+ * Cookies this site sets that are NOT strictly necessary, and therefore must be
+ * cleared the moment a visitor withdraws consent. Keeping a 90-day ad-click id
+ * on the device of someone who just pressed "Reject all" is the exact thing
+ * GDPR Art. 7(3) is about.
+ *
+ * `pxi_paseto` (session) is deliberately absent — it is strictly necessary and
+ * only exists for a signed-in user who asked to be signed in.
+ */
+// Every non-essential cookie THIS SITE can cause to exist. Withdrawal has to remove
+// what was already written, not merely stop future writes, so any tracker added to the
+// site must add its cookies here and to the Cookie Policy in the same change.
+//   _fbp/_fbc                       Meta pixel (browser id / click id)
+//   _ttp/_tt_enable_cookie          TikTok pixel
+//   personalization_id/muc_ads      X (Twitter) pixel
+// Google's own (_ga, _gcl_au) are deliberately absent — Consent Mode's 'update' to
+// denied governs those, and deleting them from JS is unreliable because the tag writes
+// some of them on a parent domain.
+const NON_ESSENTIAL_COOKIES = [
+    'pxi_attribution',
+    '_fbp',
+    '_fbc',
+    '_ttp',
+    '_tt_enable_cookie',
+    'personalization_id',
+    'muc_ads',
+];
+const NON_ESSENTIAL_STORAGE_KEYS = ['pxi_attribution'];
+
 /** Consent Mode v2 signal set — everything Google gates. */
 export const CONSENT_GRANTED = Object.freeze({
     ad_storage: 'granted',
@@ -202,6 +231,59 @@ export function writeConsentChoice(status) {
     } catch {
         /* private mode / quota — the banner just asks again next visit */
     }
+    if (status === 'denied') forgetNonEssentialStorage();
+    // Announce the DECISION, which is a different thing from the banner opening or
+    // closing. Trackers that must not exist before permission (the Meta/TikTok/X
+    // pixels) listen for this so a visitor who accepts starts being measured
+    // immediately instead of only on their next page load.
+    try {
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent(CONSENT_CHOICE_EVENT, { detail: { status } }));
+        }
+    } catch {
+        /* never throw from consent plumbing */
+    }
+}
+
+const CONSENT_CHOICE_EVENT = 'pxi:consent-choice';
+
+/**
+ * Subscribe to consent DECISIONS (granted/denied), not to the banner's visibility.
+ * @param {(status: 'granted'|'denied') => void} listener
+ * @returns {() => void} unsubscribe
+ */
+export function subscribeConsentChoice(listener) {
+    if (typeof window === 'undefined') return () => {};
+    const handler = (e) => listener(e?.detail?.status ?? readConsentChoice());
+    window.addEventListener(CONSENT_CHOICE_EVENT, handler);
+    return () => window.removeEventListener(CONSENT_CHOICE_EVENT, handler);
+}
+
+/**
+ * Drop every non-essential cookie / storage key this site owns. Called on a
+ * 'denied' answer so that withdrawing consent actually removes what was already
+ * written, rather than only stopping future writes.
+ *
+ * Google's own cookies (_ga, _gcl_au) are not touched here: Consent Mode's
+ * 'update' to denied is what governs them, and deleting them by hand from
+ * JS is unreliable (some are set on a parent domain by the tag itself).
+ */
+export function forgetNonEssentialStorage() {
+    try {
+        if (typeof document !== 'undefined') {
+            for (const name of NON_ESSENTIAL_COOKIES) {
+                // Expire on the exact path it was written with (path=/).
+                document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+            }
+        }
+        if (typeof window !== 'undefined') {
+            for (const key of NON_ESSENTIAL_STORAGE_KEYS) {
+                window.localStorage.removeItem(key);
+            }
+        }
+    } catch {
+        /* never throw from consent plumbing */
+    }
 }
 
 /**
@@ -219,25 +301,113 @@ export function updateGoogleConsent(status) {
     }
 }
 
-/** Re-apply a previously stored choice on a cold load (defaults start denied). */
+/**
+ * Re-apply a previously stored choice on a cold load. Runs in EVERY region, not
+ * just restricted ones: outside the EEA the default is 'granted', so a visitor
+ * who opted out via the footer's Cookie settings would silently be re-granted
+ * on their next page load if we only replayed inside restricted regions.
+ */
 export function replayStoredConsent() {
     const stored = readConsentChoice();
-    if (stored) updateGoogleConsent(stored);
-    return stored;
+    if (stored) {
+        updateGoogleConsent(stored);
+        return stored;
+    }
+    // No stored answer, but the browser is broadcasting an opt-out: push the
+    // denial to Google too, or GPC would only stop OUR cookies while Consent
+    // Mode happily stayed 'granted' on its unscoped default.
+    if (hasGlobalPrivacyControl()) {
+        updateGoogleConsent('denied');
+        return 'denied';
+    }
+    return null;
 }
 
-/** Banner renders only for an un-answered visitor inside a restricted region. */
+/** Banner auto-opens only for an un-answered visitor inside a restricted region. */
 export function needsConsentBanner() {
     return isRestrictedRegion() && readConsentChoice() === null;
 }
 
 /**
+ * The single predicate every non-essential tracker must consult before it
+ * writes anything to the device.
+ *
+ *   - Restricted region: nothing is allowed until an explicit 'granted'.
+ *   - Everywhere else: allowed by default (matching the unscoped Consent Mode
+ *     default), but an explicit 'denied' is binding. That second clause is what
+ *     makes the footer's "Cookie settings" opt-out real for a US visitor and is
+ *     the mechanism behind the CCPA/CPRA opt-out right.
+ */
+export function isTrackingAllowed() {
+    if (typeof window === 'undefined') return false;
+    const stored = readConsentChoice();
+    if (stored === 'denied') return false;
+    // A browser-level opt-out signal is binding in California (CCPA/CPRA) and
+    // several other states, and it outranks our own default — but NOT a later
+    // explicit 'granted' made in the banner, which is the visitor overriding
+    // their own browser on this specific site.
+    if (stored !== 'granted' && hasGlobalPrivacyControl()) return false;
+    if (isRestrictedRegion()) return stored === 'granted';
+    return true;
+}
+
+/** True when the browser sends Global Privacy Control / legacy Do Not Track. */
+export function hasGlobalPrivacyControl() {
+    try {
+        if (typeof navigator === 'undefined') return false;
+        if (navigator.globalPrivacyControl === true) return true;
+        // DNT is deprecated and inconsistently implemented, but an explicit
+        // "1" is still an unambiguous statement of preference — honour it.
+        return navigator.doNotTrack === '1' || window.doNotTrack === '1';
+    } catch {
+        return false;
+    }
+}
+
+/**
  * Whether we are allowed to send hashed first-party identifiers to Google
- * (enhanced conversions). Outside restricted regions the unscoped default is
- * 'granted', so this is true without any interaction.
+ * (enhanced conversions).
  */
 export function hasAdUserDataConsent() {
-    if (typeof window === 'undefined') return false;
-    if (!isRestrictedRegion()) return true;
-    return readConsentChoice() === 'granted';
+    return isTrackingAllowed();
 }
+
+// ── Consent preferences UI ──────────────────────────────────────────────────
+// GDPR Art. 7(3): withdrawing consent must be as easy as giving it. The banner
+// is the only consent surface we have, so it has to be re-openable on demand
+// from anywhere in the app (the footer link). This is a 12-line external store
+// rather than context so that a plain <button> in the footer can drive a
+// component mounted somewhere else entirely in the tree.
+
+// The open/closed flag lives on `window`, not in a module-scope `let`, and the
+// notification is a real DOM event. The producer (Footer) and the consumer
+// (ConsentBanner) are separate client entry points; if the bundler ever emits
+// this module into two chunks, module-scope state would silently desync while a
+// window event still reaches both. Cheap insurance for a control that must work.
+
+const CONSENT_UI_EVENT = 'pxi:consent-ui';
+const CONSENT_UI_FLAG = '__pxiConsentUiOpen';
+
+function setConsentUi(open) {
+    try {
+        if (typeof window === 'undefined') return;
+        window[CONSENT_UI_FLAG] = open;
+        window.dispatchEvent(new Event(CONSENT_UI_EVENT));
+    } catch {
+        /* never throw from consent plumbing */
+    }
+}
+
+/** Open the consent banner in "manage" mode, in ANY region. */
+export const openConsentPreferences = () => setConsentUi(true);
+
+export const closeConsentPreferences = () => setConsentUi(false);
+
+export function subscribeConsentUi(listener) {
+    if (typeof window === 'undefined') return () => {};
+    window.addEventListener(CONSENT_UI_EVENT, listener);
+    return () => window.removeEventListener(CONSENT_UI_EVENT, listener);
+}
+
+export const isConsentUiOpen = () =>
+    typeof window !== 'undefined' && window[CONSENT_UI_FLAG] === true;

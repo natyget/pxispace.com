@@ -4,11 +4,39 @@
 // referrer on landing, persist first-touch (write-once) + last-touch
 // (overwritten per campaign visit), and hand the pair to signup so it lands
 // on User.signupAttribution in the backend. Fail-silent everywhere.
+//
+// CONSENT: this is a marketing cookie, not a necessary one — it stores gclid /
+// fbclid / ttclid for 90 days. It used to be written on every page load, which
+// meant an EEA visitor who pressed "Reject all" still got an ad-click id
+// persisted to their device. Every write now goes through isTrackingAllowed(),
+// and a denial clears what was already stored (see forgetNonEssentialStorage).
+
+import { isTrackingAllowed } from './consent';
 
 const STORAGE_KEY = 'pxi_attribution';
 const COOKIE_NAME = 'pxi_attribution';
 const COOKIE_MAX_AGE_DAYS = 90;
-const PARAM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'fbclid', 'ttclid'];
+// One key per network we can buy a click from. A click id we fail to capture on landing
+// cannot be recovered later, so the conversion is permanently unattributable to the ad
+// that paid for it.
+//
+// gbraid/wbraid are not optional extras: on iOS, when ATT denies the IDFA, Google Ads
+// stops sending `gclid` and sends one of these instead. Capturing only `gclid` therefore
+// loses attribution for a large share of iPhone ad traffic — which for an events app is
+// most of it.
+//
+// MUST stay in lockstep with CLICK_ID_KEYS in pxi-mobile-app/src/lib/attribution.ts and
+// with TOUCH_KEYS in PXIStudio-App/src/lib/signupAttribution.ts (a server-side whitelist
+// that silently drops anything it does not name).
+const CLICK_ID_KEYS = ['gclid', 'gbraid', 'wbraid', 'fbclid', 'ttclid', 'twclid', 'msclkid'];
+const PARAM_KEYS = [
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_term',
+    'utm_content',
+    ...CLICK_ID_KEYS,
+];
 
 function readStored() {
     try {
@@ -54,6 +82,9 @@ function buildTouch() {
 export function captureAttribution() {
     try {
         if (typeof window === 'undefined') return;
+        // Re-checked on every call, not cached: the visitor may accept partway
+        // through the session, and the next navigation should then capture.
+        if (!isTrackingAllowed()) return;
         const touch = buildTouch();
         if (!touch) return;
         const stored = readStored() ?? {};
