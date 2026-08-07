@@ -2,11 +2,13 @@
 
 Written 6 Aug 2026. Everything in code is committed; nothing here can be done from code.
 
-> **Secrets handling.** The founder has accepted the risk of the TikTok credentials
-> having been shared in chat and declined rotation. They live only in environment
-> variables; no credential is committed to any repo (verified). If these are ever
-> forwarded to a wider channel, send the SECRET rows privately, not in the same
-> message as the public ids.
+> **No credential values in this file.** Every secret below is a placeholder. This
+> document is committed to git, which is a wider and more permanent audience than a
+> chat window — a repo gets cloned, forked, and read by anyone who later gains access.
+> Real values belong only in the Netlify UI and the EC2 `.env.production`.
+>
+> Public ids (pixel ids, the Facebook app id) ARE written out in full, because they
+> ship in the page source anyway and hiding them helps nobody.
 
 ---
 
@@ -73,7 +75,7 @@ NEXT_PUBLIC_TIKTOK_PIXEL_ID=D9QI5AJC77UAHM1GQQ10
 **EC2 `.env.production`** (restart the API):
 ```
 TIKTOK_PIXEL_ID=D9QI5AJC77UAHM1GQQ10
-TIKTOK_EVENTS_ACCESS_TOKEN=d4ac38293282a2e0fe66d1fac73297f076f3cf10
+TIKTOK_EVENTS_ACCESS_TOKEN=<TikTok Events Manager → Settings → generated token>
 TIKTOK_TEST_EVENT_CODE=TEST77294   # REMOVE after test purchases are confirmed
 ```
 
@@ -214,7 +216,7 @@ Optional, only if X ads are ever run: `NEXT_PUBLIC_X_PIXEL_ID=`
 
 ```
 TIKTOK_PIXEL_ID=D9QI5AJC77UAHM1GQQ10
-TIKTOK_EVENTS_ACCESS_TOKEN=d4ac38293282a2e0fe66d1fac73297f076f3cf10
+TIKTOK_EVENTS_ACCESS_TOKEN=<TikTok Events Manager → Settings → generated token>
 TIKTOK_TEST_EVENT_CODE=TEST77294
 
 META_PIXEL_ID=3347164888818656
