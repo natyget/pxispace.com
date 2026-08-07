@@ -191,7 +191,7 @@ the same channel message as section A.
 
 ```
 NEXT_PUBLIC_TIKTOK_PIXEL_ID=D9QI5AJC77UAHM1GQQ10
-NEXT_PUBLIC_META_PIXEL_ID=<MISSING — Events Manager → Data Sources → your pixel, 15-16 digits>
+NEXT_PUBLIC_META_PIXEL_ID=3347164888818656
 CSP_REPORT_ONLY=1
 ```
 
@@ -217,8 +217,8 @@ TIKTOK_PIXEL_ID=D9QI5AJC77UAHM1GQQ10
 TIKTOK_EVENTS_ACCESS_TOKEN=d4ac38293282a2e0fe66d1fac73297f076f3cf10
 TIKTOK_TEST_EVENT_CODE=TEST77294
 
-META_PIXEL_ID=<MISSING — same value as NEXT_PUBLIC_META_PIXEL_ID>
-META_CAPI_ACCESS_TOKEN=<MISSING — Events Manager → Settings → Conversions API → Generate>
+META_PIXEL_ID=3347164888818656
+META_CAPI_ACCESS_TOKEN=<REGENERATE — the supplied token is rejected, see below>
 META_TEST_EVENT_CODE=<optional, from Events Manager → Test Events>
 ```
 
@@ -243,3 +243,79 @@ EXPO_PUBLIC_META_APP_ID=1470652311198736
 ```
 The Meta client token is not an env var — it is baked into `app.json` by the config
 plugin. Needs a new **EAS build**.
+
+
+---
+
+## 9. Meta CAPI token is rejected — regenerate it
+
+The Pixel ID `3347164888818656` is **confirmed good**: the browser pixel loads,
+`connect.facebook.net/signals/config/3347164888818656` resolves and `_fbp` is set.
+
+The CAPI access token supplied is **not valid**:
+
+```
+{"error":{"message":"The access token could not be decrypted","type":"OAuthException","code":190}}
+```
+
+This is not a pixel or permissions problem. A bare `GET /v21.0/me?access_token=…`,
+which involves no pixel at all, fails identically — so the token string itself is bad
+(truncated on copy, or already invalidated).
+
+**Generate a replacement that does not expire.** A token copied out of Graph API
+Explorer is short-lived (1–2 hours) and will break again:
+
+1. Business Settings → **Users → System Users** → add a system user (admin).
+2. **Add Assets** → your pixel `3347164888818656` → full control.
+3. **Generate New Token** → select the app → scope **`ads_management`**.
+4. Set it as `META_CAPI_ACCESS_TOKEN` on EC2.
+
+Verify before deploying, expecting `{"events_received":1,...}`:
+
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/3347164888818656/events" \
+  -H "Content-Type: application/json" -d '{
+    "data":[{"event_name":"Purchase","event_time":'"$(date +%s)"',
+      "event_id":"manual_probe_1","action_source":"website",
+      "user_data":{"em":["e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"]},
+      "custom_data":{"value":1,"currency":"USD"}}],
+    "test_event_code":"<from Events Manager > Test Events>",
+    "access_token":"<NEW TOKEN>"}'
+```
+
+Until this is set, Meta CAPI is dormant and fails closed — the browser pixel still
+works, so remarketing audiences build normally; only the server-side purchase signal
+is missing.
+
+---
+
+## 10. Consent now gates server-side conversions
+
+`adConsent` rides through Stripe metadata from the browser. The webhook sends a Meta or
+TikTok conversion **only** when it equals `'1'`, so an opted-out buyer generates nothing
+and a missing value fails closed. Verified with a table test (5/5).
+
+Practical consequence for testing: **a test purchase made with cookies rejected will
+correctly produce no CAPI event.** Accept cookies before your test purchase, or you will
+chase a bug that is the feature working.
+
+---
+
+## 11. EventTrack migration (song → event discovery)
+
+Backend commit `d7c4954`. Additive: one new table, nothing altered or dropped, nothing
+reads or writes it yet.
+
+```bash
+npx prisma migrate deploy                              # never `migrate dev` — shadow DB is broken
+npx tsx scripts/backfillEventTracks.ts --dry-run       # reports counts, writes nothing
+npx tsx scripts/backfillEventTracks.ts                 # apply
+```
+
+The backfill is safe to re-run; it recomputes each event's rows in a transaction. Run it
+again whenever the normalisation rules in `src/services/trackKey.ts` change.
+
+**Nothing to configure in TikTok or Meta for this.** The one external dependency is
+getting the Spotify app **out of dev mode** — until then playlist reads 403, ingest goes
+through the embed payload, and `providerTrackId` stays mostly null so matching relies on
+the normalised title key alone.
