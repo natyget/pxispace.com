@@ -186,7 +186,19 @@ const SECTIONS = [
             </div>
 
             <div className="p-4 bg-legal-hub-surface/30 border border-legal-hub-border rounded-lg">
-              <h4 className="text-white font-semibold mb-2">4.6 No Sale of Personal Data; Mobile Information</h4>
+              <h4 className="text-white font-semibold mb-2">4.6 Advertising Partners &amp; &ldquo;Sharing&rdquo;</h4>
+              <p className="text-gray-400 mb-3">We advertise PXI on Google, Meta (Facebook and Instagram), TikTok and X. To measure which ads work, and to show PXI ads to people who have already visited us, we share a limited set of information with those companies. This happens <strong className="text-white">only with your consent</strong>, and only two kinds of information are involved:</p>
+              <ul className="list-disc pl-5 space-y-2 text-gray-400 text-sm mb-3">
+                <li><strong className="text-white/90">From your browser or the app:</strong> the page or screen you viewed, the ticket value, and an advertising cookie or device identifier. <strong className="text-white">Never your name, email address or phone number.</strong></li>
+                <li><strong className="text-white/90">From our servers, when a ticket purchase completes:</strong> a <strong>SHA-256 hashed, irreversible</strong> version of your email address, phone number and PXI user id, so the sale can be matched to the ad that led to it. The plaintext never leaves PXI and the hash cannot be turned back into your details. If you have opted out, nothing is sent at all.</li>
+              </ul>
+              <p className="text-gray-400 mb-3">Under the California Consumer Privacy Act this counts as <strong className="text-white">&ldquo;sharing&rdquo; for cross-context behavioral advertising</strong>, and several other US state privacy laws treat it as <strong className="text-white">targeted advertising</strong>. It is not a sale: <strong className="text-white">we never receive money for your personal information.</strong></p>
+              <p className="text-gray-400 mb-3"><strong className="text-white">To opt out</strong>, use the <strong className="text-white">Cookie settings</strong> link in the footer of any page — it works in every state and country, whether or not you were shown a banner. We honour the <strong className="text-white">Global Privacy Control</strong> signal automatically. On iOS, declining the App Tracking Transparency prompt stops advertising identifiers being collected in the app. The Cookie Policy lists the exact cookie names.</p>
+              <p className="text-gray-400"><strong className="text-white">Biometric data, precise location, and the contents of your messages are never shared with advertising partners, in any form, hashed or otherwise.</strong></p>
+            </div>
+
+            <div>
+              <h4 className="text-white font-semibold mb-2">4.7 No Sale of Personal Data; Mobile Information</h4>
               <p className="text-sm text-gray-400">We do not sell personal information. We do not sell, rent, or share mobile phone numbers or SMS consent data with third parties or affiliates for marketing or promotional purposes. Message and data rates may apply to SMS communications. Message frequency varies as described in Section 2.8.</p>
             </div>
           </div>
@@ -539,7 +551,8 @@ const SECTIONS = [
                 <li><strong className="text-white/90">TikTok.</strong> <code className="text-legal-hub-accent">_ttp</code> and <code className="text-legal-hub-accent">_tt_enable_cookie</code>, used the same way for ads on TikTok.</li>
                 <li><strong className="text-white/90">X (Twitter).</strong> <code className="text-legal-hub-accent">personalization_id</code> and <code className="text-legal-hub-accent">muc_ads</code>.</li>
               </ul>
-              <p className="text-sm mt-2">When you buy a ticket we may send Google a <strong>hashed, irreversible</strong> (SHA-256) version of your email address and phone number so a conversion can be matched to an ad click. The hashing happens in your browser: Google receives only the digest, never the address or number itself. This is skipped entirely if you have opted out. <strong className="text-white">We do not send your email address or phone number to Meta, TikTok or X in any form, hashed or otherwise.</strong></p>
+              <p className="text-sm mt-2">When you buy a ticket we may send Google a <strong>hashed, irreversible</strong> (SHA-256) version of your email address and phone number so a conversion can be matched to an ad click. The hashing happens in your browser: Google receives only the digest, never the address or number itself. This is skipped entirely if you have opted out.</p>
+              <p className="text-sm mt-2"><strong className="text-white">From your browser, we send no identifying information to Meta, TikTok or X</strong> — those pixels receive only the page you viewed and the value of the ticket, never your name, email or phone number. Separately, when a ticket purchase completes, <strong>our servers</strong> send Meta and TikTok a <strong>hashed, irreversible</strong> (SHA-256) version of your email address, phone number and PXI user id so the sale can be matched to the ad that led to it. The plaintext never leaves PXI, the digest cannot be reversed, and nothing is sent for a purchase made by someone who has opted out.</p>
             </div>
             <div>
               <h4 className="text-lg font-semibold text-white/90">2.4 Campaign Attribution (First-Party)</h4>

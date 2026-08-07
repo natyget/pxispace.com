@@ -53,11 +53,11 @@ export const INSTA_FAQS = [
 export const PRICING_FAQS = [
   {
     q: 'How much does PXI cost?',
-    a: 'PXI is free to use. Free events cost nothing. On paid tickets there is a flat $0.99 platform fee per ticket. That is the entire pricing model.',
+    a: 'PXI is free to use and free events cost nothing. On paid tickets there are two fees: a flat $0.99 per ticket deducted from your payout, and a 5.49% service fee paid by the buyer at checkout on top of the ticket price. Buyers also cover card processing. There are no monthly fees, no subscriptions and no setup cost.',
   },
   {
     q: 'Who pays the fee?',
-    a: 'The flat $0.99 is a per-ticket platform fee on paid tickets. Your ticket revenue is paid straight to your own Stripe account via destination charges. PXI never holds your money.',
+    a: 'Both sides pay a share. The organizer pays the flat $0.99 per ticket, taken from the payout. The buyer pays the 5.49% service fee plus card processing, added at checkout. Your ticket revenue goes straight to your own Stripe account via destination charges — PXI never holds your money.',
   },
   {
     q: 'Are free events really free?',
@@ -140,8 +140,17 @@ export const FAQ_PAGE_SECTIONS = [
     heading: 'Privacy & Safety',
     items: [
       {
+        // ACCURACY IS A LEGAL REQUIREMENT HERE, NOT A STYLE CHOICE.
+        // This answer previously said face recognition ran "on-device" and that "no
+        // biometric data is sent to our servers". Both statements were false: enrollment
+        // frames are uploaded over TLS and the FaceVector is derived and stored
+        // SERVER-SIDE (see FaceVector / MediaFaceEmbedding / PhotoFaceTag). It also
+        // contradicted our own Privacy Policy §2.3, which describes the real flow.
+        // A public claim that conflicts with the privacy policy and the App Store
+        // privacy label is an App Review rejection and, for biometrics, BIPA exposure.
+        // Do not reintroduce "on-device" language for face matching.
         q: 'How does Find My Shots (face matching) work?',
-        a: 'Find My Shots uses on-device face recognition to surface photos that include you from an event album. No biometric data is sent to our servers. You can turn the feature off at any time in Settings → Privacy.',
+        a: 'It is opt-in, and you have to turn it on yourself. When you do, you run a short guided face scan. Those frames are sent over an encrypted connection to our servers, where they are converted into a FaceVector — a string of numbers describing facial geometry that cannot be turned back into a picture of you. The scan frames are discarded once the vector exists. Photos uploaded to event albums are then matched against that vector so we can show you the shots you appear in. We never sell or rent biometric data. You can withdraw consent at any time in Settings → Privacy, which deletes your FaceVector and the face tags derived from it.',
       },
       {
         q: 'Is my data secure?',
