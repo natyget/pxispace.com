@@ -1,3 +1,5 @@
+import { buildCsp, cspHeaderName } from './csp.js';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -103,6 +105,13 @@ const nextConfig = {
         value: 'accelerometer=(), geolocation=(), gyroscope=(), camera=(self), microphone=(), usb=()',
       },
       { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+      // The CSP is defined once in ./csp.js. It lived in netlify.toml until now, where
+      // it only ever reached static assets and therefore did nothing — see that file
+      // for the rollout procedure and the CSP_REPORT_ONLY escape hatch.
+      {
+        key: cspHeaderName(),
+        value: buildCsp({ dev: process.env.NODE_ENV !== 'production' }),
+      },
     ];
 
     // Thin, duplicate, or private-by-nature templates. These must stay CRAWLABLE and carry

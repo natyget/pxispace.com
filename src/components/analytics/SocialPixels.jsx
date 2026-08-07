@@ -34,22 +34,25 @@ function injectMeta(id) {
   window.fbq('track', 'PageView');
 }
 
+// TikTok's official loader, verbatim from Events Manager, with `holdConsent`,
+// `revokeConsent` and `grantConsent` present in the methods list — those three are what
+// make withdrawal work after load, and an older copy of this snippet omits them.
 function injectTikTok(id) {
   if (window.ttq) return;
   /* eslint-disable */
   (function (w, d, t) {
     w.TiktokAnalyticsObject = t;
     var ttq = (w[t] = w[t] || []);
-    ttq.methods = ['page', 'track', 'identify', 'instances', 'debug', 'on', 'off', 'once', 'ready', 'alias', 'group', 'enableCookie', 'disableCookie'];
+    ttq.methods = ['page', 'track', 'identify', 'instances', 'debug', 'on', 'off', 'once', 'ready', 'alias', 'group', 'enableCookie', 'disableCookie', 'holdConsent', 'revokeConsent', 'grantConsent'];
     ttq.setAndDefer = function (obj, m) { obj[m] = function () { obj.push([m].concat(Array.prototype.slice.call(arguments, 0))); }; };
     for (var i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
-    ttq.instance = function (k) { var inst = ttq._i[k] || []; for (var j = 0; j < ttq.methods.length; j++) ttq.setAndDefer(inst, ttq.methods[j]); return inst; };
-    ttq.load = function (k, o) {
-      var url = 'https://analytics.tiktok.com/i18n/pixel/events.js';
-      ttq._i = ttq._i || {}; ttq._i[k] = []; ttq._i[k]._u = url; ttq._t = ttq._t || {}; ttq._t[k] = +new Date();
-      ttq._o = ttq._o || {}; ttq._o[k] = o || {};
-      var s = d.createElement('script'); s.type = 'text/javascript'; s.async = !0; s.src = url + '?sdkid=' + k + '&lib=' + t;
-      var f = d.getElementsByTagName('script')[0]; f.parentNode.insertBefore(s, f);
+    ttq.instance = function (k) { var e = ttq._i[k] || [], n = 0; for (; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]); return e; };
+    ttq.load = function (e, n) {
+      var r = 'https://analytics.tiktok.com/i18n/pixel/events.js', o = n && n.partner;
+      ttq._i = ttq._i || {}; ttq._i[e] = []; ttq._i[e]._u = r; ttq._t = ttq._t || {}; ttq._t[e] = +new Date();
+      ttq._o = ttq._o || {}; ttq._o[e] = n || {};
+      n = d.createElement('script'); n.type = 'text/javascript'; n.async = !0; n.src = r + '?sdkid=' + e + '&lib=' + t;
+      e = d.getElementsByTagName('script')[0]; e.parentNode.insertBefore(n, e);
     };
     ttq.load(id);
     ttq.page();
@@ -82,9 +85,24 @@ export default function SocialPixels() {
       try { if (X_PIXEL_ID) injectX(X_PIXEL_ID); } catch { /* ignore */ }
     };
 
+    // Withdrawal has to reach a pixel that is ALREADY running. A script cannot be
+    // un-injected, so we tell each SDK to stop instead: Meta's consent API pauses
+    // sending, TikTok's revokeConsent stops collection and drops its cookies. Without
+    // this, "reject" only prevented a pixel that had not loaded yet — anyone who
+    // accepted and then changed their mind kept being tracked until they navigated away.
+    const revoke = () => {
+      try { window.fbq?.('consent', 'revoke'); } catch { /* ignore */ }
+      try { window.ttq?.revokeConsent?.(); } catch { /* ignore */ }
+      try { window.ttq?.disableCookie?.(); } catch { /* ignore */ }
+    };
+
     maybeInject();
-    // A visitor who accepts from the banner must start being tracked without a reload.
-    return subscribeConsentChoice(maybeInject);
+    // A visitor who accepts from the banner must start being tracked without a reload,
+    // and one who rejects must stop being tracked without one either.
+    return subscribeConsentChoice((status) => {
+      if (status === 'denied' || !isTrackingAllowed()) revoke();
+      else maybeInject();
+    });
   }, []);
 
   return null;
