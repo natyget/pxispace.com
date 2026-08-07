@@ -221,7 +221,7 @@ const SECTIONS = [
             </div>
             <div>
               <h4 className="text-lg font-semibold text-white/90">6.2 California Residents (CCPA / CPRA)</h4>
-              <p className="text-gray-400">California residents have the right to: Know, Access, Delete, Correct, Opt-Out of Sale/Sharing, and Limit Use of Sensitive Personal Data. We do not sell personal data. Biometric data is Sensitive Personal Data under CPRA and is collected only with explicit consent. Submit requests to privacy@pxispace.com with subject line: CCPA Request.</p>
+              <p className="text-gray-400">California residents have the right to: Know, Access, Delete, Correct, Opt-Out of Sale/Sharing, and Limit Use of Sensitive Personal Data. <strong className="text-white">We do not sell personal data for money.</strong> We do use advertising cookies from Google, Meta, TikTok and X for remarketing and conversion measurement, which counts as &ldquo;sharing&rdquo; for cross-context behavioral advertising under the CPRA. To opt out, use the <strong className="text-white">Cookie settings</strong> link in the footer of any page, or send a Global Privacy Control signal from your browser — we honour GPC automatically. Biometric data is Sensitive Personal Data under CPRA, is collected only with explicit consent, and is never used for advertising. Submit any other request to privacy@pxispace.com with subject line: CCPA Request.</p>
             </div>
             <div>
               <h4 className="text-lg font-semibold text-white/90">6.3 EU / UK Residents (GDPR)</h4>
@@ -333,11 +333,11 @@ const SECTIONS = [
           <div className="space-y-4">
             <div>
               <h4 className="text-lg font-semibold text-white/90">10.1 For Attendees (Ticket Buyers)</h4>
-              <p>Ticket purchases are final unless host policy permits refunds or event is cancelled. A Consumer Fee ($0.99 flat + 4.59% variable) is charged per transaction. All sales are in USD.</p>
+              <p>Ticket purchases are final unless host policy permits refunds or event is cancelled. A Platform Service Fee ($0.99 flat per ticket, deducted from the organizer payout) and a Consumer Variable Fee (5.49% of ticket face value, paid by the buyer) are charged per transaction. All sales are in USD.</p>
             </div>
             <div>
               <h4 className="text-lg font-semibold text-white/90">10.2 For Vendors (Event Hosts)</h4>
-              <p>Fee structure: Consumer Variable Fee (4.59%) and Platform Service Fee ($0.99 flat). Payouts via Stripe Connect typically within 2–5 business days after the event, subject to Stripe processing. Vendors are responsible for chargebacks, refunds, and taxes.</p>
+              <p>Fee structure: Consumer Variable Fee (5.49% of ticket face value, paid by the buyer) and Platform Service Fee ($0.99 flat per ticket, deducted from the organizer payout). Payouts via Stripe Connect typically within 2–5 business days after the event, subject to Stripe processing. Vendors are responsible for chargebacks, refunds, and taxes.</p>
             </div>
           </div>
         </div>
@@ -507,7 +507,7 @@ const SECTIONS = [
   {
     id: 'cookie',
     title: 'Cookie Policy',
-    tldr: "We use essential cookies to keep the app working, analytics cookies to understand how you use it, and nothing that tracks you across other websites. We never sell cookie data. You control what’s optional.",
+    tldr: "We use essential cookies to keep the app working, Google Analytics to understand how you use it, and advertising cookies from Google, Meta, TikTok and X that do follow you to other sites and apps to show you PXI ads. We never sell cookie data. “Cookie settings” in the footer turns the optional ones off, in any country, at any time.",
     content: (
       <div className="space-y-8 text-gray-400">
         <div>
@@ -519,38 +519,49 @@ const SECTIONS = [
           <h3 className="text-xl font-bold mb-3 text-white">2. The Cookies We Use</h3>
           <div className="space-y-6">
             <div>
-              <h4 className="text-lg font-semibold text-white/90">2.1 Strictly Necessary Cookies (Always Active)</h4>
+              <h4 className="text-lg font-semibold text-white/90">2.1 Strictly Necessary (Always Active)</h4>
+              <p className="text-sm mb-2">These cannot be switched off — without them you cannot stay signed in or pay.</p>
               <ul className="list-disc pl-5 space-y-2 text-sm">
-                <li><code className="text-legal-hub-accent">pxi_session</code>: PASETO v4 token session cookie.</li>
-                <li><code className="text-legal-hub-accent">pxi_csrf</code>: Protection against unauthorized form submissions.</li>
-                <li><code className="text-legal-hub-accent">cf_clearance</code>: Cloudflare security/bot detection.</li>
-                <li><code className="text-legal-hub-accent">__stripe_mid / __stripe_sid</code>: Stripe payment security/fraud prevention.</li>
-                <li><code className="text-legal-hub-accent">pxi_consent</code>: Stores your cookie preferences.</li>
+                <li><code className="text-legal-hub-accent">pxi_paseto</code>: your signed-in session (PASETO v4 token). HttpOnly, Secure, SameSite=Lax. Cleared when you log out.</li>
+                <li><code className="text-legal-hub-accent">__stripe_mid</code> / <code className="text-legal-hub-accent">__stripe_sid</code>: set by Stripe for payment fraud prevention, and only on pages where you are checking out.</li>
               </ul>
             </div>
             <div>
-              <h4 className="text-lg font-semibold text-white/90">2.2 Functional Cookies</h4>
-              <p className="text-sm"><code className="text-legal-hub-accent">pxi_prefs</code> (UI settings), <code className="text-legal-hub-accent">pxi_event_history</code> (feed personalization), <code className="text-legal-hub-accent">pxi_lang</code>.</p>
+              <h4 className="text-lg font-semibold text-white/90">2.2 Analytics</h4>
+              <p className="text-sm"><code className="text-legal-hub-accent">_ga</code> and <code className="text-legal-hub-accent">_ga_&lt;id&gt;</code>, set by Google Analytics 4, to count visitors and understand which pages and features get used. Google Analytics 4 does not log or store IP addresses, and we do not send it your name, email, or phone number.</p>
             </div>
             <div>
-              <h4 className="text-lg font-semibold text-white/90">2.3 Analytics Cookies (Opt-In)</h4>
-              <p className="text-sm">Google Analytics 4 (_ga) for aggregated, anonymized flow tracking. <code className="text-legal-hub-accent">pxi_perf</code> for performance diagnostics. <code className="text-legal-hub-accent">pxi_ab</code> for feature testing.</p>
+              <h4 className="text-lg font-semibold text-white/90">2.3 Advertising</h4>
+              <p className="text-sm">We do use advertising cookies. They let us measure which ads lead to signups and ticket sales, and let us show PXI ads to you on other websites and apps (remarketing). None of them are set unless you have consented — see 2.7.</p>
+              <ul className="list-disc pl-5 space-y-2 text-sm mt-2">
+                <li><strong className="text-white/90">Google Ads.</strong> <code className="text-legal-hub-accent">_gcl_au</code> (conversion linker), plus cookies set by <code className="text-legal-hub-accent">googletagmanager.com</code> and <code className="text-legal-hub-accent">doubleclick.net</code>.</li>
+                <li><strong className="text-white/90">Meta (Facebook and Instagram).</strong> <code className="text-legal-hub-accent">_fbp</code> (a browser identifier Meta uses to recognise you across sites) and <code className="text-legal-hub-accent">_fbc</code> (recorded only if you arrived from a Meta ad). These are what allow a PXI ad to reach you on Instagram or Facebook after you have visited this site.</li>
+                <li><strong className="text-white/90">TikTok.</strong> <code className="text-legal-hub-accent">_ttp</code> and <code className="text-legal-hub-accent">_tt_enable_cookie</code>, used the same way for ads on TikTok.</li>
+                <li><strong className="text-white/90">X (Twitter).</strong> <code className="text-legal-hub-accent">personalization_id</code> and <code className="text-legal-hub-accent">muc_ads</code>.</li>
+              </ul>
+              <p className="text-sm mt-2">When you buy a ticket we may send Google a <strong>hashed, irreversible</strong> (SHA-256) version of your email address and phone number so a conversion can be matched to an ad click. The hashing happens in your browser: Google receives only the digest, never the address or number itself. This is skipped entirely if you have opted out. <strong className="text-white">We do not send your email address or phone number to Meta, TikTok or X in any form, hashed or otherwise.</strong></p>
             </div>
             <div>
-              <h4 className="text-lg font-semibold text-white/90">2.4 Marketing & Communication Cookies</h4>
-              <p className="text-sm">We do not currently use third-party advertising cookies or cross-site tracking pixels.</p>
+              <h4 className="text-lg font-semibold text-white/90">2.4 Campaign Attribution (First-Party)</h4>
+              <p className="text-sm"><code className="text-legal-hub-accent">pxi_attribution</code>, set by us and readable only by us, stores for up to 90 days the campaign tags and ad-click identifiers (<code className="text-legal-hub-accent">utm_*</code>, <code className="text-legal-hub-accent">gclid</code>, <code className="text-legal-hub-accent">gbraid</code>, <code className="text-legal-hub-accent">wbraid</code>, <code className="text-legal-hub-accent">fbclid</code>, <code className="text-legal-hub-accent">ttclid</code>, <code className="text-legal-hub-accent">twclid</code>, <code className="text-legal-hub-accent">msclkid</code>) plus the site that referred you, so we can tell which campaign brought you to PXI. It is written only if you have not opted out.</p>
             </div>
             <div>
-              <h4 className="text-lg font-semibold text-white/90">2.5 Third-Party Cookies</h4>
-              <p className="text-sm">Governed by their own policies: Stripe (payments), Cloudflare (security), Google Analytics.</p>
+              <h4 className="text-lg font-semibold text-white/90">2.5 Local Storage</h4>
+              <p className="text-sm">Not cookies, but stored on your device the same way: <code className="text-legal-hub-accent">pxi_consent_v2</code> (your cookie choice — necessary, since it is how we remember to stop), <code className="text-legal-hub-accent">pxi_user</code> (your profile, cached so the app can render while signed in), and <code className="text-legal-hub-accent">pxi_pending_deeplink</code> (the page you were heading to before being asked to log in).</p>
             </div>
             <div>
-              <h4 className="text-lg font-semibold text-white/90">2.6 Your Cookie Choices</h4>
-              <p className="text-sm">Manage preferences via <strong>Settings &gt; Privacy &gt; Cookie Preferences</strong> or browser settings.</p>
+              <h4 className="text-lg font-semibold text-white/90">2.6 Third Parties</h4>
+              <p className="text-sm">Google (Analytics, Ads, Tag Manager), Meta Platforms, TikTok, X Corp. and Stripe (payments) set cookies under their own privacy policies, and the four advertising partners may combine what they learn here with data they already hold about you on their own platforms. Cloudflare R2 stores and delivers event media for us, and Netlify hosts this website; neither sets advertising cookies on you here.</p>
             </div>
             <div>
-              <h4 className="text-lg font-semibold text-white/90">2.7 Do Not Track (DNT)</h4>
-              <p className="text-sm">PXI does not currently respond to DNT signals as there is no consistent industry standard.</p>
+              <h4 className="text-lg font-semibold text-white/90">2.7 Your Choices</h4>
+              <p className="text-sm">Use the <strong>Cookie settings</strong> link in the footer of any page on pxispace.com. It works in every country, whether or not you were shown a banner, and you can change your answer as often as you like. Choosing <strong>Reject all</strong> switches off analytics and advertising storage, tells Meta and TikTok to stop collecting immediately, and deletes the cookies named in 2.3 and 2.4 that we are able to remove (<code className="text-legal-hub-accent">pxi_attribution</code>, <code className="text-legal-hub-accent">_fbp</code>, <code className="text-legal-hub-accent">_fbc</code>, <code className="text-legal-hub-accent">_ttp</code>, <code className="text-legal-hub-accent">_tt_enable_cookie</code>, <code className="text-legal-hub-accent">personalization_id</code>, <code className="text-legal-hub-accent">muc_ads</code>). Everything in 2.1 stays, and the site works exactly the same.</p>
+              <p className="text-sm mt-2">If you are in the EEA, the UK, or Switzerland, nothing in 2.2–2.4 is set until you accept: those categories start denied and we ask you on your first visit.</p>
+              <p className="text-sm mt-2">You can also clear or block cookies in your browser settings, though that will sign you out.</p>
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold text-white/90">2.8 Global Privacy Control &amp; Do Not Track</h4>
+              <p className="text-sm">We honour the <strong>Global Privacy Control</strong> (GPC) signal. If your browser or extension sends it, we treat it as an opt-out of analytics and advertising storage — including as a request to opt out of “sale” or “sharing” under the CCPA/CPRA — without you having to do anything else. We treat a legacy <code className="text-legal-hub-accent">DNT: 1</code> header the same way. If you later press <strong>Accept all</strong> in our banner, that explicit choice takes precedence for this site.</p>
             </div>
           </div>
         </div>
@@ -558,13 +569,13 @@ const SECTIONS = [
         <div>
           <h3 className="text-xl font-bold mb-3 text-white">3. Contact Us About This Cookie Policy</h3>
           <p>Email: <span className="text-legal-hub-accent">privacy@pxispace.com</span><br />
-          In-App: Settings &gt; Privacy &gt; Cookie Preferences<br />
+          On the web: the <strong>Cookie settings</strong> link in the footer of any page<br />
           Mail: PXI LABS LLC, 5850 Town and Country Blvd, Suite 403, Frisco, TX 75034</p>
         </div>
 
         <div>
           <h3 className="text-xl font-bold mb-3 text-white">4. Updates to This Cookie Policy</h3>
-          <p className="leading-relaxed">We may update this policy periodically. Significant changes will be notified on the platform. Last Updated: July 13, 2026.</p>
+          <p className="leading-relaxed">We may update this policy periodically. Significant changes will be notified on the platform. Last Updated: August 5, 2026.</p>
         </div>
       </div>
     )
@@ -665,8 +676,8 @@ const SECTIONS = [
             <div>
               <h4 className="text-lg font-semibold text-white/90">2.1 Fee Breakdown</h4>
               <ul className="list-disc pl-5 space-y-2 text-sm">
-                <li><strong className="text-white">Platform Service Fee:</strong> $0.99 flat fee per ticket.</li>
-                <li><strong className="text-white">Consumer Variable Fee:</strong> 4.59% of ticket face value.</li>
+                <li><strong className="text-white">Platform Service Fee:</strong> $0.99 flat per ticket, deducted from the organizer payout.</li>
+                <li><strong className="text-white">Consumer Variable Fee:</strong> 5.49% of ticket face value, paid by the buyer at checkout.</li>
                 <li><strong className="text-white">Stripe Processing Fee:</strong> Standard Stripe fees (typically 2.9% + $0.30).</li>
               </ul>
             </div>
@@ -750,7 +761,32 @@ const SECTIONS = [
   }
 ];
 
-export default function LegalHubPage({ initialSection } = {}) {
+/**
+ * Canonical URL for each document. /legal is the hub that carries all of them;
+ * the four listed here also stand alone at their own path.
+ *
+ * SEO: /legal, /privacy and /terms used to render the SAME full hub — every
+ * section, identical DOM — while each declared itself canonical and all three
+ * sat in the sitemap. That is three URLs of duplicate content telling Google we
+ * do not know our own canonicals. A `documentId` now scopes the page to one
+ * document, so each URL is a distinct page that deserves its own listing.
+ */
+const SECTION_PATHS = {
+  privacy: '/privacy',
+  terms: '/terms',
+  cookie: '/cookies',
+  'child-safety': '/child-safety',
+};
+
+/** Standalone URL where one exists, otherwise the anchor inside the hub. */
+const sectionHref = (id) => SECTION_PATHS[id] ?? `/legal#${id}`;
+
+export default function LegalHubPage({ initialSection, documentId } = {}) {
+  // Single-document mode: render only this section, and turn the section nav
+  // into real links to the sibling documents.
+  const single = SECTIONS.find((s) => s.id === documentId) ?? null;
+  const visibleSections = single ? [single] : SECTIONS;
+
   const [activeSection, setActiveSection] = useState(
     SECTIONS.some((s) => s.id === initialSection) ? initialSection : SECTIONS[0].id
   );
@@ -818,17 +854,17 @@ export default function LegalHubPage({ initialSection } = {}) {
 
   return (
     <div className="legal-hub min-h-screen bg-legal-hub-bg text-legal-hub-text selection:bg-legal-hub-accent selection:text-black">
-      <header className="pt-8 pb-12 md:pt-10 md:pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-legal-hub-border">
+      <header className="pt-6 pb-6 md:pt-8 md:pb-8 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto border-b border-legal-hub-border">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="max-w-3xl"
         >
-          <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-[0.9] mb-6 text-[#E0E0E0]">
+          <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] mb-4 text-[#E0E0E0]">
             The Legal Hub.
           </h1>
-          <p className="text-xl md:text-2xl text-[#AAAAAA] font-medium tracking-tight mb-4 italic">
+          <p className="text-lg md:text-xl text-[#AAAAAA] font-medium tracking-tight mb-3 italic">
             Transparent. Secure. Stateless.
           </p>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-mono text-[#AAAAAA] uppercase tracking-widest">
@@ -840,69 +876,83 @@ export default function LegalHubPage({ initialSection } = {}) {
       </header>
 
       {/* Mobile Navigation (Sticky) */}
-      <div className="md:hidden sticky top-0 z-30 bg-legal-hub-bg/95 backdrop-blur pt-4 pb-2 border-b border-legal-hub-border">
-        <div className="flex overflow-x-auto legal-hub-hide-scrollbar px-4 gap-6">
-          {SECTIONS.map((section) => (
-            <button
-              key={`mobile-${section.id}`}
-              onClick={() => scrollToSection(section.id)}
-              className={`whitespace-nowrap pb-2 text-lg transition-all ${
-                activeSection === section.id 
-                  ? 'font-bold text-white' 
-                  : 'font-normal text-gray-500'
-              }`}
-            >
-              {section.title}
-            </button>
-          ))}
+      <div className="md:hidden sticky top-0 z-30 bg-legal-hub-bg/95 backdrop-blur pt-3 pb-2 border-b border-legal-hub-border">
+        <div className="flex overflow-x-auto legal-hub-hide-scrollbar px-4 gap-4">
+          {SECTIONS.map((section) => {
+            const className = `whitespace-nowrap pb-1.5 text-base transition-all ${
+              (single ? single.id === section.id : activeSection === section.id)
+                ? 'font-bold text-white'
+                : 'font-normal text-gray-500'
+            }`;
+            return single ? (
+              <Link key={`mobile-${section.id}`} href={sectionHref(section.id)} className={className}>
+                {section.title}
+              </Link>
+            ) : (
+              <button
+                key={`mobile-${section.id}`}
+                onClick={() => scrollToSection(section.id)}
+                className={className}
+              >
+                {section.title}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-24">
-        <div className="flex flex-col md:flex-row gap-12 lg:gap-24">
+      <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
+        <div className="flex flex-col md:flex-row gap-5 lg:gap-6">
           
           {/* Desktop Sidebar */}
-          <aside className="hidden md:block w-1/4 shrink-0">
-            <div className="sticky top-28 flex flex-col space-y-6">
-              {SECTIONS.map((section) => (
-                <button
-                  key={`desktop-${section.id}`}
-                  onClick={() => scrollToSection(section.id)}
-                  className={`text-left transition-all text-xl ${
-                    activeSection === section.id 
-                      ? 'font-bold text-white' 
-                      : 'font-normal text-gray-500 hover:text-white'
-                  }`}
-                >
-                  {section.title}
-                </button>
-              ))}
+          <aside className="hidden md:block w-36 lg:w-44 shrink-0">
+            <div className="sticky top-24 flex flex-col space-y-3">
+              {SECTIONS.map((section) => {
+                const className = `text-left transition-all text-sm lg:text-base ${
+                  (single ? single.id === section.id : activeSection === section.id)
+                    ? 'font-bold text-white'
+                    : 'font-normal text-gray-500 hover:text-white'
+                }`;
+                return single ? (
+                  <Link key={`desktop-${section.id}`} href={sectionHref(section.id)} className={className}>
+                    {section.title}
+                  </Link>
+                ) : (
+                  <button
+                    key={`desktop-${section.id}`}
+                    onClick={() => scrollToSection(section.id)}
+                    className={className}
+                  >
+                    {section.title}
+                  </button>
+                );
+              })}
             </div>
           </aside>
 
           {/* Content Panel */}
-          <div className="w-full md:w-3/4 space-y-24 md:space-y-32 pb-32">
-            {SECTIONS.map((section) => (
+          <div className="w-full md:flex-1 min-w-0 space-y-12 md:space-y-16 pb-16">
+            {visibleSections.map((section) => (
               <section 
                 key={section.id} 
                 id={section.id}
-                className="scroll-mt-28"
+                className="scroll-mt-24"
               >
-                <div className="mb-8">
-                  <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-8">
+                <div className="mb-6">
+                  <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter mb-4">
                     {section.title}
                   </h2>
                   
                   {/* TL;DR Box */}
-                  <div className="bg-neon-card shadow-neon-card p-8 md:p-12 rounded-[32px] mb-12 flex flex-col items-center justify-center text-center">
+                  <div className="bg-neon-card shadow-neon-card p-5 md:p-6 rounded-2xl mb-6 flex flex-col items-center justify-center text-center">
                     <h3 
-                      className="font-black uppercase text-white text-4xl md:text-5xl leading-none mb-6 ghost-echo"
+                      className="font-black uppercase text-white text-2xl md:text-3xl leading-none mb-3 ghost-echo"
                       data-text="TL;DR"
                     >
                       TL;DR
                     </h3>
-                    <p className="text-white/90 font-light text-lg md:text-xl max-w-3xl">
+                    <p className="text-white/90 font-light text-base md:text-lg max-w-4xl">
                       {section.tldr}
                     </p>
                   </div>
@@ -910,7 +960,7 @@ export default function LegalHubPage({ initialSection } = {}) {
 
                 <div className="max-w-none [&_strong]:text-white">{section.content}</div>
                 
-                <div className="mt-16 h-px w-full bg-gradient-to-r from-legal-hub-border via-legal-hub-border/50 to-transparent"></div>
+                <div className="mt-8 h-px w-full bg-gradient-to-r from-legal-hub-border via-legal-hub-border/50 to-transparent"></div>
               </section>
             ))}
           </div>
@@ -931,7 +981,7 @@ export default function LegalHubPage({ initialSection } = {}) {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-12 w-full sm:w-auto">
               <Link
-                href="/events"
+                href="/login?mode=signup&redirect=/dashboard/events/new"
                 className="inline-flex items-center justify-center bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors"
               >
                 Create Event
