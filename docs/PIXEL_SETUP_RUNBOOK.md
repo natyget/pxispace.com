@@ -2,10 +2,11 @@
 
 Written 6 Aug 2026. Everything in code is committed; nothing here can be done from code.
 
-> **Rotate these two credentials.** The TikTok Events API access token and the TikTok
-> app secret were pasted into a chat transcript in plain text. Rotate both in TikTok
-> Events Manager once you have confirmed the integration works, and set the new token
-> only as an environment variable. Never commit either to the repo.
+> **Secrets handling.** The founder has accepted the risk of the TikTok credentials
+> having been shared in chat and declined rotation. They live only in environment
+> variables; no credential is committed to any repo (verified). If these are ever
+> forwarded to a wider channel, send the SECRET rows privately, not in the same
+> message as the public ids.
 
 ---
 
@@ -15,7 +16,8 @@ Written 6 Aug 2026. Everything in code is committed; nothing here can be done fr
 |---|---|---|
 | TikTok Pixel ID `D9QI5AJC77UAHM1GQQ10` | Public (visible in page source) | `NEXT_PUBLIC_TIKTOK_PIXEL_ID` (Netlify) **and** `TIKTOK_PIXEL_ID` (EC2) |
 | TikTok Events API token | **SECRET** | `TIKTOK_EVENTS_ACCESS_TOKEN` (EC2 only) |
-| TikTok app secret | **SECRET** | Not used yet — see §5 |
+| TikTok app secret | **SECRET** | Not used — no viable RN Business SDK, see §5 |
+| Meta App Client Token | **SECRET** | Mobile only, already in `app.json` via the config plugin |
 | Meta Pixel ID | Public | `NEXT_PUBLIC_META_PIXEL_ID` + `META_PIXEL_ID` |
 | Meta CAPI token | **SECRET** | `META_CAPI_ACCESS_TOKEN` (EC2 only) |
 | Facebook App ID `1470652311198736` | Public | Mobile only — see §5 |
@@ -35,7 +37,7 @@ logging in were the dashboard and a real Stripe checkout.
 
 ```
 CSP_REPORT_ONLY=1
-```
+````
 
 Then walk these with the browser console open and confirm no `Content Security Policy`
 errors appear:
@@ -71,7 +73,8 @@ NEXT_PUBLIC_TIKTOK_PIXEL_ID=D9QI5AJC77UAHM1GQQ10
 **EC2 `.env.production`** (restart the API):
 ```
 TIKTOK_PIXEL_ID=D9QI5AJC77UAHM1GQQ10
-TIKTOK_EVENTS_ACCESS_TOKEN=<rotate first, then paste the new one>
+TIKTOK_EVENTS_ACCESS_TOKEN=d4ac38293282a2e0fe66d1fac73297f076f3cf10
+TIKTOK_TEST_EVENT_CODE=TEST77294   # REMOVE after test purchases are confirmed
 ```
 
 **In TikTok Events Manager:**
@@ -86,7 +89,7 @@ TIKTOK_EVENTS_ACCESS_TOKEN=<rotate first, then paste the new one>
 
 ---
 
-## 3. Meta — blocked on two ids
+## 3. Meta web + CAPI — blocked on two ids
 
 **You gave a Facebook App ID, which is not a Pixel ID.** They are different objects. The
 web pixel and Conversions API both need:
@@ -135,14 +138,15 @@ a build risk I would not take without your say-so.
 already covered — the TikTok Events API accepts `event_source: "app"`, and purchases
 already flow server-side from the Stripe webhook regardless of platform.
 
-**Meta mobile is one credential away.** `react-native-fbsdk-next` 13.4.3 (Feb 2026) is
-well maintained and ships an official Expo config plugin. It needs a **Client Token**
-(App Dashboard → Settings → Advanced → Client Token) which you did not include. ATT and
-`SKAdNetworkItems` are already configured in `app.json`, so the remaining work is small.
+**Meta mobile is DONE** (commit `59fe089`). `react-native-fbsdk-next` 13.4.3 is installed
+and configured with the app id and client token. It is built fully inert
+(`isAutoInitEnabled`, `autoLogAppEventsEnabled`, `advertiserIDCollectionEnabled` all
+false) and only starts collecting after ATT is granted, from the single decision point in
+`attribution.ts`. **Requires a new EAS build to take effect** — a JS-only OTA update will
+not add a native SDK.
 
-Say the word and I will wire Meta mobile; tell me your risk appetite on TikTok mobile and
-I will either add the 0.x package or write a thin native module against the official
-`TikTokBusinessSDK` pod.
+For TikTok mobile, tell me your risk appetite and I will either add the 0.x package or
+write a thin Expo module against the official `TikTokBusinessSDK` pod.
 
 **Either way, before the next store submission:** Play Data Safety must declare the
 Advertising ID, and the App Store privacy questionnaire must declare IDFA/tracking.
@@ -174,3 +178,68 @@ Step 3 is a console action — code cannot create audiences.
 "fired `join_event` or `purchase`, never fired `event_create_publish`". Those are
 attendees who have never hosted. That is the lookalike seed worth building, and every one
 of those events already flows to all three networks.
+
+
+---
+
+## 8. Every environment variable, in one place
+
+Public ids and secrets are separated. **Send section B privately** — do not paste it in
+the same channel message as section A.
+
+### A — Netlify (Site settings → Environment variables), then **Clear cache and deploy site**
+
+```
+NEXT_PUBLIC_TIKTOK_PIXEL_ID=D9QI5AJC77UAHM1GQQ10
+NEXT_PUBLIC_META_PIXEL_ID=<MISSING — Events Manager → Data Sources → your pixel, 15-16 digits>
+CSP_REPORT_ONLY=1
+```
+
+Already set from the earlier migration — confirm they are still there:
+```
+NEXT_PUBLIC_GOOGLE_TAG_ID=GT-MJMHMN4S
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-7K7MSDZV47
+NEXT_PUBLIC_GOOGLE_ADS_ID=AW-18365171384
+NEXT_PUBLIC_GTM_ID=GTM-MHXZZTC8
+API_BASE_URL=https://api.pxispace.com
+NEXT_PUBLIC_API_BASE_URL=https://api.pxispace.com
+```
+
+Optional, only if X ads are ever run: `NEXT_PUBLIC_X_PIXEL_ID=`
+
+> Every `NEXT_PUBLIC_*` is inlined at build time. So is `CSP_REPORT_ONLY`. Changing any of
+> them needs a **rebuild**, not a redeploy.
+
+### B — EC2 `.env.production` (then restart the API) — CONTAINS SECRETS
+
+```
+TIKTOK_PIXEL_ID=D9QI5AJC77UAHM1GQQ10
+TIKTOK_EVENTS_ACCESS_TOKEN=d4ac38293282a2e0fe66d1fac73297f076f3cf10
+TIKTOK_TEST_EVENT_CODE=TEST77294
+
+META_PIXEL_ID=<MISSING — same value as NEXT_PUBLIC_META_PIXEL_ID>
+META_CAPI_ACCESS_TOKEN=<MISSING — Events Manager → Settings → Conversions API → Generate>
+META_TEST_EVENT_CODE=<optional, from Events Manager → Test Events>
+```
+
+Also still outstanding from the GA4 migration (see the other runbook):
+```
+GA4_WEB_MEASUREMENT_ID=G-7K7MSDZV47
+GA4_WEB_API_SECRET=<mint in GA4 property 514139578>
+GA4_IOS_FIREBASE_APP_ID=<from Firebase>
+GA4_IOS_API_SECRET=<mint>
+GA4_ANDROID_FIREBASE_APP_ID=<from Firebase>
+GA4_ANDROID_API_SECRET=<mint>
+```
+
+**Remove `TIKTOK_TEST_EVENT_CODE` and `META_TEST_EVENT_CODE` after testing.** While either
+is set, those conversions go to the Test Events view and are **excluded from real
+reporting and optimisation**.
+
+### C — Mobile (`.env`, already correct)
+
+```
+EXPO_PUBLIC_META_APP_ID=1470652311198736
+```
+The Meta client token is not an env var — it is baked into `app.json` by the config
+plugin. Needs a new **EAS build**.
