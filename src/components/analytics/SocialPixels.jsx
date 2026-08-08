@@ -16,7 +16,13 @@
 
 import { useEffect } from 'react';
 import { isTrackingAllowed, subscribeConsentChoice } from '@/lib/consent';
-import { META_PIXEL_ID, TIKTOK_PIXEL_ID, X_PIXEL_ID, anySocialPixelConfigured } from '@/lib/socialPixels';
+import {
+  META_PIXEL_ID,
+  TIKTOK_PIXEL_ID,
+  X_PIXEL_ID,
+  anySocialPixelConfigured,
+  notePixelInjectionUrl,
+} from '@/lib/socialPixels';
 
 let injected = false;
 
@@ -83,6 +89,11 @@ export default function SocialPixels() {
       try { if (META_PIXEL_ID) injectMeta(META_PIXEL_ID); } catch { /* ignore */ }
       try { if (TIKTOK_PIXEL_ID) injectTikTok(TIKTOK_PIXEL_ID); } catch { /* ignore */ }
       try { if (X_PIXEL_ID) injectX(X_PIXEL_ID); } catch { /* ignore */ }
+      // Both loaders fire their own PageView for whatever URL is showing right now.
+      // Record it so the SPA tracker does not immediately send a second one for the
+      // same page — including the late-injection case, where someone accepts the
+      // banner three pages into a session.
+      notePixelInjectionUrl();
     };
 
     // Withdrawal has to reach a pixel that is ALREADY running. A script cannot be

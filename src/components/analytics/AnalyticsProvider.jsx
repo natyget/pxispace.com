@@ -16,6 +16,7 @@ import {
     trackPageView,
 } from '@/lib/analytics';
 import { captureAttribution } from '@/lib/attribution';
+import { mirrorPageViewToSocialPixels } from '@/lib/socialPixels';
 import ConsentBanner from './ConsentBanner';
 
 // Isolated so the useSearchParams() Suspense boundary wraps ONLY this null
@@ -37,6 +38,11 @@ function PageViewTracker() {
         if (lastTracked.current === url) return;
         lastTracked.current = url;
         trackPageView({ path: url });
+        // Meta and TikTok build their URL-based retargeting audiences out of PageView.
+        // `trackPageView` talks to gtag directly and never reaches the social fan-out in
+        // `track()`, so without this line those networks only ever saw the landing URL
+        // and every client-side navigation on the site was invisible to them.
+        mirrorPageViewToSocialPixels(url);
     }, [pathname, search]);
 
     return null;
@@ -64,6 +70,7 @@ function IdentityBridge() {
 
 export default function AnalyticsProvider({ children }) {
     // Attribution capture is independent of GA — it feeds User.signupAttribution.
+    // It writes a 90-day marketing cookie, so it is consent-gated internally.
     useEffect(() => {
         captureAttribution();
     }, []);
@@ -76,9 +83,13 @@ export default function AnalyticsProvider({ children }) {
                         <PageViewTracker />
                     </Suspense>
                     <IdentityBridge />
-                    <ConsentBanner />
                 </>
             ) : null}
+            {/* Outside the analyticsEnabled gate on purpose: attribution above
+                sets a non-essential cookie even when the Google tag is absent,
+                so the withdrawal surface has to exist either way. The banner
+                renders null unless it has something to ask. */}
+            <ConsentBanner />
             {children}
         </>
     );

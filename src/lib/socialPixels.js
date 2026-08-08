@@ -69,6 +69,68 @@ const num = (v) => {
   return Number.isFinite(n) && n >= 0 ? n : undefined;
 };
 
+/**
+ * Seeded by the injector so the very first navigation does not re-fire the PageView the
+ * base snippet already sent.
+ */
+let lastPageViewUrl = null;
+
+/**
+ * Must produce the same string PageViewTracker passes in (`pathname` + `?search`), or
+ * the "already fired for this URL" comparison never matches and every landing page
+ * reports twice.
+ */
+function currentUrl() {
+  if (typeof window === 'undefined') return '';
+  const { pathname = '', search = '' } = window.location ?? {};
+  return search ? `${pathname}${search}` : pathname;
+}
+
+/**
+ * Fire a PageView on a client-side route change.
+ *
+ * WHY THIS IS NOT OPTIONAL
+ * Both networks build their URL-based Custom Audiences ("everyone who viewed
+ * /event/*") out of PageView events and the URL attached to them. The base pixel
+ * snippet fires exactly one PageView, on injection. This site is an App Router SPA,
+ * so after the first paint every subsequent navigation is client-side — meaning Meta
+ * and TikTok would have seen the landing URL and nothing else, for the entire session.
+ *
+ * The practical effect was that the retargeting pool could only ever contain people
+ * who arrived directly on a page, and browsing ten events looked identical to bouncing.
+ * That is precisely the audience this whole layer exists to build.
+ *
+ * Kept out of `mirrorToSocialPixels` on purpose: web's `trackPageView` talks to gtag
+ * directly rather than going through `track()`, so there is no shared path to hook.
+ *
+ * @param {string} [url] the URL now showing — read from `location` when omitted
+ */
+export function mirrorPageViewToSocialPixels(url) {
+  if (typeof window === 'undefined') return;
+  if (!isTrackingAllowed()) return;
+  // The injector already fired one PageView for the URL it loaded on. Firing again for
+  // the same URL would double every landing page in Meta's reporting.
+  const here = url || currentUrl();
+  if (here && here === lastPageViewUrl) return;
+  lastPageViewUrl = here;
+
+  try {
+    if (typeof window.fbq === 'function') window.fbq('track', 'PageView');
+  } catch { /* never let an ad pixel break navigation */ }
+
+  try {
+    if (typeof window.ttq?.page === 'function') window.ttq.page();
+  } catch { /* ignore */ }
+
+  // X is deliberately absent: uwt.js counts a page view off `twq('config')` itself and
+  // has no documented SPA re-fire, so calling one would either no-op or double-count.
+}
+
+/** Called by SocialPixels.jsx immediately after injection. */
+export function notePixelInjectionUrl(url) {
+  lastPageViewUrl = url ?? (typeof window !== 'undefined' ? window.location?.pathname ?? null : null);
+}
+
 /** Shape GA4-style params into the value/currency/content triple every network expects. */
 function commerce(params = {}) {
   const value = num(params.value);
