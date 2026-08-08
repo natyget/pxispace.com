@@ -91,7 +91,7 @@ TIKTOK_TEST_EVENT_CODE=TEST77294   # REMOVE after test purchases are confirmed
 
 ---
 
-## 3. Meta web + CAPI — blocked on two ids
+## 3. Meta web + CAPI — UNBLOCKED, see §9
 
 **You gave a Facebook App ID, which is not a Pixel ID.** They are different objects. The
 web pixel and Conversions API both need:
@@ -122,7 +122,7 @@ three; X ad inventory is unlikely to matter for an events product in NY/Boston.
 
 ---
 
-## 5. Mobile app SDKs — NOT implemented, and here is why
+## 5. Mobile app SDKs — Meta implemented (needs a build), TikTok still not
 
 I installed both packages, inspected them, and **reverted the install**. `package.json`
 and the lockfile are untouched.
@@ -220,7 +220,7 @@ TIKTOK_EVENTS_ACCESS_TOKEN=<TikTok Events Manager → Settings → generated tok
 TIKTOK_TEST_EVENT_CODE=TEST77294
 
 META_PIXEL_ID=3347164888818656
-META_CAPI_ACCESS_TOKEN=<REGENERATE — the supplied token is rejected, see below>
+META_CAPI_ACCESS_TOKEN=<the ads_management + ads_read system-user token — VERIFIED WORKING>
 META_TEST_EVENT_CODE=<optional, from Events Manager → Test Events>
 ```
 
@@ -249,45 +249,66 @@ plugin. Needs a new **EAS build**.
 
 ---
 
-## 9. Meta CAPI token is rejected — regenerate it
+## 9. Meta CAPI — RESOLVED 7 August 2026
 
-The Pixel ID `3347164888818656` is **confirmed good**: the browser pixel loads,
-`connect.facebook.net/signals/config/3347164888818656` resolves and `_fbp` is set.
-
-The CAPI access token supplied is **not valid**:
+The regenerated system-user token works. Verified live against the real dataset:
 
 ```
-{"error":{"message":"The access token could not be decrypted","type":"OAuthException","code":190}}
+GET  /v21.0/debug_token
+  app_id 4337863129859682 ("PXI")   type SYSTEM_USER
+  scopes ads_management, ads_read   expires_at 0  (never)   is_valid true
+
+GET  /v21.0/3347164888818656
+  {"name":"Meta PXI","owner_business":{"id":"685912800638435","name":"PXI LABS"},
+   "data_use_setting":"advertising_and_analytics"}
+
+POST /v21.0/3347164888818656/events   (full-shape Purchase, hashed email, IP, UA)
+  {"events_received":1,"messages":[]}        <- no warnings
 ```
 
-This is not a pixel or permissions problem. A bare `GET /v21.0/me?access_token=…`,
-which involves no pixel at all, fails identically — so the token string itself is bad
-(truncated on copy, or already invalidated).
+The earlier token failed with `code 190 "The access token could not be decrypted"`. That was
+token-specific, not a configuration problem — the pixel id was always correct.
 
-**Generate a replacement that does not expire.** A token copied out of Graph API
-Explorer is short-lived (1–2 hours) and will break again:
+Also confirmed while validating:
 
-1. Business Settings → **Users → System Users** → add a system user (admin).
-2. **Add Assets** → your pixel `3347164888818656` → full control.
-3. **Generate New Token** → select the app → scope **`ads_management`**.
-4. Set it as `META_CAPI_ACCESS_TOKEN` on EC2.
+- Ad account `act_1482730986747606` ("PXI LABS ad account", active, USD) **is** linked to the
+  pixel — `/act_.../adspixels` returns it.
+- `first_party_cookie_status: first_party_cookie_enabled` — good, keep it.
+- `enable_automatic_matching: false` — **leave it off**, see §10.
+- No campaigns exist yet, so there is no spend history to protect.
 
-Verify before deploying, expecting `{"events_received":1,...}`:
+### The one real gap: two Meta apps
 
-```bash
-curl -s -X POST "https://graph.facebook.com/v21.0/3347164888818656/events" \
-  -H "Content-Type: application/json" -d '{
-    "data":[{"event_name":"Purchase","event_time":'"$(date +%s)"',
-      "event_id":"manual_probe_1","action_source":"website",
-      "user_data":{"em":["e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"]},
-      "custom_data":{"value":1,"currency":"USD"}}],
-    "test_event_code":"<from Events Manager > Test Events>",
-    "access_token":"<NEW TOKEN>"}'
-```
+There are two apps both named "PXI":
 
-Until this is set, Meta CAPI is dormant and fails closed — the browser pixel still
-works, so remarketing audiences build normally; only the server-side purchase signal
-is missing.
+| App | Id | Role |
+|---|---|---|
+| Business-side | `4337863129859682` | owns the CAPI system-user token |
+| Mobile SDK | `1470652311198736` | configured in `app.json` |
+
+They are unrelated. The PXI LABS system user cannot even read app `1470652311198736`
+(`code 100 / subcode 33`), which means the mobile app's events have no path into the same
+dataset as the website's. Its client token is valid — an app-token probe returns
+`{"id":"1470652311198736","name":"PXI"}` — so the app is real, just unconnected.
+
+Until it is joined up, app installs and in-app events will not correlate with web
+conversions. Fix is in `PRE_DEPLOY_CHECKLIST.md` step 6.
+
+---
+
+## 9b. Automatic Advanced Matching stays OFF
+
+Events Manager offers it and it would raise match quality. It works by scraping email and
+phone out of page form fields and hashing them in the browser.
+
+Privacy Policy §4.6 states that the browser sends no personally identifying value to an ad
+partner and that hashed identifiers travel server-side only. Enabling this would make that
+sentence false, in a document we published specifically to correct an earlier false claim.
+
+The compliant route gives us the same benefit and more: the Conversions API sends hashed
+email, phone, external id, plus client IP and user agent, from the server, only for buyers
+who allowed ad tracking. As of 7 August the IP and user agent are captured too — they carry
+most of the match quality for a buyer with no click-id cookie.
 
 ---
 
