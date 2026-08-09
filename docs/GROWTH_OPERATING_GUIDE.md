@@ -150,13 +150,13 @@ cannot (hype score, organizer ranking, repeat attendance).
 | **Followers** | Zero correlation with ticket sales in this category. |
 | **App installs** | An install that never opens an album is worth nothing to us. |
 | **Attributed ROAS in Ads Manager** | Meta grades its own homework and counts view-through. Compare against GA4 and against actual Stripe revenue. When they disagree, **Stripe is right.** |
-| **"Total revenue" in Ads Manager** | That is GROSS ticket value, not PXI revenue. Our take is about $1.23 net per ticket. A campaign showing "$2,200 revenue" produced about **$123**. This one distinction will save you from a very expensive mistake. |
+| **"Total revenue" in Ads Manager** | That is GROSS ticket value, not PXI revenue. Our take is about $2.00 net per ticket. A campaign showing "$2,200 revenue" produced about **$200**. This one distinction will save you from a very expensive mistake. |
 
 ### The numbers that matter
 
 ```
-CAC per ORGANIZER        target under $150     (they are worth ~$1,000 — see below)
-CAC per ATTENDEE         must be near $0       (they are worth ~$3 — never buy these)
+CAC per ORGANIZER        target under $200     (they are worth ~$1,670 — see below)
+CAC per ATTENDEE         must be near $0       (they are worth ~$6 — never buy these)
 Organizer activation     host_lead → event_create_publish, target 25%+
 Checkout completion      begin_checkout → purchase, target 55%+
 Album share rate         the free growth engine; watch it weekly
@@ -167,23 +167,34 @@ Event Match Quality      Meta's score for our server events; want 6+
 
 This is the most important paragraph in this document.
 
-Our take is 5.49% service fee plus $0.99 per ticket (both env-overridable; the deployed
-value is the only proof). On a $22 average ticket that is $2.20 gross, and after Stripe's
-2.9% + $0.30 it is about **$1.23 net per ticket**.
+Our take is a 5.49% service fee plus $0.99 per ticket, and the buyer separately pays a
+processing fee sized so Stripe's cut nets out — so **PXI keeps the whole $2.09 on a $20
+ticket** rather than absorbing payment costs. (Both fee values are env-overridable; the
+deployed value is the only proof.) The Monthly Model uses a $0.90 flat fee, giving a round
+**$2.00 per ticket**, and that is the number to plan with.
 
-- An **attendee** buys maybe 2–3 tickets a year → worth roughly **$3/year**
+- An **attendee** buys maybe 2–3 tickets a year → worth roughly **$6/year**
 - An **organizer** runs 1.0–1.5 paid events a month at 30–55 tickets. At 40 tickets and
-  1.25 events, that is $61 a month. At the model's 6% monthly churn the average organizer
-  lasts about 17 months → worth roughly **$1,000**
+  1.25 events that is $100 a month; at 6% monthly churn the average organizer lasts about
+  17 months → worth roughly **$1,670**
 
-**An organizer is worth about 300× an attendee.**
+**An organizer is worth about 280× an attendee.**
 
-So: **never buy attendees.** No paid channel delivers a ticket buyer for under $3. Attendees
+So: **never buy attendees.** No paid channel delivers a ticket buyer for under $6. Attendees
 must come free, through the album share loop, face-match notifications and invites — which
 is exactly what the product is built around.
 
-**Buy organizers all day.** At a $1,000 lifetime value, even $200 to acquire one is 5:1, and
-it pays back in under two months. Every dollar of paid spend should point at `host_lead`.
+**Buy organizers all day** — but not yet. See the timing warning below.
+
+> ### ⚠ None of Part 4 applies before month twelve
+>
+> Under the Monthly Model's ROI ladder there is **$0 of marketing cash until M5 and no real
+> ad budget until M12**. Independently, Meta and TikTok need ~50 conversions per ad set per
+> week before optimisation works at all. Both say the same date.
+>
+> Months 1–11 are a zero-cash, hand-sales problem, and there is a specific plan for them:
+> **`PXI-operation/Docs/Operations/PXI_EARLY_GROWTH_2026-08-08.md`**. Read that first. Come
+> back to Part 4 at month twelve.
 
 ---
 

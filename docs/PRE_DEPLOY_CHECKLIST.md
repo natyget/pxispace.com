@@ -26,11 +26,11 @@ WORKING, TESTED, NEEDS ONLY ENV VARS SET
 
 WORKING BUT INERT UNTIL YOU ACT
   Meta app events (iOS)       needs an EAS build + the app added to Events Manager
+  TikTok app events (iOS)     needs an EAS build + 3 env vars + a dedicated app token
   SKAdNetwork attribution     needs an EAS build (ids are in app.json now)
   X / Twitter pixel           no pixel id exists yet; plumbing is ready
 
 NOT BUILT, AND DELIBERATELY SO
-  TikTok app SDK              no usable React Native package exists (see step 14)
   Advanced Matching (browser) contradicts our privacy policy — see step 9
 ```
 
@@ -95,7 +95,15 @@ Restart the API after saving.
 
 ```
 EXPO_PUBLIC_META_APP_ID=1470652311198736
+
+EXPO_PUBLIC_TIKTOK_STORE_APP_ID=<App Store listing id, digits only>
+EXPO_PUBLIC_TIKTOK_APP_ID=<TikTok App ID, Events Manager → App Events>
+EXPO_PUBLIC_TIKTOK_APP_ACCESS_TOKEN=<a token generated SEPARATELY from the server one>
 ```
+
+All three TikTok values are required together — the SDK stays inert if any is missing.
+The access token ships inside the binary and is extractable, which is why it must not be
+the same token as `TIKTOK_EVENTS_ACCESS_TOKEN` on EC2. See step 14.
 
 The Meta **client token** is not an env var — it is written into the native project by the
 config plugin in `app.json`. Changing it requires a new EAS build.
@@ -267,17 +275,37 @@ Same as step 4. Test-coded events never reach optimisation.
 affirmatively grants App Tracking Transparency. The native module is not in the current
 binary, so this needs a new build.
 
-**TikTok app events — not built, on purpose.** The package that looks right,
-`react-native-tiktok`, is TikTok **Login Kit** — OAuth sign-in. It has no `trackEvent` and
-is not the Business SDK. There is no maintained React Native wrapper for TikTok's Business
-SDK. Options, in order of sanity:
+**TikTok app events — BUILT 8 August 2026, inert until an EAS build.** A maintained
+community wrapper does exist after all: `react-native-tiktok-business-sdk` (MIT, 13.6k
+weekly downloads, last published 28 July 2026) wraps the real `TikTokBusinessSDK` pod. The
+package that looks right by name, `react-native-tiktok`, is Login Kit — OAuth sign-in, no
+`trackEvent`. The names are a trap and it cost one wasted install already.
 
-1. Accept SKAdNetwork-only measurement for TikTok iOS installs (what we have now)
-2. Add a mobile measurement partner (AppsFlyer / Adjust / Singular) — they wrap all
-   networks, cost real money, and are the standard answer once paid UA is meaningful
-3. Write a native bridge to `TikTokBusinessSDK` — a few days of work, ongoing maintenance
+Same law as Meta: nothing initialises until ATT is affirmatively granted, every automatic
+tracker is disabled, SKAdNetwork support stays on. `identify()` is never called, so no email
+or phone leaves the device.
 
-Do nothing here until TikTok paid spend is actually planned.
+**Three things you must do before this can work:**
+
+1. Set these in the mobile `.env` (all three, or the SDK stays inert):
+   ```
+   EXPO_PUBLIC_TIKTOK_STORE_APP_ID=<your App Store listing id, digits only>
+   EXPO_PUBLIC_TIKTOK_APP_ID=<TikTok App ID from Events Manager → App Events>
+   EXPO_PUBLIC_TIKTOK_APP_ACCESS_TOKEN=<a SEPARATE token — see below>
+   ```
+2. **Generate a token dedicated to the app.** TikTok's SDK requires the access token to be
+   passed into `initializeSdk`, so it ships inside the binary and is extractable from any
+   IPA or APK. There is no client-token equivalent the way Meta has one — this is TikTok's
+   design. Using a separate token from the server one means a leak can be rotated without
+   taking down server-side conversions.
+3. Register the app in TikTok Ads Manager → Assets → Events → **App Events**, and confirm
+   the SKAdNetwork ids listed in step 15 match what TikTok shows you there.
+
+**The native build is UNVERIFIED.** Typecheck is clean and the JS integration is done, but
+nothing has been through `prebuild` or EAS. It is a legacy bridge module (no codegen),
+which works here only because `expo-build-properties` sets `bridgelessEnabled: false`. If
+the build breaks, `npm uninstall react-native-tiktok-business-sdk` and revert commit
+`44d4db3` — everything else keeps working, since the module is behind a guarded require.
 
 ### Step 15 — SKAdNetwork  **[done in code, needs a build]**
 
@@ -368,6 +396,8 @@ of sentence a state AG reads closely. Have counsel confirm §4.6 says enough.
 ## PART 7 — THE ORDER TO ACTUALLY DO THIS IN
 
 ```
+0.  Read PXI_EARLY_GROWTH_2026-08-08.md before planning any spend — the answer to
+    "when do we start advertising" is month twelve, for two independent reasons
 1.  Set Netlify vars (step 1), Clear cache and deploy
 2.  Set EC2 vars (step 2) WITH the test codes, restart API
 3.  Buy one real ticket on production
@@ -383,3 +413,9 @@ of sentence a state AG reads closely. Have counsel confirm §4.6 says enough.
 
 Do not start step 11 before step 5. Spending against a pixel that is not receiving
 conversions teaches the algorithm nothing and the money is simply gone.
+
+And do not start step 11 in 2026 at all. Meta and TikTok need roughly 50 conversions per ad
+set per week before optimisation does anything, and the Monthly Model's ROI ladder releases
+no real ad budget until month twelve. Both constraints land on the same date. Months 1–11
+are a hand-sales problem with a specific plan of their own:
+`PXI-operation/Docs/Operations/PXI_EARLY_GROWTH_2026-08-08.md`.
