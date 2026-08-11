@@ -4,6 +4,7 @@ import { Fragment, useCallback, useEffect, useState } from 'react';
 import { fetchAdminUsers, updateAdminUser, suspendUser, unsuspendUser } from '@/services/admin';
 import AdminPagination from '@/components/admin/AdminPagination';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminMode } from '@/contexts/AdminModeContext';
 import { adminMockUsers } from '@/lib/adminMockData';
 import { isSuperAdmin } from '@/lib/adminAccess';
 import {
@@ -139,7 +140,7 @@ export default function AdminUsersPage() {
     const [input, setInput] = useState('');
     const [q, setQ] = useState('');
     const [openUserId, setOpenUserId] = useState(null);
-    const isLiveAdmin = user?.accountTier === 'ADMIN';
+    const { isLive: isLiveAdmin } = useAdminMode();
     const canManageRoles = isSuperAdmin(user);
 
     useEffect(() => {

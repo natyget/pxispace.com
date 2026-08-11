@@ -3,6 +3,7 @@ import { getPublicProfile } from '@/lib/publicProfile';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { resolveDisplayImageUrl } from '@/lib/mediaUrl';
 import { getOgFallbackUrl } from '@/lib/shareMetadata';
+import { ogImageUrl } from '@/lib/seo/pageMetadata';
 
 /** Netlify/SSR: always run profile fetch at request time with runtime env (see `API_BASE_URL`). */
 export const dynamic = 'force-dynamic';
@@ -49,7 +50,16 @@ export async function generateMetadata({ params }) {
         profile.isPassportIssued && profile.bio && String(profile.bio).trim()
             ? String(profile.bio).trim().slice(0, 200)
             : `View ${displayName}'s PXI Passport`;
-    const ogImage = resolveDisplayImageUrl(profile.avatarUrl) || getOgFallbackUrl(site);
+    // An avatar is the most meaningful card for a profile, but we do not know its pixel
+    // size — asserting dimensions we cannot verify makes some crawlers reject the card.
+    // So: emit the avatar with no declared size, or fall back to a generated 1200×630
+    // card carrying the member's name, whose dimensions we do know.
+    const avatar = resolveDisplayImageUrl(profile.avatarUrl);
+    const ogImage =
+        avatar || ogImageUrl({ title: displayName, eyebrow: 'PXI Passport' }) || getOgFallbackUrl(site);
+    const ogImageEntry = avatar
+        ? { url: avatar, alt: displayName }
+        : { url: ogImage, width: 1200, height: 630, alt: displayName };
 
     return {
         title: `${displayName} — PXI Passport`,
@@ -62,22 +72,13 @@ export async function generateMetadata({ params }) {
             siteName: 'PXI',
             title: `${displayName} — PXI Passport`,
             description: rawDesc,
-            images: ogImage
-                ? [
-                      {
-                          url: ogImage,
-                          width: 1200,
-                          height: 1200,
-                          alt: displayName,
-                      },
-                  ]
-                : undefined,
+            images: [ogImageEntry],
         },
         twitter: {
             card: 'summary_large_image',
             title: `${displayName} — PXI Passport`,
             description: rawDesc,
-            images: ogImage ? [ogImage] : undefined,
+            images: [ogImage],
         },
     };
 }

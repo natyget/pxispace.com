@@ -8,7 +8,7 @@ import {
     updateSupportTicket,
 } from '@/services/admin';
 import AdminPagination from '@/components/admin/AdminPagination';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminMode } from '@/contexts/AdminModeContext';
 import {
     AdminError,
     AdminPageShell,
@@ -210,7 +210,6 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
 }
 
 export default function AdminSupportPage() {
-    const { user } = useAuth();
     const [rows, setRows] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [page, setPage] = useState(1);
@@ -219,7 +218,7 @@ export default function AdminSupportPage() {
     const [error, setError] = useState(null);
     const [status, setStatus] = useState('');
     const [openTicketId, setOpenTicketId] = useState(null);
-    const isLiveAdmin = user?.accountTier === 'ADMIN';
+    const { isLive: isLiveAdmin } = useAdminMode();
 
     const load = useCallback(async (p) => {
         if (!isLiveAdmin) {

@@ -22,7 +22,9 @@ import { StripePaymentModal } from '@/components/checkout/StripePaymentModal';
 import TicketEmailPreview from '@/components/tickets/TicketEmailPreview';
 import TicketDeliveryActions from '@/components/tickets/TicketDeliveryActions';
 import { buildTicketEmailPreviewInput } from '@/lib/ticketEmailPreview';
-import { trackBeginCheckout } from '@/lib/analytics';
+import { trackAddToCart, trackBeginCheckout, trackJoinEvent } from '@/lib/analytics';
+import { setEnhancedConversionData } from '@/lib/enhancedConversions';
+import { resolveEventCity } from '@/lib/seo/cities';
 
 /** Branded gradient stand-in for events without cover art (no external fallback image). */
 const COVER_PLACEHOLDER_BG =
@@ -57,6 +59,32 @@ function parseTicketTiers(event) {
   const base = Number(event.ticketPrice);
   if (base > 0) return [{ id: null, label: 'General admission', priceUsd: base }];
   return [];
+}
+
+/**
+ * The event-scoped GA4 dimensions for this event — same derivation as the event
+ * detail page, so a funnel step never disagrees with the one before it.
+ * Anything the payload genuinely lacks stays undefined and the wrapper drops it.
+ */
+function eventAnalyticsBase(event) {
+  if (!event) return {};
+  const rawGenres = Array.isArray(event.genres)
+    ? event.genres
+    : Array.isArray(event.playlist?.topGenres)
+      ? event.playlist.topGenres
+      : [];
+  const genre = rawGenres.map((g) => (typeof g === 'string' ? g : g?.name)).find(Boolean);
+  const headliner = (Array.isArray(event.featuredPeople) ? event.featuredPeople : [])
+    .map((fp) => fp?.user?.name || fp?.user?.username)
+    .find(Boolean);
+  return {
+    eventId: event.id,
+    eventTitle: event.name,
+    eventCity: resolveEventCity(event)?.name,
+    eventGenre: genre ? String(genre).toLowerCase() : undefined,
+    artist: headliner,
+    hostId: event.host?.id,
+  };
 }
 
 function formatPrice(usd, currency = 'USD') {
@@ -181,6 +209,11 @@ export default function EventCheckout({ basePath = '/events' }) {
   const [joinError, setJoinError] = useState(null);
   const [joinSuccess, setJoinSuccess] = useState(false);
   const [selectedTierId, setSelectedTierId] = useState(null);
+  // True once the tier-selection effect has run. `selectedTierId` cannot signal
+  // this on its own — null is also the id of the implicit single "General
+  // admission" tier — and the funnel events must not report a tier before the
+  // ?tier= deep link has been applied.
+  const [tierResolved, setTierResolved] = useState(false);
   const [walletSecret, setWalletSecret] = useState(null);
   const [walletOpen, setWalletOpen] = useState(false);
   const [issuedTicketId, setIssuedTicketId] = useState(null);
@@ -237,6 +270,7 @@ export default function EventCheckout({ basePath = '/events' }) {
     const timer = setTimeout(() => {
       if (!tiers.length) {
         setSelectedTierId(null);
+        setTierResolved(true);
         return;
       }
       const fromUrl = tierFromUrl != null && tiers.some((t) => String(t.id) === String(tierFromUrl)) ? tierFromUrl : null;
@@ -245,6 +279,7 @@ export default function EventCheckout({ basePath = '/events' }) {
         if (prev != null && tiers.some((t) => t.id === prev)) return prev;
         return tiers[0].id;
       });
+      setTierResolved(true);
     }, 0);
     return () => clearTimeout(timer);
   }, [tiers, tierFromUrl]);
@@ -254,17 +289,53 @@ export default function EventCheckout({ basePath = '/events' }) {
   const isPaidEvent = apiEvent?.ticketType === 'PAID' && tiers.length > 0;
   const isFreeEvent = apiEvent && apiEvent.ticketType !== 'PAID';
 
+  const selectedTier = useMemo(
+    () => tiers.find((x) => x.id === selectedTierId) || tiers[0] || null,
+    [tiers, selectedTierId],
+  );
+
+  const analyticsBase = useMemo(() => eventAnalyticsBase(apiEvent), [apiEvent]);
+
+  /** Funnel value = face value of the selected tier. Fees are added server-side
+   *  and only ever land on the server-side `purchase`. Free events are 0. */
+  const analyticsValue = useMemo(() => {
+    if (!apiEvent) return undefined;
+    if (!isPaidEvent) return 0;
+    const n = Number(selectedTier?.priceUsd ?? apiEvent.ticketPrice);
+    return Number.isFinite(n) ? n : undefined;
+  }, [apiEvent, isPaidEvent, selectedTier]);
+
+  // add_to_cart — the tier now sitting in the order. Once per tier, so switching
+  // tiers is visible in the funnel but re-renders and re-selects are not.
+  // Declared before begin_checkout so both land in funnel order on the commit
+  // where the tier first resolves.
+  const cartTrackedTiers = useRef(new Set());
+  useEffect(() => {
+    if (!apiEvent?.id || !isPaidEvent || !tierResolved || !selectedTier) return;
+    const key = `${apiEvent.id}:${selectedTier.id ?? 'base'}`;
+    if (cartTrackedTiers.current.has(key)) return;
+    cartTrackedTiers.current.add(key);
+    trackAddToCart({
+      ...analyticsBase,
+      ticketTier: selectedTier.label,
+      quantity: 1,
+      value: analyticsValue,
+    });
+  }, [apiEvent?.id, isPaidEvent, tierResolved, selectedTier, analyticsBase, analyticsValue]);
+
   const beginCheckoutTracked = useRef(false);
   useEffect(() => {
-    if (!apiEvent?.id || !isPaidEvent || beginCheckoutTracked.current) return;
+    if (!apiEvent?.id || beginCheckoutTracked.current) return;
+    // Paid events wait for the tier so ticket_tier is on the hit; free events
+    // have no tier and must still enter the funnel.
+    if (isPaidEvent && !tierResolved) return;
     beginCheckoutTracked.current = true;
-    const t = tiers.find((x) => x.id === selectedTierId) || tiers[0];
     trackBeginCheckout({
-      id: apiEvent.id,
-      name: apiEvent.name,
-      priceUsd: t?.priceUsd != null ? Number(t.priceUsd) : Number(apiEvent.ticketPrice),
+      ...analyticsBase,
+      ticketTier: isPaidEvent ? selectedTier?.label : undefined,
+      value: analyticsValue,
     });
-  }, [apiEvent, isPaidEvent, tiers, selectedTierId]);
+  }, [apiEvent?.id, isPaidEvent, tierResolved, selectedTier, analyticsBase, analyticsValue]);
 
   useEffect(() => {
     if (!apiEvent?.id || !isPaidEvent) {
@@ -312,6 +383,15 @@ export default function EventCheckout({ basePath = '/events' }) {
     if (!apiEvent || !isPaidEvent || !isAuthenticated || !user?.id) return;
     setJoining(true);
     setJoinError(null);
+    // Enhanced conversions: hash the buyer's identifiers BEFORE Stripe takes
+    // over, so the server-side `purchase` can still be matched to an ad click
+    // when cookies cannot. Consent-gated and fail-silent inside; a failure here
+    // must never surface as a payment error.
+    try {
+      await setEnhancedConversionData({ email: user?.email, phone: user?.phoneNumber });
+    } catch {
+      /* analytics never blocks checkout */
+    }
     try {
       const { clientSecret } = await purchaseTicket(apiEvent.id, apiTierId, {
         applyCredits: useCredits && creditBalanceCents > 0,
@@ -345,6 +425,11 @@ export default function EventCheckout({ basePath = '/events' }) {
         emailOptIn,
         smsOptIn: smsOptIn && !!user?.phoneNumber,
       });
+      // Client mirror of join_event, for funnel visibility only — the
+      // authoritative one is fired server-side from POST /api/tickets/generate.
+      // A free RSVP is never a `purchase`. Fired before the deep-link hand-off
+      // below, which navigates the tab away.
+      trackJoinEvent({ ...analyticsBase, ticketTier: selectedTier?.label });
       setJoinSuccess(true);
       const ticketId = result?.ticket?.id ?? null;
       const qrValue = result?.ticket?.pasetoToken ?? null;
@@ -397,7 +482,6 @@ export default function EventCheckout({ basePath = '/events' }) {
 
   const checkoutDate = formatCheckoutDate(apiEvent.startDate);
   const checkoutLocation = apiEvent.location || 'Location TBA';
-  const selectedTier = tiers.find((x) => x.id === selectedTierId) || tiers[0];
   const faceValue = isPaidEvent
     ? formatPrice(selectedTier?.priceUsd ?? apiEvent.ticketPrice, apiEvent.currency)
     : 'Free';
@@ -738,6 +822,13 @@ export default function EventCheckout({ basePath = '/events' }) {
         open={walletOpen}
         clientSecret={walletSecret}
         returnUrl={stripeReturnUrl}
+        // Presence of this prop is what opts the modal into ecommerce tracking:
+        // it also serves credit/campaign top-ups, which are not ticket sales.
+        analytics={{
+          ...analyticsBase,
+          ticketTier: selectedTier?.label,
+          value: analyticsValue,
+        }}
         onCancel={() => {
           setWalletOpen(false);
           setWalletSecret(null);

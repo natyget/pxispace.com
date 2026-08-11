@@ -7,6 +7,9 @@ export const metadata = {
   alternates: { canonical: 'https://pxispace.com/privacy' },
 };
 
+// documentId scopes the hub to this one document. Without it this route
+// rendered the entire legal hub — the same DOM as /legal and /terms — three
+// self-canonical URLs of duplicate content.
 export default function PrivacyPolicyPage() {
-  return <LegalHubPage initialSection="privacy" />;
+  return <LegalHubPage documentId="privacy" />;
 }

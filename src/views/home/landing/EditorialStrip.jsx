@@ -63,7 +63,7 @@ export default function EditorialStrip() {
       <div className="mt-6 flex flex-col justify-between gap-6 md:flex-row md:items-end">
         <h2 className="display-2 max-w-xl">Stories from the night.</h2>
         <Link
-          href="/story"
+          href="/editorial"
           className="inline-flex items-center gap-2 text-sm font-semibold text-white underline-offset-4 hover:underline"
         >
           Read all stories <ArrowRight className="h-4 w-4" />
@@ -82,7 +82,7 @@ export default function EditorialStrip() {
             viewport={{ once: false, margin: '-80px' }}
             transition={{ duration: 1.15, delay: 0.15 + i * 0.22, ease: [0.16, 1, 0.3, 1] }}
           >
-            <Link href={`/story/${story.slug}`} className="group block">
+            <Link href={`/editorial/${story.slug}`} className="group block">
               <StoryCardMedia
                 story={story}
                 className={`${story.cardAspectClass || 'aspect-[309/362]'} rounded-2xl border border-white/10`}

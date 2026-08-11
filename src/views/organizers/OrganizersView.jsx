@@ -98,7 +98,7 @@ export default function OrganizersView() {
         <div className="mt-14 flex flex-col gap-16">
           <FeatureRow
             title="Your branding, secured by PASETO"
-            body="Every ticket carries your cover art, your colors, and your own stamps when you customize it — and it's signed with the industry-standard PASETO system competitors don't use. Safe Stripe payment with only a $0.99 platform fee."
+            body="Every ticket carries your cover art, your colors, and your own stamps when you customize it — and it's signed with the industry-standard PASETO system competitors don't use. Safe Stripe payment: a flat $0.99 per ticket from your payout, and a 5.49% buyer service fee at checkout."
             chip={<div className="p-5"><EarningsMock /></div>}
             href="/pricing"
             linkLabel="View Pricing"

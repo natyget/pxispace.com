@@ -75,9 +75,9 @@ export default function FaqView() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-4">
-            <a href="mailto:support@pxispace.com" className="glow-cta px-8 py-4 text-sm">
-              Email support <ArrowRight className="h-4 w-4" />
-            </a>
+            <Link href="/contact" className="glow-cta px-8 py-4 text-sm">
+              Contact Us <ArrowRight className="h-4 w-4" />
+            </Link>
             <Link href="/support" className="pill-ghost px-8 py-4 text-sm font-semibold">
               Visit support
             </Link>

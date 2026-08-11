@@ -7,7 +7,8 @@
     "dev": "next dev -p 5173",
     "build": "next build",
     "start": "next start -p 5173",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "check:sitemap": "node scripts/check-sitemap.mjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",

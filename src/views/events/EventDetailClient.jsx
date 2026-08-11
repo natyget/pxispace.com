@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeftIcon, ArrowUpRightIcon, Loading02Icon, ScanIcon, SmartPhone01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { eventsService } from '@/services/events';
@@ -19,8 +19,12 @@ import { singleEventMapEmbedSrc } from '@/lib/eventMapEmbed';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildEventJsonLd } from '@/lib/seo/schemas';
 import { getSiteUrl } from '@/lib/siteUrl';
+import { resolveEventCity } from '@/lib/seo/cities';
+import { track, trackViewItem } from '@/lib/analytics';
 
 const NAVBAR_TOP = 'top-[var(--public-navbar-height)]';
+/** Google Ads destination for the §5.7 dynamic-remarketing hit. Unset = no-op. */
+const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
 /** Mobile: edge-to-edge under navbar; desktop: offset below fixed header */
 const DESKTOP_NAVBAR_OFFSET = 'pt-0 md:pt-[var(--public-navbar-height)]';
 const SECTION_EMPTY = 'Empty yet';
@@ -102,6 +106,33 @@ function deriveLineup(apiEvent) {
       };
     })
     .filter(Boolean);
+}
+
+/**
+ * The event-scoped GA4 dimensions for this event. Genres resolve exactly the way
+ * the server-rendered JSON-LD on the route does, and anything the payload
+ * genuinely lacks stays undefined so the wrapper drops it rather than
+ * registering an empty dimension.
+ */
+function eventAnalyticsBase(event) {
+  if (!event) return {};
+  const rawGenres = Array.isArray(event.genres)
+    ? event.genres
+    : Array.isArray(event.playlist?.topGenres)
+      ? event.playlist.topGenres
+      : [];
+  const genre = rawGenres.map((g) => (typeof g === 'string' ? g : g?.name)).find(Boolean);
+  const headliner = (Array.isArray(event.featuredPeople) ? event.featuredPeople : [])
+    .map((fp) => fp?.user?.name || fp?.user?.username)
+    .find(Boolean);
+  return {
+    eventId: event.id,
+    eventTitle: event.name,
+    eventCity: resolveEventCity(event)?.name,
+    eventGenre: genre ? String(genre).toLowerCase() : undefined,
+    artist: headliner,
+    hostId: event.host?.id,
+  };
 }
 
 function SectionDivider() {
@@ -195,6 +226,36 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
   const guestlistAvatars = useMemo(() => deriveGuestlistAvatars(apiEvent), [apiEvent]);
   const lineup = useMemo(() => deriveLineup(apiEvent), [apiEvent]);
   const ticketTiers = useMemo(() => parseTicketTiers(apiEvent), [apiEvent]);
+
+  // view_item — once per event, not per render. Keyed by id so the pane variant
+  // swapping between events still reports each one.
+  const viewItemTrackedId = useRef(null);
+  useEffect(() => {
+    if (!apiEvent?.id || viewItemTrackedId.current === apiEvent.id) return;
+    viewItemTrackedId.current = apiEvent.id;
+
+    const entryTier = ticketTiers[0] ?? null;
+    const rawValue =
+      apiEvent.ticketType === 'PAID' ? (entryTier?.priceUsd ?? apiEvent.ticketPrice) : 0;
+    const value = Number.isFinite(Number(rawValue)) ? Number(rawValue) : undefined;
+
+    trackViewItem({
+      ...eventAnalyticsBase(apiEvent),
+      ticketTier: entryTier?.label,
+      value,
+    });
+
+    // §5.7 dynamic remarketing. Scoped to the Ads destination with send_to, so it
+    // never lands in GA4 as a second page_view for this route.
+    if (GOOGLE_ADS_ID) {
+      track('page_view', {
+        send_to: GOOGLE_ADS_ID,
+        ecomm_prodid: String(apiEvent.id),
+        ecomm_pagetype: 'product',
+        ecomm_totalvalue: value ?? 0,
+      });
+    }
+  }, [apiEvent, ticketTiers]);
 
   const mapSrc = singleEventMapEmbedSrc(apiEvent?.latitude, apiEvent?.longitude);
   const hasMap = !!mapSrc;

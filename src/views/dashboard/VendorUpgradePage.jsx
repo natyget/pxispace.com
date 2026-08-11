@@ -7,6 +7,7 @@ import { Ticket01Icon, ArrowRight02Icon, Loading02Icon, CheckmarkCircle02Icon, C
 import SurfaceHeader from '@/components/dashboard/SurfaceHeader';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService, authStorage } from '../../services/auth';
+import { trackHostLead } from '@/lib/analytics';
 
 const BENEFITS = [
     {
@@ -153,6 +154,9 @@ export default function VendorUpgradePage() {
         try {
             const { url } = await authService.vendorOnboard({ fromMobile });
             setStep('redirecting');
+            // An existing attendee committing to host: the in-product half of
+            // goal #2. Distinct source from the pricing form and the Zoho page.
+            trackHostLead({ source: 'platform' });
             setTimeout(() => { window.location.href = url; }, 800);
         } catch (err) {
             if (err.code === 'STRIPE_ACCOUNT_EXISTS') {
@@ -425,7 +429,7 @@ export default function VendorUpgradePage() {
                 <a href="https://stripe.com/connect-account/legal" target="_blank" rel="noopener noreferrer" className="underline transition-colors hover:text-zinc-400">
                     Connected Account Agreement
                 </a>
-                . PXI charges a 4.59% consumer fee and a $0.90 organizer flat fee per transaction.
+                . PXI charges a 5.49% consumer fee and a $0.99 organizer flat fee per ticket.
             </p>
         </div>
     );

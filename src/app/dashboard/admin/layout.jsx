@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { AdminModeProvider } from '@/contexts/AdminModeContext';
 import { canAccessAdminDashboard } from '@/lib/adminAccess';
 
 export default function AdminSectionLayout({ children }) {
@@ -35,5 +36,5 @@ export default function AdminSectionLayout({ children }) {
         );
     }
 
-    return children;
+    return <AdminModeProvider>{children}</AdminModeProvider>;
 }

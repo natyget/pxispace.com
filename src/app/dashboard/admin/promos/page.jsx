@@ -9,7 +9,7 @@ import {
 } from '@/services/admin';
 import { searchUsers } from '@/services/events';
 import AdminPagination from '@/components/admin/AdminPagination';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminMode } from '@/contexts/AdminModeContext';
 import {
     AdminError,
     AdminPageShell,
@@ -251,13 +251,12 @@ function GrantCreditsCard() {
 }
 
 export default function AdminPromosPage() {
-    const { user } = useAuth();
     const [rows, setRows] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const isLiveAdmin = user?.accountTier === 'ADMIN';
+    const { isLive: isLiveAdmin } = useAdminMode();
 
     const load = useCallback(async (p) => {
         if (!isLiveAdmin) {

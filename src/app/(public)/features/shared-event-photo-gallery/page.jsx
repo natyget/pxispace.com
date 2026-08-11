@@ -1,20 +1,15 @@
 import { JsonLd } from '@/components/seo/JsonLd';
 import SharedEventPhotoGalleryView from '@/views/features/SharedEventPhotoGalleryView';
+import { buildPageMetadata } from '@/lib/seo/pageMetadata';
 
-export const metadata = {
-  title: 'Shared Event Photo Gallery App',
+export const metadata = buildPageMetadata({
+  title: "Shared Event Photo Gallery App",
   description:
-    'Capture and share event photos in real time with PXI. A live, tactile native camera that streams into a communal shared thread. No uploads, no group texts — just the night, preserved.',
-  alternates: {
-    canonical: 'https://pxispace.com/features/shared-event-photo-gallery',
-  },
-  openGraph: {
-    title: 'Shared Event Photo Gallery App | PXI',
-    description:
-      'Live, tactile native camera streaming into a communal shared event photo gallery. Zero friction photo sharing.',
-    url: 'https://pxispace.com/features/shared-event-photo-gallery',
-  },
-};
+    "Capture and share event photos in real time with PXI. A live, tactile native camera that streams into a communal shared thread. No uploads, no group texts — just the night, preserved.",
+  path: "/features/shared-event-photo-gallery",
+  eyebrow: "Feature",
+  ogTitle: "One shared camera roll for the whole night.",
+});
 
 const PAGE_JSONLD = {
   '@context': 'https://schema.org',

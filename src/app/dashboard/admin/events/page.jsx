@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fetchAdminEvents } from '@/services/admin';
 import AdminPagination from '@/components/admin/AdminPagination';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminMode } from '@/contexts/AdminModeContext';
 import { adminMockEvents } from '@/lib/adminMockData';
 import {
     AdminError,
@@ -31,14 +31,13 @@ function formatDate(iso) {
 }
 
 export default function AdminEventsPage() {
-    const { user } = useAuth();
     const [rows, setRows] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const isLiveAdmin = user?.accountTier === 'ADMIN';
+    const { isLive: isLiveAdmin } = useAdminMode();
 
     const load = useCallback(async (p) => {
         if (!isLiveAdmin) {

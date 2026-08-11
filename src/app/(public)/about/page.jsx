@@ -1,28 +1,19 @@
 import About from '@/views/about/About';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildAboutJsonLd } from '@/lib/seo/schemas';
+import { buildPageMetadata } from '@/lib/seo/pageMetadata';
 
 const TITLE = 'About PXI — Memory Is the Product';
 const DESCRIPTION =
   'PXI is an event platform built by operators, where the night compiles itself, the organizer keeps the money, and the memory is the point. Privacy-first, always.';
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: 'https://pxispace.com/about' },
-  openGraph: {
-    title: TITLE,
-    description: DESCRIPTION,
-    url: 'https://pxispace.com/about',
-    images: [{ url: '/og-hero.png', width: 1200, height: 630, alt: 'About PXI' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: TITLE,
-    description: DESCRIPTION,
-    images: ['/og-hero.png'],
-  },
-};
+  path: '/about',
+  eyebrow: 'Company',
+  ogTitle: 'Memory is the product.',
+});
 
 export default function Page() {
   return (

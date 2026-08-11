@@ -5,6 +5,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Loading02Icon, ImageAdd02Icon } from '@hugeicons/core-free-icons';
 import { requestPresignedUpload } from '../../services/media';
 import { createFeedItem } from '../../services/feed';
+import { trackScrapbookUpload } from '../../lib/analytics';
 
 const MAX_FILES = 40;
 const CONCURRENCY = 2;
@@ -341,6 +342,9 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
 
       setBusy(false);
       setProgress({ done: completed, total: files.length, label: '' });
+      // Report what reached the album, not what was picked — a partly failed
+      // batch still uploaded `completed` items.
+      if (completed > 0) trackScrapbookUpload({ eventId, mediaCount: completed });
       if (errors.length) {
       setLastError(errors.slice(0, 5).join(' / ') + (errors.length > 5 ? ` ... +${errors.length - 5} more` : ''));
       } else {

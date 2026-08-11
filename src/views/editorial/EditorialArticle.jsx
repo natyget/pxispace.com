@@ -14,7 +14,7 @@ export default function EditorialArticle({ story }) {
     <article className="landing-v2 bg-black text-white">
       <section className="relative overflow-hidden pt-32 md:pt-40">
         <div className="mx-auto max-w-[820px] px-6">
-          <Link href="/story" className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-white">
+          <Link href="/editorial" className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-white">
             <ArrowLeft className="h-4 w-4" /> Story
           </Link>
           <p className="mt-8 block text-[11px] font-bold uppercase tracking-[0.25em] text-zinc-500">{story.tag}</p>

@@ -4,6 +4,8 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { authStorage, authService, ensurePasetoCookie } from '../services/auth';
 import { faceService } from '../services/face';
+import { clearUserId, setUserId, setUserPropertiesFromUser } from '../lib/analytics';
+import { setEnhancedConversionData } from '../lib/enhancedConversions';
 
 const AuthContext = createContext(null);
 
@@ -101,12 +103,24 @@ export function AuthProvider({ children }) {
         setUser(newUser);
         setAuthReady(true);
         setAuthRefreshing(false);
+        // Attach GA identity synchronously here rather than waiting for the
+        // IdentityBridge effect: the auth pages redirect immediately after
+        // saveAuth, so the effect can lose the race and the first hits of the
+        // session would land without a user_id.
+        setUserId(newUser?.id);
+        setUserPropertiesFromUser(newUser);
+        // Hashed-only (SHA-256, in-browser) and consent-gated inside the module.
+        // Enriches the sign_up/login that just fired plus every later conversion.
+        // Never awaited — a redirect must not wait on a digest.
+        void setEnhancedConversionData({ email: newUser?.email, phone: newUser?.phoneNumber });
     }, []);
 
     const updateUser = useCallback((updatedUser) => {
         const merged = { ...(user || {}), ...updatedUser };
         localStorage.setItem('pxi_user', JSON.stringify(merged));
         setUser(merged);
+        // The user record changed (tier, city, XP…) — resync the user-scoped dimensions.
+        setUserPropertiesFromUser(merged);
     }, [user]);
 
     const logout = useCallback(async () => {
@@ -115,6 +129,9 @@ export function AuthProvider({ children }) {
         setUser(null);
         setAuthReady(true);
         setAuthRefreshing(false);
+        // Drop user_id, the user-scoped dimensions and the hashed identifiers the
+        // moment the session ends — not one render later. Matters on shared browsers.
+        clearUserId();
     }, []);
 
     const isAuthenticated = !!token && !!user;

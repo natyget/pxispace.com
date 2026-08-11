@@ -7,12 +7,16 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, Loading02Icon } from '@hugeicons/core-free-icons';
 import { api } from '@/services/api';
 import Button from '@/components/ui/Button';
+import { trackAddPaymentInfo } from '@/lib/analytics';
 
-const PaymentForm = ({ onSuccess, onCancel, returnUrl }) => {
+const PaymentForm = ({ onSuccess, onCancel, returnUrl, analytics }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // Method the buyer picked in the Payment Element ('card' | 'apple_pay' | …),
+  // the only place that value is observable before confirmation.
+  const [paymentType, setPaymentType] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,6 +29,11 @@ const PaymentForm = ({ onSuccess, onCancel, returnUrl }) => {
       setError(submitError.message || 'Please complete the payment form.');
       return;
     }
+    // Details are complete and accepted by Elements — that is add_payment_info.
+    // `purchase` stays server-side (Stripe webhook → Measurement Protocol).
+    // Not awaited: the wrapper is sync and fail-silent, and nothing may sit
+    // between the buyer and confirmPayment.
+    if (analytics) trackAddPaymentInfo({ ...analytics, paymentType: paymentType || undefined });
     const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
       elements,
       redirect: 'if_required',
@@ -50,6 +59,7 @@ const PaymentForm = ({ onSuccess, onCancel, returnUrl }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <PaymentElement
+        onChange={(event) => setPaymentType(event?.value?.type ?? null)}
         options={{
           layout: 'tabs',
           wallets: { applePay: 'auto', googlePay: 'auto' },
@@ -77,7 +87,12 @@ const PaymentForm = ({ onSuccess, onCancel, returnUrl }) => {
   );
 };
 
-export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open, returnUrl }) {
+/**
+ * @param {Object} [props.analytics] event-scoped GA4 dimensions for the ticket
+ *   being bought. Omit it (credits / campaign top-ups) and no ecommerce event
+ *   is fired — only ticket sales belong in the commerce funnel.
+ */
+export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open, returnUrl, analytics }) {
   const [stripePromise, setStripePromise] = useState(null);
 
   useEffect(() => {
@@ -170,7 +185,12 @@ export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open, re
                 },
               }}
             >
-              <PaymentForm onSuccess={onSuccess} onCancel={onCancel} returnUrl={returnUrl} />
+              <PaymentForm
+                onSuccess={onSuccess}
+                onCancel={onCancel}
+                returnUrl={returnUrl}
+                analytics={analytics}
+              />
             </Elements>
           ) : (
             <div className="flex items-center justify-center py-12 text-zinc-500">

@@ -4,8 +4,10 @@ import React from 'react';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { InstagramIcon } from '@hugeicons/core-free-icons';
-import { FaTiktok } from 'react-icons/fa';
+import { FaTiktok, FaXTwitter, FaYoutube } from 'react-icons/fa6';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
+import { openConsentPreferences } from '@/lib/consent';
+import { SOCIAL_PROFILES } from '@/lib/seo/social';
 
 const LogoSVG = '/logo-mark.png';
 const linkClass = 'text-zinc-500 hover:text-white transition-colors';
@@ -27,13 +29,13 @@ const ORGANIZER_LINKS = [
 const EXPLORE_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'Platform', href: '/platform' },
-  { label: 'Story', href: '/story' },
+  { label: 'Story', href: '/editorial' },
   { label: 'About Us', href: '/about' },
 ];
 
 const CONNECT_LINKS = [
   { label: 'FAQ & Support', href: '/faq' },
-  { label: 'Contact', href: 'mailto:support@pxispace.com', external: true },
+  { label: 'Contact', href: '/contact' },
   { label: 'Book a meeting', href: '/book' },
   { label: 'Legal', href: '/legal' },
 ];
@@ -131,6 +133,14 @@ const Footer = () => {
                   </li>
                 )
               )}
+              {/* Withdrawing consent has to be as easy as giving it (GDPR
+                  Art. 7(3)), and this is also where a US visitor opts out of
+                  ad personalisation. Renders in every region. */}
+              <li>
+                <button type="button" onClick={openConsentPreferences} className={`${linkClass} cursor-pointer text-left`}>
+                  Cookie settings
+                </button>
+              </li>
             </ul>
           </div>
         </div>
@@ -139,25 +149,31 @@ const Footer = () => {
           <p className="text-center md:text-left">
             &copy; {new Date().getFullYear()} PXI App. All rights reserved.
           </p>
+          {/* Driven by SOCIAL_PROFILES so these can never drift from the `sameAs` in the
+              Organization JSON-LD. They carry no utm_* — a click out to our own profile is
+              not a campaign, and tagging it would spawn junk sources in GA4. */}
           <div className="flex shrink-0 gap-4">
-            <a
-              href="https://www.instagram.com/pxilabs/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-zinc-600 transition-colors hover:text-white"
-              aria-label="PXI on Instagram"
-            >
-              <HugeiconsIcon icon={InstagramIcon} size={20} />
-            </a>
-            <a
-              href="https://www.tiktok.com/@pxi.labs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-zinc-600 transition-colors hover:text-white"
-              aria-label="PXI on TikTok"
-            >
-              <FaTiktok size={20} />
-            </a>
+            {SOCIAL_PROFILES.map(({ key, label, url }) => (
+              <a
+                key={key}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer me"
+                className="text-zinc-600 transition-colors hover:text-white"
+                aria-label={`PXI on ${label}`}
+                data-social={key}
+              >
+                {key === 'instagram' ? (
+                  <HugeiconsIcon icon={InstagramIcon} size={20} />
+                ) : key === 'tiktok' ? (
+                  <FaTiktok size={20} />
+                ) : key === 'x' ? (
+                  <FaXTwitter size={20} />
+                ) : (
+                  <FaYoutube size={20} />
+                )}
+              </a>
+            ))}
           </div>
         </div>
       </div>

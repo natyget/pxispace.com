@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEventManage } from './EventManageContext';
 import { eventShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
 import { shareEventQrImage, shareEventToInstagramStory } from '@/lib/inviteShare';
+import { trackInviteSend, trackShare } from '@/lib/analytics';
 import UserAvatar from '@/components/ui/UserAvatar';
 
 const LINEUP_ROLE_MAX_LEN = 80;
@@ -286,10 +287,12 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({ title, text, url });
-      } catch { /* dismissed */ }
+        trackShare({ method: 'native_share', contentType: 'event', itemId: eventId });
+      } catch { /* dismissed — no share happened, so nothing to report */ }
     } else {
       await navigator.clipboard.writeText(message).catch(() => {});
       toast.success('Link copied to clipboard');
+      trackShare({ method: 'copy_link', contentType: 'event', itemId: eventId });
     }
   };
 
@@ -297,10 +300,11 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
     if (!eventId) return;
     const title = event?.name || 'PXI Event';
     try {
-      await shareEventToInstagramStory(eventId, title, {
+      const method = await shareEventToInstagramStory(eventId, title, {
         coverImageUrl: event?.coverImage,
         scrapbookThumbUrl: event?.scrapbookThumbnails?.[0],
       });
+      trackShare({ method, contentType: 'event_story', itemId: eventId });
     } catch {
       toast.success('Link copied — open Instagram and paste in your Story');
     }
@@ -309,8 +313,9 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
   const handleShareQr = async () => {
     if (!eventId) return;
     try {
-      await shareEventQrImage(eventId, event?.name);
+      const method = await shareEventQrImage(eventId, event?.name);
       toast.success('QR image ready to share');
+      trackShare({ method, contentType: 'event_qr', itemId: eventId });
     } catch {
       toast.error('Could not share QR code');
     }
@@ -375,6 +380,18 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
     }
     setSending(false);
     setSelectedIds(new Set());
+
+    // Count what actually landed, not what was selected.
+    const sent = selectedUsers.length - failed.length;
+    if (sent > 0) {
+      trackInviteSend({
+        eventId,
+        eventTitle: event?.name,
+        channel: 'in_app',
+        inviteCount: sent,
+      });
+    }
+
     await reloadParticipants();
     reloadFeaturedPeople();
     await loadDirectInvites();

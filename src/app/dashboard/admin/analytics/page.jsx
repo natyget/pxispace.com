@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchPlatformAnalytics } from '@/services/admin';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminMode } from '@/contexts/AdminModeContext';
 import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
 
@@ -304,12 +304,11 @@ function RevenueLines({ data }) {
 }
 
 export default function AdminAnalyticsPage() {
-    const { user } = useAuth();
     const [days, setDays] = useState(30);
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const isLiveAdmin = user?.accountTier === 'ADMIN';
+    const { isLive: isLiveAdmin } = useAdminMode();
 
     const load = useCallback(async () => {
         if (!isLiveAdmin) {

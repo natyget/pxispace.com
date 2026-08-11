@@ -1,20 +1,15 @@
 import { JsonLd } from '@/components/seo/JsonLd';
 import CompetitorComparisonView from '@/views/competitors/CompetitorComparisonView';
+import { buildPageMetadata } from '@/lib/seo/pageMetadata';
 
-export const metadata = {
-  title: 'Partiful Alternative for Nightlife Events',
+export const metadata = buildPageMetadata({
+  title: "Partiful Alternative for Nightlife Events",
   description:
-    'Looking for a Partiful or Luma alternative? PXI is the premium event operating system with branded ticketing, live shared photo galleries, and a digital event passport — no rigid templates.',
-  alternates: {
-    canonical: 'https://pxispace.com/competitors/partiful-luma-alternative',
-  },
-  openGraph: {
-    title: 'Partiful Alternative for Nightlife Events | PXI',
-    description:
-      'The premium alternative to Partiful, Luma, and DICE. Branded ticketing, live galleries, and digital scrapbooks.',
-    url: 'https://pxispace.com/competitors/partiful-luma-alternative',
-  },
-};
+    "Looking for a Partiful or Luma alternative? PXI is the premium event operating system with branded ticketing, live shared photo galleries, and a digital event passport — no rigid templates.",
+  path: "/competitors/partiful-luma-alternative",
+  eyebrow: "Comparison",
+  ogTitle: "The premium alternative to Partiful and Luma.",
+});
 
 const PAGE_JSONLD = {
   '@context': 'https://schema.org',

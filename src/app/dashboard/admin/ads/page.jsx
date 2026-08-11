@@ -14,7 +14,7 @@ import {
     fetchAdminAdsOverview,
 } from '@/services/admin';
 import AdminPagination from '@/components/admin/AdminPagination';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminMode } from '@/contexts/AdminModeContext';
 import {
     AdminError,
     AdminPageShell,
@@ -59,8 +59,7 @@ function formatDay(iso) {
 }
 
 export default function AdminAdsPage() {
-    const { user } = useAuth();
-    const isLiveAdmin = user?.accountTier === 'ADMIN';
+    const { isLive: isLiveAdmin } = useAdminMode();
     const [overview, setOverview] = useState(null);
     const [rows, setRows] = useState([]);
     const [status, setStatus] = useState('ALL');

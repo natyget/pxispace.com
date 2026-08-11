@@ -6,14 +6,20 @@
 // exchanges the code (server-side secret) and builds the taste profile for the
 // user who initiated the flow (mobile app or web).
 
-import React, { Suspense, useEffect, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/services/api';
+import { restoreAttributionAfterRedirect, trackSpotifyConnected } from '@/lib/analytics';
 
 const env = globalThis.process?.env || {};
 const SPOTIFY_CLIENT_ID = env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || '';
 const SPOTIFY_REDIRECT_URI = env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || '';
+
+// Layout effects flush before the passive effect that fires this route's
+// page_view, so the restored campaign fields and `ignore_referrer` are already
+// set when the first hit goes out. useEffect on the server render only.
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 function SpotifyCallbackInner() {
   const params = useSearchParams();
@@ -24,6 +30,16 @@ function SpotifyCallbackInner() {
   const [platform, setPlatform] = useState('web');
   const [topGenres, setTopGenres] = useState([]);
   const ranRef = useRef(false);
+  const restoredRef = useRef(false);
+
+  // Undo the OAuth round-trip's damage to attribution: replay the stashed
+  // utm_* campaign and set ignore_referrer so the bounce back off
+  // accounts.spotify.com cannot open a new session attributed to Spotify.
+  useIsomorphicLayoutEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    restoreAttributionAfterRedirect();
+  }, []);
 
   useEffect(() => {
     if (ranRef.current) return;
@@ -36,9 +52,13 @@ function SpotifyCallbackInner() {
     api
       .post('/api/music/spotify/callback', payload)
       .then((res) => {
-        setPlatform(res?.platform === 'mobile' ? 'mobile' : 'web');
+        const isMobile = res?.platform === 'mobile';
+        setPlatform(isMobile ? 'mobile' : 'web');
         setTopGenres(Array.isArray(res?.topGenres) ? res.topGenres : []);
         setStatus('done');
+        // This page also terminates the MOBILE connect flow; the app fires its
+        // own spotify_connected, so counting that visit here would double it.
+        if (!isMobile) trackSpotifyConnected({ entryPoint: 'account_settings' });
       })
       .catch(() => setStatus('error'));
   }, [code, hasOAuthParams, state]);

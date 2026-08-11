@@ -3,12 +3,40 @@
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { FavouriteIcon, MusicNote01Icon } from '@hugeicons/core-free-icons';
+import { trackRecommendationClick, trackSelectItem } from '@/lib/analytics';
 
-const EventCard = ({ event, favorited, onToggleFavorite, detailBasePath = '/events', sponsored = false, onSponsoredClick }) => {
+/**
+ * @param {Object} props
+ * @param {string} [props.listId]   GA4 item_list_id — omit and the card reports no select_item
+ * @param {string} [props.listName] GA4 item_list_name
+ * @param {number} [props.index]    zero-based position in that list
+ * @param {'taste_match'|'city'|'genre'|'friend'} [props.recSource]
+ *        Set ONLY when the surface really is a recommendation. A plain filtered
+ *        grid (city hub, wishlist, date filter) is not one.
+ * @param {number} [props.recRank]  zero-based rank inside the recommendation set
+ */
+const EventCard = ({
+  event,
+  favorited,
+  onToggleFavorite,
+  detailBasePath = '/events',
+  sponsored = false,
+  onSponsoredClick,
+  listId,
+  listName,
+  index,
+  recSource,
+  recRank,
+}) => {
   const router = useRouter();
   const href = `${String(detailBasePath).replace(/\/$/, '')}/${event.id}`;
   const open = () => {
     if (sponsored) onSponsoredClick?.();
+    // Both wrappers are synchronous and fail-silent — nothing here can delay the route.
+    if (listId || listName) trackSelectItem({ listId, listName, item: event, index });
+    if (recSource) {
+      trackRecommendationClick({ ...event, recSource, recRank: recRank ?? index });
+    }
     router.push(href);
   };
 

@@ -4,19 +4,28 @@
 // profile dropdown). Loads favorite ids, hydrates each event, renders the
 // same discovery cards.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import EventCard from '@/views/events/EventCard';
 import { eventsService } from '@/services/events';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { useAuth } from '@/contexts/AuthContext';
+import { resolveEventCity } from '@/lib/seo/cities';
+import { trackViewItemList } from '@/lib/analytics';
 
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?q=80&w=1200&auto=format&fit=crop';
 
 const MAX_WISHLIST_FETCH = 60;
 
+// Same id the ?wishlist=1 view on /events reports, so saved-event browsing is one
+// list in reporting no matter which surface rendered it.
+const LIST = { id: 'wishlist', name: 'Wishlist' };
+// GA4 caps items[] at 200 per hit; the fetch caps at 60.
+const MAX_LIST_ITEMS = 50;
+
 function normalizeApiEvent(e) {
+  const paid = e.ticketType === 'PAID';
   return {
     id: e.id,
     title: e.name,
@@ -29,6 +38,12 @@ function normalizeApiEvent(e) {
       ? new Date(e.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       : 'Date TBA',
     musicMatchScore: e.musicMatchScore ?? null,
+
+    // GA4 taxonomy fields — GET /api/events/:id returns the full row plus `host`,
+    // so host_id / event_city / items[].price are all available here.
+    hostId: e.createdBy || e.host?.id || null,
+    city: resolveEventCity(e)?.name || null,
+    value: paid && Number(e.ticketPrice) > 0 ? Number(e.ticketPrice) : 0,
   };
 }
 
@@ -38,9 +53,12 @@ export default function WishlistPage() {
   const [events, setEvents] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(() => new Set());
   const [loading, setLoading] = useState(true);
+  // One view_item_list per load of the list, not per re-render or per heart toggle.
+  const listTrackedRef = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    listTrackedRef.current = false;
     try {
       const ids = await loadFavoriteEventIds(isLoggedIn);
       setFavoriteIds(ids);
@@ -64,6 +82,12 @@ export default function WishlistPage() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (loading || events.length === 0 || listTrackedRef.current) return;
+    listTrackedRef.current = true;
+    trackViewItemList({ listId: LIST.id, listName: LIST.name, items: events.slice(0, MAX_LIST_ITEMS) });
+  }, [loading, events]);
+
   const handleToggleFavorite = useCallback(
     (id) => {
       const isFavorite = favoriteIds.has(String(id));
@@ -80,19 +104,13 @@ export default function WishlistPage() {
   return (
     <div className="min-h-screen bg-black pt-24 pb-20 text-white">
       <div className="container mx-auto px-6">
-        <div className="mb-8 flex items-end justify-between">
+        <div className="mb-8">
           <div>
             <h1 className="text-4xl font-black uppercase tracking-tighter md:text-6xl">Wishlist</h1>
             <p className="mt-2 text-sm font-bold text-zinc-500">
               Events you saved — tap the heart on any card to remove it.
             </p>
           </div>
-          <Link
-            href="/events"
-            className="hidden shrink-0 text-xs font-black uppercase tracking-widest text-[#d84aff] hover:text-white md:block"
-          >
-            Browse events
-          </Link>
         </div>
 
         {loading ? (
@@ -122,12 +140,15 @@ export default function WishlistPage() {
             className="grid w-full justify-center gap-6"
             style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}
           >
-            {events.map((event) => (
+            {events.map((event, i) => (
               <EventCard
                 key={event.id}
                 event={event}
                 favorited={favoriteIds.has(String(event.id))}
                 onToggleFavorite={handleToggleFavorite}
+                listId={LIST.id}
+                listName={LIST.name}
+                index={i}
               />
             ))}
           </div>
