@@ -130,7 +130,7 @@ export default function TermsOfService() {
 
                         <p className="mt-3 text-neutral-300/80 leading-7">
                             <strong>Fees:</strong> PXI charges a Platform Fee
-                            ($0.99 + 3.99% per ticket) added to the ticket
+                            ($0.99 flat per ticket from the organizer payout, plus a 5.49% buyer service fee) applied to the ticket
                             price.
                         </p>
 

@@ -3,7 +3,7 @@
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { fetchAdminReports, resolveAdminReport } from '@/services/admin';
 import AdminPagination from '@/components/admin/AdminPagination';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminMode } from '@/contexts/AdminModeContext';
 import { adminMockReports } from '@/lib/adminMockData';
 import {
     AdminError,
@@ -112,7 +112,6 @@ function ActionPanel({ report, onDone, onCancel }) {
 }
 
 export default function AdminReportsPage() {
-    const { user } = useAuth();
     const [rows, setRows] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [page, setPage] = useState(1);
@@ -120,7 +119,7 @@ export default function AdminReportsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [actingOn, setActingOn] = useState(null);
-    const isLiveAdmin = user?.accountTier === 'ADMIN';
+    const { isLive: isLiveAdmin } = useAdminMode();
 
     const load = useCallback(async (p) => {
         if (!isLiveAdmin) {

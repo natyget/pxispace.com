@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Alert02Icon, CheckmarkCircle02Icon, Delete02Icon } from '@hugeicons/core-free-icons';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminMode } from '@/contexts/AdminModeContext';
 import { fetchAdminUgcReports, resolveAdminReport } from '@/services/admin';
 import { adminMockUgcReports } from '@/lib/adminMockData';
 import {
@@ -39,13 +39,12 @@ const statusStyle = {
 };
 
 export default function AdminUgcModerationPage() {
-    const { user } = useAuth();
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [statusFilter, setStatusFilter] = useState('PENDING');
     const [busyId, setBusyId] = useState(null);
-    const isLiveAdmin = user?.accountTier === 'ADMIN';
+    const { isLive: isLiveAdmin } = useAdminMode();
 
     const load = useCallback(async () => {
         setLoading(true);

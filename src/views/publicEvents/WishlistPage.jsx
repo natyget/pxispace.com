@@ -104,19 +104,13 @@ export default function WishlistPage() {
   return (
     <div className="min-h-screen bg-black pt-24 pb-20 text-white">
       <div className="container mx-auto px-6">
-        <div className="mb-8 flex items-end justify-between">
+        <div className="mb-8">
           <div>
             <h1 className="text-4xl font-black uppercase tracking-tighter md:text-6xl">Wishlist</h1>
             <p className="mt-2 text-sm font-bold text-zinc-500">
               Events you saved — tap the heart on any card to remove it.
             </p>
           </div>
-          <Link
-            href="/events"
-            className="hidden shrink-0 text-xs font-black uppercase tracking-widest text-[#d84aff] hover:text-white md:block"
-          >
-            Browse events
-          </Link>
         </div>
 
         {loading ? (

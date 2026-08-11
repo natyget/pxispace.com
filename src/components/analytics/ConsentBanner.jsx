@@ -1,12 +1,17 @@
 'use client';
 
-// EEA / UK / CH consent prompt. Renders for NOBODY else.
+// Consent prompt. AUTO-opens for EEA / UK / CH only; re-openable everywhere.
 //
 // Everywhere outside the restricted region list the unscoped Consent Mode v2
 // default is 'granted' (see AnalyticsScripts.jsx), so a US visitor never sees
-// this, never pays for the region check beyond one Intl lookup, and loses no
-// data. Inside the list the defaults start denied and stay denied until the
-// visitor accepts here.
+// this unprompted, never pays for the region check beyond one Intl lookup, and
+// loses no data. Inside the list the defaults start denied and stay denied
+// until the visitor accepts here.
+//
+// The footer's "Cookie settings" link calls openConsentPreferences(), which
+// forces this open in ANY region — GDPR Art. 7(3) requires withdrawal to be as
+// easy as consent, and it doubles as the CCPA/CPRA opt-out surface for US
+// visitors, who are granted by default and previously had no way to say no.
 //
 // Renders null on the server and on the first client paint — region detection
 // needs `window`, and a banner that flashed for everyone during hydration would
@@ -16,9 +21,12 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import {
-    isRestrictedRegion,
+    closeConsentPreferences,
+    isConsentUiOpen,
+    readConsentChoice,
     needsConsentBanner,
     replayStoredConsent,
+    subscribeConsentUi,
     updateGoogleConsent,
     writeConsentChoice,
 } from '@/lib/consent';
@@ -27,16 +35,21 @@ const subscribe = () => () => {};
 const clientSnapshot = () => true;
 const serverSnapshot = () => false;
 
+const uiServerSnapshot = () => false;
+
 export default function ConsentBanner() {
     const hydrated = useSyncExternalStore(subscribe, clientSnapshot, serverSnapshot);
+    const managing = useSyncExternalStore(subscribeConsentUi, isConsentUiOpen, uiServerSnapshot);
     const [answeredNow, setAnsweredNow] = useState(false);
 
     // Consent defaults reset to denied on every cold load, so a returning
-    // visitor who already accepted must have their choice replayed. Pure
-    // external-system sync — no React state involved.
+    // visitor who already answered must have their choice replayed — in every
+    // region, since outside the EEA the default is 'granted' and a stored
+    // 'denied' would otherwise evaporate on navigation. Pure external-system
+    // sync — no React state involved.
     useEffect(() => {
         try {
-            if (isRestrictedRegion()) replayStoredConsent();
+            replayStoredConsent();
         } catch {
             /* never break the page over a banner */
         }
@@ -46,11 +59,17 @@ export default function ConsentBanner() {
         writeConsentChoice(status);
         updateGoogleConsent(status);
         setAnsweredNow(true);
+        closeConsentPreferences();
     }, []);
 
     // needsConsentBanner() is a pure read (Intl + localStorage) and is only
     // consulted once `hydrated` is true, so it can never desync hydration.
-    if (!hydrated || answeredNow || !needsConsentBanner()) return null;
+    // `managing` bypasses it entirely: an explicit request to review the choice
+    // must win over "this visitor already answered" and over region.
+    if (!hydrated) return null;
+    if (!managing && (answeredNow || !needsConsentBanner())) return null;
+
+    const current = managing ? readConsentChoice() : null;
 
     return (
         <div
@@ -64,7 +83,25 @@ export default function ConsentBanner() {
                     We use cookies to measure how PXI is used and to make our ads relevant. You can
                     say no and the site works exactly the same.
                 </p>
+                {managing ? (
+                    <p className="mt-2 text-xs leading-relaxed text-white/45">
+                        {current === 'granted'
+                            ? 'Your current choice: accepted. Choosing “Reject all” withdraws it and clears the cookies we set.'
+                            : current === 'denied'
+                              ? 'Your current choice: rejected.'
+                              : 'You have not made a choice yet.'}
+                    </p>
+                ) : null}
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    {managing ? (
+                        <button
+                            type="button"
+                            onClick={closeConsentPreferences}
+                            className="cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-white/45 transition-colors hover:text-white sm:mr-auto"
+                        >
+                            Close
+                        </button>
+                    ) : null}
                     <button
                         type="button"
                         onClick={() => answer('denied')}

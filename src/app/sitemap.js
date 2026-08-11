@@ -45,9 +45,13 @@ export default async function sitemap() {
     { url: `${base}/beta`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/support`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/faq`, changeFrequency: 'monthly', priority: 0.5 },
+    // /legal is the hub; /privacy, /terms and /cookies each render ONE document
+    // (LegalHubPage documentId). They were previously three identical renders of
+    // the whole hub — duplicate content that Google would have folded anyway.
     { url: `${base}/legal`, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${base}/privacy`, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${base}/terms`, changeFrequency: 'monthly', priority: 0.3 },
+    { url: `${base}/cookies`, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${base}/child-safety`, changeFrequency: 'yearly', priority: 0.2 },
   ];
 

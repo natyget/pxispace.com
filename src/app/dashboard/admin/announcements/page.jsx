@@ -7,7 +7,7 @@ import {
     updateAdminAnnouncement,
     deleteAdminAnnouncement,
 } from '@/services/admin';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminMode } from '@/contexts/AdminModeContext';
 import {
     AdminError,
     AdminPageShell,
@@ -152,11 +152,10 @@ function ComposeAnnouncementCard({ onCreated }) {
 }
 
 export default function AdminAnnouncementsPage() {
-    const { user } = useAuth();
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const isLiveAdmin = user?.accountTier === 'ADMIN';
+    const { isLive: isLiveAdmin } = useAdminMode();
 
     const load = useCallback(async () => {
         if (!isLiveAdmin) {
