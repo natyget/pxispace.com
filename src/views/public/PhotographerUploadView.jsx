@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ImageAdd02Icon, Loading02Icon, CheckmarkCircle02Icon, CancelCircleIcon, Camera01Icon } from '@hugeicons/core-free-icons';
 import { getUploadLink, presignUploadLink, confirmUploadLink } from '@/services/uploadLink';
+import { trackScrapbookUpload } from '@/lib/analytics';
 
 const MAX_FILES = 100;
 const CONCURRENCY = 2;
@@ -148,12 +149,20 @@ export default function PhotographerUploadView({ token }) {
     await Promise.all(Array.from({ length: Math.min(CONCURRENCY, files.length) }, () => worker()));
 
     setBusy(false);
+    // Report what actually landed in the album, not what was picked.
+    if (completed > 0) {
+      trackScrapbookUpload({
+        eventId: linkInfo?.eventId,
+        eventTitle: linkInfo?.eventName,
+        mediaCount: completed,
+      });
+    }
     if (errors.length) {
       setUploadError(errors.slice(0, 5).join(' · ') + (errors.length > 5 ? ` +${errors.length - 5} more` : ''));
     } else {
       setResult(`${files.length} photo${files.length === 1 ? '' : 's'} uploaded successfully!`);
     }
-  }, [token]);
+  }, [token, linkInfo?.eventId, linkInfo?.eventName]);
 
   const onPick = (e) => {
     const raw = Array.from(e.target.files || []);

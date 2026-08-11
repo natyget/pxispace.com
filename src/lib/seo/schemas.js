@@ -1,10 +1,171 @@
-/** Centralised JSON-LD schema definitions for PXI pages. */
+/**
+ * Centralised JSON-LD schema definitions for PXI pages.
+ *
+ * Everything here is SERVER-RENDERED into the initial HTML. Google does execute JS, but
+ * event listings are only awarded to markup it can trust on first fetch, so no builder in
+ * this file may depend on client state.
+ *
+ * The rule that matters most: **offers must match reality**. Advertising an InStock ticket
+ * for a sold-out or finished event is the fastest way to get the whole domain demoted out
+ * of the free event listings. Every builder below omits `offers` rather than guessing.
+ */
 
-export const SITE_URL = 'https://pxispace.com';
+import { CANONICAL_ORIGIN } from '@/lib/siteUrl';
+import { SOCIAL_SAME_AS } from '@/lib/seo/social';
 
-export const ORGANIZATION_JSONLD = {
-  '@context': 'https://schema.org',
+/**
+ * Structured data always names the canonical production origin, never the origin of the
+ * running deployment — a preview build must not tell Google it is the real PXI.
+ */
+export const SITE_URL = CANONICAL_ORIGIN;
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Helpers
+ * ────────────────────────────────────────────────────────────────────────── */
+
+const abs = (pathOrUrl) =>
+  !pathOrUrl ? null : String(pathOrUrl).startsWith('http') ? String(pathOrUrl) : `${SITE_URL}${pathOrUrl}`;
+
+/**
+ * ISO-8601 with a real UTC offset for the event's local timezone, e.g.
+ * "2026-08-14T22:00:00-04:00". Google explicitly wants the offset on Event dates —
+ * a bare "Z" is legal but tells it the party starts at 2am, which is how events end up
+ * listed on the wrong day.
+ * Falls back to plain ISO (Z) when no timezone is known rather than inventing one.
+ */
+export function isoWithOffset(value, timeZone) {
+  if (!value) return null;
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  if (!timeZone) return d.toISOString();
+
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hour12: false,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+      .formatToParts(d)
+      .reduce((acc, p) => {
+        if (p.type !== 'literal') acc[p.type] = p.value;
+        return acc;
+      }, {});
+
+    // Intl renders midnight as "24" in some ICU versions; normalise it.
+    const hour = parts.hour === '24' ? '00' : parts.hour;
+    const local = `${parts.year}-${parts.month}-${parts.day}T${hour}:${parts.minute}:${parts.second}`;
+
+    // Offset = (wall-clock time in that zone) − (the same instant in UTC).
+    const asUtc = Date.UTC(
+      Number(parts.year),
+      Number(parts.month) - 1,
+      Number(parts.day),
+      Number(hour),
+      Number(parts.minute),
+      Number(parts.second),
+    );
+    const offsetMinutes = Math.round((asUtc - d.getTime()) / 60000);
+    const sign = offsetMinutes >= 0 ? '+' : '-';
+    const mag = Math.abs(offsetMinutes);
+    const oh = String(Math.floor(mag / 60)).padStart(2, '0');
+    const om = String(mag % 60).padStart(2, '0');
+    return `${local}${sign}${oh}:${om}`;
+  } catch {
+    return d.toISOString();
+  }
+}
+
+/**
+ * Truthful availability for an event's ticket offer.
+ * Returns null when we cannot honestly claim anything — the caller then omits `offers`.
+ */
+export function resolveAvailability(event, { now = new Date() } = {}) {
+  if (!event) return null;
+
+  const end = event.endDate ? new Date(event.endDate) : null;
+  const start = event.startDate ? new Date(event.startDate) : null;
+  const finished = (end && end < now) || (!end && start && start < now);
+  if (finished) return null; // a finished event has nothing to sell
+
+  if (event.status === 'ARCHIVED' || event.status === 'CANCELLED') return null;
+  if (event.salesClosed === true || event.ticketsAvailable === false) {
+    return 'https://schema.org/SoldOut';
+  }
+
+  const capacity = Number(event.capacity ?? event.maxAttendees ?? NaN);
+  const sold = Number(event.ticketsSold ?? event._count?.tickets ?? NaN);
+  if (Number.isFinite(capacity) && capacity > 0 && Number.isFinite(sold) && sold >= capacity) {
+    return 'https://schema.org/SoldOut';
+  }
+
+  if (start && start > now) return 'https://schema.org/InStock';
+  return 'https://schema.org/InStock';
+}
+
+/** schema.org eventStatus from our status field. */
+function resolveEventStatus(event) {
+  switch (event?.status) {
+    case 'CANCELLED':
+      return 'https://schema.org/EventCancelled';
+    case 'POSTPONED':
+      return 'https://schema.org/EventPostponed';
+    default:
+      return 'https://schema.org/EventScheduled';
+  }
+}
+
+/**
+ * Best-effort PostalAddress from whatever address data an event carries.
+ * `city` is the record from src/lib/seo/cities.js when the event could be placed.
+ */
+function buildPlace(event, city) {
+  const venueName = event.venueName || event.floorPlan?.name || event.location || null;
+  const street = event.streetAddress || event.floorPlan?.address || null;
+  if (!venueName && !street && !city) return null;
+
+  const place = { '@type': 'Place', name: venueName || city?.name || 'Venue TBA' };
+
+  const address = { '@type': 'PostalAddress', addressCountry: city?.country || 'US' };
+  if (street) address.streetAddress = street;
+  if (city) {
+    address.addressLocality = city.name;
+    address.addressRegion = city.state;
+  }
+  if (event.postalCode) address.postalCode = event.postalCode;
+  place.address = address;
+
+  const lat = event.latitude ?? event.floorPlan?.venueLat ?? null;
+  const lng = event.longitude ?? event.floorPlan?.venueLng ?? null;
+  if (lat != null && lng != null) {
+    place.geo = { '@type': 'GeoCoordinates', latitude: Number(lat), longitude: Number(lng) };
+  }
+  return place;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Site-wide nodes
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Stable identifier for the PXI organization entity.
+ *
+ * Every node that mentions the company references THIS id instead of restating a
+ * partial copy. Before, `/about` nested a full Organization inside AboutPage while the
+ * homepage's WebSite.publisher declared a second, thinner one with no logo and no
+ * `sameAs` — two competing descriptions of the same company, which is precisely how an
+ * entity fails to consolidate and a Knowledge Panel never forms.
+ */
+export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+
+/** The Organization node WITHOUT `@context`, for embedding inside an `@graph`. */
+export const ORGANIZATION_NODE = {
   '@type': 'Organization',
+  '@id': ORGANIZATION_ID,
   name: 'PXI',
   url: SITE_URL,
   // Full-bleed brand mark (square, purple) for Google's org logo slot.
@@ -12,16 +173,16 @@ export const ORGANIZATION_JSONLD = {
   // Branded 1200×630 card so Google prefers it for the search thumbnail
   // instead of scraping a prominent in-page content photo.
   image: `${SITE_URL}/og-hero.png`,
-  sameAs: [
-    'https://www.instagram.com/pxilabs/',
-    'https://www.tiktok.com/@pxi.labs',
-  ],
+  sameAs: SOCIAL_SAME_AS,
   contactPoint: {
     '@type': 'ContactPoint',
     email: 'support@pxispace.com',
     contactType: 'customer support',
   },
 };
+
+/** Standalone Organization document, for any page that emits it on its own. */
+export const ORGANIZATION_JSONLD = { '@context': 'https://schema.org', ...ORGANIZATION_NODE };
 
 /**
  * Homepage JSON-LD: dual-node @graph combining WebSite authority
@@ -30,16 +191,26 @@ export const ORGANIZATION_JSONLD = {
 export const HOMEPAGE_JSONLD = {
   '@context': 'https://schema.org',
   '@graph': [
+    // The full Organization lives HERE, on the homepage, because that is the URL Google
+    // treats as the site's entity home. `sameAs` is what ties pxispace.com to the
+    // Instagram / TikTok / X / YouTube accounts; emitting it only from /about (nested two
+    // levels inside an AboutPage) meant the link was never reliably made.
+    ORGANIZATION_NODE,
     {
       '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
       name: 'PXI',
       url: SITE_URL,
       image: `${SITE_URL}/og-hero.png`,
       description:
-        'PXI is a privacy-first event operating system spanning ticketing in the organizer\'s own brand, shared event photo galleries, and digital scrapbooks.',
+        "PXI is a privacy-first event operating system spanning ticketing in the organizer's own brand, shared event photo galleries, and digital scrapbooks.",
+      publisher: { '@id': ORGANIZATION_ID },
       potentialAction: {
         '@type': 'SearchAction',
-        target: `${SITE_URL}/events?q={search_term_string}`,
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_URL}/events?q={search_term_string}`,
+        },
         'query-input': 'required name=search_term_string',
       },
     },
@@ -51,7 +222,7 @@ export const HOMEPAGE_JSONLD = {
       url: SITE_URL,
       image: `${SITE_URL}/og-hero.png`,
       description:
-        'PXI is a dual-sided event operating system for organizers and attendees, combining ticketing in the organizer\'s own brand with privacy-first social scrapbooks.',
+        "PXI is a dual-sided event operating system for organizers and attendees, combining ticketing in the organizer's own brand with privacy-first social scrapbooks.",
       featureList: [
         'Branded Event Ticketing',
         'Real-Time Analytics',
@@ -62,11 +233,7 @@ export const HOMEPAGE_JSONLD = {
         'Signed, Forgery-Proof Tickets',
         'Zero Location Tracking',
       ],
-      offers: {
-        '@type': 'Offer',
-        price: '0',
-        priceCurrency: 'USD',
-      },
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     },
   ],
 };
@@ -81,7 +248,8 @@ export function buildAboutJsonLd() {
     image: `${SITE_URL}/og-hero.png`,
     description:
       'PXI is an event platform built by operators, where the night compiles itself, the organizer keeps the money, and the memory is the point.',
-    mainEntity: ORGANIZATION_JSONLD,
+    // Reference, not a second copy — the full node is emitted on the homepage.
+    mainEntity: { '@id': ORGANIZATION_ID },
   };
 }
 
@@ -132,93 +300,206 @@ export function buildItemListJsonLd(items = [], name = 'Events') {
       '@type': 'ListItem',
       position: i + 1,
       name: it.name,
-      url: it.url.startsWith('http') ? it.url : `${SITE_URL}${it.url}`,
+      url: abs(it.url),
     })),
   };
 }
 
-/**
- * Build Event JSON-LD for a public event detail page.
- * @param {object} event — API event object
- * @param {string} siteUrl — canonical site origin (no trailing slash)
- */
-export function buildEventJsonLd(event, siteUrl) {
-  if (!event) return null;
+/* ────────────────────────────────────────────────────────────────────────────
+ * Event
+ * ────────────────────────────────────────────────────────────────────────── */
 
-  // Treat events with a lineup/performers as MusicEvent for richer results.
+/**
+ * Event / MusicEvent JSON-LD for a public event detail page.
+ * This is the markup that makes PXI events eligible for Google's free event listings,
+ * so it is the highest-leverage structured data on the site.
+ *
+ * @param {object} event    — public event object from the API
+ * @param {string} siteUrl  — canonical site origin (no trailing slash)
+ * @param {object} [opts]
+ * @param {object} [opts.city]      — record from src/lib/seo/cities.js
+ * @param {string[]} [opts.genres]  — resolved genre labels
+ * @param {Date}   [opts.now]
+ */
+export function buildEventJsonLd(event, siteUrl = SITE_URL, opts = {}) {
+  if (!event) return null;
+  const { city = null, genres = [], now = new Date() } = opts;
+
+  const url = `${siteUrl}/events/${event.id}`;
+  const timeZone = event.timezone || city?.timezone || null;
+
+  // A lineup makes this a MusicEvent, which is what earns the richer music treatment.
   const lineup = Array.isArray(event.lineup) ? event.lineup : [];
-  const hasLineup = lineup.length > 0;
+  const performers = lineup
+    .map((p) => (typeof p === 'string' ? { name: p } : { name: p?.name || p?.username, role: p?.lineupRole }))
+    .filter((p) => p.name);
 
   const schema = {
     '@context': 'https://schema.org',
-    '@type': hasLineup ? 'MusicEvent' : 'Event',
+    '@type': performers.length ? 'MusicEvent' : 'Event',
     name: event.name || 'Event',
-    url: `${siteUrl}/events/${event.id}`,
-    eventStatus: 'https://schema.org/EventScheduled',
+    url,
+    eventStatus: resolveEventStatus(event),
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
   };
 
-  if (hasLineup) {
-    schema.performer = lineup
-      .map((p) => (typeof p === 'string' ? p : p?.name || p?.username))
-      .filter(Boolean)
-      .map((name) => ({ '@type': 'PerformingGroup', name }));
+  const start = isoWithOffset(event.startDate, timeZone);
+  if (start) schema.startDate = start;
+  const end = isoWithOffset(event.endDate, timeZone);
+  if (end) schema.endDate = end;
+
+  if (event.description) schema.description = String(event.description).trim().slice(0, 300);
+
+  // Google wants 1200×630 or larger; coverImage is our only guaranteed large asset.
+  const image = event.coverImage || event.image || null;
+  if (image) schema.image = [abs(image)];
+
+  const place = buildPlace(event, city);
+  if (place) schema.location = place;
+
+  if (performers.length) {
+    schema.performer = performers.map((p) => ({ '@type': 'MusicGroup', name: p.name }));
   }
 
-  if (event.startDate) {
-    schema.startDate = new Date(event.startDate).toISOString();
-  }
-  if (event.endDate) {
-    schema.endDate = new Date(event.endDate).toISOString();
-  }
-  if (event.description) {
-    schema.description = String(event.description).trim().slice(0, 300);
-  }
-
-  if (event.location) {
-    schema.location = {
-      '@type': 'Place',
-      name: event.location,
+  // Organizer is the host's brand, not a private individual's identity.
+  const organizerName = event.organizer?.name || event.host?.name || event.host?.username || null;
+  if (organizerName) {
+    schema.organizer = {
+      '@type': 'Organization',
+      name: organizerName,
+      ...(event.host?.username ? { url: `${siteUrl}/u/${event.host.username}` } : {}),
     };
-    if (event.latitude && event.longitude) {
-      schema.location.geo = {
-        '@type': 'GeoCoordinates',
-        latitude: event.latitude,
-        longitude: event.longitude,
+  }
+
+  if (genres.length) schema.genre = genres;
+
+  // Offers — only when we can state availability truthfully.
+  const availability = resolveAvailability(event, { now });
+  if (availability) {
+    const isFree = event.ticketType === 'FREE' || Number(event.ticketPrice) === 0;
+    const price = isFree ? 0 : Number(event.ticketPrice);
+    if (isFree || Number.isFinite(price)) {
+      const offer = {
+        '@type': 'Offer',
+        price: String(price.toFixed(2)),
+        priceCurrency: event.currency || 'USD',
+        availability,
+        url,
+        category: isFree ? 'free' : 'primary',
       };
+      const validFrom = isoWithOffset(event.salesStartDate || event.createdAt, timeZone);
+      if (validFrom) offer.validFrom = validFrom;
+      schema.offers = [offer];
     }
   }
 
-  if (event.coverImage) {
-    schema.image = event.coverImage;
-  }
-
-  if (event.host?.name || event.host?.username) {
-    schema.organizer = {
-      '@type': 'Person',
-      name: event.host.name || event.host.username,
-    };
-  }
-
-  const ticketType = event.ticketType;
-  const price = event.ticketPrice;
-  if (ticketType === 'FREE' || (price != null && Number(price) === 0)) {
-    schema.offers = {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-      availability: 'https://schema.org/InStock',
-      url: `${siteUrl}/events/${event.id}`,
-    };
-  } else if (ticketType === 'PAID' && price != null && Number(price) > 0) {
-    schema.offers = {
-      '@type': 'Offer',
-      price: String(Number(price).toFixed(2)),
-      priceCurrency: event.currency || 'USD',
-      availability: 'https://schema.org/InStock',
-      url: `${siteUrl}/events/${event.id}`,
-    };
-  }
-
   return schema;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Music matchmaking surfaces — artist, genre, city hubs, playlists
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * MusicGroup for an artist hub, with their upcoming PXI events as an ItemList.
+ * @param {{name:string, slug:string, bio?:string, image?:string, sameAs?:string[]}} artist
+ * @param {{name:string, url:string}[]} events
+ */
+export function buildArtistJsonLd(artist, events = []) {
+  if (!artist?.name) return null;
+  const url = `${SITE_URL}/artists/${artist.slug}`;
+  const node = {
+    '@context': 'https://schema.org',
+    '@type': 'MusicGroup',
+    name: artist.name,
+    url,
+  };
+  if (artist.bio) node.description = String(artist.bio).trim().slice(0, 300);
+  if (artist.image) node.image = abs(artist.image);
+  if (Array.isArray(artist.sameAs) && artist.sameAs.length) node.sameAs = artist.sameAs;
+  if (Array.isArray(artist.genres) && artist.genres.length) node.genre = artist.genres;
+  if (events.length) {
+    node.subjectOf = {
+      '@type': 'ItemList',
+      name: `Upcoming events with ${artist.name}`,
+      itemListElement: events.map((e, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: e.name,
+        url: abs(e.url),
+      })),
+    };
+  }
+  return node;
+}
+
+/**
+ * CollectionPage + ItemList for a genre, city, or city×genre hub.
+ * @param {{name:string, path:string, description?:string}} hub
+ * @param {{name:string, url:string}[]} events
+ */
+export function buildCollectionJsonLd(hub, events = []) {
+  if (!hub?.path) return null;
+  const url = `${SITE_URL}${hub.path}`;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: hub.name,
+    url,
+    ...(hub.description ? { description: hub.description } : {}),
+    isPartOf: { '@type': 'WebSite', name: 'PXI', url: SITE_URL },
+    mainEntity: {
+      '@type': 'ItemList',
+      name: hub.name,
+      numberOfItems: events.length,
+      itemListElement: events.map((e, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: e.name,
+        url: abs(e.url),
+      })),
+    },
+  };
+}
+
+/**
+ * Place node for a city hub, so the hub itself is an entity Google can reason about.
+ * @param {object} city — record from src/lib/seo/cities.js
+ */
+export function buildCityPlaceJsonLd(city) {
+  if (!city) return null;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Place',
+    name: city.name,
+    url: `${SITE_URL}/discover/${city.slug}`,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: city.name,
+      addressRegion: city.state,
+      addressCountry: city.country || 'US',
+    },
+    ...(city.lat != null && city.lng != null
+      ? { geo: { '@type': 'GeoCoordinates', latitude: city.lat, longitude: city.lng } }
+      : {}),
+  };
+}
+
+/**
+ * MusicPlaylist for an event or artist playlist embed.
+ * @param {{name:string, url:string, trackCount?:number, description?:string}} playlist
+ */
+export function buildPlaylistJsonLd(playlist) {
+  if (!playlist?.name || !playlist?.url) return null;
+  const node = {
+    '@context': 'https://schema.org',
+    '@type': 'MusicPlaylist',
+    name: playlist.name,
+    url: playlist.url,
+  };
+  if (Number.isFinite(Number(playlist.trackCount))) {
+    node.numTracks = Number(playlist.trackCount);
+  }
+  if (playlist.description) node.description = String(playlist.description).trim().slice(0, 300);
+  return node;
 }

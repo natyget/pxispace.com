@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Modal from '@/components/ui/Modal';
+import { trackShare } from '@/lib/analytics';
 
 function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
@@ -92,6 +93,10 @@ export default function MarketingKitModal({ open, onClose, moments = [], event }
             setError(`${failed} file${failed === 1 ? '' : 's'} opened in a tab instead of downloading (media host CORS) — save them from there.`);
         }
         setDownloading(false);
+        // Pulling the crowd's shots out to post them elsewhere is a share.
+        if (selected.length > 0) {
+            trackShare({ method: 'download', contentType: 'event_media', itemId: event?.id });
+        }
     };
 
     const copy = async (label, text) => {
@@ -99,6 +104,7 @@ export default function MarketingKitModal({ open, onClose, moments = [], event }
             await navigator.clipboard.writeText(text);
             setCopied(label);
             setTimeout(() => setCopied(''), 2000);
+            trackShare({ method: `copy_${label}`, contentType: 'event', itemId: event?.id });
         } catch {
             setError('Could not copy — your browser blocked clipboard access.');
         }

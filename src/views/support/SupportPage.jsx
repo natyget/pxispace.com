@@ -109,9 +109,9 @@ export default function SupportPage() {
             <Link href="/faq" className="glow-cta px-8 py-4 text-sm">
               Browse the full FAQ <ArrowRight className="h-4 w-4" />
             </Link>
-            <a href="mailto:support@pxispace.com" className="pill-ghost px-8 py-4 text-sm font-semibold">
-              Email support
-            </a>
+            <Link href="/contact" className="pill-ghost px-8 py-4 text-sm font-semibold">
+              Contact Us
+            </Link>
           </motion.div>
         </div>
       </section>
@@ -198,9 +198,9 @@ export default function SupportPage() {
             Send as much detail as you can, screenshots help, and we will get you back to the night.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <a href="mailto:support@pxispace.com" className="glow-cta px-8 py-4 text-sm">
-              Email support@pxispace.com <ArrowRight className="h-4 w-4" />
-            </a>
+            <Link href="/contact" className="glow-cta px-8 py-4 text-sm">
+              Contact Us <ArrowRight className="h-4 w-4" />
+            </Link>
             <Link href="/faq" className="pill-ghost px-8 py-4 text-sm font-semibold">
               Read the FAQ
             </Link>

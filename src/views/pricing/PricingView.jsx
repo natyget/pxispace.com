@@ -7,6 +7,8 @@ import { ArrowRight, Check, ShieldCheck, Sparkles } from 'lucide-react';
 import SectionShell from '@/components/marketing/SectionShell';
 import FaqList from '@/components/marketing/FaqList';
 import { PRICING_FAQS } from '@/content/faqs';
+import { trackHostLead } from '@/lib/analytics';
+import { setEnhancedConversionData } from '@/lib/enhancedConversions';
 
 const DEMO_HREF = '/book';
 const CREATE_HREF = '/login?redirect=/dashboard/events/new';
@@ -46,6 +48,11 @@ export default function PricingView() {
       });
       if (res.ok) {
         setStatus('success');
+        // Formspree accepted it — this is a qualified organizer lead. Hash the
+        // email first so the conversion is enhanced-conversion eligible.
+        void setEnhancedConversionData({ email: form.email }).then(() =>
+          trackHostLead({ source: 'pricing' }),
+        );
       } else {
         setStatus('error');
         setErrorMsg("Something went wrong on our end. Please try again or email support@pxispace.com.");
@@ -71,11 +78,11 @@ export default function PricingView() {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="display-1 mt-6 max-w-4xl"
           >
-            Free.{' '}
+            Free to host.{' '}
             <span className="inline-flex rounded-2xl border border-amber-300/40 bg-amber-300/10 px-3 py-1 text-amber-100 shadow-[0_0_32px_rgba(251,191,36,0.12)]">
               $0.99
             </span>{' '}
-            per paid ticket. That's it.
+            per paid ticket.
           </MotionH1>
           <MotionP
             initial={{ opacity: 0, y: 24 }}
@@ -83,9 +90,11 @@ export default function PricingView() {
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="body-lead mt-8 max-w-2xl"
           >
-            PXI is a free tool. Free events cost nothing. On paid tickets there's a flat{' '}
-            <strong>$0.99</strong> platform fee, and your revenue is paid straight to your Stripe
-            account. No monthly fees, no percentage cuts, no surprises.
+            PXI is a free tool and free events cost nothing. On paid tickets a flat{' '}
+            <strong>$0.99</strong> comes out of your payout, and buyers pay a{' '}
+            <strong>5.49%</strong> service fee plus card processing at checkout. No monthly fees,
+            no subscriptions, no setup cost — your revenue goes straight to your own Stripe
+            account.
           </MotionP>
           <MotionDiv
             initial={{ opacity: 0, y: 24 }}

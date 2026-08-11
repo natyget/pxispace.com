@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, CalendarDays, Clock3 } from 'lucide-react';
+import { trackHostLead } from '@/lib/analytics';
+import { setEnhancedConversionData } from '@/lib/enhancedConversions';
 
 const EASE = [0.16, 1, 0.3, 1];
 const MotionDiv = motion.div;
@@ -139,6 +141,13 @@ function SchedulerFrame({ form, setForm }) {
       reason: form.reason || 'PXI booking request',
     });
     window.open(`${EVENT_REQUEST_BASE}?${params.toString()}`, '_blank', 'noopener,noreferrer');
+
+    // The Zoho handoff IS the lead — nothing else on this page reports it.
+    // Hash the email first so the conversion carries enhanced-conversion data;
+    // the handler never awaits it, the request tab is already open.
+    void setEnhancedConversionData({ email: form.email }).then(() =>
+      trackHostLead({ source: 'book_meeting' }),
+    );
   };
 
   return (

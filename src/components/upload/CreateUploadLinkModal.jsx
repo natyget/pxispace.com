@@ -5,6 +5,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, Link01Icon, Copy01Icon, CheckmarkBadge01Icon, Loading02Icon } from '@hugeicons/core-free-icons';
 import { createUploadLink } from '@/services/uploadLink';
 import { getSiteUrl } from '@/lib/siteUrl';
+import { trackShare } from '@/lib/analytics';
 
 const EXPIRE_OPTIONS = [
   { label: '2 hours', value: 2 },
@@ -38,13 +39,16 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
   };
 
   const handleCopy = async () => {
+    let method = 'copy_link';
     try {
       await navigator.clipboard.writeText(createdLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
+      method = 'prompt_copy';
       window.prompt('Copy link:', createdLink);
     }
+    trackShare({ method, contentType: 'photographer_upload_link', itemId: eventId });
   };
 
   return (

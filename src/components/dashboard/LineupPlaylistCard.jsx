@@ -13,6 +13,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { musicService } from '@/services/music';
 import { getSiteUrl } from '@/lib/siteUrl';
+import { trackShare } from '@/lib/analytics';
 
 const PROVIDER_META = {
   SPOTIFY: { label: 'Spotify', color: '#1DB954', icon: SpotifyIcon },
@@ -100,13 +101,16 @@ export default function LineupPlaylistCard({ eventId }) {
   const djUrl = linkInfo?.token ? `${getSiteUrl()}/dj/${linkInfo.token}` : '';
 
   const handleCopy = async () => {
+    let method = 'copy_link';
     try {
       await navigator.clipboard.writeText(djUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
+      method = 'prompt_copy';
       window.prompt('Copy link:', djUrl);
     }
+    trackShare({ method, contentType: 'dj_playlist_link', itemId: eventId });
   };
 
   return (

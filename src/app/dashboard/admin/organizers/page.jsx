@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { listAdminOrganizers, grantCredits, sendAdminNotification } from '@/services/admin';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminMode } from '@/contexts/AdminModeContext';
 import {
     AdminError,
     AdminPageShell,
@@ -199,7 +199,6 @@ function SendMessageModal({ organizer, onClose, onDone }) {
 }
 
 export default function AdminOrganizersPage() {
-    const { user } = useAuth();
     const [rows, setRows] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
@@ -208,7 +207,7 @@ export default function AdminOrganizersPage() {
     const [error, setError] = useState(null);
     const [creditsTarget, setCreditsTarget] = useState(null);
     const [messageTarget, setMessageTarget] = useState(null);
-    const isLiveAdmin = user?.accountTier === 'ADMIN';
+    const { isLive: isLiveAdmin } = useAdminMode();
 
     const load = useCallback(async (p, t) => {
         if (!isLiveAdmin) {

@@ -31,6 +31,7 @@ import {
   createEmptyTier,
   validatePaidPricing,
 } from '@/lib/ticketTiers';
+import { trackEventCreatePublish, trackEventCreateStart } from '@/lib/analytics';
 
 async function getCroppedBlob(imageSrc, croppedAreaPixels) {
   const image = await new Promise((resolve, reject) => {
@@ -98,6 +99,8 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   const [isStampUploading, setIsStampUploading] = useState(false);
   const [geoLat, setGeoLat] = useState(null);
   const [geoLon, setGeoLon] = useState(null);
+  /** Geocoded city — reported as the `event_city` dimension on publish. */
+  const [geoCity, setGeoCity] = useState('');
   const [startLocal, setStartLocal] = useState(() => defaults.start);
   const [endLocal, setEndLocal] = useState(() => defaults.end);
 
@@ -157,6 +160,15 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
       if (coverPreview && coverPreview.startsWith('blob:')) URL.revokeObjectURL(coverPreview);
     };
   }, [coverPreview]);
+
+  // Top of the create funnel. Ref-guarded so StrictMode's dev double-invoke
+  // doesn't report two starts for one form.
+  const createStartTracked = useRef(false);
+  useEffect(() => {
+    if (createStartTracked.current) return;
+    createStartTracked.current = true;
+    trackEventCreateStart({ entryPoint: embedded ? 'dashboard_modal' : 'dashboard_page' });
+  }, [embedded]);
 
   useEffect(() => {
     let alive = true;
@@ -560,6 +572,18 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         return;
       }
 
+      // The event exists — report the publish now, before the non-fatal
+      // follow-ups (tiers, teams, floor plan, invites) that may each fail.
+      // `ticket_tier` carries FREE/PAID here: the create form has no per-tier
+      // selection, and paid-vs-free is the split the funnel is measured on.
+      trackEventCreatePublish({
+        eventId,
+        eventTitle: name.trim(),
+        eventCity: geoCity,
+        ticketTier: pricing.ticketType,
+        hostId: user.id,
+      });
+
       // Ticket tiers aren't accepted by POST /api/events; persist them with an
       // immediate follow-up PUT (same shape EventEditPageView uses). Non-fatal:
       // the event itself is already created with the correct base ticketPrice.
@@ -826,6 +850,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                     setLocation(props?.formatted || '');
                     setGeoLat(typeof props?.lat === 'number' ? props.lat : null);
                     setGeoLon(typeof props?.lon === 'number' ? props.lon : null);
+                    setGeoCity(props?.city || props?.county || '');
                   }}
                 />
               </GeoapifyContext>

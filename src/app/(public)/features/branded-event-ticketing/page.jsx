@@ -1,20 +1,15 @@
 import { JsonLd } from '@/components/seo/JsonLd';
 import BrandedTicketingView from '@/views/features/BrandedTicketingView';
+import { buildPageMetadata } from '@/lib/seo/pageMetadata';
 
-export const metadata = {
-  title: 'Branded Event Ticketing — Your Tickets, Your Brand, Your Revenue',
+export const metadata = buildPageMetadata({
+  title: "Branded Event Ticketing — Your Tickets, Your Brand, Your Revenue",
   description:
     "Deploy PXI's frictionless ticketing infrastructure in your own brand. Web-based sign-ups, Stripe integration, and tickets that carry your covers, your colors, and your stamps. Built for modern nightlife promoters.",
-  alternates: {
-    canonical: 'https://pxispace.com/features/branded-event-ticketing',
-  },
-  openGraph: {
-    title: 'Branded Event Ticketing — Your Tickets, Your Brand, Your Revenue | PXI',
-    description:
-      "Deploy PXI's frictionless ticketing infrastructure with Stripe integration and tickets that carry your own covers, colors, and stamps.",
-    url: 'https://pxispace.com/features/branded-event-ticketing',
-  },
-};
+  path: "/features/branded-event-ticketing",
+  eyebrow: "Feature",
+  ogTitle: "Your tickets. Your brand. Your revenue.",
+});
 
 const PAGE_JSONLD = {
   '@context': 'https://schema.org',

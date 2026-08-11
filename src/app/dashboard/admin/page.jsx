@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { fetchAdminStats } from '@/services/admin';
 import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminMode } from '@/contexts/AdminModeContext';
 import { adminMockStats } from '@/lib/adminMockData';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
 
@@ -79,11 +79,10 @@ function AdminOverviewHero({ stats, isLiveAdmin }) {
 }
 
 export default function AdminOverviewPage() {
-    const { user } = useAuth();
     const [stats, setStats] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
-    const isLiveAdmin = user?.accountTier === 'ADMIN';
+    const { isLive: isLiveAdmin } = useAdminMode();
     const resolvedLoading = isLiveAdmin ? loading : false;
     const resolvedStats = isLiveAdmin ? stats : adminMockStats;
 
