@@ -156,6 +156,11 @@ export async function createCheckoutSession(eventId, successUrl, cancelUrl, tier
 }
 
 /** GET /api/promos/credits — the caller's credit balance + recent ledger. */
+/** Validate a promo/ambassador code before payment (powers the Apply button). */
+export async function validatePromoCode(code) {
+  return api.get(`/api/promos/validate?code=${encodeURIComponent(code)}`);
+}
+
 export async function getMyCredits() {
   return api.get('/api/promos/credits');
 }

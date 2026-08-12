@@ -84,10 +84,13 @@ const OriginStory = () => {
                         <div className="w-full max-w-md rounded-xl overflow-hidden shadow-xl">
                             <video
                                 src="/landing/assets/movie.mp4"
+                                poster="/landing/assets/movie-poster.jpg"
+                                aria-label="A night on PXI, from the door to the shared scrapbook"
                                 autoPlay
                                 loop
                                 muted
                                 playsInline
+                                preload="metadata"
                                 className="w-full aspect-square object-cover rounded-xl"
                             />
                         </div>

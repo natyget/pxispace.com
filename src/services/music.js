@@ -1,8 +1,10 @@
 import { api } from './api';
 
-const env = globalThis.process?.env || {};
-const SPOTIFY_CLIENT_ID = env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || '';
-const SPOTIFY_REDIRECT_URI = env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || '';
+// Written out in full on purpose. Next inlines `process.env.NEXT_PUBLIC_*` by literal
+// text substitution, so reading through an intermediate `env` object — or through
+// `globalThis.process?.env?.X` — is never substituted and yields undefined in the browser.
+const SPOTIFY_CLIENT_ID = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || '';
+const SPOTIFY_REDIRECT_URI = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || '';
 
 function spotifyConnectPayload(platform = 'web') {
   const payload = { platform };

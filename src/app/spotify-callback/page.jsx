@@ -12,9 +12,11 @@ import { useSearchParams } from 'next/navigation';
 import { api } from '@/services/api';
 import { restoreAttributionAfterRedirect, trackSpotifyConnected } from '@/lib/analytics';
 
-const env = globalThis.process?.env || {};
-const SPOTIFY_CLIENT_ID = env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || '';
-const SPOTIFY_REDIRECT_URI = env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || '';
+// Written out in full on purpose. Next inlines `process.env.NEXT_PUBLIC_*` by literal
+// text substitution, so reading through an intermediate `env` object — or through
+// `globalThis.process?.env?.X` — is never substituted and yields undefined in the browser.
+const SPOTIFY_CLIENT_ID = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || '';
+const SPOTIFY_REDIRECT_URI = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || '';
 
 // Layout effects flush before the passive effect that fires this route's
 // page_view, so the restored campaign fields and `ignore_referrer` are already

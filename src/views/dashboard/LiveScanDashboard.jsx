@@ -15,7 +15,10 @@ import { authStorage } from '@/services/auth';
 import { getLiveOpsSnapshot } from '@/services/liveOps';
 import { listGates, createGate, updateGate, deleteGate } from '@/services/gates';
 
-const BASE_URL = globalThis.process?.env?.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+// `process.env.NEXT_PUBLIC_*` verbatim — Next inlines this form only. Written as
+// `globalThis.process?.env?.X` it is never substituted, resolves to undefined in the
+// browser, and silently falls through to the localhost default in production.
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
 
 function formatClockTime(iso) {
     if (!iso) return '';

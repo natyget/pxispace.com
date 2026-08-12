@@ -21,6 +21,13 @@ import { allCities, eventMatchesCity, resolveEventCity } from '@/lib/seo/cities'
 const PAGE_SIZE = 100; // backend hard-caps `limit` at 100
 const MAX_PAGES = 25; // 2,500 events; a safety stop, not an expected ceiling
 const REVALIDATE_SECONDS = 600;
+/**
+ * Wall-clock budget for the whole paging walk. MAX_PAGES alone is not a bound on
+ * TIME: 25 serial requests at even 2s each is 50s, well past the platform's
+ * function limit, and the caller (sitemap, city hubs) would be killed before its
+ * try/catch could degrade. Stop early and publish what we have instead.
+ */
+const TOTAL_BUDGET_MS = 8000;
 
 async function fetchPageUncached(offset) {
   const base = getServerApiBaseUrl();
@@ -43,7 +50,12 @@ async function fetchPageUncached(offset) {
  */
 async function fetchAllPublicEventsUncached() {
   const out = [];
+  const deadline = Date.now() + TOTAL_BUDGET_MS;
   for (let page = 0; page < MAX_PAGES; page += 1) {
+    if (Date.now() > deadline) {
+      console.error('[publicEvents] paging budget exhausted', { pages: page, events: out.length });
+      break;
+    }
     const res = await fetchPageUncached(page * PAGE_SIZE);
     if (!res) break;
     out.push(...res.events);
