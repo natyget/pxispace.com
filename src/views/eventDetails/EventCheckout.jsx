@@ -15,7 +15,7 @@ import {
 import Button from '../../components/ui/Button';
 import { PxiSpinner } from '@/components/loading/PxiLoading';
 import { eventsService } from '../../services/events';
-import { getTicketQuote, generateTicket, purchaseTicket, getUserTickets, getMyCredits } from '../../services/tickets';
+import { getTicketQuote, generateTicket, purchaseTicket, getUserTickets, getMyCredits, validatePromoCode } from '../../services/tickets';
 import { useAuth } from '@/contexts/AuthContext';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { StripePaymentModal } from '@/components/checkout/StripePaymentModal';
@@ -223,6 +223,10 @@ export default function EventCheckout({ basePath = '/events' }) {
   const [creditBalanceCents, setCreditBalanceCents] = useState(0);
   const [useCredits, setUseCredits] = useState(false);
   const [promoCode, setPromoCode] = useState('');
+  // Checkout fails soft on a bad code, so without an explicit Apply step the
+  // buyer got no signal at all and simply paid full price.
+  const [promoStatus, setPromoStatus] = useState(null); // {valid, message}
+  const [promoChecking, setPromoChecking] = useState(false);
   const [emailOptIn, setEmailOptIn] = useState(false);
   const [smsOptIn, setSmsOptIn] = useState(false);
 
@@ -378,6 +382,24 @@ export default function EventCheckout({ basePath = '/events' }) {
       });
     return () => { cancelled = true; };
   }, [isAuthenticated]);
+
+  const applyPromoCode = async () => {
+    const code = promoCode.trim();
+    if (!code || promoChecking) return;
+    setPromoChecking(true);
+    try {
+      const res = await validatePromoCode(code);
+      const data = res?.data ?? res;
+      setPromoStatus({
+        valid: Boolean(data?.valid),
+        message: data?.message || (data?.valid ? 'Code applied.' : "That code isn't valid."),
+      });
+    } catch {
+      setPromoStatus({ valid: false, message: "We couldn't check that code. Try again." });
+    } finally {
+      setPromoChecking(false);
+    }
+  };
 
   const startWalletCheckout = async () => {
     if (!apiEvent || !isPaidEvent || !isAuthenticated || !user?.id) return;
@@ -760,12 +782,42 @@ export default function EventCheckout({ basePath = '/events' }) {
                                   />
                                 </label>
                               ) : null}
-                              <input
-                                value={promoCode}
-                                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                                placeholder="Promo / ambassador code (optional)"
-                                className="w-full rounded-[20px] bg-white/[0.05] px-4 py-3 text-xs font-semibold uppercase tracking-widest text-white outline-none backdrop-blur-xl transition-shadow placeholder:normal-case placeholder:tracking-normal placeholder:text-zinc-500 focus:shadow-[0_0_0_1.5px_rgba(216,74,255,0.5)] border border-white/5"
-                              />
+                              <div className="flex flex-col gap-1.5">
+                                <div className="relative">
+                                  <input
+                                    value={promoCode}
+                                    onChange={(e) => {
+                                      setPromoCode(e.target.value.toUpperCase());
+                                      setPromoStatus(null);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        applyPromoCode();
+                                      }
+                                    }}
+                                    placeholder="Promo / ambassador code (optional)"
+                                    className="w-full rounded-[20px] bg-white/[0.05] py-3 pl-4 pr-24 text-xs font-semibold uppercase tracking-widest text-white outline-none backdrop-blur-xl transition-shadow placeholder:normal-case placeholder:tracking-normal placeholder:text-zinc-500 focus:shadow-[0_0_0_1.5px_rgba(216,74,255,0.5)] border border-white/5"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={applyPromoCode}
+                                    disabled={!promoCode.trim() || promoChecking}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white transition disabled:opacity-40 bg-white/10 hover:bg-white/20"
+                                  >
+                                    {promoChecking ? '…' : promoStatus?.valid ? 'Applied' : 'Apply'}
+                                  </button>
+                                </div>
+                                {promoStatus ? (
+                                  <p
+                                    className={`px-1 text-[10px] font-semibold ${
+                                      promoStatus.valid ? 'text-emerald-400' : 'text-red-400'
+                                    }`}
+                                  >
+                                    {promoStatus.message}
+                                  </p>
+                                ) : null}
+                              </div>
                               <Button
                                 variant="neon"
                                 className="w-full rounded-full py-3.5 uppercase tracking-widest shadow-lg transition-all duration-300 hover:scale-[1.01] disabled:scale-95 disabled:cursor-wait disabled:opacity-60"

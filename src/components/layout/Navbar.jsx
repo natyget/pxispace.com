@@ -174,7 +174,7 @@ const Navbar = () => {
                                 </div>
                             ) : null}
 
-                            {mounted && !isAuthenticated && pathname === '/events' ? (
+                            {mounted && !isAuthenticated ? (
                                 <div className="hidden items-center gap-5 md:flex">
                                     <Link
                                         href={`/login?redirect=${encodeURIComponent(pathname)}`}
@@ -261,10 +261,13 @@ const Navbar = () => {
                             </>
                         ) : null}
 
-                        {mounted && !isAuthenticated && pathname === "/events" ? (
+                        {/* Log in / Create belong in the hamburger on EVERY page —
+                            gating them to /events left landing and event-detail
+                            pages with no way to sign in from mobile. */}
+                        {mounted && !isAuthenticated ? (
                             <div className="mt-4 grid grid-cols-2 gap-3">
                                 <Link
-                                    href="/login?redirect=/dashboard/analytics"
+                                    href={`/login?redirect=${encodeURIComponent(pathname || '/')}`}
                                     onClick={() => setMobileMenuOpen(false)}
                                     className="flex h-12 w-full items-center justify-center rounded-full bg-white/8 text-sm font-black uppercase tracking-widest text-white transition-colors hover:bg-white/12"
                                 >

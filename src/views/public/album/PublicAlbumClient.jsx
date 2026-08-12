@@ -25,6 +25,7 @@ import { buildAlbumEventDetails } from './albumEventDetailsAdapter';
 import PublicAlbumJoinEventButton from './PublicAlbumJoinEventButton';
 import IphonePane from './IphonePane';
 import FindMyselfModal from './FindMyselfModal';
+import MyShotsCtaModal from './MyShotsCtaModal';
 import { mediaDisplayUrl } from './albumMediaLayout';
 import {
   PUBLIC_ALBUM_THREAD_LIST_HORIZONTAL_INSET,
@@ -63,6 +64,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   const [findMyselfOpen, setFindMyselfOpen] = useState(false);
   const [myMatchIds, setMyMatchIds] = useState(null); // Set<string> after a scan
   const [onlyMyShots, setOnlyMyShots] = useState(false);
+  const [myShotsCtaOpen, setMyShotsCtaOpen] = useState(false);
   const { isAuthenticated, authReady, faceEnrolled } = useAuth();
   const myMatchesLoadedForRef = useRef(null);
   const threadShellRef = useRef(null);
@@ -225,6 +227,13 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   }, [albumId, album, denied, eventId]);
 
   const openLightbox = (index) => {
+    // While the face filter is on, every tile is a photo OF THIS USER — the
+    // payoff (full size, react, save) is app-only, so hand them over instead of
+    // opening the focus viewer here.
+    if (onlyMyShots && myMatchIds) {
+      setMyShotsCtaOpen(true);
+      return;
+    }
     markAlbumVideoUserActivation();
     setLightboxIndex(index);
     setLightboxOpen(true);
@@ -438,7 +447,8 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
             <p className="py-16 text-center text-sm text-zinc-500">No photos yet. Open the app to see more.</p>
           ) : tab === 'gallery' ? (
             <div className="album-gallery-layout flex min-h-0 w-full flex-1 flex-col overflow-hidden">
-              <div className="flex shrink-0 items-center gap-2 pb-3">
+              {/* Face-match controls sit TOP-RIGHT of the gallery, above the grid. */}
+              <div className="flex shrink-0 items-center justify-end gap-2 pb-3">
                 {myMatchIds ? (
                   <button
                     type="button"
@@ -591,6 +601,12 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
         onClose={() => setFindMyselfOpen(false)}
         albumId={albumId}
         onMatches={handleFaceMatches}
+      />
+      <MyShotsCtaModal
+        open={myShotsCtaOpen}
+        onClose={() => setMyShotsCtaOpen(false)}
+        albumId={albumId}
+        matchCount={myMatchIds ? myMatchIds.size : 0}
       />
       {threadFocusOpen && tab === 'thread' ? (
         <PublicAlbumThreadFocusOverlay

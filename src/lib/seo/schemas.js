@@ -168,8 +168,11 @@ export const ORGANIZATION_NODE = {
   '@id': ORGANIZATION_ID,
   name: 'PXI',
   url: SITE_URL,
-  // Full-bleed brand mark (square, purple) for Google's org logo slot.
-  logo: `${SITE_URL}/app-icon.png`,
+  // Google's org logo slot is composited on WHITE, so it must be an opaque
+  // square — app-icon.png is the circular badge on transparency and rendered as
+  // a floating disc in a white box. logo-square.png is the same badge over its
+  // own purple gradient (scripts/build-icons.mjs).
+  logo: `${SITE_URL}/logo-square.png`,
   // Branded 1200×630 card so Google prefers it for the search thumbnail
   // instead of scraping a prominent in-page content photo.
   image: `${SITE_URL}/og-hero.png`,
@@ -502,4 +505,49 @@ export function buildPlaylistJsonLd(playlist) {
   }
   if (playlist.description) node.description = String(playlist.description).trim().slice(0, 300);
   return node;
+}
+
+/**
+ * VideoObject for a self-hosted clip.
+ *
+ * Search Console reported /about and /editorial/how-scrapbooks-work as "video
+ * indexing issues": Google found the <video> elements but the pages carried no
+ * VideoObject and the elements had no `poster`, so there was no thumbnail, name,
+ * duration or upload date to index. A thumbnail is REQUIRED — without one Google
+ * will not index a video at all.
+ *
+ * Posters are generated from the clips themselves (`<name>-poster.jpg`, one
+ * frame at 0.5s) so the thumbnail is genuinely a frame of the video rather than
+ * a stand-in cover, which Google treats as a mismatch.
+ *
+ * @param {{name:string, description:string, contentPath:string, thumbnailPath:string,
+ *          uploadDate:string, durationSeconds?:number, pagePath?:string}} video
+ */
+export function buildVideoObjectJsonLd(video) {
+  if (!video?.name || !video?.contentPath || !video?.thumbnailPath) return null;
+  const node = {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: video.name,
+    description: video.description || video.name,
+    thumbnailUrl: `${SITE_URL}${video.thumbnailPath}`,
+    contentUrl: `${SITE_URL}${video.contentPath}`,
+    uploadDate: video.uploadDate,
+    isFamilyFriendly: true,
+    publisher: { '@id': ORGANIZATION_ID },
+  };
+  if (Number.isFinite(Number(video.durationSeconds))) {
+    // ISO 8601 — Google rejects a bare number here.
+    const total = Math.round(Number(video.durationSeconds));
+    const minutes = Math.floor(total / 60);
+    const seconds = total % 60;
+    node.duration = `PT${minutes ? `${minutes}M` : ''}${seconds}S`;
+  }
+  if (video.pagePath) node.embedUrl = `${SITE_URL}${video.pagePath}`;
+  return node;
+}
+
+/** Convention: every self-hosted clip ships a sibling poster frame. */
+export function posterPathForVideo(src) {
+  return String(src).replace(/\.mp4$/i, '-poster.jpg');
 }

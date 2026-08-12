@@ -79,10 +79,15 @@ const AboutPage = () => {
           >
             <video
               src="/landing/assets/movie.mp4"
+              // Indexable thumbnail — see the VideoObject on /about. Without a
+              // poster Google has no frame to show and skips the video.
+              poster="/landing/assets/movie-poster.jpg"
+              aria-label="A night on PXI, from the door to the shared scrapbook"
               autoPlay
               loop
               muted
               playsInline
+              preload="metadata"
               className="aspect-square w-full rounded-3xl object-cover"
             />
           </ScrubReveal>

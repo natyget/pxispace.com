@@ -44,8 +44,12 @@ export const metadata = {
       { url: '/favicon.ico', sizes: 'any' },
     ],
     shortcut: '/icon-192.png',
-    // The one exception: iOS ignores alpha on the home screen and fills it with a colour
-    // of its choosing, so this single file has the brand black baked in.
+    // The one exception: surfaces that FORCE a square. iOS ignores alpha on the home
+    // screen and Android crops to its own adaptive shape, so those files ship the badge
+    // over its own purple gradient rather than transparency — a transparent square there
+    // composites to white and the badge floats in a white box. (This one used to be
+    // filled with black, which read as a foreign chrome around the mark.)
+    // The Android/maskable pair is declared in app/manifest.js.
     apple: { url: '/icon-180.png', sizes: '180x180' },
   },
   openGraph: {

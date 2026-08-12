@@ -62,6 +62,32 @@ export const EDITORIAL_STORIES = [
       '/landing/scrapbook-product/scrapbook-clip-2.mp4',
       '/landing/scrapbook-product/scrapbook-clip-3.mp4',
     ],
+    // Google found these clips but had no title, duration or thumbnail to index
+    // them by, so the page sat under "video indexing issues". Posters are real
+    // frames generated from each clip (see scripts note in seo/schemas.js).
+    videos: [
+      {
+        src: '/landing/scrapbook-product/scrapbook-clip-1.mp4',
+        name: 'Everyone shoots into one shared PXI album',
+        description:
+          'Guests shoot straight into the event\'s shared album, so the night collects itself instead of scattering across a dozen camera rolls.',
+        durationSeconds: 33,
+      },
+      {
+        src: '/landing/scrapbook-product/scrapbook-clip-2.mp4',
+        name: 'The scrapbook builds itself as the night goes',
+        description:
+          'Every photo and clip lands in the event scrapbook in real time — no one has to ask for pictures the next morning.',
+        durationSeconds: 8,
+      },
+      {
+        src: '/landing/scrapbook-product/scrapbook-clip-3.mp4',
+        name: 'Turn any frame into a post-ready card',
+        description:
+          'One tap turns a frame from the shared album into a framed card sized for Instagram.',
+        durationSeconds: 13,
+      },
+    ],
   },
   {
     slug: 'passport-and-legacy',

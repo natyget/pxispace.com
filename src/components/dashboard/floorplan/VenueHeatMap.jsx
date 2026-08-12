@@ -8,7 +8,10 @@ import { authStorage } from '@/services/auth';
 import { getEventHeatmap, listFloorPlans, attachFloorPlan, detachFloorPlan } from '@/services/floorPlans';
 import { latLngToPlanPx, mapMetersPerPixel, staticMapUrl, METERS_PER_DEG } from './geo';
 
-const BASE_URL = globalThis.process?.env?.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+// `process.env.NEXT_PUBLIC_*` verbatim — Next inlines this form only. Written as
+// `globalThis.process?.env?.X` it is never substituted, resolves to undefined in the
+// browser, and silently falls through to the localhost default in production.
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
 const PLAYBACK_BUCKETS_PER_SECOND = 8;
 const TRAIL_BUCKETS = 4;
 const TRAIL_DECAY = 0.55;
