@@ -43,5 +43,7 @@ coverage/
 .idea/
 .vscode/
 *.log
-package-lock.json
+# package-lock.json is COMMITTED on purpose. `npm ci` in .github/workflows
+# requires it and fails outright without one, and actions/setup-node's
+# `cache: npm` has no key to hash. Ignoring it broke every CI run.
 .claude/
