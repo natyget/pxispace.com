@@ -29,11 +29,17 @@ import {
     PROFILE_USERNAME_MAX_LENGTH,
     USERNAME_RULES_HINT,
 } from '../../utils/username';
-const APPLE_SERVICE_ID = (globalThis.process?.env?.NEXT_PUBLIC_APPLE_SERVICE_ID || '').trim();
+// Must be written EXACTLY as `process.env.NEXT_PUBLIC_*`. Next inlines these by literal
+// text substitution at build time; `globalThis.process?.env?.X` does not match the pattern,
+// so it is never replaced and evaluates to undefined in the browser (globalThis.process
+// does not exist there). That shipped a permanent "Apple Sign In is not configured" error
+// no amount of rebuilding or Netlify env editing could fix. The optional chaining looked
+// defensive but defeated the very mechanism it appeared to guard.
+const APPLE_SERVICE_ID = (process.env.NEXT_PUBLIC_APPLE_SERVICE_ID || '').trim();
 /** Must match a Return URL registered on the Apple Services ID (HTTPS in production). */
 const APPLE_REDIRECT_URI = (
-    globalThis.process?.env?.NEXT_PUBLIC_APPLE_REDIRECT_URI
-    || globalThis.process?.env?.NEXT_PUBLIC_SITE_URL
+    process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI
+    || process.env.NEXT_PUBLIC_SITE_URL
     || ''
 ).trim().replace(/\/$/, '');
 

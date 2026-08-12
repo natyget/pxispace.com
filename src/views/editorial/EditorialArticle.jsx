@@ -4,6 +4,17 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import SectionShell from '@/components/marketing/SectionShell';
+import { posterPathForVideo } from '@/lib/seo/schemas';
+
+/**
+ * The clip's own title when the story declares one, so the accessible name
+ * matches the VideoObject Google indexes rather than repeating the headline
+ * three times.
+ */
+function videoTitle(story, src) {
+  const meta = story.videos?.find((v) => v.src === src);
+  return meta?.name || `${story.title} scrapbook clip`;
+}
 
 export default function EditorialArticle({ story }) {
   if (!story) return null;
@@ -56,11 +67,16 @@ export default function EditorialArticle({ story }) {
                 {isVideo(src) ? (
                   <video
                     src={src}
+                    // A crawler cannot read a frame out of an autoplaying video.
+                    // `poster` is what Google indexes as the thumbnail, and
+                    // without one it declines to index the video at all.
+                    poster={posterPathForVideo(src)}
                     autoPlay
                     loop
                     muted
                     playsInline
-                    aria-label={`${story.title} scrapbook clip`}
+                    preload="metadata"
+                    aria-label={videoTitle(story, src)}
                     className="h-full w-full object-cover"
                   />
                 ) : (

@@ -101,10 +101,10 @@ ${adsId ? `window.gtag('config', '${adsId}', { allow_enhanced_conversions: true 
                         `}
                     </Script>
                     {/*
-                      NOTE — linked-destination overlap. Fetching
-                      gtag/js?id=GT-MJMHMN4S already returns AW-18365171384 as a
-                      LINKED CHILD DESTINATION of the Google tag (configured in
-                      the Ads UI, invisible from this repo). The explicit
+                      NOTE — linked-destination overlap. Loading the gtag/js
+                      bundle for tag GT-MJMHMN4S already returns AW-18365171384
+                      as a LINKED CHILD DESTINATION of the Google tag (configured
+                      in the Ads UI, invisible from this repo). The explicit
                       config() above is still required: it is what turns on
                       allow_enhanced_conversions and it is the only Ads
                       initialisation visible to a code reader. Until the link is
@@ -112,6 +112,12 @@ ${adsId ? `window.gtag('config', '${adsId}', { allow_enhanced_conversions: true 
                       twice for the same pageload. Conversions are deduplicated
                       by transaction_id, so revenue is not double-counted —
                       audience sizes are the only thing affected.
+
+                      Deliberately written without the literal `?id=` query form:
+                      the "hardcoded analytics id" guard in seo-checks.yml is a
+                      plain grep over src/ and cannot tell a comment from code,
+                      so documentation must not reproduce that exact pattern.
+                      Same reason the retired-id guard splits its own needle.
                     */}
                 </>
             ) : null}

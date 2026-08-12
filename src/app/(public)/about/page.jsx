@@ -1,6 +1,6 @@
 import About from '@/views/about/About';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildAboutJsonLd } from '@/lib/seo/schemas';
+import { buildAboutJsonLd, buildVideoObjectJsonLd } from '@/lib/seo/schemas';
 import { buildPageMetadata } from '@/lib/seo/pageMetadata';
 
 const TITLE = 'About PXI — Memory Is the Product';
@@ -24,6 +24,20 @@ export default function Page() {
       </p>
       <About />
       <JsonLd data={buildAboutJsonLd()} />
+      {/* Search Console flagged /about as a video-indexing issue: the hero clip
+          had no poster and no VideoObject, so there was nothing to index it by. */}
+      <JsonLd
+        data={buildVideoObjectJsonLd({
+          name: 'A night on PXI, from the door to the shared scrapbook',
+          description:
+            'How a night runs on PXI: tickets and doors at the front, one shared camera roll during, and a scrapbook that survives the morning after.',
+          contentPath: '/landing/assets/movie.mp4',
+          thumbnailPath: '/landing/assets/movie-poster.jpg',
+          uploadDate: '2026-07-02',
+          durationSeconds: 11,
+          pagePath: '/about',
+        })}
+      />
     </>
   );
 }

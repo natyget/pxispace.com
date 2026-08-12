@@ -88,6 +88,36 @@ const nextConfig = {
         destination: '/discover/new-york',
         permanent: true,
       },
+
+      // ── Legacy URLs Google is still crawling ────────────────────────────────
+      // Search Console reports these as 404 / soft-404 with crawl dates going
+      // back to the Vite site. They keep accruing crawl budget and pass no
+      // equity, so each one 301s to the page that replaced it.
+      //
+      // /features has never existed as an index — only /features/:slug does — so
+      // it 404'd while its own children ranked. /platform IS the product
+      // overview those links were reaching for.
+      {
+        source: '/features',
+        destination: '/platform',
+        permanent: true,
+      },
+      // Static-HTML paths from the pre-Next site.
+      {
+        source: '/features.html',
+        destination: '/platform',
+        permanent: true,
+      },
+      {
+        source: '/about.html',
+        destination: '/about',
+        permanent: true,
+      },
+      {
+        source: '/index.html',
+        destination: '/',
+        permanent: true,
+      },
     ];
   },
   // Security + robots headers live HERE, not in netlify.toml.

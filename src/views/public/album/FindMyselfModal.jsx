@@ -45,7 +45,9 @@ export default function FindMyselfModal({ open, onClose, albumId, onMatches }) {
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-md rounded-3xl border border-white/[0.08] bg-[#0b0b0e]/95 p-8 shadow-[0_0_60px_rgba(216,74,255,0.15)] backdrop-blur-xl">
+      {/* max-h + scroll: the guided viewfinder is tall, and on short laptops the
+          Capture button used to sit below the fold with no way to reach it. */}
+      <div className="relative max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-3xl border border-white/[0.08] bg-[#0b0b0e]/95 p-8 shadow-[0_0_60px_rgba(216,74,255,0.15)] backdrop-blur-xl">
         <button
           type="button"
           onClick={onClose}
@@ -84,13 +86,11 @@ export default function FindMyselfModal({ open, onClose, albumId, onMatches }) {
           </div>
         ) : null}
 
+        {/* No heading here: the capture component owns the prompt above its own
+            viewfinder (same as the app), so a second title just pushed the oval
+            off-screen and said the opposite thing on the turn poses. */}
         {step === 'scan' ? (
-          <div>
-            <h2 className="mb-6 text-center text-xl font-black uppercase tracking-[0.18em] text-white">
-              Center your face
-            </h2>
-            <FaceScanCapture onFrames={handleFrames} onCancel={onClose} ctaLabel="Find my shots" poseCount={1} />
-          </div>
+          <FaceScanCapture onFrames={handleFrames} onCancel={onClose} poseCount={1} />
         ) : null}
 
         {step === 'matching' ? (
