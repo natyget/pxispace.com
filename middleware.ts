@@ -171,8 +171,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  // Require isVendor only for vendor-only routes (e.g. Vendor Setup, event management).
-  const vendorOnlyPaths = ['/dashboard/vendor-upgrade', '/dashboard/events'];
+  // Require isVendor only for vendor-only routes (event management).
+  // NOTE: /dashboard/vendor-upgrade must stay open to non-vendors — it is the page
+  // where a CITIZEN becomes a vendor (Stripe onboarding start + return/refresh
+  // landing). Gating it behind isVendor locks everyone out of ever upgrading.
+  const vendorOnlyPaths = ['/dashboard/events'];
   const isVendorOnlyRoute = vendorOnlyPaths.some((p) => pathname.startsWith(p));
   if (isVendorOnlyRoute && !claims.isVendor) {
     return NextResponse.redirect(new URL('/403', request.url));
