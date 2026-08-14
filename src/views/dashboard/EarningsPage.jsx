@@ -68,6 +68,18 @@ const CATEGORY_LABELS = {
     OTHER: 'Other',
 };
 
+/**
+ * Ticket face value for one payment — the organizer's gross revenue.
+ *
+ * `grossAmount` on the row is the BUYER's card charge: face value plus the 5.49%
+ * service fee and Stripe's processing cost, neither of which is the organizer's
+ * money. Face value comes back exactly as payout + the flat fee taken off it.
+ * Mirrors PXIStudio-App/src/lib/paymentRevenue.ts.
+ */
+function faceValueCents(payment) {
+    return (payment?.netPayout ?? 0) + (payment?.vendorFlatFee ?? 0);
+}
+
 /** Real monthly gross/net series from payment timestamps — no projections, no estimates. */
 function buildMonthlySeries(payments) {
     const byMonth = new Map();
@@ -75,7 +87,7 @@ function buildMonthlySeries(payments) {
         const date = new Date(payment.createdAt);
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         const entry = byMonth.get(key) || { key, gross: 0, net: 0 };
-        entry.gross += dollars(payment.grossAmount);
+        entry.gross += dollars(faceValueCents(payment));
         entry.net += dollars(payment.netPayout);
         byMonth.set(key, entry);
     }
@@ -137,7 +149,7 @@ function EarningsHero({ heroValue, heroLabel, gross, retainedPct, retainedLabel,
                     </p>
                     <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Earnings</h1>
                     <p className="mt-1.5 max-w-xl text-sm leading-6 text-zinc-500">
-                        Gross sales, platform fees, event costs, marketing spend, payouts, and profit — all real numbers.
+                        Ticket face value, the $0.99 platform fee, event costs, marketing spend, payouts, and profit — all real numbers.
                     </p>
                     <div className="mt-4 flex flex-wrap items-center gap-3">
                         <button
@@ -279,10 +291,14 @@ export default function EarningsPage() {
                             payments: [payment, ...prev.payments],
                             aggregates: {
                                 ...prev.aggregates,
-                                grossRevenue:        prev.aggregates.grossRevenue        + payment.grossAmount,
-                                consumerFeeDeducted: prev.aggregates.consumerFeeDeducted + payment.consumerFee,
-                                vendorFlatFeeTotal:  prev.aggregates.vendorFlatFeeTotal  + payment.vendorFlatFee,
-                                netPayout:           prev.aggregates.netPayout           + payment.netPayout,
+                                grossRevenue:       prev.aggregates.grossRevenue       + faceValueCents(payment),
+                                vendorFlatFeeTotal: prev.aggregates.vendorFlatFeeTotal + payment.vendorFlatFee,
+                                netPayout:          prev.aggregates.netPayout          + payment.netPayout,
+                                buyerPaid: {
+                                    serviceFeeCents:    (prev.aggregates.buyerPaid?.serviceFeeCents ?? 0)    + payment.consumerFee,
+                                    processingFeeCents: (prev.aggregates.buyerPaid?.processingFeeCents ?? 0) + payment.processingFee,
+                                    totalCents:         (prev.aggregates.buyerPaid?.totalCents ?? 0)         + payment.grossAmount,
+                                },
                             },
                         };
                     });
@@ -330,9 +346,15 @@ export default function EarningsPage() {
     // ─── derived numbers (all real) ───────────────────────────────────────
     const payments = data?.payments ?? [];
     const payouts = data?.payouts ?? [];
+    // Gross = ticket face value. The $0.99 flat fee is the ONLY platform fee that comes
+    // out of it — the 5.49% service fee and Stripe's cost are added on top at checkout
+    // and paid by the buyer, so they never reduce this payout or this margin.
     const gross = data?.aggregates?.grossRevenue ?? 0;
-    const totalFees = (data?.aggregates?.consumerFeeDeducted ?? 0) + (data?.aggregates?.vendorFlatFeeTotal ?? 0);
+    const platformFee = data?.aggregates?.vendorFlatFeeTotal ?? 0;
     const netPayout = data?.aggregates?.netPayout ?? 0;
+    const buyerServiceFee = data?.aggregates?.buyerPaid?.serviceFeeCents ?? 0;
+    const buyerProcessingFee = data?.aggregates?.buyerPaid?.processingFeeCents ?? 0;
+    const buyerPaidTotal = data?.aggregates?.buyerPaid?.totalCents ?? 0;
     const eventCostCents = data?.costs?.totalCents ?? 0;
     // Only cash marketing spend deducts — credit-covered sends cost PXI, not you.
     const marketingCashCents = data?.marketing?.cashCents ?? 0;
@@ -352,14 +374,15 @@ export default function EarningsPage() {
 
     const breakdownData = useMemo(() => {
         const slices = [];
-        if (totalFees > 0) slices.push({ name: 'Platform fees', value: dollars(totalFees) });
+        // Flat fee only — the buyer's service fee was never yours to spend.
+        if (platformFee > 0) slices.push({ name: 'PXI platform fee', value: dollars(platformFee) });
         for (const row of data?.costs?.byCategory ?? []) {
             if (row.amountCents > 0) slices.push({ name: CATEGORY_LABELS[row.category] || row.category, value: dollars(row.amountCents) });
         }
         if ((data?.marketing?.adCardCents ?? 0) > 0) slices.push({ name: 'Ad boosts (card)', value: dollars(data.marketing.adCardCents) });
         if ((data?.marketing?.campaignCardCents ?? 0) > 0) slices.push({ name: 'Email & SMS (card)', value: dollars(data.marketing.campaignCardCents) });
         return slices;
-    }, [data, totalFees]);
+    }, [data, platformFee]);
 
     const eventRows = data?.costs?.byEvent ?? [];
 
@@ -424,11 +447,11 @@ export default function EarningsPage() {
                         <div className="px-5 py-2">
                             <RevenueTableRow
                                 title="Gross Revenue" value={fmtCompact(gross)} unit="USD"
-                                subheading="Total sales volume"
+                                subheading="Ticket face value sold — your listed prices"
                             />
                             <RevenueTableRow
-                                title="Platform Fees" value={fmtCompact(totalFees)} unit="USD"
-                                subheading="PXI service + flat fees"
+                                title="Platform Fee" value={fmtCompact(platformFee)} unit="USD"
+                                subheading="$0.99 per ticket — the only fee off your payout"
                             />
                             <RevenueTableRow
                                 title="Net Payout" value={fmtCompact(netPayout)} unit="USD"
@@ -453,6 +476,28 @@ export default function EarningsPage() {
                                 </>
                             ) : null}
                         </div>
+                    </SectionCard>
+
+                    <SectionCard title="What buyers paid">
+                        <div className="px-5 py-2">
+                            <RevenueTableRow
+                                title="Service Fee" value={fmtCompact(buyerServiceFee)} unit="USD"
+                                subheading="5.49%, added at checkout — kept by PXI"
+                            />
+                            <RevenueTableRow
+                                title="Card Processing" value={fmtCompact(buyerProcessingFee)} unit="USD"
+                                subheading="Stripe's cost, passed through at checkout"
+                            />
+                            <RevenueTableRow
+                                title="Buyer Total" value={fmtCompact(buyerPaidTotal)} unit="USD"
+                                subheading="Charged to cards across all your tickets"
+                            />
+                        </div>
+                        <p className="px-5 pb-4 pt-1 text-xs leading-5 text-zinc-500">
+                            These sit on top of your ticket price and come out of the buyer&apos;s
+                            card, not your payout. They&apos;re here so you can see the price
+                            attendees actually saw — they never reduce your revenue or margin.
+                        </p>
                     </SectionCard>
 
                     {includeCosts ? (
