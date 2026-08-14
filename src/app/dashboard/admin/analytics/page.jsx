@@ -72,9 +72,10 @@ function AdminAnalyticsHero({ days, setDays, isLiveAdmin, loading, signups, tick
     const rangeTake = sumValues(revenue, 'take');
     const rangeSignups = sumValues(signups);
     const rangeTickets = sumValues(tickets);
+    const takeRate = rangeGross > 0 ? `${(Math.round((rangeTake / rangeGross) * 1000) / 10).toFixed(1)}% take rate` : 'No sales yet';
     const metrics = [
-        { label: 'Range gross', value: formatUsd(rangeGross), detail: `${days}-day window` },
-        { label: 'PXI take', value: formatUsd(rangeTake), detail: 'Platform fee capture' },
+        { label: 'Ticket sales (GMV)', value: formatUsd(rangeGross), detail: `Face value · ${days}-day window` },
+        { label: 'PXI revenue', value: formatUsd(rangeTake), detail: `$0.99 + 5.49% − credits · ${takeRate}` },
         { label: 'New users', value: formatInteger(rangeSignups), detail: `${activeDays(signups)} active signup days` },
         { label: 'Tickets issued', value: formatInteger(rangeTickets), detail: `${activeDays(tickets)} active ticket days` },
     ];
@@ -92,7 +93,7 @@ function AdminAnalyticsHero({ days, setDays, isLiveAdmin, loading, signups, tick
                         Platform analytics
                     </h1>
                     <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-300 md:text-base">
-                        Growth, ticketing, revenue, and PXI take across the whole platform.
+                        Growth, ticketing, ticket sales volume, and what PXI actually keeps across the whole platform.
                     </p>
                     <div className="dashboard-segmented-toggle mt-5 w-full sm:w-auto" role="tablist" aria-label="Analytics range">
                         {RANGES.map((range) => (
@@ -208,7 +209,14 @@ function DailyBars({ title, data, color, format = (v) => String(v) }) {
     );
 }
 
-/** Two-line revenue chart (gross vs PXI take) with crosshair hover + legend. */
+/**
+ * Two-line revenue chart with crosshair hover + legend.
+ *
+ * Gross is ticket FACE VALUE (GMV) — what organizers priced tickets at. PXI revenue
+ * is what the company actually keeps: the $0.99 flat fee off each payout plus the
+ * 5.49% buyer service fee, minus credits burned. The buyer's card charge and Stripe's
+ * cut are shown as money-movement context beneath, never as revenue.
+ */
 function RevenueLines({ data }) {
     const [hover, setHover] = useState(null);
     const W = 640;
@@ -223,6 +231,9 @@ function RevenueLines({ data }) {
     const path = (pick) => data.map((d, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(pick(d)).toFixed(1)}`).join(' ');
     const grossTotal = sumValues(data, 'gross');
     const takeTotal = sumValues(data, 'take');
+    const buyerPaidTotal = sumValues(data, 'buyerPaid');
+    const processingTotal = sumValues(data, 'processing');
+    const payoutTotal = sumValues(data, 'payout');
     const takeRate = grossTotal > 0 ? `${Math.round((takeTotal / grossTotal) * 1000) / 10}%` : '0%';
 
     const onMove = (e) => {
@@ -237,23 +248,23 @@ function RevenueLines({ data }) {
         <div className="glass-panel overflow-hidden rounded-[1.25rem] p-5">
             <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Money movement</p>
-                    <h2 className="mt-2 text-xl font-bold tracking-normal text-white">Revenue per day</h2>
+                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Revenue</p>
+                    <h2 className="mt-2 text-xl font-bold tracking-normal text-white">Ticket sales vs PXI revenue</h2>
                     <p className="mt-1 text-sm leading-6 text-white/45">
-                        Gross sales compared with captured PXI take.
+                        Face value of tickets sold, against what PXI actually keeps.
                     </p>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-left">
                     <div className="rounded-2xl bg-white/[0.045] px-3 py-2">
-                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Gross</p>
+                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">GMV</p>
                         <p className="mt-1 text-sm font-bold text-white">{formatUsd(grossTotal)}</p>
                     </div>
                     <div className="rounded-2xl bg-white/[0.045] px-3 py-2">
-                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Take</p>
+                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">PXI revenue</p>
                         <p className="mt-1 text-sm font-bold text-white">{formatUsd(takeTotal)}</p>
                     </div>
                     <div className="rounded-2xl bg-white/[0.045] px-3 py-2">
-                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Rate</p>
+                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Take rate</p>
                         <p className="mt-1 text-sm font-bold text-white">{takeRate}</p>
                     </div>
                 </div>
@@ -261,15 +272,15 @@ function RevenueLines({ data }) {
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-[12px] text-white/60">
                 <div className="flex items-center gap-4">
                     <span className="inline-flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: CHART_PRIMARY }} /> Gross
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: CHART_PRIMARY }} /> Ticket sales
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: CHART_ACCENT }} /> PXI take
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: CHART_ACCENT }} /> PXI revenue
                     </span>
                 </div>
                 {hover != null ? (
                     <span className="rounded-full bg-white/[0.065] px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/70 tabular-nums">
-                        {shortDate(data[hover].key)} · gross {formatUsd(data[hover].gross)} · take {formatUsd(data[hover].take)}
+                        {shortDate(data[hover].key)} · sales {formatUsd(data[hover].gross)} · PXI {formatUsd(data[hover].take)}
                     </span>
                 ) : null}
             </div>
@@ -278,7 +289,7 @@ function RevenueLines({ data }) {
                     viewBox={`0 0 ${W} ${H}`}
                     className="block h-auto w-full"
                     role="img"
-                    aria-label="Daily gross revenue and PXI take"
+                    aria-label="Daily ticket face value and PXI revenue"
                     onMouseMove={onMove}
                     onMouseLeave={() => setHover(null)}
                 >
@@ -298,6 +309,27 @@ function RevenueLines({ data }) {
                     <text x={PAD.left} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10">{shortDate(data[0]?.key)}</text>
                     <text x={W - PAD.right} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10" textAnchor="end">{shortDate(data[data.length - 1]?.key)}</text>
                 </svg>
+            </div>
+            <div className="mt-4 border-t border-white/[0.06] pt-4">
+                <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Money movement — not revenue</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    <div className="rounded-2xl bg-white/[0.025] px-3 py-2">
+                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Charged to buyers</p>
+                        <p className="mt-1 text-sm font-bold text-white/80">{formatUsd(buyerPaidTotal)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/[0.025] px-3 py-2">
+                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Stripe processing</p>
+                        <p className="mt-1 text-sm font-bold text-white/80">{formatUsd(processingTotal)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/[0.025] px-3 py-2">
+                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Paid to organizers</p>
+                        <p className="mt-1 text-sm font-bold text-white/80">{formatUsd(payoutTotal)}</p>
+                    </div>
+                </div>
+                <p className="mt-3 text-[12px] leading-5 text-white/40">
+                    Buyers pay the ticket price plus a 5.49% service fee and Stripe&apos;s cost.
+                    Processing is passed straight through to Stripe; PXI keeps none of it.
+                </p>
             </div>
         </div>
     );
@@ -340,16 +372,28 @@ export default function AdminAnalyticsPage() {
         () => (data ? fillDays(data.days, data.series.tickets, (r) => r?.count ?? 0) : []),
         [data]
     );
+    // gross = ticket face value (GMV) · take = PXI's actual revenue ($0.99 + 5.49% − credits)
+    // buyerPaid/processing = money that moved through Stripe, never PXI revenue.
     const revenue = useMemo(
         () =>
             data
                 ? fillDays(data.days, data.series.revenue, (r) => ({
                       gross: r?.grossCents ?? 0,
                       take: r?.pxiCents ?? 0,
-                  })).map((d) => ({ key: d.key, gross: d.value.gross, take: d.value.take }))
+                      buyerPaid: r?.buyerPaidCents ?? 0,
+                      processing: r?.processingCents ?? 0,
+                      payout: r?.payoutCents ?? 0,
+                  })).map((d) => ({ key: d.key, ...d.value }))
                 : [],
         [data]
     );
+
+    const lifetimeTakeRate = useMemo(() => {
+        const gmv = Number(data?.totals?.lifetimeGrossCents || 0);
+        const take = Number(data?.totals?.lifetimePxiCents || 0);
+        if (gmv <= 0) return '$0.99 per ticket + 5.49% of face value';
+        return `${(Math.round((take / gmv) * 1000) / 10).toFixed(1)}% of ticket face value`;
+    }, [data]);
 
     return (
         <div className="max-w-7xl space-y-6 md:space-y-8">
@@ -378,10 +422,40 @@ export default function AdminAnalyticsPage() {
             {isLiveAdmin && !loading && data && (
                 <>
                     <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Lifetime totals">
-                        <StatTile label="Total users" value={formatInteger(data.totals.users)} />
+                        <StatTile
+                            label="Total users"
+                            value={formatInteger(data.totals.users)}
+                            hint={`${data.totals.openSupportTickets} open tickets · ${data.totals.pendingReports} pending reports`}
+                        />
                         <StatTile label="Tickets issued" value={formatInteger(data.totals.tickets)} hint={`${formatInteger(data.totals.events)} events`} />
-                        <StatTile label="Lifetime gross" value={formatUsd(data.totals.lifetimeGrossCents)} hint={`${formatInteger(data.totals.lifetimePayments)} payments`} />
-                        <StatTile label="Lifetime PXI take" value={formatUsd(data.totals.lifetimePxiCents)} hint={`${data.totals.openSupportTickets} open tickets · ${data.totals.pendingReports} pending reports`} />
+                        <StatTile
+                            label="Lifetime ticket sales"
+                            value={formatUsd(data.totals.lifetimeGrossCents)}
+                            hint={`Face value · ${formatInteger(data.totals.lifetimePayments)} payments`}
+                        />
+                        <StatTile
+                            label="Lifetime PXI revenue"
+                            value={formatUsd(data.totals.lifetimePxiCents)}
+                            hint={lifetimeTakeRate}
+                        />
+                    </section>
+
+                    <section className="grid gap-4 sm:grid-cols-3" aria-label="Lifetime money movement">
+                        <StatTile
+                            label="Charged to buyers"
+                            value={formatUsd(data.totals.lifetimeBuyerPaidCents)}
+                            hint="Ticket price + service fee + processing"
+                        />
+                        <StatTile
+                            label="Stripe processing"
+                            value={formatUsd(data.totals.lifetimeProcessingCents)}
+                            hint="Passed through — PXI keeps none of it"
+                        />
+                        <StatTile
+                            label="Paid to organizers"
+                            value={formatUsd(data.totals.lifetimePayoutCents)}
+                            hint="Face value minus $0.99 per ticket"
+                        />
                     </section>
 
                     <RevenueLines data={revenue} />
