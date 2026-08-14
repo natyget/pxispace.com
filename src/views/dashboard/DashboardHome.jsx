@@ -204,11 +204,15 @@ function VendorCommandCenter() {
     const { eventRows, summary } = useMemo(() => {
         const now = DASHBOARD_RENDER_NOW;
         const totalEarnings = overview?.totals?.netCents ?? vendorData?.aggregates?.netPayout ?? 0;
+        // Per-event rows show GROSS revenue — ticket face value, matching Earnings.
+        // Face value is payout + the $0.99 taken off it; `grossAmount` on the row is
+        // the buyer's card charge (face + service + processing) and is not revenue.
+        const totalGross = overview?.totals?.grossCents ?? vendorData?.aggregates?.grossRevenue ?? 0;
         const totalTickets = events.reduce((sum, e) => sum + soldTicketsExcludingOrganizer(e?._count?.tickets), 0);
         const revenueByKey = new Map();
 
         for (const payment of vendorData?.payments ?? []) {
-            const amount = payment.netPayout ?? payment.grossAmount ?? 0;
+            const amount = (payment.netPayout ?? 0) + (payment.vendorFlatFee ?? 0);
             const keys = [payment.eventId, payment.eventName, payment.event?.id, payment.event?.name].filter(Boolean);
             for (const key of keys) {
                 revenueByKey.set(key, (revenueByKey.get(key) || 0) + amount);
@@ -228,8 +232,11 @@ function VendorCommandCenter() {
                 const status = eventState(e, now);
                 const ticketsSold = soldTicketsExcludingOrganizer(e?._count?.tickets ?? 0);
                 const directRevenue = revenueByKey.get(e.id) ?? revenueByKey.get(e.name);
-                const ticketPriceRevenue = Number.isFinite(Number(e.ticketPrice)) ? Number(e.ticketPrice) * ticketsSold : null;
-                const proportionalRevenue = totalTickets > 0 ? Math.round(totalEarnings * (ticketsSold / totalTickets)) : 0;
+                // `ticketPrice` is whole USD; every other figure here is cents.
+                const ticketPriceRevenue = Number.isFinite(Number(e.ticketPrice))
+                    ? Math.round(Number(e.ticketPrice) * 100) * ticketsSold
+                    : null;
+                const proportionalRevenue = totalTickets > 0 ? Math.round(totalGross * (ticketsSold / totalTickets)) : 0;
                 const revenue = directRevenue ?? ticketPriceRevenue ?? proportionalRevenue;
 
                 return {
@@ -357,7 +364,7 @@ function VendorCommandCenter() {
             <div className="grid gap-5 lg:grid-cols-2">
                 <TrendChartCard
                     title="Revenue"
-                    subtitle="Net per day, last 30 days"
+                    subtitle="Ticket sales per day, last 30 days"
                     data={revenueTrend}
                     hasData={hasRevenueTrend}
                     loading={metricsLoading}

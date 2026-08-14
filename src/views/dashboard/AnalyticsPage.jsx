@@ -405,7 +405,7 @@ function SalesVelocityChart({ byDay, velocityPerDay7d, totalSold, grossCents, ne
             title="Ticket sales"
             subheading={paceNote || 'Tickets sold per day, with the running total tracked beneath.'}
             liveValue={formatMoney(grossCents)}
-            unit={`gross · ${formatMoney(netCents)} net`}
+            unit={`ticket sales · ${formatMoney(netCents)} to you`}
             change={{ label: `${formatNumber(totalSold)} sold total`, tone: 'neutral' }}
             timeframes={null}
             chartClassName="relative h-[300px] md:h-[360px]"
@@ -661,7 +661,7 @@ function EventComparisonChart({ details = [], loading }) {
                         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: row.color }} />
                         <span className="truncate font-semibold text-white">{row.name}</span>
                         <span className="text-right tabular-nums text-zinc-300">{formatNumber(row.tickets)}<span className="ml-1 text-[10px] text-zinc-600">sold</span></span>
-                        <span className="text-right tabular-nums text-zinc-300">{formatMoney(row.gross)}<span className="ml-1 text-[10px] text-zinc-600">gross</span></span>
+                        <span className="text-right tabular-nums text-zinc-300">{formatMoney(row.gross)}<span className="ml-1 text-[10px] text-zinc-600">sold</span></span>
                         <span className="text-right tabular-nums text-zinc-300">{percent(row.scanRate)}<span className="ml-1 text-[10px] text-zinc-600">scan</span></span>
                     </div>
                 ))}
