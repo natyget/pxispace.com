@@ -6,7 +6,9 @@ import { THREAD_CHATBAR_HORIZONTAL_INSET } from './albumLayoutConstants';
 /**
  * Mobile join CTA — primary action on the public album page (replaces the read-only
  * chatbar). Routes to `/events/[id]/checkout` where the full EULA + free-ticket /
- * paid-Stripe flow lives. Private albums with no event fall back to opening in app.
+ * paid-Stripe flow lives. Private albums with no event fall back to opening in app,
+ * and so does a viewer who is already in (member or ticket holder): the API says
+ * `shareAccess.tier === 'FULL'`, and "Join" would only lead to "already has a ticket".
  */
 function formatTicketPrice(event) {
     const type = String(event?.ticketType ?? '').toUpperCase();
@@ -24,6 +26,7 @@ export default function PublicAlbumJoinEventButton({ album, albumId, className =
     const fallbackDeepLink = albumId ? `pxi://album/${albumId}` : null;
     // Finalized scrapbook (event passed + grace over): joining is closed server-side.
     const isFinalized = album?.event?.effectiveStatus === 'ARCHIVED';
+    const alreadyIn = album?.shareAccess?.tier === 'FULL';
 
     const wrapperClass = [
         'album-thread-chatbar shrink-0 border-t border-white/10 bg-black/90 backdrop-blur-md',
@@ -33,6 +36,7 @@ export default function PublicAlbumJoinEventButton({ album, albumId, className =
         .join(' ');
 
     if (!eventId && !fallbackDeepLink) return null;
+    if (alreadyIn && !fallbackDeepLink) return null;
 
     return (
         <div className={wrapperClass}>
@@ -49,7 +53,7 @@ export default function PublicAlbumJoinEventButton({ album, albumId, className =
                     <div className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-6 text-[12px] font-black uppercase tracking-[0.18em] text-zinc-500">
                         Scrapbook — finalized
                     </div>
-                ) : eventId ? (
+                ) : eventId && !alreadyIn ? (
                     <Link
                         href={`/events/${eventId}/checkout`}
                         className="flex h-12 w-full items-center justify-center rounded-full bg-[#d946ef] px-6 text-[13px] font-black uppercase tracking-[0.18em] text-white shadow-[0_0_20px_rgba(217,70,239,0.5)] transition hover:opacity-90"

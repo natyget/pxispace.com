@@ -53,6 +53,9 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   const [loading, setLoading] = useState(!initialAlbum && !initialDenied);
   const [contentLoading, setContentLoading] = useState(false);
   const [denied, setDenied] = useState(initialDenied);
+  // The event behind a denied album (the API's 403 carries it), so the screen can
+  // offer "Join event" instead of pointing at the app.
+  const [deniedEventId, setDeniedEventId] = useState(null);
   const [tab, setTab] = useState('thread');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -187,6 +190,10 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
 
     setLoading(true);
     setDenied(false);
+    setDeniedEventId(null);
+    // The API client sends the session token when there is one, and the public
+    // album routes now honour it: a member or ticket holder gets the album, so a
+    // sign-in or a join that lands back here is enough to open it.
     albumsService
       .getPublicAlbum(albumId)
       .then((data) => {
@@ -194,13 +201,16 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
         setAlbum(a);
         if (!a || a.shareAccess?.tier === 'DENIED') {
           setDenied(true);
+          setDeniedEventId(a?.event?.id || a?.eventId || null);
         } else {
           void loadContent(albumId);
         }
       })
       .catch((err) => {
-        if (err?.status === 403) setDenied(true);
-        else setAlbum(null);
+        if (err?.status === 403) {
+          setDenied(true);
+          setDeniedEventId(err?.data?.eventId || null);
+        } else setAlbum(null);
       })
       .finally(() => setLoading(false));
   }, [albumId, initialAlbum, initialDenied, loadContent]);
@@ -325,6 +335,14 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   }
 
   if (!album || denied) {
+    // A private album used to stop here for everyone — even people who had just
+    // signed up and joined — with "open your invite link in the app". Now it is
+    // the way in: sign in if you're already part of the event, or join it (the
+    // checkout handles sign-up, phone verification and the free ticket, and its
+    // "Open album" link brings you back here with access).
+    const joinEventId = eventId || deniedEventId;
+    const signedIn = authReady && isAuthenticated;
+    const loginHref = `/login?redirect=${encodeURIComponent(`/album/${albumId}`)}`;
     return (
       <div className="flex h-full min-h-0 flex-1 items-center justify-center px-4 pt-20">
         <IphonePane className="items-center justify-center px-4 text-center text-white">
@@ -334,19 +352,30 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
               album read "Album not found". */}
           <p className="text-lg font-semibold">{denied ? 'Private album' : 'Album not found'}</p>
           <p className="mt-2 text-sm text-zinc-500">
-            {denied
-              ? 'This album is private. Open your invite link in the PXI app to see the night.'
-              : 'This link may be invalid or the album was removed.'}
+            {!denied
+              ? 'This link may be invalid or the album was removed.'
+              : signedIn
+                ? 'This album is for people at the event. Join the event to see the night.'
+                : 'This album is for people at the event. Sign in if you’re one of them, or join the event to see the night.'}
           </p>
-          {eventId ? (
-            <Link href={`/events/${eventId}`} className="mt-6 text-sm font-medium text-pxi-purple hover:text-white">
-              View event page
+          {denied && joinEventId ? (
+            <Link
+              href={`/events/${joinEventId}/checkout`}
+              className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-[#d946ef] px-6 text-[13px] font-black uppercase tracking-[0.18em] text-white shadow-[0_0_20px_rgba(217,70,239,0.5)] transition hover:opacity-90"
+            >
+              Join event
             </Link>
-          ) : (
+          ) : null}
+          {denied && !signedIn ? (
+            <Link href={loginHref} className="mt-4 text-sm font-medium text-pxi-purple hover:text-white">
+              Already part of it? Sign in
+            </Link>
+          ) : null}
+          {!denied ? (
             <Link href="/" className="mt-6 text-sm font-medium text-pxi-purple hover:text-white">
               Back to PXI
             </Link>
-          )}
+          ) : null}
           <div className="mt-8 w-full">
             <PublicAlbumBottomBar albumId={albumId} embedded />
           </div>

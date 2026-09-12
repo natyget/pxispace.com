@@ -1,7 +1,7 @@
 /**
  * Task 4: Edge Middleware RBAC Gatekeeper
  * Intercepts /dashboard/*, validates PASETO from HttpOnly cookie,
- * enforces: token present, isVendor, and (when applicable) event ownership.
+ * enforces: token present and (when applicable) event ownership.
  * Secondary verification remains in Next.js DAL / server-side.
  */
 
@@ -171,16 +171,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  // Require isVendor only for vendor-only routes (event management).
-  // NOTE: /dashboard/vendor-upgrade must stay open to non-vendors — it is the page
-  // where a CITIZEN becomes a vendor (Stripe onboarding start + return/refresh
-  // landing). Gating it behind isVendor locks everyone out of ever upgrading.
-  const vendorOnlyPaths = ['/dashboard/events'];
-  const isVendorOnlyRoute = vendorOnlyPaths.some((p) => pathname.startsWith(p));
-  if (isVendorOnlyRoute && !claims.isVendor) {
-    return NextResponse.redirect(new URL('/403', request.url));
-  }
-
+  // No vendor gate here. /dashboard/events is "My Events" for every signed-in user:
+  // the sidebar offers it to everyone, the page has an Attended tab for ticket
+  // holders, and a Citizen may create a free event under /new. This used to send
+  // every non-vendor to /403 — a leftover from before the member dashboard
+  // existed. The client-side VENDOR_ONLY_ROUTE_PREFIXES list covers the surfaces
+  // that really are vendor-only, and the API re-checks every mutation.
+  // NOTE: /dashboard/vendor-upgrade must also stay open to non-vendors — it is the
+  // page where a CITIZEN becomes a vendor.
   // Event [id] ownership: /dashboard/events/:id (exclude static segments like "new").
   const eventId = getEventIdFromPath(pathname);
   if (eventId && eventId !== 'new' && !canAccessEvent(claims, eventId)) {
