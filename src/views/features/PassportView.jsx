@@ -13,8 +13,8 @@ import CameraDemo from '@/components/marketing/CameraDemo';
 import PassportStamp from '@/components/ui/PassportStamp';
 import { HeaderPolygonBadge } from '@/components/passport/passportVisualParts';
 import { PXI_PASSPORT_LEVEL_BADGE_THEMES } from '@/utils/odysseyTier';
-import { FaApple } from 'react-icons/fa';
-import { PXI_IOS_DOWNLOAD_HREF } from '@/lib/appStoreLinks';
+import StoreGlyph from '@/components/links/StoreGlyph';
+import { PXI_GET_APP_HREF } from '@/lib/appStoreLinks';
 
 const ODYSSEY_BADGES = [
   { id: 'ODYSSEY', name: 'Odyssey', letter: 'O' },
@@ -112,8 +112,8 @@ export default function PassportView() {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="mt-10 flex flex-wrap items-center gap-4"
           >
-            <a href={PXI_IOS_DOWNLOAD_HREF} target="_blank" rel="noopener noreferrer" className="glow-cta px-8 py-4 text-sm">
-              <FaApple className="h-5 w-5" />
+            <a href={PXI_GET_APP_HREF} target="_blank" rel="noopener noreferrer" className="glow-cta px-8 py-4 text-sm">
+              <StoreGlyph className="h-5 w-5" />
               Get the app
             </a>
             <Link href="/platform" className="pill-ghost px-8 py-4 text-sm font-semibold">
@@ -272,8 +272,8 @@ export default function PassportView() {
         <div className="flex flex-col items-center text-center">
           <h2 className="display-2 max-w-2xl">Start earning stamps.</h2>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <a href={PXI_IOS_DOWNLOAD_HREF} target="_blank" rel="noopener noreferrer" className="glow-cta px-8 py-4 text-sm">
-              <FaApple className="h-5 w-5" />
+            <a href={PXI_GET_APP_HREF} target="_blank" rel="noopener noreferrer" className="glow-cta px-8 py-4 text-sm">
+              <StoreGlyph className="h-5 w-5" />
               Get the app
             </a>
             <Link

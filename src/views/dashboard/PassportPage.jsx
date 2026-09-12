@@ -7,8 +7,10 @@ import { SmartPhone01Icon, Shield01Icon, CheckmarkCircle02Icon, Loading02Icon, R
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { getRelationshipStatus } from '../../services/friends';
-import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
+import { storeLabelForPlatform, storeUrlForPlatform } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
+import StoreGlyph from '@/components/links/StoreGlyph';
+import { useAppPlatform } from '@/hooks/useAppPlatform';
 import { PxiPassportSection } from '@/components/passport/PxiPassportSection';
 import { getSiteUrl } from '@/lib/siteUrl';
 import { trackPassportLevelUp, trackShare } from '@/lib/analytics';
@@ -129,6 +131,8 @@ function PassportIssued({ user, rolesReady }) {
 
 function PassportNotIssued({ user, rolesReady }) {
     const { updateUser } = useAuth();
+    const platform = useAppPlatform();
+    const store = storeLabelForPlatform(platform);
     const [checkingVendor, setCheckingVendor] = useState(false);
     const [vendorStatusMsg, setVendorStatusMsg] = useState('');
     const [vendorChecks, setVendorChecks] = useState(null); // {chargesEnabled,payoutsEnabled,currentlyDue}
@@ -172,10 +176,10 @@ function PassportNotIssued({ user, rolesReady }) {
                         Your Passport is the profile layer for PXI events, stamps, friends, and public identity.
                         </p>
                         <div className="mt-5 flex flex-wrap items-center gap-2">
-                            <IosDownloadLink href={PXI_APP_STORE_URL}
+                            <IosDownloadLink href={storeUrlForPlatform(platform)}
                                 className="pill-solid inline-flex items-center gap-2 px-4 py-2.5 text-xs tracking-[0.02em]">
-                                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-black"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-                                App Store
+                                <StoreGlyph className="h-4 w-4 text-black" />
+                                {store.name}
                             </IosDownloadLink>
                         {rolesReady && user?.isVendor ? (
                                 <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-2 text-[11px] font-medium tracking-[0.02em] text-emerald-400">
@@ -213,10 +217,10 @@ function PassportNotIssued({ user, rolesReady }) {
                     <p className="mt-2 text-sm leading-relaxed text-zinc-400">
                         Issue your Passport from the app. It only takes a minute and unlocks your event identity.
                     </p>
-                    <IosDownloadLink href={PXI_APP_STORE_URL}
+                    <IosDownloadLink href={storeUrlForPlatform(platform)}
                         className="pill-ghost mt-5 inline-flex items-center gap-2.5 px-5 py-3 text-sm font-bold tracking-[0.02em]">
-                        <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-                        App Store
+                        <StoreGlyph className="h-5 w-5 text-white" />
+                        {store.name}
                     </IosDownloadLink>
                 </div>
 

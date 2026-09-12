@@ -157,6 +157,7 @@ const nextConfig = {
       '/verify-phone',
       '/apple-music-connect-embed',
       '/spotify-callback',
+      '/get',
       '/403',
       '/503',
     ];

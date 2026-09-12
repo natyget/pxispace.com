@@ -4,12 +4,12 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon } from '@hugeicons/core-free-icons';
-import { PXI_IOS_DOWNLOAD_HREF } from '@/lib/appStoreLinks';
+import { detectAppPlatform, storeUrlForPlatform } from '@/lib/appStoreLinks';
 
 /**
- * Dismissible "Open in PXI" banner. iOS only — no Android app yet, so the
- * banner doesn't render for Android visitors at all (nothing to open or
- * install there).
+ * Dismissible "Open in PXI" banner. Shown on iOS and Android — both have a
+ * published app, so both have something to open or install. Desktop gets
+ * nothing (the banner is `md:hidden` besides).
  *
  * Behavior:
  * - On click of "Open", attempts the `deepLinkUrl` (e.g. `pxi://album/:id`).
@@ -29,10 +29,7 @@ const PENDING_DEEPLINK_KEY = 'pxi_pending_deeplink';
 
 function detectPlatform() {
     if (typeof navigator === 'undefined') return 'unknown';
-    const ua = navigator.userAgent || '';
-    if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
-    if (/Android/i.test(ua)) return 'android';
-    return 'desktop';
+    return detectAppPlatform(navigator.userAgent || '');
 }
 
 export default function AppOpenBanner({
@@ -67,12 +64,13 @@ export default function AppOpenBanner({
     const handleOpen = useCallback(
         (event) => {
             if (!deepLinkUrl) return;
-            if (detectPlatform() !== 'ios') return;
+            const devicePlatform = detectPlatform();
+            if (devicePlatform !== 'ios' && devicePlatform !== 'android') return;
             event.preventDefault();
             try {
                 window.localStorage.setItem(PENDING_DEEPLINK_KEY, deepLinkUrl);
             } catch {}
-            const store = PXI_IOS_DOWNLOAD_HREF;
+            const store = storeUrlForPlatform(devicePlatform);
             const start = Date.now();
             let fallbackTimer = null;
             const cleanup = () => {
@@ -97,7 +95,7 @@ export default function AppOpenBanner({
         [deepLinkUrl],
     );
 
-    if (dismissed || platform === 'android') return null;
+    if (dismissed || (platform !== 'ios' && platform !== 'android')) return null;
 
     return (
         <div

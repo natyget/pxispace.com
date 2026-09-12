@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
-import { FaApple } from 'react-icons/fa';
-import { PXI_IOS_DOWNLOAD_HREF } from '@/lib/appStoreLinks';
+import StoreGlyph from '@/components/links/StoreGlyph';
+import { PXI_GET_APP_HREF } from '@/lib/appStoreLinks';
 
 /**
  * Hero: one statement, a drifting cluster of real night photos around the
@@ -109,8 +109,8 @@ export default function HeroEditorial() {
           transition={{ duration: 0.8, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
           className="mt-10 flex flex-wrap items-center justify-center gap-4"
         >
-          <a href={PXI_IOS_DOWNLOAD_HREF} target="_blank" rel="noopener noreferrer" className="glow-cta px-8 py-4 text-sm">
-            <FaApple className="h-5 w-5" />
+          <a href={PXI_GET_APP_HREF} target="_blank" rel="noopener noreferrer" className="glow-cta px-8 py-4 text-sm">
+            <StoreGlyph className="h-5 w-5" />
             Get the app
           </a>
           <Link href="/events" className="pill-ghost px-8 py-4 text-sm font-semibold backdrop-blur-xl bg-black/40 sm:bg-transparent sm:backdrop-blur-none">

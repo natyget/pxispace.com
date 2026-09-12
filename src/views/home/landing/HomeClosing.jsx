@@ -4,8 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { FaApple } from 'react-icons/fa';
-import { PXI_IOS_DOWNLOAD_HREF } from '@/lib/appStoreLinks';
+import StoreGlyph from '@/components/links/StoreGlyph';
+import { PXI_GET_APP_HREF } from '@/lib/appStoreLinks';
 import SectionShell from '@/components/marketing/SectionShell';
 
 /** Closing: one full-width photo panel, one move to make. */
@@ -49,7 +49,7 @@ export default function HomeClosing() {
                 (two quick flickers into steady). Only opacity/brightness animate,
                 so the glow-cta box-shadow styling is left intact. */}
             <motion.a
-              href={PXI_IOS_DOWNLOAD_HREF}
+              href={PXI_GET_APP_HREF}
               target="_blank"
               rel="noopener noreferrer"
               className="glow-cta px-8 py-4 text-sm"
@@ -61,7 +61,7 @@ export default function HomeClosing() {
               viewport={{ once: false, margin: '-60px' }}
               transition={{ duration: 0.75, delay: 0.35, times: [0, 0.35, 0.6, 1], ease: 'easeOut' }}
             >
-              <FaApple className="h-5 w-5" />
+              <StoreGlyph className="h-5 w-5" />
               Get the app
             </motion.a>
             <Link href="/events" className="pill-ghost px-8 py-4 text-sm font-semibold">
