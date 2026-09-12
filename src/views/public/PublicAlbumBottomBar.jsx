@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { FaApple } from 'react-icons/fa';
-import { PXI_IOS_DOWNLOAD_HREF } from '@/lib/appStoreLinks';
+import StoreGlyph from '@/components/links/StoreGlyph';
+import { PXI_GET_APP_HREF } from '@/lib/appStoreLinks';
 
 /**
  * `pxi://album/...` opens the native app when installed (see app `scheme` + Android intent filters).
@@ -34,12 +34,12 @@ export default function PublicAlbumBottomBar({ albumId, showNoAppHint = true }) 
           <div className="flex w-full max-w-[24rem] items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/60 px-3 py-2">
             <p className="text-[10px] text-zinc-500">No app on this device?</p>
             <a
-              href={PXI_IOS_DOWNLOAD_HREF}
+              href={PXI_GET_APP_HREF}
               target="_blank"
               rel="noopener noreferrer"
               className="shrink-0 flex items-center gap-1 text-[10px] font-semibold text-pxi-purple hover:text-white"
             >
-              <FaApple className="h-3 w-3" />
+              <StoreGlyph className="h-3 w-3" />
               Get the app
             </a>
           </div>

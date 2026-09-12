@@ -471,10 +471,10 @@ export default function EventCheckout({ basePath = '/events' }) {
           /* private browsing / storage disabled; deep link still attempted below */
         }
         const ua = navigator.userAgent || '';
-        // No store handoff either way: iOS has no free deferred-link mechanism to carry
-        // this album/event through install, and there's no Android app yet to hand off
-        // to — both platforms just try the deep link and stay on the success page if
-        // the app isn't installed.
+        // No store handoff either way: neither store has a free deferred-link
+        // mechanism that would carry this album/event through an install, so both
+        // platforms just try the deep link and stay on the success page (which keeps
+        // the ticket and an "Open album" link) when the app isn't installed.
         if (/iPhone|iPad|iPod|Android/i.test(ua)) {
           window.location.href = successDeepLinkUrl;
         }

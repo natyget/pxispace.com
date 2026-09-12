@@ -4,8 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { FaApple } from 'react-icons/fa';
-import { PXI_IOS_DOWNLOAD_HREF } from '@/lib/appStoreLinks';
+import StoreGlyph from '@/components/links/StoreGlyph';
+import { PXI_GET_APP_HREF } from '@/lib/appStoreLinks';
 import SectionShell from '@/components/marketing/SectionShell';
 import FaqList from '@/components/marketing/FaqList';
 import InstaShareShowcase from '@/components/marketing/InstaShareShowcase';
@@ -74,8 +74,8 @@ export default function InstagramSharingView() {
         <div className="flex flex-col items-center text-center">
           <h2 className="display-2 max-w-2xl">Your night, ready to post.</h2>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <a href={PXI_IOS_DOWNLOAD_HREF} target="_blank" rel="noopener noreferrer" className="glow-cta px-8 py-4 text-sm">
-              <FaApple className="h-5 w-5" />
+            <a href={PXI_GET_APP_HREF} target="_blank" rel="noopener noreferrer" className="glow-cta px-8 py-4 text-sm">
+              <StoreGlyph className="h-5 w-5" />
               Get the app
             </a>
             <Link href="/features/shared-event-photo-gallery" className="pill-ghost px-8 py-4 text-sm font-semibold">

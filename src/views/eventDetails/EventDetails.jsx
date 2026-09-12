@@ -17,7 +17,8 @@ import { spotifyEmbedSrc } from '@/lib/spotify';
 import { musicService } from '../../services/music';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { useAuth } from '@/contexts/AuthContext';
-import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
+import { storeLabelForPlatform, storeUrlForPlatform } from '@/lib/appStoreLinks';
+import { useAppPlatform } from '@/hooks/useAppPlatform';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
@@ -89,6 +90,8 @@ const EventDetails = ({ basePath = '/events' }) => {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const platform = useAppPlatform();
+  const store = storeLabelForPlatform(platform);
   const isLoggedIn = !!user?.id;
   const [apiEvent, setApiEvent] = useState(null);
   const [eventLoading, setEventLoading] = useState(!!id);
@@ -262,11 +265,11 @@ const EventDetails = ({ basePath = '/events' }) => {
           <div className="container mx-auto px-6 py-4 flex flex-wrap gap-3 items-center justify-between">
             <div className="flex flex-wrap gap-2">
               <IosDownloadLink
-                href={PXI_APP_STORE_URL}
+                href={storeUrlForPlatform(platform)}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-colors"
               >
                 <HugeiconsIcon icon={SmartPhone01Icon} size={14} />
-                App Store
+                {store.name}
               </IosDownloadLink>
             </div>
             <Link
