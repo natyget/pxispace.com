@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Shield01Icon } from '@hugeicons/core-free-icons';
-import { PXI_APP_STORE_URL } from '@/lib/appStoreLinks';
+import { PXI_GET_APP_HREF } from '@/lib/appStoreLinks';
 import IosDownloadLink from '@/components/links/IosDownloadLink';
 
 const SECTIONS = [
@@ -1000,7 +1000,7 @@ export default function LegalHubPage({ initialSection, documentId } = {}) {
                 Create Event
               </Link>
               <IosDownloadLink
-                href={PXI_APP_STORE_URL}
+                href={PXI_GET_APP_HREF}
                 className="inline-flex items-center justify-center bg-[rgba(20,10,30,0.75)] text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-[rgba(20,10,30,0.9)] transition-colors"
               >
                 Download the app

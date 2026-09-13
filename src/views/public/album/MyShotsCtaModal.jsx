@@ -9,7 +9,7 @@
 import React from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon } from '@hugeicons/core-free-icons';
-import { PXI_IOS_DOWNLOAD_HREF } from '@/lib/appStoreLinks';
+import { PXI_GET_APP_HREF } from '@/lib/appStoreLinks';
 
 export default function MyShotsCtaModal({ open, onClose, albumId, matchCount = 0 }) {
   if (!open) return null;
@@ -50,7 +50,7 @@ export default function MyShotsCtaModal({ open, onClose, albumId, matchCount = 0
           </a>
         ) : null}
         <a
-          href={PXI_IOS_DOWNLOAD_HREF}
+          href={PXI_GET_APP_HREF}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-3 block text-xs font-semibold uppercase tracking-widest text-zinc-500 transition hover:text-white"

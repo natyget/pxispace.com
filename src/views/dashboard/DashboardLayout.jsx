@@ -116,7 +116,7 @@ function NavLink({
 }
 
 export default function DashboardLayout({ children }) {
-    const { user, authReady, authRefreshing, logout, updateUser } = useAuth();
+    const { user, authReady, authRefreshing, logout, updateUser, phoneVerificationRequired } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -180,6 +180,8 @@ export default function DashboardLayout({ children }) {
 
     useEffect(() => {
         if (!mounted || !authReady || !user?.id) return;
+        // Server isn't enforcing phones right now — nothing to check (re-runs if the flag flips).
+        if (!phoneVerificationRequired) return;
         if (user.phoneNumber || fromMobile) {
             deferDashboardState(() => setPhoneCheckDone(true));
             return;
@@ -201,7 +203,7 @@ export default function DashboardLayout({ children }) {
                     }
                 });
         }
-    }, [mounted, authReady, user?.id, user?.phoneNumber, fromMobile, phoneCheckDone, router, updateUser, logout]);
+    }, [mounted, authReady, user?.id, user?.phoneNumber, fromMobile, phoneCheckDone, phoneVerificationRequired, router, updateUser, logout]);
 
     useEffect(() => {
         if (!rolesReady || !user?.id || isVendorUser(user) || vendorStatusCheckedUserRef.current === user.id) return;

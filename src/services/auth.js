@@ -80,6 +80,11 @@ export const authService = {
     register: (email, password, username, phone) =>
         api.post('/api/auth/register', { email, password, username, ...(phone && { phone }), ...withAttribution() }),
 
+    /** Which signup steps the server currently enforces (public, no auth).
+     *  Returns { phoneVerificationRequired } — driven by PHONE_VERIFICATION_ENABLED on the backend. */
+    getAuthConfig: () =>
+        api.get('/api/auth/config'),
+
     /** Send OTP to phone via SMS (signup). Returns { message }. */
     sendVerification: (phone) =>
         api.post('/api/auth/send-verification', { phone }),
