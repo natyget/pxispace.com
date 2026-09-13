@@ -23,6 +23,25 @@ export function AuthProvider({ children }) {
     // Face-enrollment status (null = unknown, boolean once loaded). Cached here so
     // album pages don't re-prompt already-enrolled users to scan (one status call/session).
     const [faceEnrolled, setFaceEnrolled] = useState(null);
+    // Whether the server currently demands a verified phone (PHONE_VERIFICATION_ENABLED on the
+    // backend). Every phone gate checks this first. Defaults to false so a failed fetch never sends
+    // someone to a phone screen the server would not enforce; re-read on each page load, so
+    // flipping the backend flag needs no web deploy.
+    const [phoneVerificationRequired, setPhoneVerificationRequired] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        authService.getAuthConfig()
+            .then((cfg) => {
+                if (!cancelled) setPhoneVerificationRequired(Boolean(cfg?.phoneVerificationRequired));
+            })
+            .catch(() => {
+                /* leave false — never gate on a guess */
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     useEffect(() => {
         if (!token || !user?.id) {
@@ -137,7 +156,7 @@ export function AuthProvider({ children }) {
     const isAuthenticated = !!token && !!user;
 
     return (
-        <AuthContext.Provider value={{ user, token, isAuthenticated, authReady, authRefreshing, faceEnrolled, setFaceEnrolled, saveAuth, updateUser, logout }}>
+        <AuthContext.Provider value={{ user, token, isAuthenticated, authReady, authRefreshing, faceEnrolled, setFaceEnrolled, phoneVerificationRequired, saveAuth, updateUser, logout }}>
             {children}
         </AuthContext.Provider>
     );
