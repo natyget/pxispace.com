@@ -97,7 +97,7 @@ function useDebounce(value, delay) {
 export default function EmailAuthPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user, saveAuth, isAuthenticated, authReady, updateUser, logout } = useAuth();
+    const { user, saveAuth, isAuthenticated, authReady, updateUser, logout, phoneVerificationRequired } = useAuth();
 
     const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login');
     const showVerifiedMessage = searchParams.get('verified') === '1';
@@ -127,13 +127,13 @@ export default function EmailAuthPage() {
                 router.replace(safeRedirect);
             } else if (authUser.accountTier === 'ADMIN') {
                 router.replace('/dashboard/admin');
-            } else if (!authUser.phoneNumber) {
+            } else if (phoneVerificationRequired && !authUser.phoneNumber) {
                 router.replace('/verify-phone');
             } else {
                 router.replace(defaultPostLoginPath(authUser));
             }
         },
-        [saveAuth, router, safeRedirect]
+        [saveAuth, router, safeRedirect, phoneVerificationRequired]
     );
 
     const hasRedirected = useRef(false);
@@ -364,6 +364,16 @@ export default function EmailAuthPage() {
                     const msg = 'Could not verify email availability. Please check your connection and try again.';
                     setError(msg);
                     toast.error(msg);
+                    return;
+                }
+
+                if (!phoneVerificationRequired) {
+                    // Server isn't enforcing phone OTP right now (PHONE_VERIFICATION_ENABLED=0):
+                    // create the account directly and land exactly where a login would.
+                    const result = await authService.register(normalizedEmail, password, username);
+                    trackSignUp('email');
+                    toast.success('Welcome to PXI!');
+                    handleAuthSuccess(result);
                     return;
                 }
 
