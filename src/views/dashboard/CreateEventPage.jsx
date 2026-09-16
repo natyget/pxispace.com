@@ -93,6 +93,9 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [venueName, setVenueName] = useState('');
+  // Once the organizer types a venue name themselves we stop auto-filling it from the map result,
+  // so picking a different address can never overwrite something they wrote by hand.
+  const venueNameTouchedRef = useRef(false);
   const [recurrence, setRecurrence] = useState('');
   const [spotifyPlaylistUrl, setSpotifyPlaylistUrl] = useState('');
   const [stampImage, setStampImage] = useState(null);
@@ -851,6 +854,10 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                     setGeoLat(typeof props?.lat === 'number' ? props.lat : null);
                     setGeoLon(typeof props?.lon === 'number' ? props.lon : null);
                     setGeoCity(props?.city || props?.county || '');
+                    // Geoapify returns `name` only for a POI, never for a bare street address.
+                    // Filling it here is what lets the backend match this night to a canonical
+                    // venue (VEN-1) — left to chance, the field is usually empty.
+                    if (!venueNameTouchedRef.current) setVenueName(props?.name || '');
                   }}
                 />
               </GeoapifyContext>
@@ -862,7 +869,10 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               <input
                 className={inputClass}
                 value={venueName}
-                onChange={(e) => setVenueName(e.target.value)}
+                onChange={(e) => {
+                  venueNameTouchedRef.current = true;
+                  setVenueName(e.target.value);
+                }}
                 placeholder="e.g. The Grand Hall"
               />
             </div>
