@@ -28,6 +28,7 @@ export const adminNavItems = [
   { key: 'admin-reports', label: 'Reports', path: '/dashboard/admin/reports', icon: FlagIcon, end: true, globalOnly: true },
   { key: 'admin-ugc', label: 'Content', path: '/dashboard/admin/ugc', icon: Notification03Icon, end: true, globalOnly: true },
   { key: 'admin-organizers', label: 'Organizers', path: '/dashboard/admin/organizers', icon: FireIcon, end: true },
+  { key: 'admin-venues', label: 'Venues', path: '/dashboard/admin/venues', icon: FloorPlanIcon, end: true },
   { key: 'admin-promos', label: 'Promos & Credits', path: '/dashboard/admin/promos', icon: StarIcon, end: true, globalOnly: true },
   { key: 'admin-ads', label: 'Ads', path: '/dashboard/admin/ads', icon: Megaphone01Icon, end: true, globalOnly: true },
   { key: 'admin-announcements', label: 'Announcements', path: '/dashboard/admin/announcements', icon: Megaphone01Icon, end: true, globalOnly: true },
@@ -68,6 +69,7 @@ export function isGlobalOnlyAdminPath(pathname) {
  * @property {boolean} [bouncerOnly]
  * @property {boolean} [liveOnly]
  * @property {boolean} [salesOnly] ambassadors and regional managers (PART-4)
+ * @property {boolean} [venueOwnerOnly] accounts that own a claimed venue (VEN-8)
  * @property {'notifications'} [badge]
  */
 
@@ -81,6 +83,7 @@ export function isGlobalOnlyAdminPath(pathname) {
 export const dashboardNavConfig = [
   { key: 'command', label: 'Command Center', path: '/dashboard', icon: DashboardSquare01Icon, section: 'Hub', end: true },
   { key: 'events', label: 'My Events', path: '/dashboard/events', icon: Calendar01Icon, section: 'Hub', end: true },
+  { key: 'venue', label: 'My Venue', path: '/dashboard/venue', icon: FloorPlanIcon, section: 'Hub', end: true, venueOwnerOnly: true },
   { key: 'sales', label: 'Venue Claims', path: '/dashboard/sales', icon: FloorPlanIcon, section: 'Hub', end: true, salesOnly: true },
   { key: 'earnings', label: 'Earnings', path: '/dashboard/earnings', icon: Wallet01Icon, section: 'Business', end: true, vendorOnly: true },
   { key: 'team', label: 'Teams & Security', path: '/dashboard/team', icon: Shield01Icon, section: 'Business', end: true, vendorOnly: true },
@@ -120,23 +123,25 @@ export function isVendorOnlyRoute(pathname) {
  * @param {boolean} ctx.isLiveEvent
  * @param {boolean} ctx.mounted
  * @param {boolean} [ctx.hasSalesAccess]
+ * @param {boolean} [ctx.isVenueOwner]
  * @param {{ isVendor?: boolean }} [ctx.user]
  * @returns {DashboardNavItem[]}
  */
-export function buildMemberNavItems({ hasLiveOpsAccess, isLiveEvent, mounted, user, hasSalesAccess = false }) {
+export function buildMemberNavItems({ hasLiveOpsAccess, isLiveEvent, mounted, user, hasSalesAccess = false, isVenueOwner = false }) {
   const items = [...dashboardNavConfig];
   const hasResolvedUser = mounted && !!user;
   const hasResolvedVendorStatus = typeof user?.isVendor === 'boolean';
   const vendor = isVendorUser(user);
 
   return items.filter((item) => {
-    const isRoleSensitive = item.vendorOnly || item.nonVendorOnly || item.bouncerOnly || item.liveOnly || item.salesOnly;
+    const isRoleSensitive = item.vendorOnly || item.nonVendorOnly || item.bouncerOnly || item.liveOnly || item.salesOnly || item.venueOwnerOnly;
     if (!hasResolvedUser && isRoleSensitive) return false;
     if (item.vendorOnly && !vendor) return false;
     if (item.nonVendorOnly && (!hasResolvedVendorStatus || vendor)) return false;
     if (item.bouncerOnly && !hasLiveOpsAccess) return false;
     if (item.liveOnly && !isLiveEvent) return false;
     if (item.salesOnly && !hasSalesAccess) return false;
+    if (item.venueOwnerOnly && !isVenueOwner) return false;
     return true;
   });
 }
