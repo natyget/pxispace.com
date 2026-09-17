@@ -12,8 +12,9 @@ function formatInteger(value) {
     return Number(value || 0).toLocaleString();
 }
 
+// Every account has exactly one tier; Diplomats are Citizens who also sell, so they are not added again.
 function totalUsers(users = {}) {
-    return Number(users.partial || 0) + Number(users.citizen || 0) + Number(users.vendor || 0) + Number(users.admin || 0);
+    return Number(users.partial || 0) + Number(users.citizen || 0) + Number(users.admin || 0);
 }
 
 function totalEvents(events = {}) {

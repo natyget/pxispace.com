@@ -76,6 +76,11 @@ export default function EventEditPageView() {
   const [isStampUploading, setIsStampUploading] = useState(false);
   const [geoLat, setGeoLat] = useState(null);
   const [geoLon, setGeoLon] = useState(null);
+  // True after the organizer types in the address box until they pick a suggestion. The backend keeps the old
+  // coordinates when none are sent, so a typed-but-unpicked address would save text that no longer matches the
+  // pin (QA 2026-09-17, CITY-04b: it was silently ignored while the page said saved).
+  const [locationUnpinned, setLocationUnpinned] = useState(false);
+  const venueNameTouchedRef = useRef(false);
   const [startLocal, setStartLocal] = useState('');
   const [endLocal, setEndLocal] = useState('');
   const [coverImage, setCoverImage] = useState('');
@@ -133,6 +138,7 @@ export default function EventEditPageView() {
       setName(event.name || '');
       setDescription(event.description || '');
       setLocation(event.location || '');
+      setLocationUnpinned(false);
       setGeoLat(typeof event.latitude === 'number' ? event.latitude : null);
       setGeoLon(typeof event.longitude === 'number' ? event.longitude : null);
       const start = event.startDate ? new Date(event.startDate) : new Date();
@@ -443,6 +449,10 @@ export default function EventEditPageView() {
       setFormError('Venue / location is required.');
       return;
     }
+    if (locationUnpinned) {
+      setFormError('Choose the address from the suggestions so the event can be placed on the map.');
+      return;
+    }
     const startDate = fromDatetimeLocalValue(startLocal);
     const endDate = fromDatetimeLocalValue(endLocal);
     if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
@@ -681,19 +691,24 @@ export default function EventEditPageView() {
             <label className={labelClass}>Venue / location *</label>
             <div
               className={`${inputClass} p-0 overflow-visible`}
-              onChange={(e) => {
-                if (e.target.tagName === 'INPUT') setLocation(e.target.value);
-              }}
             >
               <GeoapifyContext apiKey={GEOAPIFY_KEY}>
                 <GeoapifyGeocoderAutocomplete
                   value={location}
                   placeholder="Search venue or address..."
+                  onUserInput={(value) => {
+                    setLocation(value || '');
+                    setLocationUnpinned(true);
+                  }}
                   placeSelect={(result) => {
                     const props = result?.properties;
                     setLocation(props?.formatted || '');
                     setGeoLat(typeof props?.lat === 'number' ? props.lat : null);
                     setGeoLon(typeof props?.lon === 'number' ? props.lon : null);
+                    setLocationUnpinned(false);
+                    // A new place replaces the saved venue name unless the host typed one on this visit,
+                    // otherwise a moved night keeps the old venue's name and venue matching sees the wrong place.
+                    if (!venueNameTouchedRef.current) setVenueName(props?.name || '');
                   }}
                 />
               </GeoapifyContext>
@@ -705,7 +720,10 @@ export default function EventEditPageView() {
               <input
                 className={inputClass}
                 value={venueName}
-                onChange={(e) => setVenueName(e.target.value)}
+                onChange={(e) => {
+                  venueNameTouchedRef.current = true;
+                  setVenueName(e.target.value);
+                }}
                 placeholder="e.g. The Grand Hall"
               />
             </div>

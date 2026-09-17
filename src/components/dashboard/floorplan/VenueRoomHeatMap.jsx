@@ -177,9 +177,11 @@ export default function VenueRoomHeatMap({ venueId }) {
                     <p className="mb-2 text-[11px] font-medium text-white/40">An average night</p>
                     {hasTimeline ? (
                         <>
-                            <div className="flex h-24 items-end gap-px" role="img" aria-label="Captures and door scans per 15 minutes, averaged over nights">
+                            {/* Columns stretch to the strip's fixed height, so the bars' percentage heights resolve
+                                (QA 2026-09-17, V3-08b: with items-end the columns had no height and drew nothing). */}
+                            <div className="flex h-24 gap-px" role="img" aria-label="Captures and door scans per 15 minutes, averaged over nights">
                                 {data.timeline.map((t) => (
-                                    <div key={t.minutesFromDoors} className="flex min-w-0 flex-1 flex-col justify-end" title={`${minutesLabel(t.minutesFromDoors)}: ${t.scans} scans, ${t.captures} captures`}>
+                                    <div key={t.minutesFromDoors} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={`${minutesLabel(t.minutesFromDoors)}: ${t.scans} scans, ${t.captures} captures`}>
                                         <div style={{ height: `${(t.captures / timelineMax) * 100}%`, background: getDashboardChartShade(0) }} className="rounded-t-sm" />
                                         <div style={{ height: `${(t.scans / timelineMax) * 100}%`, background: getDashboardChartShade(1) }} />
                                     </div>

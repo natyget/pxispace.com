@@ -29,7 +29,7 @@ import {
     dashboardNavConfig,
 } from '@/lib/dashboardNavConfig';
 import { fetchAdminWhoami } from '@/services/admin';
-import { fetchSalesMe } from '@/services/sales';
+import { fetchSalesAccess } from '@/services/sales';
 import { fetchMyVenues } from '@/services/venues';
 
 function shouldClearAuth(error) {
@@ -358,8 +358,9 @@ export default function DashboardLayout({ children }) {
     useEffect(() => {
         if (!rolesReady || !user?.id) return undefined;
         let cancelled = false;
-        fetchSalesMe()
-            .then(() => { if (!cancelled) setHasSalesAccess(true); })
+        // /access answers 200 for everyone, so people without a sales role no longer log a 403 on every page.
+        fetchSalesAccess()
+            .then((res) => { if (!cancelled) setHasSalesAccess(Boolean(res?.hasAccess)); })
             .catch(() => { if (!cancelled) setHasSalesAccess(false); });
         fetchMyVenues()
             .then((res) => { if (!cancelled) setIsVenueOwner((res?.venues?.length ?? 0) > 0); })

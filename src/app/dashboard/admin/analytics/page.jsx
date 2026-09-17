@@ -68,7 +68,7 @@ function StatTile({ label, value, hint }) {
     );
 }
 
-function AdminAnalyticsHero({ days, setDays, isLiveAdmin, loading, signups, tickets, revenue, revenueWithheld = false }) {
+function AdminAnalyticsHero({ days, setDays, isLiveAdmin, loading, signups, tickets, revenue, revenueWithheld = false, cityScope = null }) {
     const rangeGross = sumValues(revenue, 'gross');
     const rangeTake = sumValues(revenue, 'take');
     const rangeSignups = sumValues(signups);
@@ -95,10 +95,12 @@ function AdminAnalyticsHero({ days, setDays, isLiveAdmin, loading, signups, tick
                         <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
                     </div>
                     <h1 className="max-w-xl text-2xl font-semibold tracking-tight text-white md:text-[28px]">
-                        Platform analytics
+                        {cityScope ? `${cityLabel(cityScope)} analytics` : 'Platform analytics'}
                     </h1>
                     <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-300 md:text-base">
-                        Growth, ticketing, ticket sales volume, and what PXI actually keeps across the whole platform.
+                        {cityScope
+                            ? `Growth and ticketing in ${cityLabel(cityScope)}: people who chose the city, hold a ticket there or host there, and events placed there.`
+                            : 'Growth, ticketing, ticket sales volume, and what PXI actually keeps across the whole platform.'}
                     </p>
                     <div className="dashboard-segmented-toggle mt-5 w-full sm:w-auto" role="tablist" aria-label="Analytics range">
                         {RANGES.map((range) => (
@@ -345,7 +347,7 @@ export default function AdminAnalyticsPage() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const { isLive: isLiveAdmin } = useAdminMode();
+    const { isLive: isLiveAdmin, cityScope } = useAdminMode();
 
     const load = useCallback(async () => {
         if (!isLiveAdmin) {
@@ -414,6 +416,7 @@ export default function AdminAnalyticsPage() {
                 tickets={tickets}
                 revenue={revenue}
                 revenueWithheld={revenueWithheld}
+                cityScope={isLiveAdmin ? cityScope : null}
             />
 
             {!isLiveAdmin && (
