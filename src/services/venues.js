@@ -33,6 +33,23 @@ export function fetchVenueSuggestions(venueId, genre) {
     return api.get(`/api/venue-analytics/${venueId}/suggestions${query({ genre })}`);
 }
 
+export function fetchVenueHeatmap(venueId) {
+    return api.get(`/api/venue-analytics/${venueId}/heatmap`);
+}
+
+// Saved segments for this venue's audience (VEN-4). Counts and names behind the privacy wall; no send action.
+export function fetchVenueSegments(venueId) {
+    return api.get(`/api/venue-analytics/${venueId}/segments`);
+}
+
+export function saveVenueSegment(venueId, name, filterJson) {
+    return api.post(`/api/venue-analytics/${venueId}/segments`, { name, filterJson });
+}
+
+export function deleteVenueSegment(venueId, segmentId) {
+    return api.delete(`/api/venue-analytics/${venueId}/segments/${segmentId}`);
+}
+
 export function fetchVenueGuarantees(venueId) {
     return api.get(`/api/venue-analytics/${venueId}/guarantees`);
 }

@@ -25,13 +25,17 @@ import {
     getDashboardChartShade,
 } from '@/components/dashboard/chartStyles';
 import {
+    deleteVenueSegment,
     fetchMyVenues,
     fetchVenueAnalytics,
     fetchVenueAudience,
     fetchVenueForecast,
     fetchVenueGuarantees,
+    fetchVenueSegments,
     fetchVenueSuggestions,
+    saveVenueSegment,
 } from '@/services/venues';
+import VenueRoomHeatMap from '@/components/dashboard/floorplan/VenueRoomHeatMap';
 import { cityLabel } from '@/lib/dashboardNavConfig';
 
 const TABS = [
@@ -146,6 +150,12 @@ function Overview({ venueId, venueName }) {
                 <Tile label="Photos and videos" value={formatInteger(data.captureVolume)} hint={peak?.checkIns ? `Busiest at ${hourLabel(peak.hour)}` : 'Captured at your events'} />
             </div>
 
+            {measured || data.captureVolume > 0 ? (
+                <SectionCard title="Where the night happens">
+                    <VenueRoomHeatMap venueId={venueId} />
+                </SectionCard>
+            ) : null}
+
             {!measured ? (
                 <EmptyRoom venueName={venueName} eventCount={data.eventCount} />
             ) : (
@@ -217,39 +227,141 @@ function Overview({ venueId, venueName }) {
 
 const PAGE_SIZE = 50;
 
+const ENGAGEMENT_OPTIONS = [
+    { value: '', label: 'Any engagement' },
+    { value: 'SEEKER', label: 'Seeker and above' },
+    { value: 'VOYAGER', label: 'Voyager and above' },
+    { value: 'PATHFINDER', label: 'Pathfinder and above' },
+    { value: 'LUMINARY', label: 'Luminary and above' },
+    { value: 'ODYSSEY', label: 'Odyssey' },
+];
+
+function segmentLabel(filterJson = {}) {
+    const parts = [];
+    if (filterJson.ticketTier) parts.push(filterJson.ticketTier === 'PAID' ? 'Paid tickets' : 'Free tickets');
+    if (filterJson.minEngagementTier) parts.push(ENGAGEMENT_OPTIONS.find((o) => o.value === filterJson.minEngagementTier)?.label || filterJson.minEngagementTier);
+    return parts.length ? parts.join(', ') : 'Everyone';
+}
+
 function Audience({ venueId, crmEnabled, adminView }) {
     const [ticketTier, setTicketTier] = useState('');
+    const [engagement, setEngagement] = useState('');
     const [page, setPage] = useState(1);
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
+    const [segments, setSegments] = useState([]);
+    const [segmentName, setSegmentName] = useState('');
+    const [segmentBusy, setSegmentBusy] = useState(false);
+    const [segmentError, setSegmentError] = useState(null);
+
+    const loadSegments = useCallback(() => {
+        fetchVenueSegments(venueId)
+            .then((res) => setSegments(res.segments || []))
+            .catch(() => setSegments([]));
+    }, [venueId]);
+
+    useEffect(() => {
+        const t = setTimeout(loadSegments, 0);
+        return () => clearTimeout(t);
+    }, [loadSegments]);
 
     useEffect(() => {
         let cancelled = false;
-        fetchVenueAudience(venueId, { ticketTier: ticketTier || undefined, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE })
+        fetchVenueAudience(venueId, { ticketTier: ticketTier || undefined, minEngagementTier: engagement || undefined, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE })
             .then((res) => { if (!cancelled) { setData(res); setError(null); } })
             .catch((err) => {
                 if (cancelled) return;
                 setError(err.status === 404 ? 'Audience lists are not switched on for venues yet.' : err.message || 'Failed to load the audience');
             });
         return () => { cancelled = true; };
-    }, [venueId, ticketTier, page]);
+    }, [venueId, ticketTier, engagement, page]);
 
     const totalPages = Math.max(1, Math.ceil((data?.identifiedTotal ?? 0) / PAGE_SIZE));
+    const activeSegment = segments.find((s) => (s.filterJson?.ticketTier || '') === ticketTier && (s.filterJson?.minEngagementTier || '') === engagement) || null;
+
+    const saveSegment = async () => {
+        setSegmentBusy(true);
+        setSegmentError(null);
+        try {
+            await saveVenueSegment(venueId, segmentName.trim(), { ticketTier: ticketTier || undefined, minEngagementTier: engagement || undefined });
+            setSegmentName('');
+            loadSegments();
+        } catch (err) {
+            setSegmentError(err.message || 'Could not save the segment');
+        } finally {
+            setSegmentBusy(false);
+        }
+    };
+
+    const removeSegment = async (segmentId) => {
+        setSegmentBusy(true);
+        try {
+            await deleteVenueSegment(venueId, segmentId);
+            loadSegments();
+        } catch (err) {
+            setSegmentError(err.message || 'Could not delete the segment');
+        } finally {
+            setSegmentBusy(false);
+        }
+    };
 
     return (
-        <SectionCard
-            title="People who came to your events"
-            actions={
-                <select value={ticketTier} onChange={(e) => { setTicketTier(e.target.value); setPage(1); }} className={inputCls} aria-label="Ticket">
-                    <option value="">All tickets</option>
-                    <option value="PAID">Paid tickets</option>
-                    <option value="FREE">Free tickets</option>
-                </select>
-            }
-        >
+        <div className="space-y-6">
             {adminView && !crmEnabled ? (
-                <div className="mb-4"><Notice tone="info">Admin preview. Venue owners do not see this list until venue audiences are switched on.</Notice></div>
+                <Notice tone="info">Admin preview. Venue owners do not see this list until venue audiences are switched on.</Notice>
             ) : null}
+
+            <SectionCard title="Saved segments">
+                {segments.length ? (
+                    <ul className="flex flex-wrap gap-2">
+                        {segments.map((s) => {
+                            const active = activeSegment?.id === s.id;
+                            return (
+                                <li key={s.id} className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] ${active ? 'bg-white text-black' : 'bg-white/[0.065] text-white/75'}`}>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setTicketTier(s.filterJson?.ticketTier || ''); setEngagement(s.filterJson?.minEngagementTier || ''); setPage(1); }}
+                                        title={segmentLabel(s.filterJson)}
+                                    >
+                                        <span className="font-semibold">{s.name}</span>
+                                        <span className={active ? 'text-black/60' : 'text-white/45'}> · {formatInteger(s.size?.total)} people</span>
+                                    </button>
+                                    <button type="button" disabled={segmentBusy} onClick={() => removeSegment(s.id)} aria-label={`Delete ${s.name}`} className={active ? 'text-black/50' : 'text-white/40 hover:text-white'}>
+                                        ×
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                ) : (
+                    <p className="text-[13px] text-white/45">Save the filters you use often, like paid regulars, to come back to them in one click.</p>
+                )}
+                <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center">
+                    <input value={segmentName} onChange={(e) => setSegmentName(e.target.value)} placeholder={`Name these filters (${segmentLabel({ ticketTier, minEngagementTier: engagement })})`} className={`${inputCls} md:flex-1`} />
+                    <button type="button" disabled={segmentBusy || !segmentName.trim() || Boolean(activeSegment)} onClick={saveSegment} className="rounded-full bg-white px-5 py-2 text-[13px] font-bold text-black disabled:opacity-40">
+                        Save segment
+                    </button>
+                </div>
+                {activeSegment ? <p className="mt-2 text-[12px] text-white/40">These filters are already saved as {activeSegment.name}.</p> : null}
+                {segmentError ? <p className="mt-2 text-[12px] text-red-300">{segmentError}</p> : null}
+                <p className="mt-3 text-[12px] leading-5 text-white/35">Segments are private to you and this venue. Messaging a segment through PXI is coming.</p>
+            </SectionCard>
+
+            <SectionCard
+                title="People who came to your events"
+                actions={
+                    <div className="flex flex-wrap gap-2">
+                        <select value={ticketTier} onChange={(e) => { setTicketTier(e.target.value); setPage(1); }} className={inputCls} aria-label="Ticket">
+                            <option value="">All tickets</option>
+                            <option value="PAID">Paid tickets</option>
+                            <option value="FREE">Free tickets</option>
+                        </select>
+                        <select value={engagement} onChange={(e) => { setEngagement(e.target.value); setPage(1); }} className={inputCls} aria-label="Engagement">
+                            {ENGAGEMENT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                    </div>
+                }
+            >
             {error ? <Notice tone="error">{error}</Notice> : !data ? <Notice>Loading...</Notice> : (
                 <>
                     <p className="mb-3 text-[13px] text-white/50">
@@ -306,7 +418,8 @@ function Audience({ venueId, crmEnabled, adminView }) {
                     </p>
                 </>
             )}
-        </SectionCard>
+            </SectionCard>
+        </div>
     );
 }
 
