@@ -470,19 +470,6 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
     }
   };
 
-  const tryGetGeo = () =>
-    new Promise((resolve) => {
-      if (typeof navigator === 'undefined' || !navigator.geolocation) {
-        resolve({});
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-        () => resolve({}),
-        { timeout: 5000, maximumAge: 60_000 }
-      );
-    });
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError(null);
@@ -492,6 +479,14 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
     }
     if (!name.trim() || !startLocal || !endLocal) {
       setFormError('Event name, start, and end are required.');
+      return;
+    }
+    if (!location.trim()) {
+      setFormError('Venue / location is required.');
+      return;
+    }
+    if (!selectedVenueId && (geoLat == null || geoLon == null)) {
+      setFormError('Choose the address from the suggestions so the event can be placed on the map.');
       return;
     }
     if (!coverImage) {
@@ -529,9 +524,8 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
 
     setIsSubmitting(true);
     try {
-      const geo = geoLat != null && geoLon != null
-        ? { latitude: geoLat, longitude: geoLon }
-        : await tryGetGeo();
+      // Coordinates only ever come from the chosen place, never from the organizer's own browser location.
+      const geo = geoLat != null && geoLon != null ? { latitude: geoLat, longitude: geoLon } : {};
       const graceTime =
         (parseInt(graceTimeHours, 10) || 0) * 60 + (parseInt(graceTimeMinutes, 10) || 0);
       const pricing = buildTicketPricingPayload({ isPaid, useTierList, price, tiers: ticketTiers });
@@ -838,16 +832,20 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           </div>
           <div className="space-y-2">
             <label className={labelClass}>Venue / location</label>
-            <div
-              className={`${inputClass} overflow-visible p-0`}
-              onChange={(e) => {
-                if (e.target.tagName === 'INPUT') setLocation(e.target.value);
-              }}
-            >
+            <div className={`${inputClass} overflow-visible p-0`}>
               <GeoapifyContext apiKey={GEOAPIFY_KEY}>
                 <GeoapifyGeocoderAutocomplete
                   value={location}
                   placeholder=""
+                  // Typing goes to state (a wrapper onChange never saw this non-React input, so typed text was
+                  // dropped: QA 2026-09-17, CITY-06). Typing also clears the pinned place, because the
+                  // coordinates must describe this address: they set the event's city and venue match.
+                  onUserInput={(value) => {
+                    setLocation(value || '');
+                    setGeoLat(null);
+                    setGeoLon(null);
+                    setSelectedVenueId(null);
+                  }}
                   placeSelect={(result) => {
                     const props = result?.properties;
                     setLocation(props?.formatted || '');

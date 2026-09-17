@@ -161,7 +161,10 @@ function Overview({ venueId, venueName }) {
             ) : (
                 <>
                     <SectionCard title="When the room fills">
-                        <RechartsChart className="h-[220px]">
+                        {/* A fixed-height box: the chart frame's h-full resolves against it. Without it the frame
+                            collapsed to 0px and the chart drew nothing (QA 2026-09-17, V3-03). */}
+                        <div className="h-[220px]">
+                        <RechartsChart className="h-full">
                             {/* The lint config does not count JSX use of render-prop components. */}
                             {/* eslint-disable-next-line no-unused-vars */}
                             {({ ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip }) => (
@@ -176,6 +179,7 @@ function Overview({ venueId, venueName }) {
                                 </ResponsiveContainer>
                             )}
                         </RechartsChart>
+                        </div>
                     </SectionCard>
 
                     <div className="grid gap-6 lg:grid-cols-2">

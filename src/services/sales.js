@@ -2,6 +2,11 @@ import { api } from './api';
 
 // PART-4 sales tools for ambassadors and regional managers (backend: /api/sales).
 
+/** Always 200: { hasAccess, salesRole, cityCode }. For deciding whether to show the sales tools at all. */
+export function fetchSalesAccess() {
+    return api.get('/api/sales/access');
+}
+
 export function fetchSalesMe() {
     return api.get('/api/sales/me');
 }
