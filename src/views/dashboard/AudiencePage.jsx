@@ -298,6 +298,10 @@ export default function AudiencePage() {
     const [total, setTotal] = useState(0);
     // True when a targeting filter is active: the server returns the count without names.
     const [namesHidden, setNamesHidden] = useState(false);
+    // Everyone counts in `total`. Only people whose consent allows it are rows (privacy policy §4.2),
+    // so the list and its pages follow `identifiedTotal`.
+    const [identifiedTotal, setIdentifiedTotal] = useState(0);
+    const [hiddenCount, setHiddenCount] = useState(0);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
@@ -315,7 +319,7 @@ export default function AudiencePage() {
         [segments, filters]
     );
 
-    const totalPages = Math.max(1, Math.ceil(total / TAKE));
+    const totalPages = Math.max(1, Math.ceil(identifiedTotal / TAKE));
 
     useEffect(() => {
         let cancelled = false;
@@ -326,6 +330,8 @@ export default function AudiencePage() {
                 if (cancelled) return;
                 setRows(res.rows || []);
                 setTotal(res.total || 0);
+                setIdentifiedTotal(res.identifiedTotal ?? res.total ?? 0);
+                setHiddenCount(res.hiddenCount || 0);
                 setNamesHidden(Boolean(res.namesHidden));
             })
             .catch((error) => {
@@ -333,6 +339,8 @@ export default function AudiencePage() {
                 setLoadError(error?.data?.error || error?.message || 'Failed to load audience.');
                 setRows([]);
                 setTotal(0);
+                setIdentifiedTotal(0);
+                setHiddenCount(0);
                 setNamesHidden(false);
             })
             .finally(() => { if (!cancelled) setLoading(false); });
@@ -506,6 +514,14 @@ export default function AudiencePage() {
                                     <p className="rounded-full bg-white/[0.06] px-3 py-1.5 text-xs font-bold tracking-[0.02em] text-zinc-300">
                                         {total.toLocaleString()} {namesHidden ? 'match' : 'attendees'}
                                     </p>
+                                    {!namesHidden && hiddenCount > 0 ? (
+                                        <p
+                                            className="rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-semibold tracking-[0.02em] text-zinc-500"
+                                            title="These people opted out of personalized sharing, or are in a region where they have not said yes. They are counted but not shown by name."
+                                        >
+                                            {hiddenCount.toLocaleString()} not shown by name
+                                        </p>
+                                    ) : null}
                                     {savingSegment ? (
                                         <div className="flex items-center gap-1.5">
                                             <input
@@ -653,7 +669,7 @@ export default function AudiencePage() {
                             <div className={`space-y-3 p-2 md:hidden ${namesHidden ? 'hidden' : ''}`}>
                                 <div className="flex items-center justify-between gap-3 px-1">
                                     <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">
-                                        {rows.length} of {total.toLocaleString()} attendees
+                                        {rows.length} of {identifiedTotal.toLocaleString()} shown
                                     </p>
                                     <button
                                         type="button"
@@ -776,7 +792,7 @@ export default function AudiencePage() {
                         {totalPages > 1 ? (
                             <div className="flex items-center justify-between gap-4 px-2">
                                 <p className="text-xs font-semibold text-zinc-500">
-                                    Page {page} of {totalPages} · {total.toLocaleString()} total
+                                    Page {page} of {totalPages} · {identifiedTotal.toLocaleString()} shown of {total.toLocaleString()}
                                 </p>
                                 <div className="flex gap-2">
                                     <button
