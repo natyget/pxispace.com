@@ -27,6 +27,16 @@ export function updateAdminUser(userId, body) {
     return api.patch(`/api/admin/users/${userId}`, body);
 }
 
+/** SUPER_ADMIN: set a sales role. Body: { salesRole, salesManagerId?, cityCode? } */
+export function updateSalesRole(userId, body) {
+    return api.post(`/api/admin/users/${userId}/sales-role`, body);
+}
+
+/** SUPER_ADMIN: regional managers, to choose an ambassador's manager. */
+export function fetchSalesManagers() {
+    return api.get('/api/admin/sales/managers');
+}
+
 export function suspendUser(userId, reason) {
     return api.post(`/api/admin/users/${userId}/suspend`, { reason });
 }
