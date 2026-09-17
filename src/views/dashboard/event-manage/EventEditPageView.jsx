@@ -808,7 +808,11 @@ export default function EventEditPageView() {
           <div className="flex items-center justify-between gap-4 rounded-xl bg-white/[0.04] px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Public event</p>
-              <p className="text-xs text-zinc-500">Anyone can discover this event.</p>
+              <p className="text-xs text-zinc-500">
+                {isPrivate
+                  ? 'Off: only people you invite can find this event. Turn on to list it in Discover.'
+                  : 'Anyone can discover this event.'}
+              </p>
             </div>
             <button
               type="button"
