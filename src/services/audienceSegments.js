@@ -27,6 +27,10 @@ function buildAttendeeQuery(filters = {}, { skip = 0, take = 50 } = {}) {
   if (filters.smsOptIn === true) params.set('smsOptIn', 'true');
   else if (filters.smsOptIn === false) params.set('smsOptIn', 'false');
 
+  // Visible filters: the server returns names for these.
+  if (filters.ticketTier === 'PAID' || filters.ticketTier === 'FREE') params.set('ticketTier', filters.ticketTier);
+  if (filters.minEngagementTier) params.set('minEngagementTier', String(filters.minEngagementTier));
+  // Targeting filters: the server returns a count and no names for these.
   if (filters.city && String(filters.city).trim()) params.set('city', String(filters.city).trim());
   if (filters.accountTier) params.set('accountTier', filters.accountTier);
 
