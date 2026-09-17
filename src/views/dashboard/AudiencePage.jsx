@@ -13,7 +13,6 @@ import {
     saveAudienceSegment,
 } from '@/services/audienceSegments';
 import { api } from '@/services/api';
-import { accessTierLabel, accessTierOf } from '@/lib/accountTier';
 
 /** Real attendee demographics from GET /api/analytics/audience (not sample data). */
 function RealAudienceOverview() {
@@ -44,9 +43,12 @@ function RealAudienceOverview() {
     const story = useMemo(() => {
         if (!data || !data.totalAttendees) return [];
         const items = [];
-        const topBracket = [...(data.ageBrackets || [])].sort((a, b) => b.count - a.count)[0];
+        // "other (...)" buckets hold groups too small to name, so they never headline the story.
+        const topBracket = [...(data.ageBrackets || [])]
+            .filter((b) => !String(b.label).startsWith('other'))
+            .sort((a, b) => b.count - a.count)[0];
         if (topBracket?.count > 0) items.push(`Your crowd skews ${topBracket.label}.`);
-        const topCity = data.topCities?.[0];
+        const topCity = (data.topCities || []).find((c) => !String(c.city).startsWith('other'));
         if (topCity) items.push(`${topCity.city} is your strongest city (${topCity.count} attendees).`);
         const emailPct = Math.round(((data.marketing?.emailOptIn || 0) / data.totalAttendees) * 100);
         items.push(`${(data.marketing?.emailOptIn || 0).toLocaleString('en-US')} people (${emailPct}%) opted into email — reachable right now from Campaigns.`);
@@ -92,6 +94,11 @@ function RealAudienceOverview() {
                             </div>
                         ))}
                     </div>
+                    {data.demographicsWithheld ? (
+                        <p className="rounded-xl bg-white/[0.035] px-4 py-3 text-xs leading-5 text-zinc-500">
+                            City and age breakdowns appear once 10 or more people have attended your events. Until then they are hidden, so no small group can be identified.
+                        </p>
+                    ) : null}
                     <div className="grid gap-4 sm:grid-cols-2">
                         {data.topCities.length > 0 && (
                             <div className="glow-surface-soft rounded-xl px-4 py-3">
@@ -175,12 +182,32 @@ function RealAudienceOverview() {
 const TAKE = 50;
 
 const FILTER_DEFAULTS = {
+    // Visible filters: narrow the names list by columns the list already shows.
+    ticketTier: '', // '' | 'PAID' | 'FREE'
+    minEngagementTier: '',
+    // Targeting filters: valid for campaigns, but the server returns a count and no names
+    // (privacy policy §4.2). Filtering a names list by city would list "everyone from Boston".
     emailOptIn: null, // null | true | false
     smsOptIn: null,
     city: '',
     accountTier: '',
     minOdysseyXp: '',
 };
+
+const TICKET_TIER_OPTIONS = [
+    { value: '', label: 'Any ticket' },
+    { value: 'PAID', label: 'Paid' },
+    { value: 'FREE', label: 'Free' },
+];
+
+const ENGAGEMENT_TIER_OPTIONS = [
+    { value: '', label: 'Any tier' },
+    { value: 'SEEKER', label: 'Seeker and above' },
+    { value: 'VOYAGER', label: 'Voyager and above' },
+    { value: 'PATHFINDER', label: 'Pathfinder and above' },
+    { value: 'LUMINARY', label: 'Luminary and above' },
+    { value: 'ODYSSEY', label: 'Odyssey' },
+];
 
 const TRI_STATE_OPTIONS = [
     { value: '', label: 'Any' },
@@ -207,7 +234,7 @@ const AUDIENCE_SELECT_CLASS = `${AUDIENCE_INPUT_CLASS} appearance-none pr-10`;
 const AUDIENCE_SCROLLBAR_CLASS =
     '[scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.18)_transparent] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-thumb:hover]:bg-white/25';
 
-function formatLastAttended(value) {
+function formatLastCheckIn(value) {
     if (!value) return '—';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '—';
@@ -232,14 +259,23 @@ function triStateValue(value) {
     return '';
 }
 
-function OptBadge({ label, active }) {
+function TicketTierBadge({ tier }) {
+    const paid = tier === 'PAID';
     return (
         <span
             className={`rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${
-                active ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/5 text-zinc-500'
+                paid ? 'bg-amber-500/15 text-amber-300' : 'bg-white/5 text-zinc-400'
             }`}
         >
-            {label}
+            {paid ? 'Paid' : 'Free'}
+        </span>
+    );
+}
+
+function EngagementBadge({ tier }) {
+    return (
+        <span className="rounded-full bg-[#d84aff]/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-[#e9a6ff]">
+            {tier?.label || 'Wanderer'}
         </span>
     );
 }
@@ -256,31 +292,12 @@ function AudienceAvatar({ row }) {
     );
 }
 
-function PassportSignals({ row }) {
-    const hasAny = row.hasPaidTicket || (row.musicConnected && row.topGenres?.length);
-    if (!hasAny) return <span className="text-xs text-zinc-600">—</span>;
-    return (
-        <div className="flex flex-wrap items-center gap-1.5">
-            {row.hasPaidTicket ? (
-                <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-amber-300">
-                    Paid
-                </span>
-            ) : null}
-            {row.musicConnected && row.topGenres?.length
-                ? row.topGenres.map((genre) => (
-                    <span key={genre} className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-zinc-400">
-                        {genre}
-                    </span>
-                ))
-                : null}
-        </div>
-    );
-}
-
 export default function AudiencePage() {
     const [filters, setFilters] = useState(FILTER_DEFAULTS);
     const [rows, setRows] = useState([]);
     const [total, setTotal] = useState(0);
+    // True when a targeting filter is active: the server returns the count without names.
+    const [namesHidden, setNamesHidden] = useState(false);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
@@ -309,12 +326,14 @@ export default function AudiencePage() {
                 if (cancelled) return;
                 setRows(res.rows || []);
                 setTotal(res.total || 0);
+                setNamesHidden(Boolean(res.namesHidden));
             })
             .catch((error) => {
                 if (cancelled) return;
                 setLoadError(error?.data?.error || error?.message || 'Failed to load audience.');
                 setRows([]);
                 setTotal(0);
+                setNamesHidden(false);
             })
             .finally(() => { if (!cancelled) setLoading(false); });
         return () => { cancelled = true; };
@@ -412,7 +431,7 @@ export default function AudiencePage() {
                 <p className="text-[13px] font-medium text-zinc-500">Audience</p>
                 <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Know your crowd</h1>
                 <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-500">
-                    Real attendee intel — Passport signal, music taste, and engagement — beyond email and phone.
+                    Who comes to your events and how engaged they are. Email addresses and phone numbers are never shown.
                 </p>
             </div>
 
@@ -481,11 +500,11 @@ export default function AudiencePage() {
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                                 <div>
                                     <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Filter audience</p>
-                                    <p className="mt-1 text-sm leading-6 text-zinc-400">Real per-attendee data — opt-in, Passport signal, and engagement.</p>
+                                    <p className="mt-1 text-sm leading-6 text-zinc-400">Ticket and engagement filters show names. Campaign targeting filters count people without listing them.</p>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
                                     <p className="rounded-full bg-white/[0.06] px-3 py-1.5 text-xs font-bold tracking-[0.02em] text-zinc-300">
-                                        {total.toLocaleString()} attendees
+                                        {total.toLocaleString()} {namesHidden ? 'match' : 'attendees'}
                                     </p>
                                     {savingSegment ? (
                                         <div className="flex items-center gap-1.5">
@@ -534,7 +553,32 @@ export default function AudiencePage() {
                             </div>
                             {statusMessage ? <p className="mt-2 text-xs font-semibold text-zinc-400">{statusMessage}</p> : null}
 
-                            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                            <p className="mt-5 px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-400">Shows names</p>
+                            <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                                <div className="space-y-2 rounded-2xl glass-field p-3">
+                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Ticket</p>
+                                    <select
+                                        value={filters.ticketTier}
+                                        onChange={(event) => updateFilter('ticketTier', event.target.value)}
+                                        className={AUDIENCE_SELECT_CLASS}
+                                    >
+                                        {TICKET_TIER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                    </select>
+                                </div>
+                                <div className="space-y-2 rounded-2xl glass-field p-3">
+                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Engagement</p>
+                                    <select
+                                        value={filters.minEngagementTier}
+                                        onChange={(event) => updateFilter('minEngagementTier', event.target.value)}
+                                        className={AUDIENCE_SELECT_CLASS}
+                                    >
+                                        {ENGAGEMENT_TIER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <p className="mt-5 px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-400">Campaign targeting (count only, names hidden)</p>
+                            <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                                 <div className="space-y-2 rounded-2xl glass-field p-3">
                                     <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Email opt-in</p>
                                     <select
@@ -597,7 +641,16 @@ export default function AudiencePage() {
                             {loading ? (
                                 <p className="px-3 py-2 text-xs font-bold tracking-[0.02em] text-zinc-500">Loading audience...</p>
                             ) : null}
-                            <div className="space-y-3 p-2 md:hidden">
+                            {!loading && namesHidden ? (
+                                <div className="px-5 py-8 text-center">
+                                    <p className="text-2xl font-semibold tabular-nums text-white">{total.toLocaleString()}</p>
+                                    <p className="mt-1 text-sm font-semibold text-zinc-300">people match these filters</p>
+                                    <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-zinc-500">
+                                        Names are not listed when you filter by city, marketing opt-in, account tier or XP. Save this as a segment to send a campaign to these people. PXI delivers the message, so their contact details stay private.
+                                    </p>
+                                </div>
+                            ) : null}
+                            <div className={`space-y-3 p-2 md:hidden ${namesHidden ? 'hidden' : ''}`}>
                                 <div className="flex items-center justify-between gap-3 px-1">
                                     <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">
                                         {rows.length} of {total.toLocaleString()} attendees
@@ -626,37 +679,33 @@ export default function AudiencePage() {
                                                     <AudienceAvatar row={row} />
                                                     <div className="min-w-0">
                                                         <p className="truncate text-base font-bold leading-6 text-white">{row.name || row.username || 'Unnamed'}</p>
-                                                        <p className="mt-1 truncate text-xs leading-5 text-zinc-500">
-                                                            {row.city || 'Unknown city'} · {accessTierLabel(accessTierOf(row))}
-                                                        </p>
+                                                        {row.username ? (
+                                                            <p className="mt-1 truncate text-xs leading-5 text-zinc-500">@{row.username}</p>
+                                                        ) : null}
                                                     </div>
                                                 </div>
                                                 <span className={`mt-1 h-4 w-4 shrink-0 rounded-md ${selected ? 'bg-white' : 'bg-white/12'}`} aria-hidden="true" />
                                             </div>
-                                            <div className="mt-3">
-                                                <PassportSignals row={row} />
+                                            <div className="mt-3 flex flex-wrap gap-1.5">
+                                                <TicketTierBadge tier={row.ticketTier} />
+                                                <EngagementBadge tier={row.engagementTier} />
                                             </div>
                                             <div className="mt-4 grid grid-cols-2 gap-2">
-                                                <div className="rounded-xl bg-white/[0.04] px-3 py-2">
-                                                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Odyssey XP</p>
-                                                    <p className="mt-1 font-mono text-sm font-bold text-zinc-100">{row.odysseyXp?.toLocaleString?.() ?? row.odysseyXp}</p>
-                                                </div>
                                                 <div className="rounded-xl bg-white/[0.04] px-3 py-2">
                                                     <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Events</p>
                                                     <p className="mt-1 font-mono text-sm font-bold text-zinc-100">{row.eventsAttended}</p>
                                                 </div>
+                                                <div className="rounded-xl bg-white/[0.04] px-3 py-2">
+                                                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Last check-in</p>
+                                                    <p className="mt-1 text-sm font-bold text-zinc-100">{formatLastCheckIn(row.lastCheckInAt)}</p>
+                                                </div>
                                             </div>
-                                            <div className="mt-3 flex flex-wrap gap-1.5">
-                                                <OptBadge label="Email" active={row.emailMarketingOptIn} />
-                                                <OptBadge label="SMS" active={row.smsMarketingOptIn} />
-                                            </div>
-                                            <p className="mt-3 text-xs font-semibold text-zinc-500">Last attended {formatLastAttended(row.lastAttendedAt)}</p>
                                         </button>
                                     );
                                 })}
                             </div>
-                            <div className={`hidden overflow-x-auto pb-1 md:block ${AUDIENCE_SCROLLBAR_CLASS}`}>
-                                <table className="w-full min-w-[1240px] text-left">
+                            <div className={`hidden overflow-x-auto pb-1 ${namesHidden ? '' : 'md:block'} ${AUDIENCE_SCROLLBAR_CLASS}`}>
+                                <table className="w-full min-w-[760px] text-left">
                                     <thead>
                                         <tr className="text-[11px] font-medium text-zinc-500">
                                             <th className="w-14 border-b border-white/[0.07] px-4 py-2.5">
@@ -669,14 +718,10 @@ export default function AudiencePage() {
                                                 </button>
                                             </th>
                                             <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Attendee</th>
-                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">City</th>
-                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Age</th>
-                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Tier</th>
-                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Opt-in</th>
-                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Passport signal</th>
-                                            <th className="border-b border-white/[0.07] px-4 py-2.5 text-right font-medium">Odyssey XP</th>
+                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Ticket</th>
+                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Engagement</th>
                                             <th className="border-b border-white/[0.07] px-4 py-2.5 text-right font-medium">Events</th>
-                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Last attended</th>
+                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Last check-in</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -703,34 +748,17 @@ export default function AudiencePage() {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-4 py-3.5 align-middle text-sm text-zinc-300">
-                                                        {row.city || '—'}
-                                                    </td>
-                                                    <td className="px-4 py-3.5 align-middle text-sm text-zinc-300">
-                                                        {row.ageBracket || '—'}
+                                                    <td className="px-4 py-3.5 align-middle">
+                                                        <TicketTierBadge tier={row.ticketTier} />
                                                     </td>
                                                     <td className="px-4 py-3.5 align-middle">
-                                                        <span className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] font-medium text-zinc-300">
-                                                            {accessTierLabel(accessTierOf(row))}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-3.5 align-middle">
-                                                        <div className="flex flex-wrap gap-1.5">
-                                                            <OptBadge label="Email" active={row.emailMarketingOptIn} />
-                                                            <OptBadge label="SMS" active={row.smsMarketingOptIn} />
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-3.5 align-middle">
-                                                        <PassportSignals row={row} />
-                                                    </td>
-                                                    <td className="px-4 py-3.5 text-right align-middle text-sm font-semibold tabular-nums text-zinc-100">
-                                                        {row.odysseyXp?.toLocaleString?.() ?? row.odysseyXp}
+                                                        <EngagementBadge tier={row.engagementTier} />
                                                     </td>
                                                     <td className="px-4 py-3.5 text-right align-middle text-sm font-semibold tabular-nums text-zinc-100">
                                                         {row.eventsAttended}
                                                     </td>
                                                     <td className="px-4 py-3.5 align-middle text-sm text-zinc-400">
-                                                        {formatLastAttended(row.lastAttendedAt)}
+                                                        {formatLastCheckIn(row.lastCheckInAt)}
                                                     </td>
                                                 </tr>
                                             );
@@ -738,7 +766,7 @@ export default function AudiencePage() {
                                     </tbody>
                                 </table>
                             </div>
-                            {!loading && rows.length === 0 ? (
+                            {!loading && !namesHidden && rows.length === 0 ? (
                                 <div className="px-5 py-8 text-center text-sm leading-6 text-zinc-500">
                                     No attendees match the current filters.
                                 </div>
