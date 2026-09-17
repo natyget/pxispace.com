@@ -207,7 +207,7 @@ export default function AdminOrganizersPage() {
     const [error, setError] = useState(null);
     const [creditsTarget, setCreditsTarget] = useState(null);
     const [messageTarget, setMessageTarget] = useState(null);
-    const { isLive: isLiveAdmin } = useAdminMode();
+    const { isLive: isLiveAdmin, cityScope } = useAdminMode();
 
     const load = useCallback(async (p, t) => {
         if (!isLiveAdmin) {
@@ -325,13 +325,16 @@ export default function AdminOrganizersPage() {
                                         >
                                             Grant credits
                                         </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setMessageTarget(o)}
-                                            className="rounded-full bg-white/[0.065] px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
-                                        >
-                                            Message
-                                        </button>
+                                        {/* Messaging goes through /notify, which is run centrally (PART-4). */}
+                                        {!cityScope && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setMessageTarget(o)}
+                                                className="rounded-full bg-white/[0.065] px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
+                                            >
+                                                Message
+                                            </button>
+                                        )}
                                     </div>
                                 </td>
                             </tr>

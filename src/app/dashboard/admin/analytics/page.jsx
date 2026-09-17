@@ -5,6 +5,7 @@ import { fetchPlatformAnalytics } from '@/services/admin';
 import { useAdminMode } from '@/contexts/AdminModeContext';
 import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
+import { cityLabel } from '@/lib/dashboardNavConfig';
 
 import { getDashboardChartShade } from '@/components/dashboard/chartStyles';
 
@@ -67,15 +68,19 @@ function StatTile({ label, value, hint }) {
     );
 }
 
-function AdminAnalyticsHero({ days, setDays, isLiveAdmin, loading, signups, tickets, revenue }) {
+function AdminAnalyticsHero({ days, setDays, isLiveAdmin, loading, signups, tickets, revenue, revenueWithheld = false }) {
     const rangeGross = sumValues(revenue, 'gross');
     const rangeTake = sumValues(revenue, 'take');
     const rangeSignups = sumValues(signups);
     const rangeTickets = sumValues(tickets);
     const takeRate = rangeGross > 0 ? `${(Math.round((rangeTake / rangeGross) * 1000) / 10).toFixed(1)}% take rate` : 'No sales yet';
     const metrics = [
-        { label: 'Ticket sales (GMV)', value: formatUsd(rangeGross), detail: `Face value · ${days}-day window` },
-        { label: 'PXI revenue', value: formatUsd(rangeTake), detail: `$0.99 + 5.49% − credits · ${takeRate}` },
+        ...(revenueWithheld
+            ? []
+            : [
+                  { label: 'Ticket sales (GMV)', value: formatUsd(rangeGross), detail: `Face value · ${days}-day window` },
+                  { label: 'PXI revenue', value: formatUsd(rangeTake), detail: `$0.99 + 5.49% − credits · ${takeRate}` },
+              ]),
         { label: 'New users', value: formatInteger(rangeSignups), detail: `${activeDays(signups)} active signup days` },
         { label: 'Tickets issued', value: formatInteger(rangeTickets), detail: `${activeDays(tickets)} active ticket days` },
     ];
@@ -388,6 +393,9 @@ export default function AdminAnalyticsPage() {
         [data]
     );
 
+    // PART-4: a city-scoped admin gets users, tickets and events for their city; money is withheld.
+    const revenueWithheld = Boolean(data?.withheld?.includes('revenue'));
+
     const lifetimeTakeRate = useMemo(() => {
         const gmv = Number(data?.totals?.lifetimeGrossCents || 0);
         const take = Number(data?.totals?.lifetimePxiCents || 0);
@@ -405,6 +413,7 @@ export default function AdminAnalyticsPage() {
                 signups={signups}
                 tickets={tickets}
                 revenue={revenue}
+                revenueWithheld={revenueWithheld}
             />
 
             {!isLiveAdmin && (
@@ -423,11 +432,17 @@ export default function AdminAnalyticsPage() {
                 <>
                     <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Lifetime totals">
                         <StatTile
-                            label="Total users"
+                            label={data.cityScope ? `Users in ${cityLabel(data.cityScope)}` : 'Total users'}
                             value={formatInteger(data.totals.users)}
-                            hint={`${data.totals.openSupportTickets} open tickets · ${data.totals.pendingReports} pending reports`}
+                            hint={
+                                data.cityScope
+                                    ? 'Chose the city, holds a ticket there, or hosts there'
+                                    : `${data.totals.openSupportTickets} open tickets · ${data.totals.pendingReports} pending reports`
+                            }
                         />
                         <StatTile label="Tickets issued" value={formatInteger(data.totals.tickets)} hint={`${formatInteger(data.totals.events)} events`} />
+                        {!revenueWithheld && (
+                        <>
                         <StatTile
                             label="Lifetime ticket sales"
                             value={formatUsd(data.totals.lifetimeGrossCents)}
@@ -438,8 +453,16 @@ export default function AdminAnalyticsPage() {
                             value={formatUsd(data.totals.lifetimePxiCents)}
                             hint={lifetimeTakeRate}
                         />
+                        </>
+                        )}
                     </section>
 
+                    {revenueWithheld ? (
+                        <div className="rounded-2xl bg-white/[0.04] px-6 py-4 text-sm text-white/55">
+                            Revenue, support and report figures are not shown to city admins.
+                        </div>
+                    ) : (
+                    <>
                     <section className="grid gap-4 sm:grid-cols-3" aria-label="Lifetime money movement">
                         <StatTile
                             label="Charged to buyers"
@@ -459,6 +482,8 @@ export default function AdminAnalyticsPage() {
                     </section>
 
                     <RevenueLines data={revenue} />
+                    </>
+                    )}
                     <div className="grid gap-6 lg:grid-cols-2">
                         <DailyBars title="Signups per day" data={signups} color={CHART_PRIMARY} />
                         <DailyBars title="Event tickets issued per day" data={tickets} color={CHART_ACCENT} />

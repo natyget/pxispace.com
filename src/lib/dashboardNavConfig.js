@@ -22,16 +22,37 @@ export const ADMIN_SIDEBAR_MODE_KEY = 'pxi_dashboard_admin_ui_mode';
 export const adminNavItems = [
   { key: 'admin-overview', label: 'Overview', path: '/dashboard/admin', icon: DashboardSquare01Icon, end: true },
   { key: 'admin-analytics', label: 'Analytics', path: '/dashboard/admin/analytics', icon: Activity01Icon, end: true },
-  { key: 'admin-support', label: 'Support', path: '/dashboard/admin/support', icon: Shield01Icon, end: true },
+  { key: 'admin-support', label: 'Support', path: '/dashboard/admin/support', icon: Shield01Icon, end: true, globalOnly: true },
   { key: 'admin-users', label: 'Accounts', path: '/dashboard/admin/users', icon: UserGroupIcon, end: true },
   { key: 'admin-events', label: 'Events', path: '/dashboard/admin/events', icon: Calendar01Icon, end: true },
-  { key: 'admin-reports', label: 'Reports', path: '/dashboard/admin/reports', icon: FlagIcon, end: true },
-  { key: 'admin-ugc', label: 'Content', path: '/dashboard/admin/ugc', icon: Notification03Icon, end: true },
+  { key: 'admin-reports', label: 'Reports', path: '/dashboard/admin/reports', icon: FlagIcon, end: true, globalOnly: true },
+  { key: 'admin-ugc', label: 'Content', path: '/dashboard/admin/ugc', icon: Notification03Icon, end: true, globalOnly: true },
   { key: 'admin-organizers', label: 'Organizers', path: '/dashboard/admin/organizers', icon: FireIcon, end: true },
-  { key: 'admin-promos', label: 'Promos & Credits', path: '/dashboard/admin/promos', icon: StarIcon, end: true },
-  { key: 'admin-ads', label: 'Ads', path: '/dashboard/admin/ads', icon: Megaphone01Icon, end: true },
-  { key: 'admin-announcements', label: 'Announcements', path: '/dashboard/admin/announcements', icon: Megaphone01Icon, end: true },
+  { key: 'admin-promos', label: 'Promos & Credits', path: '/dashboard/admin/promos', icon: StarIcon, end: true, globalOnly: true },
+  { key: 'admin-ads', label: 'Ads', path: '/dashboard/admin/ads', icon: Megaphone01Icon, end: true, globalOnly: true },
+  { key: 'admin-announcements', label: 'Announcements', path: '/dashboard/admin/announcements', icon: Megaphone01Icon, end: true, globalOnly: true },
 ];
+
+const CITY_LABELS = { NYC: 'New York', BOS: 'Boston' };
+
+/** "New York" for 'NYC'; the code itself for anything unknown. */
+export function cityLabel(code) {
+  return CITY_LABELS[code] || code || '';
+}
+
+/**
+ * PART-4: sections a city-scoped admin cannot use. The backend refuses them (CITY_SCOPE_NOT_PERMITTED); the
+ * sidebar hides them so the admin does not meet a page of errors.
+ * @param {{ cityScope?: string|null }} ctx
+ */
+export function buildAdminNavItems({ cityScope } = {}) {
+  return cityScope ? adminNavItems.filter((item) => !item.globalOnly) : adminNavItems;
+}
+
+/** @param {string} pathname */
+export function isGlobalOnlyAdminPath(pathname) {
+  return adminNavItems.some((item) => item.globalOnly && (pathname === item.path || pathname?.startsWith(`${item.path}/`)));
+}
 
 /**
  * Config-driven member dashboard navigation (Phase 2+).
@@ -46,6 +67,7 @@ export const adminNavItems = [
  * @property {boolean} [nonVendorOnly]
  * @property {boolean} [bouncerOnly]
  * @property {boolean} [liveOnly]
+ * @property {boolean} [salesOnly] ambassadors and regional managers (PART-4)
  * @property {'notifications'} [badge]
  */
 
@@ -59,6 +81,7 @@ export const adminNavItems = [
 export const dashboardNavConfig = [
   { key: 'command', label: 'Command Center', path: '/dashboard', icon: DashboardSquare01Icon, section: 'Hub', end: true },
   { key: 'events', label: 'My Events', path: '/dashboard/events', icon: Calendar01Icon, section: 'Hub', end: true },
+  { key: 'sales', label: 'Venue Claims', path: '/dashboard/sales', icon: FloorPlanIcon, section: 'Hub', end: true, salesOnly: true },
   { key: 'earnings', label: 'Earnings', path: '/dashboard/earnings', icon: Wallet01Icon, section: 'Business', end: true, vendorOnly: true },
   { key: 'team', label: 'Teams & Security', path: '/dashboard/team', icon: Shield01Icon, section: 'Business', end: true, vendorOnly: true },
   { key: 'audience', label: 'CRM', path: '/dashboard/audience', icon: UserGroupIcon, section: 'People', end: true, vendorOnly: true },
@@ -96,22 +119,24 @@ export function isVendorOnlyRoute(pathname) {
  * @param {boolean} ctx.hasLiveOpsAccess
  * @param {boolean} ctx.isLiveEvent
  * @param {boolean} ctx.mounted
+ * @param {boolean} [ctx.hasSalesAccess]
  * @param {{ isVendor?: boolean }} [ctx.user]
  * @returns {DashboardNavItem[]}
  */
-export function buildMemberNavItems({ hasLiveOpsAccess, isLiveEvent, mounted, user }) {
+export function buildMemberNavItems({ hasLiveOpsAccess, isLiveEvent, mounted, user, hasSalesAccess = false }) {
   const items = [...dashboardNavConfig];
   const hasResolvedUser = mounted && !!user;
   const hasResolvedVendorStatus = typeof user?.isVendor === 'boolean';
   const vendor = isVendorUser(user);
 
   return items.filter((item) => {
-    const isRoleSensitive = item.vendorOnly || item.nonVendorOnly || item.bouncerOnly || item.liveOnly;
+    const isRoleSensitive = item.vendorOnly || item.nonVendorOnly || item.bouncerOnly || item.liveOnly || item.salesOnly;
     if (!hasResolvedUser && isRoleSensitive) return false;
     if (item.vendorOnly && !vendor) return false;
     if (item.nonVendorOnly && (!hasResolvedVendorStatus || vendor)) return false;
     if (item.bouncerOnly && !hasLiveOpsAccess) return false;
     if (item.liveOnly && !isLiveEvent) return false;
+    if (item.salesOnly && !hasSalesAccess) return false;
     return true;
   });
 }

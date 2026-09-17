@@ -22,12 +22,14 @@ import { dashboardPrefetchRoutes, prefetchDashboardRoutes } from '@/lib/dashboar
 import { useCapabilities, useEvents } from '@/lib/dashboardStore';
 import {
     ADMIN_SIDEBAR_MODE_KEY,
-    adminNavItems,
+    buildAdminNavItems,
     buildMemberNavItems,
     isNavItemActive,
     isVendorOnlyRoute,
     dashboardNavConfig,
 } from '@/lib/dashboardNavConfig';
+import { fetchAdminWhoami } from '@/services/admin';
+import { fetchSalesMe } from '@/services/sales';
 
 function shouldClearAuth(error) {
     const status = error?.status;
@@ -338,6 +340,27 @@ export default function DashboardLayout({ children }) {
 
     const isAdminNav = rolesReady && canAccessAdminDashboard(user) && adminSidebarMode === 'admin';
 
+    // PART-4: a city-scoped admin's sidebar leaves out central sections, and staff with a sales role get
+    // Venue Claims. Both come from the backend, which re-checks on every request.
+    const [adminCityScope, setAdminCityScope] = useState(null);
+    const [hasSalesAccess, setHasSalesAccess] = useState(false);
+    useEffect(() => {
+        if (!isAdminNav) return undefined;
+        let cancelled = false;
+        fetchAdminWhoami()
+            .then((data) => { if (!cancelled) setAdminCityScope(data?.cityScope ?? null); })
+            .catch(() => { if (!cancelled) setAdminCityScope(null); });
+        return () => { cancelled = true; };
+    }, [isAdminNav]);
+    useEffect(() => {
+        if (!rolesReady || !user?.id) return undefined;
+        let cancelled = false;
+        fetchSalesMe()
+            .then(() => { if (!cancelled) setHasSalesAccess(true); })
+            .catch(() => { if (!cancelled) setHasSalesAccess(false); });
+        return () => { cancelled = true; };
+    }, [rolesReady, user?.id]);
+
     const navItems = useMemo(() => {
         if (!rolesReady) {
             return dashboardNavConfig.filter((item) => (
@@ -349,16 +372,17 @@ export default function DashboardLayout({ children }) {
             ));
         }
         if (isAdminNav) {
-            return adminNavItems;
+            return buildAdminNavItems({ cityScope: adminCityScope });
         }
         const items = buildMemberNavItems({
             hasLiveOpsAccess,
             isLiveEvent: hasLiveEvent,
             mounted: rolesReady,
             user,
+            hasSalesAccess,
         });
         return items;
-    }, [isAdminNav, rolesReady, hasLiveOpsAccess, hasLiveEvent, user]);
+    }, [isAdminNav, adminCityScope, rolesReady, hasLiveOpsAccess, hasLiveEvent, user, hasSalesAccess]);
     const navEntries = useMemo(() => {
         if (isAdminNav || sidebarCollapsed) {
             return navItems.map((item) => ({ type: 'item', key: item.key, item }));

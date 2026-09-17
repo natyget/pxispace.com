@@ -13,23 +13,27 @@
 // an admin). Pages read it via useAdminMode() instead of the raw tier.
 
 import { createContext, useContext, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { fetchAdminWhoami } from '@/services/admin';
+import { cityLabel, isGlobalOnlyAdminPath } from '@/lib/dashboardNavConfig';
 
-const AdminModeContext = createContext({ isLive: false, adminRole: 'NONE', checked: false });
+// cityScope (PART-4): null for a global admin, or the one city ('NYC', 'BOS') this admin is limited to.
+const AdminModeContext = createContext({ isLive: false, adminRole: 'NONE', cityScope: null, checked: false });
 
 export function AdminModeProvider({ children }) {
-    const [state, setState] = useState({ isLive: false, adminRole: 'NONE', checked: false });
+    const [state, setState] = useState({ isLive: false, adminRole: 'NONE', cityScope: null, checked: false });
+    const pathname = usePathname();
 
     useEffect(() => {
         let cancelled = false;
         fetchAdminWhoami()
             .then((data) => {
                 if (cancelled) return;
-                setState({ isLive: true, adminRole: data?.adminRole ?? 'NONE', checked: true });
+                setState({ isLive: true, adminRole: data?.adminRole ?? 'NONE', cityScope: data?.cityScope ?? null, checked: true });
             })
             .catch(() => {
                 if (cancelled) return;
-                setState({ isLive: false, adminRole: 'NONE', checked: true });
+                setState({ isLive: false, adminRole: 'NONE', cityScope: null, checked: true });
             });
         return () => {
             cancelled = true;
@@ -42,6 +46,20 @@ export function AdminModeProvider({ children }) {
         return (
             <div className="flex min-h-[40vh] items-center justify-center text-white/60 text-sm">
                 Loading...
+            </div>
+        );
+    }
+
+    // The sidebar hides global sections from a city-scoped admin; a typed-in URL gets this instead of a page
+    // whose every request the backend refuses.
+    if (state.cityScope && isGlobalOnlyAdminPath(pathname)) {
+        return (
+            <div className="mx-auto max-w-xl rounded-2xl bg-white/[0.04] px-6 py-10 text-center">
+                <p className="text-sm font-semibold text-white">Not available for {cityLabel(state.cityScope)} admins</p>
+                <p className="mt-2 text-sm leading-6 text-white/55">
+                    Support, moderation, promos, ads and announcements are run centrally. Ask a global admin if you need
+                    something here.
+                </p>
             </div>
         );
     }
