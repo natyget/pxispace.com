@@ -19,8 +19,16 @@ export function isPxiEmployee(user) {
     return email.endsWith(`@${PXI_DOMAIN}`);
 }
 
+/**
+ * The control room opens on a granted role, not on the ADMIN tier alone (backend
+ * middleware/auth.middleware.ts). A session that carries an explicit role of NONE is refused here
+ * too, so the account is not shown a dashboard the server will refuse. Legacy sessions with no
+ * adminRole field keep the old tier rule, and adminRoleOf resolves them to ADMIN.
+ */
 export function canAccessAdminDashboard(user) {
-    return isAdminTierUser(user) || isPxiEmployee(user);
+    if (isPxiEmployee(user)) return true;
+    if (!isAdminTierUser(user)) return false;
+    return adminRoleOf(user) !== 'NONE';
 }
 
 /**
