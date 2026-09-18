@@ -483,14 +483,37 @@ export default function LiveScanDashboard({ isLiveEvent }) {
         });
     }, [events]);
     // Live event first; otherwise the next upcoming event so gates can be set up ahead of doors.
-    const upcomingEvent = useMemo(() => {
+    const upcomingEvents = useMemo(() => {
         const nowMs = Date.now();
         return [...(events || [])]
             .filter((event) => event.startDate && new Date(event.startDate).getTime() > nowMs)
-            .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))[0] || null;
+            .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
     }, [events]);
-    const selectedEvent = liveEvents[0] || upcomingEvent || null;
+    const upcomingEvent = upcomingEvents[0] || null;
+    // Every event a host can run the door for: live ones first, then upcoming by start time. A host with
+    // two nights live at once, or setting up doors for a later night, picks it here; the first live
+    // event (or the next upcoming one) stays the default.
+    const selectableEvents = useMemo(() => {
+        const liveIds = new Set(liveEvents.map((event) => event.id));
+        return [...liveEvents, ...upcomingEvents.filter((event) => !liveIds.has(event.id))];
+    }, [liveEvents, upcomingEvents]);
+    const [chosenEventId, setChosenEventId] = useState(() => {
+        if (typeof window === 'undefined') return null;
+        return new URLSearchParams(window.location.search).get('eventId');
+    });
+    const selectedEvent =
+        selectableEvents.find((event) => event.id === chosenEventId) || liveEvents[0] || upcomingEvent || null;
     const selectedEventId = selectedEvent?.id || null;
+    const chooseEvent = (eventId) => {
+        setChosenEventId(eventId);
+        setSelectedGateId(null);
+        setMenuGateId(null);
+        if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.set('eventId', eventId);
+            window.history.replaceState(null, '', url);
+        }
+    };
 
     const refreshGates = useCallback(() => {
         if (!selectedEventId) {
@@ -679,9 +702,26 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                 </div>
             </section>
 
-            {eventIsLive && liveEvents.length > 1 ? (
-                <div className="rounded-2xl bg-white/[0.045] px-4 py-3 text-xs font-semibold text-zinc-300">
-                    You have {liveEvents.length} events live right now — showing <span className="text-white">{selectedEvent?.name}</span>.
+            {selectableEvents.length > 1 && selectedEvent ? (
+                <div className="flex flex-col gap-2 rounded-2xl bg-white/[0.045] px-4 py-3 text-xs font-semibold text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
+                    <span>
+                        {liveEvents.length > 1
+                            ? `You have ${liveEvents.length} events live right now. Choose the one whose doors you are running.`
+                            : 'Choose the event whose doors you are running.'}
+                    </span>
+                    <select
+                        aria-label="Event"
+                        value={selectedEvent.id}
+                        onChange={(e) => chooseEvent(e.target.value)}
+                        className="min-w-0 max-w-full rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white sm:max-w-xs"
+                    >
+                        {selectableEvents.map((event) => (
+                            <option key={event.id} value={event.id}>
+                                {liveEvents.some((live) => live.id === event.id) ? 'Live: ' : ''}
+                                {event.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             ) : null}
             {eventIsLive && !liveEvents.length ? (
