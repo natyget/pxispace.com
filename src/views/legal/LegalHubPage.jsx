@@ -15,7 +15,7 @@ const SECTIONS = [
     tldr: "We collect only what we need to run the party. Face Matching sends scan frames to our servers solely to create an irreversible FaceVector, then discards the images. Your location is checked when you use nearby/discover or check in — not tracked continuously. You own your photos. We never sell your data. Mobile numbers and SMS consent are never shared with third parties for their marketing. Event hosts and venue partners never see your email address or phone number.",
     content: (
       <div className="space-y-8">
-        <p className="text-sm text-gray-500">Last updated: September 17, 2026</p>
+        <p className="text-sm text-gray-500">Last updated: September 18, 2026</p>
         <div>
           <h3 className="text-xl font-bold mb-3 text-white">1. Who We Are</h3>
           <p className="text-gray-400 leading-relaxed">
