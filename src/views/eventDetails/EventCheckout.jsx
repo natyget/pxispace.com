@@ -737,7 +737,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                                   onChange={(e) => setEmailOptIn(e.target.checked)}
                                   className="mt-0.5 h-4 w-4 accent-[#d84aff]"
                                 />
-                                <span className="text-xs text-zinc-300">Email me about this host&apos;s future events</span>
+                                <span className="text-xs text-zinc-300">Email me about future events from this host and the venue</span>
                               </label>
                               {user?.phoneNumber ? (
                                 <div className="rounded-[16px] bg-white/[0.03] p-4 border border-white/5 space-y-2.5">
