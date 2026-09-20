@@ -751,7 +751,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                                     <span className="text-xs font-semibold text-zinc-200">Text me about this host&apos;s future events</span>
                                   </label>
                                   <p className="text-[11px] leading-relaxed text-zinc-400 pl-7">
-                                    By checking this box, you agree to receive promotional and event update text messages from PXI Space and event organizers at the number provided. Consent is not a condition of purchase. Message frequency varies. Message and data rates may apply. Reply STOP to cancel, HELP for info. View our{' '}
+                                    By checking this box, you agree to receive promotional and event update text messages from PXI Space, event organizers and venue partners at the number provided, sent by PXI on their behalf. Consent is not a condition of purchase. Message frequency varies. Message and data rates may apply. Reply STOP to cancel, HELP for info. View our{' '}
                                     <Link href="/legal#privacy" className="text-white underline underline-offset-2 hover:text-zinc-300">Privacy Policy</Link>
                                     {' and '}
                                     <Link href="/legal#terms" className="text-white underline underline-offset-2 hover:text-zinc-300">Terms of Service</Link>.

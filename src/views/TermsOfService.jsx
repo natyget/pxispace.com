@@ -179,10 +179,20 @@ export default function TermsOfService() {
                         title="Biometric Data (Face Grouping)"
                         Icon={RiLockLine}
                     >
+                        {/*
+                          * Face matching is SERVER-SIDE and the vector IS stored. This paragraph
+                          * used to claim the opposite ("on-device", "not stored on our servers"),
+                          * which was false — see the standing warning in src/content/faqs.js and
+                          * the live text in views/legal/LegalHubPage.jsx §2 and §6. Do not
+                          * reintroduce on-device language for face matching anywhere.
+                          */}
                         <p className="mt-2 text-neutral-300/80 leading-7">
-                            PXI uses on-device vector analysis to group photos.
-                            We do not store your facial geometry on our servers.
-                            All biometric matching occurs locally on your phone.
+                            To group photos by who is in them, PXI derives a numerical
+                            face vector from your guided capture and stores it on PXI
+                            servers, where the matching runs. It is used only to group
+                            your photos, never sold, and deleted with your account. The
+                            authoritative description of this processing, including how
+                            to withdraw consent, is in the Privacy Policy.
                         </p>
                     </Section>
 

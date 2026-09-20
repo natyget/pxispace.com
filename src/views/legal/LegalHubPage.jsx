@@ -87,7 +87,7 @@ const SECTIONS = [
             <div className="p-6 bg-legal-hub-surface border border-legal-hub-border rounded-xl">
               <h4 className="text-lg font-semibold text-white/90 mb-2">2.8 SMS / Mobile Messaging Data (A2P 10DLC)</h4>
               <p className="text-gray-400 mb-3">
-                If you provide a mobile number and opt in to text messages, we collect and process: your mobile phone number; SMS/MMS opt-in and opt-out status and timestamps; message delivery logs (sent, delivered, failed); and keyword replies such as STOP and HELP. This data is used solely to operate the PXI SMS Program (transactional event notifications, account/security alerts, and — only with separate marketing consent — promotional messages from PXI or on behalf of Event Hosts).
+                If you provide a mobile number and opt in to text messages, we collect and process: your mobile phone number; SMS/MMS opt-in and opt-out status and timestamps; message delivery logs (sent, delivered, failed); and keyword replies such as STOP and HELP. This data is used solely to operate the PXI SMS Program (transactional event notifications, account/security alerts, and — only with separate marketing consent — promotional messages sent by PXI on behalf of Event Hosts and Venue Partners).
               </p>
               <ul className="list-disc pl-5 space-y-2 text-sm text-gray-400">
                 <li><strong className="text-white">Non-sharing of mobile information:</strong> We do not sell, rent, or share your mobile phone number or SMS opt-in consent with third parties, affiliates, or partners for their own marketing or promotional purposes. Mobile numbers are shared only with our SMS delivery provider (currently Twilio) as a processor necessary to send messages you consented to receive, or as required by law.</li>
@@ -172,7 +172,8 @@ const SECTIONS = [
                 <li><strong className="text-white">When you are not shown by name in audience lists:</strong> if you opt out of personalized sharing (see Section 6.1), or you are in a region where we need your permission first and have not given it, you are counted in totals but your name, username and photo are not shown in the audience lists and insights that hosts and venue partners use.</li>
                 <li><strong className="text-white">At the door:</strong> when your ticket is scanned, the host and their door staff see your name, username and profile photo so they can check you in. This applies only to tickets for their own event and is not affected by your sharing choices, because it is needed to let you in.</li>
                 <li><strong className="text-white">Aggregate analytics for venues:</strong> venue partners also see totals for events at their venue: attendance, tickets sold, photo and video volume, check-ins by hour of day, the share of first-time and returning guests, and age bands and cities. They also see where in the venue photos were taken and which entrances guests were scanned at, drawn as a heat map of the room and as entrance totals across events. All of these are totals: they never identify who took a photo or who came through which door. Age and city figures are withheld when too few people attended for them to stay anonymous.</li>
-                <li><strong className="text-white">Contacting you:</strong> hosts and venue partners cannot see or export your contact details. If they want to reach you, PXI delivers the message on their behalf, and only through channels you have opted in to.</li>
+                <li><strong className="text-white">Contacting you — the masked relay:</strong> hosts and venue partners cannot see or export your contact details, and cannot send you anything themselves. When one of them wants to reach their past guests, they write the message and choose an audience; PXI sends it, from PXI's own systems, to the people who opted in. They are told how many people it reached, never who. Every message says "Sent via PXI on behalf of" the host or venue, carries PXI's postal address, and carries a one-click unsubscribe link (email) or the STOP keyword (SMS) that stops the channel immediately. Your address and number never leave PXI.</li>
+                <li><strong className="text-white">Venues and events held there:</strong> a venue partner's audience is everyone who attended an event held at that venue, including events that happened before the venue joined PXI, and whoever organized them. PXI attaches a past event to a venue only when PXI staff confirm the match. Nothing about you moves between venues: a night you spent at one venue is never visible to another.</li>
                 <li><strong className="text-white">No revenue to venues:</strong> venue partners do not receive ticket prices paid, revenue, payouts or fees for events at their venue.</li>
                 <li><strong className="text-white">How venue access is granted:</strong> a venue partner receives access only when PXI staff grant it. It cannot be requested or taken from within the app, and when PXI withdraws it, access ends immediately.</li>
                 <li>Hosts and venue partners are contractually bound by PXI's Vendor Agreement, may use this information only in connection with their events and venue, and may NOT sell or license your personal data to third parties.</li>
@@ -276,7 +277,7 @@ const SECTIONS = [
             Privacy inquiries: <span className="text-legal-hub-accent">privacy@pxispace.com</span><br />
             Legal inquiries: <span className="text-legal-hub-accent">legal@pxispace.com</span><br />
             In-app: Settings &gt; Help &gt; Privacy<br />
-            Mailing address: PXI LABS LLC, 5850 Town and Country Blvd, Suite 403, Frisco, TX 75034.
+            Mailing address: PXI LABS LLC, 5850 Town and Country Blvd Suite 403, Frisco TX 75034.
           </p>
         </div>
       </div>
@@ -391,7 +392,10 @@ const SECTIONS = [
               <strong className="text-white">Program name:</strong> PXI SMS Program (operated by PXI LABS LLC / PXIStudio).
             </p>
             <p>
-              <strong className="text-white">Description:</strong> By providing your mobile number and opting in, you agree to receive SMS and/or MMS messages from PXI and, where applicable, on behalf of Event Hosts. Message types may include: account verification (OTP), ticket and event confirmations, check-in and schedule alerts, host announcements related to events you joined, customer support replies, and — only if you separately opt in to marketing — promotional or campaign messages. Consent is not a condition of any purchase.
+              <strong className="text-white">Description:</strong> By providing your mobile number and opting in, you agree to receive SMS and/or MMS messages from PXI and, where applicable, sent by PXI on behalf of Event Hosts and Venue Partners. Hosts and venue partners never receive your number; PXI sends on their behalf. Message types may include: account verification (OTP), ticket and event confirmations, check-in and schedule alerts, host announcements related to events you joined, customer support replies, and — only if you separately opt in to marketing — promotional or campaign messages. Consent is not a condition of any purchase.
+            </p>
+            <p>
+              <strong className="text-white">Consent language:</strong> the box you tick when you buy a ticket or RSVP is unticked by default and reads, in full: &ldquo;By checking this box, you agree to receive promotional and event update text messages from PXI Space, event organizers and venue partners at the number provided, sent by PXI on their behalf. Consent is not a condition of purchase. Message frequency varies. Message and data rates may apply. Reply STOP to cancel, HELP for info. View our Privacy Policy and Terms of Service.&rdquo; Email consent is a separate box; ticking one is never consent for the other.
             </p>
             <p>
               <strong className="text-white">How to opt in:</strong> You opt in by affirmatively agreeing to SMS disclosures in the PXI app or on pxispace.com (for example, checking an unchecked consent box or enabling SMS in Settings), or by other methods we describe at the point of collection. Pre-checked boxes are not used. Providing a number solely for account verification does not constitute marketing consent.
@@ -597,7 +601,7 @@ const SECTIONS = [
           <h3 className="text-xl font-bold mb-3 text-white">3. Contact Us About This Cookie Policy</h3>
           <p>Email: <span className="text-legal-hub-accent">privacy@pxispace.com</span><br />
           On the web: the <strong>Cookie settings</strong> link in the footer of any page<br />
-          Mail: PXI LABS LLC, 5850 Town and Country Blvd, Suite 403, Frisco, TX 75034</p>
+          Mail: PXI LABS LLC, 5850 Town and Country Blvd Suite 403, Frisco TX 75034</p>
         </div>
 
         <div>
