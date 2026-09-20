@@ -14,10 +14,21 @@ async function request(endpoint, options = {}) {
         ...options.headers,
     };
 
-    const res = await fetch(`${BASE_URL}${endpoint}`, {
-        ...options,
-        headers,
-    });
+    let res;
+    try {
+        res = await fetch(`${BASE_URL}${endpoint}`, {
+            ...options,
+            headers,
+        });
+    } catch (cause) {
+        // fetch rejects only when the request never got an answer (offline, DNS, CORS). Its own message
+        // is the browser's "Failed to fetch", which pages were showing verbatim.
+        if (cause?.name === 'AbortError') throw cause;
+        const error = new Error("Can't reach PXI right now. Check your connection and try again.");
+        error.code = 'NETWORK_ERROR';
+        error.cause = cause;
+        throw error;
+    }
 
     const data = await res.json().catch(() => ({}));
 
