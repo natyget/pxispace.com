@@ -16,6 +16,9 @@ import Button from '../../components/ui/Button';
 import { PxiSpinner } from '@/components/loading/PxiLoading';
 import { eventsService } from '../../services/events';
 import { getTicketQuote, generateTicket, purchaseTicket, getUserTickets, getMyCredits, validatePromoCode } from '../../services/tickets';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+import { authService } from '../../services/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { StripePaymentModal } from '@/components/checkout/StripePaymentModal';
@@ -200,7 +203,7 @@ export default function EventCheckout({ basePath = '/events' }) {
   const { id } = useParams();
   const searchParams = useSearchParams();
   const tierFromUrl = searchParams.get('tier');
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, saveAuth } = useAuth();
 
   const [apiEvent, setApiEvent] = useState(null);
   const [eventLoading, setEventLoading] = useState(!!id);
@@ -229,6 +232,16 @@ export default function EventCheckout({ basePath = '/events' }) {
   const [promoChecking, setPromoChecking] = useState(false);
   const [emailOptIn, setEmailOptIn] = useState(false);
   const [smsOptIn, setSmsOptIn] = useState(false);
+  // RELAY-6: the SMS opt-in collects and proves its own number. Sign-up no longer asks for a
+  // phone at all, so without this there is no screen where consent and number are given
+  // together — which is the evidence A2P vetting asks for, and the only way to be sure the
+  // number we text belongs to the person who said yes.
+  const [smsPhone, setSmsPhone] = useState('');
+  const [smsCode, setSmsCode] = useState('');
+  const [smsVerifyStep, setSmsVerifyStep] = useState('phone'); // 'phone' | 'code'
+  const [smsVerifyBusy, setSmsVerifyBusy] = useState(false);
+  const [smsVerifyError, setSmsVerifyError] = useState('');
+  const [verifiedPhone, setVerifiedPhone] = useState(user?.phoneNumber || '');
 
   const checkoutReturnPath = useMemo(() => {
     if (!id) return basePath;
@@ -419,7 +432,7 @@ export default function EventCheckout({ basePath = '/events' }) {
         applyCredits: useCredits && creditBalanceCents > 0,
         promoCode: promoCode.trim() || undefined,
         emailOptIn,
-        smsOptIn: smsOptIn && !!user?.phoneNumber,
+        smsOptIn: smsOptIn && !!verifiedPhone,
       });
       setWalletSecret(clientSecret);
       setWalletOpen(true);
@@ -427,6 +440,45 @@ export default function EventCheckout({ basePath = '/events' }) {
       setJoinError(err.message || err.data?.error || 'Could not start wallet checkout.');
     } finally {
       setJoining(false);
+    }
+  };
+
+  /**
+   * RELAY-6, step one: send a code to the number typed beside the consent box.
+   * Nothing is stored yet — an unproved number is not consent.
+   */
+  const handleSendSmsCode = async () => {
+    setSmsVerifyError('');
+    setSmsVerifyBusy(true);
+    try {
+      await authService.sendVerification(smsPhone);
+      setSmsVerifyStep('code');
+    } catch (e) {
+      setSmsVerifyError(e?.response?.data?.error || 'Could not send the code. Check the number and try again.');
+    } finally {
+      setSmsVerifyBusy(false);
+    }
+  };
+
+  /**
+   * Step two: the code proves the number, and consent is written with it in the same call.
+   * Only on success does the SMS box count as ticked — if verification fails the consent
+   * simply never happened, which is the safe direction to fail in.
+   */
+  const handleConfirmSmsCode = async () => {
+    setSmsVerifyError('');
+    setSmsVerifyBusy(true);
+    try {
+      const res = await authService.verifyPhone(smsPhone, smsCode, true);
+      const data = res?.data ?? res;
+      if (data?.token && data?.user) await saveAuth({ token: data.token, user: data.user });
+      setVerifiedPhone(data?.user?.phoneNumber || smsPhone);
+      setSmsCode('');
+      setSmsVerifyStep('phone');
+    } catch (e) {
+      setSmsVerifyError(e?.response?.data?.error || 'That code did not work. Try again or resend.');
+    } finally {
+      setSmsVerifyBusy(false);
     }
   };
 
@@ -445,7 +497,7 @@ export default function EventCheckout({ basePath = '/events' }) {
     try {
       const result = await generateTicket(user.id, apiEvent.id, {
         emailOptIn,
-        smsOptIn: smsOptIn && !!user?.phoneNumber,
+        smsOptIn: smsOptIn && !!verifiedPhone,
       });
       // Client mirror of join_event, for funnel visibility only — the
       // authoritative one is fired server-side from POST /api/tickets/generate.
@@ -739,25 +791,96 @@ export default function EventCheckout({ basePath = '/events' }) {
                                 />
                                 <span className="text-xs text-zinc-300">Email me about future events from this host and the venue</span>
                               </label>
-                              {user?.phoneNumber ? (
-                                <div className="rounded-[16px] bg-white/[0.03] p-4 border border-white/5 space-y-2.5">
+                              {/*
+                                * RELAY-6: the number is collected HERE, next to the consent, for
+                                * anyone who has not already given us one. Carrier A2P vetting wants
+                                * to see the opt-in screen capture the number it will text, and a
+                                * number nobody proved is a wrong-number complaint waiting to happen
+                                * — so the code has to be confirmed before the consent counts.
+                                */}
+                              <div className="rounded-[16px] bg-white/[0.03] p-4 border border-white/5 space-y-2.5">
                                   <label className="flex cursor-pointer items-start gap-3">
                                     <input
                                       type="checkbox"
                                       checked={smsOptIn}
-                                      onChange={(e) => setSmsOptIn(e.target.checked)}
+                                      onChange={(e) => {
+                                        setSmsOptIn(e.target.checked);
+                                        setSmsVerifyError('');
+                                      }}
                                       className="mt-0.5 h-4 w-4 accent-[#d84aff]"
                                     />
-                                    <span className="text-xs font-semibold text-zinc-200">Text me about this host&apos;s future events</span>
+                                    <span className="text-xs font-semibold text-zinc-200">Text me about events from this host and the venue</span>
                                   </label>
+
+                                  {smsOptIn && !verifiedPhone ? (
+                                    <div className="space-y-2.5 pl-7">
+                                      {smsVerifyStep === 'phone' ? (
+                                        <>
+                                          <div className="verify-phone-input-wrapper">
+                                            <PhoneInput
+                                              international
+                                              defaultCountry="US"
+                                              value={smsPhone}
+                                              onChange={(v) => setSmsPhone(v || '')}
+                                              placeholder="Mobile number"
+                                            />
+                                          </div>
+                                          <button
+                                            type="button"
+                                            disabled={!smsPhone || smsVerifyBusy}
+                                            onClick={handleSendSmsCode}
+                                            className="h-9 rounded-full bg-white/10 px-4 text-[11px] font-bold uppercase tracking-wider text-white disabled:opacity-40"
+                                          >
+                                            {smsVerifyBusy ? 'Sending…' : 'Send code'}
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <p className="text-[11px] text-zinc-400">
+                                            Enter the 6-digit code we sent to {smsPhone}.
+                                          </p>
+                                          <input
+                                            inputMode="numeric"
+                                            maxLength={6}
+                                            value={smsCode}
+                                            onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, ''))}
+                                            placeholder="------"
+                                            className="h-9 w-32 rounded-full bg-white/5 px-4 text-center tracking-[0.4em] text-sm text-white border border-white/10"
+                                          />
+                                          <div className="flex gap-2">
+                                            <button
+                                              type="button"
+                                              disabled={smsCode.length < 4 || smsVerifyBusy}
+                                              onClick={handleConfirmSmsCode}
+                                              className="h-9 rounded-full bg-pxi-purple px-4 text-[11px] font-bold uppercase tracking-wider text-white disabled:opacity-40"
+                                            >
+                                              {smsVerifyBusy ? 'Checking…' : 'Confirm'}
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => { setSmsVerifyStep('phone'); setSmsCode(''); setSmsVerifyError(''); }}
+                                              className="h-9 rounded-full px-3 text-[11px] text-zinc-400 underline"
+                                            >
+                                              Change number
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
+                                      {smsVerifyError ? <p className="text-[11px] text-red-400">{smsVerifyError}</p> : null}
+                                    </div>
+                                  ) : null}
+
+                                  {smsOptIn && verifiedPhone ? (
+                                    <p className="pl-7 text-[11px] text-emerald-400">Texts will go to {verifiedPhone}.</p>
+                                  ) : null}
+
                                   <p className="text-[11px] leading-relaxed text-zinc-400 pl-7">
                                     By checking this box, you agree to receive promotional and event update text messages from PXI Space, event organizers and venue partners at the number provided, sent by PXI on their behalf. Consent is not a condition of purchase. Message frequency varies. Message and data rates may apply. Reply STOP to cancel, HELP for info. View our{' '}
                                     <Link href="/legal#privacy" className="text-white underline underline-offset-2 hover:text-zinc-300">Privacy Policy</Link>
                                     {' and '}
                                     <Link href="/legal#terms" className="text-white underline underline-offset-2 hover:text-zinc-300">Terms of Service</Link>.
                                   </p>
-                                </div>
-                              ) : null}
+                              </div>
                             </div>
                           ) : null}
 

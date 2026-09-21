@@ -93,9 +93,15 @@ export const authService = {
     verifyOtp: (phone, code) =>
         api.post('/api/auth/verify-otp', { phone, code }),
 
-    /** For social-login users: verify phone and save to profile. Returns { token, user }. */
-    verifyPhone: (phone, code) =>
-        api.post('/api/auth/verify-phone', { phone, code }),
+    /**
+     * Verify a phone and save it to the profile. Returns { token, user }.
+     *
+     * `smsOptIn` (RELAY-6) records marketing consent in the same call, so the consent lands
+     * with the number it was given for and only once the code proved that number. Positive
+     * only: omitting it never opts anyone out.
+     */
+    verifyPhone: (phone, code, smsOptIn) =>
+        api.post('/api/auth/verify-phone', { phone, code, ...(smsOptIn ? { smsOptIn: true } : {}) }),
 
     checkUsername: (username) =>
         api.get(`/api/auth/check-username?username=${encodeURIComponent(username)}`),
