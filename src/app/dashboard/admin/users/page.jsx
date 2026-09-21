@@ -1,7 +1,8 @@
 'use client';
 
 import { Fragment, useCallback, useEffect, useState } from 'react';
-import { fetchAdminUsers, updateAdminUser, suspendUser, unsuspendUser } from '@/services/admin';
+import { fetchAdminUsers, fetchSalesManagers, updateAdminUser, updateSalesRole, suspendUser, unsuspendUser } from '@/services/admin';
+import { cityLabel } from '@/lib/dashboardNavConfig';
 import AdminPagination from '@/components/admin/AdminPagination';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminMode } from '@/contexts/AdminModeContext';
@@ -33,7 +34,95 @@ function formatDate(iso) {
     }
 }
 
-function UserActions({ user: row, canManageRoles, onDone }) {
+const SALES_ROLE_LABELS = { NONE: 'No sales role', AMBASSADOR: 'Ambassador', REGIONAL_MANAGER: 'Regional manager' };
+
+/**
+ * PART-4, super admin only: an admin's city and a person's sales role. The backend enforces the rules
+ * (support and moderation stay central, a manager needs a city, an ambassador needs a manager) and its
+ * message is shown as is when it refuses.
+ */
+function StaffAccessControls({ row, busy, act }) {
+    const [salesRole, setSalesRole] = useState(row.salesRole || 'NONE');
+    const [cityCode, setCityCode] = useState(row.adminCityCode || '');
+    const [managerId, setManagerId] = useState(row.salesManagerId || '');
+    const [managers, setManagers] = useState([]);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetchSalesManagers()
+            .then((data) => { if (!cancelled) setManagers((data.managers || []).filter((m) => m.id !== row.id)); })
+            .catch(() => { if (!cancelled) setManagers([]); });
+        return () => { cancelled = true; };
+    }, [row.id]);
+
+    const selectCls = 'rounded-full bg-white/[0.065] px-3 py-1.5 text-[12px] text-white/80 outline-none';
+    const salesBody = () => {
+        if (salesRole === 'REGIONAL_MANAGER') return { salesRole, cityCode: cityCode || null };
+        if (salesRole === 'AMBASSADOR') return { salesRole, salesManagerId: managerId || null };
+        return { salesRole };
+    };
+    const salesChanged =
+        salesRole !== (row.salesRole || 'NONE') ||
+        (salesRole === 'REGIONAL_MANAGER' && cityCode !== (row.adminCityCode || '')) ||
+        (salesRole === 'AMBASSADOR' && managerId !== (row.salesManagerId || ''));
+
+    return (
+        <div className="space-y-2 rounded-xl bg-white/[0.03] p-3">
+            <p className="text-[11px] font-medium text-white/40">City and sales access</p>
+            <div className="flex flex-wrap items-center gap-2">
+                <select
+                    value={row.adminCityCode || ''}
+                    disabled={busy}
+                    onChange={(e) => act(() => updateAdminUser(row.id, { adminCityCode: e.target.value || null }))}
+                    className={selectCls}
+                    aria-label="Admin city"
+                >
+                    <option value="">Admin city: all cities</option>
+                    <option value="NYC">Admin city: New York only</option>
+                    <option value="BOS">Admin city: Boston only</option>
+                </select>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+                <select value={salesRole} disabled={busy} onChange={(e) => setSalesRole(e.target.value)} className={selectCls} aria-label="Sales role">
+                    {Object.entries(SALES_ROLE_LABELS).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                    ))}
+                </select>
+                {salesRole === 'REGIONAL_MANAGER' && (
+                    <select value={cityCode} disabled={busy} onChange={(e) => setCityCode(e.target.value)} className={selectCls} aria-label="Territory">
+                        <option value="">Choose a territory</option>
+                        <option value="NYC">New York</option>
+                        <option value="BOS">Boston</option>
+                    </select>
+                )}
+                {salesRole === 'AMBASSADOR' && (
+                    <select value={managerId} disabled={busy} onChange={(e) => setManagerId(e.target.value)} className={selectCls} aria-label="Manager">
+                        <option value="">Choose a regional manager</option>
+                        {managers.map((m) => (
+                            <option key={m.id} value={m.id}>
+                                {m.name || `@${m.username}`} ({cityLabel(m.cityCode)})
+                            </option>
+                        ))}
+                    </select>
+                )}
+                <button
+                    type="button"
+                    disabled={busy || !salesChanged}
+                    onClick={() => act(() => updateSalesRole(row.id, salesBody()))}
+                    className="rounded-full bg-white/[0.065] px-4 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40"
+                >
+                    Save sales role
+                </button>
+            </div>
+            <p className="text-[11px] leading-5 text-white/35">
+                An admin city limits an ADMIN to that city. A regional manager&apos;s territory is stored as their city too.
+                Support and moderation roles cannot have a city.
+            </p>
+        </div>
+    );
+}
+
+function UserActions({ user: row, canManageRoles, canSuspend, onDone }) {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState(null);
     const [suspendReason, setSuspendReason] = useState('');
@@ -95,6 +184,8 @@ function UserActions({ user: row, canManageRoles, onDone }) {
                     </>
                 )}
             </div>
+            {canManageRoles && <StaffAccessControls row={row} busy={busy} act={act} />}
+            {canSuspend && (
             <div className="flex flex-wrap items-center gap-2">
                 {row.suspendedAt ? (
                     <button
@@ -124,6 +215,7 @@ function UserActions({ user: row, canManageRoles, onDone }) {
                     </>
                 )}
             </div>
+            )}
             {error && <p className="text-red-300 text-[12px]">{error}</p>}
         </div>
     );
@@ -140,8 +232,10 @@ export default function AdminUsersPage() {
     const [input, setInput] = useState('');
     const [q, setQ] = useState('');
     const [openUserId, setOpenUserId] = useState(null);
-    const { isLive: isLiveAdmin } = useAdminMode();
+    const { isLive: isLiveAdmin, cityScope } = useAdminMode();
     const canManageRoles = isSuperAdmin(user);
+    // Suspension is trust-and-safety work, run centrally (PART-4): the backend refuses it for a city admin.
+    const canSuspend = !cityScope;
 
     useEffect(() => {
         const t = setTimeout(() => setQ(input.trim()), 400);
@@ -191,7 +285,7 @@ export default function AdminUsersPage() {
     return (
         <AdminPageShell
             title="Accounts"
-            copy={`Search by email, username, or ID. Open a live account to adjust organizer access, verification, and suspension state.${canManageRoles ? ' Super-admin controls are enabled.' : ''}`}
+            copy={`${cityScope ? `People in ${cityLabel(cityScope)}: they chose the city, hold a ticket there, or host there. ` : ''}Search by email, username, or ID. Open a live account to adjust organizer access${cityScope ? ' and verification' : ', verification, and suspension state'}.${canManageRoles ? ' Super-admin controls are enabled.' : ''}`}
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
                 { label: 'Matches', value: total.toLocaleString(), hint: q || 'All users' },
@@ -244,6 +338,13 @@ export default function AdminUsersPage() {
                                             {u.adminRole && u.adminRole !== 'NONE' ? (
                                                 <span className="ml-1.5 inline-flex rounded-full bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-sky-300">
                                                     {u.adminRole.replaceAll('_', ' ')}
+                                                    {u.adminCityCode ? ` · ${cityLabel(u.adminCityCode)}` : ''}
+                                                </span>
+                                            ) : null}
+                                            {u.salesRole && u.salesRole !== 'NONE' ? (
+                                                <span className="ml-1.5 inline-flex rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-amber-300">
+                                                    {SALES_ROLE_LABELS[u.salesRole]}
+                                                    {u.salesRole === 'REGIONAL_MANAGER' && u.adminCityCode ? ` · ${cityLabel(u.adminCityCode)}` : ''}
                                                 </span>
                                             ) : null}
                                         </td>
@@ -265,6 +366,7 @@ export default function AdminUsersPage() {
                                                 <UserActions
                                                     user={u}
                                                     canManageRoles={canManageRoles}
+                                                    canSuspend={canSuspend}
                                                     onDone={() => {
                                                         setOpenUserId(null);
                                                         load(page);

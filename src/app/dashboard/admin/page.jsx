@@ -6,13 +6,15 @@ import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 import { useAdminMode } from '@/contexts/AdminModeContext';
 import { adminMockStats } from '@/lib/adminMockData';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
+import { cityLabel } from '@/lib/dashboardNavConfig';
 
 function formatInteger(value) {
     return Number(value || 0).toLocaleString();
 }
 
+// Every account has exactly one tier; Diplomats are Citizens who also sell, so they are not added again.
 function totalUsers(users = {}) {
-    return Number(users.partial || 0) + Number(users.citizen || 0) + Number(users.vendor || 0) + Number(users.admin || 0);
+    return Number(users.partial || 0) + Number(users.citizen || 0) + Number(users.admin || 0);
 }
 
 function totalEvents(events = {}) {
@@ -45,11 +47,12 @@ function StatBlock({ title, rows }) {
     );
 }
 
-function AdminOverviewHero({ stats, isLiveAdmin }) {
+function AdminOverviewHero({ stats, isLiveAdmin, cityScope }) {
     const userTotal = totalUsers(stats?.users);
     const eventTotal = totalEvents(stats?.events);
     const pendingReports = Number(stats?.reports?.pending || 0);
     const openSupport = Number(stats?.support?.open || 0);
+    const city = cityLabel(cityScope);
 
     return (
         <section className="dashboard-surface-b relative overflow-hidden rounded-[1.25rem] px-5 py-7 md:px-8 md:py-8">
@@ -59,19 +62,24 @@ function AdminOverviewHero({ stats, isLiveAdmin }) {
                         <span className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">PXI Admin</span>
                         <span className="text-zinc-700">/</span>
                         <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
+                        {city ? (
+                            <span className="rounded-full bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-300">{city} only</span>
+                        ) : null}
                     </div>
                     <h1 className="max-w-xl text-2xl font-semibold tracking-tight text-white md:text-[28px]">
-                        Admin overview
+                        {city ? `${city} overview` : 'Admin overview'}
                     </h1>
                     <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-300 md:text-base">
-                        Users, events, reports, and operating queues at platform level.
+                        {city
+                            ? `People and events in ${city}. Reports, support and promos are run centrally.`
+                            : 'Users, events, reports, and operating queues at platform level.'}
                     </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2 xl:w-[520px]">
                     <SummaryTile label="Users" value={formatInteger(userTotal)} hint={`${formatInteger(stats?.users?.vendor)} organizers`} />
                     <SummaryTile label="Events" value={formatInteger(eventTotal)} hint={`${formatInteger(stats?.events?.upcoming)} upcoming`} />
-                    <SummaryTile label="Reports" value={formatInteger(pendingReports)} hint="Pending review" />
-                    <SummaryTile label="Support" value={formatInteger(openSupport)} hint="Open tickets" />
+                    {stats?.reports ? <SummaryTile label="Reports" value={formatInteger(pendingReports)} hint="Pending review" /> : null}
+                    {stats?.support ? <SummaryTile label="Support" value={formatInteger(openSupport)} hint="Open tickets" /> : null}
                 </div>
             </div>
         </section>
@@ -82,7 +90,7 @@ export default function AdminOverviewPage() {
     const [stats, setStats] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
-    const { isLive: isLiveAdmin } = useAdminMode();
+    const { isLive: isLiveAdmin, cityScope } = useAdminMode();
     const resolvedLoading = isLiveAdmin ? loading : false;
     const resolvedStats = isLiveAdmin ? stats : adminMockStats;
 
@@ -112,7 +120,7 @@ export default function AdminOverviewPage() {
 
     return (
         <div className="max-w-7xl space-y-6 md:space-y-8">
-            <AdminOverviewHero stats={resolvedStats} isLiveAdmin={isLiveAdmin} />
+            <AdminOverviewHero stats={resolvedStats} isLiveAdmin={isLiveAdmin} cityScope={isLiveAdmin ? cityScope : null} />
 
             {resolvedLoading && (
                 <div className="rounded-2xl bg-white/[0.04] px-6 py-12 text-center text-sm text-white/50">
@@ -128,7 +136,9 @@ export default function AdminOverviewPage() {
                     <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Operating mode</p>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
                         {isLiveAdmin
-                            ? 'Live admin data is enabled for this account. Use the sidebar to manage users, events, safety, support, promos, and moderation.'
+                            ? cityScope
+                                ? `Live admin data for ${cityLabel(cityScope)}. Accounts, events, organizers and venues are limited to this city.`
+                                : 'Live admin data is enabled for this account. Use the sidebar to manage users, events, safety, support, promos, and moderation.'
                             : 'Preview mode is enabled for PXI employee accounts without backend ADMIN tier. The data below is mock data for safe UI review.'}
                     </p>
                 </div>
@@ -153,14 +163,17 @@ export default function AdminOverviewPage() {
                             { label: 'Ended or archived', value: resolvedStats.events.ended },
                         ]}
                     />
-                    <StatBlock
-                        title="Reports"
-                        rows={[
-                            { label: 'Pending', value: resolvedStats.reports.pending },
-                            { label: 'Cancelled', value: resolvedStats.reports.cancel },
-                            { label: 'Accepted (resolved)', value: resolvedStats.reports.accepted },
-                        ]}
-                    />
+                    {/* Null for a city-scoped admin: moderation is central (PART-4). */}
+                    {resolvedStats.reports ? (
+                        <StatBlock
+                            title="Reports"
+                            rows={[
+                                { label: 'Pending', value: resolvedStats.reports.pending },
+                                { label: 'Cancelled', value: resolvedStats.reports.cancel },
+                                { label: 'Accepted (resolved)', value: resolvedStats.reports.accepted },
+                            ]}
+                        />
+                    ) : null}
                     {resolvedStats.support || resolvedStats.promos ? (
                         <StatBlock
                             title="Operations"

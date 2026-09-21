@@ -6,6 +6,8 @@ import { authStorage, authService, ensurePasetoCookie } from '../services/auth';
 import { faceService } from '../services/face';
 import { clearUserId, setUserId, setUserPropertiesFromUser } from '../lib/analytics';
 import { setEnhancedConversionData } from '../lib/enhancedConversions';
+import { subscribeConsentChoice } from '../lib/consent';
+import { syncTrackingConsent } from '../lib/consentSync';
 
 const AuthContext = createContext(null);
 
@@ -60,6 +62,17 @@ export function AuthProvider({ children }) {
         return () => {
             cancelled = true;
         };
+    }, [token, user?.id]);
+
+    // Personalized-sharing consent lives in this browser, but the audience lists that must honour it are
+    // built on the server. Report it once per signed-in user when it changes, and immediately when the
+    // person makes a choice in the banner.
+    useEffect(() => {
+        if (!token || !user?.id) return undefined;
+        void syncTrackingConsent(user.id);
+        return subscribeConsentChoice(() => {
+            void syncTrackingConsent(user.id, { force: true });
+        });
     }, [token, user?.id]);
 
     // Hydrate from localStorage, re-sync HttpOnly cookie, then refresh role fields.

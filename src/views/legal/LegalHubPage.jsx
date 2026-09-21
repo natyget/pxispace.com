@@ -12,16 +12,17 @@ const SECTIONS = [
   {
     id: 'privacy',
     title: 'Privacy Policy',
-    tldr: "We collect only what we need to run the party. Face Matching sends scan frames to our servers solely to create an irreversible FaceVector, then discards the images. Your location is checked when you use nearby/discover or check in — not tracked continuously. You own your photos. We never sell your data. Mobile numbers and SMS consent are never shared with third parties for their marketing.",
+    tldr: "We collect only what we need to run the party. Face Matching sends scan frames to our servers solely to create an irreversible FaceVector, then discards the images. Your location is checked when you use nearby/discover or check in — not tracked continuously. You own your photos. We never sell your data. Mobile numbers and SMS consent are never shared with third parties for their marketing. Event hosts and venue partners never see your email address or phone number.",
     content: (
       <div className="space-y-8">
+        <p className="text-sm text-gray-500">Last updated: September 18, 2026</p>
         <div>
           <h3 className="text-xl font-bold mb-3 text-white">1. Who We Are</h3>
           <p className="text-gray-400 leading-relaxed">
             PXIStudio ("PXI," "we," "us," "our") is a Social Media Studio combining event photo-sharing, ticketing, gamification, and analog-emulative media creation into one platform. We are operated by <strong>PXI LABS LLC</strong>, headquartered in Cambridge, Massachusetts, USA.
           </p>
           <p className="text-gray-400 leading-relaxed mt-2">
-            Our Services include: (i) event discovery and ticketing, (ii) spatially-grouped event photo albums, (iii) the Odyssey gamification system, (iv) the Analog Engine media creation suite, (v) real-time event social features, and (vi) vendor/host management tools. These Terms apply to all of these Services collectively.
+            Our Services include: (i) event discovery and ticketing, (ii) spatially-grouped event photo albums, (iii) the Odyssey gamification system, (iv) the Analog Engine media creation suite, (v) real-time event social features, and (vi) tools for event hosts and venue partners. These Terms apply to all of these Services collectively.
           </p>
         </div>
 
@@ -86,7 +87,7 @@ const SECTIONS = [
             <div className="p-6 bg-legal-hub-surface border border-legal-hub-border rounded-xl">
               <h4 className="text-lg font-semibold text-white/90 mb-2">2.8 SMS / Mobile Messaging Data (A2P 10DLC)</h4>
               <p className="text-gray-400 mb-3">
-                If you provide a mobile number and opt in to text messages, we collect and process: your mobile phone number; SMS/MMS opt-in and opt-out status and timestamps; message delivery logs (sent, delivered, failed); and keyword replies such as STOP and HELP. This data is used solely to operate the PXI SMS Program (transactional event notifications, account/security alerts, and — only with separate marketing consent — promotional messages from PXI or on behalf of Event Hosts).
+                If you provide a mobile number and opt in to text messages, we collect and process: your mobile phone number; SMS/MMS opt-in and opt-out status and timestamps; message delivery logs (sent, delivered, failed); and keyword replies such as STOP and HELP. This data is used solely to operate the PXI SMS Program (transactional event notifications, account/security alerts, and — only with separate marketing consent — promotional messages sent by PXI on behalf of Event Hosts and Venue Partners).
               </p>
               <ul className="list-disc pl-5 space-y-2 text-sm text-gray-400">
                 <li><strong className="text-white">Non-sharing of mobile information:</strong> We do not sell, rent, or share your mobile phone number or SMS opt-in consent with third parties, affiliates, or partners for their own marketing or promotional purposes. Mobile numbers are shared only with our SMS delivery provider (currently Twilio) as a processor necessary to send messages you consented to receive, or as required by law.</li>
@@ -136,6 +137,8 @@ const SECTIONS = [
             <li>Running the Odyssey gamification system: awarding XP, Stamps, and Leaderboard rankings.</li>
             <li>Processing ticket purchases, distributing payouts to vendors via Stripe Connect.</li>
             <li>Personalizing your feed, event recommendations, and suggested connections based on attendance history.</li>
+            <li>Venue analytics: giving venue partners aggregate figures about events held at their venue, such as attendance, check-in times and photo volume. These figures never identify an individual. See Section 4.2.</li>
+            <li>Audience insights: combining your activity on PXI (events you attend, the price band of the tickets you chose, music taste you choose to connect, the accounts you follow, and engagement) to recommend events to you and to estimate, in aggregate, how many people an event may draw. This uses your information only if you have not opted out of personalized sharing. Hosts and venue partners never see this profile. See Sections 4.2 and 6.1.</li>
             <li>Safety, fraud prevention, and abuse detection (e.g., detecting spoofed GPS, fake tickets, account manipulation).</li>
             <li>Sending transactional communications: ticket confirmations, event reminders, payout notifications, and (where consented) SMS/MMS event and account alerts.</li>
             <li>Sending marketing communications by email or SMS (only with your explicit opt-in for that channel; unsubscribe available at any time via email Unsubscribe links or by replying STOP to SMS).</li>
@@ -162,8 +165,19 @@ const SECTIONS = [
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold text-white/90">4.2 With Vendors and Hosts</h4>
-              <p className="text-gray-400">When you purchase a ticket or join a host-created event album, the host receives: your RSVP status, display name, and check-in confirmation. Hosts are contractually bound by PXI's Vendor Agreement and may only use your data in connection with their event. Hosts may NOT sell or license your personal data to third parties.</p>
+              <h4 className="text-lg font-semibold text-white/90">4.2 With Event Hosts and Venue Partners</h4>
+              <p className="text-gray-400 mb-3">Event hosts (the organizers of events) and venue partners (venues where events on PXI take place) are held to the same privacy standard. <strong className="text-white">Neither ever receives your email address or phone number.</strong></p>
+              <ul className="list-disc pl-5 space-y-2 text-gray-400">
+                <li><strong className="text-white">What they can see about you:</strong> your display name, username, profile photo, how many of their events you attended, when you last checked in, the ticket tier you chose, and your Odyssey engagement tier. A host sees this for its own events. A venue partner sees it for events held at its venue, whoever organized them.</li>
+                <li><strong className="text-white">When you are not shown by name in audience lists:</strong> if you opt out of personalized sharing (see Section 6.1), or you are in a region where we need your permission first and have not given it, you are counted in totals but your name, username and photo are not shown in the audience lists and insights that hosts and venue partners use.</li>
+                <li><strong className="text-white">At the door:</strong> when your ticket is scanned, the host and their door staff see your name, username and profile photo so they can check you in. This applies only to tickets for their own event and is not affected by your sharing choices, because it is needed to let you in.</li>
+                <li><strong className="text-white">Aggregate analytics for venues:</strong> venue partners also see totals for events at their venue: attendance, tickets sold, photo and video volume, check-ins by hour of day, the share of first-time and returning guests, and age bands and cities. They also see where in the venue photos were taken and which entrances guests were scanned at, drawn as a heat map of the room and as entrance totals across events. All of these are totals: they never identify who took a photo or who came through which door. Age and city figures are withheld when too few people attended for them to stay anonymous.</li>
+                <li><strong className="text-white">Contacting you — the masked relay:</strong> hosts and venue partners cannot see or export your contact details, and cannot send you anything themselves. When one of them wants to reach their past guests, they write the message and choose an audience; PXI sends it, from PXI's own systems, to the people who opted in. They are told how many people it reached, never who. Every message says "Sent via PXI on behalf of" the host or venue, carries PXI's postal address, and carries a one-click unsubscribe link (email) or the STOP keyword (SMS) that stops the channel immediately. Your address and number never leave PXI.</li>
+                <li><strong className="text-white">Venues and events held there:</strong> a venue partner's audience is everyone who attended an event held at that venue, including events that happened before the venue joined PXI, and whoever organized them. PXI attaches a past event to a venue only when PXI staff confirm the match. Nothing about you moves between venues: a night you spent at one venue is never visible to another.</li>
+                <li><strong className="text-white">No revenue to venues:</strong> venue partners do not receive ticket prices paid, revenue, payouts or fees for events at their venue.</li>
+                <li><strong className="text-white">How venue access is granted:</strong> a venue partner receives access only when PXI staff grant it. It cannot be requested or taken from within the app, and when PXI withdraws it, access ends immediately.</li>
+                <li>Hosts and venue partners are contractually bound by PXI's Vendor Agreement, may use this information only in connection with their events and venue, and may NOT sell or license your personal data to third parties.</li>
+              </ul>
             </div>
 
             <div className="p-4 bg-legal-hub-surface/30 border border-legal-hub-border rounded-lg">
@@ -215,6 +229,7 @@ const SECTIONS = [
             <li><strong className="text-white">Biometric vectors:</strong> Until consent revoked, account deletion, or 3 years from last interaction — whichever is earliest.</li>
             <li><strong className="text-white">In-app messages &amp; voice notes:</strong> Retained for the life of the conversation or until deleted by participants / account deletion, subject to legal holds and safety investigations.</li>
             <li><strong className="text-white">Music Match taste profiles:</strong> Until you disconnect Music Match or delete your account.</li>
+            <li><strong className="text-white">Audience insight profiles:</strong> Refreshed regularly. Deleted when you opt out of personalized sharing or delete your account.</li>
             <li><strong className="text-white">Location data (Event Lock):</strong> Deleted after proximity / clustering computation; aggregate metadata up to 90 days.</li>
             <li><strong className="text-white">Payment and ticketing records:</strong> 7 years (tax/legal/compliance requirements).</li>
             <li><strong className="text-white">Usage and analytics data:</strong> 24 months rolling.</li>
@@ -229,7 +244,7 @@ const SECTIONS = [
           <div className="space-y-4">
             <div>
               <h4 className="text-lg font-semibold text-white/90">6.1 All Users</h4>
-              <p className="text-gray-400">Access and download a copy of your data: Settings &gt; Privacy &gt; Download My Data. Correct inaccurate profile data at any time within Settings. Delete your account and associated data: Settings &gt; Account &gt; Delete Account. Revoke biometric consent: Settings &gt; Apps &gt; Face Matching. Disconnect Music Match from the Music Match / music connect screen or Settings. Opt out of marketing email: Settings &gt; Notifications &gt; Marketing, or click Unsubscribe in any email. Opt out of SMS at any time by replying <strong className="text-white">STOP</strong> to a PXI text message, or via Settings &gt; Notifications &gt; SMS; reply <strong className="text-white">HELP</strong> for SMS help. Report content or request removal of tagged photos: In-app report button or privacy@pxispace.com.</p>
+              <p className="text-gray-400">Access and download a copy of your data: Settings &gt; Privacy &gt; Download My Data. Correct inaccurate profile data at any time within Settings. Delete your account and associated data: Settings &gt; Account &gt; Delete Account. Revoke biometric consent: Settings &gt; Apps &gt; Face Matching. Disconnect Music Match from the Music Match / music connect screen or Settings. Opt out of marketing email: Settings &gt; Notifications &gt; Marketing, or click Unsubscribe in any email. Opt out of SMS at any time by replying <strong className="text-white">STOP</strong> to a PXI text message, or via Settings &gt; Notifications &gt; SMS; reply <strong className="text-white">HELP</strong> for SMS help. Opt out of personalized sharing, which stops you being shown by name in the audience lists of event hosts and venue partners (door check-in is not affected) and stops audience insight profiling: use the <strong className="text-white">Cookie settings</strong> link in the footer of any page, send a Global Privacy Control signal, or email privacy@pxispace.com. You will still be counted in totals. Report content or request removal of tagged photos: In-app report button or privacy@pxispace.com.</p>
             </div>
             <div>
               <h4 className="text-lg font-semibold text-white/90">6.2 California Residents (CCPA / CPRA)</h4>
@@ -262,7 +277,7 @@ const SECTIONS = [
             Privacy inquiries: <span className="text-legal-hub-accent">privacy@pxispace.com</span><br />
             Legal inquiries: <span className="text-legal-hub-accent">legal@pxispace.com</span><br />
             In-app: Settings &gt; Help &gt; Privacy<br />
-            Mailing address: PXI LABS LLC, 5850 Town and Country Blvd, Suite 403, Frisco, TX 75034.
+            Mailing address: PXI LABS LLC, 5850 Town and Country Blvd Suite 403, Frisco TX 75034.
           </p>
         </div>
       </div>
@@ -377,7 +392,10 @@ const SECTIONS = [
               <strong className="text-white">Program name:</strong> PXI SMS Program (operated by PXI LABS LLC / PXIStudio).
             </p>
             <p>
-              <strong className="text-white">Description:</strong> By providing your mobile number and opting in, you agree to receive SMS and/or MMS messages from PXI and, where applicable, on behalf of Event Hosts. Message types may include: account verification (OTP), ticket and event confirmations, check-in and schedule alerts, host announcements related to events you joined, customer support replies, and — only if you separately opt in to marketing — promotional or campaign messages. Consent is not a condition of any purchase.
+              <strong className="text-white">Description:</strong> By providing your mobile number and opting in, you agree to receive SMS and/or MMS messages from PXI and, where applicable, sent by PXI on behalf of Event Hosts and Venue Partners. Hosts and venue partners never receive your number; PXI sends on their behalf. Message types may include: account verification (OTP), ticket and event confirmations, check-in and schedule alerts, host announcements related to events you joined, customer support replies, and — only if you separately opt in to marketing — promotional or campaign messages. Consent is not a condition of any purchase.
+            </p>
+            <p>
+              <strong className="text-white">Consent language:</strong> the box you tick when you buy a ticket or RSVP is unticked by default and reads, in full: &ldquo;By checking this box, you agree to receive promotional and event update text messages from PXI Space, event organizers and venue partners at the number provided, sent by PXI on their behalf. Consent is not a condition of purchase. Message frequency varies. Message and data rates may apply. Reply STOP to cancel, HELP for info. View our Privacy Policy and Terms of Service.&rdquo; Email consent is a separate box; ticking one is never consent for the other.
             </p>
             <p>
               <strong className="text-white">How to opt in:</strong> You opt in by affirmatively agreeing to SMS disclosures in the PXI app or on pxispace.com (for example, checking an unchecked consent box or enabling SMS in Settings), or by other methods we describe at the point of collection. Pre-checked boxes are not used. Providing a number solely for account verification does not constitute marketing consent.
@@ -583,7 +601,7 @@ const SECTIONS = [
           <h3 className="text-xl font-bold mb-3 text-white">3. Contact Us About This Cookie Policy</h3>
           <p>Email: <span className="text-legal-hub-accent">privacy@pxispace.com</span><br />
           On the web: the <strong>Cookie settings</strong> link in the footer of any page<br />
-          Mail: PXI LABS LLC, 5850 Town and Country Blvd, Suite 403, Frisco, TX 75034</p>
+          Mail: PXI LABS LLC, 5850 Town and Country Blvd Suite 403, Frisco TX 75034</p>
         </div>
 
         <div>

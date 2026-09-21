@@ -2,9 +2,13 @@ import { isAdminTierUser } from '@/lib/accountTier';
 
 const PXI_DOMAIN = 'pxispace.com';
 // Must match the backend's SUPER_ADMIN_EMAIL (utils/accountTier.ts); overridable per-env.
-const SUPER_ADMIN_EMAIL = (process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL || 'natan@pxispace.com')
-    .trim()
-    .toLowerCase();
+// One address or a comma-separated list, e.g. "natan@pxispace.com,simon@pxispace.com".
+const SUPER_ADMIN_EMAILS = new Set(
+    (process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL || 'natan@pxispace.com')
+        .split(',')
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean)
+);
 
 /** Control-room role hierarchy (mirrors backend utils/accountTier.ts). */
 const ROLE_RANK = { NONE: 0, SUPPORT: 1, MODERATOR: 2, ADMIN: 3, SUPER_ADMIN: 4 };
@@ -15,8 +19,16 @@ export function isPxiEmployee(user) {
     return email.endsWith(`@${PXI_DOMAIN}`);
 }
 
+/**
+ * The control room opens on a granted role, not on the ADMIN tier alone (backend
+ * middleware/auth.middleware.ts). A session that carries an explicit role of NONE is refused here
+ * too, so the account is not shown a dashboard the server will refuse. Legacy sessions with no
+ * adminRole field keep the old tier rule, and adminRoleOf resolves them to ADMIN.
+ */
 export function canAccessAdminDashboard(user) {
-    return isAdminTierUser(user) || isPxiEmployee(user);
+    if (isPxiEmployee(user)) return true;
+    if (!isAdminTierUser(user)) return false;
+    return adminRoleOf(user) !== 'NONE';
 }
 
 /**
@@ -26,7 +38,7 @@ export function canAccessAdminDashboard(user) {
  */
 export function adminRoleOf(user) {
     if (!user) return 'NONE';
-    if (String(user.email || '').trim().toLowerCase() === SUPER_ADMIN_EMAIL) return 'SUPER_ADMIN';
+    if (SUPER_ADMIN_EMAILS.has(String(user.email || '').trim().toLowerCase())) return 'SUPER_ADMIN';
     if (user.adminRole && ROLE_RANK[user.adminRole] != null) return user.adminRole;
     if (isAdminTierUser(user) || isPxiEmployee(user)) return 'ADMIN';
     return 'NONE';

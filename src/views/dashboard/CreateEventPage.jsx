@@ -93,6 +93,9 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [venueName, setVenueName] = useState('');
+  // Once the organizer types a venue name themselves we stop auto-filling it from the map result,
+  // so picking a different address can never overwrite something they wrote by hand.
+  const venueNameTouchedRef = useRef(false);
   const [recurrence, setRecurrence] = useState('');
   const [spotifyPlaylistUrl, setSpotifyPlaylistUrl] = useState('');
   const [stampImage, setStampImage] = useState(null);
@@ -467,19 +470,6 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
     }
   };
 
-  const tryGetGeo = () =>
-    new Promise((resolve) => {
-      if (typeof navigator === 'undefined' || !navigator.geolocation) {
-        resolve({});
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-        () => resolve({}),
-        { timeout: 5000, maximumAge: 60_000 }
-      );
-    });
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError(null);
@@ -489,6 +479,14 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
     }
     if (!name.trim() || !startLocal || !endLocal) {
       setFormError('Event name, start, and end are required.');
+      return;
+    }
+    if (!location.trim()) {
+      setFormError('Venue / location is required.');
+      return;
+    }
+    if (!selectedVenueId && (geoLat == null || geoLon == null)) {
+      setFormError('Choose the address from the suggestions so the event can be placed on the map.');
       return;
     }
     if (!coverImage) {
@@ -526,9 +524,8 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
 
     setIsSubmitting(true);
     try {
-      const geo = geoLat != null && geoLon != null
-        ? { latitude: geoLat, longitude: geoLon }
-        : await tryGetGeo();
+      // Coordinates only ever come from the chosen place, never from the organizer's own browser location.
+      const geo = geoLat != null && geoLon != null ? { latitude: geoLat, longitude: geoLon } : {};
       const graceTime =
         (parseInt(graceTimeHours, 10) || 0) * 60 + (parseInt(graceTimeMinutes, 10) || 0);
       const pricing = buildTicketPricingPayload({ isPaid, useTierList, price, tiers: ticketTiers });
@@ -835,22 +832,30 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           </div>
           <div className="space-y-2">
             <label className={labelClass}>Venue / location</label>
-            <div
-              className={`${inputClass} overflow-visible p-0`}
-              onChange={(e) => {
-                if (e.target.tagName === 'INPUT') setLocation(e.target.value);
-              }}
-            >
+            <div className={`${inputClass} overflow-visible p-0`}>
               <GeoapifyContext apiKey={GEOAPIFY_KEY}>
                 <GeoapifyGeocoderAutocomplete
                   value={location}
                   placeholder=""
+                  // Typing goes to state (a wrapper onChange never saw this non-React input, so typed text was
+                  // dropped: QA 2026-09-17, CITY-06). Typing also clears the pinned place, because the
+                  // coordinates must describe this address: they set the event's city and venue match.
+                  onUserInput={(value) => {
+                    setLocation(value || '');
+                    setGeoLat(null);
+                    setGeoLon(null);
+                    setSelectedVenueId(null);
+                  }}
                   placeSelect={(result) => {
                     const props = result?.properties;
                     setLocation(props?.formatted || '');
                     setGeoLat(typeof props?.lat === 'number' ? props.lat : null);
                     setGeoLon(typeof props?.lon === 'number' ? props.lon : null);
                     setGeoCity(props?.city || props?.county || '');
+                    // Geoapify returns `name` only for a POI, never for a bare street address.
+                    // Filling it here is what lets the backend match this night to a canonical
+                    // venue (VEN-1) — left to chance, the field is usually empty.
+                    if (!venueNameTouchedRef.current) setVenueName(props?.name || '');
                   }}
                 />
               </GeoapifyContext>
@@ -862,7 +867,10 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               <input
                 className={inputClass}
                 value={venueName}
-                onChange={(e) => setVenueName(e.target.value)}
+                onChange={(e) => {
+                  venueNameTouchedRef.current = true;
+                  setVenueName(e.target.value);
+                }}
                 placeholder="e.g. The Grand Hall"
               />
             </div>
@@ -1077,7 +1085,11 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           <div className="glass-field flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Public event</p>
-              <p className="text-xs text-zinc-500">Anyone can discover this event.</p>
+              <p className="text-xs text-zinc-500">
+                {isPrivate
+                  ? 'Off: only people you invite can find this event. Turn on to list it in Discover.'
+                  : 'Anyone can discover this event.'}
+              </p>
             </div>
             <button
               type="button"

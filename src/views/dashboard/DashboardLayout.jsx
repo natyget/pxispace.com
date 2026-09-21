@@ -22,12 +22,15 @@ import { dashboardPrefetchRoutes, prefetchDashboardRoutes } from '@/lib/dashboar
 import { useCapabilities, useEvents } from '@/lib/dashboardStore';
 import {
     ADMIN_SIDEBAR_MODE_KEY,
-    adminNavItems,
+    buildAdminNavItems,
     buildMemberNavItems,
     isNavItemActive,
     isVendorOnlyRoute,
     dashboardNavConfig,
 } from '@/lib/dashboardNavConfig';
+import { fetchAdminWhoami } from '@/services/admin';
+import { fetchSalesAccess } from '@/services/sales';
+import { fetchMyVenues } from '@/services/venues';
 
 function shouldClearAuth(error) {
     const status = error?.status;
@@ -338,6 +341,33 @@ export default function DashboardLayout({ children }) {
 
     const isAdminNav = rolesReady && canAccessAdminDashboard(user) && adminSidebarMode === 'admin';
 
+    // PART-4: a city-scoped admin's sidebar leaves out central sections, and staff with a sales role get
+    // Venue Claims. Both come from the backend, which re-checks on every request.
+    const [adminCityScope, setAdminCityScope] = useState(null);
+    const [hasSalesAccess, setHasSalesAccess] = useState(false);
+    // VEN-8: the venue section appears only while this account owns a venue; a revoked claim removes it.
+    const [isVenueOwner, setIsVenueOwner] = useState(false);
+    useEffect(() => {
+        if (!isAdminNav) return undefined;
+        let cancelled = false;
+        fetchAdminWhoami()
+            .then((data) => { if (!cancelled) setAdminCityScope(data?.cityScope ?? null); })
+            .catch(() => { if (!cancelled) setAdminCityScope(null); });
+        return () => { cancelled = true; };
+    }, [isAdminNav]);
+    useEffect(() => {
+        if (!rolesReady || !user?.id) return undefined;
+        let cancelled = false;
+        // /access answers 200 for everyone, so people without a sales role no longer log a 403 on every page.
+        fetchSalesAccess()
+            .then((res) => { if (!cancelled) setHasSalesAccess(Boolean(res?.hasAccess)); })
+            .catch(() => { if (!cancelled) setHasSalesAccess(false); });
+        fetchMyVenues()
+            .then((res) => { if (!cancelled) setIsVenueOwner((res?.venues?.length ?? 0) > 0); })
+            .catch(() => { if (!cancelled) setIsVenueOwner(false); });
+        return () => { cancelled = true; };
+    }, [rolesReady, user?.id]);
+
     const navItems = useMemo(() => {
         if (!rolesReady) {
             return dashboardNavConfig.filter((item) => (
@@ -349,16 +379,18 @@ export default function DashboardLayout({ children }) {
             ));
         }
         if (isAdminNav) {
-            return adminNavItems;
+            return buildAdminNavItems({ cityScope: adminCityScope });
         }
         const items = buildMemberNavItems({
             hasLiveOpsAccess,
             isLiveEvent: hasLiveEvent,
             mounted: rolesReady,
             user,
+            hasSalesAccess,
+            isVenueOwner,
         });
         return items;
-    }, [isAdminNav, rolesReady, hasLiveOpsAccess, hasLiveEvent, user]);
+    }, [isAdminNav, adminCityScope, rolesReady, hasLiveOpsAccess, hasLiveEvent, user, hasSalesAccess, isVenueOwner]);
     const navEntries = useMemo(() => {
         if (isAdminNav || sidebarCollapsed) {
             return navItems.map((item) => ({ type: 'item', key: item.key, item }));

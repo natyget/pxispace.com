@@ -47,3 +47,9 @@ coverage/
 # requires it and fails outright without one, and actions/setup-node's
 # `cache: npm` has no key to hash. Ignoring it broke every CI run.
 .claude/
+
+# Written by `next dev` on every run (see the agentRules option in next.config.js), from the
+# docs inside node_modules/next. Generated, not authored: committing them means a diff every
+# time Next is upgraded, and they come back on their own for whoever needs them.
+AGENTS.md
+CLAUDE.md
