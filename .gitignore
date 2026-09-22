@@ -53,3 +53,6 @@ coverage/
 # time Next is upgraded, and they come back on their own for whoever needs them.
 AGENTS.md
 CLAUDE.md
+
+# PXI-WEB browser QA inputs and screenshots (tokens live here — never commit)
+scripts/qa/.artifacts/

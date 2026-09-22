@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { JsonLd } from '@/components/seo/JsonLd';
 import CityEventsView from '@/views/discover/CityEventsView';
 import { getCity, allCitySlugs } from '@/lib/seo/cities';
-import { getAllPublicEvents, eventsInCity, eventGenres, eventUrl } from '@/lib/publicEvents';
+import { getPublicEventsSnapshot, eventsInCity, eventGenres, eventUrl } from '@/lib/publicEvents';
 import { allGenres, eventMatchesGenre } from '@/lib/seo/genres';
 import {
   SITE_URL,
@@ -43,11 +43,20 @@ export default async function CityPage({ params }) {
 
   // Resolve the events on the SERVER so the list is in the first HTML response.
   // Previously this hub client-fetched, so a crawler saw a hero and six skeletons.
+  //
+  // WEB-1: an empty city was still shipping those skeletons, because `[]` told the view
+  // nothing about whether anybody had looked. `seeded` is that missing fact — when the
+  // upstream answered, even with nothing, the first HTML is the create CTA rather than a
+  // loading state nobody will ever see resolve.
   let cityEvents = [];
+  let seeded = false;
   try {
-    cityEvents = eventsInCity(await getAllPublicEvents(), city);
+    const snapshot = await getPublicEventsSnapshot();
+    cityEvents = eventsInCity(snapshot.events, city);
+    seeded = snapshot.ok;
   } catch {
     cityEvents = [];
+    seeded = false;
   }
 
   // Only link genre sub-hubs that actually have events in this city — an empty
@@ -64,7 +73,7 @@ export default async function CityPage({ params }) {
 
   return (
     <>
-      <CityEventsView city={city} initialEvents={cityEvents} />
+      <CityEventsView city={city} initialEvents={seeded ? cityEvents : null} />
 
       {genreLinks.length ? (
         <nav aria-label={`${city.name} genres`} className="bg-black">
