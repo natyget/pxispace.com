@@ -45,19 +45,29 @@ async function fetchPageUncached(offset) {
 }
 
 /**
- * Every published, upcoming, public event. Returns [] rather than throwing — an SEO
- * surface must degrade to "fewer URLs", never to a 500.
+ * Every published, upcoming, public event, with whether the upstream actually answered.
+ *
+ * Returns `{ events, ok }` rather than throwing — an SEO surface must degrade to "fewer
+ * URLs", never to a 500. But `events: []` alone is ambiguous in a way that matters to the
+ * city hubs: "this city has nothing on" and "we could not ask" produce the same empty array
+ * and must not produce the same page. `ok` is false only when the FIRST page failed, i.e.
+ * when nothing at all was learned; a later page failing still leaves real events to publish.
  */
 async function fetchAllPublicEventsUncached() {
   const out = [];
+  let ok = true;
   const deadline = Date.now() + TOTAL_BUDGET_MS;
   for (let page = 0; page < MAX_PAGES; page += 1) {
     if (Date.now() > deadline) {
       console.error('[publicEvents] paging budget exhausted', { pages: page, events: out.length });
+      if (page === 0) ok = false;
       break;
     }
     const res = await fetchPageUncached(page * PAGE_SIZE);
-    if (!res) break;
+    if (!res) {
+      if (page === 0) ok = false;
+      break;
+    }
     out.push(...res.events);
     if (res.events.length < PAGE_SIZE) break;
     if (res.total != null && out.length >= res.total) break;
@@ -65,7 +75,7 @@ async function fetchAllPublicEventsUncached() {
 
   const now = Date.now();
   const seen = new Set();
-  return out
+  const events = out
     .filter((e) => {
       if (!e?.id || seen.has(e.id)) return false;
       seen.add(e.id);
@@ -80,9 +90,17 @@ async function fetchAllPublicEventsUncached() {
       return true;
     })
     .sort((a, b) => new Date(a.startDate ?? 0) - new Date(b.startDate ?? 0));
+
+  return { events, ok };
 }
 
-export const getAllPublicEvents = cache(fetchAllPublicEventsUncached);
+/** `{ events, ok }` — use this where "we could not ask" must read differently from "empty". */
+export const getPublicEventsSnapshot = cache(fetchAllPublicEventsUncached);
+
+/** Every published, upcoming, public event. The list alone, for callers that only publish it. */
+export async function getAllPublicEvents() {
+  return (await getPublicEventsSnapshot()).events;
+}
 
 /* ────────────────────────────────────────────────────────────────────────── */
 
