@@ -11,9 +11,9 @@ import {
   useMemo,
 } from 'react';
 import { useParams } from 'next/navigation';
+import { refreshSessionClaims } from '@/services/auth';
 import { eventsService } from '@/services/events';
 
-import { getEventsForWallet } from '@/services/events';
 
 const EventManageContext = createContext(null);
 
@@ -38,37 +38,58 @@ export function EventManageProvider({ children }) {
     return false;
   }, [event]);
 
-  const loadEvent = useCallback(() => {
+  /**
+   * WEB-2. This is now the authoritative access check for a dashboard event, because the edge
+   * no longer refuses one. Two things changed:
+   *
+   *   - `canManage` from the API decides, not the token's claim list. The API answers against
+   *     the database, so a co-host, a second device and a stale cookie all get the truth.
+   *   - On a refusal we refresh the session token ONCE and ask again before saying no. Claims
+   *     freeze at token issue, so the common case is simply an out-of-date cookie. Once only:
+   *     a genuine refusal survives a refresh, and retrying it forever would spin.
+   *
+   * The old version caught every rejection and hunted the id through two list endpoints, then
+   * said "Event not found" regardless — so a permission problem, a deleted event and a dropped
+   * connection all read the same, and none of them told the reader what to do.
+   */
+  const loadEvent = useCallback(async () => {
     if (!eventId) return;
-    setLoading(true);
-    eventsService
-      .getEvent(eventId)
-      .then((data) => {
-        setEvent(data.event || data);
-        setError(null);
-      })
-      .catch(async () => {
-        try {
-          const managedRes = await eventsService.getManagedEvents({ limit: 100, offset: 0 });
-          const found = (managedRes?.events || []).find((e) => String(e.id) === String(eventId));
-          if (found) {
-            setEvent(found);
-            setError(null);
-            return;
-          }
-          const walletRes = await getEventsForWallet(100, 0);
-          const foundWallet = (walletRes?.events || []).find((e) => String(e.id) === String(eventId));
-          if (foundWallet) {
-            setEvent(foundWallet);
-            setError(null);
-            return;
-          }
-        } catch {
-          // ignore fallback error
+
+    // One attempt. A refusal gets exactly one retry, after refreshing the token — see above.
+    const attempt = async (allowRefresh) => {
+      try {
+        const data = await eventsService.getEvent(eventId);
+        const loaded = data.event || data;
+        if (loaded?.canManage === false) {
+          if (allowRefresh && (await refreshSessionClaims())) return attempt(false);
+          setEvent(null);
+          setError({ kind: 'forbidden', message: 'You do not have access to this event.' });
+          return;
         }
-        setError('Event not found');
-      })
-      .finally(() => setLoading(false));
+        setEvent(loaded);
+        setError(null);
+      } catch (err) {
+        const status = err?.status;
+        if (status === 404) {
+          setError({ kind: 'missing', message: 'This event no longer exists.' });
+        } else if (status === 401 || status === 403) {
+          if (allowRefresh && (await refreshSessionClaims())) return attempt(false);
+          setError({ kind: 'forbidden', message: 'You do not have access to this event.' });
+        } else {
+          setError({
+            kind: 'unavailable',
+            message: 'Could not load this event. Check your connection and try again.',
+          });
+        }
+      }
+    };
+
+    setLoading(true);
+    try {
+      await attempt(true);
+    } finally {
+      setLoading(false);
+    }
   }, [eventId]);
 
   const loadParticipants = useCallback(() => {

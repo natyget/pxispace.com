@@ -14,7 +14,7 @@ const TABS = [
 ];
 
 export default function EventManageLayoutInner({ children }) {
-  const { loading, error, event, eventId } = useEventManage();
+  const { loading, error, event, eventId, reloadEvent } = useEventManage();
   const pathname = usePathname();
 
   if (loading && !event) {
@@ -26,12 +26,35 @@ export default function EventManageLayoutInner({ children }) {
   }
 
   if (error || !event || !eventId) {
+    // WEB-2: three different problems used to read "Event not found" with one dead-end link.
+    // A reader who was refused, a reader whose event was deleted, and a reader whose network
+    // dropped each need a different next step — and the last one is usually fixed by trying
+    // again, which the old copy never offered.
+    const kind = error?.kind ?? 'missing';
+    const message = error?.message ?? 'This event no longer exists.';
     return (
-      <div>
-        <p className="text-red-400">{error || 'Event not found'}</p>
-        <Link href="/dashboard/events" className="mt-4 inline-block text-sm font-semibold text-white/60 hover:text-white">
-          Back to events
-        </Link>
+      <div className="max-w-lg">
+        <p className="text-red-400">{message}</p>
+        {kind === 'forbidden' ? (
+          <p className="mt-2 text-sm text-white/50">
+            Only the organizer and their co-hosts can manage an event. If you were just added as a
+            co-host, sign out and back in to pick up the change.
+          </p>
+        ) : null}
+        <div className="mt-4 flex flex-wrap items-center gap-4">
+          {kind === 'unavailable' ? (
+            <button
+              type="button"
+              onClick={() => reloadEvent()}
+              className="text-sm font-semibold text-white hover:text-white/80"
+            >
+              Try again
+            </button>
+          ) : null}
+          <Link href="/dashboard/events" className="text-sm font-semibold text-white/60 hover:text-white">
+            Back to events
+          </Link>
+        </div>
       </div>
     );
   }
