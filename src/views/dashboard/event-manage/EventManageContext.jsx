@@ -52,6 +52,17 @@ export function EventManageProvider({ children }) {
    * said "Event not found" regardless — so a permission problem, a deleted event and a dropped
    * connection all read the same, and none of them told the reader what to do.
    */
+  // WEB-2: heal a stale cookie instead of carrying it around. The edge sets pxi_claims_stale
+  // when the token's claim list did not cover this event — which is no longer a refusal, but
+  // is worth repairing so the next request takes the fast path. Fire and forget: the page has
+  // already loaded on the API's answer, so nothing here is waiting on it.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (!/(?:^|;\s*)pxi_claims_stale=1/.test(document.cookie)) return;
+    document.cookie = 'pxi_claims_stale=; Max-Age=0; path=/';
+    void refreshSessionClaims();
+  }, []);
+
   const loadEvent = useCallback(async () => {
     if (!eventId) return;
 
