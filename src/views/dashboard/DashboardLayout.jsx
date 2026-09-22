@@ -261,7 +261,10 @@ export default function DashboardLayout({ children }) {
             if (!capabilities.loading && capabilities.determined && !hasLiveOpsAccess) router.replace('/dashboard');
             return;
         }
-        if (!isVendor && isVendorOnlyRoute(pathname)) router.replace('/dashboard');
+        // WEB-2: say why. A silent bounce to /dashboard leaves someone who clicked
+        // "Analytics" staring at the home screen wondering what they did wrong; /403 names the
+        // reason and offers the upgrade, which is the actual way in.
+        if (!isVendor && isVendorOnlyRoute(pathname)) router.replace('/403?reason=vendor');
     }, [rolesReady, pathname, capabilities.loading, capabilities.determined, hasLiveOpsAccess, isVendor, onLiveOpsSurface, router]);
 
     useEffect(() => {

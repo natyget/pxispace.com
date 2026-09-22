@@ -95,7 +95,8 @@ export default async function CityGenrePage({ params }) {
         title={`${genre.name} events in ${city.name}`}
         intro={genre.blurb}
         events={events}
-        emptyMessage={`No ${genre.name} events on the calendar in ${city.name} right now. New nights go up every week.`}
+        emptyMessage={`Nothing ${genre.name.toLowerCase()} on the calendar in ${city.name} right now. If you are putting one on, this is where people will look for it.`}
+        emptyCta={{ title: `No ${genre.name} events in ${city.name} yet.` }}
         rails={[
           ...(siblingGenres.length ? [{ title: `More in ${city.name}`, links: siblingGenres }] : []),
           ...(otherCities.length ? [{ title: `${genre.name} elsewhere`, links: otherCities }] : []),

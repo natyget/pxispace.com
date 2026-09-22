@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import CreateEventEmptyState from '@/components/discover/CreateEventEmptyState';
 import { eventsService } from '@/services/events';
 import EventCard from '@/views/events/EventCard';
 import { StaggerGroup, RevealItem, HoverLift } from '@/components/motion/Reveal';
@@ -61,6 +62,11 @@ export default function CityEventsView({ city, initialEvents }) {
   const seeded = Array.isArray(initialEvents) && initialEvents.length > 0;
   const [events, setEvents] = useState(() => (seeded ? initialEvents : []));
   const [loading, setLoading] = useState(!seeded);
+  // WEB-1: a failed fetch used to be indistinguishable from an empty city — both set events
+  // to [] — so a reader whose connection dropped was told "no events here, create one". The
+  // three outcomes are different and now look different.
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     // Already server-rendered — refetching would only cause a flash of the same rows.
@@ -72,12 +78,16 @@ export default function CityEventsView({ city, initialEvents }) {
         if (!alive) return;
         setEvents(res?.events || []);
       })
-      .catch(() => alive && setEvents([]))
+      .catch(() => {
+        if (!alive) return;
+        setEvents([]);
+        setFailed(true);
+      })
       .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
     };
-  }, [seeded]);
+  }, [seeded, attempt]);
 
   const cityEvents = useMemo(() => {
     const needles = city.match.map((m) => m.toLowerCase());
@@ -137,16 +147,29 @@ export default function CityEventsView({ city, initialEvents }) {
               </RevealItem>
             ))}
           </StaggerGroup>
-        ) : (
+        ) : failed ? (
           <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-10 text-center">
-            <h2 className="display-3">No live events in {city.name} yet.</h2>
+            <h2 className="display-3">Could not load events.</h2>
             <p className="body-lead mx-auto mt-4 max-w-md">
-              New nights drop all the time. Browse everything happening on PXI right now.
+              Something went wrong on our side, or your connection dropped. This is not an empty city.
             </p>
-            <Link href="/events" className="glow-cta mt-8 inline-flex px-8 py-4 text-sm">
-              Explore all events <ArrowRight className="h-4 w-4" />
-            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setLoading(true);
+                setFailed(false);
+                setAttempt((n) => n + 1);
+              }}
+              className="glow-cta mt-8 inline-flex px-8 py-4 text-sm"
+            >
+              Try again
+            </button>
           </div>
+        ) : (
+          <CreateEventEmptyState
+            title={`No live events in ${city.name} yet.`}
+            blurb={`Be the first. Put your night on PXI and people in ${city.name} will find it here.`}
+          />
         )}
       </SectionShell>
     </div>

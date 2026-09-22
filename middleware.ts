@@ -120,19 +120,32 @@ async function verifyPasetoV4(
 /** Path prefix for event-scoped dashboard routes. Event [id] is the first segment after this. */
 const DASHBOARD_EVENTS_PREFIX = '/dashboard/events/';
 
-/**
- * Event ownership: Per task, "User ID does not match ownership ID of requested event parameter [id]"
- * redirect to 403. At Edge we use ownedEventIds + staffEventIds from the PASETO payload (no DB).
- * Server-side DAL still verifies ownership for mutations.
- */
+/** Only a UUID is an event id. Anything else under /dashboard/events/ is a static route. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function getEventIdFromPath(pathname: string): string | null {
   if (!pathname.startsWith(DASHBOARD_EVENTS_PREFIX)) return null;
-  const after = pathname.slice(DASHBOARD_EVENTS_PREFIX.length);
-  const segment = after.split('/')[0];
-  return segment || null;
+  const segment = pathname.slice(DASHBOARD_EVENTS_PREFIX.length).split('/')[0];
+  // Previously this returned any segment and the caller excluded the literal 'new'. An
+  // allowlist of one: the day someone adds /dashboard/events/archived it would be read as an
+  // event id. Shape-checking is the durable version of that rule.
+  return segment && UUID_RE.test(segment) ? segment : null;
 }
 
-function canAccessEvent(claims: { ownedEventIds?: string[]; staffEventIds?: string[] }, eventId: string): boolean {
+/**
+ * Whether the token ALREADY proves this event — a fast path, never a verdict.
+ *
+ * WEB-2. This used to be the verdict: a miss meant /403, computed from claims that are
+ * stale by construction. `ownedEventIds` is creator-only and capped, and claims freeze at
+ * token issue, so three ordinary people were locked out of events they run: an accepted
+ * co-host, anyone whose cookie predates the event (a second device, or an event made
+ * elsewhere), and a prolific organizer whose older events fell past the cap.
+ *
+ * The edge now gates AUTHENTICATION only. Whether you may manage an event is answered by
+ * the API, against the database, where the answer cannot be stale — see `canManage` on
+ * GET /api/events/:id. A hit here just tells the app it need not re-check.
+ */
+function claimsProveEvent(claims: { ownedEventIds?: string[]; staffEventIds?: string[] }, eventId: string): boolean {
   const owned = claims.ownedEventIds ?? [];
   const staff = claims.staffEventIds ?? [];
   return owned.includes(eventId) || staff.includes(eventId);
@@ -179,14 +192,21 @@ export async function middleware(request: NextRequest) {
   // that really are vendor-only, and the API re-checks every mutation.
   // NOTE: /dashboard/vendor-upgrade must also stay open to non-vendors — it is the
   // page where a CITIZEN becomes a vendor.
-  // Event [id] ownership: /dashboard/events/:id (exclude static segments like "new").
-  const eventId = getEventIdFromPath(pathname);
-  if (eventId && eventId !== 'new' && !canAccessEvent(claims, eventId)) {
-    return NextResponse.redirect(new URL('/403', request.url));
-  }
-
   const res = NextResponse.next();
   res.headers.set('x-pxi-user-id', claims.sub);
+
+  // Event [id]: a claim miss is no longer a refusal. The page loads and asks the API, which
+  // knows the truth. We pass the miss along so the app can refresh its token once — that
+  // brings the claim list back in step for the next request without anyone being bounced.
+  const eventId = getEventIdFromPath(pathname);
+  if (eventId && !claimsProveEvent(claims, eventId)) {
+    res.cookies.set('pxi_claim_miss', eventId, {
+      httpOnly: false, // read and cleared by the dashboard; carries no authority of its own
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 300,
+    });
+  }
   return res;
 }
 
