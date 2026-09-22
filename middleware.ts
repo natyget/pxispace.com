@@ -196,11 +196,15 @@ export async function middleware(request: NextRequest) {
   res.headers.set('x-pxi-user-id', claims.sub);
 
   // Event [id]: a claim miss is no longer a refusal. The page loads and asks the API, which
-  // knows the truth. We pass the miss along so the app can refresh its token once — that
-  // brings the claim list back in step for the next request without anyone being bounced.
+  // knows the truth. We flag the miss so the dashboard re-issues its token once and the claim
+  // list catches up — a stale cookie heals itself instead of being carried around forever.
+  //
+  // The flag is a bare '1'. WEB-2 forbids putting event ids in a client-readable cookie, and
+  // rightly: this cookie is readable by any script on the origin, and a list of event ids a
+  // person has opened is not something to hand out for a convenience signal.
   const eventId = getEventIdFromPath(pathname);
   if (eventId && !claimsProveEvent(claims, eventId)) {
-    res.cookies.set('pxi_claim_miss', eventId, {
+    res.cookies.set('pxi_claims_stale', '1', {
       httpOnly: false, // read and cleared by the dashboard; carries no authority of its own
       sameSite: 'lax',
       path: '/',
