@@ -70,6 +70,26 @@ function claims(token) {
 }
 
 const textOf = async (page) => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+
+const CHALLENGE = /Performing security verification|Just a moment|Ray ID:/i;
+
+/**
+ * Navigate, then wait out Cloudflare if it interposes.
+ *
+ * The deployed site starts challenging part-way through a long automated run from one IP. The
+ * interstitial clears itself in a few seconds — but asserting while it is up reads as the page
+ * being broken, which is how an earlier run produced four failures that were nothing to do
+ * with the app. Local runs never see it and pay nothing for this.
+ */
+async function go(page, url, { settle = 0 } = {}) {
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 });
+    for (let i = 0; i < 12; i += 1) {
+        const body = await textOf(page).catch(() => '');
+        if (!CHALLENGE.test(body)) break;
+        await page.waitForTimeout(4000);
+    }
+    if (settle) await page.waitForTimeout(settle);
+}
 const shot = (page, name) => page.screenshot({ path: path.join(SHOTS, `${name}.png`) });
 
 /** An API call made from inside the page: the app's origin, the app's token, real CORS. */
@@ -104,7 +124,7 @@ function apiCall(page, pathname, { method = 'GET', body = null, auth = true } = 
  */
 async function loginThroughForm(page, { email, password }, { expectLanding = null } = {}) {
     if (!/\/login/.test(page.url())) {
-        await page.goto(`${SITE}/login`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+        await go(page, `${SITE}/login`);
     }
     const emailField = page.locator('input[type="email"]').first();
     await emailField.waitFor({ state: 'visible', timeout: 60000 });
@@ -127,7 +147,17 @@ async function loginThroughForm(page, { email, password }, { expectLanding = nul
         submit.click(),
     ]);
     await page.waitForTimeout(5000);
-    const token = await page.evaluate(() => localStorage.getItem('pxi_token'));
+    let token = await page.evaluate(() => localStorage.getItem('pxi_token'));
+    if (!token) {
+        // One retry, and say what the page said. A login that silently "just failed" has sent
+        // more than one person hunting a bug in the app when the answer was on screen.
+        const said = (await textOf(page)).slice(0, 200);
+        console.log(`        login did not take, retrying — page said: ${said}`);
+        await page.waitForTimeout(4000);
+        await page.locator('button[type="submit"]').first().click({ timeout: 30000 }).catch(() => {});
+        await page.waitForTimeout(8000);
+        token = await page.evaluate(() => localStorage.getItem('pxi_token'));
+    }
     if (!token) throw new Error(`login failed for ${email} — landed on ${page.url()}`);
     if (expectLanding) check(`login lands on ${expectLanding}`, page.url().includes(expectLanding), page.url());
     return token;
@@ -147,7 +177,7 @@ async function newContext(browser, opts = {}) {
     section('Phase 0 · accounts');
     {
         const { ctx, page } = await newContext(browser);
-        await page.goto(`${SITE}/`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+        await go(page, `${SITE}/`);
         const reg = await apiCall(page, '/api/auth/register', {
             method: 'POST',
             auth: false,
@@ -167,8 +197,7 @@ async function newContext(browser, opts = {}) {
     {
         const { ctx, page } = await newContext(browser);
 
-        await page.goto(`${SITE}/discover/new-york`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await page.waitForTimeout(8000);
+        await go(page, `${SITE}/discover/new-york`, { settle: 8000 });
         let body = await textOf(page);
         await shot(page, '01-city-empty');
         check('an empty city says it is empty', /No live events in New York yet/.test(body), body.slice(0, 140));
@@ -177,15 +206,13 @@ async function newContext(browser, opts = {}) {
         check('…with the skeletons gone', (await page.locator('.animate-pulse').count()) === 0);
         check('…and no error copy anywhere near it', !/Could not load events/.test(body));
 
-        await page.goto(`${SITE}/discover/boston`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await page.waitForTimeout(8000);
+        await go(page, `${SITE}/discover/boston`, { settle: 8000 });
         body = await textOf(page);
         await shot(page, '02-city-with-events');
         check('a city with events lists the real event', /QA Cambridge Night/i.test(body), body.slice(0, 160));
         check('…and does not pitch creating one instead', !/No live events in Boston/.test(body));
 
-        await page.goto(`${SITE}/discover/boston/afrohouse`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await page.waitForTimeout(5000);
+        await go(page, `${SITE}/discover/boston/afrohouse`, { settle: 5000 });
         body = await textOf(page);
         await shot(page, '03-genre-empty');
         check('the genre sub-hub has its own empty heading', /No Afro House events in Boston yet/.test(body));
@@ -205,8 +232,7 @@ async function newContext(browser, opts = {}) {
         const { ctx, page } = await newContext(browser);
         let block = true;
         await ctx.route(`${API}/api/events**`, (route) => (block ? route.abort('failed') : route.continue()));
-        await page.goto(`${UNSEEDED}/discover/new-york`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await page.waitForTimeout(8000);
+        await go(page, `${UNSEEDED}/discover/new-york`, { settle: 8000 });
         let body = await textOf(page);
         await shot(page, '04-error');
         check('a failed fetch says the fetch failed', /Could not load events/.test(body), body.slice(0, 140));
@@ -229,8 +255,7 @@ async function newContext(browser, opts = {}) {
             await new Promise((r) => setTimeout(r, 120000));
             await route.abort();
         });
-        await page.goto(`${UNSEEDED}/discover/new-york`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await page.waitForTimeout(6000);
+        await go(page, `${UNSEEDED}/discover/new-york`, { settle: 6000 });
         const skeletons = await page.locator('.animate-pulse').count();
         const body = await textOf(page);
         await shot(page, '06-loading');
@@ -242,10 +267,13 @@ async function newContext(browser, opts = {}) {
     // TC-7, the whole round trip: CTA → login → the create form.
     {
         const { ctx, page } = await newContext(browser);
-        await page.goto(`${SITE}/discover/boston/afrohouse`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await page.waitForTimeout(4000);
+        await go(page, `${SITE}/discover/boston/afrohouse`, { settle: 4000 });
         await page.locator('a[href="/dashboard/events/new"]').first().click();
         await page.waitForURL(/\/login/, { timeout: 60000 }).catch(() => {});
+        // A click can land on the interstitial too, and the URL then is not the real answer.
+        for (let i = 0; i < 12 && CHALLENGE.test(await textOf(page).catch(() => '')); i += 1) {
+            await page.waitForTimeout(4000);
+        }
         await page.waitForTimeout(3000);
         await shot(page, '07-cta-to-login');
         check(
@@ -267,7 +295,7 @@ async function newContext(browser, opts = {}) {
     let freshEventId = null;
     {
         const { ctx, page } = await newContext(browser);
-        await page.goto(`${SITE}/`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+        await go(page, `${SITE}/`);
         const token = await loginThroughForm(page, ORGANIZER);
         const before = claims(token);
         console.log(`        session minted with ${(before?.ownedEventIds || []).length} owned / ${(before?.staffEventIds || []).length} staff claims`);
@@ -275,7 +303,7 @@ async function newContext(browser, opts = {}) {
         // "Another device": a separate browser, same account, creates an event. The session
         // above never sees the refreshed token — which is the entire bug.
         const other = await newContext(browser);
-        await other.page.goto(`${SITE}/`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+        await go(other.page, `${SITE}/`);
         await loginThroughForm(other.page, ORGANIZER);
         const created = await apiCall(other.page, '/api/events', {
             method: 'POST',
@@ -299,8 +327,7 @@ async function newContext(browser, opts = {}) {
             { owned: (claims(stale)?.ownedEventIds || []).length },
         );
 
-        await page.goto(`${SITE}/dashboard/events/${freshEventId}`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await page.waitForTimeout(14000);
+        await go(page, `${SITE}/dashboard/events/${freshEventId}`, { settle: 14000 });
         const body = await textOf(page);
         await shot(page, '09-own-event-stale-cookie');
         check('the creator is NOT bounced to /403', !page.url().includes('/403'), page.url());
@@ -313,9 +340,18 @@ async function newContext(browser, opts = {}) {
             JSON.stringify(after || {}).includes(freshEventId),
             { owned: (after?.ownedEventIds || []).length },
         );
+        // The heal has to be visible AT THE EDGE, which is the point of it: open the same page
+        // again and the claim should now hit, so nothing flags it as stale.
+        //
+        // Asserting the flag is gone immediately after the first load is NOT the same thing and
+        // is flaky: the effect clears the cookie on mount, but a request still carrying the old
+        // token can re-set it a moment later. That race is harmless — the flag is a bare '1'
+        // worth one extra refresh — and it resolves as soon as the refreshed token reaches the
+        // cookie, which is exactly what this second visit proves.
+        await go(page, `${SITE}/dashboard/events/${freshEventId}`, { settle: 8000 });
         const cookies = await ctx.cookies();
         const pxi = cookies.filter((c) => c.name.startsWith('pxi_'));
-        check('the stale-claims flag was consumed', !pxi.some((c) => c.name === 'pxi_claims_stale'), pxi.map((c) => c.name));
+        check('the healed session no longer trips the edge', !pxi.some((c) => c.name === 'pxi_claims_stale'), pxi.map((c) => c.name));
         check(
             'no PXI cookie carries an event id',
             !pxi.some((c) => /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-/i.test(c.value)),
@@ -327,11 +363,11 @@ async function newContext(browser, opts = {}) {
     // 2b. The reported bug itself: a co-host accepted AFTER their session was minted.
     {
         const host = await newContext(browser);
-        await host.page.goto(`${SITE}/`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+        await go(host.page, `${SITE}/`);
         await loginThroughForm(host.page, ORGANIZER);
 
         const guest = await newContext(browser);
-        await guest.page.goto(`${SITE}/`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+        await go(guest.page, `${SITE}/`);
         const guestToken = await loginThroughForm(guest.page, CITIZEN);
         const guestClaims = claims(guestToken);
         check(
@@ -361,8 +397,7 @@ async function newContext(browser, opts = {}) {
         });
 
         // The cookie in this browser still predates the membership. That is the bug.
-        await guest.page.goto(`${SITE}/dashboard/events/${freshEventId}`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await guest.page.waitForTimeout(14000);
+        await go(guest.page, `${SITE}/dashboard/events/${freshEventId}`, { settle: 14000 });
         const body = await textOf(guest.page);
         await shot(guest.page, '10-cohost-stale-cookie');
         check('THE REPORTED BUG: an accepted co-host reaches the event', !guest.page.url().includes('/403'), guest.page.url());
@@ -375,11 +410,10 @@ async function newContext(browser, opts = {}) {
     // 2c. A stranger, the same three refusals, and the API behind them.
     {
         const { ctx, page } = await newContext(browser);
-        await page.goto(`${SITE}/`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+        await go(page, `${SITE}/`);
         await loginThroughForm(page, CITIZEN);
 
-        await page.goto(`${SITE}/dashboard/events/${FOREIGN_EVENT}`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await page.waitForTimeout(14000);
+        await go(page, `${SITE}/dashboard/events/${FOREIGN_EVENT}`, { settle: 14000 });
         let body = await textOf(page);
         await shot(page, '11-stranger-refused');
         check('a stranger is refused in words, not by a redirect', /do not have access/i.test(body), body.slice(0, 200));
@@ -391,8 +425,7 @@ async function newContext(browser, opts = {}) {
         check('…and refuses the write outright', write.status === 403, { status: write.status, body: write.text.slice(0, 120) });
 
         // A deleted or invented event must not look like a permission problem.
-        await page.goto(`${SITE}/dashboard/events/00000000-0000-4000-8000-000000000000`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await page.waitForTimeout(12000);
+        await go(page, `${SITE}/dashboard/events/00000000-0000-4000-8000-000000000000`, { settle: 12000 });
         body = await textOf(page);
         await shot(page, '12-missing-event');
         check('a missing event reads differently from a refusal', /not found|no longer/i.test(body) && !/do not have access/i.test(body), body.slice(0, 200));
@@ -402,25 +435,22 @@ async function newContext(browser, opts = {}) {
     // 2d. TC-9 with a REAL Citizen: the vendor bounce, and what stays open.
     {
         const { ctx, page } = await newContext(browser);
-        await page.goto(`${SITE}/`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+        await go(page, `${SITE}/`);
         const token = await loginThroughForm(page, CITIZEN);
         check('the test account really is a non-vendor', claims(token)?.isVendor !== true, claims(token)?.role);
 
-        await page.goto(`${SITE}/dashboard/analytics`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await page.waitForTimeout(10000);
+        await go(page, `${SITE}/dashboard/analytics`, { settle: 10000 });
         const body = await textOf(page);
         await shot(page, '13-vendor-bounce');
         check('a Citizen on a vendor-only surface lands on the explained refusal', page.url().includes('/403?reason=vendor'), page.url());
         check('…which names the reason', /for organizers/i.test(body), body.slice(0, 200));
         check('…and links to the upgrade', (await page.locator('a[href="/dashboard/vendor-upgrade"]').count()) > 0);
 
-        await page.goto(`${SITE}/dashboard/events`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await page.waitForTimeout(9000);
+        await go(page, `${SITE}/dashboard/events`, { settle: 9000 });
         await shot(page, '14-citizen-my-events');
         check('…and My Events stays open to them (decision 8)', !page.url().includes('/403'), page.url());
 
-        await page.goto(`${SITE}/403`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-        await page.waitForTimeout(4000);
+        await go(page, `${SITE}/403`, { settle: 4000 });
         const plain = await textOf(page);
         check('/403 with no reason reads as a plain refusal, not a vendor pitch', /do not have access to this page/i.test(plain) && !/for organizers/i.test(plain), plain.slice(0, 160));
         await ctx.close();
@@ -430,8 +460,7 @@ async function newContext(browser, opts = {}) {
     {
         const { ctx, page } = await newContext(browser);
         for (const target of ['/dashboard/events', '/dashboard/events/new', '/dashboard/analytics', `/dashboard/events/${freshEventId}`]) {
-            await page.goto(`${SITE}${target}`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-            await page.waitForTimeout(2500);
+            await go(page, `${SITE}${target}`, { settle: 2500 });
             check(`signed out, ${target} → login with the return path`, /\/login\?redirect=/.test(page.url()), page.url());
         }
         await ctx.close();

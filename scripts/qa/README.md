@@ -34,6 +34,10 @@ SITE=http://localhost:5174 UNSEEDED=http://localhost:5173 node scripts/qa/webDee
 3. **A seeded hub has no loading or error state**, by design — the answer is already in the
    first response. Those two states only exist on a server that could not seed, which is what
    `UNSEEDED` points at.
+4. **Do not point `SITE` at the deployed site for a whole run.** Six or seven navigations in,
+   Cloudflare puts up a block page and keeps it up, and every assertion after that reads as a
+   broken app. Run against a local build of the same commit and check the deployed site with
+   curl, which is not rate-limited.
 
 Assertions to copy rather than reinvent: grep the event **id**, never `href="/events/…"` (the
 markup escapes its quotes), and match card titles case-insensitively (CSS uppercases them).
