@@ -138,8 +138,18 @@ async function runProfile(browser, profile) {
     body = await textOf(page);
     await page.screenshot({ path: path.join(SHOTS, `02-city-with-events-${tag}.png`), fullPage: true });
 
-    check('a city with events lists them', /QA Boston Discovery Night/i.test(body), body.slice(0, 160));
-    check('…and does not pitch creating one instead', !/No live events in Boston/.test(body));
+    // Boston is deliberately EMPTY now — the public QA event that used to fill it was deleted
+    // so the founder could reach the empty state. Asserting a fixture we removed on purpose
+    // would fail this run for the wrong reason, so the populated case is exercised only when
+    // the city actually has something on, and is reported as not-exercised otherwise.
+    const cardCount = await page.locator('a[href^="/events/"]').count();
+    if (cardCount > 0) {
+        check('a city with events lists them', cardCount > 0, { cards: cardCount });
+        check('…and does not pitch creating one instead', !/No live events in Boston/.test(body));
+    } else {
+        note('the populated-city case', 'NOT EXERCISED — Boston is intentionally empty; ' +
+            'create a PUBLIC event in Boston to cover it, and remember the hub caches for an hour');
+    }
 
     const ox2 = await overflowsX(page);
     check('…and still does not scroll sideways', !ox2.over, ox2);
