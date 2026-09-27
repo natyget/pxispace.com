@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import CreateEventEmptyState from '@/components/discover/CreateEventEmptyState';
 import { ArrowRight } from 'lucide-react';
 import { eventImageUrl, eventPriceUsd } from '@/lib/publicEvents';
 import { resolveEventCity } from '@/lib/seo/cities';
@@ -59,8 +60,13 @@ export function HubEventCard({ event }) {
   );
 }
 
-export function HubEventGrid({ events = [], emptyMessage = 'No upcoming events yet.' }) {
+export function HubEventGrid({ events = [], emptyMessage = 'No upcoming events yet.', emptyCta = null }) {
   if (!events.length) {
+    // WEB-1: a hub that can be filled by the reader (a city/genre night) offers to let them
+    // fill it. Hubs they cannot act on — an artist page, say — keep the plain sentence.
+    if (emptyCta) {
+      return <CreateEventEmptyState title={emptyCta.title} blurb={emptyMessage} className="mt-2" />;
+    }
     return <p className="text-sm text-zinc-500">{emptyMessage}</p>;
   }
   return (
@@ -130,6 +136,7 @@ export default function HubPage({
   intro,
   events = [],
   emptyMessage,
+  emptyCta = null,
   children,
   rails = [],
 }) {
@@ -154,7 +161,7 @@ export default function HubPage({
 
       <section className="mx-auto max-w-[1200px] px-6 pb-24 pt-14">
         {children}
-        <HubEventGrid events={events} emptyMessage={emptyMessage} />
+        <HubEventGrid events={events} emptyMessage={emptyMessage} emptyCta={emptyCta} />
         {rails.map((rail) => (
           <HubLinkRail key={rail.title} title={rail.title} links={rail.links} />
         ))}

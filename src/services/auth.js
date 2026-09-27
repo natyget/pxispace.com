@@ -35,6 +35,33 @@ export async function ensurePasetoCookie(token) {
     return setPasetoCookie(token);
 }
 
+/**
+ * Re-issue the session token so its event claims match the database, and re-sync the cookie.
+ *
+ * WEB-2: claims freeze at token issue. Accept a co-host invite, create an event on your
+ * phone, or sign in on a second device, and this browser's cookie still describes the world
+ * as it was — which is why the dashboard used to 403 people out of their own events. The
+ * backend has always been able to mint a fresh one; the web simply never asked.
+ *
+ * Returns true when a new token was stored. Callers should try this ONCE before showing an
+ * access error, never in a loop: a genuine refusal survives a refresh.
+ */
+export async function refreshSessionClaims() {
+    if (typeof window === 'undefined') return false;
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return false;
+    try {
+        const res = await api.post('/api/auth/refresh-session', {});
+        const fresh = res?.data?.token ?? res?.token;
+        if (!fresh) return false;
+        localStorage.setItem(TOKEN_KEY, fresh);
+        await setPasetoCookie(fresh);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 /** Clear HttpOnly PASETO cookie on logout (Next.js only). */
 async function clearPasetoCookie() {
     if (typeof window === 'undefined') return;

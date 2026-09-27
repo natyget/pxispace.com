@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import CreateEventEmptyState from '@/components/discover/CreateEventEmptyState';
 import { eventsService } from '@/services/events';
 import EventCard from '@/views/events/EventCard';
 import { StaggerGroup, RevealItem, HoverLift } from '@/components/motion/Reveal';
@@ -51,20 +52,31 @@ function normalize(e, city) {
 /**
  * @param {object}   props
  * @param {object}   props.city          registry record from @/lib/seo/cities
- * @param {object[]} [props.initialEvents] events resolved on the SERVER by the route.
+ * @param {object[]|null} [props.initialEvents] events resolved on the SERVER by the route.
  *   Without these the hub shipped a hero plus six skeleton divs, which is all Google
  *   ever saw — the entire point of a city hub is the event list being in the first HTML
  *   response. When they are supplied we render them immediately and skip the client
  *   fetch; the page is still interactive, it just is not empty on arrival.
+ *
+ *   An ARRAY means the server asked and this is the answer, including an empty one — an
+ *   empty city then renders its create CTA in the first response instead of six skeletons
+ *   that resolve to the same CTA a second later. `null` means the server could not ask, and
+ *   only then does the client fetch and show a loading state.
  */
 export default function CityEventsView({ city, initialEvents }) {
-  const seeded = Array.isArray(initialEvents) && initialEvents.length > 0;
+  const seeded = Array.isArray(initialEvents);
   const [events, setEvents] = useState(() => (seeded ? initialEvents : []));
   const [loading, setLoading] = useState(!seeded);
+  // WEB-1: a failed fetch used to be indistinguishable from an empty city — both set events
+  // to [] — so a reader whose connection dropped was told "no events here, create one". The
+  // three outcomes are different and now look different.
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     // Already server-rendered — refetching would only cause a flash of the same rows.
-    if (seeded) return undefined;
+    // `attempt` is the Try again button, which only exists after a client fetch failed.
+    if (seeded && attempt === 0) return undefined;
     let alive = true;
     eventsService
       .getPublicEvents(48, 0)
@@ -72,12 +84,36 @@ export default function CityEventsView({ city, initialEvents }) {
         if (!alive) return;
         setEvents(res?.events || []);
       })
-      .catch(() => alive && setEvents([]))
+      .catch(() => {
+        if (!alive) return;
+        setEvents([]);
+        setFailed(true);
+      })
       .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
     };
-  }, [seeded]);
+  }, [seeded, attempt]);
+
+  // A hub the server found empty is cached for an hour, so an event added in the meantime
+  // would not show until it regenerated. One quiet look, once, with no loading state and no
+  // way to fail: it can only add rows. If it comes back empty or errors, the server's answer
+  // stands and the reader keeps the create CTA they were already looking at.
+  const toppedUpRef = useRef(false);
+  useEffect(() => {
+    if (!seeded || attempt > 0 || initialEvents.length || toppedUpRef.current) return undefined;
+    toppedUpRef.current = true;
+    let alive = true;
+    eventsService
+      .getPublicEvents(48, 0)
+      .then((res) => {
+        if (alive && res?.events?.length) setEvents(res.events);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [seeded, attempt, initialEvents]);
 
   const cityEvents = useMemo(() => {
     const needles = city.match.map((m) => m.toLowerCase());
@@ -120,7 +156,12 @@ export default function CityEventsView({ city, initialEvents }) {
       </section>
 
       {/* Grid */}
-      <SectionShell pad="loose">
+      {/* WEB-1 follow-up: `loose` is py-28 on mobile — 112px of air above a card whose whole
+          job is to be seen. With a grid that reads as breathing room; with a single empty-state
+          card it pushed the create CTA under the fold at 1440x1000 and at 390x664 alike, which
+          is what "can't see the CTA" meant. Cards keep the loose rhythm; the empty and error
+          states get the tight one. Skeletons count as cards, so nothing shifts while loading. */}
+      <SectionShell pad={loading || cityEvents.length ? 'loose' : 'tight'}>
         {loading ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -137,16 +178,29 @@ export default function CityEventsView({ city, initialEvents }) {
               </RevealItem>
             ))}
           </StaggerGroup>
-        ) : (
+        ) : failed ? (
           <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-10 text-center">
-            <h2 className="display-3">No live events in {city.name} yet.</h2>
+            <h2 className="display-3">Could not load events.</h2>
             <p className="body-lead mx-auto mt-4 max-w-md">
-              New nights drop all the time. Browse everything happening on PXI right now.
+              Something went wrong on our side, or your connection dropped. This is not an empty city.
             </p>
-            <Link href="/events" className="glow-cta mt-8 inline-flex px-8 py-4 text-sm">
-              Explore all events <ArrowRight className="h-4 w-4" />
-            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setLoading(true);
+                setFailed(false);
+                setAttempt((n) => n + 1);
+              }}
+              className="glow-cta mt-8 inline-flex px-8 py-4 text-sm"
+            >
+              Try again
+            </button>
           </div>
+        ) : (
+          <CreateEventEmptyState
+            title={`No live events in ${city.name} yet.`}
+            blurb={`Be the first. Put your night on PXI and people in ${city.name} will find it here.`}
+          />
         )}
       </SectionShell>
     </div>
