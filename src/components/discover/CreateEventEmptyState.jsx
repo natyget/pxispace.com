@@ -19,10 +19,10 @@ import { ArrowRight } from 'lucide-react';
  */
 export default function CreateEventEmptyState({ title, blurb, className = '' }) {
     return (
-        <div className={`rounded-3xl border border-white/[0.08] bg-white/[0.02] p-10 text-center ${className}`}>
+        <div className={`rounded-3xl border border-white/[0.08] bg-white/[0.02] p-6 text-center sm:p-10 ${className}`}>
             <h2 className="display-3">{title}</h2>
             <p className="body-lead mx-auto mt-4 max-w-md">{blurb}</p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:mt-8">
                 <Link href="/dashboard/events/new" className="glow-cta inline-flex px-8 py-4 text-sm">
                     Create an event <ArrowRight className="h-4 w-4" />
                 </Link>
