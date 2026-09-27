@@ -19,7 +19,7 @@ const SECTIONS = [
         <div>
           <h3 className="text-xl font-bold mb-3 text-white">1. Who We Are</h3>
           <p className="text-gray-400 leading-relaxed">
-            PXIStudio ("PXI," "we," "us," "our") is a Social Media Studio combining event photo-sharing, ticketing, gamification, and analog-emulative media creation into one platform. We are operated by <strong>PXI LABS LLC</strong>, headquartered in Cambridge, Massachusetts, USA.
+            PXIStudio ("PXI," "we," "us," "our") is a Social Media Studio combining event photo-sharing, ticketing, gamification, and analog-emulative media creation into one platform. We are operated by <strong>PXI LABS LLC</strong>, headquartered at 5850 Town and Country Blvd Suite 403, Frisco TX 75034, USA.
           </p>
           <p className="text-gray-400 leading-relaxed mt-2">
             Our Services include: (i) event discovery and ticketing, (ii) spatially-grouped event photo albums, (iii) the Odyssey gamification system, (iv) the Analog Engine media creation suite, (v) real-time event social features, and (vi) tools for event hosts and venue partners. These Terms apply to all of these Services collectively.
