@@ -156,7 +156,12 @@ export default function CityEventsView({ city, initialEvents }) {
       </section>
 
       {/* Grid */}
-      <SectionShell pad="loose">
+      {/* WEB-1 follow-up: `loose` is py-28 on mobile — 112px of air above a card whose whole
+          job is to be seen. With a grid that reads as breathing room; with a single empty-state
+          card it pushed the create CTA under the fold at 1440x1000 and at 390x664 alike, which
+          is what "can't see the CTA" meant. Cards keep the loose rhythm; the empty and error
+          states get the tight one. Skeletons count as cards, so nothing shifts while loading. */}
+      <SectionShell pad={loading || cityEvents.length ? 'loose' : 'tight'}>
         {loading ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
