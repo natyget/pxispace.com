@@ -9,6 +9,7 @@ import { getAdSlot } from '@/services/ads';
 import { musicService } from '@/services/music';
 import { getAnonId, queueAdImpression, trackAdClick, useAdImpression } from '@/lib/adTracking';
 import EventCard from '@/views/events/EventCard';
+import CreateEventEmptyState from '@/components/discover/CreateEventEmptyState';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 import { resolveEventCity } from '@/lib/seo/cities';
@@ -61,6 +62,9 @@ function normalizeApiEvent(e) {
     // Fields used by original EventCard UI
     image: e.coverImage || DEFAULT_IMG,
     location: e.location || 'Location TBA',
+    // What the city filter reads. Kept apart from the display fields above, which fall back
+    // to "Location TBA" — a string that must never count as being in a city.
+    cityText: e.location || '',
     date: e.startDate
       ? new Date(e.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       : 'Date TBA',
@@ -110,6 +114,9 @@ function normalizeAdEvent(ad) {
     albumId: null,
     image: e.coverImage || DEFAULT_IMG,
     location: e.venueName || e.location || 'Location TBA',
+    // A sponsored event's display fields prefer the venue name ("The Sinclair"), which says
+    // nothing about the city — so the filter reads venue name and address together.
+    cityText: [e.venueName, e.location].filter(Boolean).join(' '),
     date: e.startDate
       ? new Date(e.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       : 'Date TBA',
@@ -262,6 +269,54 @@ function cityOptionMatchesQuery(city, query) {
   const normalizedQuery = normalizeCityText(query);
   if (!normalizedQuery) return true;
   return cityAliases(city).some((alias) => normalizeCityText(alias).includes(normalizedQuery));
+}
+
+/** The one city test for the banner and the grid, so the two can never disagree. */
+function eventInCity(ev, city) {
+  return locationMatchesCity(ev.cityText, city);
+}
+
+const TIME_PHRASES = { today: 'today', this_week: 'this week', this_month: 'this month' };
+
+/**
+ * Copy for an empty list. It names what emptied the list, so "no events in Boston today" is
+ * never read as "PXI has nothing on". `more` means the banner above still has events, so an
+ * empty grid under it is the end of the list rather than an empty site.
+ */
+function emptyResultsCopy({ city = 'All', time = 'all', query = '', more = false }) {
+  const inCity = city !== 'All' ? ` in ${city}` : '';
+  const when = TIME_PHRASES[time] ? ` ${TIME_PHRASES[time]}` : '';
+  const people = city !== 'All' ? `people in ${city}` : 'people';
+  if (query) {
+    const shown = query.length > 40 ? `${query.slice(0, 40)}…` : query;
+    return {
+      title: `Nothing matches “${shown}”${inCity}${when}.`,
+      blurb: `Try another search, or put your own night on PXI and ${people} will find it here.`,
+    };
+  }
+  if (inCity && !when) {
+    // Same words as the empty /discover/[city] hub: both are the same fetch filtered by city.
+    return {
+      title: `No live events${inCity} yet.`,
+      blurb: `Be the first. Put your night on PXI and ${people} will find it here.`,
+    };
+  }
+  if (inCity || when) {
+    return {
+      title: `No events${inCity}${when}.`,
+      blurb: `Hosting something? Put it on PXI and ${people} will find it here.`,
+    };
+  }
+  if (more) {
+    return {
+      title: 'That’s everything for now.',
+      blurb: 'New events land here as hosts post them. Hosting something? Put it on PXI and people will find it here.',
+    };
+  }
+  return {
+    title: 'No live events yet.',
+    blurb: 'Be the first. Put your night on PXI and people will find it here.',
+  };
 }
 
 function EventCardSkeleton() {
@@ -443,7 +498,7 @@ export default function PublicEventsPage() {
     }
 
     if (cityFilter && cityFilter !== 'All') {
-      list = list.filter((e) => locationMatchesCity(`${e.venue ?? ''} ${e.location ?? ''}`, cityFilter));
+      list = list.filter((e) => eventInCity(e, cityFilter));
     }
 
     if (favoritesOnly) {
@@ -454,15 +509,25 @@ export default function PublicEventsPage() {
   }, [events, trending, timeFilter, cityFilter, searchQuery, favoritesOnly, favoriteIds, musicSortActive, isLoggedIn]);
 
   // Paid featured slots pin first (labeled Sponsored); organic newest-first fills
-  // the remaining hero slots, deduped by event id.
+  // the remaining hero slots, deduped by event id. A chosen city applies to both, so a
+  // reader who picked Boston never gets a night somewhere else as the featured event.
+  // Time and search stay off the banner; those narrow the grid below it.
   const heroEvents = useMemo(() => {
-    const paid = featuredAds.map(normalizeAdEvent);
+    const inCity = (e) => eventInCity(e, cityFilter);
+    const paid = featuredAds.map(normalizeAdEvent).filter(inCity);
     const paidIds = new Set(paid.map((e) => String(e.id)));
-    const organic = [...events]
+    const organic = events
+      .filter(inCity)
       .sort((a, b) => (b.createdAt?.getTime?.() ?? 0) - (a.createdAt?.getTime?.() ?? 0))
       .filter((e) => !paidIds.has(String(e.id)));
     return [...paid, ...organic].slice(0, 8);
-  }, [events, featuredAds]);
+  }, [events, featuredAds, cityFilter]);
+
+  // A new city is a new set of slides, so the banner starts again from the first.
+  const chooseCity = (city) => {
+    setCityFilter(city);
+    setHeroIndex(0);
+  };
 
   const featured = useMemo(
     () => (heroEvents.length ? heroEvents[Math.min(heroIndex, heroEvents.length - 1)] : null),
@@ -490,6 +555,57 @@ export default function PublicEventsPage() {
     if (isFiltered) return rest;
     return interleaveGridAds(rest, gridAds);
   }, [rest, gridAds, searchQuery, timeFilter, cityFilter, favoritesOnly, trending, musicSortEffective]);
+
+  // ── Empty states ──────────────────────────────────────────────────────────
+  // WEB-1 on /events: when a filter empties the list, the reader gets the same "create one"
+  // CTA as an empty city hub, worded for what emptied it, plus a way back to everything.
+  const narrowing = Boolean(searchQuery.trim()) || timeFilter !== 'all' || cityFilter !== 'All';
+
+  const resetFilters = () => {
+    setTimeFilter(TIME_OPTIONS[0].id);
+    chooseCity(CITY_PRESETS[0]);
+    setCityQuery('');
+    setSearchQuery('');
+    setSearchOpen(false);
+    setOpenMenu(null);
+  };
+
+  const showAllButton = (
+    <button
+      type="button"
+      onClick={resetFilters}
+      className="inline-flex px-6 py-4 text-sm text-zinc-400 underline underline-offset-4 hover:text-white"
+    >
+      Show all events
+    </button>
+  );
+
+  // Not on the wishlist: that list is the reader's own saves, which load separately from the
+  // events, so an empty state there could claim "nothing" before the saves arrive.
+  const gridEmpty =
+    loading || favoritesOnly || restWithAds.length > 0 ? null : (
+      <CreateEventEmptyState
+        {...emptyResultsCopy({
+          city: cityFilter,
+          time: timeFilter,
+          query: searchQuery.trim(),
+          more: heroEvents.length > 0,
+        })}
+        secondary={narrowing ? showAllButton : null}
+      />
+    );
+
+  // The mobile Featured tab lists the banner's events, which follow the city and nothing else.
+  const featuredEmpty =
+    loading || heroEvents.length > 0 ? null : (
+      <CreateEventEmptyState
+        {...emptyResultsCopy({ city: cityFilter })}
+        secondary={cityFilter !== 'All' ? showAllButton : null}
+      />
+    );
+
+  // Nothing to feature once loading is done: drop the banner rather than pulse its skeleton forever.
+  const showHero = loading || heroEvents.length > 0;
 
   // ── Analytics ─────────────────────────────────────────────────────────────
   // The grid renders TWICE (a md:hidden mobile copy and a hidden md:block desktop
@@ -680,7 +796,7 @@ export default function PublicEventsPage() {
                       <button
                         key={c}
                         type="button"
-                        onClick={() => { setCityFilter(c); setOpenMenu(null); }}
+                        onClick={() => { chooseCity(c); setOpenMenu(null); }}
                         className={`w-full rounded-xl px-3 py-2 text-left text-sm font-semibold hover:bg-white/5 ${cityFilter === c ? 'text-[#d946ef]' : 'text-white'}`}
                       >
                         {c}
@@ -740,7 +856,7 @@ export default function PublicEventsPage() {
         : null}
 
       {/* Hero (Desktop only) */}
-      <section className="hidden md:flex relative w-full overflow-hidden bg-black px-6 pb-16 pt-12 items-center" style={{ minHeight: '400px', maxHeight: '65svh' }}>
+      <section className={`hidden ${showHero ? 'md:flex' : ''} relative w-full overflow-hidden bg-black px-6 pb-16 pt-12 items-center`} style={{ minHeight: '400px', maxHeight: '65svh' }}>
         {/* Blurred cover image backdrop (full-bleed, crossfades with slide) */}
         {bgCover ? (
           <div className="absolute inset-0 z-0">
@@ -862,8 +978,9 @@ export default function PublicEventsPage() {
         </div>
       </div>
 
-      {/* Grid */}
-      <main className="mx-auto max-w-[1440px] px-4 pb-20 md:px-6">
+      {/* Grid. Without the banner above it, the heading would start under the fixed navbar
+          (92px tall at rest on desktop, against the page's 80px top padding), so it gets room. */}
+      <main className={`mx-auto max-w-[1440px] px-4 pb-20 md:px-6 ${showHero ? '' : 'md:pt-10'}`}>
         <div className="hidden md:flex items-center justify-between mb-6">
           <h2 className="text-xl font-black uppercase tracking-widest text-white/60">
             {favoritesOnly ? 'Your Wishlist' : 'Upcoming Events'}
@@ -888,6 +1005,8 @@ export default function PublicEventsPage() {
         <div className="md:hidden">
           {loading && events.length === 0 ? (
             <EventsGridSkeleton count={4} />
+          ) : activeTab === 'featured' && featuredEmpty ? (
+            <div className="py-6">{featuredEmpty}</div>
           ) : activeTab === 'featured' ? (
             <div className="grid gap-6 w-full justify-center py-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
               {heroEvents.map((ev, i) => (
@@ -902,6 +1021,8 @@ export default function PublicEventsPage() {
                 />
               ))}
             </div>
+          ) : gridEmpty ? (
+            <div className="py-6">{gridEmpty}</div>
           ) : (
             <div className="grid gap-6 w-full justify-center py-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
               {restWithAds.map((ev, i) => (
@@ -925,6 +1046,8 @@ export default function PublicEventsPage() {
         <div className="hidden md:block">
           {loading && events.length === 0 ? (
             <EventsGridSkeleton />
+          ) : gridEmpty ? (
+            gridEmpty
           ) : (
             <div className="grid gap-6 w-full justify-center" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}>
               {restWithAds.map((ev, i) => (

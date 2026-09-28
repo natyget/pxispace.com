@@ -16,8 +16,12 @@ import { ArrowRight } from 'lucide-react';
  *
  * Written stranger-first: the reader may never have heard of PXI, so the copy says what
  * happens next rather than naming our features.
+ *
+ * `secondary` replaces the default "Browse everything on PXI" link; pass `null` for none.
+ * /events uses it because that link would point at the page the reader is already on, where
+ * the useful second action is clearing the filters that emptied the list.
  */
-export default function CreateEventEmptyState({ title, blurb, className = '' }) {
+export default function CreateEventEmptyState({ title, blurb, className = '', secondary }) {
     return (
         <div className={`rounded-3xl border border-white/[0.08] bg-white/[0.02] p-6 text-center sm:p-10 ${className}`}>
             <h2 className="display-3">{title}</h2>
@@ -26,12 +30,16 @@ export default function CreateEventEmptyState({ title, blurb, className = '' }) 
                 <Link href="/dashboard/events/new" className="glow-cta inline-flex px-8 py-4 text-sm">
                     Create an event <ArrowRight className="h-4 w-4" />
                 </Link>
-                <Link
-                    href="/events"
-                    className="inline-flex px-6 py-4 text-sm text-zinc-400 underline underline-offset-4 hover:text-white"
-                >
-                    Browse everything on PXI
-                </Link>
+                {secondary === undefined ? (
+                    <Link
+                        href="/events"
+                        className="inline-flex px-6 py-4 text-sm text-zinc-400 underline underline-offset-4 hover:text-white"
+                    >
+                        Browse everything on PXI
+                    </Link>
+                ) : (
+                    secondary
+                )}
             </div>
         </div>
     );

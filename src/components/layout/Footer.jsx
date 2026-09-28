@@ -8,6 +8,7 @@ import { FaTiktok, FaXTwitter, FaYoutube } from 'react-icons/fa6';
 import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
 import { openConsentPreferences } from '@/lib/consent';
 import { SOCIAL_PROFILES } from '@/lib/seo/social';
+import { allCities } from '@/lib/seo/cities';
 
 const LogoSVG = '/logo-mark.png';
 const linkClass = 'text-zinc-500 hover:text-white transition-colors';
@@ -17,6 +18,10 @@ const ATTENDEE_LINKS = [
   { label: 'Digital Passport', href: '/features/digital-event-passport' },
   { label: 'Share to Instagram', href: '/features/instagram-event-sharing' },
   { label: 'Find Events', href: '/events' },
+  // The city hubs are the pages built to rank for "events in Boston". Otherwise only the /genres
+  // and /artists hubs link to them; this puts them one click from /events and the other pages
+  // that carry the footer.
+  ...allCities().map((c) => ({ label: `Events in ${c.name}`, href: `/discover/${c.slug}` })),
 ];
 
 const ORGANIZER_LINKS = [
