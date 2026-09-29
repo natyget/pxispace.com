@@ -187,8 +187,9 @@ export const ORGANIZATION_NODE = {
 export const ORGANIZATION_JSONLD = { '@context': 'https://schema.org', ...ORGANIZATION_NODE };
 
 /**
- * Homepage JSON-LD: dual-node @graph combining WebSite authority
- * with SoftwareApplication rich snippets (dual applicationCategory).
+ * Homepage JSON-LD (from pxispace-redesign/site/index.html): Organization, WebSite and the
+ * iOS app. The feature list only names things the app ships — no analytics or privacy
+ * superlatives (see pxispace-redesign/research/seo-final.md, "Claims to strip").
  */
 export const HOMEPAGE_JSONLD = {
   '@context': 'https://schema.org',
@@ -203,37 +204,30 @@ export const HOMEPAGE_JSONLD = {
       '@id': `${SITE_URL}/#website`,
       name: 'PXI',
       url: SITE_URL,
-      image: `${SITE_URL}/og-hero.png`,
       description:
-        "PXI is a privacy-first event operating system spanning ticketing in the organizer's own brand, shared event photo galleries, and digital scrapbooks.",
+        "PXI is an event platform built around the memory of the night: ticketing in the organizer's own brand, one shared event camera roll and a scrapbook by morning.",
       publisher: { '@id': ORGANIZATION_ID },
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: {
-          '@type': 'EntryPoint',
-          urlTemplate: `${SITE_URL}/events?q={search_term_string}`,
-        },
-        'query-input': 'required name=search_term_string',
-      },
     },
     {
-      '@type': 'SoftwareApplication',
+      '@type': 'MobileApplication',
+      '@id': `${SITE_URL}/#app`,
       name: 'PXI',
       operatingSystem: 'iOS',
-      applicationCategory: ['BusinessApplication', 'EntertainmentApplication'],
+      applicationCategory: 'LifestyleApplication',
       url: SITE_URL,
+      installUrl: 'https://apps.apple.com/app/pxi/id6751762197',
+      downloadUrl: 'https://apps.apple.com/app/pxi/id6751762197',
       image: `${SITE_URL}/og-hero.png`,
+      publisher: { '@id': ORGANIZATION_ID },
       description:
-        "PXI is a dual-sided event operating system for organizers and attendees, combining ticketing in the organizer's own brand with privacy-first social scrapbooks.",
+        'The event app for tickets, one shared camera roll for the whole room, and a scrapbook that builds itself by morning.',
       featureList: [
-        'Branded Event Ticketing',
-        'Real-Time Analytics',
-        'Live Shared Event Camera',
-        'Morning-After Digital Scrapbook',
-        'Event Passport with Attendance Stamps',
-        'One-Tap Instagram Sharing',
-        'Signed, Forgery-Proof Tickets',
-        'Zero Location Tracking',
+        'Event tickets and Apple Wallet passes',
+        'Live shared event camera roll',
+        'Morning-after scrapbook',
+        'Event passport with attendance stamps',
+        'One-tap Instagram story cards',
+        'Signed, forgery-resistant tickets',
       ],
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     },
