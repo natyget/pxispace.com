@@ -150,16 +150,23 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .nav-me-menu button:hover { background: rgba(255, 255, 255, .06); color: #fff; }
 .pxr .nav-me-menu .out { margin-top: 4px; color: #ffb08f; }
 .pxr .nav-me-menu .out svg { color: var(--orange); }
-/* phone sheet, signed in */
-.pxr .mnav-me { display: flex; flex-direction: column; gap: 14px; opacity: 0; transform: translateY(18px); transition: opacity .45s var(--ease-out), transform .55s var(--ease-out); transition-delay: calc(var(--i) * 55ms + 60ms); }
-.pxr .mnav.in .mnav-me { opacity: 1; transform: none; }
-.pxr .mnav-me-head { display: flex; align-items: center; gap: 14px; }
-.pxr .mnav-me-head b { display: block; font: 600 18px/1.2 var(--f-body); color: #fff; }
-.pxr .mnav-me-head small { display: block; margin-top: 3px; font: 500 13px/1.2 var(--f-body); color: #71717a; }
-.pxr .mnav-me-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.pxr .mnav-me-grid a { display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 14px; border-radius: 16px; background: rgba(255, 255, 255, .06); font: 600 15px/1 var(--f-body); color: #e4e4e7; }
-.pxr .mnav-me-grid a svg { color: var(--purple); }
-.pxr .mnav-me .mnav-foot { opacity: 1; transform: none; }
+/* phone sheet, signed in: two quiet rows, then your avatar (tap → Log out) beside Events */
+.pxr .mnav-sub,
+.pxr .mnav-bottom { opacity: 0; transform: translateY(18px); transition: opacity .45s var(--ease-out), transform .55s var(--ease-out); transition-delay: calc(var(--i) * 55ms + 60ms); }
+.pxr .mnav.in .mnav-sub,
+.pxr .mnav.in .mnav-bottom { opacity: 1; transform: none; }
+.pxr .mnav-sub { display: flex; flex-direction: column; margin-top: 18px; }
+.pxr .mnav-sub a { padding: 12px 2px; font: 600 20px/1 var(--f-body); color: rgba(255, 255, 255, .6); }
+.pxr .mnav-sub a:active { color: #fff; }
+.pxr .mnav-bottom { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: auto; }
+.pxr .mnav-bottom .btn { flex: 1; max-width: 220px; height: 54px; }
+.pxr .mnav-av { position: relative; }
+.pxr .mnav-av > button { display: block; border-radius: 50%; }
+.pxr .mnav-av > button img { display: block; }
+.pxr .mnav-out { position: absolute; left: 0; bottom: calc(100% + 12px); min-width: 180px; padding: 8px; border-radius: 18px; background: rgba(24, 24, 27, .96); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); box-shadow: 0 18px 40px rgba(0, 0, 0, .6); animation: pxr-drop .2s var(--ease-out); }
+.pxr .mnav-out small { display: block; padding: 6px 10px 8px; font: 500 12px/1.2 var(--f-body); color: #71717a; }
+.pxr .mnav-out button { display: block; width: 100%; height: 44px; padding: 0 10px; border-radius: 12px; text-align: left; font: 600 16px/1 var(--f-body); color: #ffb08f; }
+.pxr .mnav-out button:active { background: rgba(255, 255, 255, .06); }
 
 /* ───────── the night clock: a small dial + time pill and the app CTA pill ───────── */
 .pxr .clock { position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); z-index: 60; display: flex; align-items: center; gap: 8px; translate: -50% 140%; opacity: 0; transition: translate .8s var(--ease-out), opacity .5s; }
@@ -201,6 +208,14 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .room-lit { position: absolute; inset: -3%; }
 .pxr .room img,
 .pxr .room-lit img { width: 100%; height: 100%; object-fit: cover; }
+/* Phones: the three friends span ~65% of the photo's width, but a full-bleed portrait crop shows only
+   ~39% — so the photo is sized to their width instead, centred on them (47% across), across the middle of
+   the dark hero. Above and below stays black, which is the lights-out look anyway. */
+@media (max-width: 860px) and (orientation: portrait) {
+  .pxr .room img,
+.pxr .room-lit img { position: absolute; left: 50%; top: 50%; width: 158vw; max-width: none; height: auto; translate: -47% -50%; object-fit: fill;
+    -webkit-mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent); mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent); }
+}
 .pxr .room { --mx: 50%; --my: 42%; --lr: 280px; -webkit-mask-image: radial-gradient(circle var(--lr) at var(--mx) var(--my), #000 0%, rgba(0, 0, 0, .5) 42%, rgba(0, 0, 0, .085) 100%); mask-image: radial-gradient(circle var(--lr) at var(--mx) var(--my), #000 0%, rgba(0, 0, 0, .5) 42%, rgba(0, 0, 0, .085) 100%); filter: brightness(.6) saturate(.85); }
 .pxr .room-lit { opacity: 0; filter: brightness(1.12) contrast(1.06) saturate(.9); }
 .pxr .hero-scrim { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(46% 40% at 50% 50%, rgba(5, 5, 5, .82), rgba(5, 5, 5, .35) 70%, transparent 100%), linear-gradient(180deg, #050505 0%, transparent 18%, transparent 78%, #050505 100%); }
@@ -832,14 +847,16 @@ html.pxr-doc { overflow-x: clip; }
   .pxr.home #finale .org { margin-top: 56px; }
   .pxr.home #finale { padding-bottom: 28px; }
 
-  /* camera + roll: the phone gets the room the bottom padding held; its foot sits behind the
-     fixed time/app pills while pinned and comes fully into view as the scene scrolls away */
+  /* phones fill the space between the copy and the screen's bottom edge — never past it (the section
+     clips there). Their foot sits behind the fixed time/app pills while pinned and comes into view as
+     the scene scrolls away. The phone-only stage sizes (data-mw/mh) are cut to the drawn content, so
+     no stage carries empty space under its phone or passport. */
   .pxr.home #camera .scene-grid,
-.pxr.home #roll .scene-grid { padding-top: 62px; padding-bottom: 0; row-gap: 4px; }
-  /* a clear gap between the heading block and the stage: the passport and the story phone must
-     never ride up over the level badge / the subhead, whatever the browser's text metrics */
+.pxr.home #roll .scene-grid,
+.pxr.home #stamp .scene-grid,
+.pxr.home #post .scene-grid { padding-top: 62px; padding-bottom: 0; row-gap: 4px; }
   .pxr.home #stamp .stage-box,
-.pxr.home #post .stage-box { margin-top: 14px; }
+.pxr.home #post .stage-box { margin-top: 8px; }
 }
 
 /* Home scrolls vertically only: a diagonal swipe must not nudge the page sideways. The stories

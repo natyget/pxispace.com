@@ -130,7 +130,7 @@ export default function HomeView() {
               </div>
             </div>
             <div className="stage-box">
-              <div className="stage" data-w="640" data-h="664" data-mw="312" data-mh="640" data-mbleed="72">
+              <div className="stage" data-w="640" data-h="664" data-mw="312" data-mh="640">
                 <div className="iphone cam-phone" data-pw="300" data-time="10:31" aria-hidden="true"></div>
                 <div className="cam-chip" aria-hidden="true">
                   <p className="cc-lbl">
@@ -220,7 +220,7 @@ export default function HomeView() {
               </div>
             </div>
             <div className="stage-box">
-              <div className="stage" data-w="600" data-h="690" data-mw="372" data-mh="672" data-mbleed="72" aria-hidden="true">
+              <div className="stage" data-w="600" data-h="690" data-mw="372" data-mh="672" aria-hidden="true">
                 <div className="bursts"></div>
                 <div className="iphone thread-phone" data-pw="316" data-time="11:52"></div>
                 <div className="flythumbs"></div>
@@ -299,7 +299,7 @@ export default function HomeView() {
               </div>
             </div>
             <div className="stage-box">
-              <div className="stage" data-w="480" data-h="712" data-mw="480" data-mh="706" data-max="1.5">
+              <div className="stage" data-w="480" data-h="712" data-mw="372" data-mh="560" data-max="1.5">
                 <div className="passport-host" role="img" aria-label="A PXI passport filling with verified event stamps"></div>{' '}
                 <span className="ink-ring" aria-hidden="true"></span>{' '}
                 <div className="specks" aria-hidden="true"></div>
@@ -324,7 +324,7 @@ export default function HomeView() {
               </div>
             </div>
             <div className="stage-box">
-              <div className="stage" data-w="560" data-h="720" data-mw="320" data-mh="664">
+              <div className="stage" data-w="560" data-h="720" data-mw="320" data-mh="644">
                 <div className="share">
                   <div className="canvas">
                     <div className="canvas-bg" aria-hidden="true">

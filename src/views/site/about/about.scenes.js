@@ -29,14 +29,20 @@ export default async function initAbout(PXR, L) {
     try { await img.decode(); } catch { return; }
     if (!L.alive) return;
     const COLORS = ['#f5f5f5', '#f5f5f5', '#f5f5f5', '#e9e9ee', '#D84AFF', '#e98bff', '#FF5A1F'];
-    let W = 0, H = 0, pts = [], t0 = performance.now(), running = true, disperse = 0, mx = -9999, my = -9999, laidOut = false;
+    let W = 0, H = 0, pts = [], groups = [], t0 = performance.now(), running = true, disperse = 0, mx = -9999, my = -9999, laidOut = false;
+    // Touch screens get a field that holds still once gathered: no idle drift, so nothing is drawn
+    // unless the gather is playing or the scroll moves the scatter. That was every frame, forever.
+    const STILL = !FINE;
+    const GATHERED = 0.25 + 0.9 * 0.9 + 1.6 + 0.05;   // the last particle lands at this many seconds
+    let settled = false, queued = false;
     const rnd = (a, b) => a + Math.random() * (b - a);
     function layout() {
       // The gather plays once. A later layout (rotation, a real resize) re-targets the points
       // in place instead of scattering them and gathering again.
       const again = laidOut;
       laidOut = true;
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      // phones: a lighter canvas (1.5x) and a coarser sample — the mark reads the same, the frames stay cheap
+      const dpr = Math.min(STILL ? 1.5 : 2, window.devicePixelRatio || 1);
       W = cv.clientWidth; H = cv.clientHeight;
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -46,9 +52,9 @@ export default async function initAbout(PXR, L) {
       const oc = document.createElement('canvas'); oc.width = size; oc.height = size;
       const o = oc.getContext('2d'); o.drawImage(img, 0, 0, size, size);
       const data = o.getImageData(0, 0, size, size).data;
-      const step = m ? 4 : 5, target = [];
+      const step = m ? 5 : 5, target = [];
       for (let y = 0; y < size; y += step) for (let x = 0; x < size; x += step) if (data[(y * size + x) * 4 + 3] > 120) target.push([cx - size / 2 + x + rnd(-1, 1), cy - size / 2 + y + rnd(-1, 1)]);
-      const N = target.length, AMB = m ? 120 : 280;
+      const N = target.length, AMB = m ? 90 : 280;
       const keep = pts;
       pts = [];
       for (let i = 0; i < N + AMB; i++) {
@@ -59,35 +65,48 @@ export default async function initAbout(PXR, L) {
         p.ux = dx / L; p.uy = dy / L; p.depth = p.depth || rnd(0.4, 1.4);
         pts.push(p);
       }
+      // draw in batches: one fillStyle/globalAlpha per colour and layer instead of per particle
+      const g = new Map();
+      for (const p of pts) { const k = p.c + (p.amb ? 'a' : 'm'); if (!g.has(k)) g.set(k, { c: p.c, amb: p.amb, list: [] }); g.get(k).list.push(p); }
+      groups = [...g.values()];
       if (!again) t0 = performance.now();
-      if (REDUCED) draw(99);
+      if (REDUCED || (again && settled)) draw(99);
     }
     const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
     function draw(tt) {
       ctx.clearRect(0, 0, W, H);
-      for (const p of pts) {
-        const f = p.amb ? 1 : ease((tt - 0.25 - p.d * 0.9) / 1.6);
-        let x = p.sx + (p.tx - p.sx) * f, y = p.sy + (p.ty - p.sy) * f;
-        if (!REDUCED) { x += Math.sin(tt * p.sp + p.ph) * (p.amb ? 6 : 0.9); y += Math.cos(tt * p.sp * 0.8 + p.ph) * (p.amb ? 5 : 0.9); }
-        if (FINE && !p.amb) { const dx = x - mx, dy = y - my, d = Math.hypot(dx, dy), reach = 280; if (d < reach) { const k = (1 - d / reach) * 96; x += (dx / (d || 1)) * k; y += (dy / (d || 1)) * k; } }
-        if (disperse > 0) { const k = disperse * disperse * 420 * p.depth; x += p.ux * k + (p.amb ? 0 : p.ux * 20 * disperse); y += p.uy * k - disperse * 60 * p.depth; }
-        const a = (p.amb ? 0.24 : 1) * (1 - disperse * 0.85);
+      const drift = !REDUCED && !(STILL && settled);
+      const fade = 1 - disperse * 0.85;
+      for (const grp of groups) {
+        const a = (grp.amb ? 0.24 : 1) * fade;
         if (a <= 0.01) continue;
-        ctx.globalAlpha = a; ctx.fillStyle = p.c;
-        ctx.fillRect(x, y, p.s, p.s);
+        ctx.globalAlpha = a; ctx.fillStyle = grp.c;
+        for (const p of grp.list) {
+          const f = p.amb ? 1 : ease((tt - 0.25 - p.d * 0.9) / 1.6);
+          let x = p.sx + (p.tx - p.sx) * f, y = p.sy + (p.ty - p.sy) * f;
+          if (drift) { x += Math.sin(tt * p.sp + p.ph) * (p.amb ? 6 : 0.9); y += Math.cos(tt * p.sp * 0.8 + p.ph) * (p.amb ? 5 : 0.9); }
+          if (FINE && !p.amb) { const dx = x - mx, dy = y - my, d = Math.hypot(dx, dy), reach = 280; if (d < reach) { const k = (1 - d / reach) * 96; x += (dx / (d || 1)) * k; y += (dy / (d || 1)) * k; } }
+          if (disperse > 0) { const k = disperse * disperse * 420 * p.depth; x += p.ux * k + (p.amb ? 0 : p.ux * 20 * disperse); y += p.uy * k - disperse * 60 * p.depth; }
+          ctx.fillRect(x, y, p.s, p.s);
+        }
       }
       ctx.globalAlpha = 1;
     }
     function frame(now) {
+      queued = false;
       if (!running) return;
-      draw((now - t0) / 1000);
-      requestAnimationFrame(frame);
+      const tt = (now - t0) / 1000;
+      if (STILL && tt > GATHERED) settled = true;
+      draw(tt);
+      if (!(STILL && settled)) { queued = true; requestAnimationFrame(frame); }
     }
+    // one frame on demand (touch screens, once settled): only when the scroll moves the scatter
+    const kick = () => { if (!queued && running) { queued = true; requestAnimationFrame(frame); } };
     layout();
     if (!REDUCED) {
-      requestAnimationFrame(frame);
-      new IntersectionObserver(([e]) => { const was = running; running = e.isIntersecting; if (running && !was) requestAnimationFrame(frame); }).observe(hero);
-      if (gsap) ScrollTrigger.create({ trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.4, onUpdate: (s) => { disperse = s.progress; } });
+      kick();
+      new IntersectionObserver(([e]) => { const was = running; running = e.isIntersecting; if (running && !was) kick(); }).observe(hero);
+      if (gsap) ScrollTrigger.create({ trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.4, onUpdate: (s) => { if (s.progress === disperse) return; disperse = s.progress; kick(); } });
       if (FINE) { hero.addEventListener('pointermove', (e) => { const r = cv.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; }); hero.addEventListener('pointerleave', () => { mx = my = -9999; }); }
     }
     // Phones fire resize whenever the address bar slides in or out while scrolling; only a real
