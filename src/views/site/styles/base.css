@@ -61,9 +61,9 @@ div.pxr { color: var(--smoke); font-family: var(--f-body); -webkit-font-smoothin
 /* clip, not the demo's hidden: `hidden` makes <body> its own scroll container, and the app's
    globals.css sets overscroll-behavior: none on body, which then refuses to hand wheel/touch
    scrolling up to the page — nothing scrolls. `clip` hides horizontal overflow without creating
-   a scroll container. `hidden` stays first as the fallback for Safari < 16, which has no clip
-   (and no overscroll-behavior either, so it scrolls fine). */
-html.pxr-doc body { background: transparent; overflow-x: hidden; overflow-x: clip; }
+   a scroll container. Safari < 16 has no clip, so it keeps the app's own body overflow-x: hidden;
+   it has no overscroll-behavior either, so it still scrolls. */
+html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr img { display: block; max-width: 100%; }
 .pxr a { color: inherit; text-decoration: none; }
 .pxr button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
