@@ -51,10 +51,10 @@ export default function HomeView() {
         {/* ============ HERO — lights out, tap to shoot ============ */}
         <section className="hero" id="hero">
           <div className="room" aria-hidden="true">
-            <picture><source media="(max-width: 860px) and (orientation: portrait)" srcSet="/site/img/hero-night-portrait.jpg" /><img src="/site/img/hero-crew.jpg?v=2" alt="" /></picture>
+            <picture><source media="(max-width: 860px) and (orientation: portrait)" srcSet="/site/img/hero-joy-portrait.jpg" /><img src="/site/img/hero-crew.jpg?v=2" alt="" /></picture>
           </div>
           <div className="room-lit" aria-hidden="true">
-            <picture><source media="(max-width: 860px) and (orientation: portrait)" srcSet="/site/img/hero-night-portrait.jpg" /><img src="/site/img/hero-crew.jpg?v=2" alt="" /></picture>
+            <picture><source media="(max-width: 860px) and (orientation: portrait)" srcSet="/site/img/hero-joy-portrait.jpg" /><img src="/site/img/hero-crew.jpg?v=2" alt="" /></picture>
           </div>
           <div className="hero-scrim" aria-hidden="true"></div>
           <div className="shots" aria-hidden="true"></div>

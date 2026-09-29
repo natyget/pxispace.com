@@ -216,8 +216,9 @@ export default async function initHome(PXR, L) {
     const live = [];
     const slots = () => {
       const W = hero.clientWidth, H = hero.clientHeight;
-      const pts = W < 700
-        ? [[0.19, 0.15], [0.81, 0.165], [0.13, 0.79], [0.87, 0.77], [0.5, 0.115], [0.6, 0.9]]
+      // phones: the copy sits low over the portrait, so prints only land up in the photo, beside her face
+      const pts = W < 700 || (W <= 860 && H > W)
+        ? [[0.17, 0.16], [0.86, 0.18], [0.13, 0.43], [0.87, 0.42]]
         : [[0.13, 0.28], [0.87, 0.26], [0.1, 0.72], [0.9, 0.7], [0.27, 0.86], [0.73, 0.87], [0.31, 0.14], [0.69, 0.13]];
       return pts.map(([x, y], i) => ({ x: x * W, y: y * H, i }));
     };

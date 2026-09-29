@@ -210,9 +210,15 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .room-lit picture { display: contents; }
 .pxr .room img,
 .pxr .room-lit img { width: 100%; height: 100%; object-fit: cover; }
-/* Phones get their own portrait photo (<picture> in HomeView); the two friends sit a little above centre */
-@media (max-width: 860px) and (orientation: portrait) { .pxr .room img,
-.pxr .room-lit img { object-position: 44% 30%; } }
+/* Phones get their own portrait (<picture> in HomeView), shown as a photo, not a dark room:
+   no spotlight mask or dimming, her face clear up top, the copy low over the dark jacket */
+@media (max-width: 860px) and (orientation: portrait) {
+  .pxr .room img,
+  .pxr .room-lit img { object-position: 50% 0%; }
+  .pxr .hero .room { -webkit-mask-image: none; mask-image: none; filter: brightness(.92) contrast(1.04); }
+  .pxr .hero .hero-scrim { background: linear-gradient(180deg, rgba(5, 5, 5, .55) 0%, transparent 13%, transparent 34%, rgba(5, 5, 5, .7) 50%, rgba(5, 5, 5, .94) 64%, #050505 100%); }
+  .pxr .hero .hero-copy { justify-content: flex-end; padding-bottom: 60px; }
+}
 .pxr .room { --mx: 50%; --my: 42%; --lr: 280px; -webkit-mask-image: radial-gradient(circle var(--lr) at var(--mx) var(--my), #000 0%, rgba(0, 0, 0, .5) 42%, rgba(0, 0, 0, .085) 100%); mask-image: radial-gradient(circle var(--lr) at var(--mx) var(--my), #000 0%, rgba(0, 0, 0, .5) 42%, rgba(0, 0, 0, .085) 100%); filter: brightness(.6) saturate(.85); }
 .pxr .room-lit { opacity: 0; filter: brightness(1.12) contrast(1.06) saturate(.9); }
 .pxr .hero-scrim { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(46% 40% at 50% 50%, rgba(5, 5, 5, .82), rgba(5, 5, 5, .35) 70%, transparent 100%), linear-gradient(180deg, #050505 0%, transparent 18%, transparent 78%, #050505 100%); }
