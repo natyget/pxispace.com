@@ -35,6 +35,8 @@ const EXPLORE_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'Platform', href: '/platform' },
   { label: 'Story', href: '/editorial' },
+  // Linked from every public page's footer so the guide is crawled from everywhere.
+  { label: 'Fashion Week Brooklyn', href: '/editorial/fashion-week-brooklyn' },
   { label: 'About Us', href: '/about' },
 ];
 
