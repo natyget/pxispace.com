@@ -91,7 +91,7 @@ export default function SiteNav({ page }) {
     <>
       <header className={`nav${sheet ? ' menu-open' : ''}`}>
         <a className="nav-logo" href="/" aria-label="PXI home">
-          <img src="/site/img/pxi-mark-small.svg?v=grit4" alt="PXI" width="44" height="44" />
+          <img src="/site/img/pxi-mark-small.svg?v=grit5" alt="PXI" width="44" height="44" />
         </a>{' '}
         <nav className="nav-links" aria-label="Primary">
           {LINKS.map((l) => (

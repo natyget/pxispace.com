@@ -112,13 +112,17 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 /* nav — mirrors the live Navbar */
 .pxr .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; padding: 14px var(--gutter); background: transparent; transition: padding .5s var(--ease-out); }
 .pxr .nav.scrolled { padding-top: 8px; padding-bottom: 8px; }
-.pxr .nav-logo img { width: 44px; height: 44px; object-fit: contain; translate: 0 0; }
+/* The logo files are centred on their ink, so the image box IS the mark's box: its left edge is the
+   page gutter and its vertical centre is the header's. -1px cancels the ~20-unit air the file keeps for the
+   torn edge, putting the ink's left edge exactly on the gutter. */
+.pxr .nav-logo { display: grid; place-items: center start; min-width: 44px; min-height: 44px; margin-left: -1px; }
+.pxr .nav-logo img { width: 44px; height: 44px; object-fit: contain; }
 .pxr .nav-links { position: absolute; left: 50%; translate: -50% 0; display: flex; gap: 36px; }
-.pxr .nav-links a { position: relative; font: 500 15px/1 var(--f-body); letter-spacing: 0; text-transform: none; color: rgba(255, 255, 255, .55); transition: color .3s; padding: 10px 2px; }
-.pxr .nav-links a:hover,
-.pxr .nav-links a.on { color: #fff; }
-.pxr .nav-links a::after { content: ''; position: absolute; left: 0; right: 0; bottom: -8px; height: 1px; background: var(--purple); transform: scaleX(0); transform-origin: left; transition: transform .3s; }
-.pxr .nav-links a.on::after { transform: scaleX(1); }
+/* the current tab is a soft filled pill (no underline, no dot); the rest stay quiet until hovered */
+.pxr .nav-links { gap: 4px; }
+.pxr .nav-links a { position: relative; padding: 10px 16px; border-radius: 999px; font: 500 15px/1 var(--f-body); letter-spacing: 0; text-transform: none; color: rgba(255, 255, 255, .55); transition: color .25s, background .25s; }
+.pxr .nav-links a:hover { color: #fff; }
+.pxr .nav-links a.on { color: #fff; background: rgba(255, 255, 255, .1); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
 .pxr .nav-right { display: flex; align-items: center; gap: 20px; }
 .pxr .nav-login { font: 700 12px/1 var(--f-body); color: #d4d4d8; transition: color .2s; }
 .pxr .nav-login:hover { color: #fff; }
@@ -573,12 +577,12 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .stories-all:hover { text-decoration: underline; text-underline-offset: 4px; }
 .pxr .story-fan { position: relative; display: flex; justify-content: center; margin-top: 64px; perspective: 1400px; }
 .pxr .story { position: relative; display: block; width: clamp(200px, 22vw, 300px); margin: 0 -18px; transition: box-shadow .5s; }
-.pxr .story-media { position: relative; aspect-ratio: 309 / 362; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .1); background: #0a0a0a; box-shadow: 0 30px 60px rgba(0, 0, 0, .6); }
+.pxr .story-media { position: relative; aspect-ratio: 309 / 362; border-radius: 16px; overflow: hidden; background: #0a0a0a; box-shadow: 0 30px 60px rgba(0, 0, 0, .6); }
 .pxr .story-media > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .pxr .story-media.framed img.bg { transform: scale(1.1); filter: blur(20px); opacity: .45; }
 .pxr .story-media.framed img.fg { object-fit: contain; z-index: 1; }
 .pxr .story-media .shade-b { position: absolute; inset: 0; z-index: 2; background: linear-gradient(to top, rgba(0, 0, 0, .82), rgba(0, 0, 0, .15) 45%, transparent 65%); }
-.pxr .story .tag { position: absolute; left: 16px; top: 16px; z-index: 3; padding: 5px 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .2); background: rgba(0, 0, 0, .4); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); font: 700 10px/1.2 var(--f-body); letter-spacing: .2em; text-transform: uppercase; color: #fff; }
+.pxr .story .tag { position: absolute; left: 16px; top: 16px; z-index: 3; padding: 5px 12px; border-radius: 999px; background: rgba(0, 0, 0, .5); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); font: 700 10px/1.2 var(--f-body); letter-spacing: .2em; text-transform: uppercase; color: #fff; }
 .pxr .story-cap { position: absolute; left: 18px; right: 18px; bottom: 18px; z-index: 3; }
 .pxr .story-cap h3 { font: 600 17px/1.3 var(--f-body); color: #fff; text-wrap: balance; }
 .pxr .story-cap span { display: block; margin-top: 8px; font: 600 10px/1 var(--f-body); letter-spacing: .2em; text-transform: uppercase; color: rgba(255, 255, 255, .6); }
@@ -623,12 +627,14 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 /* ───────── mobile ───────── */
 @media (max-width: 860px) {
   .pxr .nav { padding: 10px 16px; }
+  /* both edges sit on the page gutter: logo ink on the left, the menu bars' right end on the right */
+  .pxr .nav-menu { width: 44px; height: 44px; margin-right: -12px; }
   .pxr .nav-links,
 .pxr .nav-login,
 .pxr .nav-events { display: none; }
   .pxr .nav-menu { display: inline-flex; }
   .pxr .nav-me { display: none; }
-  .pxr .nav-logo img { width: 38px; height: 38px; }
+  .pxr .nav-logo img { width: 40px; height: 40px; }
   .pxr .scene-grid,
 .pxr .scene-grid.flip { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); padding: 70px 18px 96px; row-gap: 6px; align-items: start; }
   .pxr .scene-grid.flip .copy { order: 0; }
@@ -742,7 +748,7 @@ html.pxr-doc { overflow-x: clip; }
 .pxr.home #finale .gd-mo { font: 800 11px/1 var(--f-body); letter-spacing: .26em; text-transform: uppercase; color: #ffb08f; }
 .pxr.home #finale .gd-big { margin-top: 8px; font: 700 clamp(64px, 6.6vw, 92px)/.86 var(--f-display); letter-spacing: -.05em; color: #fff; }
 .pxr.home #finale .gd-days { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 16px; }
-.pxr.home #finale .gd-days i { font-style: normal; padding: 6px 7px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .2); background: rgba(5, 5, 5, .25); font: 700 11px/1 var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: #f4f4f5; }
+.pxr.home #finale .gd-days i { font-style: normal; padding: 6px 7px; border-radius: 8px; background: rgba(255, 255, 255, .14); font: 700 11px/1 var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: #f4f4f5; }
 .pxr.home #finale .gd-city { margin-top: 12px; font: 700 11px/1 var(--f-body); letter-spacing: .2em; text-transform: uppercase; color: #d4d4d8; }
 .pxr.home #finale .story-media.collage { background: radial-gradient(90% 60% at 50% 0%, rgba(255, 208, 0, .08), transparent 70%), #1a1a1c; }
 .pxr.home #finale .story-media.collage > img { inset: auto; height: auto; aspect-ratio: 4 / 5; object-fit: cover; border: 5px solid #f4f1ea; border-bottom-width: 16px; border-radius: 2px; box-shadow: 0 16px 30px rgba(0, 0, 0, .55); }
@@ -850,8 +856,8 @@ html.pxr-doc { overflow-x: clip; }
   .pxr.home #finale .story:nth-child(2) { z-index: 2; }
   .pxr.home #finale .story-media { border-radius: 12px; box-shadow: 0 18px 40px rgba(0, 0, 0, .6); }
   .pxr.home #finale .story-cap { left: 10px; right: 10px; bottom: 10px; }
-  .pxr.home #finale .story:nth-child(1) .story-cap { right: 18px; }
-  .pxr.home #finale .story:nth-child(3) .story-cap { left: 18px; }
+  .pxr.home #finale .story:nth-child(1) .story-cap { right: 30px; }
+  .pxr.home #finale .story:nth-child(3) .story-cap { left: 30px; }
   .pxr.home #finale .story-cap h3 { font-size: 11.5px; line-height: 1.25; }
   .pxr.home #finale .story-cap span { margin-top: 5px; font-size: 10px; }
   .pxr.home #finale .story .tag { left: 8px; top: 8px; padding: 4px 8px; font-size: 8.5px; letter-spacing: .14em; }
@@ -890,8 +896,6 @@ html.pxr-doc { overflow-x: clip; }
 
 /* header tap targets on the home page: 44px boxes, icons kept where they were */
 @media (max-width: 860px) {
-  .pxr.home .nav-menu { width: 44px; height: 44px; margin-right: -7px; }
-  .pxr.home .nav-logo { display: grid; place-items: center; min-width: 44px; min-height: 44px; margin-left: -3px; }
 }
 
 /* landscape phones: copy and stage side by side (a stacked grid leaves the stage 0px tall) */

@@ -13,8 +13,6 @@ html.pxr-doc.pxr-fwbk.fwbk-doc { scroll-behavior: smooth; }
    position:sticky for the day rail; clip keeps the same visual result without that. */
 div.pxr.fwbk { --line: rgba(255, 255, 255, .08); --muted: #a1a1aa; --dim: #8b8b94; --card: #0f0f11; --nav-h: 72px; }
 html.pxr-doc.pxr-fwbk body { overflow-x: clip; }
-.pxr.fwbk .nav-menu { width: 44px; height: 44px; margin-right: -7px; }
-.pxr.fwbk .nav-logo { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
 .pxr.fwbk .socials { gap: 0; }
 .pxr.fwbk .socials a { min-width: 44px; min-height: 44px; }
 .pxr.fwbk .appstore small { font-size: 11px; letter-spacing: .08em; }

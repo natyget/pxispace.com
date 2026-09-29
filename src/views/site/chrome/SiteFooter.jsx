@@ -8,7 +8,7 @@ export default function SiteFooter({ page }) {
   return (
     <footer className="foot">
       <div className="foot-ghost" aria-hidden="true">
-        <img src="/site/img/pxi-mark.svg?v=grit4" alt="" />
+        <img src="/site/img/pxi-mark.svg?v=grit5" alt="" />
       </div>
       <div className="foot-inner">
         <div className="foot-grid">

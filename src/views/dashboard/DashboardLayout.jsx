@@ -430,7 +430,7 @@ export default function DashboardLayout({ children }) {
                     <div className="flex min-h-0 flex-col">
                         <div className={`flex items-center px-4 py-4 ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
                             <Link href="/" className={`flex items-center ${sidebarCollapsed ? 'hidden' : 'block'} md:block ${sidebarCollapsed ? 'md:hidden' : ''} min-w-0 transition-opacity hover:opacity-80`}>
-                                <img src="/logo-mark.png" alt="PXI" className="h-[38px] md:h-[44px] w-auto translate-y-[3px] object-contain" />
+                                <img src="/logo-mark.png" alt="PXI" className="h-[38px] md:h-[44px] w-auto object-contain" />
                             </Link>
 
                             <button
@@ -440,7 +440,7 @@ export default function DashboardLayout({ children }) {
                                 type="button"
                             >
                                 {sidebarCollapsed ? (
-                                    <img src="/logo-mark.png" alt="PXI" className="absolute inset-0 m-auto h-[38px] w-auto translate-y-[3px] object-contain transition duration-200 group-hover:scale-75 group-hover:opacity-0" />
+                                    <img src="/logo-mark.png" alt="PXI" className="absolute inset-0 m-auto h-[38px] w-auto object-contain transition duration-200 group-hover:scale-75 group-hover:opacity-0" />
                                 ) : null}
                                 <HugeiconsIcon icon={sidebarCollapsed ? PanelLeftCloseIcon : PanelLeftOpenIcon} size={sidebarCollapsed ? 26 : 18} className={sidebarCollapsed ? 'opacity-0 transition duration-200 group-hover:opacity-100' : ''} />
                             </button>
@@ -547,7 +547,7 @@ export default function DashboardLayout({ children }) {
                     >
                         <HugeiconsIcon icon={Menu01Icon} size={22} />
                     </button>
-                    <img src="/logo-mark.png" alt="PXI" className="h-[38px] w-auto translate-y-[4px] object-contain" />
+                    <img src="/logo-mark.png" alt="PXI" className="h-[38px] w-auto object-contain" />
                 </header>
 
                 <main className="flex-1 overflow-auto p-6 md:p-8">
