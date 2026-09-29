@@ -25,7 +25,6 @@ const PAGE_JSONLD = {
     'Stripe Destination Charges',
     'Partial User Web Sign-ups',
     'Event Lifecycle Management',
-    'Promoter Link Attribution',
   ],
   offers: {
     '@type': 'Offer',

@@ -1,0 +1,42 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//PXI//Fashion Week Brooklyn 2026 guide//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Fashion Week Brooklyn: Brooklyn x Japan Festival
+X-WR-TIMEZONE:America/New_York
+BEGIN:VTIMEZONE
+TZID:America/New_York
+X-LIC-LOCATION:America/New_York
+BEGIN:DAYLIGHT
+TZOFFSETFROM:-0500
+TZOFFSETTO:-0400
+TZNAME:EDT
+DTSTART:19700308T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0500
+TZNAME:EST
+DTSTART:19701101T020000
+RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:fwbk-2026-oct-4@pxispace.com
+DTSTAMP:20260927T160000Z
+SEQUENCE:0
+DTSTART;TZID=America/New_York:20261004T120000
+DTEND;TZID=America/New_York:20261004T180000
+SUMMARY:Fashion Week Brooklyn: Brooklyn x Japan Festival
+LOCATION:Brooklyn Beauty Fashion Labo\, 300 7th St\, Brooklyn\, NY 11215
+DESCRIPTION:Pratt Creative Exhibition & Fashion Runway Show\, hosted by J-C
+ ollabo. Exhibition 12-6 pm\, runway 4 pm (per FWBK's schedule). Open to th
+ e public\, RSVP required: https://www.fashionweekbrooklyn.com/copy-of-tick
+ ets-schedule . Schedule subject to change. Independent guide by PXI: https
+ ://pxispace.com/editorial/fashion-week-brooklyn#oct-4
+URL:https://pxispace.com/editorial/fashion-week-brooklyn#oct-4
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR

@@ -21,36 +21,30 @@ export const metadata = {
   description:
     'Plan the party, share the camera roll, relive the nostalgia. PXI is the event and social scrapbook app that unifies your best nights in one place.',
   icons: {
-    // THE CIRCULAR BADGE, on a transparent canvas, at every size — resampled from
-    // app-icon.png rather than cropped from it.
+    // The v2 mark (pxispace-redesign/brand/pxi-logo-v2), on a transparent canvas at
+    // every size. Tab icons are NOT masked by browsers, so they stay transparent and
+    // composite onto whatever surface they land on.
     //
-    // A previous pass cropped the badge into a full-bleed opaque square on the theory
-    // that consumers mask it anyway. Two things were wrong with that. Browser tabs do
-    // NOT mask, so the tab showed a purple square with the mark clipped at the edges;
-    // and transparent corners were never the "white corners" bug in the first place —
-    // that was /favicon-circle.png being a corrupt near-transparent file.
-    //
-    // A transparent corner composites to whatever surface it lands on, which is the
-    // correct behaviour. Opaque corners are what cannot adapt.
+    // `?v=grit3` busts the favicon cache: browsers hold favicons far longer than their
+    // Cache-Control says, and without a new URL returning visitors keep the old badge.
+    // Bump it whenever the files change.
     icon: [
-      { url: '/icon-16.png', type: 'image/png', sizes: '16x16' },
-      { url: '/icon-32.png', type: 'image/png', sizes: '32x32' },
-      { url: '/icon-48.png', type: 'image/png', sizes: '48x48' },
-      { url: '/icon-96.png', type: 'image/png', sizes: '96x96' },
-      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
-      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
-      // Google fetches /favicon.ico before it reads any of the above. It now carries
-      // purpose-made 16/32/48 frames instead of one 32 the browser had to downsample.
-      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-16.png?v=grit3', type: 'image/png', sizes: '16x16' },
+      { url: '/icon-32.png?v=grit3', type: 'image/png', sizes: '32x32' },
+      { url: '/icon-48.png?v=grit3', type: 'image/png', sizes: '48x48' },
+      { url: '/icon-96.png?v=grit3', type: 'image/png', sizes: '96x96' },
+      { url: '/icon-192.png?v=grit3', type: 'image/png', sizes: '192x192' },
+      { url: '/icon-512.png?v=grit3', type: 'image/png', sizes: '512x512' },
+      // Google fetches /favicon.ico before it reads any of the above. It carries
+      // purpose-made 16/32/48 frames (the 16 is hand-hinted).
+      { url: '/favicon.ico?v=grit3', sizes: 'any' },
     ],
-    shortcut: '/icon-192.png',
+    shortcut: '/icon-192.png?v=grit3',
     // The one exception: surfaces that FORCE a square. iOS ignores alpha on the home
-    // screen and Android crops to its own adaptive shape, so those files ship the badge
-    // over its own purple gradient rather than transparency — a transparent square there
-    // composites to white and the badge floats in a white box. (This one used to be
-    // filled with black, which read as a foreign chrome around the mark.)
+    // screen, so the Apple touch icon is opaque Pitch Black — a transparent square there
+    // composites to white and the mark floats in a white box.
     // The Android/maskable pair is declared in app/manifest.js.
-    apple: { url: '/icon-180.png', sizes: '180x180' },
+    apple: { url: '/icon-180.png?v=grit3', sizes: '180x180' },
   },
   openGraph: {
     type: 'website',
@@ -75,7 +69,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Codystar&family=Inter:wght@400;500;600;700;800;900&family=Stack+Sans+Notch:wght@200..700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Codystar&family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,500;1,600&family=Stack+Sans+Notch:wght@200..700&display=swap"
           rel="stylesheet"
         />
         {/* The Google tag is fetched from googletagmanager.com by AnalyticsScripts;

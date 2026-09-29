@@ -1,0 +1,124 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//PXI//Fashion Week Brooklyn 2026 guide//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Fashion Week Brooklyn 2026 (PXI guide)
+X-WR-TIMEZONE:America/New_York
+BEGIN:VTIMEZONE
+TZID:America/New_York
+X-LIC-LOCATION:America/New_York
+BEGIN:DAYLIGHT
+TZOFFSETFROM:-0500
+TZOFFSETTO:-0400
+TZNAME:EDT
+DTSTART:19700308T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0500
+TZNAME:EST
+DTSTART:19701101T020000
+RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:fwbk-2026-oct-4@pxispace.com
+DTSTAMP:20260927T160000Z
+SEQUENCE:0
+DTSTART;TZID=America/New_York:20261004T120000
+DTEND;TZID=America/New_York:20261004T180000
+SUMMARY:Fashion Week Brooklyn: Brooklyn x Japan Festival
+LOCATION:Brooklyn Beauty Fashion Labo\, 300 7th St\, Brooklyn\, NY 11215
+DESCRIPTION:Pratt Creative Exhibition & Fashion Runway Show\, hosted by J-C
+ ollabo. Exhibition 12-6 pm\, runway 4 pm (per FWBK's schedule). Open to th
+ e public\, RSVP required: https://www.fashionweekbrooklyn.com/copy-of-tick
+ ets-schedule . Schedule subject to change. Independent guide by PXI: https
+ ://pxispace.com/editorial/fashion-week-brooklyn#oct-4
+URL:https://pxispace.com/editorial/fashion-week-brooklyn#oct-4
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:fwbk-2026-oct-5@pxispace.com
+DTSTAMP:20260927T160000Z
+SEQUENCE:0
+DTSTART;TZID=America/New_York:20261005T180000
+DTEND;TZID=America/New_York:20261005T220000
+SUMMARY:Fashion Week Brooklyn: Slayway (LGBTQAI+ Designers) Collection
+LOCATION:Atolye NYC\, 236B 6th St\, Brooklyn\, NY 11215
+DESCRIPTION:In partnership with Catch These Compliments. Doors 6 pm\, runwa
+ y 7 pm (per FWBK's schedule\; the RSVP page lists doors at 5:30 pm and a 1
+ 0 pm end). RSVP: https://www.fashionweekbrooklyn.com/copy-of-tickets-sched
+ ule . Schedule subject to change. Independent guide by PXI: https://pxispa
+ ce.com/editorial/fashion-week-brooklyn#oct-5
+URL:https://pxispace.com/editorial/fashion-week-brooklyn#oct-5
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:fwbk-2026-oct-6@pxispace.com
+DTSTAMP:20260927T160000Z
+SEQUENCE:0
+DTSTART;TZID=America/New_York:20261006T180000
+DTEND;TZID=America/New_York:20261006T220000
+SUMMARY:Fashion Week Brooklyn: Young Designers Runway
+LOCATION:Atolye NYC\, 236B 6th St\, Brooklyn\, NY 11215
+DESCRIPTION:Young Designers\, in partnership with Rutgers University. Doors
+  6 pm\, runway 7 pm (per FWBK's schedule\; the RSVP page lists doors at 5:
+ 30 pm and a 10 pm end). RSVP: https://www.fashionweekbrooklyn.com/copy-of-
+ tickets-schedule . Schedule subject to change. Independent guide by PXI: h
+ ttps://pxispace.com/editorial/fashion-week-brooklyn#oct-6
+URL:https://pxispace.com/editorial/fashion-week-brooklyn#oct-6
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:fwbk-2026-oct-7@pxispace.com
+DTSTAMP:20260927T160000Z
+SEQUENCE:0
+DTSTART;TZID=America/New_York:20261007T180000
+DTEND;TZID=America/New_York:20261007T220000
+SUMMARY:Fashion Week Brooklyn: Level Up Designers Runway (invitation only)
+LOCATION:Atolye NYC\, 236B 6th St\, Brooklyn\, NY 11215
+DESCRIPTION:Up Next Emerging Designers\, hosted by Atolye NYC. By invitatio
+ n only. Doors 6 pm\, runway 7 pm (per FWBK's schedule\; the RSVP page list
+ s doors at 5:30 pm and a 10 pm end). Schedule subject to change. Independe
+ nt guide by PXI: https://pxispace.com/editorial/fashion-week-brooklyn#oct-
+ 7
+URL:https://pxispace.com/editorial/fashion-week-brooklyn#oct-7
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:fwbk-2026-oct-8@pxispace.com
+DTSTAMP:20260927T160000Z
+SEQUENCE:0
+DTSTART;TZID=America/New_York:20261008T170000
+DTEND;TZID=America/New_York:20261008T210000
+SUMMARY:Fashion Week Brooklyn: Very Brooklyn Show
+LOCATION:bkONE Productions\, Industry City\, 51 35th St\, Building 5\, Broo
+ klyn\, NY 11232
+DESCRIPTION:A Very Brooklyn Fashion Show 2026\, with Brooklyn Made and the 
+ Brooklyn Chamber of Commerce. Doors 5 pm\, runway 6 pm (per FWBK's schedul
+ e\; Brooklyn Made lists 6-9 pm). Open to the public\; Brooklyn Made lists 
+ it as free. RSVP: https://www.fashionweekbrooklyn.com/copy-of-tickets-sche
+ dule . Schedule subject to change. Independent guide by PXI: https://pxisp
+ ace.com/editorial/fashion-week-brooklyn#oct-8
+URL:https://pxispace.com/editorial/fashion-week-brooklyn#oct-8
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:fwbk-2026-oct-9@pxispace.com
+DTSTAMP:20260927T160000Z
+SEQUENCE:0
+DTSTART;VALUE=DATE:20261009
+DTEND;VALUE=DATE:20261010
+TRANSP:TRANSPARENT
+SUMMARY:World Fashion Exhibition Times Square 2026 (time TBA)
+LOCATION:Times Square\, New York\, NY
+DESCRIPTION:Presented by World Fashion Week and Fashion Week Brooklyn. Time
+  and access not yet published: https://worldfashionexhibition.com/times-sq
+ uare-2026 . Independent guide by PXI: https://pxispace.com/editorial/fashi
+ on-week-brooklyn#oct-9
+URL:https://pxispace.com/editorial/fashion-week-brooklyn#oct-9
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR
