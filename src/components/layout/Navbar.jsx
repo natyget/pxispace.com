@@ -64,10 +64,11 @@ const Navbar = () => {
         { name: "About", path: "/about" },
     ];
 
+    // the current page is a soft filled pill — no underline
     const linkClass = (path) =>
         pathname === path
-            ? "text-white after:scale-x-100"
-            : "text-white/50 hover:text-white after:scale-x-0";
+            ? "bg-white/10 text-white"
+            : "text-white/50 hover:text-white";
 
     return (
         <>
@@ -90,7 +91,7 @@ const Navbar = () => {
                         same file the (site) nav uses, so the logo is identical on every public
                         page. The full mark pinches at nav size; see brand/temp-logo/README.md. */}
                     <img
-                        src="/pxi-mark-small.svg?v=grit3"
+                        src="/pxi-mark-small.svg?v=grit5"
                         alt="PXI"
                         width={44}
                         height={44}
@@ -102,13 +103,13 @@ const Navbar = () => {
                 {pathname === "/events" ? (
                     <div id="navbar-center-portal" className="absolute left-1/2 -translate-x-1/2 items-center justify-center z-10 flex" />
                 ) : (
-                    <div className="hidden absolute left-1/2 -translate-x-1/2 items-center justify-center gap-9 z-10 md:flex">
+                    <div className="hidden absolute left-1/2 -translate-x-1/2 items-center justify-center gap-1 z-10 md:flex">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.path}
                                 href={link.path}
                                 onClick={() => setMobileMenuOpen(false)}
-                                className={`relative text-[11px] font-bold uppercase tracking-[0.2em] leading-none transition-colors after:absolute after:-bottom-2 after:left-0 after:h-px after:w-full after:origin-left after:bg-pxi-purple after:transition-transform after:duration-300 ${linkClass(link.path)}`}
+                                className={`relative rounded-full px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] leading-none transition-colors duration-300 ${linkClass(link.path)}`}
                             >
                                 {link.name}
                             </Link>

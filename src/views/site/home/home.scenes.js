@@ -82,11 +82,14 @@ export default async function initHome(PXR, L) {
     $$('.stage').forEach((st) => {
       const box = st.parentElement, mob = MOB && st.dataset.mw;
       const w = +(mob ? st.dataset.mw : st.dataset.w), h = +(mob ? st.dataset.mh : st.dataset.h);
-      const s = Math.min(box.clientWidth / w, box.clientHeight / h, +(st.dataset.max || 1.18));
+      // data-mbleed (phones): the stage may run this many px past the box bottom — under the
+      // fixed time/app pills — so the phone can be bigger; it is then pinned to the box top
+      const bleed = mob ? +(st.dataset.mbleed || 0) : 0;
+      const s = Math.min(box.clientWidth / w, (box.clientHeight + bleed) / h, +(st.dataset.max || 1.18));
       st.style.width = w + 'px'; st.style.height = h + 'px';
       st.style.transform = `translate(-50%, -50%) scale(${s})`;
       // data-mtop (phones): pull a short stage up toward the copy instead of floating mid-box
-      st.style.top = mob && st.dataset.mtop ? (h * s) / 2 + (box.clientHeight - h * s) * +st.dataset.mtop + 'px' : '';
+      st.style.top = bleed ? (h * s) / 2 + 'px' : mob && st.dataset.mtop ? (h * s) / 2 + (box.clientHeight - h * s) * +st.dataset.mtop + 'px' : '';
       st._s = s; st._w = w; st._h = h;
     });
   }
@@ -175,6 +178,8 @@ export default async function initHome(PXR, L) {
     });
     ScrollTrigger.create({ trigger: '#hero', start: 'top top', end: '35% top', onLeave: () => clock.classList.add('on'), onEnterBack: () => clock.classList.remove('on') });
     ScrollTrigger.create({ start: 0, end: 'max', onUpdate: (self) => { prog.style.strokeDashoffset = CIRC * (1 - self.progress); } });
+    // once the story is posted the night is over: the time pill becomes "Explore events"
+    ScrollTrigger.create({ trigger: '#finale', start: 'top 85%', onEnter: () => clock.classList.add('past'), onLeaveBack: () => clock.classList.remove('past') });
 
     // reduced motion: the roll is three still panels (#roll, #roll-d, #roll-e) and has no lights-out beat
     const JUMPS = [
@@ -235,7 +240,9 @@ export default async function initHome(PXR, L) {
       gsap.set(img, { filter: 'brightness(0.1) contrast(0.7) saturate(0) blur(3px)' });
       const tl = gsap.timeline();
       if (!REDUCED) {
-        tl.to('.flash', { opacity: strength, duration: 0.05, ease: 'power1.out' }, 0).to('.flash', { opacity: 0, duration: 0.75, ease: 'power2.out' }, 0.08)
+        tl.set('.flash', { display: 'block' }, 0)
+          .to('.flash', { opacity: strength, duration: 0.05, ease: 'power1.out' }, 0).to('.flash', { opacity: 0, duration: 0.75, ease: 'power2.out' }, 0.08)
+          .add(() => { if (!gsap.isTweening('.flash')) gsap.set('.flash', { display: 'none' }); }, 0.84)
           .fromTo('.room-lit', { opacity: 0 }, { opacity: 0.9, duration: 0.04 }, 0).to('.room-lit', { opacity: 0, duration: 1.5, ease: 'power2.in' }, 0.15);
       }
       const to = place(entry);
@@ -390,11 +397,16 @@ export default async function initHome(PXR, L) {
   /* ───────────────── 11:52 PM → 9:40 AM — ROLL / LIGHTS OUT / MORNING ───────────────── */
   const MAN = await (await fetch('/site/img/lib/manifest.json')).json();
   if (!L.alive) return;
+  // the four keepers carry the room's reactions and comments, the way the app shows them
   const KEEP = [
-    { i: 9, p: 'k00', x: 40, y: 109, w: 302, h: 250, r: -1, tape: 'left:-14px;top:-4px;rotate:-38deg', badge: '<i>♥</i> Most loved · 41' },
-    { i: 13, p: 'k01', x: 358, y: 149, w: 202, h: 190, r: 2, tape: 'left:calc(50% - 28px);top:-9px;rotate:3deg' },
-    { i: 18, p: 'k02', x: 40, y: 423, w: 227, h: 170, r: -2, tape: 'right:-12px;top:-2px;rotate:36deg' },
-    { i: 22, p: 'k03', x: 283, y: 375, w: 277, h: 214, r: 1, tape: 'left:calc(50% - 28px);top:-9px;rotate:-4deg' },
+    { i: 9, p: 'k00', x: 40, y: 109, w: 302, h: 250, r: -1, tape: 'left:-14px;top:-4px;rotate:-38deg',
+      rx: ['❤️ 41', '🔥 18', '😂 7'], cm: [['A18', 'ama', 'we look SO good ✨'], ['A9', 'kofi', 'the dj said one more and meant it']] },
+    { i: 13, p: 'k01', x: 358, y: 149, w: 202, h: 190, r: 2, tape: 'left:calc(50% - 28px);top:-9px;rotate:3deg',
+      rx: ['❤️ 23', '🙌 11'] },
+    { i: 18, p: 'k02', x: 40, y: 423, w: 227, h: 170, r: -2, tape: 'right:-12px;top:-2px;rotate:36deg',
+      rx: ['🔥 16', '❤️ 12'], cm: [['A2', 'tay', 'printing this one']] },
+    { i: 22, p: 'k03', x: 283, y: 375, w: 277, h: 214, r: 1, tape: 'left:calc(50% - 28px);top:-9px;rotate:-4deg',
+      rx: ['❤️ 34', '😍 15', '🔥 9'], cm: [['A16', 'nia', 'best night of the year']] },
   ];
   // Reduced motion: the roll can't scrub, so it becomes three still panels — the thread
   // (#roll itself, which keeps both chapter headings as the real text), then visual-only
@@ -463,12 +475,13 @@ export default async function initHome(PXR, L) {
     const floaties = $$('.floaty', stage);
 
     // ---- tiles: the wall of the whole night (all unique) ----
+    const keeperNotes = (k) => `<div class="kx"><p class="kx-rx">${k.rx.map((r) => `<span>${r}</span>`).join('')}</p>${(k.cm || []).map(([a, who, text]) => `<p class="kx-cm"><img src="${AV(a)}" alt=""><span><b>${who}</b>${text}</span></p>`).join('')}</div>`;
     const WALL = MAN.sets.w, TILE_N = 40;
     let html = '';
     for (let i = 0; i < TILE_N; i++) {
       const k = KEEP.find((kk) => kk.i === i);
       const src = k ? `/site/img/lib/${k.p}.jpg` : `/site/img/lib/${WALL[i % WALL.length]}`;
-      html += `<div class="tile${k ? ' keeper' : ''}"><div class="im"><img src="${src}" alt="" loading="lazy"></div><div class="shade"></div>${k ? `<i class="tape" style="${k.tape}"></i>${k.badge ? `<span class="badge">${k.badge}</span>` : ''}` : ''}</div>`;
+      html += `<div class="tile${k ? ' keeper' : ''}"><div class="im"><img src="${src}" alt="" loading="lazy"></div><div class="shade"></div>${k ? `<i class="tape" style="${k.tape}"></i>${keeperNotes(k)}` : ''}</div>`;
       wall.r[i] = rand(-1.4, 1.4);
     }
     tilesEl.insertAdjacentHTML('beforeend', html);
@@ -508,17 +521,17 @@ export default async function initHome(PXR, L) {
     layout();
     L.on(ScrollTrigger, 'refreshInit', layout);
 
-    // phones: the counters ride as one pill on the stage instead of a block under the lead
+    // phones: the counter becomes a vertical label beside the phone (the phone sits to the right)
     const statsEl = q('.stats')[0];
     if (MOB) $('.stage-box', sec).appendChild(statsEl);
-    const stats = { photos: 12, people: 3 };
-    const statEls = { photos: q('[data-stat="photos"]')[0], people: q('[data-stat="people"]')[0] };
-    const writeStats = () => { statEls.photos.textContent = Math.round(stats.photos); statEls.people.textContent = Math.round(stats.people); };
+    const stats = { photos: 12 };
+    const photosEl = q('[data-stat="photos"]')[0];
+    const writeStats = () => { photosEl.textContent = Math.round(stats.photos); };
 
     const tl = gsap.timeline({ paused: REDUCED, scrollTrigger: pinST(sec, 6.8, 0.6, { invalidateOnRefresh: true }) });
 
     // A — every phone fires, every shot lands at the bottom of the thread
-    tl.to(stats, { photos: 171, people: 31, duration: 7.3, ease: 'none', onUpdate: writeStats }, 0.2);
+    tl.to(stats, { photos: 171, duration: 7.3, ease: 'none', onUpdate: writeStats }, 0.2);
     ARR.forEach((a, i) => {
       const t = 0.3 + i * 1.0, b = B[i], [bx, by] = BP[i], tg = target(i);
       const cx = tg.x + tg.w / 2, cy = tg.y + tg.h / 2;
@@ -538,7 +551,7 @@ export default async function initHome(PXR, L) {
 
     // B — pull back: the thread explodes into the wall of the whole night
     tl.addLabel('b', 7.8)
-      .to(stats, { photos: 214, people: 38, duration: 1.4, ease: 'power1.out', onUpdate: writeStats }, 'b')
+      .to(stats, { photos: 214, duration: 1.4, ease: 'power1.out', onUpdate: writeStats }, 'b')
       .to(q('.beat-a'), { opacity: 0, y: -24, duration: 0.6 }, 'b+=.5');
     // phones: the counter pill sits on the phone's composer, so it leaves before the phone shrinks
     if (MOB) tl.to(statsEl, { opacity: 0, y: 12, duration: 0.3 }, 'b');
@@ -566,7 +579,7 @@ export default async function initHome(PXR, L) {
       .addLabel('dd', 'd+=1.8')
       .fromTo(q('.beat-d'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.8 }, 'd+=1.8')
       .fromTo(q('.tile .tape'), { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.3, stagger: 0.12 }, 'd+=2.6')
-      .fromTo(q('.tile .badge'), { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4 }, 'd+=3.1');
+      .fromTo(q('.tile .kx'), { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.08 }, 'd+=3.1');
 
     // E — the lock screen at 9:40: the scrapbook dims behind the glass and the face-match
     // pushes (the real copy the backend sends) drop in one by one, main first.
@@ -773,22 +786,22 @@ export default async function initHome(PXR, L) {
     const sec = $('#finale');
     const st = ScrollTrigger.create({ trigger: sec, start: 'top 90%', end: 'top 15%', scrub: true });
     register('finale', null, [[0, T(10, 5, 1)], [1, T(22, 0, 7)]], st);
-    // "fan the deck" — the live EditorialStrip motion, on desktop only. Phones and tablets
-    // (<=860px) get a flat, swipeable scroll-snap rail (no rotation, nothing clipped at the
-    // edges). gsap.matchMedia reverts each mode's inline transforms when the other takes over.
-    const BASE = [{ r: -7, y: 26 }, { r: 0, y: 0 }, { r: 7, y: 26 }];
+    // "fan the deck": three cards held like a hand, on every screen size — there is no
+    // horizontal scrolling anywhere on the home page. Phones use a tighter fan.
+    const WIDE = { base: [{ r: -7, y: 26 }, { r: 0, y: 0 }, { r: 7, y: 26 }] };
+    const NARROW = { base: [{ r: -9, y: 18 }, { r: 0, y: 0 }, { r: 9, y: 18 }] };
     const cards = $$('.story');
-    const RAIL = '(max-width: 860px)', DECK = '(min-width: 861px)';
     const mm = L.mm();
     const replay = $('.replay'); // the last thing in the finale, right before the footer
     if (replay) replay.addEventListener('click', () => window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' }));
-    if (REDUCED) { mm.add(DECK, () => { gsap.set(cards, { y: (i) => BASE[i].y, rotation: (i) => BASE[i].r }); }); return; }
-    gsap.from(['.finale .display-xl', '.finale > .lead', '.finale > .ctas'], { y: 50, opacity: 0, duration: 1.1, ease: 'expo.out', stagger: 0.08, scrollTrigger: { trigger: sec, start: 'top 70%', toggleActions: 'play none none reverse' } });
-    gsap.from('.stories-head > *', { y: 40, opacity: 0, duration: 1, ease: 'expo.out', stagger: 0.08, scrollTrigger: { trigger: '.stories', start: 'top 85%', toggleActions: 'play none none reverse' } });
-    mm.add(RAIL, () => {
-      gsap.from(cards, { x: 60, opacity: 0, duration: 1, ease: 'expo.out', stagger: 0.1, scrollTrigger: { trigger: '.story-fan', start: 'top 88%', toggleActions: 'play none none reverse' } });
+    mm.add({ narrow: '(max-width: 860px)', wide: '(min-width: 861px)' }, (ctx) => {
+      const BASE = (ctx.conditions.narrow ? NARROW : WIDE).base;
+      if (REDUCED) { gsap.set(cards, { y: (i) => BASE[i].y, rotation: (i) => BASE[i].r }); return undefined; }
+      return deck(BASE);
     });
-    mm.add(DECK, () => {
+    if (REDUCED) return;
+    gsap.from('.stories-head > *', { y: 40, opacity: 0, duration: 1, ease: 'expo.out', stagger: 0.08, scrollTrigger: { trigger: '.stories', start: 'top 85%', toggleActions: 'play none none reverse' } });
+    function deck(BASE) {
       gsap.fromTo(cards, { y: 150, opacity: 0, rotation: (i) => BASE[i].r * 2.4 }, { y: (i) => BASE[i].y, opacity: 1, rotation: (i) => BASE[i].r, duration: 1.2, ease: 'expo.out', stagger: 0.12, scrollTrigger: { trigger: '.story-fan', start: 'top 88%', toggleActions: 'play none none reverse' } });
       if (!FINE) return undefined;
       const off = cards.map((c, i) => {
@@ -799,7 +812,7 @@ export default async function initHome(PXR, L) {
         return () => { c.removeEventListener('mouseenter', lift); c.removeEventListener('mouseleave', drop); c.removeEventListener('focus', lift); c.removeEventListener('blur', drop); };
       });
       return () => off.forEach((f) => f());
-    });
+    }
     gsap.from('.org', { y: 40, opacity: 0, duration: 1, ease: 'expo.out', scrollTrigger: { trigger: '.org', start: 'top 90%', toggleActions: 'play none none reverse' } });
   }
 

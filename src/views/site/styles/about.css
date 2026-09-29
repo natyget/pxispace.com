@@ -97,8 +97,6 @@ div.pxr.about .appstore small { font-size: 11px; letter-spacing: .08em; }
 
 /* ───────── mobile ───────── */
 @media (max-width: 860px) {
-  div.pxr.about .nav-menu { width: 44px; height: 44px; margin-right: -7px; }
-  div.pxr.about .nav-logo { display: grid; place-items: center; min-width: 44px; min-height: 44px; margin-left: -3px; }
   .pxr:where(.about) .ab-hero { align-items: flex-end; padding: 0 18px 96px; }
   .pxr:where(.about) .ab-hero .display-1 { font-size: min(14vw, 3.8rem); }
   .pxr:where(.about) .ab-hero .hero-lead { font-size: 15.5px; margin-top: 18px; }
