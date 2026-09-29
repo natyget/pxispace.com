@@ -10,7 +10,7 @@ import { openConsentPreferences } from '@/lib/consent';
 import { SOCIAL_PROFILES } from '@/lib/seo/social';
 import { allCities } from '@/lib/seo/cities';
 
-const LogoSVG = '/logo-mark.png';
+const LogoSVG = '/pxi-mark-small.svg?v=grit';
 const linkClass = 'text-zinc-500 hover:text-white transition-colors';
 
 const ATTENDEE_LINKS = [
@@ -61,7 +61,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="mb-4 inline-flex items-center gap-2">
-              <img src={LogoSVG} alt="PXI" className="h-8 w-auto object-contain" />
+              <img src={LogoSVG} alt="PXI" width={40} height={40} className="h-10 w-10 object-contain" />
             </Link>
             <p className="mb-6 max-w-xs text-sm leading-relaxed text-zinc-500">
               Tickets, one shared camera roll, and the morning-after scrapbook. Never lose the night.

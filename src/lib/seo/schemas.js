@@ -169,9 +169,8 @@ export const ORGANIZATION_NODE = {
   name: 'PXI',
   url: SITE_URL,
   // Google's org logo slot is composited on WHITE, so it must be an opaque
-  // square — app-icon.png is the circular badge on transparency and rendered as
-  // a floating disc in a white box. logo-square.png is the same badge over its
-  // own purple gradient (scripts/build-icons.mjs).
+  // square — a mark on transparency renders as a floating shape in a white box.
+  // logo-square.png is the mark on opaque Pitch Black.
   logo: `${SITE_URL}/logo-square.png`,
   // Branded 1200×630 card so Google prefers it for the search thumbnail
   // instead of scraping a prominent in-page content photo.
