@@ -248,7 +248,7 @@ export default function HomeView() {
               <p className="ls-time">9:40</p>
             </div>
             <div className="notif main">
-              <img className="n-icon" src="/site/img/app-icon.png?v=grit" alt="" />
+              <img className="n-icon" src="/site/img/app-icon.png?v=grit2" alt="" />
               <div className="n-text">
                 <p className="n-top">
                   <b>PXI</b>
@@ -259,7 +259,7 @@ export default function HomeView() {
               <img className="n-thumb" src="/site/img/lib/k00.jpg" alt="" />
             </div>
             <div className="notif n2">
-              <img className="n-icon" src="/site/img/app-icon.png?v=grit" alt="" />
+              <img className="n-icon" src="/site/img/app-icon.png?v=grit2" alt="" />
               <div className="n-text">
                 <p className="n-top">
                   <b>Kofi saved your photo</b>
@@ -270,7 +270,7 @@ export default function HomeView() {
               <img className="n-thumb" src="/site/img/lib/k01.jpg" alt="" />
             </div>
             <div className="notif n3">
-              <img className="n-icon" src="/site/img/app-icon.png?v=grit" alt="" />
+              <img className="n-icon" src="/site/img/app-icon.png?v=grit2" alt="" />
               <div className="n-text">
                 <p className="n-top">
                   <b>Ama reacted to your photo</b>

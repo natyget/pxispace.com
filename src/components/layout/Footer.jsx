@@ -10,7 +10,7 @@ import { openConsentPreferences } from '@/lib/consent';
 import { SOCIAL_PROFILES } from '@/lib/seo/social';
 import { allCities } from '@/lib/seo/cities';
 
-const LogoSVG = '/pxi-mark-small.svg?v=grit';
+const LogoSVG = '/pxi-mark-small.svg?v=grit2';
 const linkClass = 'text-zinc-500 hover:text-white transition-colors';
 
 const ATTENDEE_LINKS = [

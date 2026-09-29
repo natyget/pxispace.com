@@ -8,7 +8,7 @@ export default function SiteFooter({ page }) {
   return (
     <footer className="foot">
       <div className="foot-ghost" aria-hidden="true">
-        <img src="/site/img/pxi-mark.svg?v=grit" alt="" />
+        <img src="/site/img/pxi-mark.svg?v=grit2" alt="" />
       </div>
       <div className="foot-inner">
         {page === 'home' ? (
@@ -18,7 +18,7 @@ export default function SiteFooter({ page }) {
         ) : null}
         <div className="foot-grid">
           <div className="foot-brand">
-            <img src="/site/img/pxi-mark-small.svg?v=grit" alt="PXI" width="40" height="40" {...(page === 'fwbk' ? { loading: 'lazy', decoding: 'async' } : null)} />{' '}
+            <img src="/site/img/pxi-mark-small.svg?v=grit2" alt="PXI" width="40" height="40" {...(page === 'fwbk' ? { loading: 'lazy', decoding: 'async' } : null)} />{' '}
             <p>Tickets, one shared camera roll, and the morning-after scrapbook. Never lose the night.</p>{' '}
             <a className="appstore" href="https://apps.apple.com/app/pxi/id6751762197" target="_blank" rel="noopener noreferrer" aria-label="Download on App Store">
               <img src="/site/img/apple-logo-white.svg" alt="" width="18" height="22" />

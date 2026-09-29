@@ -61,7 +61,7 @@ export default function AboutView() {
               <span className="fi" data-i="Calendar01Icon"></span>
             </div>
             <div className="one">
-              <img src="/site/img/pxi-mark.svg?v=grit" alt="" width="180" height="180" />
+              <img src="/site/img/pxi-mark.svg?v=grit2" alt="" width="180" height="180" />
             </div>
           </div>
           <ul className="sr-only">

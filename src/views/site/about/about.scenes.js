@@ -25,7 +25,7 @@ export default async function initAbout(PXR, L) {
   async function initField() {
     const cv = $('.field'), hero = $('#hero');
     const ctx = cv.getContext('2d');
-    const img = new Image(); img.src = '/site/img/pxi-mark.svg?v=grit';
+    const img = new Image(); img.src = '/site/img/pxi-mark-clean.svg?v=grit2';
     try { await img.decode(); } catch { return; }
     if (!L.alive) return;
     const COLORS = ['#f5f5f5', '#f5f5f5', '#f5f5f5', '#e9e9ee', '#D84AFF', '#e98bff', '#FF5A1F'];

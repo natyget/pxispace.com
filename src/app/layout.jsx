@@ -21,30 +21,30 @@ export const metadata = {
   description:
     'Plan the party, share the camera roll, relive the nostalgia. PXI is the event and social scrapbook app that unifies your best nights in one place.',
   icons: {
-    // The Sep 2026 mark (pxispace-redesign/brand/temp-logo), on a transparent canvas at
+    // The v2 mark (pxispace-redesign/brand/pxi-logo-v2), on a transparent canvas at
     // every size. Tab icons are NOT masked by browsers, so they stay transparent and
     // composite onto whatever surface they land on.
     //
-    // `?v=grit` busts the favicon cache: browsers hold favicons far longer than their
+    // `?v=grit2` busts the favicon cache: browsers hold favicons far longer than their
     // Cache-Control says, and without a new URL returning visitors keep the old badge.
     // Bump it whenever the files change.
     icon: [
-      { url: '/icon-16.png?v=grit', type: 'image/png', sizes: '16x16' },
-      { url: '/icon-32.png?v=grit', type: 'image/png', sizes: '32x32' },
-      { url: '/icon-48.png?v=grit', type: 'image/png', sizes: '48x48' },
-      { url: '/icon-96.png?v=grit', type: 'image/png', sizes: '96x96' },
-      { url: '/icon-192.png?v=grit', type: 'image/png', sizes: '192x192' },
-      { url: '/icon-512.png?v=grit', type: 'image/png', sizes: '512x512' },
+      { url: '/icon-16.png?v=grit2', type: 'image/png', sizes: '16x16' },
+      { url: '/icon-32.png?v=grit2', type: 'image/png', sizes: '32x32' },
+      { url: '/icon-48.png?v=grit2', type: 'image/png', sizes: '48x48' },
+      { url: '/icon-96.png?v=grit2', type: 'image/png', sizes: '96x96' },
+      { url: '/icon-192.png?v=grit2', type: 'image/png', sizes: '192x192' },
+      { url: '/icon-512.png?v=grit2', type: 'image/png', sizes: '512x512' },
       // Google fetches /favicon.ico before it reads any of the above. It carries
       // purpose-made 16/32/48 frames (the 16 is hand-hinted).
-      { url: '/favicon.ico?v=grit', sizes: 'any' },
+      { url: '/favicon.ico?v=grit2', sizes: 'any' },
     ],
-    shortcut: '/icon-192.png?v=grit',
+    shortcut: '/icon-192.png?v=grit2',
     // The one exception: surfaces that FORCE a square. iOS ignores alpha on the home
     // screen, so the Apple touch icon is opaque Pitch Black — a transparent square there
     // composites to white and the mark floats in a white box.
     // The Android/maskable pair is declared in app/manifest.js.
-    apple: { url: '/icon-180.png?v=grit', sizes: '180x180' },
+    apple: { url: '/icon-180.png?v=grit2', sizes: '180x180' },
   },
   openGraph: {
     type: 'website',
