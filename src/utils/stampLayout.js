@@ -590,7 +590,8 @@ export function splitDiamondPassTitleLines(name) {
 
 /** Standard stamp copy: date → name (optional split) → city → role. */
 export function buildStampFieldLines(date, name, city, role, splitName = false) {
-    const nameParts = splitName ? splitDiamondPassTitleLines(name) : [name];
+    // No name (private stamps) → no name row, so the remaining lines don't leave a gap.
+    const nameParts = (splitName ? splitDiamondPassTitleLines(name) : [name]).filter(Boolean);
     return [
         { text: date, size: STAMP_FONT.dateCompact },
         ...nameParts.map((part) => ({ text: part, size: STAMP_FONT.nameCompact, bold: true })),

@@ -29,10 +29,13 @@ async function fetchPassportEventsLegacy(userId, mode) {
         const ev = (eventsData?.events ?? []).find((e) => e.id === ticket.eventId);
         if (!ev) return [];
         const albumRole = 'MEMBER';
+        const isPrivate = ev.visibility === 'PRIVATE';
         return [
             {
                 id: ev.id,
-                name: ev.name,
+                // Same contract as the API: a private event's name never reaches the stamp.
+                name: isPrivate ? '' : ev.name,
+                isPrivate,
                 startDate: ev.startDate,
                 location: ev.location,
                 xp: xpByEventId?.[ev.id],
