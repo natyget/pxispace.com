@@ -675,7 +675,7 @@ export default function FashionWeekBrooklynView() {
             {/* During the week: add <ol class="recaps"> here with one <li> per night that has a published recap (photo, credit, 2–3 lines, link to #oct-N). Never ship empty tiles. */}
             <aside className="fw-cta" aria-labelledby="h-cta">
               <div className="fw-cta-copy">
-                <img className="fw-cta-icon" src="/site/img/app-icon.png?v=grit2" alt="" width="56" height="56" loading="lazy" decoding="async" />{' '}
+                <img className="fw-cta-icon" src="/site/img/app-icon.png?v=grit3" alt="" width="56" height="56" loading="lazy" decoding="async" />{' '}
                 <h2 id="h-cta">Shooting the week? Keep it in one album on PXI.</h2>
                 <p>PXI gives an event one shared camera roll, so everyone’s photos from the night end up in the same place.</p>
               </div>

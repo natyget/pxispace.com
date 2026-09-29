@@ -145,7 +145,7 @@ export default async function initHome(PXR, L) {
       <span class="at-refund">Ticket is non refundable</span>
     </div>
     <div class="at-stub"><div class="at-qr-anchor"><span class="at-tap">TAP</span><div class="at-qr">${hi('QrCodeIcon', 30)}${withExtras ? '<span class="scanline"></span>' : ''}</div></div></div>
-    ${withExtras ? '<div class="admit-wrap"><div class="admit">Admitted<small>Door 2 · 9:52 PM</small></div></div>' : ''}
+    ${withExtras ? '<div class="admit-wrap"><div class="admit">Admitted</div></div>' : ''}
   </div>`;
 
   /* ───────────────────────── avatars ───────────────────────── */
@@ -227,8 +227,7 @@ export default async function initHome(PXR, L) {
       const slot = free.reduce((a, b) => (Math.hypot(a.x - x, a.y - y) <= Math.hypot(b.x - x, b.y - y) ? a : b));
       const el = document.createElement('div');
       el.className = 'polaroid'; el.style.width = pw() + 'px';
-      const f = fmt(computeClock());
-      el.innerHTML = `<div class="ph"><img src="${POOL[n++ % POOL.length]}" alt=""></div><div class="cap"><b>№ ${String(28 - exp).padStart(2, '0')}</b><span>${f.time} ${f.ap}</span></div>`;
+      el.innerHTML = `<div class="ph"><img src="${POOL[n++ % POOL.length]}" alt=""></div><div class="cap"><b>#${String(28 - exp).padStart(2, '0')}</b></div>`;
       shots.appendChild(el);
       const entry = { el, slot: slot.i }; live.push(entry);
       const w = el.offsetWidth, h = el.offsetHeight, img = $('img', el);
@@ -273,7 +272,6 @@ export default async function initHome(PXR, L) {
       .from('.hero .display-1 .ln > span', { yPercent: 105, duration: 1.1, ease: 'expo.out', stagger: 0.09 }, 0.05)
       .from('.hero-lead', { y: 16, opacity: 0, duration: 0.9, ease: 'expo.out' }, 0.3)
       .from('.hero .ctas > *', { y: 16, opacity: 0, duration: 0.9, ease: 'expo.out', stagger: 0.07 }, 0.38)
-      .from('.scroll-cue', { y: 10, opacity: 0, duration: 0.7, ease: 'expo.out' }, 1.25)
       .add(() => { if (!REDUCED) gsap.to('.tap-cue', { opacity: 0.5, duration: 0.9, ease: 'sine.inOut', repeat: -1, yoyo: true }); }, 1.2);
     if (!REDUCED) {
       const auto = (k, s) => { const p = slots()[k], W = hero.clientWidth, H = hero.clientHeight; shoot(p.x + (W / 2 - p.x) * 0.3, p.y + (H / 2 - p.y) * 0.3, s); };
@@ -284,7 +282,7 @@ export default async function initHome(PXR, L) {
     if (REDUCED) intro.progress(1);
     const exit = gsap.timeline({ paused: REDUCED, scrollTrigger: REDUCED ? undefined : { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.4 } });
     exit.to('.hero-copy', { y: -140, opacity: 0, ease: 'none' }, 0).to(shots, { y: -300, ease: 'none' }, 0)
-      .to('.scroll-cue', { opacity: 0, ease: 'none', duration: 0.3 }, 0).to(room, { opacity: 0.15, ease: 'none' }, 0);
+      .to(room, { opacity: 0.15, ease: 'none' }, 0);
     register('hero', exit, [[0, T(21, 47)], [exit.duration(), T(21, 48)]], REDUCED ? still(exit, hero, 0) : undefined);
   }
 
@@ -293,10 +291,11 @@ export default async function initHome(PXR, L) {
     const sec = $('#doors'), q = gsap.utils.selector(sec);
     $('.t-body', sec).innerHTML = ticketHTML(true);
     $('.t-stub', sec).innerHTML = ticketHTML(true);
-    const FACES = ['ama', 'kofi', 'tay', 'jo', 'nia', 'zee', 'dre', 'lu'];
-    $('.facepile', sec).innerHTML = FACES.slice(0, 7).map((p, i) => `<img src="${AV(PEOPLE[p])}" alt="" style="z-index:${10 - i}">`).join('') + '<span class="more">+149</span>';
+    // clean, face-forward portraits only (Ama and Kofi lead, as the line below names them)
+    const FACES = ['A18', 'A9', 'A2', 'A16', 'A11'];
+    $('.facepile', sec).innerHTML = FACES.map((a, i) => `<img src="${AV(a)}" alt="" style="z-index:${10 - i}">`).join('') + '<span class="more">+151</span>';
     const members = { n: 156 };
-    const writeM = () => { const n = Math.round(members.n); $('.going .more', sec).textContent = '+' + (n - 7); $('.going-others', sec).textContent = n - 2; };
+    const writeM = () => { const n = Math.round(members.n); $('.going .more', sec).textContent = '+' + (n - FACES.length); $('.going-others', sec).textContent = n - 2; };
     const tl = gsap.timeline({ paused: REDUCED, defaults: { ease: 'power2.inOut' }, scrollTrigger: pinST(sec, 2.5) });
     gsap.set(q('.ticket-pair'), { y: -280 });
     tl.to(q('.ticket-pair'), { y: 0, duration: 2, ease: 'none' }, 0)
@@ -337,7 +336,7 @@ export default async function initHome(PXR, L) {
     const IM = ['midday', 'bluehour', 'beach', 'neon', 'shade'];
     const FOCUS = [[208, 380], [262, 214], [268, 292], [250, 330], [246, 560]];
     scr.insertAdjacentHTML('afterbegin', `<div class="cam-imgs">${IM.map((n) => `<img src="/site/img/cam/${n}.jpg" alt="">`).join('')}</div><div class="cam-fade"></div>`);
-    scr.insertAdjacentHTML('beforeend', `${sbar('10:31')}<div class="live-pill">${EV.name}</div>
+    scr.insertAdjacentHTML('beforeend', `${sbar('10:31')}<div class="live-pill"></div>
       <div class="reticle">${RETICLE}<span class="sun">${SUN}</span></div>
       <div class="zoom"><span>.5</span><span class="on">1</span><span>3</span></div>
       <div class="queue"><i class="qs"></i><span class="qc">3</span><i class="qg"></i></div>
@@ -348,6 +347,9 @@ export default async function initHome(PXR, L) {
     const imgs = $$('.cam-imgs img', scr), ret = $('.reticle', scr), qc = $('.qc', scr), items = q('.light-list li');
     const LIGHT = items.map((li) => $('span', li).lastChild.textContent.trim());
     const chipN = $('.cc-lbl small', sec), chipT = $('.cc-lbl span', sec), dots = q('.cc-dots i');
+    // phones: the on-screen pill names the light being shot (desktop has the list beside it)
+    const lightPill = $('.live-pill', scr);
+    lightPill.textContent = LIGHT[0];
     let chipK = 0;
     const tl = gsap.timeline({ paused: REDUCED, scrollTrigger: pinST(sec, 2.8, 0.5) });
     const T0 = (k) => 0.3 + k * 1.25;
@@ -374,7 +376,7 @@ export default async function initHome(PXR, L) {
       let n = 3; for (let k = 0; k < 5; k++) if (tl.time() >= T0(k) + 0.72) n++;
       qc.textContent = n;
       let a = 0; for (let k = 1; k < 5; k++) if (tl.time() >= T0(k) + 0.15) a = k;
-      if (a !== chipK) { chipK = a; chipN.textContent = String(a + 1).padStart(2, '0'); chipT.textContent = LIGHT[a]; dots.forEach((d, k) => d.classList.toggle('on', k === a)); }
+      if (a !== chipK) { chipK = a; lightPill.textContent = LIGHT[a]; chipN.textContent = String(a + 1).padStart(2, '0'); chipT.textContent = LIGHT[a]; dots.forEach((d, k) => d.classList.toggle('on', k === a)); }
       gsap.set(q('.queue .qs'), { opacity: n > 1 ? 0.7 : 0 });
     });
     if (!REDUCED) items.forEach((li, k) => $('button', li).addEventListener('click', () => {
@@ -778,7 +780,7 @@ export default async function initHome(PXR, L) {
     const cards = $$('.story');
     const RAIL = '(max-width: 860px)', DECK = '(min-width: 861px)';
     const mm = L.mm();
-    const replay = $('.replay'); // lives in the shared footer; guard in case the footer changes
+    const replay = $('.replay'); // the last thing in the finale, right before the footer
     if (replay) replay.addEventListener('click', () => window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' }));
     if (REDUCED) { mm.add(DECK, () => { gsap.set(cards, { y: (i) => BASE[i].y, rotation: (i) => BASE[i].r }); }); return; }
     gsap.from(['.finale .display-xl', '.finale > .lead', '.finale > .ctas'], { y: 50, opacity: 0, duration: 1.1, ease: 'expo.out', stagger: 0.08, scrollTrigger: { trigger: sec, start: 'top 70%', toggleActions: 'play none none reverse' } });

@@ -75,10 +75,6 @@ export default function HomeView() {
               <a className="btn btn-secondary" href="/events">Explore events</a>
             </div>
           </div>
-          <p className="scroll-cue" aria-hidden="true">
-            <span>Scroll to live the night</span>
-            <i></i>
-          </p>
         </section>
         {/* ============ 9:48 PM — DOORS ============ */}
         <section className="scene" id="doors">
@@ -212,7 +208,7 @@ export default function HomeView() {
                 <div className="stats" aria-hidden="true">
                   <div>
                     <b data-stat="photos">12</b>
-                    <span>in the roll</span>
+                    <span>photos in the roll</span>
                   </div>
                   <div>
                     <b data-stat="people">3</b>
@@ -235,7 +231,7 @@ export default function HomeView() {
           </div>
           <div className="wall-text" aria-hidden="true">
             <p className="wt-big">One roll. Zero<br /> “can you send me that?”</p>
-            <p className="wt-sub">214 shots <i>·</i> 38 phones</p>
+            <p className="wt-sub"><span>214 shots</span> <span>38 phones</span></p>
           </div>
           <div className="night-text" aria-hidden="true">
             <p className="nt-time">4:12 AM</p>
@@ -248,7 +244,7 @@ export default function HomeView() {
               <p className="ls-time">9:40</p>
             </div>
             <div className="notif main">
-              <img className="n-icon" src="/site/img/app-icon.png?v=grit2" alt="" />
+              <img className="n-icon" src="/site/img/app-icon.png?v=grit3" alt="" />
               <div className="n-text">
                 <p className="n-top">
                   <b>PXI</b>
@@ -259,7 +255,7 @@ export default function HomeView() {
               <img className="n-thumb" src="/site/img/lib/k00.jpg" alt="" />
             </div>
             <div className="notif n2">
-              <img className="n-icon" src="/site/img/app-icon.png?v=grit2" alt="" />
+              <img className="n-icon" src="/site/img/app-icon.png?v=grit3" alt="" />
               <div className="n-text">
                 <p className="n-top">
                   <b>Kofi saved your photo</b>
@@ -270,7 +266,7 @@ export default function HomeView() {
               <img className="n-thumb" src="/site/img/lib/k01.jpg" alt="" />
             </div>
             <div className="notif n3">
-              <img className="n-icon" src="/site/img/app-icon.png?v=grit2" alt="" />
+              <img className="n-icon" src="/site/img/app-icon.png?v=grit3" alt="" />
               <div className="n-text">
                 <p className="n-top">
                   <b>Ama reacted to your photo</b>
@@ -466,6 +462,7 @@ export default function HomeView() {
             <a className="btn btn-secondary" href="/platform">For organizers</a>{' '}
             <p>Throwing one? Tickets, the shared camera and the morning-after recap — <b>under your brand.</b></p>
           </div>
+          <button className="btn btn-secondary replay" type="button">↺ Replay the night</button>
         </section>
       </main>
       <SiteFooter page="home" />

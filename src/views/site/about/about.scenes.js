@@ -25,13 +25,17 @@ export default async function initAbout(PXR, L) {
   async function initField() {
     const cv = $('.field'), hero = $('#hero');
     const ctx = cv.getContext('2d');
-    const img = new Image(); img.src = '/site/img/pxi-mark-clean.svg?v=grit2';
+    const img = new Image(); img.src = '/site/img/pxi-mark-clean.svg?v=grit3';
     try { await img.decode(); } catch { return; }
     if (!L.alive) return;
     const COLORS = ['#f5f5f5', '#f5f5f5', '#f5f5f5', '#e9e9ee', '#D84AFF', '#e98bff', '#FF5A1F'];
-    let W = 0, H = 0, pts = [], t0 = performance.now(), running = true, disperse = 0, mx = -9999, my = -9999;
+    let W = 0, H = 0, pts = [], t0 = performance.now(), running = true, disperse = 0, mx = -9999, my = -9999, laidOut = false;
     const rnd = (a, b) => a + Math.random() * (b - a);
     function layout() {
+      // The gather plays once. A later layout (rotation, a real resize) re-targets the points
+      // in place instead of scattering them and gathering again.
+      const again = laidOut;
+      laidOut = true;
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       W = cv.clientWidth; H = cv.clientHeight;
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
@@ -50,12 +54,12 @@ export default async function initAbout(PXR, L) {
       for (let i = 0; i < N + AMB; i++) {
         const p = keep[i] || { x: rnd(0, W), y: rnd(0, H), s: rnd(1.3, 2.6), c: COLORS[(Math.random() * COLORS.length) | 0], ph: rnd(0, 6.28), sp: rnd(0.4, 1.2), d: rnd(0, 0.9) };
         if (i < N) { p.tx = target[i][0]; p.ty = target[i][1]; p.amb = false; } else { p.tx = rnd(0, W); p.ty = rnd(0, H); p.amb = true; }
-        p.sx = p.x; p.sy = p.y;
+        if (again) { p.sx = p.tx; p.sy = p.ty; } else { p.sx = p.x; p.sy = p.y; }
         const dx = p.tx - cx, dy = p.ty - cy, L = Math.hypot(dx, dy) || 1;
-        p.ux = dx / L; p.uy = dy / L; p.depth = rnd(0.4, 1.4);
+        p.ux = dx / L; p.uy = dy / L; p.depth = p.depth || rnd(0.4, 1.4);
         pts.push(p);
       }
-      t0 = performance.now();
+      if (!again) t0 = performance.now();
       if (REDUCED) draw(99);
     }
     const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
@@ -86,13 +90,18 @@ export default async function initAbout(PXR, L) {
       if (gsap) ScrollTrigger.create({ trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.4, onUpdate: (s) => { disperse = s.progress; } });
       if (FINE) { hero.addEventListener('pointermove', (e) => { const r = cv.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; }); hero.addEventListener('pointerleave', () => { mx = my = -9999; }); }
     }
-    let rz; L.on(window, 'resize', () => { clearTimeout(rz); rz = setTimeout(layout, 150); });
+    // Phones fire resize whenever the address bar slides in or out while scrolling; only a real
+    // change of width (rotation, window resize) or a big height change re-lays the field out.
+    let rz; L.on(window, 'resize', () => {
+      clearTimeout(rz);
+      rz = setTimeout(() => { if (cv.clientWidth !== W || Math.abs(cv.clientHeight - H) > 160) layout(); }, 150);
+    });
   }
 
   function initHeroCopy() {
     if (!gsap || REDUCED) return;
     gsap.from('.ab-hero .ln > span', { yPercent: 112, duration: 1.2, ease: 'expo.out', stagger: 0.1, delay: 0.15 });
-    gsap.from(['.ab-hero .hero-lead', '.ab-cue'], { y: 24, opacity: 0, duration: 1.1, ease: 'expo.out', stagger: 0.08, delay: 0.35 });
+    gsap.from('.ab-hero .hero-lead', { y: 24, opacity: 0, duration: 1.1, ease: 'expo.out', delay: 0.35 });
     gsap.to('.ab-hero-copy', { y: -80, opacity: 0.2, ease: 'none', scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 0.4 } });
   }
 
@@ -114,10 +123,13 @@ export default async function initAbout(PXR, L) {
       html += `<span class="w${cls}">${w}</span> `;
     }
     st.innerHTML = html.trim();
-    const ws = $$('.w', st);
+    const ws = $$('.w', st), head = $('.mission-h');
     if (!gsap || REDUCED) { ws.forEach((w) => { w.style.color = endColor(w); }); return; }
     const tl = gsap.timeline({ scrollTrigger: { trigger: '#mission', start: MOB() ? 'top 20%' : 'top top', end: () => '+=' + window.innerHeight * (MOB() ? 0.9 : 1.1), pin: !MOB(), scrub: 0.5, invalidateOnRefresh: true } });
-    ws.forEach((w, k) => tl.to(w, { color: endColor(w), duration: 0.4, ease: 'none' }, k * 0.12));  }
+    // the heading lights up first, then the sentence word by word
+    tl.fromTo(head, { opacity: 0.16, y: 18 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 0);
+    ws.forEach((w, k) => tl.to(w, { color: endColor(w), duration: 0.4, ease: 'none' }, 0.35 + k * 0.12));
+  }
 
   /* ═════════════ WHY — five apps collapse into one place ═════════════ */
   function initWhy() {

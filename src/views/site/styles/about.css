@@ -36,6 +36,7 @@ div.pxr.about .appstore small { font-size: 11px; letter-spacing: .08em; }
 /* ───────── mission ───────── */
 .pxr:where(.about) .mission { position: relative; min-height: 100vh; min-height: 100svh; display: flex; align-items: center; justify-content: center; padding: 12vh var(--gutter); }
 .pxr:where(.about) .mission-in { max-width: 820px; margin: 0 auto; width: 100%; }
+.pxr:where(.about) .mission-h { margin: 0 auto 28px; text-align: center; color: #fff; }
 .pxr:where(.about) .statement { font: 500 clamp(1.35rem, 2.1vw, 1.85rem)/1.55 var(--f-body); letter-spacing: -.015em; color: #F5F5F5; text-align: center; text-wrap: pretty; }
 .pxr:where(.about) .statement .w { color: rgba(245, 245, 245, .16); }
 
@@ -56,7 +57,7 @@ div.pxr.about .appstore small { font-size: 11px; letter-spacing: .08em; }
 .pxr:where(.about) .f3 .fi { color: #FF5A1F; }
 .pxr:where(.about) .f4 { right: 4%; bottom: 6%; }
 .pxr:where(.about) .f4 .fi { color: #00F0FF; }
-.pxr:where(.about) .one { left: 50%; top: 50%; width: 46%; translate: -50% -50%; opacity: 0; }
+.pxr:where(.about) .one { left: 50%; top: 50%; width: 66%; translate: -50% -50%; opacity: 0; }
 .pxr:where(.about) .one img { width: 100%; height: auto; display: block; }
 
 /* ───────── vision ───────── */
@@ -103,6 +104,7 @@ div.pxr.about .appstore small { font-size: 11px; letter-spacing: .08em; }
   .pxr:where(.about) .ab-hero .hero-lead { font-size: 15.5px; margin-top: 18px; }
   .pxr:where(.about) .ab-cue { left: 18px; bottom: 26px; }
   .pxr:where(.about) .mission { min-height: 70vh; padding: 72px 18px; }
+  .pxr:where(.about) .mission-h { margin-bottom: 18px; }
   .pxr:where(.about) .statement { font-size: 1.2rem; line-height: 1.55; }
   .pxr:where(.about) .why { grid-template-columns: 1fr; padding: 96px 18px 72px; gap: 36px; align-content: center; }
   .pxr:where(.about) .why-copy { gap: 14px; }

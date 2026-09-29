@@ -127,7 +127,7 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 /* ───────── the night clock: a small dial + time pill and the app CTA pill ───────── */
 .pxr .clock { position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); z-index: 60; display: flex; align-items: center; gap: 8px; translate: -50% 140%; opacity: 0; transition: translate .8s var(--ease-out), opacity .5s; }
 .pxr .clock.on { translate: -50% 0; opacity: 1; }
-.pxr .clock-pill { display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 18px 0 7px; border-radius: 50px; background: rgba(18, 18, 18, .72); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); box-shadow: 0 0 0 1px rgba(255, 255, 255, .07), 0 14px 40px rgba(0, 0, 0, .5); transition: background .2s; }
+.pxr .clock-pill { display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 18px 0 7px; border-radius: 50px; background: rgba(18, 18, 18, .72); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); box-shadow: 0 14px 40px rgba(0, 0, 0, .5); transition: background .2s; }
 .pxr .clock-pill:hover { background: rgba(28, 28, 30, .8); }
 .pxr .dial { width: 38px; height: 38px; flex: none; }
 .pxr .dial .track { fill: none; stroke: rgba(255, 255, 255, .1); stroke-width: 2.4; }
@@ -168,7 +168,9 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .kicker-wrap { position: relative; display: grid; place-items: center; }
 .pxr .hero-kicker { visibility: hidden; font: 700 11px/1 var(--f-body); letter-spacing: .3em; text-transform: uppercase; }
 .pxr .tap-cue { position: absolute; inset: 0; display: grid; place-items: center; white-space: nowrap; font: 900 14px/1 var(--f-body); letter-spacing: .38em; text-transform: uppercase; color: var(--orange); text-shadow: 0 0 14px rgba(255, 90, 31, .75), 0 0 32px rgba(255, 90, 31, .35); padding-left: .38em; }
-.pxr .hero .display-1 { margin-top: 26px; text-shadow: 0 10px 60px rgba(0, 0, 0, .8); }
+/* no text-shadow: each line clips (for the rise-in), which cut a 60px shadow into dark
+   rectangles that showed whenever the flash lit the room behind them */
+.pxr .hero .display-1 { margin-top: 26px; }
 .pxr .hero .display-1 .ln { display: block; overflow: hidden; padding-bottom: .06em; margin-bottom: -.06em; }
 .pxr .hero .display-1 .ln > span { display: inline-block; }
 .pxr .hero-lead { margin-top: 26px; max-width: 27em; font: 500 clamp(1.02rem, 1.45vw, 1.3rem)/1.5 var(--f-body); color: #a1a1aa; text-wrap: balance; }
@@ -181,10 +183,12 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .polaroid { position: absolute; left: 0; top: 0; background: #fff; padding: 7px 7px 0; border-radius: 3px; box-shadow: 0 30px 60px -12px rgba(0, 0, 0, .75), 0 0 0 1px rgba(0, 0, 0, .06); will-change: transform; }
 .pxr .polaroid .ph { aspect-ratio: 3 / 4; background: #111412; overflow: hidden; }
 .pxr .polaroid .ph img { width: 100%; height: 100%; object-fit: cover; }
-.pxr .polaroid .cap { display: flex; justify-content: space-between; align-items: center; height: 30px; padding: 0 3px; font: 600 9px/1 var(--f-body); letter-spacing: .12em; color: #8a8579; }
-.pxr .polaroid .cap b { font-weight: 700; color: #b0aa9c; }
+.pxr .polaroid .cap { display: flex; justify-content: flex-end; align-items: center; height: 30px; padding: 0 3px; font: 600 10px/1 var(--f-body); letter-spacing: .08em; color: #8a8579; }
+.pxr .polaroid .cap b { font-weight: 700; color: #a8a295; font-variant-numeric: tabular-nums; }
 .pxr .vf-cursor { position: fixed; left: 0; top: 0; width: 60px; height: 60px; margin: -30px 0 0 -30px; z-index: 90; pointer-events: none; opacity: 0; transition: opacity .25s; }
 .pxr .vf-cursor.on { opacity: 1; }
+/* touch screens never show the viewfinder; a fixed box hanging off the left edge lets iOS pan sideways */
+@media (hover: none) { .pxr .vf-cursor { display: none; } }
 .pxr .vf-cursor i { position: absolute; width: 14px; height: 14px; border: 2px solid #fff; filter: drop-shadow(0 0 6px rgba(0, 0, 0, .6)); }
 .pxr .vf-cursor i:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 4px; }
 .pxr .vf-cursor i:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 4px; }
@@ -263,17 +267,16 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .at-qr { position: relative; width: 56px; height: 56px; border-radius: 12px; background: #fff; display: grid; place-items: center; border: 1.5px solid var(--app-purple); box-shadow: 0 0 12px rgba(240, 31, 255, .85); overflow: hidden; }
 .pxr .at-qr svg { width: 30px; height: 30px; color: #0a0a0a; }
 .pxr .scanline { position: absolute; left: -6px; right: -6px; top: 0; height: 2px; background: var(--cyan); box-shadow: 0 0 12px 2px rgba(0, 240, 255, .8), 0 0 40px 8px rgba(0, 240, 255, .25); opacity: 0; }
-.pxr .admit-wrap { position: absolute; left: 150px; top: 132px; transform: rotate(-9deg); z-index: 3; }
-.pxr .admit { opacity: 0; padding: 5px 8px 4px; background: rgba(8, 20, 14, .82) !important; border: 1.5px solid var(--green); border-radius: 5px; outline: 1px solid rgba(0, 255, 136, .7); outline-offset: 2px; font: 800 11px/1 var(--f-ios); letter-spacing: .14em; text-transform: uppercase; text-align: center; color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .55); box-shadow: 0 0 18px rgba(0, 255, 136, .2); background: rgba(0, 255, 136, .07); }
-.pxr .admit small { display: block; margin-top: 4px; font: 700 5.5px/1 var(--f-ios); letter-spacing: .2em; }
+/* one word, big, stamped across the middle of the ticket */
+.pxr .admit-wrap { position: absolute; left: 124px; top: 96px; transform: translate(-50%, -50%) rotate(-9deg); z-index: 3; }
+.pxr .admit { opacity: 0; padding: 8px 16px 7px; background: rgba(8, 20, 14, .86) !important; border: 2px solid var(--green); border-radius: 6px; outline: 1px solid rgba(0, 255, 136, .7); outline-offset: 3px; font: 800 21px/1 var(--f-ios); letter-spacing: .16em; text-transform: uppercase; text-align: center; white-space: nowrap; color: var(--green); text-shadow: 0 0 12px rgba(0, 255, 136, .6); box-shadow: 0 0 22px rgba(0, 255, 136, .25); }
 /* who's going — quiet social proof, no container */
 .pxr .going { position: absolute; left: 35px; top: 408px; width: 490px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .pxr .facepile { display: flex; align-items: center; }
-.pxr .facepile img,
-.pxr .facepile .more { width: 42px; height: 42px; border-radius: 50%; box-shadow: 0 0 0 3px #050505; margin-left: -11px; }
-.pxr .facepile img { object-fit: cover; }
+.pxr .facepile img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2.5px #050505; margin-left: -9px; }
 .pxr .facepile > :first-child { margin-left: 0; }
-.pxr .facepile .more { display: grid; place-items: center; background: #1b1b1d; font: 700 12px/1 var(--f-body); color: #fff; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+/* the count floats beside the faces as plain text — no chip */
+.pxr .facepile .more { margin-left: 10px; font: 600 14px/1 var(--f-body); color: #e4e4e7; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .pxr .going-txt { font: 500 14px/1.4 var(--f-body); color: #a1a1aa; }
 .pxr .going-txt b { color: #fff; font-weight: 600; }
 .pxr .going-others { font-variant-numeric: tabular-nums; }
@@ -409,7 +412,12 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .wall-text::before { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(48% 42% at 50% 50%, rgba(5, 5, 5, .86), rgba(5, 5, 5, .4) 62%, transparent 82%); }
 .pxr .wt-big { font: 700 clamp(2.6rem, 6.4vw, 6.4rem)/.94 var(--f-display); letter-spacing: -.04em; color: #fff; text-shadow: 0 10px 80px rgba(0, 0, 0, .9); text-wrap: balance; }
 .pxr .wt-sub { margin-top: 22px; padding: 0; font: 600 clamp(1.2rem, 2vw, 1.7rem)/1.15 var(--f-display); letter-spacing: -.02em; text-transform: none; color: var(--orange); text-shadow: 0 10px 40px rgba(0, 0, 0, .55); }
-.pxr .wt-sub i { font-style: normal; color: rgba(255, 90, 31, .55); margin: 0 .35em; }
+.pxr .wt-sub { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 .8em; }
+/* the live roll counters read like the wall line: plain orange words, no pill, no separator */
+.pxr.home .scene-roll .stats { gap: 0 .8em; margin-top: 2px; flex-wrap: wrap; }
+.pxr.home .scene-roll .stats > div { flex-direction: row; align-items: baseline; gap: .3em; }
+.pxr.home .scene-roll .stats b,
+.pxr.home .scene-roll .stats span { font: 600 clamp(1.2rem, 1.9vw, 1.6rem)/1.15 var(--f-display); letter-spacing: -.02em; text-transform: none; color: var(--orange); }
 .pxr .night-text { opacity: 0; }
 .pxr .nt-time { font: 700 clamp(4rem, 13vw, 12rem)/.85 var(--f-display); letter-spacing: -.05em; font-variant-numeric: tabular-nums; color: #fff; }
 .pxr .nt-time small { font-size: .28em; letter-spacing: .08em; margin-left: .2em; color: #a1a1aa; }
@@ -531,7 +539,11 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .story-cap h3 { font: 600 17px/1.3 var(--f-body); color: #fff; text-wrap: balance; }
 .pxr .story-cap span { display: block; margin-top: 8px; font: 600 10px/1 var(--f-body); letter-spacing: .2em; text-transform: uppercase; color: rgba(255, 255, 255, .6); }
 .pxr .story:hover { z-index: 5; }
-.pxr .org { margin-top: 120px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.pxr .org { margin-top: 80px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+/* after the stories: organizers, then the replay, then the footer — close together */
+.pxr.home #finale { padding-bottom: 40px; }
+.pxr.home #finale .replay { margin: 36px auto 0; height: 50px; padding: 0 26px; font: 600 15px/1 var(--f-body); letter-spacing: 0; text-transform: none; color: #fff; }
+.pxr.home .foot { margin-top: 24px; }
 .pxr .org p { font: 500 15px/1.5 var(--f-body); color: #a1a1aa; max-width: 30em; }
 .pxr .org b { color: #fff; font-weight: 600; }
 
@@ -602,10 +614,12 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
   .pxr .clock-menu { width: min(300px, calc(100vw - 24px)); }
   .pxr .finale { padding: 16vh 18px 8vh; }
   .pxr .stories { margin-top: 100px; }
-  .pxr .org { margin-top: 80px; }
+  .pxr .org { margin-top: 56px; }
   .pxr .foot-grid { grid-template-columns: 1fr 1fr; }
   .pxr .foot-brand { grid-column: 1 / -1; }
   .pxr .foot-bottom { flex-direction: column; }
+  /* keep the copyright clear of the fixed time + get-the-app pills */
+  .pxr .foot { padding-bottom: 96px; }
 }
 @media (prefers-reduced-motion: reduce) { .pxr .grain,
 .pxr .scroll-cue i { animation: none; } }
@@ -666,8 +680,8 @@ html.pxr-doc { overflow-x: clip; }
 .pxr.home .more-link:hover { color: #fff; text-decoration-color: var(--orange); }
 .pxr.home .more-link svg { flex: none; color: var(--orange); }
 .pxr.home #camera .cam-chip { display: none; }
-/* the previous face overlaps the counter's left edge: centre "+157" in the part you can see */
-.pxr.home #doors .facepile .more { padding-left: 11px; }
+/* the on-screen light name is a phones-only affordance (desktop lists the lights beside the phone) */
+.pxr.home #camera .live-pill { display: none; }
 
 /* stories from the night: the guide card + the scrapbook collage */
 .pxr.home #finale .story { border-radius: 16px; }
@@ -721,22 +735,17 @@ html.pxr-doc { overflow-x: clip; }
   .pxr.home #doors .ticket-pair { left: 5px; }
   .pxr.home #doors .going { left: 5px; top: 392px; width: 490px; gap: 14px; }
   .pxr.home #doors .going-txt { font-size: 20.5px; }
-  .pxr.home #doors .facepile img,
-.pxr.home #doors .facepile .more { width: 56px; height: 56px; margin-left: -14px; box-shadow: 0 0 0 4px #050505; }
+  .pxr.home #doors .facepile img { width: 42px; height: 42px; margin-left: -11px; box-shadow: 0 0 0 3px #050505; }
   .pxr.home #doors .facepile > :first-child { margin-left: 0; }
-  .pxr.home #doors .facepile .more { font-size: 16px; padding-left: 14px; }
+  .pxr.home #doors .facepile .more { margin-left: 12px; font-size: 19px; }
   .pxr.home #doors .stub-note { left: 226px; top: 0; }
   .pxr.home #doors .stub-note p { font-size: 20px; }
 
   /* camera: the phone fills the stage; the presets become one chip on the screen */
   .pxr.home #camera .cam-phone { left: 6px; top: 6px; }
   .pxr.home #camera .light-list { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
-  .pxr.home #camera .cam-chip { position: absolute; left: 6px; top: 94px; z-index: 5; width: 300px; display: flex; flex-direction: column; align-items: center; gap: 9px; pointer-events: none; }
-  .pxr.home #camera .cc-lbl { display: inline-flex; align-items: center; gap: 9px; height: 38px; padding: 0 17px 0 15px; border-radius: 999px; background: rgba(10, 10, 12, .6); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 0 0 1px rgba(255, 255, 255, .12), 0 8px 20px rgba(0, 0, 0, .35); font: 700 17px/1 var(--f-body); color: #fff; white-space: nowrap; }
-  .pxr.home #camera .cc-lbl small { font: 800 14px/1 var(--f-body); letter-spacing: .12em; color: var(--orange); }
-  .pxr.home #camera .cc-dots { display: flex; gap: 6px; }
-  .pxr.home #camera .cc-dots i { width: 7px; height: 7px; border-radius: 4px; background: rgba(255, 255, 255, .45); box-shadow: 0 1px 4px rgba(0, 0, 0, .4); transition: width .3s var(--ease-out), background .3s; }
-  .pxr.home #camera .cc-dots i.on { width: 20px; background: #fff; }
+  /* the light's name rides in the app's own top pill, small; no separate chip, no progress dots */
+  .pxr.home #camera .live-pill { display: flex; top: 60px; padding: 8px 16px; font: 700 19px/1 var(--f-ios); letter-spacing: 0; color: #fff; }
 
   /* roll: the thread phone fills the stage, bursts hug its edges, stats ride as one pill */
   .pxr.home .scene-roll .thread-phone { left: 28px; top: 5px; }
@@ -745,11 +754,9 @@ html.pxr-doc { overflow-x: clip; }
   .pxr.home .scene-roll .burst .who { display: none; }
   .pxr.home .scene-roll .floaty { font-size: 28px; }
   .pxr.home .scene-roll .bursts { z-index: 4; }
-  .pxr.home .scene-roll .stats { position: absolute; left: 50%; bottom: 14px; z-index: 6; translate: -50% 0; flex-direction: row; gap: 14px; margin: 0; padding: 0 18px; height: 40px; border-radius: 999px; background: rgba(18, 18, 18, .88); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 0 0 1px rgba(255, 255, 255, .1), 0 12px 30px rgba(0, 0, 0, .5); white-space: nowrap; }
-  .pxr.home .scene-roll .stats > div { flex-direction: row; align-items: baseline; gap: 6px; }
-  .pxr.home .scene-roll .stats > div + div::before { content: '·'; margin-right: 8px; color: var(--purple); font-weight: 800; }
-  .pxr.home .scene-roll .stats b { font: 700 17px/1 var(--f-body); letter-spacing: -.01em; }
-  .pxr.home .scene-roll .stats span { font: 600 12px/1 var(--f-body); letter-spacing: .04em; text-transform: none; color: #a1a1aa; }
+  .pxr.home .scene-roll .stats { margin-top: 0; white-space: nowrap; }
+  .pxr.home .scene-roll .stats b,
+.pxr.home .scene-roll .stats span { font-size: 18px; }
   .pxr.home .scene-roll .notif-stack { width: calc(100vw - 28px); }
   .pxr.home .scene-roll .ls-time { font-size: clamp(64px, 19vw, 84px); }
   .pxr.home .scene-roll .ls-clock { margin-bottom: 12px; }
@@ -766,8 +773,24 @@ html.pxr-doc { overflow-x: clip; }
   .pxr.home #post .rx-pill { padding: 7px 11px; font-size: 13px; } .pxr.home #post .rx-pill span { font-size: 17px; }
   .pxr.home #post .rx-pill.r1 { left: 192px; top: 292px; } .pxr.home #post .rx-pill.r2 { left: 204px; top: 334px; }
 
-  .pxr.home #finale .org { margin-top: 72px; }
+  .pxr.home #finale .org { margin-top: 56px; }
+  .pxr.home #finale { padding-bottom: 28px; }
+
+  /* camera + roll: the phone gets the room the bottom padding held; its foot sits behind the
+     fixed time/app pills while pinned and comes fully into view as the scene scrolls away */
+  .pxr.home #camera .scene-grid,
+.pxr.home #roll .scene-grid { padding-bottom: 14px; }
+  /* a clear gap between the heading block and the stage: the passport and the story phone must
+     never ride up over the level badge / the subhead, whatever the browser's text metrics */
+  .pxr.home #stamp .stage-box,
+.pxr.home #post .stage-box { margin-top: 14px; }
+  .pxr.home .scene-roll .stats { margin-bottom: 8px; }
 }
+
+/* Home scrolls vertically only: a diagonal swipe must not nudge the page sideways. The stories
+   rail is the one horizontal scroller, so it keeps horizontal panning. */
+.pxr.home { touch-action: pan-y pinch-zoom; }
+.pxr.home #finale .story-fan { touch-action: pan-x pan-y pinch-zoom; }
 /* phones + tablets (<=860): the stories become a swipeable rail (app.js skips the deck motion here) */
 @media (max-width: 860px) {
   .pxr.home #finale .stories { margin-top: 96px; padding: 0; }

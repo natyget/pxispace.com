@@ -63,6 +63,9 @@ export default async function initPlatform(PXR, L) {
   }
   // mobile: crop the phone to the height it has, with a short fade, and move the app's bottom-anchored UI up with it
   function cropPhone(ph, vis) {
+    // The stage box stops 70px above the screen bottom (room for the status pill). Let the phone
+    // run most of the way down behind that pill instead of cutting it off at the box edge.
+    vis += 54;
     const full = ph.pw * 2.094;
     if (vis >= full - 2) { ph.el.classList.remove('crop'); ph.scr.style.height = ''; return; }
     ph.el.classList.add('crop');
@@ -262,7 +265,7 @@ export default async function initPlatform(PXR, L) {
     const nx = (n, sub, chip, cls, dot) => `<div class="nx"><i class="dot ${dot}"></i><div><b>${n}</b><small>${sub}</small></div></div>`;
     el.innerHTML = `
       <aside class="cc-side">
-        <div class="cc-logo"><img src="/site/img/pxi-mark-small.svg?v=grit2" alt=""><span>${lu(LU.panel, 18, 1.8)}</span></div>
+        <div class="cc-logo"><img src="/site/img/pxi-mark-small.svg?v=grit3" alt=""><span>${lu(LU.panel, 18, 1.8)}</span></div>
         <div class="cc-nav">${nav.map((x) => x.length === 1 ? `<p class="cc-sec">${x[0]}</p>` : `<div class="cc-item ${x[2] || ''}">${hi(x[0], 18)}${x[1]}</div>`).join('')}</div>
         <div class="cc-acct"><img src="/site/img/lib/w06.jpg" alt=""><div><b>Late Checkout Co.</b><small>@latecheckout</small></div>${hi('Settings01Icon', 16)}</div>
       </aside>

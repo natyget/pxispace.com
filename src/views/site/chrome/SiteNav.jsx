@@ -21,7 +21,7 @@ export default function SiteNav({ page }) {
   return (
     <header className="nav">
       <a className="nav-logo" href="/" aria-label="PXI home">
-        <img src="/site/img/pxi-mark-small.svg?v=grit2" alt="PXI" width="44" height="44" />
+        <img src="/site/img/pxi-mark-small.svg?v=grit3" alt="PXI" width="44" height="44" />
       </a>{' '}
       <nav className="nav-links" aria-label="Primary">
         {LINKS.map((l) =>

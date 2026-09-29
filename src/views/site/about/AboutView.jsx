@@ -28,16 +28,12 @@ export default function AboutView() {
               </span>
             </h1>
             <p className="hero-lead">PXI is event technology built around what people keep: tickets in the organizer's own name, one shared camera roll for everyone in the room, and a scrapbook that's ready the next morning.</p>
-          </div>{' '}
-          <a className="ab-cue" href="#mission">
-            <span>Our mission</span>
-            <i aria-hidden="true"></i>
-          </a>
+          </div>
         </section>
         {/* ============ MISSION ============ */}
         <section className="mission" id="mission" aria-labelledby="mission-h">
           <div className="mission-in">
-            <h2 id="mission-h" className="sr-only">Our mission</h2>
+            <h2 id="mission-h" className="display mission-h">Our mission</h2>
             <p className="statement">Our mission is to give every night a place to live, so the people who host it keep the revenue and the people who were there keep the memory.</p>
           </div>
         </section>
@@ -61,7 +57,7 @@ export default function AboutView() {
               <span className="fi" data-i="Calendar01Icon"></span>
             </div>
             <div className="one">
-              <img src="/site/img/pxi-mark.svg?v=grit2" alt="" width="180" height="180" />
+              <img src="/site/img/pxi-mark.svg?v=grit3" alt="" width="180" height="180" />
             </div>
           </div>
           <ul className="sr-only">

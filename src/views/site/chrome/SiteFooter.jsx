@@ -1,24 +1,19 @@
-// Shared footer for the redesign pages (ported from pxispace-redesign/site). Differences
-// between pages are the demo's own: the "Replay the night" button is home-only, and the
-// Fashion Week Brooklyn guide loads no icon script, so it inlines the Instagram glyph.
+// Shared footer for the redesign pages (ported from pxispace-redesign/site). The one per-page
+// difference: the Fashion Week Brooklyn guide loads no icon script, so it inlines the Instagram glyph.
+// (Home's "Replay the night" lives at the end of its finale, just above this footer.)
 
-/** @param { page: 'home' | 'platform' | 'about' | 'fwbk' } props */
+/** @param {{ page: 'home' | 'platform' | 'about' | 'fwbk' }} props */
 export default function SiteFooter({ page }) {
   const hideIcons = page === 'fwbk' ? 'true' : undefined;
   return (
     <footer className="foot">
       <div className="foot-ghost" aria-hidden="true">
-        <img src="/site/img/pxi-mark.svg?v=grit2" alt="" />
+        <img src="/site/img/pxi-mark.svg?v=grit3" alt="" />
       </div>
       <div className="foot-inner">
-        {page === 'home' ? (
-          <>
-            <button className="replay" type="button">↺ Replay the night</button>{' '}
-          </>
-        ) : null}
         <div className="foot-grid">
           <div className="foot-brand">
-            <img src="/site/img/pxi-mark-small.svg?v=grit2" alt="PXI" width="40" height="40" {...(page === 'fwbk' ? { loading: 'lazy', decoding: 'async' } : null)} />{' '}
+            <img src="/site/img/pxi-mark-small.svg?v=grit3" alt="PXI" width="40" height="40" {...(page === 'fwbk' ? { loading: 'lazy', decoding: 'async' } : null)} />{' '}
             <p>Tickets, one shared camera roll, and the morning-after scrapbook. Never lose the night.</p>{' '}
             <a className="appstore" href="https://apps.apple.com/app/pxi/id6751762197" target="_blank" rel="noopener noreferrer" aria-label="Download on App Store">
               <img src="/site/img/apple-logo-white.svg" alt="" width="18" height="22" />

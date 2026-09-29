@@ -23,7 +23,8 @@ import { ArrowRight } from 'lucide-react';
  */
 export default function CreateEventEmptyState({ title, blurb, className = '', secondary }) {
     return (
-        <div className={`rounded-3xl border border-white/[0.08] bg-white/[0.02] p-6 text-center sm:p-10 ${className}`}>
+        // No card: our surfaces don't use borders, and the words stand on their own.
+        <div className={`p-6 text-center sm:p-10 ${className}`}>
             <h2 className="display-3">{title}</h2>
             <p className="body-lead mx-auto mt-4 max-w-md">{blurb}</p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:mt-8">
