@@ -39,6 +39,7 @@ export function ogImageUrl({ title, eyebrow, kicker } = {}) {
  * @param {object}  input
  * @param {string}  input.title        <title> and og:title (the layout appends "| PXI")
  * @param {string}  input.description  meta description and og:description
+ * @param {string} [input.ogDescription] a different description for the share card
  * @param {string}  input.path         site-relative path, e.g. '/about'
  * @param {string} [input.ogTitle]     override the card headline when the <title> is long
  * @param {string} [input.eyebrow]     small uppercase label on the generated card
@@ -51,6 +52,7 @@ export function ogImageUrl({ title, eyebrow, kicker } = {}) {
 export function buildPageMetadata({
   title,
   description,
+  ogDescription,
   path = '/',
   ogTitle,
   eyebrow,
@@ -81,7 +83,7 @@ export function buildPageMetadata({
       siteName: 'PXI',
       locale: 'en_US',
       title: ogTitle || title,
-      description,
+      description: ogDescription || description,
       url,
       images,
     },
@@ -89,7 +91,7 @@ export function buildPageMetadata({
       card: 'summary_large_image',
       site: '@pxilabs',
       title: ogTitle || title,
-      description,
+      description: ogDescription || description,
       images: [resolved],
     },
   };

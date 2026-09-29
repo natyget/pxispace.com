@@ -1,0 +1,393 @@
+/* GENERATED from pxispace-redesign/site/fwbk.css — scoped under .pxr (page: .fwbk).
+   Every selector is prefixed so this sheet cannot reach any page outside the redesign
+   wrapper; <html>/<body> rules only apply while html.pxr-doc is set (see SiteRuntime).
+   Edit this file directly from now on. */
+/* ─────────────────────────────────────────────────────────────
+   Fashion Week Brooklyn 2026 guide. Static, text-first, mobile-first.
+   Uses styles.css for tokens, nav, mobile menu, buttons and footer.
+   ───────────────────────────────────────────────────────────── */
+html.pxr-doc.pxr-fwbk.fwbk-doc { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html.pxr-doc.pxr-fwbk.fwbk-doc { scroll-behavior: auto; } }
+
+/* body overflow-x:hidden (styles.css) would turn <body> into a scroll container and break
+   position:sticky for the day rail; clip keeps the same visual result without that. */
+div.pxr.fwbk { --line: rgba(255, 255, 255, .08); --muted: #a1a1aa; --dim: #8b8b94; --card: #0f0f11; --nav-h: 72px; }
+html.pxr-doc.pxr-fwbk body { overflow-x: clip; }
+.pxr.fwbk .nav-menu { width: 44px; height: 44px; margin-right: -7px; }
+.pxr.fwbk .nav-logo { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+.pxr.fwbk .socials { gap: 0; }
+.pxr.fwbk .socials a { min-width: 44px; min-height: 44px; }
+.pxr.fwbk .appstore small { font-size: 11px; letter-spacing: .08em; }
+.pxr.fwbk .nav-menu:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+
+.pxr:where(.fwbk) .fw-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.pxr:where(.fwbk) .fw-skip { position: fixed; left: 16px; top: -80px; z-index: 100; padding: 15px 18px; border-radius: 50px; background: #fff; color: #050505; font: 700 14px/1 var(--f-body); transition: top .2s; }
+.pxr:where(.fwbk) .fw-skip:focus { top: 12px; }
+.pxr.fwbk a:focus-visible,
+.pxr.fwbk summary:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; border-radius: 10px; }
+.pxr:where(.fwbk) .nw { white-space: nowrap; }
+
+.pxr:where(.fwbk) .fw-in { position: relative; max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+.pxr.fwbk .grad { color: #fff; background: none; -webkit-text-fill-color: #fff; }
+.pxr:where(.fwbk) .fw-link { color: #e9b4ff; text-decoration: underline; text-decoration-color: rgba(233, 180, 255, .4); text-underline-offset: 3px; transition: color .2s, text-decoration-color .2s; }
+.pxr:where(.fwbk) .fw-link:hover { color: #fff; text-decoration-color: currentColor; }
+
+/* ───────── hero ───────── */
+.pxr:where(.fwbk) .fw-hero { position: relative; padding: 116px 0 56px; }
+.pxr:where(.fwbk) .fw-hero::before { content: ''; position: absolute; right: 0; top: 0; width: 60%; height: 100%; pointer-events: none; background: radial-gradient(50% 45% at 70% 45%, rgba(255, 90, 31, .10), transparent 70%); }
+.pxr:where(.fwbk) .fw-hero-grid { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr); gap: 64px; align-items: center; }
+.pxr:where(.fwbk) .fw-crumbs ol { list-style: none; display: flex; flex-wrap: wrap; align-items: center; font: 600 13px/1.2 var(--f-body); color: var(--dim); }
+.pxr:where(.fwbk) .fw-crumbs li { display: inline-flex; align-items: center; }
+.pxr:where(.fwbk) .fw-crumbs li + li::before { content: ''; width: 5px; height: 5px; margin: 0 10px; border-top: 1.5px solid #52525b; border-right: 1.5px solid #52525b; rotate: 45deg; }
+.pxr:where(.fwbk) .fw-crumbs a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; color: var(--muted); transition: color .2s; }
+.pxr:where(.fwbk) .fw-crumbs a:hover { color: #fff; }
+.pxr:where(.fwbk) .fw-crumbs [aria-current] { color: #d4d4d8; }
+.pxr:where(.fwbk) .fw-h1 { margin-top: 10px; font: 700 clamp(2.45rem, 5.4vw, 4.9rem)/.96 var(--f-display); letter-spacing: -.042em; color: #fff; text-wrap: balance; }
+.pxr:where(.fwbk) .fw-h1 .grad { display: inline; }
+.pxr:where(.fwbk) .fw-lead { margin-top: 26px; max-width: 36em; font: 400 clamp(1rem, 1.25vw, 1.14rem)/1.62 var(--f-body); color: #b4b4bd; text-wrap: pretty; }
+.pxr:where(.fwbk) .fw-lead b { color: #f4f4f5; font-weight: 600; }
+.pxr:where(.fwbk) .fw-meta { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 8px; }
+.pxr:where(.fwbk) .fw-pill { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 14px; border-radius: var(--r-pill); background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06); font: 600 13px/1 var(--f-body); color: #d4d4d8; white-space: nowrap; }
+.pxr:where(.fwbk) .fw-pill-verified { background: rgba(163, 255, 0, .08); box-shadow: inset 0 0 0 1px rgba(163, 255, 0, .18); color: #e6ffc2; }
+.pxr:where(.fwbk) .fw-pill-verified svg { color: var(--lime); }
+.pxr:where(.fwbk) .fw-ctas { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 12px; }
+.pxr:where(.fwbk) .fw-ctas .btn { height: 52px; padding: 0 26px; font-size: 15px; }
+
+/* the poster: the home page's guide card, blown up (no photo, so nobody is pictured at an event they didn't attend) */
+.pxr:where(.fwbk) .fw-hero-stage { position: relative; justify-self: end; width: min(100%, 440px); }
+.pxr:where(.fwbk) .fw-poster { position: relative; overflow: hidden; aspect-ratio: 11 / 13; max-height: max(480px, calc(100svh - 200px)); border-radius: var(--r-xl); background: radial-gradient(110% 70% at 10% 0%, rgba(216, 74, 255, .42), transparent 62%), radial-gradient(90% 60% at 100% 100%, rgba(255, 90, 31, .34), transparent 62%), #0c0a10; box-shadow: 0 0 0 1px rgba(255, 255, 255, .09), 0 40px 120px rgba(0, 0, 0, .65), 0 0 90px rgba(216, 74, 255, .10); }
+.pxr:where(.fwbk) .fw-poster::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: url(/site/img/grain.png); opacity: .07; mix-blend-mode: overlay; }
+.pxr:where(.fwbk) .fp-runway { position: absolute; left: 0; bottom: 0; width: 100%; height: 48%; }
+.pxr:where(.fwbk) .fp-copy { position: absolute; left: 36px; right: 36px; top: 40px; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; }
+.pxr:where(.fwbk) .fp-copy [data-t]::before { content: attr(data-t); }
+.pxr:where(.fwbk) .fp-mo { font: 800 12px/1 var(--f-body); letter-spacing: .26em; text-transform: uppercase; color: #ffb08f; }
+.pxr:where(.fwbk) .fp-big { margin-top: 14px; font: 700 clamp(118px, 11.5vw, 160px)/.84 var(--f-display); letter-spacing: -.055em; color: #fff; text-shadow: 0 0 60px rgba(216, 74, 255, .35); }
+.pxr:where(.fwbk) .fp-days { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 24px; }
+.pxr:where(.fwbk) .fp-days i { font-style: normal; padding: 7px 9px; border-radius: var(--r-s); border: 1px solid rgba(255, 255, 255, .2); background: rgba(5, 5, 5, .25); font: 700 11px/1 var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: #f4f4f5; }
+.pxr:where(.fwbk) .fp-days .fp-plus { border-style: dashed; border-color: rgba(255, 176, 143, .45); color: #ffb08f; }
+.pxr:where(.fwbk) .fp-city { margin-top: 16px; font: 700 11px/1 var(--f-body); letter-spacing: .2em; text-transform: uppercase; color: #d4d4d8; }
+
+/* ───────── schedule: day rail + main column ───────── */
+.pxr:where(.fwbk) .fw-sched { display: grid; grid-template-columns: 208px minmax(0, 1fr); gap: 56px; align-items: start; padding-top: 24px; scroll-margin-top: 90px; }
+.pxr:where(.fwbk) .fw-days { position: sticky; top: 104px; z-index: 20; }
+.pxr:where(.fwbk) .fw-days-h { margin: 0 0 12px 14px; font: 600 14px/1 var(--f-body); color: #8b8b94; }
+.pxr:where(.fwbk) .fw-days ol { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.pxr:where(.fwbk) .fw-days { transition: opacity .25s, visibility .25s; }
+.pxr:where(.fwbk) .fw-days.gone { opacity: 0; visibility: hidden; }
+.pxr:where(.fwbk) .fw-days a { position: relative; display: grid; grid-template-columns: 38px 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; min-height: 58px; padding: 9px 14px; border-radius: var(--r-m); color: var(--muted); transition: background .2s, color .2s; }
+.pxr:where(.fwbk) .fw-days a:hover { background: rgba(255, 255, 255, .04); color: #fff; }
+.pxr:where(.fwbk) .fw-days a b { grid-row: 1 / span 2; font: 700 30px/1 var(--f-display); letter-spacing: -.04em; color: #fff; text-align: center; }
+.pxr:where(.fwbk) .fw-days .d { font: 700 11px/1 var(--f-body); letter-spacing: .18em; text-transform: uppercase; align-self: end; }
+.pxr:where(.fwbk) .fw-days .s { font: 500 14px/1.25 var(--f-body); color: #d4d4d8; align-self: start; margin-top: 4px; }
+.pxr:where(.fwbk) .fw-days a.on { background: rgba(255, 255, 255, .07); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
+.pxr:where(.fwbk) .fw-days a.on::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 2px; border-radius: 2px; background: linear-gradient(var(--purple), var(--orange)); }
+.pxr:where(.fwbk) .fw-days a.is-today .d { color: var(--orange); }
+.pxr:where(.fwbk) .fw-days a.is-today b { color: var(--orange); }
+
+.pxr:where(.fwbk) .fw-h2 { font: 700 clamp(1.9rem, 3.3vw, 2.9rem)/1 var(--f-display); letter-spacing: -.035em; color: #fff; text-wrap: balance; }
+/* at a glance: the night-by-night table first, then the facts */
+.pxr:where(.fwbk) .glance { scroll-margin-top: 100px; }
+.pxr:where(.fwbk) .week-wrap { margin-top: 24px; border-radius: var(--r-card); background: var(--card); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; scroll-margin-top: 176px; }   /* lands with "At a glance" still in view */
+.pxr:where(.fwbk) .week { width: 100%; border-collapse: collapse; font: 500 14px/1.45 var(--f-body); color: #d4d4d8; }
+.pxr:where(.fwbk) .week caption { caption-side: top; text-align: left; padding: 18px 22px 6px; font: 600 14px/1.3 var(--f-body); color: var(--dim); text-wrap: balance; }
+.pxr:where(.fwbk) .week th,
+.pxr:where(.fwbk) .week td { padding: 14px 16px; text-align: left; vertical-align: top; }
+.pxr:where(.fwbk) .week thead th { font: 600 13px/1 var(--f-body); color: #8b8b94; border-bottom: 1px solid var(--line); padding-top: 10px; }
+.pxr:where(.fwbk) .week tbody tr + tr { border-top: 1px solid var(--line); }
+.pxr:where(.fwbk) .week tbody th { white-space: nowrap; padding-left: 22px; }
+.pxr:where(.fwbk) .week tbody th a { display: inline-flex; align-items: center; min-height: 44px; margin: -8px 0; font: 700 15px/1.2 var(--f-display); letter-spacing: -.01em; color: #fff; text-decoration: underline; text-decoration-color: rgba(255, 255, 255, .25); text-underline-offset: 4px; }
+.pxr:where(.fwbk) .week tbody th a:hover { text-decoration-color: var(--purple); }
+.pxr:where(.fwbk) .week td:nth-child(2) { color: #fff; font-weight: 600; }
+.pxr:where(.fwbk) .week small { display: block; font-size: 13px; color: var(--dim); }
+.pxr:where(.fwbk) .week tbody tr:hover { background: rgba(255, 255, 255, .02); }
+
+.pxr:where(.fwbk) .glance-facts { margin-top: 14px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; border-radius: var(--r-card); overflow: hidden; background: var(--line); box-shadow: inset 0 0 0 1px var(--line); }
+.pxr:where(.fwbk) .glance-facts > div { padding: 20px 22px; background: #0b0b0d; }
+.pxr:where(.fwbk) .glance-facts dt { font: 600 13px/1.2 var(--f-body); color: var(--dim); }
+.pxr:where(.fwbk) .glance-facts dd { margin-top: 10px; font: 500 15px/1.5 var(--f-body); color: #e4e4e7; text-wrap: pretty; }
+
+/* day cards */
+.pxr:where(.fwbk) .days { margin-top: 56px; display: flex; flex-direction: column; gap: 18px; }
+.pxr:where(.fwbk) .day { position: relative; display: grid; grid-template-columns: 84px minmax(0, 1fr); column-gap: 24px; padding: 30px; border-radius: var(--r-card); background: linear-gradient(180deg, #121215, #0c0c0e); box-shadow: inset 0 0 0 1px var(--line); scroll-margin-top: 100px; }
+.pxr:where(.fwbk) .day.is-today { box-shadow: inset 0 0 0 1.5px rgba(255, 90, 31, .7), 0 0 70px rgba(255, 90, 31, .12); }
+.pxr:where(.fwbk) .day-head { display: contents; }
+.pxr:where(.fwbk) .day-date { grid-column: 1; grid-row: 1 / span 2; align-self: start; display: flex; flex-direction: column; align-items: center; padding: 14px 0 12px; border-radius: var(--r-m); background: rgba(255, 255, 255, .04); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06); }
+.pxr:where(.fwbk) .day-date span { font: 700 11px/1 var(--f-body); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.pxr:where(.fwbk) .day-date b { margin: 6px 0 5px; font: 700 40px/1 var(--f-display); letter-spacing: -.05em; color: #fff; }
+.pxr:where(.fwbk) .day.is-today .day-date b { color: var(--orange); }
+.pxr:where(.fwbk) .day-title,
+.pxr:where(.fwbk) .day-body { grid-column: 2; min-width: 0; }
+.pxr:where(.fwbk) .day-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.pxr:where(.fwbk) .day-tags:empty { display: none; }
+.pxr:where(.fwbk) .tag { display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: var(--r-pill); background: rgba(255, 255, 255, .06); font: 700 11px/1 var(--f-body); letter-spacing: .1em; text-transform: uppercase; color: #d4d4d8; white-space: nowrap; }
+.pxr:where(.fwbk) .tag-today { background: var(--orange); color: #fff; }
+.pxr:where(.fwbk) .day h2 { font: 700 clamp(1.4rem, 2.2vw, 1.9rem)/1.1 var(--f-display); letter-spacing: -.028em; color: #fff; text-wrap: balance; }
+
+/* the two facts a guest needs first: when, and whether they can get in */
+.pxr:where(.fwbk) .day-key { margin-top: 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-width: 560px; }
+.pxr:where(.fwbk) .day-key > div { padding: 13px 16px 14px; border-radius: var(--r-m); background: rgba(255, 255, 255, .045); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07); }
+.pxr:where(.fwbk) .day-key dt,
+.pxr:where(.fwbk) .day-facts dt { font: 600 13px/1.2 var(--f-body); color: var(--dim); }
+.pxr:where(.fwbk) .day-key dd { margin-top: 8px; font: 700 18px/1.2 var(--f-display); letter-spacing: -.015em; color: #fff; }
+.pxr:where(.fwbk) .day-key dd small { display: block; margin-top: 5px; font: 500 13px/1.35 var(--f-body); letter-spacing: 0; color: var(--muted); }
+.pxr:where(.fwbk) .acc-open { background: rgba(163, 255, 0, .06) !important; box-shadow: inset 0 0 0 1px rgba(163, 255, 0, .16) !important; }
+.pxr:where(.fwbk) .acc-open dd { color: #cfff7a; }
+.pxr:where(.fwbk) .acc-rsvp { background: rgba(0, 240, 255, .05) !important; box-shadow: inset 0 0 0 1px rgba(0, 240, 255, .15) !important; }
+.pxr:where(.fwbk) .acc-rsvp dd { color: #8ff8ff; }
+.pxr:where(.fwbk) .acc-invite { background: rgba(255, 90, 31, .07) !important; box-shadow: inset 0 0 0 1px rgba(255, 90, 31, .2) !important; }
+.pxr:where(.fwbk) .acc-invite dd { color: #ffab88; }
+.pxr:where(.fwbk) .acc-tba { background: rgba(255, 208, 0, .05) !important; box-shadow: inset 0 0 0 1px rgba(255, 208, 0, .15) !important; }
+.pxr:where(.fwbk) .acc-tba dd { color: #ffe27a; }
+
+.pxr:where(.fwbk) .day-facts { margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+.pxr:where(.fwbk) .day-facts > div { padding: 14px 0; border-top: 1px solid var(--line); }
+.pxr:where(.fwbk) .day-facts dd { margin-top: 8px; font: 500 15px/1.5 var(--f-body); color: #ececef; text-wrap: pretty; }
+.pxr:where(.fwbk) .day-facts dd small { display: block; margin-top: 4px; font: 400 14px/1.45 var(--f-body); color: var(--muted); }
+.pxr:where(.fwbk) .day-facts .dir { margin-left: 2px; padding: 10px 2px; font-weight: 600; white-space: nowrap; }
+.pxr:where(.fwbk) .day-facts .dir svg { margin-left: 3px; vertical-align: -1px; }
+
+.pxr:where(.fwbk) .day-designers { padding-top: 14px; border-top: 1px solid var(--line); }
+.pxr:where(.fwbk) .day-designers h3 { font: 600 13px/1.2 var(--f-body); color: var(--dim); }
+.pxr:where(.fwbk) .day-designers ul { list-style: none; margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.pxr:where(.fwbk) .day-designers li { display: inline-flex; align-items: baseline; flex-wrap: wrap; gap: 6px; padding: 8px 13px; border-radius: 18px; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05); font: 500 14px/1.3 var(--f-body); color: #ececef; }
+.pxr:where(.fwbk) .day-designers li em { font-style: normal; font-weight: 700; color: #fff; }
+.pxr:where(.fwbk) .day-designers li em::after { content: ':'; }
+.pxr:where(.fwbk) .day-designers li small { font: 600 11px/1 var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+
+.pxr:where(.fwbk) .day-note { margin-top: 16px; display: flex; gap: 10px; align-items: flex-start; padding: 11px 14px; border-radius: var(--r-s); background: rgba(255, 208, 0, .05); font: 500 13.5px/1.5 var(--f-body); color: #c9c9cf; text-wrap: pretty; }
+.pxr:where(.fwbk) .day-note svg { flex: none; margin-top: 2px; color: var(--gold); }
+.pxr:where(.fwbk) .day-actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+.pxr:where(.fwbk) .day-actions .btn { height: 48px; padding: 0 22px; font-size: 15px; }
+.pxr:where(.fwbk) .day-actions .btn-primary { box-shadow: none; }
+
+/* ───────── sections below the schedule ───────── */
+.pxr:where(.fwbk) .fw-sec { padding-top: 112px; scroll-margin-top: 80px; }
+.pxr:where(.fwbk) .fw-intro { margin-top: 16px; max-width: 40em; font: 400 16px/1.6 var(--f-body); color: var(--muted); text-wrap: pretty; }
+.pxr:where(.fwbk) .fw-body { font: 400 16px/1.65 var(--f-body); color: #b4b4bd; text-wrap: pretty; }
+.pxr:where(.fwbk) .fw-fine { margin-top: 18px; font: 500 14px/1.5 var(--f-body); color: var(--dim); }
+.pxr:where(.fwbk) .fw-split { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.6fr); gap: 56px; align-items: start; }
+@media (min-width: 861px) { .pxr:where(.fwbk) .fw-split > div:first-child { position: sticky; top: 110px; } }
+
+.pxr:where(.fwbk) .venues { margin-top: 32px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.pxr:where(.fwbk) .venue { display: flex; flex-direction: column; padding: 24px; border-radius: var(--r-card); background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+.pxr:where(.fwbk) .venue-when { font: 600 14px/1.4 var(--f-body); color: #FF5A1F; }
+.pxr:where(.fwbk) .venue h3 { margin-top: 12px; font: 700 22px/1.1 var(--f-display); letter-spacing: -.02em; color: #fff; }
+.pxr:where(.fwbk) .venue-addr { margin-top: 10px; flex: 1; font: 500 14.5px/1.55 var(--f-body); color: #c9c9cf; }
+.pxr:where(.fwbk) .venue-btn { margin-top: 20px; height: 44px; padding: 0 16px; font-size: 14px; align-self: flex-start; }
+
+.pxr:where(.fwbk) .steps { list-style: none; counter-reset: step; margin-top: 32px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.pxr:where(.fwbk) .steps li { counter-increment: step; padding: 24px; border-radius: var(--r-card); background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+.pxr:where(.fwbk) .steps li::before { content: '0' counter(step); display: block; font: 700 28px/1 var(--f-display); letter-spacing: -.03em; color: #FF5A1F; }
+.pxr:where(.fwbk) .steps h3 { margin-top: 18px; font: 700 19px/1.2 var(--f-display); letter-spacing: -.015em; color: #fff; }
+.pxr:where(.fwbk) .steps p { margin-top: 10px; font: 400 14.5px/1.6 var(--f-body); color: #b4b4bd; }
+.pxr:where(.fwbk) .fw-callout { margin-top: 14px; padding: 18px 22px; border-radius: var(--r-m); background: rgba(216, 74, 255, .06); box-shadow: inset 0 0 0 1px rgba(216, 74, 255, .16); font: 400 15px/1.6 var(--f-body); color: #c9c9cf; }
+.pxr:where(.fwbk) .fw-callout b { color: #fff; }
+
+.pxr:where(.fwbk) .fw-links { list-style: none; margin-top: 24px; display: flex; flex-wrap: wrap; gap: 10px; }
+.pxr:where(.fwbk) .fw-links .btn { height: 46px; padding: 0 20px; font-size: 14.5px; }
+
+/* recaps: one honest slot until a night has a real recap (no empty tiles) */
+.pxr:where(.fwbk) .recap { margin-top: 28px; display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 22px 24px; border-radius: var(--r-card); background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+.pxr:where(.fwbk) .recap-ic { display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--r-m); background: linear-gradient(135deg, rgba(216, 74, 255, .22), rgba(255, 90, 31, .18)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); color: #fff; }
+.pxr:where(.fwbk) .recap-h { font: 700 18px/1.25 var(--f-display); letter-spacing: -.015em; color: #fff; text-wrap: balance; }
+.pxr:where(.fwbk) .recap-copy p + p { margin-top: 4px; font: 400 14.5px/1.5 var(--f-body); color: var(--muted); text-wrap: pretty; }
+.pxr:where(.fwbk) .recap-btn { height: 48px; padding: 0 22px; font-size: 15px; }
+
+.pxr:where(.fwbk) .fw-cta { position: relative; margin-top: 18px; display: grid; grid-template-columns: minmax(0, 1.3fr) auto; gap: 18px 40px; align-items: center; padding: 36px 40px; border-radius: var(--r-xl); background: radial-gradient(80% 140% at 0% 0%, rgba(216, 74, 255, .16), transparent 60%), radial-gradient(70% 140% at 100% 100%, rgba(255, 90, 31, .14), transparent 60%), #0e0e10; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09); }
+.pxr:where(.fwbk) .fw-cta-icon { display: block; width: 56px; height: 56px; border-radius: 13px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .1), 0 10px 30px rgba(0, 0, 0, .4); }
+.pxr:where(.fwbk) .fw-cta h2 { margin-top: 18px; font: 700 clamp(1.5rem, 2.6vw, 2.2rem)/1.05 var(--f-display); letter-spacing: -.03em; color: #fff; text-wrap: balance; }
+.pxr:where(.fwbk) .fw-cta-copy p { margin-top: 12px; max-width: 32em; font: 400 15.5px/1.6 var(--f-body); color: #b4b4bd; }
+.pxr:where(.fwbk) .fw-cta-btns { display: flex; flex-direction: column; gap: 10px; }
+.pxr:where(.fwbk) .fw-cta-btns .btn { height: 52px; font-size: 15px; }
+.pxr:where(.fwbk) .fw-apple { width: 15px; height: 18px; filter: invert(1); }
+.pxr:where(.fwbk) .fw-cta-more { grid-column: 1 / -1; font: 500 14px/1.5 var(--f-body); color: var(--dim); }
+
+.pxr:where(.fwbk) .faq details { border-top: 1px solid var(--line); }
+.pxr:where(.fwbk) .faq details:last-child { border-bottom: 1px solid var(--line); }
+.pxr:where(.fwbk) .faq summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 64px; padding: 16px 0; font: 600 17px/1.35 var(--f-body); color: #fff; cursor: pointer; text-wrap: balance; }
+.pxr:where(.fwbk) .faq summary::-webkit-details-marker { display: none; }
+.pxr:where(.fwbk) .faq summary::after { content: ''; flex: none; width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, .06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 6v12M6 12h12' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / 14px no-repeat; transition: rotate .25s var(--ease-out), background-color .2s; }
+.pxr:where(.fwbk) .faq details[open] summary::after { rotate: 45deg; background-color: rgba(216, 74, 255, .2); }
+.pxr:where(.fwbk) .faq details p { padding: 0 44px 22px 0; font: 400 15.5px/1.65 var(--f-body); color: #b4b4bd; text-wrap: pretty; }
+
+.pxr:where(.fwbk) .disclose { padding: 18px 22px; border-radius: var(--r-m); background: rgba(255, 255, 255, .04); box-shadow: inset 0 0 0 1px var(--line); font: 600 16px/1.55 var(--f-body); color: #fff; }
+.pxr:where(.fwbk) .sources .fw-body { margin-top: 18px; }
+.pxr:where(.fwbk) .src-list { list-style: none; margin-top: 18px; border-top: 1px solid var(--line); }
+.pxr:where(.fwbk) .src-list li { padding: 13px 0; border-bottom: 1px solid var(--line); font: 600 15px/1.45 var(--f-body); color: #d4d4d8; }
+.pxr:where(.fwbk) .src-list a { display: inline; padding: 13px 4px; margin: 0 -4px; color: #fff; text-decoration: underline; text-decoration-color: rgba(255, 255, 255, .25); text-underline-offset: 3px; }
+.pxr:where(.fwbk) .src-list a:hover { text-decoration-color: var(--purple); }
+.pxr:where(.fwbk) .src-list span { display: block; margin-top: 4px; font: 500 13.5px/1.4 var(--f-body); color: var(--dim); }
+.pxr:where(.fwbk) .src-h { margin-top: 36px; font: 700 20px/1.2 var(--f-display); letter-spacing: -.015em; color: #fff; }
+.pxr:where(.fwbk) .conflicts { list-style: none; margin-top: 14px; display: grid; gap: 10px; }
+.pxr:where(.fwbk) .conflicts li { padding: 14px 16px; border-radius: var(--r-s); background: rgba(255, 255, 255, .03); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05); font: 400 14.5px/1.55 var(--f-body); color: #b4b4bd; }
+.pxr:where(.fwbk) .conflicts b { color: #fff; font-weight: 600; }
+
+/* footer: line up with the page's content column */
+.pxr.fwbk .foot { margin-top: 120px; }
+.pxr.fwbk .foot-inner { max-width: 1180px; padding: 0 32px; }
+
+/* ───────── ≤1099px: the day rail becomes a bottom dock (shown while the schedule is on screen) ───────── */
+@media (max-width: 1099px) {
+  .pxr:where(.fwbk) .fw-sched { display: block; }
+  /* no-JS fallback: a plain row of chips above the table */
+  .pxr:where(.fwbk) .fw-days { position: static; margin: 0 auto 24px; max-width: 480px; }
+  .pxr:where(.fwbk).js .fw-days { position: fixed; z-index: 40; top: auto; left: 16px; right: 16px; bottom: calc(12px + env(safe-area-inset-bottom)); margin: 0 auto; max-width: 480px; opacity: 0; visibility: hidden; translate: 0 20px; transition: opacity .25s, translate .35s var(--ease-out), visibility .25s; }
+  .pxr:where(.fwbk).js .fw-days.dock-on { opacity: 1; visibility: visible; translate: 0 0; }
+  .pxr:where(.fwbk) .fw-days-h,
+.pxr:where(.fwbk) .fw-days .s { display: none; }
+  .pxr:where(.fwbk) .fw-days ol { flex-direction: row; gap: 3px; padding: 4px; border-radius: var(--r-pill); background: rgba(22, 22, 25, .92); -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); box-shadow: 0 0 0 1px rgba(255, 255, 255, .1), 0 14px 40px rgba(0, 0, 0, .6); }
+  .pxr:where(.fwbk) .fw-days li { flex: 1 1 0; min-width: 0; }
+  .pxr:where(.fwbk) .fw-days a { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 3px; min-height: 50px; padding: 0; border-radius: var(--r-pill); }
+  .pxr:where(.fwbk) .fw-days a b { font-size: 19px; }
+  .pxr:where(.fwbk) .fw-days .d { align-self: center; font-size: 11px; letter-spacing: .12em; }
+  .pxr:where(.fwbk) .fw-days a.on { background: #fff; color: #050505; box-shadow: none; }
+  .pxr:where(.fwbk) .fw-days a.on b { color: #050505; }
+  .pxr:where(.fwbk) .fw-days a.on::before { display: none; }
+  .pxr:where(.fwbk) .fw-days a.is-today { box-shadow: inset 0 0 0 1.5px var(--orange); }
+  .pxr:where(.fwbk) .fw-days a.is-today.on { background: var(--orange); color: #fff; }
+  .pxr:where(.fwbk) .fw-days a.is-today.on b,
+.pxr:where(.fwbk) .fw-days a.is-today.on .d { color: #fff; }
+  .pxr:where(.fwbk) .day,
+.pxr:where(.fwbk) .glance { scroll-margin-top: calc(var(--nav-h) + 24px); }
+  .pxr:where(.fwbk) .week-wrap { scroll-margin-top: calc(var(--nav-h) + 72px); }
+  .pxr:where(.fwbk) .fw-sched { scroll-margin-top: calc(var(--nav-h) + 12px); }
+  .pxr:where(.fwbk) .glance-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pxr:where(.fwbk) .venues,
+.pxr:where(.fwbk) .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ───────── phones ───────── */
+@media (max-width: 860px) {
+  div.pxr.fwbk { --nav-h: 58px; }
+  .pxr:where(.fwbk) .fw-in { padding: 0 16px; }
+  .pxr:where(.fwbk) .fw-hero { padding: calc(var(--nav-h) + 10px) 0 36px; }
+  .pxr:where(.fwbk) .fw-hero::before { width: 100%; height: 60%; }
+  .pxr:where(.fwbk) .fw-hero-grid { grid-template-columns: 1fr; gap: 0; }
+  .pxr:where(.fwbk) .fw-hero-stage { order: -1; justify-self: stretch; width: auto; margin-bottom: 8px; }
+  .pxr:where(.fwbk) .fw-poster { aspect-ratio: auto; max-height: none; height: 188px; border-radius: var(--r-l); box-shadow: 0 0 0 1px rgba(255, 255, 255, .09), 0 24px 70px rgba(0, 0, 0, .55); }
+  .pxr:where(.fwbk) .fp-runway { left: auto; right: 0; width: 60%; height: 100%; -webkit-mask-image: linear-gradient(90deg, transparent, #000 38%); mask-image: linear-gradient(90deg, transparent, #000 38%); }
+  .pxr:where(.fwbk) .fp-copy { left: 20px; right: 20px; top: 22px; }
+  .pxr:where(.fwbk) .fp-mo { font-size: 11px; }
+  .pxr:where(.fwbk) .fp-big { margin-top: 10px; font-size: 84px; }
+  .pxr:where(.fwbk) .fp-days { flex-wrap: nowrap; gap: 4px; margin-top: 16px; }
+  .pxr:where(.fwbk) .fp-days i { padding: 6px 6px; letter-spacing: .03em; }
+  .pxr:where(.fwbk) .fp-city { display: none; }
+  .pxr:where(.fwbk) .fw-crumbs ol { font-size: 12.5px; }
+  .pxr:where(.fwbk) .fw-crumbs li + li::before { margin: 0 8px; }
+  .pxr:where(.fwbk) .fw-h1 { margin-top: 2px; font-size: clamp(2.3rem, 10.6vw, 3.1rem); line-height: .98; }
+  .pxr:where(.fwbk) .fw-lead { margin-top: 18px; font-size: 16px; line-height: 1.58; color: #bdbdc5; }
+  .pxr:where(.fwbk) .fw-meta { margin-top: 18px; gap: 6px; }
+  .pxr:where(.fwbk) .fw-pill { height: 30px; padding: 0 12px; font-size: 12.5px; }
+  .pxr:where(.fwbk) .fw-ctas { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pxr:where(.fwbk) .fw-ctas .btn { height: 50px; padding: 0 14px; font-size: 14.5px; gap: 8px; }
+
+  .pxr:where(.fwbk) .fw-sched { padding-top: 8px; }
+  .pxr:where(.fwbk) .week-wrap { margin-top: 18px; }
+  .pxr:where(.fwbk) .glance-facts { margin-top: 14px; grid-template-columns: 1fr; }
+  .pxr:where(.fwbk) .glance-facts > div { padding: 14px 16px; }
+  .pxr:where(.fwbk) .glance-facts dd { margin-top: 7px; font-size: 14.5px; }
+
+  /* the table reflows into compact rows: date on the left, details stacked */
+  .pxr:where(.fwbk) .week-wrap { background: none; box-shadow: none; border-radius: 0; overflow: visible; }
+  .pxr:where(.fwbk) .week caption { display: block; padding: 4px 0 10px; }
+  .pxr:where(.fwbk) .week thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .pxr:where(.fwbk) .week,
+.pxr:where(.fwbk) .week tbody { display: block; }
+  .pxr:where(.fwbk) .week tbody tr { display: grid; grid-template-columns: 88px minmax(0, 1fr); column-gap: 14px; padding: 14px 16px; border-radius: var(--r-m); background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+  .pxr:where(.fwbk) .week tbody tr + tr { border-top: 0; margin-top: 8px; }
+  .pxr:where(.fwbk) .week tbody th { grid-row: 1 / span 4; padding: 0; white-space: normal; }
+  .pxr:where(.fwbk) .week tbody th a { min-height: 44px; margin: 0; align-items: flex-start; font-size: 15px; line-height: 1.2; white-space: nowrap; }
+  .pxr:where(.fwbk) .week td { padding: 0; }
+  .pxr:where(.fwbk) .week td[data-l="Show"] { font-size: 15px; }
+  .pxr:where(.fwbk) .week td[data-l="Venue"] { font-size: 14px; color: var(--muted); }
+  .pxr:where(.fwbk) .week td[data-l="Runway"],
+.pxr:where(.fwbk) .week td[data-l="Access"] { display: inline; margin-top: 6px; font-size: 13.5px; }
+  .pxr:where(.fwbk) .week td[data-l="Runway"]::before { content: 'Runway '; color: var(--dim); }
+  .pxr:where(.fwbk) .week td[data-l="Runway"] small { display: inline; white-space: nowrap; }
+  .pxr:where(.fwbk) .week td[data-l="Access"] { color: #ececef; font-weight: 600; }
+
+  .pxr:where(.fwbk) .days { margin-top: 36px; gap: 12px; }
+  .pxr:where(.fwbk) .day { display: block; padding: 18px 16px 16px; }
+  .pxr:where(.fwbk) .day-date { display: none; }            /* aria-hidden duplicate of the H2 and the dock */
+  .pxr:where(.fwbk) .day-tags { margin-bottom: 10px; }
+  .pxr:where(.fwbk) .day h2 { font-size: clamp(1.28rem, 5.7vw, 1.5rem); line-height: 1.14; }
+  .pxr:where(.fwbk) .day-key { margin-top: 14px; max-width: none; }
+  .pxr:where(.fwbk) .day-key > div { padding: 11px 13px 12px; }
+  .pxr:where(.fwbk) .day-key dd { margin-top: 7px; font-size: 17px; }
+  .pxr:where(.fwbk) .day-key dd small { font-size: 13px; }
+  .pxr:where(.fwbk) .day-facts { grid-template-columns: 1fr; margin-top: 10px; }
+  .pxr:where(.fwbk) .day-facts > div { padding: 10px 0; }
+  .pxr:where(.fwbk) .day-facts > div:first-child { border-top: 0; }
+  .pxr:where(.fwbk) .day-facts dd { margin-top: 6px; font-size: 15px; line-height: 1.45; }
+  .pxr:where(.fwbk) .day-facts dd small { font-size: 13.5px; }
+  .pxr:where(.fwbk) .day-facts .vn { display: none; }    /* the venue name is already in the H2 */
+  /* designers read as a line of names on phones; a separator that lands at a line start is clipped away */
+  .pxr:where(.fwbk) .day-designers { padding-top: 10px; overflow: hidden; }
+  .pxr:where(.fwbk) .day-designers ul { margin: 7px 0 0 -18px; gap: 1px 0; }
+  .pxr:where(.fwbk) .day-designers li { position: relative; display: block; padding: 0 0 0 18px; border-radius: 0; background: none; box-shadow: none; font: 500 15px/1.5 var(--f-body); white-space: nowrap; }
+  .pxr:where(.fwbk) .day-designers li:has(em) { white-space: normal; }
+  .pxr:where(.fwbk) .day-designers li::before { content: '/'; position: absolute; left: 6px; top: 0; color: #52525b; }
+  .pxr:where(.fwbk) .day-designers li small { margin-left: 5px; font: 500 13.5px/1 var(--f-body); letter-spacing: 0; text-transform: none; color: var(--dim); }
+  .pxr:where(.fwbk) .day-designers li small::before { content: '('; } .pxr:where(.fwbk) .day-designers li small::after { content: ')'; }
+  .pxr:where(.fwbk) .day-note { margin-top: 10px; padding: 0; background: none; gap: 8px; font-size: 13.5px; color: var(--muted); }
+  .pxr:where(.fwbk) .day-note svg { margin-top: 3px; }
+  .pxr:where(.fwbk) .day-actions { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pxr:where(.fwbk) .day-actions .btn { height: 48px; padding: 0 8px; gap: 6px; font-size: 14.5px; }
+  .pxr:where(.fwbk) .day-actions:has(> :nth-child(3)) .btn:first-child { grid-column: 1 / -1; }
+
+  .pxr:where(.fwbk) .fw-sec { padding-top: 76px; }
+  .pxr:where(.fwbk) .fw-split { grid-template-columns: 1fr; gap: 20px; }
+  .pxr:where(.fwbk) .fw-intro,
+.pxr:where(.fwbk) .fw-body { font-size: 15.5px; }
+  .pxr:where(.fwbk) .venues,
+.pxr:where(.fwbk) .steps { grid-template-columns: 1fr; gap: 10px; margin-top: 24px; }
+  .pxr:where(.fwbk) .venue,
+.pxr:where(.fwbk) .steps li { padding: 20px 18px; }
+  .pxr:where(.fwbk) .venue-btn { align-self: stretch; }
+  .pxr:where(.fwbk) .steps li { display: grid; grid-template-columns: 44px 1fr; column-gap: 12px; }
+  .pxr:where(.fwbk) .steps li::before { grid-row: 1 / span 2; font-size: 28px; }
+  .pxr:where(.fwbk) .steps h3 { margin-top: 2px; font-size: 18px; }
+  .pxr:where(.fwbk) .steps p { margin-top: 6px; }
+  .pxr:where(.fwbk) .fw-links { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  .pxr:where(.fwbk) .fw-links .btn { width: 100%; height: 48px; justify-content: space-between; padding: 0 20px; }
+  .pxr:where(.fwbk) .fw-links .btn::after { content: ''; width: 8px; height: 8px; border-top: 2px solid currentColor; border-right: 2px solid currentColor; rotate: 45deg; opacity: .5; }
+  .pxr:where(.fwbk) .recap { margin-top: 22px; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; padding: 16px; }
+  .pxr:where(.fwbk) .recap-ic { width: 44px; height: 44px; border-radius: 12px; }
+  .pxr:where(.fwbk) .recap-ic svg { width: 22px; height: 22px; }
+  .pxr:where(.fwbk) .recap-h { font-size: 16.5px; }
+  .pxr:where(.fwbk) .recap-copy p + p { font-size: 14px; }
+  .pxr:where(.fwbk) .recap-btn { grid-column: 1 / -1; width: 100%; }
+  .pxr:where(.fwbk) .fw-cta { grid-template-columns: 1fr; padding: 24px 20px; border-radius: var(--r-l); margin-top: 14px; }
+  .pxr:where(.fwbk) .fw-cta-icon { width: 52px; height: 52px; border-radius: 12px; }
+  .pxr:where(.fwbk) .fw-cta h2 { margin-top: 16px; }
+  .pxr:where(.fwbk) .fw-cta-btns .btn { width: 100%; }
+  .pxr:where(.fwbk) .faq summary { font-size: 16px; min-height: 60px; }
+  .pxr:where(.fwbk) .faq details p { padding-right: 0; font-size: 15px; }
+  .pxr.fwbk .foot { margin-top: 90px; }
+  .pxr.fwbk .foot-inner { padding: 0 16px; }
+  .pxr.fwbk .foot-col ul { gap: 0; }
+  .pxr.fwbk .foot-col a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+  .pxr.fwbk .socials { gap: 6px; }
+  .pxr.fwbk .socials a { width: 44px; height: 44px; }
+  .pxr.fwbk .appstore { min-height: 44px; }
+}
+@media (max-width: 374px) {
+  .pxr:where(.fwbk) .fw-ctas { grid-template-columns: 1fr; }
+  .pxr:where(.fwbk) .fp-big { font-size: 76px; }
+  .pxr:where(.fwbk) .fp-days i { padding: 6px 5px; letter-spacing: 0; }
+  .pxr:where(.fwbk) .fw-days ol { gap: 2px; padding: 3px; }
+  .pxr:where(.fwbk) .fw-days .d { font-size: 11px; letter-spacing: .06em; }
+  .pxr:where(.fwbk) .day-actions .btn { font-size: 14px; padding: 0 6px; }
+  .pxr:where(.fwbk) .day-key > div { padding: 11px 11px 12px; }
+  .pxr:where(.fwbk) .day-key dd { font-size: 16px; }
+  .pxr:where(.fwbk) .week tbody tr { grid-template-columns: 82px minmax(0, 1fr); column-gap: 10px; padding: 14px; }
+  .pxr:where(.fwbk) .week tbody th a { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pxr:where(.fwbk) .fw-skip,
+.pxr:where(.fwbk) .fw-days,
+.pxr:where(.fwbk) .fw-days a,
+.pxr:where(.fwbk) .faq summary::after,
+.pxr:where(.fwbk) .fw-link { transition: none; }
+  .pxr:where(.fwbk).js .fw-days { translate: 0 0; }
+}

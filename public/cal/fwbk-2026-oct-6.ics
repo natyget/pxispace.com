@@ -1,0 +1,42 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//PXI//Fashion Week Brooklyn 2026 guide//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Fashion Week Brooklyn: Young Designers Runway
+X-WR-TIMEZONE:America/New_York
+BEGIN:VTIMEZONE
+TZID:America/New_York
+X-LIC-LOCATION:America/New_York
+BEGIN:DAYLIGHT
+TZOFFSETFROM:-0500
+TZOFFSETTO:-0400
+TZNAME:EDT
+DTSTART:19700308T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0500
+TZNAME:EST
+DTSTART:19701101T020000
+RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:fwbk-2026-oct-6@pxispace.com
+DTSTAMP:20260927T160000Z
+SEQUENCE:0
+DTSTART;TZID=America/New_York:20261006T180000
+DTEND;TZID=America/New_York:20261006T220000
+SUMMARY:Fashion Week Brooklyn: Young Designers Runway
+LOCATION:Atolye NYC\, 236B 6th St\, Brooklyn\, NY 11215
+DESCRIPTION:Young Designers\, in partnership with Rutgers University. Doors
+  6 pm\, runway 7 pm (per FWBK's schedule\; the RSVP page lists doors at 5:
+ 30 pm and a 10 pm end). RSVP: https://www.fashionweekbrooklyn.com/copy-of-
+ tickets-schedule . Schedule subject to change. Independent guide by PXI: h
+ ttps://pxispace.com/editorial/fashion-week-brooklyn#oct-6
+URL:https://pxispace.com/editorial/fashion-week-brooklyn#oct-6
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR
