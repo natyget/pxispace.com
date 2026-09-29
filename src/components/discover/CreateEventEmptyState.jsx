@@ -7,7 +7,9 @@ import { ArrowRight } from 'lucide-react';
  * The founder's ask was specific — "a CTA to create events instead of trying to load them
  * constantly when there isnt any events. the cta tells them to create one." An empty hub used
  * to offer "Explore all events", which sends someone who came looking for a night in their
- * city off to a list that may also be thin. The primary action is now to put one on.
+ * city off to a list that may also be thin. The primary action is now to put one on, and
+ * the button is brand orange rather than the site's usual white CTA, also at the founder's
+ * ask, so it is the first thing the eye lands on.
  *
  * The create link points straight at /dashboard/events/new: middleware redirects a signed-out
  * visitor to /login with `redirect` set to the full return path, so they land back on the
@@ -27,7 +29,7 @@ export default function CreateEventEmptyState({ title, blurb, className = '', se
             <h2 className="display-3">{title}</h2>
             <p className="body-lead mx-auto mt-4 max-w-md">{blurb}</p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:mt-8">
-                <Link href="/dashboard/events/new" className="glow-cta inline-flex px-8 py-4 text-sm">
+                <Link href="/dashboard/events/new" className="glow-cta glow-cta--orange inline-flex px-8 py-4 text-sm">
                     Create an event <ArrowRight className="h-4 w-4" />
                 </Link>
                 {secondary === undefined ? (

@@ -1470,6 +1470,20 @@ html, body {
   background: #f4f4f5;
 }
 
+/* Brand-orange .glow-cta: white on --pxi-orange, the same pairing as the event page's
+   Get tickets pill. Same shape and lift; only the colour changes. For the one action a
+   screen is built around, such as "Create an event" on an empty list. */
+.glow-cta--orange {
+  background: var(--pxi-orange);
+  color: #ffffff;
+  box-shadow: 0 0 24px var(--glow-orange);
+}
+
+.glow-cta--orange:hover {
+  background: #ff7a3c;
+  box-shadow: 0 0 34px rgba(255, 90, 31, 0.6);
+}
+
 /* Full-bleed auto-scrolling marquee track (poster/photo strips) */
 .mkt-marquee-track {
   display: flex;
