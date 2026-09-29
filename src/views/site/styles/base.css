@@ -206,16 +206,13 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .hero .ctas * { cursor: pointer; }
 .pxr .room,
 .pxr .room-lit { position: absolute; inset: -3%; }
+.pxr .room picture,
+.pxr .room-lit picture { display: contents; }
 .pxr .room img,
 .pxr .room-lit img { width: 100%; height: 100%; object-fit: cover; }
-/* Phones: the three friends span ~65% of the photo's width, but a full-bleed portrait crop shows only
-   ~39% — so the photo is sized to their width instead, centred on them (47% across), across the middle of
-   the dark hero. Above and below stays black, which is the lights-out look anyway. */
-@media (max-width: 860px) and (orientation: portrait) {
-  .pxr .room img,
-.pxr .room-lit img { position: absolute; left: 50%; top: 50%; width: 158vw; max-width: none; height: auto; translate: -47% -50%; object-fit: fill;
-    -webkit-mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent); mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent); }
-}
+/* Phones get their own portrait photo (<picture> in HomeView); the two friends sit a little above centre */
+@media (max-width: 860px) and (orientation: portrait) { .pxr .room img,
+.pxr .room-lit img { object-position: 44% 30%; } }
 .pxr .room { --mx: 50%; --my: 42%; --lr: 280px; -webkit-mask-image: radial-gradient(circle var(--lr) at var(--mx) var(--my), #000 0%, rgba(0, 0, 0, .5) 42%, rgba(0, 0, 0, .085) 100%); mask-image: radial-gradient(circle var(--lr) at var(--mx) var(--my), #000 0%, rgba(0, 0, 0, .5) 42%, rgba(0, 0, 0, .085) 100%); filter: brightness(.6) saturate(.85); }
 .pxr .room-lit { opacity: 0; filter: brightness(1.12) contrast(1.06) saturate(.9); }
 .pxr .hero-scrim { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(46% 40% at 50% 50%, rgba(5, 5, 5, .82), rgba(5, 5, 5, .35) 70%, transparent 100%), linear-gradient(180deg, #050505 0%, transparent 18%, transparent 78%, #050505 100%); }
@@ -849,14 +846,12 @@ html.pxr-doc { overflow-x: clip; }
 
   /* phones fill the space between the copy and the screen's bottom edge — never past it (the section
      clips there). Their foot sits behind the fixed time/app pills while pinned and comes into view as
-     the scene scrolls away. The phone-only stage sizes (data-mw/mh) are cut to the drawn content, so
-     no stage carries empty space under its phone or passport. */
+     the scene scrolls away. (The passport keeps its own layout: #stamp rules above.) */
   .pxr.home #camera .scene-grid,
 .pxr.home #roll .scene-grid,
-.pxr.home #stamp .scene-grid,
 .pxr.home #post .scene-grid { padding-top: 62px; padding-bottom: 0; row-gap: 4px; }
-  .pxr.home #stamp .stage-box,
-.pxr.home #post .stage-box { margin-top: 8px; }
+  .pxr.home #post .stage-box { margin-top: 8px; }
+  .pxr.home #stamp .stage-box { margin-top: 14px; }
 }
 
 /* Home scrolls vertically only: a diagonal swipe must not nudge the page sideways. The stories

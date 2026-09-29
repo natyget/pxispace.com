@@ -51,10 +51,10 @@ export default function HomeView() {
         {/* ============ HERO — lights out, tap to shoot ============ */}
         <section className="hero" id="hero">
           <div className="room" aria-hidden="true">
-            <img src="/site/img/hero-crew.jpg" alt="" />
+            <picture><source media="(max-width: 860px) and (orientation: portrait)" srcSet="/site/img/hero-night-portrait.jpg" /><img src="/site/img/hero-crew.jpg?v=2" alt="" /></picture>
           </div>
           <div className="room-lit" aria-hidden="true">
-            <img src="/site/img/hero-crew.jpg" alt="" />
+            <picture><source media="(max-width: 860px) and (orientation: portrait)" srcSet="/site/img/hero-night-portrait.jpg" /><img src="/site/img/hero-crew.jpg?v=2" alt="" /></picture>
           </div>
           <div className="hero-scrim" aria-hidden="true"></div>
           <div className="shots" aria-hidden="true"></div>
@@ -299,7 +299,7 @@ export default function HomeView() {
               </div>
             </div>
             <div className="stage-box">
-              <div className="stage" data-w="480" data-h="712" data-mw="372" data-mh="560" data-max="1.5">
+              <div className="stage" data-w="480" data-h="712" data-mw="480" data-mh="706" data-max="1.5">
                 <div className="passport-host" role="img" aria-label="A PXI passport filling with verified event stamps"></div>{' '}
                 <span className="ink-ring" aria-hidden="true"></span>{' '}
                 <div className="specks" aria-hidden="true"></div>
