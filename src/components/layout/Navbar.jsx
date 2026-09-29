@@ -90,7 +90,7 @@ const Navbar = () => {
                         same file the (site) nav uses, so the logo is identical on every public
                         page. The full mark pinches at nav size; see brand/temp-logo/README.md. */}
                     <img
-                        src="/pxi-mark-small.svg?v=grit3"
+                        src="/pxi-mark-small.svg?v=grit4"
                         alt="PXI"
                         width={44}
                         height={44}

@@ -675,12 +675,12 @@ export default function FashionWeekBrooklynView() {
             {/* During the week: add <ol class="recaps"> here with one <li> per night that has a published recap (photo, credit, 2–3 lines, link to #oct-N). Never ship empty tiles. */}
             <aside className="fw-cta" aria-labelledby="h-cta">
               <div className="fw-cta-copy">
-                <img className="fw-cta-icon" src="/site/img/app-icon.png?v=grit3" alt="" width="56" height="56" loading="lazy" decoding="async" />{' '}
+                <img className="fw-cta-icon" src="/site/img/app-icon.png?v=grit4" alt="" width="56" height="56" loading="lazy" decoding="async" />{' '}
                 <h2 id="h-cta">Shooting the week? Keep it in one album on PXI.</h2>
                 <p>PXI gives an event one shared camera roll, so everyone’s photos from the night end up in the same place.</p>
               </div>
               <div className="fw-cta-btns">
-                <a className="btn btn-primary" href="https://apps.apple.com/app/pxi/id6751762197" target="_blank" rel="noopener noreferrer"><img src="/site/img/apple-logo-white.svg" alt="" width="15" height="18" className="fw-apple" />Get PXI on the App Store<span className="fw-sr"> (opens in a new tab)</span></a>{' '}
+                <a className="btn btn-warm" href="https://apps.apple.com/app/pxi/id6751762197" target="_blank" rel="noopener noreferrer"><img src="/site/img/apple-logo-white.svg" alt="" width="15" height="18" className="fw-apple" />Get PXI on the App Store<span className="fw-sr"> (opens in a new tab)</span></a>{' '}
                 <a className="btn btn-secondary" href="/features/shared-event-photo-gallery">How shared event albums work</a>
               </div>
               <p className="fw-cta-more">Looking for more nights out? <a className="fw-link" href="/discover/new-york">Browse events in New York on PXI</a>.</p>

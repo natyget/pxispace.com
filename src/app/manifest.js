@@ -10,7 +10,7 @@
 // Shipping one file as both is the usual mistake: a maskable-tagged transparent
 // icon gets cropped AND whitened.
 //
-// `?v=grit3` matches the favicon cache-buster in app/layout.jsx.
+// `?v=grit4` matches the favicon cache-buster in app/layout.jsx.
 
 export const dynamic = 'force-static';
 
@@ -26,10 +26,10 @@ export default function manifest() {
     // Pitch Black, the brand canvas.
     theme_color: '#050505',
     icons: [
-      { src: '/icon-192.png?v=grit3', sizes: '192x192', type: 'image/png', purpose: 'any' },
-      { src: '/icon-512.png?v=grit3', sizes: '512x512', type: 'image/png', purpose: 'any' },
-      { src: '/maskable-192.png?v=grit3', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-      { src: '/maskable-512.png?v=grit3', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      { src: '/icon-192.png?v=grit4', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: '/icon-512.png?v=grit4', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/maskable-192.png?v=grit4', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+      { src: '/maskable-512.png?v=grit4', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   };
 }
