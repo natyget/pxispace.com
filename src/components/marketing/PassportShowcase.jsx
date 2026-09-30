@@ -20,7 +20,7 @@ const SHOWCASE_USER = {
   isVendor: true, // Diplomat passport
   isPassportIssued: true,
   odysseyXp: 18450, // Luminary tier
-  avatarUrl: '/landing/assets/maya_profile_new.jpg',
+  avatarUrl: '/site/img/av/maya.jpg',
   createdAt: '2024-09-14T00:00:00.000Z',
 };
 

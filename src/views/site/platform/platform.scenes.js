@@ -109,7 +109,7 @@ export default async function initPlatform(PXR, L) {
   const EV = { name: 'Late Checkout', date: 'OCT 2', time: '10:00 PM', where: 'SEAPORT, BOSTON', tier: 'GENERAL' };
   const AV = (n) => `/site/img/av/${n}.jpg`;
   const P = {
-    maya: { n: 'Maya Laurent', u: 'maya.lrnt', img: '/landing/assets/maya_profile_new.jpg' },
+    maya: { n: 'Maya Laurent', u: 'maya.lrnt', img: '/site/img/av/maya.jpg' },
     kofi: { n: 'Kofi Asante', u: 'kofi.a', img: AV('A10') }, nia: { n: 'Nia Brooks', u: 'niab', img: AV('A14') },
     zee: { n: 'Zee Mensah', u: 'zee.m', img: AV('A20') }, tay: { n: 'Taylor Reid', u: 'tay.reid', img: AV('A2') },
     jo: { n: 'Jo Okafor', u: 'jo.okafor', img: AV('A7') }, sade: { n: 'Sade Adeyemi', u: 'sade.a', img: AV('A13') },

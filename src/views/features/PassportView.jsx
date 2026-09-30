@@ -238,7 +238,7 @@ export default function PassportView() {
               <div className="flex flex-col items-center justify-center p-8 bg-white/5 rounded-3xl border border-white/10 h-full">
                 <div className="relative">
                   <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-black">
-                    <img src="/landing/assets/maya_profile_new.jpg" alt="Maya avatar" className="h-full w-full object-cover" />
+                    <img src="/site/img/av/maya.jpg" alt="Maya avatar" className="h-full w-full object-cover" />
                   </div>
                   <div className="absolute -bottom-2 -right-4 rotate-6 px-4 py-1.5 rounded-full bg-violet-600 border border-violet-400 shadow-xl">
                     <span className="text-xs font-bold text-white uppercase tracking-widest">Odyssey</span>

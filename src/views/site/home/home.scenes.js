@@ -601,7 +601,7 @@ export default async function initHome(PXR, L) {
   const PCSS = await (await fetch('/site/vendor/pxi-passport.css')).text();
   if (!L.alive) return;
   const shadowMount = (host) => { const root = host.attachShadow({ mode: 'open' }); root.innerHTML = `<style>${PCSS}</style><div class="m"></div>`; return { root, mount: $('.m', root) }; };
-  const MAYA = { id: 'MAYA426L', name: 'Maya Laurent', username: 'maya.lrnt', city: 'Brooklyn', bio: 'Rooftops, film cameras, front row.', instagramHandle: 'maya.lrnt', age: 21, isVendor: true, isPassportIssued: true, odysseyXp: 6800, avatarUrl: '/landing/assets/maya_profile_new.jpg', createdAt: '2024-09-14T00:00:00.000Z' };
+  const MAYA = { id: 'MAYA426L', name: 'Maya Laurent', username: 'maya.lrnt', city: 'Brooklyn', bio: 'Rooftops, film cameras, front row.', instagramHandle: 'maya.lrnt', age: 21, isVendor: true, isPassportIssued: true, odysseyXp: 6800, avatarUrl: '/site/img/av/maya.jpg', createdAt: '2024-09-14T00:00:00.000Z' };
   const STAMP_EVENTS = [
     { id: 'st-1', name: 'AFRODISIAC', location: 'Boston, MA', startDate: '2026-05-16', ticketPriceUsd: 30, albumRole: 'MEMBER' },
     { id: 'st-2', name: 'MAISON BLANCHE', location: 'Manhattan, NY', startDate: '2026-02-21', ticketPriceUsd: 140, albumRole: 'OWNER' },
@@ -751,7 +751,7 @@ export default async function initHome(PXR, L) {
   function initPost() {
     const sec = $('#post'), q = gsap.utils.selector(sec);
     buildPhone($('.post-phone', sec));
-    $('.ig-head img', sec).src = '/landing/assets/maya_profile_new.jpg';
+    $('.ig-head img', sec).src = '/site/img/av/maya.jpg';
     $('.ig-chrome', sec).insertAdjacentHTML('afterbegin', `<div class="ig-sb">${sbar('10:02', true)}</div>`);
     // sticker: the exact stamp artwork the passport just printed
     const st = shadowMount($('.sticker-stamp', sec));
