@@ -26,6 +26,7 @@ const MAX_LIST_ITEMS = 50;
 
 function normalizeApiEvent(e) {
   const paid = e.ticketType === 'PAID';
+  const priceUsd = paid && Number(e.ticketPrice) > 0 ? Number(e.ticketPrice) : 0;
   return {
     id: e.id,
     title: e.name,
@@ -38,12 +39,17 @@ function normalizeApiEvent(e) {
       ? new Date(e.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       : 'Date TBA',
     musicMatchScore: e.musicMatchScore ?? null,
+    // What the album card prints under the cover: price, and who is hosting / going.
+    price: priceUsd > 0 ? `${e.currency === 'EUR' ? '€' : '$'}${priceUsd.toFixed(2)}` : 'Free',
+    ticketType: e.ticketType || null,
+    organizer: e.organizer || e.host || null,
+    attendees: e._count?.tickets ?? 0,
 
     // GA4 taxonomy fields — GET /api/events/:id returns the full row plus `host`,
     // so host_id / event_city / items[].price are all available here.
     hostId: e.createdBy || e.host?.id || null,
     city: resolveEventCity(e)?.name || null,
-    value: paid && Number(e.ticketPrice) > 0 ? Number(e.ticketPrice) : 0,
+    value: priceUsd,
   };
 }
 

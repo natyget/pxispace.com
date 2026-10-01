@@ -1,11 +1,20 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { FavouriteIcon, MusicNote01Icon } from '@hugeicons/core-free-icons';
+import Sleeve from '@/components/discover/Sleeve';
+import { formatWhen, priceLabel, splitLocation } from '@/components/discover/discoverEvent';
 import { trackRecommendationClick, trackSelectItem } from '@/lib/analytics';
 
 /**
+ * The browse card: an album sleeve (heavy title, "by host", guest facepile) with its record
+ * tucked behind the cover. It slides out a little on hover or keyboard focus. Shared by
+ * /events, the city and genre hubs and the wishlist, so they all look like the app's Discover.
+ *
+ * The cover is a real link to the event page (a crawlable href, open in a new tab, focusable),
+ * and the analytics calls fire from its click just as they did from the old card.
+ *
  * @param {Object} props
  * @param {string} [props.listId]   GA4 item_list_id — omit and the card reports no select_item
  * @param {string} [props.listName] GA4 item_list_name
@@ -28,94 +37,74 @@ const EventCard = ({
   recSource,
   recRank,
 }) => {
-  const router = useRouter();
   const href = `${String(detailBasePath).replace(/\/$/, '')}/${event.id}`;
-  const open = () => {
+
+  const onOpen = () => {
     if (sponsored) onSponsoredClick?.();
     // Both wrappers are synchronous and fail-silent — nothing here can delay the route.
     if (listId || listName) trackSelectItem({ listId, listName, item: event, index });
     if (recSource) {
       trackRecommendationClick({ ...event, recSource, recRank: recRank ?? index });
     }
-    router.push(href);
   };
 
-  const dateStr =
-    event.date ||
-    (event.startDate
-      ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-      : null);
+  const when = event.startDate ? formatWhen(event.startDate) : event.date || 'Date TBA';
+  const place = splitLocation({ ...event, location: event.location || event.venue }).venue;
+  const km = event.distanceKm != null ? ` · ${Math.round(event.distanceKm * 10) / 10} km` : '';
+  const hasPrice = event.price != null && String(event.price).trim() !== '';
 
-  const matchScore =
-    event.musicMatchScore != null && event.musicMatchScore > 0 ? event.musicMatchScore : null;
+  const score = Number(event.musicMatchScore);
+  const match = Number.isFinite(score) && score > 0 ? Math.round(score) : null;
+
+  let badge = null;
+  if (sponsored) {
+    badge = <span className="dsc-badge">Sponsored</span>;
+  } else if (match != null) {
+    badge = (
+      <span className="dsc-badge">
+        <HugeiconsIcon icon={MusicNote01Icon} size={10} strokeWidth={2.6} />
+        {match}%
+      </span>
+    );
+  }
 
   return (
-    <div
-      onClick={open}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && open()}
-      className="group relative cursor-pointer overflow-hidden rounded-lg bloom-purple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-    >
-      <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-zinc-900">
-        <img
-          src={event.coverImage || event.image}
-          alt={event.title || ''}
-          className="h-full w-full object-cover"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
-
-        {/* Top-left: music match % when scored — otherwise nothing */}
-        {matchScore != null ? (
-          <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-sm">
-            <HugeiconsIcon icon={MusicNote01Icon} size={12} className="text-white" />
-            {matchScore}%
+    <article className="dsc-card">
+      <Sleeve
+        event={event}
+        variant="card"
+        coverAs={Link}
+        coverProps={{ href, prefetch: false, draggable: false, onClick: onOpen }}
+        overlay={badge}
+        tab={
+          onToggleFavorite ? (
+            <button
+              type="button"
+              className="dsc-heart"
+              aria-pressed={Boolean(favorited)}
+              aria-label={favorited ? 'Remove from wishlist' : 'Add to wishlist'}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleFavorite(event.id);
+              }}
+            >
+              <HugeiconsIcon icon={FavouriteIcon} size={15} strokeWidth={2.2} />
+            </button>
+          ) : null
+        }
+      />
+      <div className="dsc-card-cap">
+        <span className="dsc-card-when">{when}</span>
+        <div className="dsc-card-row">
+          <span className="dsc-card-where">
+            {place}
+            {km}
           </span>
-        ) : null}
-
-        {/* Favorite toggle button top-right */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleFavorite?.(event.id);
-          }}
-          className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-black/40 border-0 text-white hover:bg-black/60 transition-colors backdrop-blur-sm"
-          aria-label={favorited ? 'Remove from wishlist' : 'Add to wishlist'}
-        >
-          <HugeiconsIcon
-            icon={FavouriteIcon}
-            size={14}
-            className={favorited ? 'fill-current text-[#d84aff]' : 'text-white/70'}
-          />
-        </button>
-
-        {/* Bottom overlay: time / title / location */}
-        <div className="absolute bottom-0 left-0 right-0 p-5">
-          {sponsored ? (
-            <span className="mb-2 inline-flex rounded-full border border-white/20 bg-black/50 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white/90 backdrop-blur-sm">
-              Sponsored
-            </span>
-          ) : null}
-          {dateStr ? (
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-widest text-zinc-300">{dateStr}</p>
-          ) : null}
-          <h3 className="text-white mb-1 text-2xl font-black uppercase leading-none tracking-tighter">
-            {event.title}
-          </h3>
-          <p className="text-sm font-bold text-zinc-300 mb-2">{event.location || event.venue}</p>
-
-          {event.distanceKm != null ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-zinc-300">
-                {Math.round(event.distanceKm * 10) / 10} km
-              </span>
-            </div>
-          ) : null}
+          {hasPrice ? <span className="dsc-card-price">{priceLabel(event)}</span> : null}
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 
