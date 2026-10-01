@@ -37,7 +37,12 @@ export default async function initHome(PXR, L) {
   const vh = () => window.innerHeight;
   const rand = (a, b) => a + Math.random() * (b - a);
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  const hi = (name, size = 24, style = '') => `<svg class="hg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" style="${style}">${(window.HUGE || {})[name] || ''}</svg>`;
+  // the app's own Hugeicons that the page's icon set (public/site/vendor/hugeicons.js) does not carry: same paths
+  const HUGE_X = {
+    Mic01Icon: '<path d="M17 7V11C17 13.7614 14.7614 16 12 16C9.23858 16 7 13.7614 7 11V7C7 4.23858 9.23858 2 12 2C14.7614 2 17 4.23858 17 7Z" stroke="currentColor" stroke-width="1.5"/><path d="M17 7H14M17 11H14" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><path d="M20 11C20 15.4183 16.4183 19 12 19M12 19C7.58172 19 4 15.4183 4 11M12 19V22M12 22H15M12 22H9" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/>',
+    Add01Icon: '<path d="M12.001 5.00003V19.002" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M19.002 12.002L4.99998 12.002" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>',
+  };
+  const hi = (name, size = 24, style = '') => `<svg class="hg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" style="${style}">${(window.HUGE || {})[name] || HUGE_X[name] || ''}</svg>`;
   $$('svg.huge[data-icon]').forEach((s) => { s.setAttribute('fill', 'none'); s.innerHTML = (window.HUGE || {})[s.dataset.icon] || ''; });
 
   /* ───────────────────────── event (one realistic night) ───────────────────────── */
@@ -538,14 +543,14 @@ export default async function initHome(PXR, L) {
       { img: 't06', poster: 'lu', side: 'r', rx: [['🙌', 8], ['❤️', 5]] },
       { img: 't07', poster: 'kev', side: 'l', last: ['ama', 'take me back 🥺'], rx: [['❤️', 31, true], ['🥹', 12]] },
     ];
-    const card = (c) => `<div class="tcard"><div class="frame" style="height:${frameH(c.img)}px"><img src="/site/img/lib/${c.img}.jpg" alt=""><i class="gloss"></i><i class="topsh"></i>
+    const card = (c) => `<div class="tcard"><div class="frame" style="height:${frameH(c.img)}px"><img src="/site/img/lib/${c.img}.jpg" alt=""><i class="topsh"></i>
       <span class="poster ${c.side}"><img src="${AV(PEOPLE[c.poster])}" alt="">${c.poster}</span>
-      ${c.last ? `<div class="lastc"><img src="${AV(PEOPLE[c.last[0]])}" alt=""><div><small>${c.last[0]}</small><p>${c.last[1]}</p></div></div>` : ''}</div>
-      <div class="rxbar"><div class="chips">${c.rx.map(([e, n, on]) => `<span class="chip${on ? ' on' : ''}"><em>${e}</em>${n}</span>`).join('')}</div><div class="dock"><span>${hi('AddCircleIcon', 26)}</span><span>${hi('LinkForwardIcon', 26)}</span></div></div></div>`;
+      ${c.last ? `<div class="lastc"><img src="${AV(PEOPLE[c.last[0]])}" alt=""><div><small>${c.last[0]}</small><p>${c.last[1]}</p></div><span class="lc-more">${hi('MoreHorizontalIcon', 18)}</span></div>` : ''}</div>
+      <div class="rxbar"><div class="chips">${c.rx.map(([e, n, on]) => `<span class="chip${on ? ' on' : ''}"><em>${e}</em>${n}</span>`).join('')}</div><div class="dock"><span class="add">${hi('Add01Icon', 20)}</span><span>${hi('LinkForwardIcon', 26)}</span></div></div></div>`;
     const msg = (m) => `<div class="tmsg"><img src="${AV(PEOPLE[m.who])}" alt=""><div class="bub"><div class="meta"><b>${m.who}</b><span>${m.time}</span></div><p>${m.text}</p></div></div>`;
     scr.insertAdjacentHTML('afterbegin', `<div class="th-feed"><div class="th-list">${OLD.map((it) => (it.type === 'msg' ? msg(it) : card(it))).join('')}${ARR.map(card).join('')}</div></div>
       <div class="th-top">${sbar('11:52')}<div class="th-head"><span class="back"><svg viewBox="0 0 24 24" width="28" height="28"><path d="m15 18-6-6 6-6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="ttl">${EV.name}</span><span class="more">${hi('MoreHorizontalIcon', 26)}</span></div><div class="th-toggle"><span class="on">Thread</span><span>Gallery</span></div></div>
-      <div class="chatbar"><span class="gif">GIF</span><span class="inp">Type a message...</span><span class="send">${hi('SentIcon', 20)}</span></div><i class="home-ind"></i>`);
+      <div class="chatbar"><span class="gif">GIF</span><span class="mic">${hi('Mic01Icon', 19)}</span><span class="inp">Type a message...</span><span class="send">${hi('SentIcon', 20)}</span></div><i class="home-ind"></i>`);
     const list = $('.th-list', scr), rows = Array.from(list.children), FEED_H = 612, PAD = 14;
     const bottomOf = (el) => el.offsetTop + el.offsetHeight;
     const yFor = (lastIdx) => FEED_H - PAD - bottomOf(rows[lastIdx]);

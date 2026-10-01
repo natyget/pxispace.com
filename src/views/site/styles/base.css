@@ -434,49 +434,55 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .burst .ring { position: absolute; left: -40px; top: -40px; width: 80px; height: 80px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .9); opacity: 0; }
 .pxr .burst .core { position: absolute; left: -60px; top: -60px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, #fff 0 8%, rgba(255, 255, 255, .55) 20%, rgba(216, 74, 255, .18) 45%, transparent 70%); opacity: 0; }
 .pxr .burst .who { position: absolute; left: 50%; top: 30px; translate: -50% 0; font: 700 10px/1 var(--f-body); letter-spacing: .06em; color: #a1a1aa; white-space: nowrap; opacity: 0; }
-.pxr .fthumb { position: absolute; left: 0; top: 0; overflow: hidden; opacity: 0; border-radius: 16px; border: 7px solid rgba(74, 80, 92, .95); box-shadow: 0 20px 50px rgba(0, 0, 0, .6); transform-origin: 50% 50%; }
+.pxr .fthumb { position: absolute; left: 0; top: 0; overflow: hidden; opacity: 0; border-radius: 16px; border: 7px solid #1c1c1c; box-shadow: 0 20px 50px rgba(0, 0, 0, .6); transform-origin: 50% 50%; }
 .pxr .fthumb img { width: 100%; height: 100%; object-fit: cover; }
 .pxr .thread-phone { left: 142px; top: 6px; }
 .pxr .th-top { position: absolute; left: 0; right: 0; top: 0; height: 172px; background: #000; z-index: 20; }
 .pxr .th-head { position: absolute; left: 16px; right: 16px; top: 54px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
 .pxr .th-head .back { width: 40px; height: 40px; display: flex; align-items: center; }
-.pxr .th-head .ttl { flex: 1; text-align: center; font: 900 14px/18px var(--f-ios); letter-spacing: 1.2px; text-transform: uppercase; }
+.pxr .th-head .ttl { flex: 1; text-align: center; font: 700 15px/18px var(--f-display); letter-spacing: 1.2px; text-transform: uppercase; }
 .pxr .th-head .more { width: 40px; height: 40px; display: flex; align-items: center; justify-content: flex-end; }
 .pxr .th-toggle { position: absolute; left: 16px; right: 16px; top: 116px; height: 50px; padding: 6px; border-radius: 999px; background: #1c1c1c; display: flex; }
-.pxr .th-toggle span { position: relative; flex: 1; display: grid; place-items: center; border-radius: 999px; font: 900 11px/1 var(--f-ios); letter-spacing: 2.4px; text-transform: uppercase; color: rgba(255, 255, 255, .3); }
-.pxr .th-toggle span.on { color: #fff; background: #d84aff; box-shadow: 0 0 15px rgba(216, 74, 255, .8); }
+.pxr .th-toggle span { position: relative; flex: 1; display: grid; place-items: center; border-radius: 999px; font: 900 11px/1 var(--f-body); letter-spacing: 2.4px; text-transform: uppercase; color: rgba(255, 255, 255, .3); }
+.pxr .th-toggle span.on { color: #fff; background: var(--app-purple); }
 .pxr .th-feed { position: absolute; left: 0; right: 0; top: 172px; height: 612px; overflow: hidden; }
 .pxr .th-list { position: absolute; left: 30px; right: 30px; top: 0; }
 .pxr .tcard { position: relative; margin-bottom: 24px; }
-.pxr .tcard .frame { position: relative; width: 342px; border-radius: 16px; border: 7px solid rgba(74, 80, 92, .95); overflow: hidden; background: #0d0f15; box-shadow: 0 8px 16px rgba(0, 0, 0, .5); }
+.pxr .tcard .frame { position: relative; width: 342px; border-radius: 16px; border: 7px solid #1c1c1c; overflow: hidden; background: #1c1c1c; box-shadow: 0 8px 16px rgba(0, 0, 0, .5); }
 .pxr .tcard .frame > img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pxr .tcard .gloss { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255, 255, 255, .12), transparent 50%); }
 .pxr .tcard .topsh { position: absolute; left: 0; right: 0; top: 0; height: 20%; background: linear-gradient(rgba(0, 0, 0, .55), rgba(0, 0, 0, .18) 42%, transparent); }
-.pxr .tcard .poster { position: absolute; top: 0; z-index: 25; display: flex; align-items: center; gap: 8px; padding: 6px 10px; font: 800 12px/1 var(--f-ios); letter-spacing: .3px; color: rgba(255, 255, 255, .96); text-shadow: 0 1px 4px rgba(0, 0, 0, .85); }
-.pxr .tcard .poster.l { left: 0; flex-direction: row-reverse; } .pxr .tcard .poster.r { right: 0; }
-.pxr .tcard .poster img { width: 32px; height: 32px; border-radius: 16px; object-fit: cover; }
-.pxr .tcard .lastc { position: absolute; left: 5px; right: 10px; bottom: 7px; z-index: 28; border-radius: 14px; overflow: hidden; background: rgba(92, 96, 108, .38); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); display: flex; align-items: flex-start; gap: 8px; padding: 7px 9px; }
-.pxr .tcard .lastc img { width: 36px; height: 36px; border-radius: 18px; object-fit: cover; flex: none; }
-.pxr .tcard .lastc small { display: block; margin-bottom: 4px; font: 800 11px/1.1 var(--f-ios); letter-spacing: .4px; color: rgba(158, 162, 176, .98); }
-.pxr .tcard .lastc p { font: 500 13px/18px var(--f-ios); color: #fff; }
+/* the poster is the avatar (2px #1C1C1C ring) and the username in heavy white caps straight on the photo, no pill; the soft black shadow holds it on a bright photo */
+.pxr .tcard .poster { position: absolute; top: 0; z-index: 25; display: flex; align-items: center; gap: 8px; padding: 6px 10px; font: 900 12px/15px var(--f-body); letter-spacing: .6px; text-transform: uppercase; color: #fff; text-shadow: 0 1px 5px rgba(0, 0, 0, .7); }
+/* the avatar sits on the outer edge: left pill = avatar then name, right pill = name then avatar */
+.pxr .tcard .poster.l { left: 0; } .pxr .tcard .poster.r { right: 0; flex-direction: row-reverse; }
+.pxr .tcard .poster img { width: 32px; height: 32px; border-radius: 16px; object-fit: cover; border: 2px solid #1c1c1c; background: #1c1c1c; }
+.pxr .tcard .lastc { position: absolute; left: 5px; right: 10px; bottom: 7px; z-index: 28; border-radius: 14px; overflow: hidden; background: rgba(28, 28, 28, .94); display: flex; align-items: flex-start; gap: 8px; padding: 7px 9px; }
+.pxr .tcard .lastc img { width: 36px; height: 36px; border-radius: 18px; object-fit: cover; flex: none; background: #2e2e2e; }
+.pxr .tcard .lastc > div { flex: 1; min-width: 0; }
+.pxr .tcard .lastc .lc-more { align-self: center; flex: none; padding-left: 4px; color: rgba(255, 255, 255, .85); }
+.pxr .tcard .lastc small { display: block; margin-bottom: 4px; font: 800 10.5px/1.1 var(--f-body); letter-spacing: 1px; text-transform: uppercase; color: #9a9a9a; }
+.pxr .tcard .lastc p { font: 600 14px/19px var(--f-body); color: #fff; }
 .pxr .rxbar { display: flex; align-items: center; height: 48px; margin-top: 4px; }
 .pxr .rxbar .chips { display: flex; gap: 6px; padding-left: 10px; }
-.pxr .rxbar .chip { display: flex; align-items: center; gap: 4px; padding: 6px 8px; border-radius: 9999px; background: rgba(42, 42, 42, .8); font: 600 12px/1 var(--f-ios); color: #A0A0A0; }
-.pxr .rxbar .chip.on { background: rgba(176, 38, 255, .15); color: #B026FF; }
+.pxr .rxbar .chip { display: flex; align-items: center; gap: 4px; padding: 6px 8px; border-radius: 9999px; background: #1c1c1c; font: 800 12px/1 var(--f-body); color: #fff; }
+/* the viewer's own reaction: the app lays rgba(165, 35, 239, .15) over the #1C1C1C chip, which is this flat colour */
+.pxr .rxbar .chip.on { background: #311d3c; color: var(--app-purple); }
 .pxr .rxbar .chip em { font-style: normal; font-size: 18px; line-height: 1; }
 .pxr .rxbar .dock { display: flex; align-items: center; padding: 0 4px; }
 .pxr .rxbar .dock span { width: 38px; height: 38px; display: grid; place-items: center; color: #fff; }
+.pxr .rxbar .dock span.add { border-radius: 50%; background: #1c1c1c; }
+.pxr .rxbar .dock span.add svg path { stroke-width: 2.4; }
 .pxr .tmsg { display: flex; align-items: flex-end; gap: 10px; max-width: 92%; margin-bottom: 18px; }
 .pxr .tmsg img { width: 32px; height: 32px; border-radius: 16px; object-fit: cover; flex: none; margin-bottom: 2px; }
-.pxr .tmsg .bub { max-width: 300px; padding: 6px 8px; border-radius: 14px 14px 14px 8px; background: rgba(255, 255, 255, .08); }
+.pxr .tmsg .bub { max-width: 300px; padding: 6px 12px; border-radius: 18px 18px 18px 6px; background: #1c1c1c; }
 .pxr .tmsg .meta { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
-.pxr .tmsg .meta b { font: 700 10px/1.2 var(--f-ios); color: rgba(158, 162, 176, .98); }
-.pxr .tmsg .meta span { font: 400 9px/1.2 var(--f-ios); color: rgba(158, 162, 176, .75); }
-.pxr .tmsg p { font: 400 14px/19px var(--f-ios); color: #fff; }
-.pxr .chatbar { position: absolute; left: 0; right: 0; bottom: 0; height: 90px; border-top: .5px solid rgba(255, 255, 255, .1); display: flex; align-items: flex-start; gap: 12px; padding: 12px 22px 0; background: rgba(0, 0, 0, .6); z-index: 20; }
-.pxr .chatbar .gif { width: 44px; height: 44px; border-radius: 22px; background: rgba(255, 255, 255, .15); display: grid; place-items: center; font: 800 9px/1 var(--f-ios); letter-spacing: .3px; flex: none; }
-.pxr .chatbar .inp { flex: 1; height: 44px; border-radius: 22px; background: rgba(28, 28, 32, .42); border: .5px solid rgba(255, 255, 255, .06); padding: 0 16px; display: flex; align-items: center; font: 400 15px/1 var(--f-ios); color: rgba(255, 255, 255, .35); }
-.pxr .chatbar .send { width: 44px; height: 44px; border-radius: 22px; background: #d946ef; box-shadow: 0 0 8px rgba(217, 70, 239, .6); display: grid; place-items: center; flex: none; color: #fff; }
+.pxr .tmsg .meta b { font: 800 10px/1.2 var(--f-body); letter-spacing: .8px; text-transform: uppercase; color: #9a9a9a; }
+.pxr .tmsg .meta span { font: 700 9.5px/1.2 var(--f-body); color: #7a7a7a; }
+.pxr .tmsg p { font: 500 14px/19px var(--f-body); color: #fff; }
+.pxr .chatbar { position: absolute; left: 0; right: 0; bottom: 0; height: 90px; display: flex; align-items: flex-start; gap: 12px; padding: 12px 22px 0; background: #000; z-index: 20; }
+.pxr .chatbar .gif, .pxr .chatbar .mic { width: 44px; height: 44px; border-radius: 22px; background: #1c1c1c; display: grid; place-items: center; font: 900 11px/1 var(--f-body); letter-spacing: .6px; color: #fff; flex: none; }
+.pxr .chatbar .inp { flex: 1; min-width: 0; height: 44px; border-radius: 22px; background: #1c1c1c; padding: 0 16px; display: flex; align-items: center; font: 400 15px/1 var(--f-body); color: #6a6a6a; white-space: nowrap; }
+.pxr .chatbar .send { width: 44px; height: 44px; border-radius: 22px; background: #2e2e2e; display: grid; place-items: center; flex: none; color: rgba(255, 255, 255, .35); }
 .pxr .home-ind { position: absolute; left: 50%; bottom: 8px; translate: -50% 0; width: 134px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .85); z-index: 70; }
 .pxr .home-ind.dark { background: rgba(0, 0, 0, .8); }
 .pxr .floaty { position: absolute; font-size: 22px; opacity: 0; pointer-events: none; z-index: 6; }
