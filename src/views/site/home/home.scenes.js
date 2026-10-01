@@ -426,7 +426,7 @@ export default async function initHome(PXR, L) {
       // stay and scroll away with the scene, and the pin ends as the stub goes — no empty stage
       .to(q('.t-stub'), { x: MOB ? 40 : 300, y: MOB ? -760 : -620, rotation: MOB ? 14 : 28, scale: 0.8, duration: 1.3, ease: 'power2.in' }, 8.3 + E)
       .to(q('.t-stub'), { opacity: 0, duration: 0.45, ease: 'power1.in' }, 8.95 + E);
-    register('doors', tl, [[0, T(21, 48)], [3.85, T(21, 49)], [4.3 + E, T(21, 51)], [5.6 + E, T(21, 52)], [tl.duration(), T(21, 58)]], REDUCED ? still(tl, sec, 6.3 + E) : undefined);
+    register('doors', tl, [[0, T(21, 48)], [3.85, T(21, 49)], [4.3 + E, T(21, 51)], [5.6 + E, T(21, 52)], [tl.duration(), T(21, 58)]], REDUCED ? still(tl, sec, 5.5 + E) : undefined);
   }
 
   /* ───────────────────────── 10:31 PM — CAMERA (one camera, one film look) ───────────────────────── */
