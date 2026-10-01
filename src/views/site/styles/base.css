@@ -417,14 +417,15 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .tile .kx-cm b { font-weight: 700; margin-right: .35em; }
 .pxr .tile.keeper { z-index: 3; }
 .pxr .sb-frame { position: absolute; left: 0; top: 0; z-index: 2; width: 568px; height: 648px; transform-origin: 0 0; pointer-events: none; }
-.pxr .sb-card { position: absolute; inset: 0; opacity: 0; border-radius: var(--r-l); background: #1c1c1c; box-shadow: 0 0 0 1px rgba(255, 255, 255, .06), 0 40px 90px rgba(0, 0, 0, .6), 0 0 90px rgba(175, 180, 190, .12); }
-.pxr .sb-head { position: absolute; left: 24px; right: 24px; top: 22px; display: flex; justify-content: space-between; align-items: flex-start; }
-.pxr .sb-title { font: 700 28px/1 var(--f-display); letter-spacing: -.02em; text-transform: uppercase; }
-.pxr .sb-meta { margin-top: 8px; font: 600 11px/1 var(--f-body); letter-spacing: .2em; text-transform: uppercase; color: #8b8b93; }
-.pxr .sb-stats { display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 12px; background: var(--paper); color: rgba(0, 0, 0, .82); font: 700 12px/1 var(--f-body); box-shadow: 0 4px 10px rgba(0, 0, 0, .3); rotate: 2deg; }
-.pxr .sb-stats span { display: inline-flex; align-items: center; gap: 5px; }
-.pxr .sb-stats i { width: 3px; height: 3px; border-radius: 50%; background: rgba(0, 0, 0, .5); }
-.pxr .sb-more { position: absolute; right: 24px; bottom: 16px; font: 600 11px/1 var(--f-body); letter-spacing: .14em; text-transform: uppercase; color: #8b8b93; }
+/* the scrapbook card is the app's Scrapbook page, in the frame's 568 x 648: RECENT, the night's poster as the print (the four keeper
+   photos land on it: their slots are KEEP in initRoll), the date under it, and the line with its two stars. Flat: no ring, no glow. */
+.pxr .sb-card { position: absolute; inset: 0; opacity: 0; border-radius: 28px; background: #000; }
+.pxr .sb-label { position: absolute; left: 16px; top: 13px; font: 800 12px/1 var(--f-body); letter-spacing: .24em; text-transform: uppercase; color: var(--app-purple); }
+.pxr .sb-print { position: absolute; left: 12px; right: 8px; top: 38px; height: 548px; border-radius: 22px; overflow: hidden; background: #1c1c1c; }
+.pxr .sb-print img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+.pxr .sb-date { position: absolute; left: 0; right: 0; top: 599px; text-align: center; font: 800 11px/1 var(--f-body); letter-spacing: .13em; text-transform: uppercase; color: #fff; }
+.pxr .sb-line { position: absolute; left: 0; right: 0; top: 616px; display: flex; align-items: center; justify-content: center; gap: 10px; font: 700 24px/26px var(--f-display); letter-spacing: -.02em; color: #fff; white-space: nowrap; }
+.pxr .sb-star { width: 20px; height: 23px; flex: none; fill: #3e0a48; stroke: #9a6aa6; stroke-width: .9; stroke-linejoin: round; }
 .pxr .bursts,
 .pxr .flythumbs { position: absolute; inset: 0; pointer-events: none; }
 .pxr .flythumbs { z-index: 5; }
