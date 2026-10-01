@@ -339,6 +339,12 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .at-qr { position: relative; width: 62px; height: 62px; border-radius: 12px; background: #fff; display: grid; place-items: center; overflow: hidden; }
 .pxr .at-qr svg { width: 34px; height: 34px; color: #0a0a0a; }
 .pxr .at-note { font: 800 7.5px/1.2 var(--f-body); letter-spacing: .5px; text-transform: uppercase; color: rgba(255, 255, 255, .45); white-space: nowrap; }
+/* tucked under the front ticket (the Studio's stack, platform): the name and the date sit on the bottom stitch where the tier and the thread button were */
+.pxr .at-back { display: none; position: absolute; left: 26px; right: 12px; bottom: 23px; align-items: baseline; justify-content: space-between; gap: 8px; }
+.pxr .aticket.back .at-back { display: flex; }
+.pxr .aticket.back .at-action { visibility: hidden; }
+.pxr .aticket.back .at-stub { opacity: .6; }
+.pxr .at-back .at-title { margin: 0; min-width: 0; font-size: 19px; line-height: 23px; }
 /* the scan: a flat line across the tile, no glow */
 .pxr .scanline { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--app-purple); opacity: 0; }
 /* one word, big, stamped across the middle of the ticket: flat ink, no glow */
