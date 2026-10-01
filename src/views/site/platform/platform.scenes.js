@@ -84,28 +84,28 @@ export default async function initPlatform(PXR, L) {
   const TS = 248, TT = 10, TB = 178, TR = 10;
   const TICKET_PATH = `M 6 ${TT} H ${TS - TR} A ${TR} ${TR} 0 0 0 ${TS + TR} ${TT} H 344 L 349 ${TT}` + sawSegs(TT, TB, 349, 344, 6, true, true) +
     ` L 344 ${TB} H ${TS + TR} A ${TR} ${TR} 0 0 0 ${TS - TR} ${TB} H 6 L 1 ${TB}` + sawSegs(TB, TT, 1, 6, 6, false, true) + ` L 6 ${TT} Z`;
-  const EDGES = [`M 6 ${TT} H ${TS - TR} A ${TR} ${TR} 0 0 0 ${TS + TR} ${TT} H 344`, `M 344 ${TB} H ${TS + TR} A ${TR} ${TR} 0 0 0 ${TS - TR} ${TB} H 6`,
-    `M 6 ${TT} L 1 ${TT}` + sawSegs(TT, TB, 1, 6, 6, true, true) + ` L 6 ${TB}`, `M 344 ${TT} L 349 ${TT}` + sawSegs(TT, TB, 349, 344, 6, true, true) + ` L 344 ${TB}`];
   const dx = +Math.sqrt(18 * 18 - 8 * 8).toFixed(2);
   const INNER = `M 14 18 H ${TS - dx} A 18 18 0 0 0 ${TS + dx} 18 H 336 V 170 H ${TS + dx} A 18 18 0 0 0 ${TS - dx} 170 H 14 V 18`;
-  const NP = '#f01fff';
-  const edge = (d, w = 1.75, op = 1) => `<path d="${d}" stroke="${NP}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
-  const ticketHTML = (ev) => `<div class="aticket">
+  // the app's flat ticket (TicketCard): one #1C1C1C shape with a 1px #2E2E2E edge, and the stitching (the dashed line
+  // just inside the edge and down the tear) in the state's thread: purple while upcoming, orange while live
+  const T_FILL = '#1C1C1C', T_EDGE = '#2E2E2E', T_UP = '#A523EF', T_LIVE = '#FF5A1F';
+  const ticketHTML = (ev, live = false) => {
+    const thread = `fill="none" stroke="${live ? T_LIVE : T_UP}" stroke-width="1.6" stroke-dasharray="5 3.5" stroke-linecap="round" stroke-linejoin="round"`;
+    return `<div class="aticket${live ? ' live' : ''}">
     <svg class="at-svg" viewBox="0 0 350 188" preserveAspectRatio="xMidYMid meet">
-      <path d="${TICKET_PATH}" fill="#0e0e10"/>${EDGES.map((d) => edge(d)).join('')}
-      <path d="${INNER}" stroke="${NP}" stroke-width="1.25" fill="none" opacity=".9" stroke-dasharray="5 5"/>
-      ${EDGES.map((d) => edge(d, 3, 0.35)).join('')}
-      <line x1="${TS}" y1="${TT + TR}" x2="${TS}" y2="${TB - TR}" stroke="rgba(216,74,255,0.35)" stroke-width="1" stroke-dasharray="5 5"/>
+      <path d="${TICKET_PATH}" fill="${T_FILL}" stroke="${T_EDGE}" stroke-width="1" stroke-linejoin="round"/>
+      <path d="${INNER}" ${thread}/>
+      <line x1="${TS}" y1="${TT + TR + 8 + 3}" x2="${TS}" y2="${TB - TR - 8 - 3}" ${thread}/>
     </svg>
-    <div class="at-badge"><i></i>UPCOMING</div>
     <div class="at-main">
-      <div class="at-head"><span class="at-title">${ev.name}</span><span class="at-vis">Public</span></div>
-      <div class="at-grid"><div class="at-field"><small>Date &amp; time</small><b>${ev.date} / ${ev.time}</b></div><div class="at-field"><small>Location</small><b>${ev.where}</b></div></div>
+      <div class="at-status"><span class="at-st">${live ? 'Live now' : 'Upcoming'}</span><span class="at-vis">Public</span></div>
+      <div class="at-title">${ev.name}</div>
+      <div class="at-grid"><div class="at-field"><small>Date &amp; time</small><b>${ev.date}<br>${ev.time}</b></div><div class="at-field"><small>Location</small><b>${ev.where}</b></div></div>
       <div class="at-action"><div class="at-field"><small>Tier</small><b>${ev.tier}</b></div><span class="at-thread">Open thread</span></div>
-      <span class="at-refund">Ticket is non refundable</span>
     </div>
-    <div class="at-stub"><div class="at-qr-anchor"><span class="at-tap">TAP</span><div class="at-qr">${hi('QrCodeIcon', 30)}</div></div></div>
+    <div class="at-stub"><div class="at-qr-anchor"><span class="at-tap">Tap to scan</span><div class="at-qr">${hi('QrCodeIcon', 34)}</div><span class="at-note">Non-refundable</span></div></div>
   </div>`;
+  };
   const EV = { name: 'Late Checkout', date: 'OCT 2', time: '10:00 PM', where: 'SEAPORT, BOSTON', tier: 'GENERAL' };
   const AV = (n) => `/site/img/av/${n}.jpg`;
   const P = {

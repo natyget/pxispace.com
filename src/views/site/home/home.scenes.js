@@ -123,41 +123,41 @@ export default async function initHome(PXR, L) {
   }
   const TS = 248, TT = 10, TB = 178, TR = 10;
   const dx = +Math.sqrt(18 * 18 - 8 * 8).toFixed(2);
-  const NP = '#f01fff';
-  const edge = (d, w = 1.75, op = 1) => `<path d="${d}" stroke="${NP}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
+  // the app's flat ticket (TicketCard): one #1C1C1C shape with a 1px #2E2E2E edge, and the stitching
+  // (the dashed line just inside the edge and down the tear) in the state's thread: purple while upcoming, orange while live
+  const T_FILL = '#1C1C1C', T_EDGE = '#2E2E2E', T_UP = '#A523EF', T_LIVE = '#FF5A1F';
   // TD = width of an optional left panel that carries the event's artwork (the doors scene); the body and stub are the app's, unchanged
   const shapeOf = (TD) => {
     const L0 = 6 - TD, L1 = 1 - TD;
     return {
       path: `M ${L0} ${TT} H ${TS - TR} A ${TR} ${TR} 0 0 0 ${TS + TR} ${TT} H 344 L 349 ${TT}` + sawSegs(TT, TB, 349, 344, 6, true, true) +
         ` L 344 ${TB} H ${TS + TR} A ${TR} ${TR} 0 0 0 ${TS - TR} ${TB} H ${L0} L ${L1} ${TB}` + sawSegs(TB, TT, L1, L0, 6, false, true) + ` L ${L0} ${TT} Z`,
-      top: `M ${L0} ${TT} H ${TS - TR} A ${TR} ${TR} 0 0 0 ${TS + TR} ${TT} H 344`,
-      bot: `M 344 ${TB} H ${TS + TR} A ${TR} ${TR} 0 0 0 ${TS - TR} ${TB} H ${L0}`,
-      left: `M ${L0} ${TT} L ${L1} ${TT}` + sawSegs(TT, TB, L1, L0, 6, true, true) + ` L ${L0} ${TB}`,
-      right: `M 344 ${TT} L 349 ${TT}` + sawSegs(TT, TB, 349, 344, 6, true, true) + ` L 344 ${TB}`,
       inner: `M ${14 - TD} 18 H ${TS - dx} A 18 18 0 0 0 ${TS + dx} 18 H 336 V 170 H ${TS + dx} A 18 18 0 0 0 ${TS - dx} 170 H ${14 - TD} V 18`,
     };
   };
   const TD = 72; // the wide ticket's artwork panel
   const SHAPE = { 0: shapeOf(0), [TD]: shapeOf(TD) };
-  const ticketHTML = (withExtras, panel = 0) => { const S = SHAPE[panel]; const inner = (w = 1.25, op = 0.9) => `<path d="${S.inner}" stroke="${NP}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${op}" stroke-dasharray="5 5"/>`; return `<div class="aticket${panel ? ' wide' : ''}">
+  // live = the ticket of a night that is on right now (orange stitching, LIVE NOW)
+  const ticketHTML = (withExtras, panel = 0, live = false) => {
+    const S = SHAPE[panel];
+    const thread = `fill="none" stroke="${live ? T_LIVE : T_UP}" stroke-width="1.6" stroke-dasharray="5 3.5" stroke-linecap="round" stroke-linejoin="round"`;
+    return `<div class="aticket${panel ? ' wide' : ''}${live ? ' live' : ''}">
     <svg class="at-svg" viewBox="${-panel} 0 ${350 + panel} 188" preserveAspectRatio="xMidYMid meet">
-      <path d="${S.path}" fill="#0e0e10"/>
-      ${edge(S.top)}${edge(S.bot)}${edge(S.left)}${edge(S.right)}${inner()}
-      ${edge(S.top, 3, 0.35)}${edge(S.bot, 3, 0.35)}${edge(S.left, 3, 0.35)}${edge(S.right, 3, 0.35)}${inner(2, 0.28)}
-      <line x1="${TS}" y1="${TT + TR}" x2="${TS}" y2="${TB - TR}" stroke="rgba(216,74,255,0.35)" stroke-width="1" stroke-dasharray="5 5"/>
+      <path d="${S.path}" fill="${T_FILL}" stroke="${T_EDGE}" stroke-width="1" stroke-linejoin="round"/>
+      <path d="${S.inner}" ${thread}/>
+      <line x1="${TS}" y1="${TT + TR + 8 + 3}" x2="${TS}" y2="${TB - TR - 8 - 3}" ${thread}/>
     </svg>
-    <div class="at-badge"><i></i>UPCOMING</div>
     ${panel ? '<div class="at-art"></div>' : ''}
     <div class="at-main">
-      <div class="at-head"><span class="at-title">${EV.name}</span><span class="at-vis">Public</span></div>
-      <div class="at-grid"><div class="at-field"><small>Date &amp; time</small><b>${EV.date} / ${EV.time}</b></div><div class="at-field"><small>Location</small><b>${EV.where}</b></div></div>
+      <div class="at-status"><span class="at-st">${live ? 'Live now' : 'Upcoming'}</span><span class="at-vis">Public</span></div>
+      <div class="at-title">${EV.name}</div>
+      <div class="at-grid"><div class="at-field"><small>Date &amp; time</small><b>${EV.date}<br>${EV.time}</b></div><div class="at-field"><small>Location</small><b>${EV.where}</b></div></div>
       <div class="at-action"><div class="at-field"><small>Tier</small><b>${EV.tier}</b></div><span class="at-thread">Open thread</span></div>
-      <span class="at-refund">Ticket is non refundable</span>
     </div>
-    <div class="at-stub"><div class="at-qr-anchor"><span class="at-tap">TAP</span><div class="at-qr">${hi('QrCodeIcon', 30)}${withExtras ? '<span class="scanline"></span>' : ''}</div></div></div>
+    <div class="at-stub"><div class="at-qr-anchor"><span class="at-tap">Tap to scan</span><div class="at-qr">${hi('QrCodeIcon', 34)}${withExtras ? '<span class="scanline"></span>' : ''}</div><span class="at-note">Non-refundable</span></div></div>
     ${withExtras ? '<div class="admit-wrap"><div class="admit">Admitted</div></div>' : ''}
-  </div>`; };
+  </div>`;
+  };
 
   /* ───────────────────────── avatars ───────────────────────── */
   const AV = (n) => `/site/img/av/${n}.jpg`;
@@ -346,7 +346,7 @@ export default async function initHome(PXR, L) {
     const c0 = scrToStage(phone, (402 - CW) / 2, 192);
     const W0 = CW * k;
     const pair = $('.ticket-pair', sec), feed = $('.feed', sec);
-    const TICK_Y = 70, TK = 490 / (350 + TD), ART = { x: 10, y: 50, w: 52, h: 69 }; // the artwork slot, in ticket units (the ticket is drawn at TK)
+    const TICK_Y = 70, TK = 490 / (350 + TD), ART = { x: 27, y: 59, w: 52, h: 69 }; // the artwork slot, in ticket units (the ticket is drawn at TK): inside the stitching, centred in the panel
     const slot = { x: pair.offsetLeft + ART.x * TK, y: feed.offsetTop + TICK_Y + ART.y * TK, w: ART.w * TK };
     const sleeveOf = (cls) => `<div class="dsc-sleeve dsc-sleeve-stage dd-mini ${cls}">${$('.dsc-cover', sLate).outerHTML}</div>`;
     $$('.at-art', sec).forEach((el) => { el.innerHTML = sleeveOf(''); });
@@ -395,10 +395,10 @@ export default async function initHome(PXR, L) {
     tl.set(sLate, { visibility: 'hidden' }, 4.35)
       .set(fly, { opacity: 1 }, 4.35)
       .to(fly, { scale: 1.07, y: c0.y - 14, rotation: -2.5, duration: 0.3, ease: 'power2.out' }, 4.35)
-      .to(flyCover, { boxShadow: '0 30px 60px rgba(0,0,0,.6), 0 0 36px rgba(216,74,255,.45)', duration: 0.3, ease: 'power2.out' }, 4.35)
+      .to(flyCover, { boxShadow: '0 30px 60px rgba(0,0,0,.6)', duration: 0.3, ease: 'power2.out' }, 4.35)
       .to(phone, { opacity: 0, scale: 0.94, duration: 0.8, ease: 'power1.inOut' }, 4.8)
       .to(fly, { x: slot.x, y: slot.y, width: slot.w, scale: 1, rotation: 0, duration: 0.95, ease: 'power3.inOut' }, 4.65)
-      .to(flyCover, { boxShadow: '0 2px 8px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.12)', duration: 0.95 }, 4.65)
+      .to(flyCover, { boxShadow: '0 0 0 0 rgba(0,0,0,0)', duration: 0.95 }, 4.65)
       .to(pair, { opacity: 1, scale: 1, duration: 0.5, ease: 'power1.out' }, 4.85)
       .to(pair, { clipPath: 'inset(-2000px -2000px -2000px -2000px)', duration: 1.0, ease: 'power2.inOut' }, 4.85)
       .set(fly, { opacity: 0 }, 5.62)
@@ -412,7 +412,7 @@ export default async function initHome(PXR, L) {
       // scanned at the door (the stub copy carries the visible QR)
       .fromTo(q('.t-stub .scanline'), { top: '0%', opacity: 0 }, { top: '100%', opacity: 1, duration: 1.1, ease: 'none' }, 4.3 + E)
       .to(q('.t-stub .scanline'), { opacity: 0, duration: 0.2 }, 5.4 + E)
-      .to(q('.t-stub .at-qr'), { boxShadow: '0 0 26px rgba(0,240,255,.95)', borderColor: '#00F0FF', duration: 0.4 }, 5.1 + E)
+      .to(q('.t-stub .at-qr'), { backgroundColor: '#00FF88', duration: 0.4 }, 5.1 + E)
       .fromTo(q('.t-body .admit'), { scale: 2.1, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'power4.in' }, 5.6 + E)
       .to(pair, { keyframes: { x: [0, -5, 4, -2, 0] }, duration: 0.3, ease: 'none' }, 5.9 + E)
       // tear along the perforation

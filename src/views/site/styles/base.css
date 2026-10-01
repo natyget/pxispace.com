@@ -34,7 +34,7 @@ html.pxr-doc { scroll-behavior: auto; }
   --charcoal: #121212;
   --smoke: #F5F5F5;
   --purple: #D84AFF;
-  --app-purple: #f01fff;   /* Colors.newPurple — the app ticket's neon */
+  --app-purple: #A523EF;   /* Colors.pxiPurple — the app's one purple (buttons, the active segment, small-caps labels) */
   --orange: #FF5A1F;
   --cyan: #00F0FF;
   --lime: #A3FF00;
@@ -304,40 +304,46 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr #doors .aticket-wrap.t-body { clip-path: inset(-40px 24.17% -40px -40px); }
 .pxr .aticket-wrap.t-stub { clip-path: inset(-40px -40px -40px 70.86%); }
 .pxr #doors .aticket-wrap.t-stub { clip-path: inset(-40px -40px -40px 75.83%); }
-.pxr .aticket { position: absolute; left: 0; top: 0; width: 350px; height: 188px; transform-origin: 0 0; transform: scale(1.4); font-family: var(--f-ios); }
-.pxr .aticket svg.at-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 11px rgba(240, 31, 255, .45)); }
-.pxr .at-badge { position: absolute; top: 2px; left: 22px; z-index: 2; display: flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; border: 1px solid #FACC15; background: #000; box-shadow: 0 0 8px rgba(250, 204, 21, .85); font: 900 9px/1 var(--f-ios); letter-spacing: 1.1px; color: #fff; }
-.pxr .at-badge i { width: 7px; height: 7px; border-radius: 4px; background: #FACC15; box-shadow: 0 0 4px #FACC15; }
-.pxr .at-main { position: absolute; left: 0; top: 0; width: 70.86%; height: 100%; padding: 14px 8px 10px 18px; overflow: hidden; }
-.pxr .at-head { margin-top: 16px; display: flex; align-items: baseline; gap: 10px; }
+/* the ticket is the app's flat one: #1C1C1C with a 1px #2E2E2E edge (drawn in the SVG), stitching in the state's thread,
+   print in the app's sizes (these are the app's own units: the ticket is 350 × 188 and scaled as a whole) */
+.pxr .aticket { position: absolute; left: 0; top: 0; width: 350px; height: 188px; transform-origin: 0 0; transform: scale(1.4); font-family: var(--f-body); }
+.pxr .aticket svg.at-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.pxr .at-main { position: absolute; left: 0; top: 0; width: 70.86%; height: 100%; padding: 25px 12px 23px 26px; overflow: hidden; display: flex; flex-direction: column; }
 /* the wide ticket (doors): an artwork panel on the left, the app's body and stub shifted right by it */
 .pxr .aticket.wide { width: 422px; transform: scale(1.1611); }
-.pxr .aticket.wide .at-badge { left: 94px; }
 .pxr .aticket.wide .at-main { left: 72px; width: 248px; }
 .pxr .aticket.wide .at-stub { left: 320px; }
 .pxr .aticket.wide .admit-wrap { left: 196px; }
-/* the event's cover, as the ticket's artwork (Discover's cover flies in and settles here) */
-.pxr .at-art { position: absolute; left: 10px; top: 50px; width: 52px; height: 69px; z-index: 2; visibility: hidden; }
-.pxr .at-art .dsc-cover { border-radius: 5px; box-shadow: 0 2px 8px rgba(0, 0, 0, .6), 0 0 0 1px rgba(255, 255, 255, .12); }
-.pxr .at-title { flex: 1 1 auto; min-width: 0; font: 900 15px/1.2 var(--f-ios); letter-spacing: .2px; text-transform: uppercase; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pxr .at-vis { flex: none; font: 800 10px/1 var(--f-ios); letter-spacing: 1.2px; text-transform: uppercase; color: var(--app-purple); text-decoration: underline; text-decoration-color: var(--app-purple); }
-.pxr .at-grid { display: flex; gap: 6px; margin-top: 10px; padding-right: 2px; }
-.pxr .at-field { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.pxr .at-field small { font: 800 8px/1.1 var(--f-ios); letter-spacing: .8px; text-transform: uppercase; color: rgba(216, 74, 255, .72); }
-.pxr .at-field b { font: 700 9.5px/13px var(--f-ios); letter-spacing: .3px; text-transform: uppercase; color: #fff; }
-.pxr .at-action { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: 4px; }
-.pxr .at-action .at-field { padding-bottom: 2px; }
-.pxr .at-thread { flex: none; padding: 9px 14px; border-radius: 999px; background: var(--app-purple); box-shadow: 0 0 12px rgba(240, 31, 255, .75); font: 900 10px/1 var(--f-ios); letter-spacing: 1.1px; text-transform: uppercase; color: #fff; }
-.pxr .at-refund { display: inline-block; margin-top: 14px; padding: 5px 8px; border: 1px solid rgba(216, 74, 255, .45); border-radius: 4px; font: 800 8px/1 var(--f-ios); letter-spacing: 1px; text-transform: uppercase; color: rgba(216, 74, 255, .72); }
+/* the event's cover, as the ticket's artwork (Discover's cover flies in and settles here): flat, no ring, no shadow */
+.pxr .at-art { position: absolute; left: 27px; top: 59px; width: 52px; height: 69px; z-index: 2; visibility: hidden; }
+.pxr .at-art .dsc-cover { border-radius: 5px; box-shadow: none; }
+.pxr .at-status { display: flex; align-items: center; justify-content: space-between; }
+.pxr .at-st, .pxr .at-vis { font: 800 10.5px/1.2 var(--f-body); letter-spacing: 1.4px; text-transform: uppercase; white-space: nowrap; }
+.pxr .at-st { color: rgba(255, 255, 255, .7); }
+.pxr .aticket.live .at-st { color: var(--orange); }
+.pxr .at-vis { color: var(--app-purple); }
+.pxr .at-title { margin-top: 1px; font: 700 21px/25px var(--f-display); letter-spacing: -.2px; text-transform: uppercase; color: #fff; white-space: nowrap; overflow: hidden; }
+.pxr .at-grid { display: flex; gap: 10px; margin-top: 6px; }
+.pxr .at-field { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
+.pxr .at-grid .at-field:first-child { flex-grow: .8; }
+.pxr .at-grid .at-field:last-child { flex-grow: 1.2; }
+.pxr .at-field small { margin-bottom: 3px; font: 800 9.5px/1.2 var(--f-body); letter-spacing: 1px; text-transform: uppercase; color: var(--app-purple); white-space: nowrap; }
+.pxr .at-field b { font: 700 12.5px/15.5px var(--f-body); letter-spacing: .2px; text-transform: uppercase; color: #fff; }
+/* the tier and the thread button sit on the bottom stitch, whatever the lines above take */
+.pxr .at-action { flex: 1; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+.pxr .at-action .at-field b { white-space: nowrap; overflow: hidden; }
+.pxr .at-thread { flex: none; display: flex; align-items: center; height: 31px; padding: 0 15px; border-radius: 999px; background: var(--app-purple); font: 900 11.5px/1 var(--f-body); letter-spacing: 1.1px; text-transform: uppercase; color: #fff; }
 .pxr .at-stub { position: absolute; left: 70.86%; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; }
-.pxr .at-qr-anchor { position: relative; width: 56px; height: 56px; translate: -8px 0; }
-.pxr .at-tap { position: absolute; left: 50%; top: -22px; translate: -50% 0; z-index: 10; padding: 2px 8px; border-radius: 99px; background: var(--app-purple); box-shadow: 0 2px 3px rgba(240, 31, 255, .6); font: 900 8px/1.3 var(--f-ios); letter-spacing: 1.2px; color: #fff; }
-.pxr .at-qr { position: relative; width: 56px; height: 56px; border-radius: 12px; background: #fff; display: grid; place-items: center; border: 1.5px solid var(--app-purple); box-shadow: 0 0 12px rgba(240, 31, 255, .85); overflow: hidden; }
-.pxr .at-qr svg { width: 30px; height: 30px; color: #0a0a0a; }
-.pxr .scanline { position: absolute; left: -6px; right: -6px; top: 0; height: 2px; background: var(--cyan); box-shadow: 0 0 12px 2px rgba(0, 240, 255, .8), 0 0 40px 8px rgba(0, 240, 255, .25); opacity: 0; }
-/* one word, big, stamped across the middle of the ticket */
+.pxr .at-qr-anchor { display: flex; flex-direction: column; align-items: center; gap: 7px; translate: -4px 0; }
+.pxr .at-tap { font: 800 9px/1.2 var(--f-body); letter-spacing: .7px; text-transform: uppercase; color: rgba(255, 255, 255, .8); white-space: nowrap; }
+.pxr .at-qr { position: relative; width: 62px; height: 62px; border-radius: 12px; background: #fff; display: grid; place-items: center; overflow: hidden; }
+.pxr .at-qr svg { width: 34px; height: 34px; color: #0a0a0a; }
+.pxr .at-note { font: 800 7.5px/1.2 var(--f-body); letter-spacing: .5px; text-transform: uppercase; color: rgba(255, 255, 255, .45); white-space: nowrap; }
+/* the scan: a flat line across the tile, no glow */
+.pxr .scanline { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--app-purple); opacity: 0; }
+/* one word, big, stamped across the middle of the ticket: flat ink, no glow */
 .pxr .admit-wrap { position: absolute; left: 124px; top: 96px; transform: translate(-50%, -50%) rotate(-9deg); z-index: 3; }
-.pxr .admit { opacity: 0; padding: 8px 16px 7px; background: rgba(8, 20, 14, .86) !important; border: 2px solid var(--green); border-radius: 6px; outline: 1px solid rgba(0, 255, 136, .7); outline-offset: 3px; font: 800 21px/1 var(--f-ios); letter-spacing: .16em; text-transform: uppercase; text-align: center; white-space: nowrap; color: var(--green); text-shadow: 0 0 12px rgba(0, 255, 136, .6); box-shadow: 0 0 22px rgba(0, 255, 136, .25); }
+.pxr .admit { opacity: 0; padding: 8px 16px 7px; background: rgba(28, 28, 28, .92) !important; border: 2px solid var(--green); border-radius: 6px; outline: 1px solid rgba(0, 255, 136, .7); outline-offset: 3px; font: 800 21px/1 var(--f-body); letter-spacing: .16em; text-transform: uppercase; text-align: center; white-space: nowrap; color: var(--green); }
 /* who's going — quiet social proof, no container */
 .pxr .going { position: absolute; left: 35px; top: 408px; width: 490px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .pxr .facepile { display: flex; align-items: center; }
