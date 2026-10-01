@@ -122,25 +122,33 @@ export default async function initHome(PXR, L) {
     return d;
   }
   const TS = 248, TT = 10, TB = 178, TR = 10;
-  const TICKET_PATH = `M 6 ${TT} H ${TS - TR} A ${TR} ${TR} 0 0 0 ${TS + TR} ${TT} H 344 L 349 ${TT}` + sawSegs(TT, TB, 349, 344, 6, true, true) +
-    ` L 344 ${TB} H ${TS + TR} A ${TR} ${TR} 0 0 0 ${TS - TR} ${TB} H 6 L 1 ${TB}` + sawSegs(TB, TT, 1, 6, 6, false, true) + ` L 6 ${TT} Z`;
-  const TOP_EDGE = `M 6 ${TT} H ${TS - TR} A ${TR} ${TR} 0 0 0 ${TS + TR} ${TT} H 344`;
-  const BOT_EDGE = `M 344 ${TB} H ${TS + TR} A ${TR} ${TR} 0 0 0 ${TS - TR} ${TB} H 6`;
-  const LEFT_EDGE = `M 6 ${TT} L 1 ${TT}` + sawSegs(TT, TB, 1, 6, 6, true, true) + ` L 6 ${TB}`;
-  const RIGHT_EDGE = `M 344 ${TT} L 349 ${TT}` + sawSegs(TT, TB, 349, 344, 6, true, true) + ` L 344 ${TB}`;
   const dx = +Math.sqrt(18 * 18 - 8 * 8).toFixed(2);
-  const INNER = `M 14 18 H ${TS - dx} A 18 18 0 0 0 ${TS + dx} 18 H 336 V 170 H ${TS + dx} A 18 18 0 0 0 ${TS - dx} 170 H 14 V 18`;
   const NP = '#f01fff';
   const edge = (d, w = 1.75, op = 1) => `<path d="${d}" stroke="${NP}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
-  const inner = (w = 1.25, op = 0.9) => `<path d="${INNER}" stroke="${NP}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${op}" stroke-dasharray="5 5"/>`;
-  const ticketHTML = (withExtras) => `<div class="aticket">
-    <svg class="at-svg" viewBox="0 0 350 188" preserveAspectRatio="xMidYMid meet">
-      <path d="${TICKET_PATH}" fill="#0e0e10"/>
-      ${edge(TOP_EDGE)}${edge(BOT_EDGE)}${edge(LEFT_EDGE)}${edge(RIGHT_EDGE)}${inner()}
-      ${edge(TOP_EDGE, 3, 0.35)}${edge(BOT_EDGE, 3, 0.35)}${edge(LEFT_EDGE, 3, 0.35)}${edge(RIGHT_EDGE, 3, 0.35)}${inner(2, 0.28)}
+  // TD = width of an optional left panel that carries the event's artwork (the doors scene); the body and stub are the app's, unchanged
+  const shapeOf = (TD) => {
+    const L0 = 6 - TD, L1 = 1 - TD;
+    return {
+      path: `M ${L0} ${TT} H ${TS - TR} A ${TR} ${TR} 0 0 0 ${TS + TR} ${TT} H 344 L 349 ${TT}` + sawSegs(TT, TB, 349, 344, 6, true, true) +
+        ` L 344 ${TB} H ${TS + TR} A ${TR} ${TR} 0 0 0 ${TS - TR} ${TB} H ${L0} L ${L1} ${TB}` + sawSegs(TB, TT, L1, L0, 6, false, true) + ` L ${L0} ${TT} Z`,
+      top: `M ${L0} ${TT} H ${TS - TR} A ${TR} ${TR} 0 0 0 ${TS + TR} ${TT} H 344`,
+      bot: `M 344 ${TB} H ${TS + TR} A ${TR} ${TR} 0 0 0 ${TS - TR} ${TB} H ${L0}`,
+      left: `M ${L0} ${TT} L ${L1} ${TT}` + sawSegs(TT, TB, L1, L0, 6, true, true) + ` L ${L0} ${TB}`,
+      right: `M 344 ${TT} L 349 ${TT}` + sawSegs(TT, TB, 349, 344, 6, true, true) + ` L 344 ${TB}`,
+      inner: `M ${14 - TD} 18 H ${TS - dx} A 18 18 0 0 0 ${TS + dx} 18 H 336 V 170 H ${TS + dx} A 18 18 0 0 0 ${TS - dx} 170 H ${14 - TD} V 18`,
+    };
+  };
+  const TD = 72; // the wide ticket's artwork panel
+  const SHAPE = { 0: shapeOf(0), [TD]: shapeOf(TD) };
+  const ticketHTML = (withExtras, panel = 0) => { const S = SHAPE[panel]; const inner = (w = 1.25, op = 0.9) => `<path d="${S.inner}" stroke="${NP}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${op}" stroke-dasharray="5 5"/>`; return `<div class="aticket${panel ? ' wide' : ''}">
+    <svg class="at-svg" viewBox="${-panel} 0 ${350 + panel} 188" preserveAspectRatio="xMidYMid meet">
+      <path d="${S.path}" fill="#0e0e10"/>
+      ${edge(S.top)}${edge(S.bot)}${edge(S.left)}${edge(S.right)}${inner()}
+      ${edge(S.top, 3, 0.35)}${edge(S.bot, 3, 0.35)}${edge(S.left, 3, 0.35)}${edge(S.right, 3, 0.35)}${inner(2, 0.28)}
       <line x1="${TS}" y1="${TT + TR}" x2="${TS}" y2="${TB - TR}" stroke="rgba(216,74,255,0.35)" stroke-width="1" stroke-dasharray="5 5"/>
     </svg>
     <div class="at-badge"><i></i>UPCOMING</div>
+    ${panel ? '<div class="at-art"></div>' : ''}
     <div class="at-main">
       <div class="at-head"><span class="at-title">${EV.name}</span><span class="at-vis">Public</span></div>
       <div class="at-grid"><div class="at-field"><small>Date &amp; time</small><b>${EV.date} / ${EV.time}</b></div><div class="at-field"><small>Location</small><b>${EV.where}</b></div></div>
@@ -149,7 +157,7 @@ export default async function initHome(PXR, L) {
     </div>
     <div class="at-stub"><div class="at-qr-anchor"><span class="at-tap">TAP</span><div class="at-qr">${hi('QrCodeIcon', 30)}${withExtras ? '<span class="scanline"></span>' : ''}</div></div></div>
     ${withExtras ? '<div class="admit-wrap"><div class="admit">Admitted</div></div>' : ''}
-  </div>`;
+  </div>`; };
 
   /* ───────────────────────── avatars ───────────────────────── */
   const AV = (n) => `/site/img/av/${n}.jpg`;
@@ -297,40 +305,128 @@ export default async function initHome(PXR, L) {
   /* ───────────────────────── 9:48 PM — DOORS ───────────────────────── */
   function initDoors() {
     const sec = $('#doors'), q = gsap.utils.selector(sec);
-    $('.t-body', sec).innerHTML = ticketHTML(true);
-    $('.t-stub', sec).innerHTML = ticketHTML(true);
+    $('.t-body', sec).innerHTML = ticketHTML(true, TD);
+    $('.t-stub', sec).innerHTML = ticketHTML(true, TD);
     // clean, face-forward portraits only (Ama and Kofi lead, as the line below names them)
     const FACES = ['A18', 'A9', 'A2', 'A16', 'A11'];
     $('.facepile', sec).innerHTML = FACES.map((a, i) => `<img src="${AV(a)}" alt="" style="z-index:${10 - i}">`).join('') + '<span class="more">+151</span>';
     const members = { n: 156 };
     const writeM = () => { const n = Math.round(members.n); $('.going .more', sec).textContent = '+' + (n - FACES.length); $('.going-others', sec).textContent = n - 2; };
+
+    /* ---- the phone: the app's Discover screen (drawn by DoorsDiscover, moved in here) ---- */
+    const phone = $('.dd-phone', sec), stage = $('.stage', sec);
+    const PW = MOB ? 300 : 272;
+    phone.dataset.pw = PW;
+    phone.style.left = ((MOB ? 500 : 560) - PW) / 2 + 'px';
+    phone.style.top = (MOB ? 6 : 14) + 'px';
+    const scr = buildPhone(phone);
+    scr.appendChild($('.dd-screen', sec));
+    scr.insertAdjacentHTML('beforeend', `${sbar('9:48')}<div class="tabbar"><span>${hi('Home05Icon')}</span><span>${hi('Camera02Icon')}</span><span class="on">${hi('DashboardSquare03Icon')}</span><span>${hi('Passport01Icon')}</span></div><i class="home-ind"></i><i class="dd-touch"></i>`);
+    const touch = $('.dd-touch', scr);
+    const [sSun, sOmn, sLate, sBrunch] = $$('.dd-slide', scr);
+    const track = $('.dd-track', scr), lateDisc = $('.dsc-disc-wrap', sLate), lateSpin = $('.dsc-disc', sLate), lateInfo = $('.dsc-di', sLate);
+    const detO = $('.dd-det[data-k="omnia"]', scr), detL = $('.dd-det[data-k="late"]', scr);
+    const join = $('.dsc-join', scr);
+
+    // carousel: slide k sits at offset (base − p) steps from the centre; the centred one is full size
+    // and its neighbours peek, dimmed and smaller — the same look as the /events stage
+    const CW = 232, STEP = CW * 1.02, BASE = [-1, 0, 1, 2];
+    const sw = { p: 0 };
+    const place = () => [sSun, sOmn, sLate, sBrunch].forEach((el, i) => {
+      const o = BASE[i] - sw.p, a = Math.abs(o);
+      const sc = a <= 1 ? 1 - 0.14 * a : Math.max(0.72, 0.86 - 0.14 * (a - 1));
+      gsap.set(el, { xPercent: -50, x: o * STEP, scale: sc, zIndex: Math.round(10 - a * 3), opacity: Math.min(1, Math.max(0, 1.75 - a) / 0.75), filter: `brightness(${(1 - 0.5 * Math.min(1, a)).toFixed(3)})` });
+    });
+    place();
+    gsap.set(detL, { opacity: 0 });
+    gsap.set([lateInfo], { opacity: 0 });
+
+    /* ---- geometry for the hand-off: the cover's place on the phone, and the ticket's artwork slot ---- */
+    const k = phone._k;
+    const c0 = scrToStage(phone, (402 - CW) / 2, 192);
+    const W0 = CW * k;
+    const pair = $('.ticket-pair', sec), feed = $('.feed', sec);
+    const TICK_Y = 70, TK = 490 / (350 + TD), ART = { x: 10, y: 50, w: 52, h: 69 }; // the artwork slot, in ticket units (the ticket is drawn at TK)
+    const slot = { x: pair.offsetLeft + ART.x * TK, y: feed.offsetTop + TICK_Y + ART.y * TK, w: ART.w * TK };
+    const sleeveOf = (cls) => `<div class="dsc-sleeve dsc-sleeve-stage dd-mini ${cls}">${$('.dsc-cover', sLate).outerHTML}</div>`;
+    $$('.at-art', sec).forEach((el) => { el.innerHTML = sleeveOf(''); });
+    stage.insertAdjacentHTML('beforeend', sleeveOf('dd-fly'));
+    const fly = $('.dd-fly', stage), flyCover = $('.dsc-cover', fly);
+    gsap.set(fly, { x: c0.x, y: c0.y, width: W0 });
+    // the ticket starts folded up inside the artwork slot and opens outward from it
+    const px = (n) => n.toFixed(1) + 'px';
+    const pairW = 490, pairH = 188 * TK, sx = ART.x * TK, sy = ART.y * TK, sh = ART.h * TK;
+    const folded = `inset(${px(sy)} ${px(pairW - sx - slot.w)} ${px(pairH - sy - sh)} ${px(sx)})`;
+    gsap.set(pair, { y: TICK_Y, opacity: 0, clipPath: folded, scale: 0.92, transformOrigin: `${px(sx + slot.w / 2)} ${px(sy + sh / 2)}` });
+
+    // touch points on the phone's screen (design units)
+    const tabAt = { x: 201 + CW / 2 - 15, y: 192 + (CW * 4) / 6 };
+    const joinAt = { x: 201 - 114 + 76, y: 716 };
+    const tap = (tl, at, t) => tl
+      .set(touch, { x: at.x, y: at.y }, t)
+      .fromTo(touch, { scale: 0.45, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.18, ease: 'power2.out', immediateRender: false }, t)
+      .to(touch, { scale: 1.5, opacity: 0, duration: 0.4, ease: 'power1.out' }, t + 0.3);
+
     const tl = gsap.timeline({ paused: REDUCED, defaults: { ease: 'power2.inOut' }, scrollTrigger: pinST(sec, 2.5) });
-    gsap.set(q('.ticket-pair'), { y: -280 });
-    tl.to(q('.ticket-pair'), { y: 0, duration: 2, ease: 'none' }, 0)
-      .fromTo(q('.slot'), { opacity: 0.55 }, { opacity: 1, duration: 0.3, repeat: 5, yoyo: true, ease: 'none' }, 0)
-      .to(q('.printer'), { y: -30, opacity: 0, duration: 0.8 }, 2.1)
-      .to(q('.ticket-pair'), { y: 44, duration: 1.1 }, 2.1)
-      .from(q('.going-txt'), { y: 14, opacity: 0, duration: 0.6, ease: 'power3.out' }, 3.3)
-      .from(q('.facepile > *'), { y: 18, scale: 0.6, opacity: 0, stagger: 0.09, duration: 0.45, ease: 'back.out(1.8)' }, 2.9)
-      .to(members, { n: 164, duration: 1.1, ease: 'none', onUpdate: writeM }, 3.1)
+    // 1 · swipe: Late Checkout comes to the centre, the details below swap
+    tl.set(touch, { x: 292, y: 360, scale: 0.8, opacity: 0 }, 0.35)
+      .to(touch, { opacity: 1, scale: 1, duration: 0.12, ease: 'power1.out' }, 0.35)
+      .to(touch, { x: 150, duration: 0.7, ease: 'power3.inOut' }, 0.47)
+      .to(touch, { opacity: 0, scale: 0.8, duration: 0.15 }, 1.12)
+      .to(sw, { p: 1, duration: 0.7, ease: 'power3.inOut', onUpdate: place }, 0.47)
+      .to(detO, { opacity: 0, y: -8, duration: 0.3, ease: 'power1.in' }, 0.6)
+      .fromTo(detL, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', immediateRender: false }, 0.9);
+    // 2 · tap the orange tab: the record slides out from behind the cover, lettered AMAPIANO, with two polaroids
+    tap(tl, tabAt, 1.5);
+    tl.to($('.dsc-tab', sLate), { scale: 0.88, duration: 0.1, transformOrigin: '100% 50%' }, 1.58)
+      .to($('.dsc-tab', sLate), { scale: 1, duration: 0.2, ease: 'back.out(2)' }, 1.68)
+      .to(track, { x: -70, duration: 0.65, ease: 'power3.out' }, 1.7)
+      .to(lateDisc, { xPercent: 31, duration: 0.65, ease: 'power3.out' }, 1.7)
+      .to(lateSpin, { rotation: 300, duration: 1.8, ease: 'none' }, 1.7)
+      .to(lateInfo, { opacity: 1, duration: 0.3, ease: 'none' }, 2.15)
+      .to(lateInfo, { opacity: 0, duration: 0.2, ease: 'none' }, 3.05)
+      .to(lateDisc, { xPercent: 0, duration: 0.55, ease: 'power3.inOut' }, 3.1)
+      .to(track, { x: 0, duration: 0.55, ease: 'power3.inOut' }, 3.1);
+    // 3 · two taps: JOIN
+    tap(tl, joinAt, 3.85);
+    tl.to(join, { scale: 0.93, duration: 0.1, ease: 'power1.out' }, 3.93)
+      .to(join, { scale: 1, duration: 0.25, ease: 'back.out(2.4)' }, 4.03);
+    // 4 · the centred cover lifts out of the phone and settles as the ticket's artwork; the ticket opens around it
+    tl.set(sLate, { visibility: 'hidden' }, 4.35)
+      .set(fly, { opacity: 1 }, 4.35)
+      .to(fly, { scale: 1.07, y: c0.y - 14, rotation: -2.5, duration: 0.3, ease: 'power2.out' }, 4.35)
+      .to(flyCover, { boxShadow: '0 30px 60px rgba(0,0,0,.6), 0 0 36px rgba(216,74,255,.45)', duration: 0.3, ease: 'power2.out' }, 4.35)
+      .to(phone, { opacity: 0, scale: 0.94, duration: 0.8, ease: 'power1.inOut' }, 4.8)
+      .to(fly, { x: slot.x, y: slot.y, width: slot.w, scale: 1, rotation: 0, duration: 0.95, ease: 'power3.inOut' }, 4.65)
+      .to(flyCover, { boxShadow: '0 2px 8px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.12)', duration: 0.95 }, 4.65)
+      .to(pair, { opacity: 1, scale: 1, duration: 0.5, ease: 'power1.out' }, 4.85)
+      .to(pair, { clipPath: 'inset(-2000px -2000px -2000px -2000px)', duration: 1.0, ease: 'power2.inOut' }, 4.85)
+      .set(fly, { opacity: 0 }, 5.62)
+      .set(q('.at-art'), { visibility: 'visible' }, 5.62);
+
+    // 5 · the ending, unchanged: who's going, the scan, ADMIT, the tear, the stub, the note
+    const E = 2.8; // the old timeline's 0 → this timeline's 2.8 (the ticket is already on stage)
+    tl.from(q('.going-txt'), { y: 14, opacity: 0, duration: 0.6, ease: 'power3.out' }, 3.3 + E)
+      .from(q('.facepile > *'), { y: 18, scale: 0.6, opacity: 0, stagger: 0.09, duration: 0.45, ease: 'back.out(1.8)' }, 2.9 + E)
+      .to(members, { n: 164, duration: 1.1, ease: 'none', onUpdate: writeM }, 3.1 + E)
       // scanned at the door (the stub copy carries the visible QR)
-      .fromTo(q('.t-stub .scanline'), { top: '0%', opacity: 0 }, { top: '100%', opacity: 1, duration: 1.1, ease: 'none' }, 4.3)
-      .to(q('.t-stub .scanline'), { opacity: 0, duration: 0.2 }, 5.4)
-      .to(q('.t-stub .at-qr'), { boxShadow: '0 0 26px rgba(0,240,255,.95)', borderColor: '#00F0FF', duration: 0.4 }, 5.1)
-      .fromTo(q('.t-body .admit'), { scale: 2.1, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'power4.in' }, 5.6)
-      .to(q('.ticket-pair'), { keyframes: { x: [0, -5, 4, -2, 0] }, duration: 0.3, ease: 'none' }, 5.9)
+      .fromTo(q('.t-stub .scanline'), { top: '0%', opacity: 0 }, { top: '100%', opacity: 1, duration: 1.1, ease: 'none' }, 4.3 + E)
+      .to(q('.t-stub .scanline'), { opacity: 0, duration: 0.2 }, 5.4 + E)
+      .to(q('.t-stub .at-qr'), { boxShadow: '0 0 26px rgba(0,240,255,.95)', borderColor: '#00F0FF', duration: 0.4 }, 5.1 + E)
+      .fromTo(q('.t-body .admit'), { scale: 2.1, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'power4.in' }, 5.6 + E)
+      .to(pair, { keyframes: { x: [0, -5, 4, -2, 0] }, duration: 0.3, ease: 'none' }, 5.9 + E)
       // tear along the perforation
-      .set(q('.feed'), { overflow: 'visible' }, 6.7)
-      .to(q('.t-body'), { x: -18, rotation: -4, duration: 0.6 }, 6.7)
-      .to(q('.t-stub'), { x: MOB ? 10 : 22, y: -8, rotation: MOB ? 5 : 7, duration: 0.6 }, 6.7)
-      .to(q('.t-body'), { y: 140, rotation: -10, duration: 1.1, ease: 'power2.in' }, 7.4)
-      .to(q('.t-body'), { opacity: 0, duration: 0.5, ease: 'power1.in' }, 7.4) // gone before it drops behind who's-going
-      .fromTo(q('.stub-note'), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6 }, 7.5)
+      .set(q('.feed'), { overflow: 'visible' }, 6.7 + E)
+      .to(q('.t-body'), { x: -18, rotation: -4, duration: 0.6 }, 6.7 + E)
+      .to(q('.t-stub'), { x: MOB ? 10 : 22, y: -8, rotation: MOB ? 5 : 7, duration: 0.6 }, 6.7 + E)
+      .to(q('.t-body'), { y: 140, rotation: -10, duration: 1.1, ease: 'power2.in' }, 7.4 + E)
+      .to(q('.t-body'), { opacity: 0, duration: 0.5, ease: 'power1.in' }, 7.4 + E) // gone before it drops behind who's-going
+      .fromTo(q('.stub-note'), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6 }, 7.5 + E)
       // the stub leaves upward and fades before it reaches the header; who's-going and the note
       // stay and scroll away with the scene, and the pin ends as the stub goes — no empty stage
-      .to(q('.t-stub'), { x: MOB ? 40 : 300, y: MOB ? -760 : -620, rotation: MOB ? 14 : 28, scale: 0.8, duration: 1.3, ease: 'power2.in' }, 8.3)
-      .to(q('.t-stub'), { opacity: 0, duration: 0.45, ease: 'power1.in' }, 8.95);
-    register('doors', tl, [[0, T(21, 48)], [4.3, T(21, 51)], [5.6, T(21, 52)], [tl.duration(), T(21, 58)]], REDUCED ? still(tl, sec, 6.3) : undefined);
+      .to(q('.t-stub'), { x: MOB ? 40 : 300, y: MOB ? -760 : -620, rotation: MOB ? 14 : 28, scale: 0.8, duration: 1.3, ease: 'power2.in' }, 8.3 + E)
+      .to(q('.t-stub'), { opacity: 0, duration: 0.45, ease: 'power1.in' }, 8.95 + E);
+    register('doors', tl, [[0, T(21, 48)], [3.85, T(21, 49)], [4.3 + E, T(21, 51)], [5.6 + E, T(21, 52)], [tl.duration(), T(21, 58)]], REDUCED ? still(tl, sec, 6.3 + E) : undefined);
   }
 
   /* ───────────────────────── 10:31 PM — CAMERA (one camera, one film look) ───────────────────────── */

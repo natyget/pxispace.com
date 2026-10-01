@@ -4,6 +4,7 @@
 import SiteShell from '../runtime/SiteShell';
 import SiteNav from '../chrome/SiteNav';
 import SiteFooter from '../chrome/SiteFooter';
+import DoorsDiscover from './DoorsDiscover';
 
 export default function HomeView() {
   return (
@@ -89,13 +90,9 @@ export default function HomeView() {
               </div>
             </div>
             <div className="stage-box">
-              <div className="stage" data-w="560" data-h="600" data-mw="500" data-mh="540" data-mtop=".22" aria-hidden="true">
-                <div className="printer">
-                  <span className="printer-label">Box office · Late Checkout — Amapiano &amp; Afrobeats</span>{' '}
-                  <div className="printer-body">
-                    <span className="slot"></span>
-                  </div>
-                </div>
+              <div className="stage" data-w="560" data-h="600" data-mw="500" data-mh="640" data-mtop=".22" aria-hidden="true">
+                <div className="iphone dd-phone" data-pw="272"></div>
+                <DoorsDiscover />
                 <div className="feed">
                   <div className="ticket-pair">
                     <div className="aticket-wrap t-body"></div>

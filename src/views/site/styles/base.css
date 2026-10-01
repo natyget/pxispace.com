@@ -296,21 +296,29 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .hg { display: inline-block; flex: none; }
 
 /* ───────── DOORS — the app TicketCard, 1:1 ───────── */
-.pxr .printer { position: absolute; left: 20px; top: 34px; width: 520px; }
-.pxr .printer-label { display: block; text-align: center; font: 700 9px/1 var(--f-body); letter-spacing: .28em; text-transform: uppercase; color: #52525b; margin-bottom: 10px; }
-.pxr .printer-body { position: relative; height: 34px; border-radius: 17px; background: linear-gradient(#1a1a1d, #0e0e10); border: 1px solid rgba(255, 255, 255, .07); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 20px 40px rgba(0, 0, 0, .5); }
-.pxr .slot { position: absolute; left: 22px; right: 22px; bottom: 9px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--app-purple), var(--orange)); box-shadow: 0 0 14px rgba(240, 31, 255, .7), 0 0 30px rgba(255, 90, 31, .35); }
 .pxr .feed { position: absolute; left: 0; right: 0; top: 77px; bottom: -260px; overflow: hidden; }
 .pxr .ticket-pair { position: absolute; left: 35px; top: 0; width: 490px; height: 263px; }
+.pxr #doors .ticket-pair { height: 219px; }
 .pxr .aticket-wrap { position: absolute; inset: 0; }
 .pxr .aticket-wrap.t-body { clip-path: inset(-40px 29.14% -40px -40px); }
+.pxr #doors .aticket-wrap.t-body { clip-path: inset(-40px 24.17% -40px -40px); }
 .pxr .aticket-wrap.t-stub { clip-path: inset(-40px -40px -40px 70.86%); }
+.pxr #doors .aticket-wrap.t-stub { clip-path: inset(-40px -40px -40px 75.83%); }
 .pxr .aticket { position: absolute; left: 0; top: 0; width: 350px; height: 188px; transform-origin: 0 0; transform: scale(1.4); font-family: var(--f-ios); }
 .pxr .aticket svg.at-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 11px rgba(240, 31, 255, .45)); }
 .pxr .at-badge { position: absolute; top: 2px; left: 22px; z-index: 2; display: flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; border: 1px solid #FACC15; background: #000; box-shadow: 0 0 8px rgba(250, 204, 21, .85); font: 900 9px/1 var(--f-ios); letter-spacing: 1.1px; color: #fff; }
 .pxr .at-badge i { width: 7px; height: 7px; border-radius: 4px; background: #FACC15; box-shadow: 0 0 4px #FACC15; }
 .pxr .at-main { position: absolute; left: 0; top: 0; width: 70.86%; height: 100%; padding: 14px 8px 10px 18px; overflow: hidden; }
 .pxr .at-head { margin-top: 16px; display: flex; align-items: baseline; gap: 10px; }
+/* the wide ticket (doors): an artwork panel on the left, the app's body and stub shifted right by it */
+.pxr .aticket.wide { width: 422px; transform: scale(1.1611); }
+.pxr .aticket.wide .at-badge { left: 94px; }
+.pxr .aticket.wide .at-main { left: 72px; width: 248px; }
+.pxr .aticket.wide .at-stub { left: 320px; }
+.pxr .aticket.wide .admit-wrap { left: 196px; }
+/* the event's cover, as the ticket's artwork (Discover's cover flies in and settles here) */
+.pxr .at-art { position: absolute; left: 10px; top: 50px; width: 52px; height: 69px; z-index: 2; visibility: hidden; }
+.pxr .at-art .dsc-cover { border-radius: 5px; box-shadow: 0 2px 8px rgba(0, 0, 0, .6), 0 0 0 1px rgba(255, 255, 255, .12); }
 .pxr .at-title { flex: 1 1 auto; min-width: 0; font: 900 15px/1.2 var(--f-ios); letter-spacing: .2px; text-transform: uppercase; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pxr .at-vis { flex: none; font: 800 10px/1 var(--f-ios); letter-spacing: 1.2px; text-transform: uppercase; color: var(--app-purple); text-decoration: underline; text-decoration-color: var(--app-purple); }
 .pxr .at-grid { display: flex; gap: 6px; margin-top: 10px; padding-right: 2px; }
@@ -802,8 +810,6 @@ html.pxr-doc { overflow-x: clip; }
 .pxr.home .more-link { display: none; }
 
   /* doors: the ticket at the real app size (~89vw) */
-  .pxr.home #doors .printer { left: 0; width: 500px; }
-  .pxr.home #doors .printer-label { visibility: hidden; }
   .pxr.home #doors .ticket-pair { left: 5px; }
   .pxr.home #doors .going { left: 5px; top: 392px; width: 490px; gap: 14px; }
   .pxr.home #doors .going-txt { font-size: 20.5px; }
@@ -942,3 +948,45 @@ html.pxr-doc { overflow-x: clip; }
 @media (min-width: 861px) and (min-height: 501px) and (max-height: 800px) {
   .pxr.home .scene-grid { padding-top: 80px; padding-bottom: 88px; }
 }
+
+/* ───────── DOORS — the app's Discover screen, which becomes the ticket ───────── */
+.pxr .dd-src { display: none; }
+.pxr .dd-screen { position: absolute; inset: 0; z-index: 1; overflow: hidden; background: radial-gradient(130% 55% at 50% 30%, rgba(216, 74, 255, .2), transparent 72%), #050505; color: #fff; font-family: var(--f-display); }
+.pxr .dd-title { position: absolute; left: 24px; top: 62px; display: flex; align-items: center; gap: 6px; font: 700 34px/1 var(--f-display); letter-spacing: -.035em; }
+.pxr .dd-title svg { margin-top: 5px; opacity: .75; }
+.pxr .dd-pillrow { position: absolute; left: 20px; right: 20px; top: 118px; }
+.pxr .dd-screen .dsc-pill { min-height: 54px; gap: 2px; padding: 0 6px 0 18px; }
+.pxr .dd-screen .dsc-pill-lbl { font-size: 15px; }
+.pxr .dd-screen .dsc-pill-sel { gap: 4px; padding: 8px 5px; font-size: 17px; }
+.pxr .dd-screen .dsc-pill-lbl + .dsc-pop + .dsc-pill-lbl { margin-left: 8px; }
+.pxr .dd-screen .dsc-pill-sep { margin: 0 6px; }
+.pxr .dd-screen .dsc-pill-btn { width: 40px; height: 40px; }
+.pxr .dd-car { position: absolute; left: 0; top: 192px; width: 402px; height: 330px; }
+.pxr .dd-track { position: absolute; inset: 0; }
+.pxr .dd-slide { position: absolute; left: 50%; top: 0; width: 232px; will-change: transform, filter; }
+.pxr .dd-screen .dsc-disc-wrap,
+.pxr .dd-screen .dsc-di,
+.pxr .dd-screen .dsc-img,
+.pxr .dd-screen .dsc-tab { transition: none; }
+.pxr .dd-screen .dsc-di { transform: translateX(31%); }
+.pxr .dd-screen .dsc-ttl { padding: 0 0 .06em; }
+.pxr .dd-screen .dsc-by { margin: 2.4cqw 0 0; }
+.pxr .dd-screen .dsc-tab { padding: 0 0 0 1%; }
+.pxr .dd-screen .dsc-polaroid { padding: 3.4% 3.4% 13%; }
+.pxr .dd-screen .dsc-di-sub { margin: 1.2cqw 0 0; }
+.pxr .dd-det { position: absolute; left: 22px; right: 22px; top: 548px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 18px; }
+.pxr .dd-screen .dsc-stampdisc { width: 112px; }
+.pxr .dd-screen .dsc-facts { gap: 10px 10px; }
+.pxr .dd-screen .dsc-fact dt { margin: 0 0 4px; font-size: 10px; }
+.pxr .dd-screen .dsc-fact dd { font-size: 16px; }
+.pxr .dd-screen .dsc-fact-big dd { font-size: 30px; }
+.pxr .dd-screen .dsc-fact-sub { margin: 3px 0 0; font-size: 11.5px; }
+.pxr .dd-actions { position: absolute; left: 0; right: 0; top: 690px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+.pxr .dd-screen .dsc-join { height: 52px; min-width: 152px; padding: 0 34px; font-size: 17px; }
+.pxr .dd-screen .dsc-round { width: 52px; height: 52px; }
+.pxr .dd-touch { position: absolute; left: 0; top: 0; z-index: 60; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .8); background: rgba(255, 255, 255, .22); box-shadow: 0 0 18px rgba(255, 255, 255, .25); opacity: 0; pointer-events: none; }
+/* the cover that lifts out of the phone and lands as the ticket's artwork (and the copy on the ticket) */
+.pxr .dd-fly { position: absolute; left: 0; top: 0; z-index: 30; opacity: 0; pointer-events: none; }
+.pxr .dd-mini .dsc-ttl { font-size: calc(var(--fs) * 1cqw); padding: 0 0 .06em; }
+.pxr .dd-mini .dsc-by { margin: 2.4cqw 0 0; font-size: 3.5cqw; }
+.pxr .dd-mini .dsc-meta { top: 6cqw; left: 6.5cqw; right: 9cqw; }

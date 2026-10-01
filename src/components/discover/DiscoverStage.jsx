@@ -61,7 +61,7 @@ async function shareEvent(event) {
 }
 
 /** What is printed on the record once it is out. */
-function DiscInfo({ event }) {
+export function DiscInfo({ event }) {
   const genre = event.genre ? String(event.genre) : '';
   const photos = (event.pastPhotos || []).filter(Boolean).slice(0, 2);
   const reactions = Number(event.pastReactions) > 0 ? Number(event.pastReactions) : 0;
