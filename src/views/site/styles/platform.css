@@ -271,17 +271,17 @@ div.pxr.platform {
 .pxr:where(.platform) .sc { position: absolute; inset: 0; background: #000; overflow: hidden; }
 .pxr:where(.platform) .sc-cam { position: absolute; inset: -20px; background: url(/site/img/lib/w27.jpg) center/cover; filter: blur(10px) brightness(.42) saturate(.9); }
 .pxr:where(.platform) .sc-guest { position: absolute; left: 118px; top: 252px; width: 170px; height: 300px; border-radius: 26px; background: #0b0b0d; box-shadow: 0 0 0 5px #1b1b1e, 0 30px 60px rgba(0, 0, 0, .6); transform: rotate(-6deg); overflow: hidden; }
-.pxr:where(.platform) .sc-guest .gq { position: absolute; left: 25px; top: 78px; width: 120px; height: 120px; border-radius: 14px; background: #fff; padding: 9px; box-shadow: 0 0 22px rgba(240, 31, 255, .8); }
+.pxr:where(.platform) .sc-guest .gq { position: absolute; left: 25px; top: 78px; width: 120px; height: 120px; border-radius: 14px; background: #fff; padding: 9px; }
 .pxr:where(.platform) .sc-guest .gq svg { width: 100%; height: 100%; }
 .pxr:where(.platform) .sc-guest .gt { position: absolute; left: 0; right: 0; top: 26px; text-align: center; font: 900 13px/1 var(--f-ios); letter-spacing: 1.2px; color: #fff; }
-.pxr:where(.platform) .sc-guest .gs { position: absolute; left: 0; right: 0; top: 46px; text-align: center; font: 800 12px/1 var(--f-ios); letter-spacing: 1.2px; color: rgba(216, 74, 255, .85); }
+.pxr:where(.platform) .sc-guest .gs { position: absolute; left: 0; right: 0; top: 46px; text-align: center; font: 800 12px/1 var(--f-body); letter-spacing: 1.2px; color: var(--app-purple); }
 .pxr:where(.platform) .sc-guest .gn { position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; font: 700 13px/1 var(--f-ios); color: rgba(255, 255, 255, .65); }
-.pxr:where(.platform) .sc-head { position: absolute; left: 20px; right: 20px; top: 60px; height: 60px; border-radius: 16px; background: rgba(20, 20, 22, .6); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font: 900 16px/1 var(--f-ios); letter-spacing: 2px; color: #fff; }
-.pxr:where(.platform) .sc-head i { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .2); }
+.pxr:where(.platform) .sc-head { position: absolute; left: 20px; right: 20px; top: 60px; height: 60px; border-radius: 16px; background: #1c1c1c; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font: 700 16px/1 var(--f-display); letter-spacing: 2px; color: #fff; }
+.pxr:where(.platform) .sc-head i { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #2e2e2e; }
 .pxr:where(.platform) .sc-door { position: absolute; left: 20px; right: 0; top: 136px; display: flex; align-items: center; gap: 8px; }
 .pxr:where(.platform) .sc-door > small { font: 800 13px/1 var(--f-ios); letter-spacing: 1.5px; color: rgba(255, 255, 255, .65); margin-right: 4px; }
-.pxr:where(.platform) .sc-door span { padding: 8px 14px; border-radius: 999px; background: rgba(0, 0, 0, .55); border: 1px solid rgba(255, 255, 255, .25); font: 700 14px/1 var(--f-ios); color: #fff; white-space: nowrap; }
-.pxr:where(.platform) .sc-door span.on { background: #fff; color: #000; border-color: #fff; }
+.pxr:where(.platform) .sc-door span { padding: 8px 14px; border-radius: 999px; background: #1c1c1c; font: 700 14px/1 var(--f-body); color: #fff; white-space: nowrap; }
+.pxr:where(.platform) .sc-door span.on { background: var(--app-purple); color: #fff; }
 .pxr:where(.platform) .sc-frame { position: absolute; left: 60px; top: 262px; width: 281px; height: 281px; border-radius: 24px; border: 2px solid #fff; background: rgba(0, 0, 0, .3); }
 .pxr:where(.platform) .sc-frame.ok { border-color: #32D74B; background: rgba(50, 215, 75, .2); }
 .pxr:where(.platform) .sc-frame.bad { border-color: #FF453A; background: rgba(255, 69, 58, .2); }
@@ -289,8 +289,8 @@ div.pxr.platform {
 .pxr:where(.platform) .sc-frame.ok .ic.okc { opacity: 1; color: #32D74B; }
 .pxr:where(.platform) .sc-frame.bad .ic.bdc { opacity: 1; color: #FF453A; }
 .pxr:where(.platform) .sc-hint { position: absolute; left: 0; right: 0; top: 567px; text-align: center; font: 500 15px/1 var(--f-ios); color: rgba(255, 255, 255, .85); text-shadow: 0 1px 6px rgba(0, 0, 0, .6); }
-.pxr:where(.platform) .sc-card { position: absolute; left: 20px; right: 20px; bottom: 44px; min-height: 100px; border-radius: 16px; background: rgba(50, 215, 75, .10); border: 1px solid rgba(50, 215, 75, .3); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); display: flex; align-items: center; gap: 12px; padding: 20px; opacity: 0; }
-.pxr:where(.platform) .sc-card.bad { background: rgba(255, 69, 58, .10); border-color: rgba(255, 69, 58, .3); }
+.pxr:where(.platform) .sc-card { position: absolute; left: 20px; right: 20px; bottom: 44px; min-height: 100px; border-radius: 16px; background: #1c1c1c; display: flex; align-items: center; gap: 12px; padding: 20px; opacity: 0; }
+
 .pxr:where(.platform) .sc-card img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
 .pxr:where(.platform) .sc-card b { display: block; font: 800 18px/1.15 var(--f-ios); color: #fff; }
 .pxr:where(.platform) .sc-card small { display: block; margin-top: 4px; font: 400 14px/1.2 var(--f-ios); color: rgba(255, 255, 255, .7); }
@@ -300,35 +300,34 @@ div.pxr.platform {
 
 /* Invite People (PostCreateInviteSheet.tsx) */
 .pxr:where(.platform) .iv { position: absolute; inset: 0; background: #000; }
-.pxr:where(.platform) .iv-sheet { position: absolute; left: 0; right: 0; top: 60px; bottom: 0; border-radius: 28px 28px 0 0; background: #000; overflow: hidden; box-shadow: 0 -1px 0 rgba(255, 255, 255, .12); }
-.pxr:where(.platform) .iv-head { position: relative; height: 60px; display: grid; place-items: center; font: 900 16px/1 var(--f-ios); letter-spacing: 2px; color: #fff; }
-.pxr:where(.platform) .iv-head i { position: absolute; right: 16px; top: 12px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .1); }
-.pxr:where(.platform) .iv-name { padding: 8px 20px 0; font: italic 900 36px/1.05 var(--f-ios); color: #fff; }
+.pxr:where(.platform) .iv-sheet { position: absolute; left: 0; right: 0; top: 60px; bottom: 0; border-radius: 28px 28px 0 0; background: #1c1c1c; overflow: hidden; }
+.pxr:where(.platform) .iv-head { position: relative; height: 60px; display: grid; place-items: center; font: 700 14px/1 var(--f-display); letter-spacing: 2px; text-transform: uppercase; color: #fff; }
+.pxr:where(.platform) .iv-head i { position: absolute; right: 16px; top: 12px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #2e2e2e; }
+.pxr:where(.platform) .iv-name { padding: 8px 20px 0; font: 700 34px/1.05 var(--f-display); letter-spacing: -.01em; color: #fff; }
 .pxr:where(.platform) .iv-meta { display: flex; gap: 12px; padding: 10px 20px 14px; font: 500 14px/1 var(--f-ios); color: rgba(255, 255, 255, .5); }
 .pxr:where(.platform) .iv-meta span { display: inline-flex; align-items: center; gap: 5px; }
-.pxr:where(.platform) .iv-boost { display: flex; align-items: center; gap: 14px; margin: 0 20px 12px; padding: 14px 16px; border-radius: 18px; background: linear-gradient(135deg, rgba(216, 74, 255, .28), rgba(216, 74, 255, .08)); }
+.pxr:where(.platform) .iv-boost { display: flex; align-items: center; gap: 14px; margin: 0 20px 12px; padding: 14px 16px; border-radius: 18px; background: #2e2e2e; color: var(--app-purple); }
 .pxr:where(.platform) .iv-boost > div { flex: 1; }
 .pxr:where(.platform) .iv-boost b { display: block; font: 800 15px/1.1 var(--f-ios); color: #fff; }
 .pxr:where(.platform) .iv-boost small { display: block; margin-top: 4px; font: 500 13px/17px var(--f-ios); color: rgba(255, 255, 255, .7); }
 .pxr:where(.platform) .iv-share { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 16px 12px; }
-.pxr:where(.platform) .iv-share span { min-height: 64px; border-radius: 14px; background: rgba(255, 255, 255, .05); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; font: 800 13px/1 var(--f-ios); letter-spacing: 1.2px; color: #fff; }
-.pxr:where(.platform) .iv-share span.ig { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); }
+.pxr:where(.platform) .iv-share span { min-height: 64px; border-radius: 14px; background: #2e2e2e; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; font: 800 13px/1 var(--f-ios); letter-spacing: 1.2px; color: #fff; }
 .pxr:where(.platform) .iv-chips { display: flex; gap: 8px; margin: 2px 16px 14px; }
-.pxr:where(.platform) .iv-chips span { padding: 9px 16px; border-radius: 999px; background: rgba(255, 255, 255, .08); font: 700 14px/1 var(--f-ios); color: rgba(255, 255, 255, .65); transition: background .25s, color .25s; }
-.pxr:where(.platform) .iv-chips span.on { background: #fff; color: #000; }
+.pxr:where(.platform) .iv-chips span { padding: 9px 16px; border-radius: 999px; background: #2e2e2e; font: 800 14px/1 var(--f-body); color: #8a8a8a; transition: background .25s, color .25s; }
+.pxr:where(.platform) .iv-chips span.on { background: var(--app-purple); color: #fff; }
 .pxr:where(.platform) .iv-sec { display: flex; align-items: center; justify-content: space-between; margin: 0 16px 4px; font: 800 13px/1 var(--f-ios); letter-spacing: 1.4px; color: rgba(255, 255, 255, .55); }
-.pxr:where(.platform) .iv-sec .all { padding: 8px 12px; border-radius: 999px; background: #fff; color: #000; font: 900 13px/1 var(--f-ios); letter-spacing: .8px; transition: box-shadow .25s; }
-.pxr:where(.platform) .iv-sec .all.pressed { box-shadow: 0 0 0 4px rgba(255, 255, 255, .2); }
+.pxr:where(.platform) .iv-sec .all { padding: 8px 12px; border-radius: 999px; background: var(--app-purple); color: #fff; font: 900 13px/1 var(--f-body); letter-spacing: .8px; transition: box-shadow .25s; }
+.pxr:where(.platform) .iv-sec .all.pressed { opacity: .8; }
 .pxr:where(.platform) .iv-list { position: relative; margin: 0 16px; }
 .pxr:where(.platform) .iv-row { display: flex; align-items: center; gap: 13px; height: 58px; opacity: 0; }
 .pxr:where(.platform) .iv-row img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 .pxr:where(.platform) .iv-row div { flex: 1; min-width: 0; }
 .pxr:where(.platform) .iv-row b { display: block; font: 700 16px/1.1 var(--f-ios); color: #fff; }
 .pxr:where(.platform) .iv-row small { display: block; margin-top: 3px; font: 400 14px/1 var(--f-ios); color: rgba(255, 255, 255, .45); }
-.pxr:where(.platform) .iv-row .ck { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .08); color: #D8B4FE; font: 300 22px/1 var(--f-ios); transition: background .2s, color .2s; }
-.pxr:where(.platform) .iv-row .ck.on { background: #fff; color: #000; font: 800 15px/1 var(--f-ios); }
-.pxr:where(.platform) .iv-send { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; padding: 12px 16px 32px; background: rgba(0, 0, 0, .85); opacity: 0; }
-.pxr:where(.platform) .iv-send span { display: grid; place-items: center; height: 54px; border-radius: 999px; background: #fff; color: #000; font: 900 16px/1 var(--f-ios); letter-spacing: .5px; white-space: nowrap; }
+.pxr:where(.platform) .iv-row .ck { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #2e2e2e; color: #fff; font: 300 22px/1 var(--f-body); transition: background .2s, color .2s; }
+.pxr:where(.platform) .iv-row .ck.on { background: var(--app-purple); color: #fff; font: 800 15px/1 var(--f-body); }
+.pxr:where(.platform) .iv-send { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; padding: 12px 16px 32px; background: #1c1c1c; opacity: 0; }
+.pxr:where(.platform) .iv-send span { display: grid; place-items: center; height: 54px; border-radius: 999px; background: var(--app-purple); color: #fff; font: 800 15px/1 var(--f-body); letter-spacing: .6px; text-transform: uppercase; white-space: nowrap; }
 .pxr:where(.platform) .iv-alert { position: absolute; left: 50%; top: 50%; z-index: 8; width: 280px; translate: -50% -50%; border-radius: 16px; background: rgba(40, 40, 44, .94); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); text-align: center; overflow: hidden; opacity: 0; }
 .pxr:where(.platform) .iv-alert b { display: block; padding: 20px 16px 4px; font: 700 18px/1.2 var(--f-ios); color: #fff; }
 .pxr:where(.platform) .iv-alert p { padding: 0 16px 18px; font: 400 14px/1.35 var(--f-ios); color: rgba(255, 255, 255, .8); }
