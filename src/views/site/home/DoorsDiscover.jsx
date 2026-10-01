@@ -23,7 +23,7 @@ const EVENTS = [
     location: 'Roxbury Crossing, Boston, MA', price: 'Free', musicMatchScore: 81, startDate: '2026-10-01T21:00:00', tab: true, details: true,
   },
   {
-    key: 'late', id: 'dd-late', title: 'Late Checkout', organizerName: 'Naty', coverImage: `${GALLERY}/gallery-02.jpg`,
+    key: 'late', id: 'dd-late', title: 'Late Checkout', organizerName: 'Room 12 Collective', coverImage: '/site/img/posters/late-checkout.jpg', hideNameOnCover: true,
     location: 'Seaport, Boston, MA', price: '$10.00', musicMatchScore: 93, startDate: '2026-10-02T22:00:00', genre: 'Amapiano',
     pastPhotos: [`${GALLERY}/gallery-01.jpeg`, `${GALLERY}/gallery-04.jpg`], tab: true, disc: true, details: true,
   },
