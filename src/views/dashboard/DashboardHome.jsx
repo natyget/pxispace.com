@@ -59,10 +59,10 @@ function eventState(event, now = DASHBOARD_RENDER_NOW) {
     return 'Draft';
 }
 
-/** Color-coded status dot — green live, amber upcoming, zinc otherwise. */
+/** Color-coded status dot: orange live, purple upcoming, zinc otherwise. */
 function stateDotClass(status) {
-    if (status === 'Live') return 'bg-emerald-400';
-    if (status === 'Upcoming') return 'bg-amber-400';
+    if (status === 'Live') return 'bg-pxi-orange';
+    if (status === 'Upcoming') return 'bg-pxi-purple';
     return 'bg-zinc-500';
 }
 
@@ -335,26 +335,26 @@ function VendorCommandCenter() {
             <section className="px-1">
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,480px)] xl:items-end">
                     <div className="min-w-0">
-                        <p className="text-[13px] font-medium text-zinc-500">Command center</p>
-                        <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Run the room</h1>
-                        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-500">
+                        <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Command center</p>
+                        <h1 className="mt-1.5 text-2xl font-black uppercase tracking-[-0.01em] text-white md:text-[30px]">Run the room</h1>
+                        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-[#9a9a9a]">
                             Live work, the next events, and the money — one read, no repeats.
                         </p>
                         <div className="mt-4 flex flex-wrap items-center gap-2.5">
-                            <Link href="/dashboard/events/new" className="pill-solid inline-flex items-center gap-2 px-5 py-2.5 text-sm tracking-[0.02em]">
+                            <Link href="/dashboard/events/new" className="pill-solid inline-flex items-center gap-2 px-5 py-2.5 text-[12px]">
                                 <HugeiconsIcon icon={PlusSignIcon} size={15} />
                                 Create event
                             </Link>
-                            <Link href="/dashboard/analytics" className="pill-ghost inline-flex items-center px-5 py-2.5 text-sm font-bold tracking-[0.02em]">
+                            <Link href="/dashboard/analytics" className="pill-ghost inline-flex items-center px-5 py-2.5 text-[12px] font-black uppercase tracking-[0.08em]">
                                 See what moved the room
                             </Link>
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[1.25rem] bg-white/[0.06] ring-1 ring-white/[0.07] sm:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl bg-white/[0.08] sm:grid-cols-4">
                         {commandMetrics.map((metric) => (
-                            <div key={metric.label} className="bg-[#0e0e13] px-4 py-3.5">
-                                <p className="text-[12px] font-medium text-zinc-500">{metric.label}</p>
-                                <p className="mt-1.5 truncate text-[22px] font-semibold leading-none tracking-tight text-white">{metric.value}</p>
+                            <div key={metric.label} className="bg-pxi-surface px-4 py-3.5">
+                                <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">{metric.label}</p>
+                                <p className="mt-1.5 truncate text-[22px] font-black leading-none tracking-tight text-white">{metric.value}</p>
                             </div>
                         ))}
                     </div>
@@ -385,7 +385,7 @@ function VendorCommandCenter() {
             </div>
 
             <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
-                <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
+                <section className="dashboard-surface rounded-3xl p-5 md:p-6">
                     <SurfaceHeader
                         eyebrow="Now / next"
                         title="Upcoming + live"
@@ -395,7 +395,7 @@ function VendorCommandCenter() {
                         {metricsLoading ? (
                             <div className="grid gap-3 md:grid-cols-2">
                                 {[0, 1, 2, 3].map((item) => (
-                                    <div key={item} className="h-[104px] animate-pulse rounded-[1.25rem] bg-white/[0.035]" />
+                                    <div key={item} className="h-[104px] animate-pulse rounded-3xl bg-pxi-field" />
                                 ))}
                             </div>
                         ) : upcomingAndLiveEvents.length === 0 ? (
@@ -416,22 +416,22 @@ function VendorCommandCenter() {
                 </section>
 
                 <aside className="space-y-5">
-                    <section className="dashboard-surface rounded-[1.25rem] p-5">
+                    <section className="dashboard-surface rounded-3xl p-5">
                         <SurfaceHeader eyebrow="Attention" title="Urgent notices" />
                         <div className="mt-4 space-y-3">
                             {urgentQueue.length ? (
                                 urgentQueue.map((notice) => <NoticeLink key={notice.id} notice={notice} />)
                             ) : (
-                                <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-5">
+                                <div className="rounded-3xl bg-pxi-field px-4 py-5">
                                     <p className="text-sm font-semibold text-white">No urgent notices.</p>
-                                    <p className="mt-1 text-xs leading-5 text-zinc-500">Customer requests and event issues will surface here when they need review.</p>
+                                    <p className="mt-1 text-xs leading-5 text-[#9a9a9a]">Customer requests and event issues will surface here when they need review.</p>
                                 </div>
                             )}
                         </div>
                     </section>
 
                     {reminders.length ? (
-                        <section className="dashboard-surface rounded-[1.25rem] p-5">
+                        <section className="dashboard-surface rounded-3xl p-5">
                             <SurfaceHeader eyebrow="Follow-ups" title="Reminders" />
                             <div className="mt-4 space-y-3">
                                 {reminders.map((update) => (
@@ -493,7 +493,7 @@ function MoatBand({ summary, loading }) {
     ];
 
     return (
-        <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
+        <section className="dashboard-surface rounded-3xl p-5 md:p-6">
             <SurfaceHeader
                 eyebrow="Only on PXI"
                 title="What you get here and nowhere else"
@@ -503,14 +503,14 @@ function MoatBand({ summary, loading }) {
                     <Link
                         key={item.title}
                         href={item.href}
-                        className="group flex flex-col rounded-[1.25rem] bg-white/[0.035] p-4 transition hover:bg-white/[0.055]"
+                        className="group flex flex-col rounded-3xl bg-pxi-field p-4 transition hover:bg-[#3a3a3a]"
                     >
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.055]">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#3a3a3a]">
                             <HugeiconsIcon icon={item.icon} size={17} className="text-white opacity-60" />
                         </div>
                         <p className="mt-3.5 text-sm font-bold text-white">{item.title}</p>
-                        <p className="mt-1.5 text-[13px] font-semibold tabular-nums text-[#e08bff]">{item.stat}</p>
-                        <p className="mt-1.5 flex-1 text-xs leading-5 text-zinc-500">{item.body}</p>
+                        <p className="mt-1.5 text-[13px] font-bold tabular-nums text-white">{item.stat}</p>
+                        <p className="mt-1.5 flex-1 text-xs leading-5 text-[#9a9a9a]">{item.body}</p>
                         <p className="mt-3 text-[11px] font-bold tracking-[0.02em] text-white/45 transition group-hover:text-white/75">
                             {item.action} →
                         </p>
@@ -530,17 +530,17 @@ function AnnouncementBanner({ announcement }) {
         && !announcement.ctaHref.startsWith('//')
     );
     return (
-        <div className="dashboard-surface relative overflow-hidden rounded-[1.25rem] p-5">
-            <span className="absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-[#d84aff]/70 via-[#d84aff]/35 to-transparent" aria-hidden="true" />
+        <div className="dashboard-surface relative overflow-hidden rounded-3xl p-5">
+            <span className="absolute inset-y-0 left-0 w-[3px] bg-pxi-purple" aria-hidden="true" />
             <div className="flex flex-col gap-3 pl-2 md:flex-row md:items-center md:justify-between md:gap-6">
                 <div className="min-w-0">
                     <p className="text-sm font-bold text-white">{announcement.title}</p>
-                    <p className="mt-1 text-sm leading-6 text-zinc-400">{announcement.body}</p>
+                    <p className="mt-1 text-sm leading-6 text-[#9a9a9a]">{announcement.body}</p>
                 </div>
                 {hasCta ? (
                     <Link
                         href={announcement.ctaHref}
-                        className="shrink-0 self-start whitespace-nowrap rounded-full bg-[#d84aff]/10 px-4 py-2 text-[12px] font-bold tracking-[0.02em] text-[#e08bff] ring-1 ring-[#d84aff]/25 transition hover:bg-[#d84aff]/20 hover:text-white md:self-center"
+                        className="shrink-0 self-start whitespace-nowrap rounded-full bg-pxi-purple px-5 py-2.5 text-[12px] font-black uppercase tracking-[0.08em] text-white transition hover:brightness-110 md:self-center"
                     >
                         {announcement.ctaLabel}
                     </Link>
@@ -552,7 +552,7 @@ function AnnouncementBanner({ announcement }) {
 
 function TrendChartCard({ title, subtitle, data, hasData, loading, color, valueFormatter, gradientId }) {
     return (
-        <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
+        <section className="dashboard-surface rounded-3xl p-5 md:p-6">
             <SurfaceHeader eyebrow={subtitle} title={title} />
             <div className="mt-4 h-[200px] md:h-[230px]">
                 {loading ? (
@@ -602,7 +602,7 @@ function TrendChartCard({ title, subtitle, data, hasData, loading, color, valueF
                                         strokeWidth={2.2}
                                         fill={`url(#${gradientId})`}
                                         dot={false}
-                                        activeDot={{ r: 4, fill: '#ffffff', stroke: '#09090b' }}
+                                        activeDot={{ r: 4, fill: '#ffffff', stroke: '#1c1c1c' }}
                                         isAnimationActive={false}
                                     />
                                 </AreaChart>
@@ -617,7 +617,7 @@ function TrendChartCard({ title, subtitle, data, hasData, loading, color, valueF
 
 function EventPriorityRow({ event }) {
     return (
-        <Link href={event.href} className="grid gap-4 rounded-[1.25rem] bg-white/[0.035] p-4 transition hover:bg-white/[0.055] md:grid-cols-[minmax(0,1fr)_220px] md:items-center">
+        <Link href={event.href} className="grid gap-4 rounded-3xl bg-pxi-field p-4 transition hover:bg-[#3a3a3a] md:grid-cols-[minmax(0,1fr)_220px] md:items-center">
             <div className="min-w-0">
                 <div className="flex min-w-0 items-center gap-2.5">
                     <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${stateDotClass(event.status)}`} aria-hidden="true" />
@@ -639,9 +639,9 @@ function EventPriorityRow({ event }) {
 
 function EmptyPanel({ title, body, href, action }) {
     return (
-        <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-7 text-center">
+        <div className="rounded-3xl bg-pxi-field px-4 py-7 text-center">
             <p className="text-sm font-semibold text-white">{title}</p>
-            <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-zinc-500">{body}</p>
+            <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-[#9a9a9a]">{body}</p>
             <Link href={href} className="pill-ghost mt-4 px-4 py-2 text-xs font-bold tracking-[0.02em] whitespace-nowrap">
                 {action}
             </Link>
@@ -651,7 +651,7 @@ function EmptyPanel({ title, body, href, action }) {
 
 function NoticeLink({ notice }) {
     return (
-        <Link href={notice.href} className="block rounded-[1.25rem] bg-white/[0.035] p-4 transition hover:bg-white/[0.055]">
+        <Link href={notice.href} className="block rounded-3xl bg-pxi-field p-4 transition hover:bg-[#3a3a3a]">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-white">{notice.title}</p>
@@ -659,7 +659,7 @@ function NoticeLink({ notice }) {
                     <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-white/50">{notice.detail}</p>
                 </div>
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${
-                    notice.severity === 'high' ? 'bg-red-500/[0.08] text-red-400/80' : 'bg-white/[0.045] text-white/55'
+                    notice.severity === 'high' ? 'bg-[#ff3b30]/15 text-[#ff3b30]' : 'bg-[#3a3a3a] text-white/55'
                 }`}>
                     {notice.severity}
                 </span>
@@ -673,12 +673,12 @@ function UpdateLink({ update }) {
     return (
         <Link
             href={update.href}
-            className="block rounded-[1.25rem] bg-white/[0.035] p-4 transition hover:bg-white/[0.055]"
+            className="block rounded-3xl bg-pxi-field p-4 transition hover:bg-[#3a3a3a]"
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-white">{update.title}</p>
-                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500">{update.detail}</p>
+                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#9a9a9a]">{update.detail}</p>
                 </div>
                 <span className="shrink-0 text-[11px] font-medium tracking-[0.02em] text-white/45 whitespace-nowrap">
                     {update.action}

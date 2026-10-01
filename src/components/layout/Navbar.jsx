@@ -254,7 +254,7 @@ const Navbar = () => {
                                 </Link>
                                 <button
                                     onClick={() => { setMobileMenuOpen(false); setShowLogoutModal(true); }}
-                                    className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-pxi-purple"
+                                    className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-[#d84aff]"
                                 >
                                     Sign Out
                                 </button>
@@ -310,7 +310,7 @@ const Navbar = () => {
                     <div className="flex gap-3">
                         <button
                             onClick={handleLogout}
-                            className="flex-1 px-5 py-3 rounded-full bg-pxi-purple text-white font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all border-0"
+                            className="flex-1 px-5 py-3 rounded-full bg-[#d84aff] text-white font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all border-0"
                         >
                             Sign Out
                         </button>
