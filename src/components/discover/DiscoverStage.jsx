@@ -10,7 +10,7 @@ import {
   ArrowRight01Icon,
   FavouriteIcon,
   MusicNote01Icon,
-  Share08Icon,
+  LinkForwardIcon,
 } from '@hugeicons/core-free-icons';
 import Sleeve from './Sleeve';
 import EventStamp from './EventStamp';
@@ -431,7 +431,7 @@ export default function DiscoverStage({
               {cta.label}
             </Link>
             <button type="button" className="dsc-round dsc-round-share" aria-label={`Share ${active.title}`} onClick={() => shareEvent(active)}>
-              <HugeiconsIcon icon={Share08Icon} size={22} strokeWidth={2} />
+              <HugeiconsIcon icon={LinkForwardIcon} size={22} strokeWidth={2} />
             </button>
             {onToggleFavorite ? (
               <button

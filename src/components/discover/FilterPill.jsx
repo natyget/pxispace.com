@@ -6,13 +6,14 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ArrowDown01Icon,
   Cancel01Icon,
-  MusicNote01Icon,
   Search01Icon,
+  Sorting01Icon,
   Tick02Icon,
 } from '@hugeicons/core-free-icons';
 
 /**
- * "at Time ⌄  in City ⌄ | search" — the discovery filter pill from the app.
+ * "at Time ⌄  in City ⌄ | sort  search" — the discovery filter pill from the app. Time picks
+ * only a time window and City only a place; how the list is ordered lives behind the sort button.
  * Purely presentational: the page owns the filter state and passes it in.
  */
 
@@ -64,9 +65,9 @@ function Option({ selected, onClick, children }) {
  * @param {(city:string, q:string)=>boolean} props.cityMatches
  * @param {string} props.searchQuery
  * @param {(q:string)=>void} props.onSearch
- * @param {boolean} props.showMatch  signed-in: show the music-match sort toggle
- * @param {boolean} props.matchActive
- * @param {()=>void} props.onToggleMatch
+ * @param {{id:string,label:string}[]} props.sortOptions  the first one is the default order
+ * @param {string} props.sortKey
+ * @param {(id:string)=>void} props.onSort
  */
 export default function FilterPill({
   timeOptions,
@@ -80,13 +81,13 @@ export default function FilterPill({
   cityMatches,
   searchQuery,
   onSearch,
-  showMatch,
-  matchActive,
-  onToggleMatch,
+  sortOptions,
+  sortKey,
+  onSort,
 }) {
   const rootRef = useRef(null);
   const searchRef = useRef(null);
-  const [menu, setMenu] = useState(null); // 'time' | 'city' | null
+  const [menu, setMenu] = useState(null); // 'time' | 'city' | 'sort' | null
   const [searchOpen, setSearchOpen] = useState(false);
   const searching = searchOpen || Boolean(searchQuery);
 
@@ -105,6 +106,8 @@ export default function FilterPill({
 
   const timeLabel = timeOptions.find((o) => o.id === timeFilter)?.label ?? 'All';
   const cityLabel = cityFilter || 'All';
+  const sortLabel = sortOptions.find((o) => o.id === sortKey)?.label ?? sortOptions[0]?.label ?? '';
+  const sortDefault = !sortOptions.length || sortKey === sortOptions[0].id;
 
   const closeSearch = () => {
     onSearch('');
@@ -219,20 +222,37 @@ export default function FilterPill({
 
       <span className="dsc-pill-fill" />
 
-      {showMatch ? (
+      <span className="dsc-pill-sep" aria-hidden="true" />
+
+      <div className="dsc-pop dsc-pop-r">
         <button
           type="button"
-          className={`dsc-pill-btn dsc-pill-match${matchActive ? ' on' : ''}`}
-          aria-pressed={matchActive}
-          aria-label="Sort by music match"
-          title="Sort by music match"
-          onClick={onToggleMatch}
+          className={`dsc-pill-btn dsc-pill-sort${sortDefault ? '' : ' on'}`}
+          aria-haspopup="listbox"
+          aria-expanded={menu === 'sort'}
+          aria-label={`Sort: ${sortLabel}`}
+          title="Sort"
+          onClick={() => setMenu((m) => (m === 'sort' ? null : 'sort'))}
         >
-          <HugeiconsIcon icon={MusicNote01Icon} size={18} strokeWidth={2.2} />
+          <HugeiconsIcon icon={Sorting01Icon} size={20} strokeWidth={2.2} />
         </button>
-      ) : null}
-
-      <span className="dsc-pill-sep" aria-hidden="true" />
+        {menu === 'sort' ? (
+          <Menu label="Sort by">
+            {sortOptions.map((o) => (
+              <Option
+                key={o.id}
+                selected={sortKey === o.id}
+                onClick={() => {
+                  onSort(o.id);
+                  close();
+                }}
+              >
+                {o.label}
+              </Option>
+            ))}
+          </Menu>
+        ) : null}
+      </div>
 
       <button
         type="button"

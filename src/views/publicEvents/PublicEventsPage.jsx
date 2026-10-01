@@ -62,7 +62,7 @@ function normalizeApiEvent(e) {
     // Not sent by the API yet (see the app's docs/handoff/CTO-HANDOFF.md, item 9). Until then the
     // cover shows the host's face alone and prints the event name over the artwork.
     attendeePreview: Array.isArray(e.attendeePreview) ? e.attendeePreview : [],
-    coverHasTitle: e.coverHasTitle === true,
+    hideNameOnCover: e.hideNameOnCover === true,
 
     // Fields used by original EventCard UI
     image: e.coverImage || DEFAULT_IMG,
@@ -206,6 +206,13 @@ const TRENDING_OPTIONS = [
   { id: 'nearest', label: 'Nearest' },
   { id: 'largest', label: 'Largest' },
 ];
+// What the sort button offers, worded for the reader. The ids are the TRENDING_OPTIONS ids.
+const SORT_OPTIONS = [
+  { id: 'all', label: 'Newest' },
+  { id: 'nearest', label: 'Soonest' },
+  { id: 'largest', label: 'Most going' },
+];
+const SORT_MATCH = { id: 'match', label: 'Music match' };
 const TIME_OPTIONS = [
   { id: 'all', label: 'All' },
   { id: 'today', label: 'Today' },
@@ -408,7 +415,7 @@ export default function PublicEventsPage() {
   const [musicConnectedRaw, setMusicConnected] = useState(null);
   const [heroIndex, setHeroIndex] = useState(0);
 
-  const [trending] = useState(TRENDING_OPTIONS[0].id); // All | Nearest | Largest
+  const [trending, setTrending] = useState(TRENDING_OPTIONS[0].id); // All | Nearest | Largest
   const [timeFilter, setTimeFilter] = useState(TIME_OPTIONS[0].id); // All | Today | This week | This month
   const [cityFilter, setCityFilter] = useState(CITY_PRESETS[0]);
   const [cityQuery, setCityQuery] = useState('');
@@ -620,6 +627,8 @@ export default function PublicEventsPage() {
   const narrowing = Boolean(searchQuery.trim()) || timeFilter !== 'all' || cityFilter !== 'All';
 
   const resetFilters = () => {
+    setTrending(TRENDING_OPTIONS[0].id);
+    setMusicSortActive(false);
     setTimeFilter(TIME_OPTIONS[0].id);
     chooseCity(CITY_PRESETS[0]);
     setCityQuery('');
@@ -737,6 +746,18 @@ export default function PublicEventsPage() {
     });
   }, []);
 
+  // The sort button: the three plain orders for everyone, plus the signed-in music match.
+  const sortOptions = isLoggedIn ? [...SORT_OPTIONS, SORT_MATCH] : SORT_OPTIONS;
+  const sortKey = musicSortEffective ? SORT_MATCH.id : trending;
+  const chooseSort = (id) => {
+    if (id === SORT_MATCH.id) {
+      setMusicSortActive(true);
+      return;
+    }
+    setMusicSortActive(false);
+    setTrending(id);
+  };
+
   const pill = (
     <FilterPill
       timeOptions={TIME_OPTIONS}
@@ -750,9 +771,9 @@ export default function PublicEventsPage() {
       cityMatches={cityOptionMatchesQuery}
       searchQuery={searchQuery}
       onSearch={setSearchQuery}
-      showMatch={isLoggedIn}
-      matchActive={musicSortActive}
-      onToggleMatch={() => setMusicSortActive((v) => !v)}
+      sortOptions={sortOptions}
+      sortKey={sortKey}
+      onSort={chooseSort}
     />
   );
 

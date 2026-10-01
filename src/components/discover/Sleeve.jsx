@@ -1,46 +1,14 @@
 'use client';
 
 import './discover.css';
-import { attendeeCount, hostOf, initialsOf, titleScale } from './discoverEvent';
+import { hostOf, titleScale } from './discoverEvent';
 
 /**
  * The album sleeve every discovery surface is built from: a portrait cover (heavy title
- * top-left, "BY HOST" in purple, a guest facepile bottom-left) with a black vinyl record
- * tucked behind it. `variant="stage"` slides pop the record out; `variant="card"` shows a
+ * top-left, "BY HOST" in purple) with a black vinyl record tucked behind it. `variant="stage"` slides pop the record out; `variant="card"` shows a
  * sliver of it and slides it out on hover. All geometry is in container-width units (cqw),
  * so the same markup scales from a 120px thumbnail to a 450px hero.
  */
-
-// Faces are real people or nothing: up to three guests when the API sends `attendeePreview`,
-// otherwise the host alone. No placeholder circles.
-export function Facepile({ event }) {
-  const host = hostOf(event);
-  const count = attendeeCount(event);
-  const guests = (Array.isArray(event.attendeePreview) ? event.attendeePreview : [])
-    .filter((g) => g && g.avatarUrl)
-    .slice(0, 3);
-  if (!guests.length && !host.name && !host.avatar && !count) return null;
-  return (
-    <span className="dsc-faces" role="img" aria-label={count ? `${count} going` : `Hosted by ${host.name}`}>
-      {guests.length ? (
-        guests.map((g, i) => (
-          <span key={g.id || i} className="dsc-face">
-            <img src={g.avatarUrl} alt="" draggable={false} loading="lazy" decoding="async" />
-          </span>
-        ))
-      ) : host.name || host.avatar ? (
-        <span className="dsc-face">
-          {host.avatar ? (
-            <img src={host.avatar} alt="" draggable={false} loading="lazy" decoding="async" />
-          ) : (
-            initialsOf(host.name)
-          )}
-        </span>
-      ) : null}
-      {count > 0 ? <span className="dsc-faces-n">{count > 999 ? '999+' : count} going</span> : null}
-    </span>
-  );
-}
 
 function Disc({ image }) {
   const safe = image ? String(image).replace(/["\\\n]/g, '') : '';
@@ -81,7 +49,7 @@ export default function Sleeve({
   const host = hostOf(event);
   const image = event.coverImage || event.image;
   // A finished poster already carries the event's name: show the artwork alone.
-  const poster = event.coverHasTitle === true;
+  const poster = event.hideNameOnCover === true;
   return (
     <div className={`dsc-sleeve dsc-sleeve-${variant}${popped ? ' is-popped' : ''}${poster ? ' is-poster' : ''}`}>
       <Disc image={image} />
@@ -104,7 +72,6 @@ export default function Sleeve({
             {host.name ? <span className="dsc-by">by {host.name}</span> : null}
           </span>
         )}
-        <Facepile event={event} />
         {overlay}
       </Cover>
       {tab}

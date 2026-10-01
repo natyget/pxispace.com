@@ -68,7 +68,7 @@ export default function HomeView() {
                 <span>Never lose</span>
               </span>{' '}
               <span className="ln">
-                <span>the moment.</span>
+                <span>the moment</span>
               </span>
             </h1>
             <p className="hero-lead">Tickets, one shared camera for the whole room, and a scrapbook that <b>builds itself by morning.</b></p>
