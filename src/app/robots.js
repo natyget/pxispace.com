@@ -53,15 +53,9 @@ export default function robots() {
     };
   }
 
-  const disallow = [
-    '/dashboard/',
-    '/login',
-    '/signup',
-    '/verify-phone',
-    '/passport-required',
-    '/stripe/',
-    '/api/',
-  ];
+  // /verify-phone and /passport-required are NOT listed: they send X-Robots-Tag: noindex
+  // (next.config.js headers), and a Disallow would stop Google from ever reading it.
+  const disallow = ['/dashboard/', '/login', '/signup', '/stripe/', '/api/'];
   return {
     rules: [
       { userAgent: '*', allow: '/', disallow },
@@ -71,7 +65,7 @@ export default function robots() {
       { userAgent: 'PerplexityBot', allow: '/' },
       { userAgent: 'Google-Extended', allow: '/' },
     ],
+    // No `host:` — it is a non-standard Yandex directive that Google ignores.
     sitemap: `${base}/sitemap.xml`,
-    host: base,
   };
 }

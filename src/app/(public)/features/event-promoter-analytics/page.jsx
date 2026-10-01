@@ -19,7 +19,7 @@ const PAGE_JSONLD = {
   applicationCategory: 'BusinessApplication',
   url: 'https://pxispace.com/features/event-promoter-analytics',
   description:
-    'Real-time predictive analytics, attendance funnel tracking, and promoter ROI attribution for event organizers.',
+    'Sales pace, turnout and attendance funnels, hype through the night and a venue heat map for event organizers.',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
 };
 

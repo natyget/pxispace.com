@@ -41,6 +41,14 @@ export default async function sitemap() {
     { url: `${base}/features/instagram-event-sharing`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/competitors/partiful-luma-alternative`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${base}/editorial`, changeFrequency: 'weekly', priority: 0.6 },
+    // Standalone guide (not in EDITORIAL_STORIES). Bump lastModified with each nightly recap
+    // during the week — Google only trusts lastmod that is consistently accurate.
+    {
+      url: `${base}/editorial/fashion-week-brooklyn`,
+      changeFrequency: 'daily',
+      priority: 0.7,
+      lastModified: new Date('2026-09-28'),
+    },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/beta`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/support`, changeFrequency: 'monthly', priority: 0.5 },

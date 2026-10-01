@@ -25,7 +25,6 @@ const PAGE_JSONLD = {
     'Real-Time Shared Thread',
     'Best-Shots Ranking',
     'Auto-Compiled Scrapbook',
-    'Zero Location Tracking',
   ],
   offers: {
     '@type': 'Offer',
