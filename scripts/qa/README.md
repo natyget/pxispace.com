@@ -8,6 +8,21 @@ npm i -D playwright && npx playwright install chromium
 export PXI_QA_DIR=./scripts/qa/.artifacts      # screenshots and inputs; gitignored
 ```
 
+## `quietWindow.cjs`: when someone is working at the machine
+
+These runs must be headed (point 1 below), and a headed window opens on top of whatever is on
+screen and takes the keyboard. Preload `quietWindow.cjs` and the window opens off-screen, is
+minimized at once and is never seen. Same browser, same build, same requests:
+
+```bash
+node -r ./scripts/qa/quietWindow.cjs scripts/qa/venueDashboard.cjs
+```
+
+Two things differ. A full-page picture of the dashboard comes in window-height pieces
+(`name.png`, `name.part2.png`, ...), because a minimized window does not paint beyond its own
+height. And a change of viewport width (phone checks) briefly restores the window off-screen:
+the run reports how many and how long (about a tenth of a second each).
+
 ## `webDeep.cjs` — start here
 
 The main run. Registers its own Citizen, invites a co-host and accepts the invite, creates
