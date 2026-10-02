@@ -24,15 +24,16 @@ export function albumDisplayTitle(album) {
 
 function formatLocation(event) {
   const raw = String(event?.location ?? '').trim();
-  if (raw) {
-    const split = raw.split(/\n|,|•/).map((s) => s.trim()).filter(Boolean);
-    if (split.length >= 2) return { primary: split[0], secondary: split.slice(1).join(' · ') };
-    return { primary: raw, secondary: '' };
-  }
   const lat = event?.latitude != null ? Number(event.latitude) : NaN;
   const lng = event?.longitude != null ? Number(event.longitude) : NaN;
-  if (Number.isFinite(lat) && Number.isFinite(lng)) {
-    return { primary: `${lat.toFixed(5)}, ${lng.toFixed(5)}`, secondary: 'Coordinates (no address set)' };
+  const coords = Number.isFinite(lat) && Number.isFinite(lng) ? { latitude: lat, longitude: lng } : {};
+  if (raw) {
+    const split = raw.split(/\n|,|•/).map((s) => s.trim()).filter(Boolean);
+    if (split.length >= 2) return { primary: split[0], secondary: split.slice(1).join(' · '), address: raw, ...coords };
+    return { primary: raw, secondary: '', address: raw, ...coords };
+  }
+  if (coords.latitude != null) {
+    return { primary: `${lat.toFixed(5)}, ${lng.toFixed(5)}`, secondary: 'Coordinates (no address set)', ...coords };
   }
   return { primary: 'Location TBD', secondary: '' };
 }
@@ -70,13 +71,18 @@ export function buildAlbumEventDetails(album, albumId) {
     id: event?.id,
     title: albumDisplayTitle(album),
     image: event?.coverImage || album.coverImage,
+    // PUBLIC / PRIVATE is the grey line under the name (as in the app). Paid / Free is no longer a
+    // badge: the footer pill says it ("Get ticket $10.00" or "Join") and the tiers list the prices.
     badges: [
       { label: isPublic ? 'Public' : 'Private', tone: isPublic ? 'purple' : 'neutral' },
-      { label: isPaidEvent ? 'Paid' : 'Free', tone: isPaidEvent ? 'amber' : 'green' },
       ...(isFinalized ? [{ label: 'Scrapbook · Finalized', tone: 'neutral' }] : []),
     ],
+    visibility: event?.visibility,
+    startDate: event?.startDate,
+    endDate: event?.endDate,
     schedule: formatAlbumSchedule(event),
     location: formatLocation(event),
+    shareUrl: albumId ? `/album/${albumId}` : undefined,
     description: event?.description,
     host: album.host
       ? { name: album.host.name, username: album.host.username, avatarUrl: album.host.avatarUrl }
@@ -93,7 +99,8 @@ export function buildAlbumEventDetails(album, albumId) {
     primaryAction = { label: 'Scrapbook — finalized', disabled: true };
   } else if (event?.id) {
     primaryAction = {
-      label: ticketLabel ? `Join Event · ${ticketLabel}` : 'Join Event',
+      // The app's footer wording: "Join", or "Get ticket $10.00" (no dot before the price).
+      label: ticketLabel ? `Get ticket ${ticketLabel}` : 'Join',
       href: `/events/${event.id}/checkout`,
     };
   } else if (openInAppUrl) {
