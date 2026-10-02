@@ -42,6 +42,25 @@ SITE=http://localhost:5174 UNSEEDED=http://localhost:5173 node scripts/qa/webDee
 Assertions to copy rather than reinvent: grep the event **id**, never `href="/events/…"` (the
 markup escapes its quotes), and match card titles case-insensitively (CSS uppercases them).
 
+## `venueDashboard.cjs`: the venue dashboard (VEN-8)
+
+Signs in through the login form as an account that owns a venue, opens each of its venues, and
+checks that every card shows what the API answered: the door, the arrival chart, tonight and
+upcoming, come back, insights, albums, the audience, the heat map, night by night, guarantees,
+and phone width. It hardcodes nothing about the data, so it reads the same on a venue with no
+nights, one night or many. Results: `PXIStudio-App/docs/VEN8_QA.md`.
+
+```bash
+QA_EMAIL=... QA_PASSWORD=... node scripts/qa/venueDashboard.cjs
+```
+
+`LOCAL_API=http://localhost:4320` answers the venue requests from a backend checkout that is
+not deployed yet (`npm run venue:local-api` in PXIStudio-App, read-only). That local API answers
+as one named account without a login, so it is for looking at a branch, not for testing sign-in.
+Leave `LOCAL_API` out to test against the deployed API as the venue's real owner.
+
+The pure decisions behind the cards have their own tests, no browser needed: `npm run test:venue`.
+
 ## `webLive.cjs` / `webLiveDown.cjs` — the earlier pass
 
 Kept because they cover the first HTML response directly and are proxy-based, so they still

@@ -37,6 +37,21 @@ export function fetchVenueHeatmap(venueId) {
     return api.get(`/api/venue-analytics/${venueId}/heatmap`);
 }
 
+// VEN-8, Brandon's design: tonight and what is coming up, the door, how a night built, and the albums.
+export function fetchVenueHome(venueId) {
+    return api.get(`/api/venue-analytics/${venueId}/home`);
+}
+
+// The "when the room fills" chart for a choice of nights: { eventId } for one night, { from, to } for a range.
+export function fetchVenueActivity(venueId, params = {}) {
+    return api.get(`/api/venue-analytics/${venueId}/activity${query(params)}`);
+}
+
+// The forecast card: a range for each night booked this week. 404 for an owner until forecasts are released.
+export function fetchVenueWeekForecast(venueId) {
+    return api.get(`/api/venue-analytics/${venueId}/forecast/week`);
+}
+
 // Saved segments for this venue's audience (VEN-4). Counts and names behind the privacy wall; no send action.
 export function fetchVenueSegments(venueId) {
     return api.get(`/api/venue-analytics/${venueId}/segments`);
