@@ -66,7 +66,13 @@ function CampaignsPageContent() {
     const [quote, setQuote] = useState(null);
     const [busy, setBusy] = useState(false);
     const isSms = channel === 'SMS';
-    const bodyMaxLength = isSms ? 320 : 10000;
+    // What a text can hold depends on who sends it. PXI puts "Sent via PXI on behalf of
+    // {name}: " in front of the body and the STOP line after it, and the API refuses anything
+    // that does not fit once they are added. The quote carries the sender's name and the exact
+    // room left; they are kept from the last quote so the limit does not jump back while a new
+    // one loads. 320 is only the assumption before the first quote arrives.
+    const [relay, setRelay] = useState({ senderName: '', smsBudget: null });
+    const bodyMaxLength = isSms ? (relay.smsBudget ?? 320) : 10000;
 
     const [payState, setPayState] = useState(null); // { campaignId, clientSecret }
     const [sentWithCredits, setSentWithCredits] = useState(false);
@@ -116,7 +122,14 @@ function CampaignsPageContent() {
         }
         const timer = setTimeout(() => {
             api.get(`/api/campaigns/quote?${params}`)
-                .then((q) => { if (!cancelled) setQuote(q); })
+                .then((q) => {
+                    if (cancelled) return;
+                    setQuote(q);
+                    setRelay((prev) => ({
+                        senderName: q?.sentOnBehalfOf || prev.senderName,
+                        smsBudget: typeof q?.smsBodyBudget === 'number' ? q.smsBodyBudget : prev.smsBudget,
+                    }));
+                })
                 .catch(() => { if (!cancelled) setQuote(null); });
         }, 0);
         return () => {
@@ -159,7 +172,9 @@ function CampaignsPageContent() {
     };
 
     const smsNotReady = isSms && quote?.smsChannelReady === false;
-    const canSubmit = name.trim() && (isSms || subject.trim()) && body.trim() && quote?.recipientCount > 0
+    // Typing is capped at the limit, but a long email body carried over to SMS is not.
+    const bodyTooLong = body.length > bodyMaxLength;
+    const canSubmit = name.trim() && (isSms || subject.trim()) && body.trim() && !bodyTooLong && quote?.recipientCount > 0
         && (audience !== 'ATTENDEES' || eventId) && (audience !== 'SEGMENT' || segmentId) && !smsNotReady;
     const creditApplied = quote?.creditAppliedCents || 0;
     const cardRemainder = quote?.stripeRemainderCents ?? (quote ? quote.priceCents - creditApplied : 0);
@@ -320,9 +335,15 @@ function CampaignsPageContent() {
                             />
                             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.06] bg-white/[0.02] px-4 py-2.5 sm:px-5">
                                 <span className="text-[11px] font-semibold text-zinc-500">
-                                    {isSms ? '"Reply STOP to unsubscribe." is appended automatically.' : 'An unsubscribe link is added automatically.'}
+                                    {isSms
+                                        ? relay.senderName
+                                            ? `Starts "Sent via PXI on behalf of ${relay.senderName}:" and ends "Reply STOP to unsubscribe." Both are added automatically.`
+                                            : '"Reply STOP to unsubscribe." is appended automatically.'
+                                        : relay.senderName
+                                            ? `"Sent via PXI on behalf of ${relay.senderName}" and an unsubscribe link are added automatically.`
+                                            : 'An unsubscribe link is added automatically.'}
                                 </span>
-                                <span className={`text-[11px] font-bold tabular-nums ${body.length >= bodyMaxLength ? 'text-amber-300' : 'text-zinc-500'}`}>
+                                <span className={`text-[11px] font-bold tabular-nums ${bodyTooLong ? 'text-red-400' : body.length >= bodyMaxLength ? 'text-amber-300' : 'text-zinc-500'}`}>
                                     {formatNumber(body.length)}/{formatNumber(bodyMaxLength)}
                                 </span>
                             </div>
@@ -392,7 +413,9 @@ function CampaignsPageContent() {
                 </div>
                 <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white/[0.035] px-4 py-3">
                     <p className="text-sm text-zinc-400">
-                        {quote
+                        {bodyTooLong
+                            ? `That is ${formatNumber(body.length - bodyMaxLength)} over what ${isSms ? 'a text' : 'an email'} can hold. Shorten the message to send it.`
+                            : quote
                             ? quote.recipientCount > 0
                                 ? <>Reaches <span className="font-bold text-white">{quote.recipientCount}</span> opted-in {quote.recipientCount === 1 ? 'person' : 'people'} · <span className="font-bold text-white">{formatUsd(quote.priceCents)}</span></>
                                 : 'No opted-in recipients yet — attendees enable event updates in their PXI settings.'
@@ -419,7 +442,8 @@ function CampaignsPageContent() {
                                 <div className="min-w-0">
                                     <p className="truncate text-sm font-bold text-white">{c.name}</p>
                                     <p className="truncate text-xs text-zinc-500">
-                                        {c.subject} · {c.recipientCount} recipients · {formatUsd(c.priceCents)}
+                                        {/* A text has no subject line, so the row would start with a stray separator. */}
+                                        {c.channel === 'SMS' ? 'Text message' : c.subject} · {c.recipientCount} {c.recipientCount === 1 ? 'recipient' : 'recipients'} · {formatUsd(c.priceCents)}
                                         {c.creditAppliedCents > 0 ? ` (${formatUsd(c.creditAppliedCents)} credits)` : ''} · {formatDate(c.sentAt || c.createdAt)}
                                     </p>
                                 </div>

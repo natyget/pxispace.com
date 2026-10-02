@@ -39,6 +39,8 @@ export default function HomeView() {
           </span>{' '}
           <span className="clock-day">FRI</span>
         </button>{' '}
+        {/* after the story post the night is over: the time pill hands over to the events */}
+        <a className="clock-events" href="/events">Explore events</a>{' '}
         <a className="clock-cta" href="https://apps.apple.com/app/pxi/id6751762197" target="_blank" rel="noopener noreferrer" aria-label="Get the app on the App Store"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.200 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z" /></svg>Get the app</a>{' '}
         <div className="clock-menu" id="clock-menu" hidden>
           <p className="clock-menu-h">Jump to</p>
@@ -49,10 +51,10 @@ export default function HomeView() {
         {/* ============ HERO — lights out, tap to shoot ============ */}
         <section className="hero" id="hero">
           <div className="room" aria-hidden="true">
-            <img src="/site/img/room.jpg" alt="" />
+            <img src="/site/img/hero-crew.jpg" alt="" />
           </div>
           <div className="room-lit" aria-hidden="true">
-            <img src="/site/img/room.jpg" alt="" />
+            <img src="/site/img/hero-crew.jpg" alt="" />
           </div>
           <div className="hero-scrim" aria-hidden="true"></div>
           <div className="shots" aria-hidden="true"></div>
@@ -71,7 +73,7 @@ export default function HomeView() {
             </h1>
             <p className="hero-lead">Tickets, one shared camera for the whole room, and a scrapbook that <b>builds itself by morning.</b></p>
             <div className="ctas">
-              <a className="btn btn-primary" href="https://apps.apple.com/app/pxi/id6751762197" target="_blank" rel="noopener noreferrer" aria-label="Get the app on the App Store"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z" /></svg>Get the app</a>{' '}
+              <a className="btn btn-warm" href="https://apps.apple.com/app/pxi/id6751762197" target="_blank" rel="noopener noreferrer" aria-label="Get the app on the App Store"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z" /></svg>Get the app</a>{' '}
               <a className="btn btn-secondary" href="/events">Explore events</a>
             </div>
           </div>
@@ -128,7 +130,7 @@ export default function HomeView() {
               </div>
             </div>
             <div className="stage-box">
-              <div className="stage" data-w="640" data-h="664" data-mw="312" data-mh="640">
+              <div className="stage" data-w="640" data-h="664" data-mw="312" data-mh="640" data-mbleed="72">
                 <div className="iphone cam-phone" data-pw="300" data-time="10:31" aria-hidden="true"></div>
                 <div className="cam-chip" aria-hidden="true">
                   <p className="cc-lbl">
@@ -208,11 +210,7 @@ export default function HomeView() {
                 <div className="stats" aria-hidden="true">
                   <div>
                     <b data-stat="photos">12</b>
-                    <span>photos in the roll</span>
-                  </div>
-                  <div>
-                    <b data-stat="people">3</b>
-                    <span>shooting</span>
+                    <span>shots in the roll</span>
                   </div>
                 </div>
               </div>
@@ -222,7 +220,7 @@ export default function HomeView() {
               </div>
             </div>
             <div className="stage-box">
-              <div className="stage" data-w="600" data-h="690" data-mw="372" data-mh="672" aria-hidden="true">
+              <div className="stage" data-w="600" data-h="690" data-mw="372" data-mh="672" data-mbleed="72" aria-hidden="true">
                 <div className="bursts"></div>
                 <div className="iphone thread-phone" data-pw="316" data-time="11:52"></div>
                 <div className="flythumbs"></div>
@@ -244,7 +242,7 @@ export default function HomeView() {
               <p className="ls-time">9:40</p>
             </div>
             <div className="notif main">
-              <img className="n-icon" src="/site/img/app-icon.png?v=grit3" alt="" />
+              <img className="n-icon" src="/site/img/app-icon.png?v=grit5" alt="" />
               <div className="n-text">
                 <p className="n-top">
                   <b>PXI</b>
@@ -255,7 +253,7 @@ export default function HomeView() {
               <img className="n-thumb" src="/site/img/lib/k00.jpg" alt="" />
             </div>
             <div className="notif n2">
-              <img className="n-icon" src="/site/img/app-icon.png?v=grit3" alt="" />
+              <img className="n-icon" src="/site/img/app-icon.png?v=grit5" alt="" />
               <div className="n-text">
                 <p className="n-top">
                   <b>Kofi saved your photo</b>
@@ -266,7 +264,7 @@ export default function HomeView() {
               <img className="n-thumb" src="/site/img/lib/k01.jpg" alt="" />
             </div>
             <div className="notif n3">
-              <img className="n-icon" src="/site/img/app-icon.png?v=grit3" alt="" />
+              <img className="n-icon" src="/site/img/app-icon.png?v=grit5" alt="" />
               <div className="n-text">
                 <p className="n-top">
                   <b>Ama reacted to your photo</b>
@@ -391,12 +389,6 @@ export default function HomeView() {
         </section>
         {/* ============ FINALE — the next one ============ */}
         <section className="finale" id="finale">
-          <h2 className="display-xl">The night<br /> is waiting.</h2>
-          <p className="lead center">Pull up, shoot it, keep it. All of it.</p>
-          <div className="ctas center">
-            <a className="btn btn-warm" href="https://apps.apple.com/app/pxi/id6751762197" target="_blank" rel="noopener noreferrer" aria-label="Get the app on the App Store"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z" /></svg>Get the app</a>{' '}
-            <a className="btn btn-secondary" href="/events">Explore events</a>
-          </div>
           <div className="stories">
             <div className="stories-head">
               <div className="stories-title">

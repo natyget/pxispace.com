@@ -10,7 +10,7 @@ import { openConsentPreferences } from '@/lib/consent';
 import { SOCIAL_PROFILES } from '@/lib/seo/social';
 import { allCities } from '@/lib/seo/cities';
 
-const LogoSVG = '/pxi-mark-small.svg?v=grit3';
+const LogoSVG = '/pxi-mark.svg?v=grit5';
 const linkClass = 'text-zinc-500 hover:text-white transition-colors';
 
 const ATTENDEE_LINKS = [
@@ -50,21 +50,19 @@ const CONNECT_LINKS = [
 const Footer = () => {
   return (
     <footer className="relative overflow-hidden bg-black pt-20 pb-12">
-      {/* oversized ghost watermark */}
-      <div
-        className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[18%] select-none text-[22vw] font-black leading-none tracking-tighter text-white/[0.03]"
+      {/* the footer's one logo: the mark, centred behind the columns, never cropped
+          (same treatment as the redesign pages' footer) */}
+      <img
+        src={LogoSVG}
+        alt=""
         aria-hidden
-      >
-        PXI
-      </div>
+        className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[min(86vw,520px)] max-h-[94%] -translate-x-1/2 -translate-y-1/2 select-none object-contain opacity-[0.09]"
+      />
 
       <div className="relative z-10 mx-auto max-w-[1200px] px-6">
         <div className="grid grid-cols-2 gap-x-8 gap-y-12 border-t border-white/[0.08] pt-14 md:grid-cols-5">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="mb-4 inline-flex items-center gap-2">
-              <img src={LogoSVG} alt="PXI" width={40} height={40} className="h-10 w-10 object-contain" />
-            </Link>
             <p className="mb-6 max-w-xs text-sm leading-relaxed text-zinc-500">
               Tickets, one shared camera roll, and the morning-after scrapbook. Never lose the night.
             </p>

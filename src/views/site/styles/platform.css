@@ -172,7 +172,8 @@ div.pxr.platform {
 .pxr:where(.platform) .cs-head .btns i { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .06); color: rgba(255, 255, 255, .8); }
 .pxr:where(.platform) .cs-view { position: absolute; left: 0; right: 0; top: 76px; bottom: 112px; overflow: hidden; }
 .pxr:where(.platform) .cs-body { padding: 8px 20px 40px; }
-.pxr:where(.platform) .cs-cover { position: relative; height: 210px; border-radius: 24px; background: rgba(255, 255, 255, .06); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; font: 900 12px/1 var(--f-ios); letter-spacing: 2px; color: #fff; }
+/* the app's cover is 3:4 portrait: a centred card, not a full-width strip */
+.pxr:where(.platform) .cs-cover { position: relative; width: 216px; aspect-ratio: 3 / 4; margin: 0 auto; border-radius: 22px; background: rgba(255, 255, 255, .06); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; font: 900 12px/1 var(--f-ios); letter-spacing: 2px; color: #fff; }
 .pxr:where(.platform) .cs-cover svg { color: rgba(255, 255, 255, .6); }
 .pxr:where(.platform) .cs-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
 .pxr:where(.platform) .cs-sec { margin: 26px 0 14px; font: 700 16px/1 var(--f-ios); text-transform: uppercase; color: #fff; }
@@ -597,8 +598,6 @@ div.pxr.platform .scene-grid.flip { display: block; padding: 0; }
   .pxr:where(.platform) .stage.m > * { position: absolute; left: 0; right: 0; }
   .pxr:where(.platform) .stage.m .iphone { right: auto; }
   .pxr:where(.platform) .stage.m .dcard { position: absolute; }
-  div.pxr.platform .nav-menu { width: 44px; height: 44px; margin-right: -7px; }
-  div.pxr.platform .nav-logo { display: grid; place-items: center; min-width: 44px; min-height: 44px; margin-left: -3px; }
   /* hero */
   .pxr:where(.platform) .p-hero-copy { padding: 96px 16px 0; }
   .pxr:where(.platform) .p-hero .display-1 { font-size: min(11vw, 3.2rem); }

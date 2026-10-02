@@ -265,7 +265,7 @@ export default async function initPlatform(PXR, L) {
     const nx = (n, sub, chip, cls, dot) => `<div class="nx"><i class="dot ${dot}"></i><div><b>${n}</b><small>${sub}</small></div></div>`;
     el.innerHTML = `
       <aside class="cc-side">
-        <div class="cc-logo"><img src="/site/img/pxi-mark-small.svg?v=grit3" alt=""><span>${lu(LU.panel, 18, 1.8)}</span></div>
+        <div class="cc-logo"><img src="/site/img/pxi-mark-small.svg?v=grit5" alt=""><span>${lu(LU.panel, 18, 1.8)}</span></div>
         <div class="cc-nav">${nav.map((x) => x.length === 1 ? `<p class="cc-sec">${x[0]}</p>` : `<div class="cc-item ${x[2] || ''}">${hi(x[0], 18)}${x[1]}</div>`).join('')}</div>
         <div class="cc-acct"><img src="/site/img/lib/w06.jpg" alt=""><div><b>Late Checkout Co.</b><small>@latecheckout</small></div>${hi('Settings01Icon', 16)}</div>
       </aside>
@@ -356,7 +356,7 @@ export default async function initPlatform(PXR, L) {
       <div class="cs-sheet"><div class="cs-grab"></div>
         <div class="cs-head">CREATE EVENT<span class="btns"><i>${lu(LU.reset, 18)}</i><i>${lu(LU.x, 18)}</i></span></div>
         <div class="cs-view"><div class="cs-body">
-          <div class="cs-cover"><img src="/site/img/lib/w06.jpg" alt="">${hi('Image01Icon', 30)}ADD COVER IMAGE *</div>
+          <div class="cs-cover"><img src="/site/img/late-checkout-cover.jpg" alt="">${hi('Image01Icon', 30)}ADD COVER IMAGE *</div>
           <p class="cs-sec">Basics</p>
           ${inp('EVENT NAME *', 'Late Checkout', 'Name your event...')}
           ${inp('VENUE / LOCATION *', 'Seaport, Boston, MA', 'Search venue or address...')}

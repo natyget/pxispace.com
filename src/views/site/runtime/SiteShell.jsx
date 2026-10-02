@@ -14,7 +14,6 @@ import { useEffect, useRef } from 'react';
 import { preload } from 'react-dom';
 import { createLifecycle } from './lifecycle';
 import { loadScript } from './loadScript';
-import initNav from './nav';
 
 const V = '/site/vendor/';
 const PAGES = {
@@ -34,7 +33,6 @@ function start(el, page) {
   const cfg = PAGES[page];
   // html.pxr-doc switches on the page's <html>/<body> rules (see styles/base.css).
   L.addHtmlClass('pxr-doc', `pxr-${page}`, ...(cfg.htmlClass || []));
-  initNav(el, L);
   (async () => {
     for (const src of cfg.vendor) await loadScript(src);
     if (!L.alive) return;
