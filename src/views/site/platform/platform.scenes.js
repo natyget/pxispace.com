@@ -34,7 +34,16 @@ export default async function initPlatform(PXR, L) {
   const txt = (el, v) => { if (el && el.textContent !== String(v)) el.textContent = v; };
   const html = (el, h) => { if (el && el._h !== h) { el.innerHTML = h; el._h = h; } };
   const HUGE = window.HUGE || {};
-  const hi = (name, size = 24) => `<svg class="hg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none">${HUGE[name] || ''}</svg>`;
+  // the app's own Hugeicons that the page's icon set (public/site/vendor/hugeicons-p.js) does not carry: same paths
+  const HUGE_X = {
+    RefreshIcon: '<path d="M20.0092 2V5.13219C20.0092 5.42605 19.6418 5.55908 19.4537 5.33333C17.6226 3.2875 14.9617 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>',
+    Sorting01Icon: '<path d="M11.0001 8L19.0001 8.00006" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M11.0001 12H16.0001" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M11.0001 16H14.0001" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M11.0001 4H21.0001" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M5.5 21V3M5.5 21C4.79977 21 3.49153 19.0057 3 18.5M5.5 21C6.20023 21 7.50847 19.0057 8 18.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>',
+    Home05Icon: `<path d="M3 11.9896V14.5C3 17.7998 3 19.4497 4.02513 20.4749C5.05025 21.5 6.70017 21.5 10 21.5H14C17.2998 21.5 18.9497 21.5 19.9749 20.4749C21 19.4497 21 17.7998 21 14.5V11.9896C21 10.3083 21 9.46773 20.6441 8.74005C20.2882 8.01237 19.6247 7.49628 18.2976 6.46411L16.2976 4.90855C14.2331 3.30285 13.2009 2.5 12 2.5C10.7991 2.5 9.76689 3.30285 7.70242 4.90855L5.70241 6.46411C4.37533 7.49628 3.71179 8.01237 3.3559 8.74005C3 9.46773 3 10.3083 3 11.9896Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M14 15C14 13.8954 13.1046 13 12 13C10.8954 13 10 13.8954 10 15C10 16.1046 10.8954 17 12 17C13.1046 17 14 16.1046 14 15Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/>`,
+    DashboardSquare03Icon: `<path d="M9.75 3H5.75C5.05222 3 4.70333 3 4.41943 3.08612C3.78023 3.28002 3.28002 3.78023 3.08612 4.41943C3 4.70333 3 5.05222 3 5.75C3 6.44778 3 6.79667 3.08612 7.08057C3.28002 7.71977 3.78023 8.21998 4.41943 8.41388C4.70333 8.5 5.05222 8.5 5.75 8.5H9.75C10.4478 8.5 10.7967 8.5 11.0806 8.41388C11.7198 8.21998 12.22 7.71977 12.4139 7.08057C12.5 6.79667 12.5 6.44778 12.5 5.75C12.5 5.05222 12.5 4.70333 12.4139 4.41943C12.22 3.78023 11.7198 3.28002 11.0806 3.08612C10.7967 3 10.4478 3 9.75 3Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/><path d="M21 9.75V5.75C21 5.05222 21 4.70333 20.9139 4.41943C20.72 3.78023 20.2198 3.28002 19.5806 3.08612C19.2967 3 18.9478 3 18.25 3C17.5522 3 17.2033 3 16.9194 3.08612C16.2802 3.28002 15.78 3.78023 15.5861 4.41943C15.5 4.70333 15.5 5.05222 15.5 5.75V9.75C15.5 10.4478 15.5 10.7967 15.5861 11.0806C15.78 11.7198 16.2802 12.22 16.9194 12.4139C17.2033 12.5 17.5522 12.5 18.25 12.5C18.9478 12.5 19.2967 12.5 19.5806 12.4139C20.2198 12.22 20.72 11.7198 20.9139 11.0806C21 10.7967 21 10.4478 21 9.75Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/><path d="M16.9194 20.9139C17.2033 21 17.5522 21 18.25 21C18.9478 21 19.2967 21 19.5806 20.9139C20.2198 20.72 20.72 20.2198 20.9139 19.5806C21 19.2967 21 18.9478 21 18.25C21 17.5522 21 17.2033 20.9139 16.9194C20.72 16.2802 20.2198 15.78 19.5806 15.5861C19.2967 15.5 18.9478 15.5 18.25 15.5C17.5522 15.5 17.2033 15.5 16.9194 15.5861C16.2802 15.78 15.78 16.2802 15.5861 16.9194C15.5 17.2033 15.5 17.5522 15.5 18.25C15.5 18.9478 15.5 19.2967 15.5861 19.5806C15.78 20.2198 16.2802 20.72 16.9194 20.9139Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/><path d="M8.5 11.5H7C5.11438 11.5 4.17157 11.5 3.58579 12.0858C3 12.6716 3 13.6144 3 15.5V17C3 18.8856 3 19.8284 3.58579 20.4142C4.17157 21 5.11438 21 7 21H8.5C10.3856 21 11.3284 21 11.9142 20.4142C12.5 19.8284 12.5 18.8856 12.5 17V15.5C12.5 13.6144 12.5 12.6716 11.9142 12.0858C11.3284 11.5 10.3856 11.5 8.5 11.5Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/>`,
+    Passport01Icon: `<path d="M12.9503 22C15.595 22 16.9173 22 17.8667 21.2437C18.8161 20.4874 19.1189 19.1927 19.7247 16.6033L21.642 8.40697C21.9773 6.97363 22.145 6.25696 21.8406 5.7379C21.2878 4.79529 19.8789 5.00001 18.9593 5.00001" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M2 9C2 5.70017 2 4.05025 3.02513 3.02513C4.05025 2 5.70017 2 9 2H12C15.2998 2 16.9497 2 17.9749 3.02513C19 4.05025 19 5.70017 19 9V15C19 18.2998 19 19.9497 17.9749 20.9749C16.9497 22 15.2998 22 12 22H9C5.70017 22 4.05025 22 3.02513 20.9749C2 19.9497 2 18.2998 2 15V9Z" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 6C12.7091 6 14.5 7.79086 14.5 10C14.5 12.2091 12.7091 14 10.5 14M10.5 6C8.29086 6 6.5 7.79086 6.5 10C6.5 12.2091 8.29086 14 10.5 14M10.5 6C9.67157 6 9 7.79086 9 10C9 12.2091 9.67157 14 10.5 14M10.5 6C11.3284 6 12 7.79086 12 10C12 12.2091 11.3284 14 10.5 14" stroke="currentColor" stroke-width="1.5"/><path d="M7 17L14 17" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/>`,
+    ImageAdd01Icon: '<path d="M11.5085 2.9903C7.02567 2.9903 4.78428 2.9903 3.39164 4.38238C1.99902 5.77447 1.99902 8.015 1.99902 12.4961C1.99902 16.9771 1.99902 19.2176 3.39164 20.6098C4.78428 22.0018 7.02567 22.0018 11.5085 22.0018C15.9912 22.0018 18.2326 22.0018 19.6253 20.6098C21.0179 19.2176 21.0179 16.9771 21.0179 12.4961V11.9958" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><path d="M4.99902 20.9898C9.209 16.2385 13.9402 9.93727 20.999 14.6632" stroke="currentColor" stroke-width="1.5"/><path d="M17.9958 1.99829V10.0064M22.0014 5.97728L13.9902 5.99217" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>',
+  };
+  const hi = (name, size = 24) => `<svg class="hg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none">${HUGE[name] || HUGE_X[name] || ''}</svg>`;
   const lu = (paths, size = 24, sw = 2) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
   const LU = {
     x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
@@ -84,28 +93,30 @@ export default async function initPlatform(PXR, L) {
   const TS = 248, TT = 10, TB = 178, TR = 10;
   const TICKET_PATH = `M 6 ${TT} H ${TS - TR} A ${TR} ${TR} 0 0 0 ${TS + TR} ${TT} H 344 L 349 ${TT}` + sawSegs(TT, TB, 349, 344, 6, true, true) +
     ` L 344 ${TB} H ${TS + TR} A ${TR} ${TR} 0 0 0 ${TS - TR} ${TB} H 6 L 1 ${TB}` + sawSegs(TB, TT, 1, 6, 6, false, true) + ` L 6 ${TT} Z`;
-  const EDGES = [`M 6 ${TT} H ${TS - TR} A ${TR} ${TR} 0 0 0 ${TS + TR} ${TT} H 344`, `M 344 ${TB} H ${TS + TR} A ${TR} ${TR} 0 0 0 ${TS - TR} ${TB} H 6`,
-    `M 6 ${TT} L 1 ${TT}` + sawSegs(TT, TB, 1, 6, 6, true, true) + ` L 6 ${TB}`, `M 344 ${TT} L 349 ${TT}` + sawSegs(TT, TB, 349, 344, 6, true, true) + ` L 344 ${TB}`];
   const dx = +Math.sqrt(18 * 18 - 8 * 8).toFixed(2);
   const INNER = `M 14 18 H ${TS - dx} A 18 18 0 0 0 ${TS + dx} 18 H 336 V 170 H ${TS + dx} A 18 18 0 0 0 ${TS - dx} 170 H 14 V 18`;
-  const NP = '#f01fff';
-  const edge = (d, w = 1.75, op = 1) => `<path d="${d}" stroke="${NP}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
-  const ticketHTML = (ev) => `<div class="aticket">
+  // the app's flat ticket (TicketCard): one #1C1C1C shape with a 1px #2E2E2E edge, and the stitching (the dashed line
+  // just inside the edge and down the tear) in the state's thread: purple while upcoming, orange while live
+  const T_FILL = '#1C1C1C', T_EDGE = '#2E2E2E', T_UP = '#A523EF', T_LIVE = '#FF5A1F';
+  // back = tucked under the front ticket in the Studio's stack: the name and the date replace the tier and the thread button
+  const ticketHTML = (ev, live = false, back = false) => {
+    const thread = `fill="none" stroke="${live ? T_LIVE : T_UP}" stroke-width="1.6" stroke-dasharray="5 3.5" stroke-linecap="round" stroke-linejoin="round"`;
+    return `<div class="aticket${live ? ' live' : ''}${back ? ' back' : ''}">
     <svg class="at-svg" viewBox="0 0 350 188" preserveAspectRatio="xMidYMid meet">
-      <path d="${TICKET_PATH}" fill="#0e0e10"/>${EDGES.map((d) => edge(d)).join('')}
-      <path d="${INNER}" stroke="${NP}" stroke-width="1.25" fill="none" opacity=".9" stroke-dasharray="5 5"/>
-      ${EDGES.map((d) => edge(d, 3, 0.35)).join('')}
-      <line x1="${TS}" y1="${TT + TR}" x2="${TS}" y2="${TB - TR}" stroke="rgba(216,74,255,0.35)" stroke-width="1" stroke-dasharray="5 5"/>
+      <path d="${TICKET_PATH}" fill="${T_FILL}" stroke="${T_EDGE}" stroke-width="1" stroke-linejoin="round"/>
+      <path d="${INNER}" ${thread}/>
+      <line x1="${TS}" y1="${TT + TR + 8 + 3}" x2="${TS}" y2="${TB - TR - 8 - 3}" ${thread}/>
     </svg>
-    <div class="at-badge"><i></i>UPCOMING</div>
     <div class="at-main">
-      <div class="at-head"><span class="at-title">${ev.name}</span><span class="at-vis">Public</span></div>
-      <div class="at-grid"><div class="at-field"><small>Date &amp; time</small><b>${ev.date} / ${ev.time}</b></div><div class="at-field"><small>Location</small><b>${ev.where}</b></div></div>
+      <div class="at-status"><span class="at-st">${live ? 'Live now' : 'Upcoming'}</span><span class="at-vis">Public</span></div>
+      <div class="at-title">${ev.name}</div>
+      <div class="at-grid"><div class="at-field"><small>Date &amp; time</small><b>${ev.date}<br>${ev.time}</b></div><div class="at-field"><small>Location</small><b>${ev.where}</b></div></div>
       <div class="at-action"><div class="at-field"><small>Tier</small><b>${ev.tier}</b></div><span class="at-thread">Open thread</span></div>
-      <span class="at-refund">Ticket is non refundable</span>
+      ${back ? `<div class="at-back"><span class="at-title">${ev.name}</span><span class="at-vis">${ev.date}</span></div>` : ''}
     </div>
-    <div class="at-stub"><div class="at-qr-anchor"><span class="at-tap">TAP</span><div class="at-qr">${hi('QrCodeIcon', 30)}</div></div></div>
+    <div class="at-stub"><div class="at-qr-anchor"><span class="at-tap">Tap to scan</span><div class="at-qr">${hi('QrCodeIcon', 34)}</div><span class="at-note">Non-refundable</span></div></div>
   </div>`;
+  };
   const EV = { name: 'Late Checkout', date: 'OCT 2', time: '10:00 PM', where: 'SEAPORT, BOSTON', tier: 'GENERAL' };
   const AV = (n) => `/site/img/av/${n}.jpg`;
   const P = {
@@ -342,39 +353,39 @@ export default async function initPlatform(PXR, L) {
 
   /* ═════════════════════════ 01 LAUNCH — Create Event sheet ═════════════════════════ */
   const TIERS = [['Early Bird', '60', '25'], ['General', '90', '35'], ['VIP', '30', '60']];
+  // the Studio's next nights: the one just created in front, the two after it tucked under (the app's wheel)
+  const STACK = [EV, { name: 'Sunday Session', date: 'OCT 11', time: '4:00 PM', where: 'SOUTH END, BOSTON', tier: 'GENERAL' }, { name: 'Afterglow', date: 'OCT 17', time: '11:00 PM', where: 'FENWAY, BOSTON', tier: 'FREE' }];
   function launchScreen(scr) {
-    const inp = (lab, val, ph) => `<div class="cs-f"><label>${lab}</label><div class="cs-in" data-type="${val}" data-ph="${ph}"></div></div>`;
+    const plus = hi('Add01Icon', 20);
     scr.insertAdjacentHTML('beforeend', `<div class="cs">
-      <div class="studio">${sbar('9:41')}<p class="st-h">STUDIO</p><div class="st-tk">${ticketHTML(EV)}</div>
-        <div class="st-create">${lu('<path d="M5 12h14"/><path d="M12 5v14"/>', 18, 2.5)}CREATE EVENT</div>
-        <div class="st-list"><small>YOUR EVENTS</small>
-          <div class="st-row"><img src="/site/img/lib/w06.jpg" alt=""><div><b>Late Checkout</b><small>Fri, Oct 2 · 180 tickets</small></div><span class="tag live">ON SALE</span></div>
-          <div class="st-row"><img src="/site/img/lib/w36.jpg" alt=""><div><b>Sunday Session</b><small>Sun, Oct 11 · 74 tickets</small></div><span class="tag dr">UPCOMING</span></div>
-          <div class="st-share"><span>${lu(LU.share, 20)}LINK</span><span class="ig">${hi('InstagramIcon', 20)}STORY</span><span>${hi('QrCodeIcon', 20)}SCAN</span></div>
-        </div>
+      <div class="studio">${sbar('9:41')}<p class="st-h">STUDIO</p><span class="st-bell">${hi('Notification03Icon', 24)}</span>
+        <div class="st-seg"><span class="on">Event</span><span>Scrapbook</span><span>VAULT</span></div>
+        <div class="st-bar"><div class="st-create">${plus}CREATE</div><span class="st-round">${hi('Sorting01Icon', 23)}</span><span class="st-round">${hi('Search01Icon', 23)}</span></div>
+        <div class="st-stack">${[2, 1, 0].map((i) => `<div class="st-t t${i + 1}">${ticketHTML(STACK[i], false, i > 0)}</div>`).join('')}</div>
+        <div class="tabbar"><span>${hi('Home05Icon')}</span><span>${hi('Camera02Icon')}</span><span class="on">${hi('DashboardSquare03Icon')}</span><span>${hi('Passport01Icon')}</span></div>
       </div>
       <div class="cs-sheet"><div class="cs-grab"></div>
-        <div class="cs-head">CREATE EVENT<span class="btns"><i>${lu(LU.reset, 18)}</i><i>${lu(LU.x, 18)}</i></span></div>
+        <div class="cs-head">Create event<span class="btns"><i>${hi('RefreshIcon', 20)}</i><i>${hi('Cancel01Icon', 20)}</i></span></div>
         <div class="cs-view"><div class="cs-body">
-          <div class="cs-cover"><img src="/site/img/late-checkout-cover.jpg" alt="">${hi('Image01Icon', 30)}ADD COVER IMAGE *</div>
-          <p class="cs-sec">Basics</p>
-          ${inp('EVENT NAME *', 'Late Checkout', 'Name your event...')}
-          ${inp('VENUE / LOCATION *', 'Seaport, Boston, MA', 'Search venue or address...')}
-          <div class="cs-f cs-lineup"><label>LINE UP &amp; STAFF</label>
+          <div class="cs-name"><div class="cs-in" data-type="Late Checkout" data-ph="Event name"></div></div>
+          <div class="cs-cover"><img src="/site/img/posters/late-checkout.jpg" alt="">${hi('ImageAdd01Icon', 34)}<b>ADD COVER</b><small>Shown in Discover and on every ticket</small></div>
+          <div class="cs-loc"><div class="cs-in" data-type="Seaport, Boston, MA" data-ph="Location"></div></div>
+          <div class="cs-pills cs-config"><div class="cs-in" data-type="Fri, Oct 2" data-ph="Date"></div><div class="cs-in" data-type="10:00 PM" data-ph="Time"></div></div>
+          <div class="cs-f cs-lineup"><label>LINE UP / STAFF</label>
             <div class="cs-lu"><span class="r">DJ</span><span class="u">@kwame.selects</span></div>
-            <div class="cs-lu"><span class="r">Co-host</span><span class="u">@ama.k</span><span class="staff">STAFF</span></div>
-            <div class="cs-lu"><span class="r">Bouncer</span><span class="u">@dre.door</span><span class="staff">STAFF</span></div>
+            <div class="cs-lu"><span class="r">Co-host</span><span class="u">@ama.k</span></div>
+            <div class="cs-lu"><span class="r">Bouncer</span><span class="u">@dre.door</span></div>
+            <div class="cs-addbtn">${plus}ADD</div>
           </div>
-          <p class="cs-sec cs-config">Configuration</p>
-          <div class="cs-2">${inp('START DATE *', 'Fri, Oct 2', 'Select date')}${inp('TIME *', '10:00 PM', 'Time')}</div>
-          <div class="cs-tg"><div><b>PUBLIC EVENT</b><small>Anyone can discover this event.</small></div><span class="sw"></span></div>
-          <div class="cs-tg"><div><b>PAID TICKET</b><small>Requires verified vendor / Stripe.</small></div><span class="sw"></span></div>
-          <div class="cs-f cs-tiers"><label>TICKET TIERS</label>
-            ${TIERS.map(([n, c, p], i) => `<div class="cs-tier"><small>TIER ${i + 1}</small><div class="row"><div><label>TIER NAME</label><div class="cs-in" data-type="${n}" data-ph="e.g. VIP"></div></div><div><label>CAPACITY</label><div class="cs-in" data-type="${c}" data-ph="Unlimited"></div></div><div><label>PRICE (USD)</label><div class="cs-in" data-type="${p}" data-ph="0"></div></div></div></div>`).join('')}
-            <div class="cs-add">+ ADD TIER</div>
+          <div class="cs-f cs-descf"><label>DESCRIPTION</label><div class="cs-desc">A rooftop night above the Seaport. Doors at 10, last call at 2.</div></div>
+          <div class="cs-tg first"><div><b>PUBLIC EVENT</b><small class="cap">Invite only</small></div><span class="sw"></span></div>
+          <div class="cs-tg"><div><b>PAID EVENT</b><small>Needs a verified vendor</small></div><span class="sw"></span></div>
+          <div class="cs-tiers"><b>TICKET TIERS</b><small>VVIP, VIP, general admission and more.</small>
+            ${TIERS.map(([n, c, p]) => `<div class="cs-tier"><div class="row"><div><label>TIER</label><div class="cs-in" data-type="${n}" data-ph="Name"></div></div><div><label>CAPACITY</label><div class="cs-in" data-type="${c}" data-ph="Unlimited"></div></div><div><label>PRICE</label><div class="cs-in usd" data-type="${p}" data-ph="0"></div></div></div></div>`).join('')}
+            <div class="cs-addbtn">${plus}ADD TIER</div>
           </div>
-          <div class="cs-f cs-rec"><label>RECURRENCE</label><div class="cs-seg"><span>One-off</span><span>Weekly</span><span>Biweekly</span><span>Monthly</span></div></div>
-          <div class="cs-f"><label>CUSTOM PASSPORT STAMP (OPTIONAL)</label><div class="cs-stamp"><span class="th">${hi('Image01Icon', 22)}<span class="mini"></span></span><p>Shown on attendees' passports for this series.</p><span class="add">ADD STAMP</span></div></div>
+          <div class="cs-f cs-rec"><label>REPEAT</label><div class="cs-seg"><span>One-off</span><span>Weekly</span><span>Biweekly</span><span>Monthly</span></div></div>
+          <div class="cs-f"><label>CUSTOM PASSPORT STAMP (OPTIONAL)</label><div class="cs-stamp"><span class="th">${hi('ImageAdd01Icon', 22)}<i>ADD STAMP</i><span class="mini"></span></span><p>Shown on attendees' passports for this series.</p></div></div>
         </div></div>
         <div class="cs-foot"><span class="cancel">Cancel</span><span class="go">CREATE EVENT</span></div>
       </div></div>`);
@@ -384,6 +395,7 @@ export default async function initPlatform(PXR, L) {
     const focus = t > a && t < b + Math.min(0.3, (b - a) * 0.6);
     html(el, n ? esc(s.slice(0, n)) + (focus ? '<i class="caret"></i>' : '') : (focus ? '<i class="caret"></i>' : '') + `<span class="ph">${el.dataset.ph}</span>`);
     el.classList.toggle('focus', focus);
+    el.classList.toggle('filled', n > 0);
   }
   let PCSS = null;
   async function renderStamp(host, size) {
@@ -423,7 +435,7 @@ export default async function initPlatform(PXR, L) {
       RELAY.push(() => lay(mLayout(sec, rm)));
     }
     const view = $('.cs-view', scr), body = $('.cs-body', scr), ins = $$('.cs-in', scr), sw = $$('.sw', scr), rec = $$('.cs-seg span', scr);
-    const lineup = $$('.cs-lu', scr), tiers = $$('.cs-tier', scr), go = $('.cs-foot .go', scr);
+    const lineup = $$('.cs-lu', scr), tiers = $$('.cs-tier', scr), go = $('.cs-foot .go', scr), pubCap = $('.cs-tg .cap', scr), tiersCard = $('.cs-tiers', scr);
     const off = (sel) => { const e = $(sel, scr); return e ? e.offsetTop : 0; };
     const scrollTo = (y) => -clamp(y - 14, 0, body.offsetHeight - view.offsetHeight);
     const TYPE = [[0.8, 1.9], [2.0, 2.7], [3.9, 4.25], [4.3, 4.55], [5.2, 5.35], [5.37, 5.45], [5.47, 5.55], [5.6, 5.75], [5.77, 5.85], [5.87, 5.95], [6.0, 6.15], [6.17, 6.25], [6.27, 6.35]];
@@ -450,6 +462,7 @@ export default async function initPlatform(PXR, L) {
       const t = tl.time();
       ins.forEach((el, i) => typeInto(el, t, TYPE[i][0], TYPE[i][1]));
       sw[0].classList.toggle('on', t > 4.55); sw[1].classList.toggle('on', t > 4.75);
+      txt(pubCap, t > 4.55 ? 'Listed in Discover' : 'Invite only'); tiersCard.classList.toggle('on', t > 4.75);
       rec.forEach((s, i) => s.classList.toggle('on', t > 7.05 ? i === 3 : i === 0));
       txt(go, t > 7.85 ? 'CREATING...' : 'CREATE EVENT');
     });

@@ -37,7 +37,12 @@ export default async function initHome(PXR, L) {
   const vh = () => window.innerHeight;
   const rand = (a, b) => a + Math.random() * (b - a);
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  const hi = (name, size = 24, style = '') => `<svg class="hg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" style="${style}">${(window.HUGE || {})[name] || ''}</svg>`;
+  // the app's own Hugeicons that the page's icon set (public/site/vendor/hugeicons.js) does not carry: same paths
+  const HUGE_X = {
+    Mic01Icon: '<path d="M17 7V11C17 13.7614 14.7614 16 12 16C9.23858 16 7 13.7614 7 11V7C7 4.23858 9.23858 2 12 2C14.7614 2 17 4.23858 17 7Z" stroke="currentColor" stroke-width="1.5"/><path d="M17 7H14M17 11H14" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><path d="M20 11C20 15.4183 16.4183 19 12 19M12 19C7.58172 19 4 15.4183 4 11M12 19V22M12 22H15M12 22H9" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/>',
+    Add01Icon: '<path d="M12.001 5.00003V19.002" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M19.002 12.002L4.99998 12.002" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>',
+  };
+  const hi = (name, size = 24, style = '') => `<svg class="hg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" style="${style}">${(window.HUGE || {})[name] || HUGE_X[name] || ''}</svg>`;
   $$('svg.huge[data-icon]').forEach((s) => { s.setAttribute('fill', 'none'); s.innerHTML = (window.HUGE || {})[s.dataset.icon] || ''; });
 
   /* ───────────────────────── event (one realistic night) ───────────────────────── */
@@ -123,41 +128,41 @@ export default async function initHome(PXR, L) {
   }
   const TS = 248, TT = 10, TB = 178, TR = 10;
   const dx = +Math.sqrt(18 * 18 - 8 * 8).toFixed(2);
-  const NP = '#f01fff';
-  const edge = (d, w = 1.75, op = 1) => `<path d="${d}" stroke="${NP}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
+  // the app's flat ticket (TicketCard): one #1C1C1C shape with a 1px #2E2E2E edge, and the stitching
+  // (the dashed line just inside the edge and down the tear) in the state's thread: purple while upcoming, orange while live
+  const T_FILL = '#1C1C1C', T_EDGE = '#2E2E2E', T_UP = '#A523EF', T_LIVE = '#FF5A1F';
   // TD = width of an optional left panel that carries the event's artwork (the doors scene); the body and stub are the app's, unchanged
   const shapeOf = (TD) => {
     const L0 = 6 - TD, L1 = 1 - TD;
     return {
       path: `M ${L0} ${TT} H ${TS - TR} A ${TR} ${TR} 0 0 0 ${TS + TR} ${TT} H 344 L 349 ${TT}` + sawSegs(TT, TB, 349, 344, 6, true, true) +
         ` L 344 ${TB} H ${TS + TR} A ${TR} ${TR} 0 0 0 ${TS - TR} ${TB} H ${L0} L ${L1} ${TB}` + sawSegs(TB, TT, L1, L0, 6, false, true) + ` L ${L0} ${TT} Z`,
-      top: `M ${L0} ${TT} H ${TS - TR} A ${TR} ${TR} 0 0 0 ${TS + TR} ${TT} H 344`,
-      bot: `M 344 ${TB} H ${TS + TR} A ${TR} ${TR} 0 0 0 ${TS - TR} ${TB} H ${L0}`,
-      left: `M ${L0} ${TT} L ${L1} ${TT}` + sawSegs(TT, TB, L1, L0, 6, true, true) + ` L ${L0} ${TB}`,
-      right: `M 344 ${TT} L 349 ${TT}` + sawSegs(TT, TB, 349, 344, 6, true, true) + ` L 344 ${TB}`,
       inner: `M ${14 - TD} 18 H ${TS - dx} A 18 18 0 0 0 ${TS + dx} 18 H 336 V 170 H ${TS + dx} A 18 18 0 0 0 ${TS - dx} 170 H ${14 - TD} V 18`,
     };
   };
   const TD = 72; // the wide ticket's artwork panel
   const SHAPE = { 0: shapeOf(0), [TD]: shapeOf(TD) };
-  const ticketHTML = (withExtras, panel = 0) => { const S = SHAPE[panel]; const inner = (w = 1.25, op = 0.9) => `<path d="${S.inner}" stroke="${NP}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${op}" stroke-dasharray="5 5"/>`; return `<div class="aticket${panel ? ' wide' : ''}">
+  // live = the ticket of a night that is on right now (orange stitching, LIVE NOW)
+  const ticketHTML = (withExtras, panel = 0, live = false) => {
+    const S = SHAPE[panel];
+    const thread = `fill="none" stroke="${live ? T_LIVE : T_UP}" stroke-width="1.6" stroke-dasharray="5 3.5" stroke-linecap="round" stroke-linejoin="round"`;
+    return `<div class="aticket${panel ? ' wide' : ''}${live ? ' live' : ''}">
     <svg class="at-svg" viewBox="${-panel} 0 ${350 + panel} 188" preserveAspectRatio="xMidYMid meet">
-      <path d="${S.path}" fill="#0e0e10"/>
-      ${edge(S.top)}${edge(S.bot)}${edge(S.left)}${edge(S.right)}${inner()}
-      ${edge(S.top, 3, 0.35)}${edge(S.bot, 3, 0.35)}${edge(S.left, 3, 0.35)}${edge(S.right, 3, 0.35)}${inner(2, 0.28)}
-      <line x1="${TS}" y1="${TT + TR}" x2="${TS}" y2="${TB - TR}" stroke="rgba(216,74,255,0.35)" stroke-width="1" stroke-dasharray="5 5"/>
+      <path d="${S.path}" fill="${T_FILL}" stroke="${T_EDGE}" stroke-width="1" stroke-linejoin="round"/>
+      <path d="${S.inner}" ${thread}/>
+      <line x1="${TS}" y1="${TT + TR + 8 + 3}" x2="${TS}" y2="${TB - TR - 8 - 3}" ${thread}/>
     </svg>
-    <div class="at-badge"><i></i>UPCOMING</div>
     ${panel ? '<div class="at-art"></div>' : ''}
     <div class="at-main">
-      <div class="at-head"><span class="at-title">${EV.name}</span><span class="at-vis">Public</span></div>
-      <div class="at-grid"><div class="at-field"><small>Date &amp; time</small><b>${EV.date} / ${EV.time}</b></div><div class="at-field"><small>Location</small><b>${EV.where}</b></div></div>
+      <div class="at-status"><span class="at-st">${live ? 'Live now' : 'Upcoming'}</span><span class="at-vis">Public</span></div>
+      <div class="at-title">${EV.name}</div>
+      <div class="at-grid"><div class="at-field"><small>Date &amp; time</small><b>${EV.date}<br>${EV.time}</b></div><div class="at-field"><small>Location</small><b>${EV.where}</b></div></div>
       <div class="at-action"><div class="at-field"><small>Tier</small><b>${EV.tier}</b></div><span class="at-thread">Open thread</span></div>
-      <span class="at-refund">Ticket is non refundable</span>
     </div>
-    <div class="at-stub"><div class="at-qr-anchor"><span class="at-tap">TAP</span><div class="at-qr">${hi('QrCodeIcon', 30)}${withExtras ? '<span class="scanline"></span>' : ''}</div></div></div>
+    <div class="at-stub"><div class="at-qr-anchor"><span class="at-tap">Tap to scan</span><div class="at-qr">${hi('QrCodeIcon', 34)}${withExtras ? '<span class="scanline"></span>' : ''}</div><span class="at-note">Non-refundable</span></div></div>
     ${withExtras ? '<div class="admit-wrap"><div class="admit">Admitted</div></div>' : ''}
-  </div>`; };
+  </div>`;
+  };
 
   /* ───────────────────────── avatars ───────────────────────── */
   const AV = (n) => `/site/img/av/${n}.jpg`;
@@ -346,7 +351,7 @@ export default async function initHome(PXR, L) {
     const c0 = scrToStage(phone, (402 - CW) / 2, 192);
     const W0 = CW * k;
     const pair = $('.ticket-pair', sec), feed = $('.feed', sec);
-    const TICK_Y = 70, TK = 490 / (350 + TD), ART = { x: 10, y: 50, w: 52, h: 69 }; // the artwork slot, in ticket units (the ticket is drawn at TK)
+    const TICK_Y = 70, TK = 490 / (350 + TD), ART = { x: 27, y: 59, w: 52, h: 69 }; // the artwork slot, in ticket units (the ticket is drawn at TK): inside the stitching, centred in the panel
     const slot = { x: pair.offsetLeft + ART.x * TK, y: feed.offsetTop + TICK_Y + ART.y * TK, w: ART.w * TK };
     const sleeveOf = (cls) => `<div class="dsc-sleeve dsc-sleeve-stage dd-mini ${cls}">${$('.dsc-cover', sLate).outerHTML}</div>`;
     $$('.at-art', sec).forEach((el) => { el.innerHTML = sleeveOf(''); });
@@ -395,10 +400,10 @@ export default async function initHome(PXR, L) {
     tl.set(sLate, { visibility: 'hidden' }, 4.35)
       .set(fly, { opacity: 1 }, 4.35)
       .to(fly, { scale: 1.07, y: c0.y - 14, rotation: -2.5, duration: 0.3, ease: 'power2.out' }, 4.35)
-      .to(flyCover, { boxShadow: '0 30px 60px rgba(0,0,0,.6), 0 0 36px rgba(216,74,255,.45)', duration: 0.3, ease: 'power2.out' }, 4.35)
+      .to(flyCover, { boxShadow: '0 30px 60px rgba(0,0,0,.6)', duration: 0.3, ease: 'power2.out' }, 4.35)
       .to(phone, { opacity: 0, scale: 0.94, duration: 0.8, ease: 'power1.inOut' }, 4.8)
       .to(fly, { x: slot.x, y: slot.y, width: slot.w, scale: 1, rotation: 0, duration: 0.95, ease: 'power3.inOut' }, 4.65)
-      .to(flyCover, { boxShadow: '0 2px 8px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.12)', duration: 0.95 }, 4.65)
+      .to(flyCover, { boxShadow: '0 0 0 0 rgba(0,0,0,0)', duration: 0.95 }, 4.65)
       .to(pair, { opacity: 1, scale: 1, duration: 0.5, ease: 'power1.out' }, 4.85)
       .to(pair, { clipPath: 'inset(-2000px -2000px -2000px -2000px)', duration: 1.0, ease: 'power2.inOut' }, 4.85)
       .set(fly, { opacity: 0 }, 5.62)
@@ -412,7 +417,7 @@ export default async function initHome(PXR, L) {
       // scanned at the door (the stub copy carries the visible QR)
       .fromTo(q('.t-stub .scanline'), { top: '0%', opacity: 0 }, { top: '100%', opacity: 1, duration: 1.1, ease: 'none' }, 4.3 + E)
       .to(q('.t-stub .scanline'), { opacity: 0, duration: 0.2 }, 5.4 + E)
-      .to(q('.t-stub .at-qr'), { boxShadow: '0 0 26px rgba(0,240,255,.95)', borderColor: '#00F0FF', duration: 0.4 }, 5.1 + E)
+      .to(q('.t-stub .at-qr'), { backgroundColor: '#00FF88', duration: 0.4 }, 5.1 + E)
       .fromTo(q('.t-body .admit'), { scale: 2.1, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'power4.in' }, 5.6 + E)
       .to(pair, { keyframes: { x: [0, -5, 4, -2, 0] }, duration: 0.3, ease: 'none' }, 5.9 + E)
       // tear along the perforation
@@ -538,14 +543,14 @@ export default async function initHome(PXR, L) {
       { img: 't06', poster: 'lu', side: 'r', rx: [['🙌', 8], ['❤️', 5]] },
       { img: 't07', poster: 'kev', side: 'l', last: ['ama', 'take me back 🥺'], rx: [['❤️', 31, true], ['🥹', 12]] },
     ];
-    const card = (c) => `<div class="tcard"><div class="frame" style="height:${frameH(c.img)}px"><img src="/site/img/lib/${c.img}.jpg" alt=""><i class="gloss"></i><i class="topsh"></i>
+    const card = (c) => `<div class="tcard"><div class="frame" style="height:${frameH(c.img)}px"><img src="/site/img/lib/${c.img}.jpg" alt=""><i class="topsh"></i>
       <span class="poster ${c.side}"><img src="${AV(PEOPLE[c.poster])}" alt="">${c.poster}</span>
-      ${c.last ? `<div class="lastc"><img src="${AV(PEOPLE[c.last[0]])}" alt=""><div><small>${c.last[0]}</small><p>${c.last[1]}</p></div></div>` : ''}</div>
-      <div class="rxbar"><div class="chips">${c.rx.map(([e, n, on]) => `<span class="chip${on ? ' on' : ''}"><em>${e}</em>${n}</span>`).join('')}</div><div class="dock"><span>${hi('AddCircleIcon', 26)}</span><span>${hi('LinkForwardIcon', 26)}</span></div></div></div>`;
+      ${c.last ? `<div class="lastc"><img src="${AV(PEOPLE[c.last[0]])}" alt=""><div><small>${c.last[0]}</small><p>${c.last[1]}</p></div><span class="lc-more">${hi('MoreHorizontalIcon', 18)}</span></div>` : ''}</div>
+      <div class="rxbar"><div class="chips">${c.rx.map(([e, n, on]) => `<span class="chip${on ? ' on' : ''}"><em>${e}</em>${n}</span>`).join('')}</div><div class="dock"><span class="add">${hi('Add01Icon', 20)}</span><span>${hi('LinkForwardIcon', 26)}</span></div></div></div>`;
     const msg = (m) => `<div class="tmsg"><img src="${AV(PEOPLE[m.who])}" alt=""><div class="bub"><div class="meta"><b>${m.who}</b><span>${m.time}</span></div><p>${m.text}</p></div></div>`;
     scr.insertAdjacentHTML('afterbegin', `<div class="th-feed"><div class="th-list">${OLD.map((it) => (it.type === 'msg' ? msg(it) : card(it))).join('')}${ARR.map(card).join('')}</div></div>
       <div class="th-top">${sbar('11:52')}<div class="th-head"><span class="back"><svg viewBox="0 0 24 24" width="28" height="28"><path d="m15 18-6-6 6-6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="ttl">${EV.name}</span><span class="more">${hi('MoreHorizontalIcon', 26)}</span></div><div class="th-toggle"><span class="on">Thread</span><span>Gallery</span></div></div>
-      <div class="chatbar"><span class="gif">GIF</span><span class="inp">Type a message...</span><span class="send">${hi('SentIcon', 20)}</span></div><i class="home-ind"></i>`);
+      <div class="chatbar"><span class="gif">GIF</span><span class="mic">${hi('Mic01Icon', 19)}</span><span class="inp">Type a message...</span><span class="send">${hi('SentIcon', 20)}</span></div><i class="home-ind"></i>`);
     const list = $('.th-list', scr), rows = Array.from(list.children), FEED_H = 612, PAD = 14;
     const bottomOf = (el) => el.offsetTop + el.offsetHeight;
     const yFor = (lastIdx) => FEED_H - PAD - bottomOf(rows[lastIdx]);
