@@ -442,7 +442,8 @@ function CampaignsPageContent() {
                                 <div className="min-w-0">
                                     <p className="truncate text-sm font-bold text-white">{c.name}</p>
                                     <p className="truncate text-xs text-zinc-500">
-                                        {c.subject} · {c.recipientCount} recipients · {formatUsd(c.priceCents)}
+                                        {/* A text has no subject line, so the row would start with a stray separator. */}
+                                        {c.channel === 'SMS' ? 'Text message' : c.subject} · {c.recipientCount} {c.recipientCount === 1 ? 'recipient' : 'recipients'} · {formatUsd(c.priceCents)}
                                         {c.creditAppliedCents > 0 ? ` (${formatUsd(c.creditAppliedCents)} credits)` : ''} · {formatDate(c.sentAt || c.createdAt)}
                                     </p>
                                 </div>
