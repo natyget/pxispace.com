@@ -4,8 +4,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Calendar01Icon, Ticket01Icon } from '@hugeicons/core-free-icons';
 import EventsHero from './EventsHero';
 import EventsFilters from './EventsFilters';
 import EventsGrid from './EventsGrid';
@@ -29,8 +27,14 @@ function toEventDetailsModalEvent(event) {
     title: event.title,
     image: event.image,
     badges: event.status ? [{ label: event.status, tone: 'purple' }] : [],
+    visibility: event.visibility ?? undefined,
+    startDate: event.startDate ?? undefined,
+    endDate: event.endDate ?? undefined,
     schedule: event.date,
     location: event.location,
+    latitude: event.latitude ?? undefined,
+    longitude: event.longitude ?? undefined,
+    shareUrl: `/album/${event.albumId || event.id}`,
     description: event.description,
     host: event.organizer
       ? { name: event.organizer.name, username: event.organizer.username, avatarUrl: event.organizer.avatarUrl }
@@ -40,8 +44,11 @@ function toEventDetailsModalEvent(event) {
   };
 }
 
+/** The app's footer wording: "Join", or "Get ticket $10.00" (no dot before the price). */
 function ticketCtaLabel(event) {
-  return event.ticketType === 'PAID' || (event.price && event.price !== 'Free') ? 'Get Ticket' : 'RSVP';
+  const paid = event.ticketType === 'PAID' || (event.price && event.price !== 'Free');
+  if (!paid) return 'Join';
+  return event.price && event.price !== 'Free' ? `Get ticket ${event.price}` : 'Get ticket';
 }
 
 const DEFAULT_IMG =
@@ -91,6 +98,9 @@ const normalizeApiEvent = (e) => {
           : String(e.visibility || 'Event'),
     price,
     description: typeof e.description === 'string' ? e.description : '',
+    visibility: e.visibility ?? null,
+    startDate: e.startDate ?? null,
+    endDate: e.endDate ?? null,
     latitude: e.latitude ?? null,
     longitude: e.longitude ?? null,
     vendorHint,
@@ -388,7 +398,6 @@ const Events = ({ detailBasePath = '/events' }) => {
             previewEvent
               ? {
                   label: ticketCtaLabel(previewEvent),
-                  icon: <HugeiconsIcon icon={Ticket01Icon} size={16} />,
                   onClick: () => {
                     setPreviewEvent(null);
                     router.push(`${String(detailBasePath).replace(/\/$/, '')}/${previewEvent.id}`);
@@ -400,7 +409,6 @@ const Events = ({ detailBasePath = '/events' }) => {
             previewEvent
               ? {
                   label: 'Open Album',
-                  icon: <HugeiconsIcon icon={Calendar01Icon} size={16} />,
                   href: `/album/${previewEvent.albumId || previewEvent.id}`,
                   onClick: () => setPreviewEvent(null),
                 }

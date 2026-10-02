@@ -702,7 +702,11 @@ export default async function initHome(PXR, L) {
   const PCSS = await (await fetch('/site/vendor/pxi-passport.css')).text();
   if (!L.alive) return;
   const shadowMount = (host) => { const root = host.attachShadow({ mode: 'open' }); root.innerHTML = `<style>${PCSS}</style><div class="m"></div>`; return { root, mount: $('.m', root) }; };
-  const MAYA = { id: 'MAYA426L', name: 'Maya Laurent', username: 'maya.lrnt', city: 'Brooklyn', bio: 'Rooftops, film cameras, front row.', instagramHandle: 'maya.lrnt', age: 21, isVendor: true, isPassportIssued: true, odysseyXp: 6800, avatarUrl: '/site/img/av/maya.jpg', createdAt: '2024-09-14T00:00:00.000Z' };
+  // The card's avatar resolver (vendor/pxi-react.js) only accepts http(s)/data URLs and the app's own
+  // /images/ and /landing/ paths; with no media base compiled into the bundle, a relative
+  // '/site/img/...' path resolves to null and the card falls back to the grey silhouette. So hand it
+  // an absolute URL on this origin.
+  const MAYA = { id: 'MAYA426L', name: 'Maya Laurent', username: 'maya.lrnt', city: 'Brooklyn', bio: 'Rooftops, film cameras, front row.', instagramHandle: 'maya.lrnt', age: 21, isVendor: true, isPassportIssued: true, odysseyXp: 6800, avatarUrl: `${window.location.origin}/site/img/av/maya.jpg`, createdAt: '2024-09-14T00:00:00.000Z' };
   const STAMP_EVENTS = [
     { id: 'st-1', name: 'AFRODISIAC', location: 'Boston, MA', startDate: '2026-05-16', ticketPriceUsd: 30, albumRole: 'MEMBER' },
     { id: 'st-2', name: 'MAISON BLANCHE', location: 'Manhattan, NY', startDate: '2026-02-21', ticketPriceUsd: 140, albumRole: 'OWNER' },

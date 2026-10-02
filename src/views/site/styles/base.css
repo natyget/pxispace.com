@@ -650,11 +650,16 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .replay { display: block; margin: 0 auto 48px; font: 700 11px/1 var(--f-body); letter-spacing: .24em; text-transform: uppercase; color: #71717a; padding: 12px 18px; border-radius: var(--r-pill); transition: color .2s, background .2s; }
 .pxr .replay:hover { color: #fff; background: rgba(255, 255, 255, .05); }
 .pxr .foot-grid { display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 48px 32px; padding-top: 56px; border-top: 1px solid rgba(255, 255, 255, .08); }
+/* wide enough that the two store buttons sit side by side in the brand column; narrower, they stack */
+@media (min-width: 1180px) { .pxr .foot-grid { grid-template-columns: 1.8fr repeat(4, 1fr); } }
 .pxr .foot-brand img { width: 40px; height: 40px; object-fit: contain; }
 .pxr .foot-brand p { margin-top: 0; max-width: 18rem; font: 400 14px/1.6 var(--f-body); color: #71717a; }
+.pxr .appstores { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 22px; }
 .pxr .appstore { display: inline-flex; align-items: center; gap: 10px; margin-top: 22px; padding: 10px 18px; border-radius: 999px; background: rgba(255, 255, 255, .06); transition: background .2s; }
+.pxr .appstores .appstore { margin-top: 0; }
 .pxr .appstore:hover { background: rgba(255, 255, 255, .12); }
 .pxr .appstore img { width: 18px; height: 22px; }
+.pxr .appstore svg { width: 19px; height: 22px; flex: none; }
 .pxr .appstore span { display: flex; flex-direction: column; font: 700 13px/1 var(--f-body); color: #fff; }
 .pxr .appstore small { font: 700 8px/1 var(--f-body); letter-spacing: .18em; text-transform: uppercase; color: rgba(255, 255, 255, .7); margin-bottom: 3px; }
 .pxr .foot-col h4 { margin-bottom: 18px; font: 700 11px/1 var(--f-body); letter-spacing: .2em; text-transform: uppercase; color: #fff; }

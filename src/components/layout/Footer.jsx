@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { InstagramIcon } from '@hugeicons/core-free-icons';
 import { FaTiktok, FaXTwitter, FaYoutube } from 'react-icons/fa6';
-import AppStoreCtaPair from '@/components/links/AppStoreCtaPair';
+import GooglePlayMark from '@/components/links/GooglePlayMark';
+import { PXI_IOS_DOWNLOAD_HREF, PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
+import { APPLE_MARK } from '@/lib/landingAssets';
 import { openConsentPreferences } from '@/lib/consent';
 import { SOCIAL_PROFILES } from '@/lib/seo/social';
 import { allCities } from '@/lib/seo/cities';
@@ -47,6 +49,47 @@ const CONNECT_LINKS = [
   { label: 'Legal', href: '/legal' },
 ];
 
+// Same buttons as the redesign pages' footer: flat pills at their natural width, side by side when
+// the column is wide enough and stacked when it is not (the text never wraps inside a button).
+const storeBtn =
+  'inline-flex items-center gap-2.5 whitespace-nowrap rounded-full bg-white/[0.06] px-[18px] py-2.5 transition-colors hover:bg-white/[0.12]';
+const storeSmall = 'mb-[3px] block text-[8px] font-bold uppercase leading-none tracking-[0.18em] text-white/70';
+const storeBig = 'block text-[13px] font-bold leading-none text-white';
+
+/** Both stores, always: the footer is where a desktop visitor holding the other kind of phone looks. */
+function StoreButtons() {
+  return (
+    <div className="flex flex-wrap items-center gap-2.5">
+      <a
+        href={PXI_IOS_DOWNLOAD_HREF}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Download on App Store"
+        className={storeBtn}
+      >
+        <img src={APPLE_MARK} alt="" aria-hidden className="h-[22px] w-[18px] shrink-0 object-contain" />
+        <span>
+          <span className={storeSmall}>Download on</span>
+          <span className={storeBig}>App Store</span>
+        </span>
+      </a>
+      <a
+        href={PXI_PLAY_STORE_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Get it on Google Play"
+        className={storeBtn}
+      >
+        <GooglePlayMark className="shrink-0" />
+        <span>
+          <span className={storeSmall}>Get it on</span>
+          <span className={storeBig}>Google Play</span>
+        </span>
+      </a>
+    </div>
+  );
+}
+
 const Footer = () => {
   return (
     <footer className="relative overflow-hidden bg-black pt-20 pb-12">
@@ -60,13 +103,13 @@ const Footer = () => {
       />
 
       <div className="relative z-10 mx-auto max-w-[1200px] px-6">
-        <div className="grid grid-cols-2 gap-x-8 gap-y-12 border-t border-white/[0.08] pt-14 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-12 border-t border-white/[0.08] pt-14 md:grid-cols-5 xl:grid-cols-[1.8fr_repeat(4,minmax(0,1fr))]">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <p className="mb-6 max-w-xs text-sm leading-relaxed text-zinc-500">
               Tickets, one shared camera roll, and the morning-after scrapbook. Never lose the night.
             </p>
-            <AppStoreCtaPair variant="row" className="max-w-[280px]" />
+            <StoreButtons />
           </div>
 
           {/* Explore */}
