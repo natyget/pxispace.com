@@ -32,7 +32,7 @@ const STATUS_FILTERS = [
 const statusStyle = {
     OPEN: 'bg-amber-500/10 text-amber-300',
     IN_PROGRESS: 'bg-sky-500/10 text-sky-300',
-    WAITING_ON_USER: 'bg-violet-500/10 text-violet-300',
+    WAITING_ON_USER: 'bg-pxi-purple/15 text-white',
     RESOLVED: 'bg-emerald-500/10 text-emerald-300',
     CLOSED: 'bg-white/[0.055] text-white/55',
 };
@@ -126,7 +126,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                 <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-full bg-white/[0.065] px-4 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
+                    className="rounded-full bg-pxi-field px-4 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
                 >
                     Close
                 </button>
@@ -144,7 +144,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                             value={ticket.status}
                             disabled={busy}
                             onChange={(e) => act(() => updateSupportTicket(ticketId, { status: e.target.value }))}
-                            className="rounded-full bg-white/[0.065] px-3 py-1.5 text-[12px] text-white/80 outline-none"
+                            className="rounded-full bg-pxi-field px-3 py-1.5 text-[12px] text-white/80 outline-none"
                         >
                             {STATUS_FILTERS.filter((s) => s.value).map((s) => (
                                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -154,7 +154,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                             value={ticket.priority}
                             disabled={busy}
                             onChange={(e) => act(() => updateSupportTicket(ticketId, { priority: e.target.value }))}
-                            className="rounded-full bg-white/[0.065] px-3 py-1.5 text-[12px] text-white/80 outline-none"
+                            className="rounded-full bg-pxi-field px-3 py-1.5 text-[12px] text-white/80 outline-none"
                         >
                             {['LOW', 'NORMAL', 'HIGH', 'URGENT'].map((p) => (
                                 <option key={p} value={p}>{p}</option>
@@ -171,7 +171,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                         {(ticket.messages || []).map((m) => (
                             <div
                                 key={m.id}
-                                className={`rounded-xl px-4 py-3 ${m.isStaff ? 'ml-8 bg-white/[0.075]' : 'mr-8 bg-white/[0.035]'}`}
+                                className={`rounded-xl px-4 py-3 ${m.isStaff ? 'ml-8 bg-white/[0.075]' : 'mr-8 bg-pxi-field'}`}
                             >
                                 <div className="flex items-center justify-between gap-3 mb-1.5">
                                     <span className="text-[11px] font-bold tracking-[0.02em] text-white/45">
@@ -190,14 +190,14 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                             onChange={(e) => setReply(e.target.value)}
                             rows={3}
                             placeholder="Reply as PXI staff..."
-                            className="w-full rounded-xl bg-white/[0.055] px-4 py-3 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075] resize-y"
+                            className="w-full rounded-2xl bg-pxi-field px-4 py-3 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075] resize-y"
                         />
                         <div className="flex justify-end">
                             <button
                                 type="button"
                                 onClick={sendReply}
                                 disabled={busy || !reply.trim()}
-                                className="rounded-full bg-white text-black px-5 py-2 text-[13px] font-bold disabled:opacity-40"
+                                className="rounded-full bg-pxi-purple text-white px-5 py-2 text-[13px] font-bold disabled:opacity-40 uppercase tracking-[0.08em]"
                             >
                                 Send reply
                             </button>
@@ -271,8 +271,8 @@ export default function AdminSupportPage() {
                         onClick={() => setStatus(f.value)}
                         className={`rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
                             status === f.value
-                                ? 'bg-white text-black'
-                                : 'bg-white/[0.045] text-white/60 hover:bg-white/[0.075] hover:text-white'
+                                ? 'bg-pxi-purple text-white'
+                                : 'bg-pxi-field text-white/60 hover:bg-white/[0.075] hover:text-white'
                         }`}
                     >
                         {f.label}

@@ -5,13 +5,13 @@ import { motion } from 'framer-motion';
 
 /**
  * Purple spinner — matches mobile Wall Circle strip loading
- * (`TheCircle` → ActivityIndicator, Colors.neonPurple / #B026FF).
+ * (`TheCircle` → ActivityIndicator; the app purple, #A523EF).
  */
 /**
  * Purple filled pulsing circle/dot loader.
  * Matches the premium dark mode branding.
  */
-const NEON_PURPLE = '#B026FF';
+const NEON_PURPLE = '#A523EF';
 
 export function PxiSpinner({ size = 'lg', className = '' }) {
   const dim = size === 'sm' ? 'h-3.5 w-3.5' : size === 'md' ? 'h-6 w-6' : 'h-8 w-8';
@@ -20,10 +20,7 @@ export function PxiSpinner({ size = 'lg', className = '' }) {
     <div
       role="status"
       aria-label="Loading"
-      className={`shrink-0 rounded-full bg-gradient-to-tr from-[#B026FF] to-[#d84aff] animate-pulse ${dim} ${className}`}
-      style={{
-        boxShadow: '0 0 10px rgba(176, 38, 255, 0.4)',
-      }}
+      className={`shrink-0 rounded-full bg-[#A523EF] animate-pulse ${dim} ${className}`}
     />
   );
 }

@@ -92,7 +92,7 @@ export default function Popover({
                 <Portal>
                     <div
                         ref={contentRef}
-                        className={`dashboard-popover-surface fixed z-[9999] rounded-2xl p-2 text-white ${className}`.trim()}
+                        className={`dashboard-popover-surface fixed z-[9999] rounded-[20px] p-2 text-white ${className}`.trim()}
                         style={{ top: position.top, left: position.left }}
                     >
                         {content}

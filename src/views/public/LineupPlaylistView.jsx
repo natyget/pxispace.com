@@ -76,7 +76,7 @@ export default function LineupPlaylistView({ token }) {
                 className="w-16 h-16 rounded-2xl object-cover"
               />
             ) : (
-              <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-pxi-field flex items-center justify-center">
                 <HugeiconsIcon icon={MusicNote01Icon} size={22} className="text-white/40" />
               </div>
             )}
@@ -119,7 +119,7 @@ export default function LineupPlaylistView({ token }) {
               {playlist.topGenres.map((genre) => (
                 <span
                   key={genre}
-                  className="px-3 py-1 rounded-full bg-white/5 text-zinc-300 text-xs font-semibold"
+                  className="px-3 py-1 rounded-full bg-pxi-field text-zinc-300 text-xs font-semibold"
                 >
                   {genre}
                 </span>
@@ -131,7 +131,7 @@ export default function LineupPlaylistView({ token }) {
             href={playlist.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full text-center py-3.5 rounded-full bg-white text-black font-black text-sm"
+            className="block w-full text-center py-3.5 rounded-full bg-pxi-purple text-white font-black text-sm"
           >
             Open in {providerLabel}
           </a>

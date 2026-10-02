@@ -141,13 +141,13 @@ export default function MarketingKitModal({ open, onClose, moments = [], event }
                                 onClick={() => toggle(moment.mediaId)}
                                 aria-pressed={isSelected}
                                 className={`relative aspect-[3/4] overflow-hidden rounded-xl transition ${
-                                    isSelected ? 'ring-2 ring-[#d84aff]' : 'opacity-60 hover:opacity-100'
+                                    isSelected ? 'ring-2 ring-pxi-purple' : 'opacity-60 hover:opacity-100'
                                 }`}
                             >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={moment.thumbnailUrl || moment.r2Url} alt="" className="h-full w-full object-cover" loading="lazy" />
                                 {isSelected ? (
-                                    <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#d84aff] text-[9px] font-bold text-white">✓</span>
+                                    <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-pxi-purple text-[9px] font-bold text-white">✓</span>
                                 ) : null}
                             </button>
                         );

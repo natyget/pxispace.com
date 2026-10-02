@@ -127,7 +127,7 @@ export default function LineupPlaylistCard({ eventId }) {
             Loading playlist...
           </div>
         ) : playlist ? (
-          <div className="space-y-2 rounded-xl bg-white/[0.04] p-4">
+          <div className="space-y-2 rounded-xl bg-pxi-field p-4">
             <div className="flex items-center gap-2 flex-wrap">
               <ProviderPill provider={playlist.provider} />
               <span className="text-xs text-zinc-500">
@@ -140,7 +140,7 @@ export default function LineupPlaylistCard({ eventId }) {
                 {playlist.topGenres.map((genre) => (
                   <span
                     key={genre}
-                    className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-zinc-400"
+                    className="rounded-full bg-pxi-field px-2 py-0.5 text-[10px] text-zinc-400"
                   >
                     {genre}
                   </span>
@@ -160,7 +160,7 @@ export default function LineupPlaylistCard({ eventId }) {
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
-              className="dashboard-input flex-1 rounded-xl px-3 py-2.5 text-sm text-white placeholder-zinc-500"
+              className="dashboard-input flex-1 rounded-2xl px-3 py-2.5 text-sm text-white placeholder-zinc-500"
               placeholder="https://open.spotify.com/playlist/..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -170,7 +170,7 @@ export default function LineupPlaylistCard({ eventId }) {
               type="button"
               onClick={handleSave}
               disabled={saving || !url.trim()}
-              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-xs font-bold tracking-[0.02em] text-black transition hover:bg-zinc-200 disabled:opacity-50"
+              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-pxi-purple px-4 py-2.5 text-xs font-bold text-white transition hover:brightness-110 disabled:opacity-50 uppercase tracking-[0.08em]"
             >
               {saving ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" /> : null}
               {saving ? 'Reading playlist...' : 'Save playlist'}
@@ -199,12 +199,12 @@ export default function LineupPlaylistCard({ eventId }) {
               <p className="text-xs text-zinc-500 leading-relaxed">
                 Share this link — your DJ can paste their set without an account.
               </p>
-              <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3">
+              <div className="flex items-center gap-3 rounded-xl bg-pxi-field p-3">
                 <p className="flex-1 text-xs text-white break-all font-mono leading-relaxed">{djUrl}</p>
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="shrink-0 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                  className="shrink-0 p-2 rounded-lg bg-pxi-field hover:bg-white/10 transition-colors"
                 >
                   {copied ? (
                     <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} className="text-emerald-400" />

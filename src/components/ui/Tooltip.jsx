@@ -60,7 +60,7 @@ export default function Tooltip({ children, content, disabled = false, className
                     <div
                         ref={tooltipRef}
                         role="tooltip"
-                        className={`dashboard-popover-surface pointer-events-none fixed z-[9999] rounded-full px-3 py-2 text-xs font-bold text-white ${className}`.trim()}
+                        className={`pointer-events-none fixed z-[9999] rounded-full bg-pxi-field px-3 py-2 text-xs font-bold text-white shadow-[0_8px_24px_rgba(0,0,0,0.5)] ${className}`.trim()}
                         style={{ top: position.top, left: position.left }}
                     >
                         {content}

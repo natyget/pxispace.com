@@ -56,28 +56,29 @@ function NavLink({
 }) {
     const isActive = isNavItemActive(pathname, item, searchParams);
     const isLiveOperations = item.key === 'operations' && isLiveEvent;
+    // App look: the active item is a flat purple pill; "live" is the orange accent.
     const activeClasses = isLiveOperations
-        ? 'bg-emerald-500/[0.07] text-emerald-200'
-        : 'bg-white/[0.055] text-white';
+        ? 'bg-pxi-orange/15 text-pxi-orange'
+        : 'bg-pxi-purple text-white';
     const inactiveClasses = isLiveOperations
-        ? 'group bg-transparent hover:bg-emerald-500/[0.04]'
-        : 'group bg-transparent hover:bg-white/[0.03]';
+        ? 'group bg-transparent hover:bg-pxi-orange/10'
+        : 'group bg-transparent hover:bg-white/[0.06]';
     const iconClasses = isLiveOperations
-        ? 'text-emerald-300 opacity-60 group-hover:opacity-80 transition-opacity duration-300'
+        ? 'text-pxi-orange opacity-80 group-hover:opacity-100 transition-opacity duration-300'
         : isActive
-            ? 'text-white opacity-90'
-            : 'text-white opacity-40 group-hover:opacity-70 transition-opacity duration-300';
+            ? 'text-white opacity-100'
+            : 'text-white opacity-50 group-hover:opacity-80 transition-opacity duration-300';
     const labelClasses = isLiveOperations
-        ? 'text-emerald-300/60 group-hover:text-emerald-200/80 transition-colors duration-300'
+        ? 'text-pxi-orange/80 group-hover:text-pxi-orange transition-colors duration-300'
         : isActive
             ? 'text-white'
-            : 'text-white/45 group-hover:text-white/75 transition-colors duration-300';
+            : 'text-[#9a9a9a] group-hover:text-white transition-colors duration-300';
 
     const linkClasses = sidebarCollapsed
-        ? `w-10 h-10 rounded-xl flex items-center justify-center mx-auto transition-all duration-300 ease-in-out ${
+        ? `w-10 h-10 rounded-full flex items-center justify-center mx-auto transition-all duration-300 ease-in-out ${
             isActive ? activeClasses : inactiveClasses
         }`
-        : `relative w-full inline-flex items-center px-4 py-[9px] rounded-xl transition-all duration-300 ease-in-out ${
+        : `relative w-full inline-flex items-center px-4 py-[10px] rounded-full transition-all duration-300 ease-in-out ${
             isActive ? activeClasses : inactiveClasses
         }`;
 
@@ -88,12 +89,6 @@ function NavLink({
             className={linkClasses}
             title={sidebarCollapsed ? item.label : undefined}
         >
-            {isActive && !sidebarCollapsed ? (
-                <span
-                    aria-hidden="true"
-                    className={`absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full ${isLiveOperations ? 'bg-emerald-300' : 'bg-[#d84aff]'}`}
-                />
-            ) : null}
             <span className="relative flex-shrink-0">
                 <HugeiconsIcon
                     icon={item.icon}
@@ -102,7 +97,7 @@ function NavLink({
                 />
             </span>
             <span
-                className={`block overflow-hidden whitespace-nowrap text-[13px] font-semibold tracking-wide transition-all duration-300 ease-in-out ${labelClasses} ${
+                className={`block overflow-hidden whitespace-nowrap text-[13px] font-bold tracking-wide transition-all duration-300 ease-in-out ${labelClasses} ${
                     sidebarCollapsed ? 'max-w-0 opacity-0 ml-0' : 'max-w-[180px] opacity-100 ml-2.5'
                 }`}
             >
@@ -333,7 +328,7 @@ export default function DashboardLayout({ children }) {
                     </button>
                     <button
                         onClick={() => dashboardShellActions.closeTopLayer()}
-                        className="pill-ghost flex-1 px-4 py-2.5 text-sm font-medium"
+                        className="pill-cancel flex-1 px-4 py-2.5 text-sm font-medium"
                     >
                         Cancel
                     </button>
@@ -416,13 +411,13 @@ export default function DashboardLayout({ children }) {
         <div className="dashboard-page-surface flex h-screen overflow-hidden">
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+                    className="fixed inset-0 z-40 bg-black/60 md:hidden"
                     onClick={closeMobileSidebar}
                 />
             )}
 
             <aside
-                className={`dashboard-sidebar fixed top-0 left-0 z-50 flex h-full flex-col overflow-hidden border-r border-white/[0.06] bg-[#0b0b0f] transition-all duration-300 ease-in-out
+                className={`dashboard-sidebar fixed top-0 left-0 z-50 flex h-full flex-col overflow-hidden bg-pxi-surface transition-all duration-300 ease-in-out
                     ${sidebarCollapsed ? 'md:w-[72px] w-[240px]' : 'w-[240px]'}
                     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:static md:z-auto md:translate-x-0`}
             >
@@ -435,7 +430,7 @@ export default function DashboardLayout({ children }) {
 
                             <button
                                 onClick={() => dashboardShellActions.toggleSidebar()}
-                                className={`group relative hidden items-center justify-center overflow-hidden rounded-full transition md:flex ${sidebarCollapsed ? 'bg-transparent hover:bg-white/[0.08]' : 'bg-white/[0.04] hover:bg-white/[0.08]'} text-white/70 hover:text-white ${sidebarCollapsed ? 'h-11 w-11' : 'h-9 w-9 shrink-0'}`}
+                                className={`group relative hidden items-center justify-center overflow-hidden rounded-full transition md:flex ${sidebarCollapsed ? 'bg-transparent hover:bg-white/[0.08]' : 'bg-pxi-field hover:bg-[#3a3a3a]'} text-white/70 hover:text-white ${sidebarCollapsed ? 'h-11 w-11' : 'h-9 w-9 shrink-0'}`}
                                 aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                                 type="button"
                             >
@@ -456,7 +451,7 @@ export default function DashboardLayout({ children }) {
                         {rolesReady && canAccessAdminDashboard(user) && (
                             <div className={`mb-2 px-3 md:px-4 ${sidebarCollapsed ? 'flex flex-col items-center' : ''}`}>
                                 <div
-                                    className={`flex rounded-full bg-white/[0.045] p-0.5 ${sidebarCollapsed ? 'w-11 flex-col gap-0.5 py-1' : 'w-full'}`}
+                                    className={`flex rounded-full bg-pxi-field p-0.5 ${sidebarCollapsed ? 'w-11 flex-col gap-0.5 py-1' : 'w-full'}`}
                                     role="group"
                                     aria-label="Switch between platform admin and workspace dashboard"
                                 >
@@ -465,8 +460,8 @@ export default function DashboardLayout({ children }) {
                                         onClick={() => setAdminSidebarModeAndNavigate('admin')}
                                         className={`${sidebarCollapsed ? 'py-2 text-[10px]' : 'flex-1 py-2 text-xs'} rounded-full font-bold tracking-wide transition-colors ${
                                             adminSidebarMode === 'admin'
-                                                ? 'bg-white/[0.04] text-white/90'
-                                                : 'text-white/40 hover:text-white/70'
+                                                ? 'bg-pxi-purple text-white'
+                                                : 'text-white/50 hover:text-white/80'
                                         }`}
                                         title="Platform admin"
                                     >
@@ -477,8 +472,8 @@ export default function DashboardLayout({ children }) {
                                         onClick={() => setAdminSidebarModeAndNavigate('user')}
                                         className={`${sidebarCollapsed ? 'py-2 text-[10px]' : 'flex-1 py-2 text-xs'} rounded-full font-bold tracking-wide transition-colors ${
                                             adminSidebarMode === 'user'
-                                                ? 'bg-white/[0.04] text-white/90'
-                                                : 'text-white/40 hover:text-white/70'
+                                                ? 'bg-pxi-purple text-white'
+                                                : 'text-white/50 hover:text-white/80'
                                         }`}
                                         title="Workspace dashboard"
                                     >
@@ -491,7 +486,7 @@ export default function DashboardLayout({ children }) {
                         <nav className={`dashboard-scrollbar-none mt-1 flex-1 overflow-hidden ${sidebarCollapsed ? 'flex flex-col items-center gap-1.5 px-0' : 'space-y-1.5 px-3 md:px-4'}`}>
                             {navEntries.map((entry) => (
                                 entry.type === 'section' ? (
-                                    <div key={entry.key} className="px-4 pt-4 pb-1 text-[11px] font-medium tracking-[0.02em] text-white/[0.28] first:pt-1">
+                                    <div key={entry.key} className="px-4 pt-4 pb-1 text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple first:pt-1">
                                         {entry.label}
                                     </div>
                                 ) : (
@@ -520,7 +515,7 @@ export default function DashboardLayout({ children }) {
                             onSignOut={() => dashboardShellActions.openModal('logoutConfirm')}
                         />
                         {showDevCaps && (
-                            <div className={`mt-2 rounded-xl bg-white/[0.045] px-2 py-1 text-[10px] text-white/70 ${sidebarCollapsed ? 'text-center' : ''}`}>
+                            <div className={`mt-2 rounded-xl bg-pxi-field px-2 py-1 text-[10px] text-white/70 ${sidebarCollapsed ? 'text-center' : ''}`}>
                                 {capabilities.hasBouncerAccess ? 'LiveOps: enabled' : 'LiveOps: disabled'} ·
                                 {' '}events:{capabilities.source?.events ? 'Y' : 'N'}
                                 {' '}notif:{capabilities.source?.notifications ? 'Y' : 'N'}

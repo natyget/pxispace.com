@@ -7,8 +7,7 @@ import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Cancel01Icon,
-  Clock01Icon,
-  Location01Icon,
+  Link01Icon,
   MusicNote01Icon,
 } from '@hugeicons/core-free-icons';
 import Button from '@/components/ui/Button';
@@ -18,14 +17,16 @@ import { displayImageSrc } from '@/lib/mediaUrl';
 import { spotifyEmbedSrc } from '@/lib/spotify';
 import { musicService } from '@/services/music';
 
-const RADIUS_PX = 20;
-const GLASS_SURFACE = 'bg-[rgba(26,26,26,0.6)] backdrop-blur-xl';
+// App look: a flat #1C1C1C sheet with 28px corners, a 24px cover, #2E2E2E inner cards.
+const RADIUS_PX = 28;
+const SHEET_SURFACE = 'bg-[#1c1c1c]';
+const SMALL_CAPS = 'text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple';
 
 const BADGE_TONE_CLASS = {
-  purple: 'border-purple-500/50 bg-purple-500/20 text-purple-200',
-  amber: 'border-amber-400/55 bg-amber-400/15 text-amber-200',
-  green: 'border-green-400/45 bg-green-400/12 text-green-300',
-  neutral: 'border-white/20 bg-white/5 text-white/60',
+  purple: 'bg-pxi-purple/20 text-pxi-purple',
+  amber: 'bg-amber-400/15 text-amber-300',
+  green: 'bg-green-400/15 text-green-300',
+  neutral: 'bg-white/10 text-white/60',
 };
 
 const PROVIDER_META = {
@@ -36,7 +37,7 @@ const PROVIDER_META = {
 function Badge({ tone = 'neutral', children }) {
   return (
     <span
-      className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${BADGE_TONE_CLASS[tone] || BADGE_TONE_CLASS.neutral}`}
+      className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${BADGE_TONE_CLASS[tone] || BADGE_TONE_CLASS.neutral}`}
     >
       {children}
     </span>
@@ -44,24 +45,35 @@ function Badge({ tone = 'neutral', children }) {
 }
 
 function SectionHeading({ children }) {
-  return <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-pxi-purple">{children}</h3>;
+  return <h3 className={SMALL_CAPS}>{children}</h3>;
 }
 
-function MetaRow({ icon, primary, secondary }) {
-  if (!primary) return null;
+/** A purple small-caps label over a white value (the app's DATE / TIME pair). */
+function LabeledValue({ label, value, note }) {
+  if (!value) return null;
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl bg-white/5 px-3 py-2.5 text-left">
-      <HugeiconsIcon icon={icon} size={16} className="shrink-0 text-white" aria-hidden />
-      <span className="min-w-0">
-        <p className="truncate text-[12px] font-bold leading-tight text-white">{primary}</p>
-        {secondary ? (
-          <p className="truncate text-[10px] font-semibold uppercase leading-tight tracking-wide text-white/45">
-            {secondary}
-          </p>
-        ) : null}
-      </span>
+    <div className="min-w-0">
+      <p className={SMALL_CAPS}>{label}</p>
+      <p className="mt-1.5 break-words text-[17px] font-black leading-snug text-white">{value}</p>
+      {note ? <p className="mt-0.5 break-words text-[12px] font-medium text-[#9a9a9a]">{note}</p> : null}
     </div>
   );
+}
+
+/**
+ * The callers send a schedule as { primary, secondary } (or one string). The album adapter's is a
+ * weekday plus "OCT 12 · 9:00 PM – 2:00 AM": that becomes DATE "Saturday, OCT 12" and TIME
+ * "9:00 PM – 2:00 AM". Anything that does not carry a time stays under DATE as a note.
+ */
+function toDateTime(schedule) {
+  const primary = String(schedule?.primary || '').trim();
+  const secondary = String(schedule?.secondary || '').trim();
+  if (!primary) return { date: '', time: '', note: '' };
+  if (!secondary) return { date: primary, time: '', note: '' };
+  if (!/\d/.test(secondary)) return { date: primary, time: '', note: secondary };
+  const parts = secondary.split(' · ');
+  if (parts.length >= 2) return { date: `${primary}, ${parts[0]}`, time: parts.slice(1).join(' · '), note: '' };
+  return { date: primary, time: secondary, note: '' };
 }
 
 /** Playlist section — multi-playlist lineup with per-row scores (mobile album parity). */
@@ -113,7 +125,7 @@ function PlaylistSection({ playlist }) {
               return (
                 <div
                   key={row.id || row.sourceUrl}
-                  className="flex items-center gap-3 rounded-2xl bg-white/[0.05] px-3 py-3 text-left"
+                  className="flex items-center gap-3 rounded-2xl bg-[#2e2e2e] px-3 py-3 text-left"
                 >
                   <div className="min-w-0 flex-1 space-y-1.5">
                     <div className="flex items-center justify-between gap-2">
@@ -136,7 +148,7 @@ function PlaylistSection({ playlist }) {
                         {row.topGenres.slice(0, 4).map((genre) => (
                           <span
                             key={genre}
-                            className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-semibold text-zinc-300"
+                            className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-semibold text-[#9a9a9a]"
                           >
                             {genre}
                           </span>
@@ -157,7 +169,7 @@ function PlaylistSection({ playlist }) {
                     </a>
                   </div>
                   {row.matchScore != null && row.matchScore > 0 ? (
-                    <span className="shrink-0 text-sm font-black text-[#d84aff]">{row.matchScore}%</span>
+                    <span className="shrink-0 text-sm font-black text-pxi-purple">{row.matchScore}%</span>
                   ) : null}
                 </div>
               );
@@ -165,7 +177,7 @@ function PlaylistSection({ playlist }) {
             {matchDetail?.matchedArtists?.length ? (
               <p className="text-xs leading-relaxed text-white/55">
                 You listen to{' '}
-                <span className="font-bold text-[#d84aff]">
+                <span className="font-bold text-pxi-purple">
                   {matchDetail.matchedArtists.slice(0, 4).join(', ')}
                 </span>
                 {matchDetail.matchedArtists.length > 4
@@ -176,7 +188,7 @@ function PlaylistSection({ playlist }) {
             ) : null}
           </div>
         ) : (
-          <div className="flex items-center gap-3 rounded-2xl bg-white/[0.05] px-3 py-3 text-left">
+          <div className="flex items-center gap-3 rounded-2xl bg-[#2e2e2e] px-3 py-3 text-left">
             <HugeiconsIcon icon={MusicNote01Icon} size={18} className="shrink-0 text-zinc-500" aria-hidden />
             <div className="min-w-0">
               <p className="text-xs font-semibold text-zinc-400">No lineup playlists yet.</p>
@@ -212,12 +224,13 @@ function PlaylistSection({ playlist }) {
   );
 }
 
+// Purple JOIN / GET TICKETS pill, and beside it the orange share pill (#FF5A1F at 15%).
 const PRIMARY_LINK_CLASS =
-  'inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold uppercase tracking-widest text-white transition-all duration-300 ease-out active:scale-95 neon-pill hover:scale-105';
+  'inline-flex h-[52px] min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-pxi-purple px-6 text-[13px] font-black uppercase tracking-[0.08em] text-white transition active:scale-[0.98] hover:brightness-110';
 const PRIMARY_DISABLED_CLASS =
-  'inline-flex w-full items-center justify-center gap-2 rounded-full bg-white/[0.04] px-6 py-3 text-sm font-bold uppercase tracking-widest text-zinc-500';
+  'inline-flex h-[52px] min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-[#2e2e2e] px-6 text-[13px] font-black uppercase tracking-[0.08em] text-[#9a9a9a]';
 const SECONDARY_CLASS =
-  'flex w-full items-center justify-center gap-2 rounded-full bg-[var(--pxi-orange)]/15 px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[var(--pxi-orange)] transition hover:scale-105 hover:bg-[var(--pxi-orange)]/25';
+  'inline-flex h-[52px] shrink-0 items-center justify-center gap-2 rounded-full bg-pxi-orange/15 px-5 text-[12px] font-black uppercase tracking-[0.08em] text-pxi-orange transition hover:bg-pxi-orange/25 active:scale-[0.98]';
 
 function ActionButton({ action, variant }) {
   if (!action) return null;
@@ -246,21 +259,24 @@ function ActionButton({ action, variant }) {
       );
     }
     return (
-      <Button variant="neon" className="w-full uppercase tracking-widest" onClick={onClick} icon={icon}>
+      <Button variant="primary" className="h-[52px] min-w-0 flex-1" onClick={onClick} icon={icon}>
         {label}
       </Button>
     );
   }
 
+  // The share pill always carries an orange link icon (the caller's own icon wins).
+  const pillIcon = icon || <HugeiconsIcon icon={Link01Icon} size={16} />;
+
   if (href) {
     return href.startsWith('/') ? (
       <Link href={href} onClick={onClick} className={SECONDARY_CLASS}>
-        {icon}
+        {pillIcon}
         {label}
       </Link>
     ) : (
       <a href={href} onClick={onClick} className={SECONDARY_CLASS}>
-        {icon}
+        {pillIcon}
         {label}
       </a>
     );
@@ -268,17 +284,18 @@ function ActionButton({ action, variant }) {
 
   return (
     <button type="button" onClick={onClick} disabled={disabled} className={SECONDARY_CLASS}>
-      {icon}
+      {pillIcon}
       {label}
     </button>
   );
 }
 
 /**
- * Shared event/album details surface — glass card (rgba(26,26,26,0.6) + blur, radius 20,
- * borderless), generalizing `EventPreviewModal`'s pattern. Sections (badges, host,
- * schedule/location, about, ticket tiers, lineup, playlist, participants) render only
- * when the caller supplies data for them.
+ * Shared event/album details surface — the app's event view: a flat #1C1C1C sheet (28px
+ * corners), EVENT DETAILS top-left with a close X, the name as a heavy caps title, a 24px cover,
+ * the place, a DATE / TIME pair, the host with the description in a #2E2E2E bubble, then the
+ * purple action pill and the orange share pill. Sections (badges, host, schedule/location,
+ * ticket tiers, lineup, playlist, participants) render only when the caller supplies data.
  *
  * `presentation="modal"` — floating centered card with backdrop (desktop).
  * `presentation="sheet"` — full-screen sheet, drag-down (touch/pointer) to dismiss (mobile web).
@@ -350,9 +367,11 @@ export default function EventDetailsModal({
   const hasLineup = Array.isArray(event.lineup) && event.lineup.length > 0;
   const hasParticipants = Array.isArray(event.participants) && event.participants.length > 0;
   const hasBadges = Array.isArray(event.badges) && event.badges.length > 0;
+  const { date, time, note } = toDateTime(scheduleObj);
+  const hostName = event.host ? event.host.name || event.host.username || 'Host' : '';
 
   const body = (
-    <div className="space-y-5 p-6 text-white sm:p-8">
+    <div className="space-y-6 px-6 pb-8 pt-1 text-white sm:px-8">
       {hasBadges ? (
         <div className="flex flex-wrap gap-2">
           {event.badges.map((b) => (
@@ -363,29 +382,57 @@ export default function EventDetailsModal({
         </div>
       ) : null}
 
-      <h2 className="text-2xl font-black uppercase leading-tight tracking-tighter text-white">{event.title}</h2>
+      <h2 className="break-words text-[28px] font-black uppercase leading-[1.05] tracking-[-0.01em] text-white sm:text-[32px]">
+        {event.title}
+      </h2>
 
-      {event.host ? (
-        <div className="flex items-center gap-2">
-          <UserAvatar user={{ avatarUrl: event.host.avatarUrl }} size={28} className="shrink-0" />
-          <p className="text-[11px] text-white/60">
-            Hosted by <span className="font-bold text-white">{event.host.name || event.host.username || 'Host'}</span>
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[24px] bg-[#2e2e2e]">
+        {coverSrc ? (
+          <Image src={coverSrc} alt="" fill unoptimized className="object-cover" sizes="(max-width: 640px) 100vw, 36rem" />
+        ) : null}
+      </div>
+
+      {locationObj?.primary ? (
+        <div className="min-w-0">
+          <p className="break-words text-[22px] font-black uppercase leading-[1.1] tracking-[-0.01em] text-white">
+            {locationObj.primary}
           </p>
+          {locationObj.secondary ? (
+            <p className="mt-1.5 break-words text-[13px] font-medium text-[#9a9a9a]">{locationObj.secondary}</p>
+          ) : null}
         </div>
       ) : null}
 
-      {scheduleObj || locationObj ? (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <MetaRow icon={Clock01Icon} primary={scheduleObj?.primary} secondary={scheduleObj?.secondary} />
-          <MetaRow icon={Location01Icon} primary={locationObj?.primary} secondary={locationObj?.secondary} />
+      {date || time ? (
+        <div className="grid grid-cols-2 gap-4">
+          <LabeledValue label="Date" value={date} note={note} />
+          <LabeledValue label="Time" value={time} />
         </div>
       ) : null}
 
-      {event.description ? (
-        <section className="space-y-2">
-          <SectionHeading>About</SectionHeading>
-          <p className="text-sm leading-relaxed text-zinc-400">{event.description}</p>
-        </section>
+      {event.host || event.description ? (
+        <div className="flex items-start gap-3">
+          {event.host ? <UserAvatar user={{ avatarUrl: event.host.avatarUrl }} size={44} className="shrink-0" /> : null}
+          <div className="min-w-0 flex-1 rounded-[20px] bg-[#2e2e2e] px-4 py-3 text-left">
+            {event.host ? (
+              <p className={SMALL_CAPS}>
+                Hosted by <span className="text-white">{hostName}</span>
+              </p>
+            ) : null}
+            {event.description ? (
+              <p className={`${event.host ? 'mt-1.5 ' : ''}break-words text-[14px] leading-relaxed text-white/90`}>
+                {event.description}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {primaryAction || secondaryAction ? (
+        <div className="flex items-stretch gap-3">
+          <ActionButton action={primaryAction} variant="primary" />
+          <ActionButton action={secondaryAction} variant="secondary" />
+        </div>
       ) : null}
 
       {hasTicketTiers ? (
@@ -395,15 +442,15 @@ export default function EventDetailsModal({
             {event.ticketTiers.map((tier) => (
               <li
                 key={tier.id || tier.label}
-                className="flex items-center justify-between gap-3 rounded-2xl bg-white/[0.05] px-3 py-2 text-left"
+                className="flex items-center justify-between gap-3 rounded-2xl bg-[#2e2e2e] px-4 py-3 text-left"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-white">{tier.label}</p>
+                  <p className="text-sm font-bold text-white">{tier.label}</p>
                   {tier.capacity != null ? (
-                    <p className="mt-0.5 text-[9px] text-white/45">Capacity {tier.capacity}</p>
+                    <p className="mt-0.5 text-[10px] text-[#9a9a9a]">Capacity {tier.capacity}</p>
                   ) : null}
                 </div>
-                <p className="shrink-0 text-xs font-bold text-amber-200">{tier.priceLabel}</p>
+                <p className="shrink-0 text-sm font-black text-white">{tier.priceLabel}</p>
               </li>
             ))}
           </ul>
@@ -417,7 +464,7 @@ export default function EventDetailsModal({
             {event.lineup.map((person) => (
               <li
                 key={person.id || person.userId}
-                className="flex items-center gap-3 rounded-2xl bg-white/[0.05] px-3 py-2 text-left"
+                className="flex items-center gap-3 rounded-2xl bg-[#2e2e2e] px-3 py-2.5 text-left"
               >
                 <UserAvatar user={{ avatarUrl: person.avatarUrl }} size={32} className="shrink-0" />
                 <div className="min-w-0 flex-1">
@@ -425,11 +472,11 @@ export default function EventDetailsModal({
                     {person.name?.trim() || `@${person.username || 'unknown'}`}
                   </p>
                   {person.name?.trim() && person.username ? (
-                    <p className="truncate text-[10px] text-white/45">@{person.username}</p>
+                    <p className="truncate text-[10px] text-[#9a9a9a]">@{person.username}</p>
                   ) : null}
                 </div>
                 {person.role ? (
-                  <span className="shrink-0 text-[9px] font-black uppercase tracking-wide text-white/50">
+                  <span className="shrink-0 text-[9px] font-black uppercase tracking-wide text-[#9a9a9a]">
                     {person.role}
                   </span>
                 ) : null}
@@ -454,7 +501,7 @@ export default function EventDetailsModal({
               {event.participants.slice(0, 8).map((p, i) => (
                 <div
                   key={`${p.userId}-${i}`}
-                  className="relative size-9 overflow-hidden rounded-full ring-2 ring-[#141416]"
+                  className="relative size-9 overflow-hidden rounded-full ring-2 ring-[#1c1c1c]"
                   style={{ zIndex: 10 - i }}
                 >
                   <UserAvatar user={{ avatarUrl: p.avatarUrl }} size={36} className="size-full" />
@@ -462,48 +509,39 @@ export default function EventDetailsModal({
               ))}
             </div>
           ) : (
-            <p className="text-xs text-white/45">Be the first to join.</p>
+            <p className="text-xs text-[#9a9a9a]">Be the first to join.</p>
           )}
         </section>
-      ) : null}
-
-      {primaryAction || secondaryAction ? (
-        <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-          <ActionButton action={primaryAction} variant="primary" />
-          <ActionButton action={secondaryAction} variant="secondary" />
-        </div>
       ) : null}
     </div>
   );
 
+  // App look: EVENT DETAILS small caps top-left, close X top-right. Sticky so the X stays in reach.
   const header = (
-    <div className="relative h-48 shrink-0 sm:h-56">
-      {coverSrc ? (
-        <Image src={coverSrc} alt="" fill unoptimized className="object-cover" sizes="(max-width: 640px) 100vw, 36rem" />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-black" />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,20,20,0.95)] to-transparent" />
+    <div className={`sticky top-0 z-10 flex items-center justify-between px-6 pb-3 pt-5 sm:px-8 sm:pt-6 ${SHEET_SURFACE}`}>
+      <p className={SMALL_CAPS}>Event details</p>
       {!isInline ? (
         <button
           type="button"
           onClick={dismiss}
-          className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#2e2e2e] text-white/80 transition-colors hover:text-white"
           aria-label="Close details"
         >
-          <HugeiconsIcon icon={Cancel01Icon} size={20} />
+          <HugeiconsIcon icon={Cancel01Icon} size={18} />
         </button>
-      ) : null}
+      ) : (
+        <span className="h-9" aria-hidden />
+      )}
     </div>
   );
 
   // `presentation="inline"` — no portal, no scrim, no dismiss: fills its parent
   // (the desktop album page's right pane) with its own scroll region, wearing the
-  // same glass-card chrome as the floating desktop modal.
+  // same flat sheet chrome as the floating desktop modal.
   if (isInline) {
     return (
       <div
-        className={`flex h-full min-h-0 flex-col overflow-hidden shadow-2xl ${GLASS_SURFACE}`}
+        className={`flex h-full min-h-0 flex-col overflow-hidden ${SHEET_SURFACE}`}
         style={{ borderRadius: RADIUS_PX }}
       >
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -519,7 +557,7 @@ export default function EventDetailsModal({
       <div className="fixed inset-0 z-[9999]" role="dialog" aria-modal="true" aria-label="Event details">
         <motion.div className="absolute inset-0 bg-black" style={{ opacity: scrimOpacity }} aria-hidden />
         <motion.div
-          className={`absolute inset-0 flex flex-col overflow-hidden ${GLASS_SURFACE} bg-[#0c0c0c]`}
+          className={`absolute inset-0 flex flex-col overflow-hidden ${SHEET_SURFACE}`}
           style={{ y, borderTopLeftRadius: RADIUS_PX, borderTopRightRadius: RADIUS_PX }}
           drag="y"
           dragConstraints={{ top: 0, bottom: 1000 }}
@@ -552,7 +590,7 @@ export default function EventDetailsModal({
       className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto p-4 pt-[8vh] md:p-8 md:pt-[10vh]"
       onClick={dismiss}
     >
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" aria-hidden />
+      <div className="absolute inset-0 bg-black/80" aria-hidden />
       {/* Desktop floating card — click-outside (backdrop) + Escape dismiss per design law's
           desktop minimum. No drag gesture here: the card's content scrolls at the page level
           (no independent inner scroll region), so a drag-to-dismiss layer would fight touch
@@ -562,7 +600,7 @@ export default function EventDetailsModal({
         role="dialog"
         aria-modal="true"
         aria-label="Event details"
-        className={`relative w-full max-w-xl overflow-hidden shadow-2xl ${GLASS_SURFACE}`}
+        className={`relative w-full max-w-xl overflow-hidden ${SHEET_SURFACE}`}
         style={{ borderRadius: RADIUS_PX }}
         onClick={(e) => e.stopPropagation()}
       >

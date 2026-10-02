@@ -36,7 +36,7 @@ function cx(...classes) {
 function StateChip({ state, muted = false }) {
     if (state === 'Accepted') {
         return (
-            <span className={cx('inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em]', muted ? 'bg-white/5 text-zinc-500' : 'bg-emerald-500/10 text-emerald-300')}>
+            <span className={cx('inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em]', muted ? 'bg-pxi-field text-zinc-500' : 'bg-emerald-500/10 text-emerald-300')}>
                 Accepted
             </span>
         );
@@ -44,14 +44,14 @@ function StateChip({ state, muted = false }) {
 
     if (state === 'Flagged') {
         return (
-            <span className={cx('inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em]', muted ? 'bg-white/5 text-zinc-500' : 'bg-red-500/10 text-red-300')}>
+            <span className={cx('inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em]', muted ? 'bg-pxi-field text-zinc-500' : 'bg-red-500/10 text-red-300')}>
                 Flagged
             </span>
         );
     }
 
     return (
-        <span className="inline-flex rounded-full bg-white/5 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-zinc-400">
+        <span className="inline-flex rounded-full bg-pxi-field px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-zinc-400">
             {state}
         </span>
     );
@@ -75,7 +75,7 @@ function DormantMessage() {
 
 function OpsMetric({ label, value, hint }) {
     return (
-        <div className="rounded-2xl bg-white/[0.045] px-4 py-4">
+        <div className="rounded-2xl bg-pxi-field px-4 py-4">
             <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">{label}</p>
             <p className="mt-2 text-2xl font-bold tabular-nums text-white">{value}</p>
             {hint ? <p className="mt-1 text-xs font-semibold text-zinc-500">{hint}</p> : null}
@@ -162,7 +162,7 @@ function RecentScansSection({ isLive, scans, onIncident }) {
             </div>
             <div className="mt-4 space-y-2">
                 {scans.map((scan) => (
-                    <div key={scan.id} className="grid gap-3 rounded-2xl bg-white/[0.035] px-4 py-3 md:grid-cols-[1.2fr_0.9fr_0.7fr_auto] md:items-center">
+                    <div key={scan.id} className="grid gap-3 rounded-2xl bg-pxi-field px-4 py-3 md:grid-cols-[1.2fr_0.9fr_0.7fr_auto] md:items-center">
                         <div>
                             <p className="text-sm font-bold text-white">{scan.name}</p>
                             <p className="mt-0.5 text-xs text-zinc-500">{scan.ticket}</p>
@@ -179,7 +179,7 @@ function RecentScansSection({ isLive, scans, onIncident }) {
                             onClick={() => onIncident(scan)}
                             className={cx(
                                 'rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] transition',
-                                isLive && scan.gateId ? 'bg-red-500/10 text-red-200 hover:bg-red-500/20' : 'cursor-not-allowed bg-white/5 text-zinc-500'
+                                isLive && scan.gateId ? 'bg-red-500/10 text-red-200 hover:bg-red-500/20' : 'cursor-not-allowed bg-pxi-field text-zinc-500'
                             )}
                         >
                             Incident Report
@@ -187,7 +187,7 @@ function RecentScansSection({ isLive, scans, onIncident }) {
                     </div>
                 ))}
                 {!scans.length ? (
-                    <div className="rounded-2xl bg-white/[0.035] px-4 py-4 text-sm text-zinc-500">
+                    <div className="rounded-2xl bg-pxi-field px-4 py-4 text-sm text-zinc-500">
                         {isLive ? 'No tickets scanned yet.' : 'Goes live during active events.'}
                     </div>
                 ) : null}
@@ -268,7 +268,7 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
                 className={cx(
                     'mt-5 rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] transition',
                     !isLive
-                        ? 'cursor-not-allowed bg-white/5 text-zinc-500'
+                        ? 'cursor-not-allowed bg-pxi-field text-zinc-500'
                         : gate.paused
                             ? 'bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20'
                             : 'bg-red-500/10 text-red-200 hover:bg-red-500/20'
@@ -288,7 +288,7 @@ function GateCard({ gate, isLive, menuOpen, onOpen, onEdit, onTogglePause, onTog
                     </div>
                 ))}
                 {!gate.scans.length ? (
-                    <div className="rounded-xl bg-white/[0.035] px-3 py-4 text-sm text-zinc-500">
+                    <div className="rounded-xl bg-pxi-field px-3 py-4 text-sm text-zinc-500">
                         No scans yet.
                     </div>
                 ) : null}
@@ -365,7 +365,7 @@ function GateEditModal({ open, gate, rosterMembers, saving, onClose, onSave }) {
                     </div>
                 </div>
                 <div className="flex justify-end gap-3">
-                    <button type="button" onClick={onClose} className="pill-ghost px-4 py-2 text-sm font-bold">Cancel</button>
+                    <button type="button" onClick={onClose} className="pill-cancel px-4 py-2 text-sm font-bold">Cancel</button>
                     <button
                         type="button"
                         disabled={!name.trim() || saving}
@@ -703,7 +703,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
             </section>
 
             {selectableEvents.length > 1 && selectedEvent ? (
-                <div className="flex flex-col gap-2 rounded-2xl bg-white/[0.045] px-4 py-3 text-xs font-semibold text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-2 rounded-2xl bg-pxi-field px-4 py-3 text-xs font-semibold text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
                     <span>
                         {liveEvents.length > 1
                             ? `You have ${liveEvents.length} events live right now. Choose the one whose doors you are running.`
@@ -730,7 +730,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                 </div>
             ) : null}
             {!eventIsLive && selectedEvent ? (
-                <div className="rounded-2xl bg-white/[0.045] px-4 py-3 text-xs font-semibold text-zinc-400">
+                <div className="rounded-2xl bg-pxi-field px-4 py-3 text-xs font-semibold text-zinc-400">
                     Setting up gates for <span className="text-white">{selectedEvent.name}</span> — scans go live when the event does.
                 </div>
             ) : null}
@@ -766,7 +766,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                         disabled={!selectedEventId}
                         className={cx(
                             'flex h-10 w-10 items-center justify-center rounded-full text-2xl font-bold transition',
-                            selectedEventId ? 'bg-white text-black hover:bg-zinc-200' : 'cursor-not-allowed bg-white/5 text-zinc-500'
+                            selectedEventId ? 'bg-pxi-purple text-white hover:brightness-110' : 'cursor-not-allowed bg-pxi-field text-zinc-500'
                         )}
                         aria-label="Add gate"
                     >
@@ -811,7 +811,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                         const noteText = typeof entry === 'string' ? entry : (entry?.note || entry?.text || entry?.message || '');
                         const timeVal = typeof entry === 'object' && entry?.at ? formatClockTime(entry.at) : null;
                         return (
-                            <div key={`${gate.id}-${i}`} className="min-w-0 break-words rounded-2xl bg-white/[0.045] p-4">
+                            <div key={`${gate.id}-${i}`} className="min-w-0 break-words rounded-2xl bg-pxi-field p-4">
                                 <HugeiconsIcon icon={Alert02Icon} size={18} className={eventIsLive ? 'text-amber-300' : 'text-zinc-500'} />
                                 <p className="mt-3 text-sm font-bold text-white">{gate.name}</p>
                                 <p className="mt-1 text-xs leading-relaxed text-zinc-400 min-w-0 break-words">
@@ -822,7 +822,7 @@ export default function LiveScanDashboard({ isLiveEvent }) {
                         );
                     }))}
                     {!gates.some((gate) => gate.incidentLog?.length) ? (
-                        <div className="rounded-2xl bg-white/[0.045] p-4 md:col-span-3">
+                        <div className="rounded-2xl bg-pxi-field p-4 md:col-span-3">
                             <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} className={eventIsLive ? 'text-emerald-300' : 'text-zinc-500'} />
                             <p className="mt-3 text-sm font-bold text-white">No incidents logged</p>
                             <p className="mt-1 text-xs text-zinc-500">Report one from a recent scan, or add gates to keep floor notes here.</p>

@@ -25,7 +25,7 @@ export default function AuthParticles() {
                 vy: (Math.random() - 0.5) * 0.4,
                 radius: Math.random() * 2 + 1,
                 color: isPurple ? '176,38,255' : '255,255,255',
-                shadowColor: isPurple ? '#B026FF' : '#ffffff',
+                shadowColor: isPurple ? '#A523EF' : '#ffffff',
                 opacity: Math.random() * 0.4 + 0.1,
                 opacityDir: Math.random() > 0.5 ? 1 : -1,
                 opacitySpeed: 0.003 + Math.random() * 0.004,

@@ -13,13 +13,13 @@ export default function RangeInput({
   return (
     <div className="space-y-2">
       <div className="flex items-start justify-between gap-3">
-        <label className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
+        <label className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">
           {label}
           {hint ? (
-            <span className="text-zinc-600 normal-case tracking-normal font-normal"> {hint}</span>
+            <span className="text-[#808080] normal-case tracking-normal font-normal"> {hint}</span>
           ) : null}
         </label>
-        <span className="text-sm font-bold text-white tabular-nums shrink-0">{formatValue(value)}</span>
+        <span className="text-sm font-black text-white tabular-nums shrink-0">{formatValue(value)}</span>
       </div>
       <input
         type="range"
@@ -30,7 +30,7 @@ export default function RangeInput({
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full accent-pxi-purple cursor-pointer"
       />
-      <div className="flex justify-between text-[10px] text-zinc-600 tabular-nums">
+      <div className="flex justify-between text-[10px] text-[#808080] tabular-nums">
         <span>{formatValue(min)}</span>
         <span>{formatValue(max)}</span>
       </div>

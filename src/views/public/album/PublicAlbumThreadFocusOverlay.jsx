@@ -133,7 +133,7 @@ export default function PublicAlbumThreadFocusOverlay({
         dragMomentum={false}
         onDragEnd={handleDragEnd}
       >
-        <div className="shrink-0 bg-[rgba(26,26,26,0.6)] px-3 pb-2.5 pt-2.5 backdrop-blur-xl">
+        <div className="shrink-0 bg-pxi-field px-3 pb-2.5 pt-2.5">
           {/* Drag handle affordance */}
           <div className="mb-1.5 flex justify-center">
             <span className="h-1 w-9 rounded-full bg-white/25" aria-hidden />
@@ -214,7 +214,7 @@ export default function PublicAlbumThreadFocusOverlay({
           ))}
         </div>
 
-        <div className="shrink-0 bg-[rgba(26,26,26,0.6)] px-[22px] py-3 backdrop-blur-xl">
+        <div className="shrink-0 bg-pxi-field px-[22px] py-3">
           <div className="flex items-center gap-3 rounded-2xl bg-black/40 px-3 py-2.5">
             <p className="min-w-0 flex-1 text-[11px] leading-snug text-zinc-400">
               React and comment in the PXI app — this page is read-only
@@ -222,7 +222,7 @@ export default function PublicAlbumThreadFocusOverlay({
             {openInAppUrl ? (
               <a
                 href={openInAppUrl}
-                className="shrink-0 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-black hover:bg-zinc-200"
+                className="shrink-0 rounded-full bg-pxi-purple px-3.5 py-2 text-xs font-bold text-white hover:brightness-110"
               >
                 Open
               </a>

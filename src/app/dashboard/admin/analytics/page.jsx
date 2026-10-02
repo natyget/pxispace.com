@@ -60,7 +60,7 @@ function fillDays(days, rows, pick) {
 
 function StatTile({ label, value, hint }) {
     return (
-        <div className="rounded-2xl bg-white/[0.04] p-5 backdrop-blur-md">
+        <div className="rounded-2xl bg-pxi-field p-5">
             <p className="text-[11px] font-medium tracking-[0.02em] text-white/40">{label}</p>
             <p className="mt-3 text-[28px] font-bold leading-none tracking-normal text-white tabular-nums">{value}</p>
             {hint ? <p className="mt-2 text-[12px] font-semibold leading-5 text-white/45">{hint}</p> : null}
@@ -161,13 +161,13 @@ function DailyBars({ title, data, color, format = (v) => String(v) }) {
                         {daysWithActivity} active days · {format(total)} total
                     </p>
                 </div>
-                <span className="w-fit rounded-full bg-white/[0.065] px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/55 tabular-nums">
+                <span className="w-fit rounded-full bg-pxi-field px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/55 tabular-nums">
                     {hover != null
                         ? `${shortDate(data[hover].key)} · ${format(data[hover].value)}`
                         : `Peak ${format(max)}`}
                 </span>
             </div>
-            <div className="rounded-2xl bg-white/[0.025] p-3">
+            <div className="rounded-2xl bg-pxi-field p-3">
                 <svg
                     viewBox={`0 0 ${W} ${H}`}
                     className="block h-auto w-full"
@@ -262,15 +262,15 @@ function RevenueLines({ data }) {
                     </p>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-left">
-                    <div className="rounded-2xl bg-white/[0.045] px-3 py-2">
+                    <div className="rounded-2xl bg-pxi-field px-3 py-2">
                         <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">GMV</p>
                         <p className="mt-1 text-sm font-bold text-white">{formatUsd(grossTotal)}</p>
                     </div>
-                    <div className="rounded-2xl bg-white/[0.045] px-3 py-2">
+                    <div className="rounded-2xl bg-pxi-field px-3 py-2">
                         <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">PXI revenue</p>
                         <p className="mt-1 text-sm font-bold text-white">{formatUsd(takeTotal)}</p>
                     </div>
-                    <div className="rounded-2xl bg-white/[0.045] px-3 py-2">
+                    <div className="rounded-2xl bg-pxi-field px-3 py-2">
                         <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Take rate</p>
                         <p className="mt-1 text-sm font-bold text-white">{takeRate}</p>
                     </div>
@@ -286,12 +286,12 @@ function RevenueLines({ data }) {
                     </span>
                 </div>
                 {hover != null ? (
-                    <span className="rounded-full bg-white/[0.065] px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/70 tabular-nums">
+                    <span className="rounded-full bg-pxi-field px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/70 tabular-nums">
                         {shortDate(data[hover].key)} · sales {formatUsd(data[hover].gross)} · PXI {formatUsd(data[hover].take)}
                     </span>
                 ) : null}
             </div>
-            <div className="rounded-2xl bg-white/[0.025] p-3">
+            <div className="rounded-2xl bg-pxi-field p-3">
                 <svg
                     viewBox={`0 0 ${W} ${H}`}
                     className="block h-auto w-full"
@@ -320,15 +320,15 @@ function RevenueLines({ data }) {
             <div className="mt-4 border-t border-white/[0.06] pt-4">
                 <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Money movement — not revenue</p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                    <div className="rounded-2xl bg-white/[0.025] px-3 py-2">
+                    <div className="rounded-2xl bg-pxi-field px-3 py-2">
                         <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Charged to buyers</p>
                         <p className="mt-1 text-sm font-bold text-white/80">{formatUsd(buyerPaidTotal)}</p>
                     </div>
-                    <div className="rounded-2xl bg-white/[0.025] px-3 py-2">
+                    <div className="rounded-2xl bg-pxi-field px-3 py-2">
                         <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Stripe processing</p>
                         <p className="mt-1 text-sm font-bold text-white/80">{formatUsd(processingTotal)}</p>
                     </div>
-                    <div className="rounded-2xl bg-white/[0.025] px-3 py-2">
+                    <div className="rounded-2xl bg-pxi-field px-3 py-2">
                         <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Paid to organizers</p>
                         <p className="mt-1 text-sm font-bold text-white/80">{formatUsd(payoutTotal)}</p>
                     </div>
@@ -420,7 +420,7 @@ export default function AdminAnalyticsPage() {
             />
 
             {!isLiveAdmin && (
-                <div className="rounded-2xl bg-white/[0.04] px-6 py-12 text-center text-sm text-white/50">
+                <div className="rounded-2xl bg-pxi-field px-6 py-12 text-center text-sm text-white/50">
                     Live platform analytics requires a backend ADMIN account.
                 </div>
             )}
@@ -428,7 +428,7 @@ export default function AdminAnalyticsPage() {
                 <div className="rounded-2xl bg-red-500/5 px-6 py-4 text-sm text-red-300">{error}</div>
             )}
             {isLiveAdmin && loading && (
-                <div className="rounded-2xl bg-white/[0.04] px-6 py-12 text-center text-sm text-white/45">Loading...</div>
+                <div className="rounded-2xl bg-pxi-field px-6 py-12 text-center text-sm text-white/45">Loading...</div>
             )}
 
             {isLiveAdmin && !loading && data && (
@@ -461,7 +461,7 @@ export default function AdminAnalyticsPage() {
                     </section>
 
                     {revenueWithheld ? (
-                        <div className="rounded-2xl bg-white/[0.04] px-6 py-4 text-sm text-white/55">
+                        <div className="rounded-2xl bg-pxi-field px-6 py-4 text-sm text-white/55">
                             Revenue, support and report figures are not shown to city admins.
                         </div>
                     ) : (

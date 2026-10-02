@@ -11,7 +11,7 @@ export default function PublicAlbumReadOnlyChatBar({ className = '' }) {
   return (
     <div
       className={[
-        'album-thread-chatbar shrink-0 border-t border-white/10 bg-black/90 backdrop-blur-md',
+        'album-thread-chatbar shrink-0 border-t border-white/10 bg-black/90',
         className,
       ]
         .filter(Boolean)
@@ -27,16 +27,16 @@ export default function PublicAlbumReadOnlyChatBar({ className = '' }) {
         }}
       >
         <div
-          className="flex size-11 shrink-0 items-center justify-center rounded-full border border-white/45 bg-white/[0.06] text-[9px] font-extrabold tracking-wide text-white opacity-60"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-pxi-field text-[9px] font-extrabold tracking-wide text-white opacity-60"
         >
           GIF
         </div>
         <div
-          className="flex min-h-11 flex-1 items-center rounded-[22px] border border-white/[0.18] bg-[rgba(28,28,32,0.42)] px-4 py-3 text-[15px] text-white/35"
+          className="flex min-h-11 flex-1 items-center rounded-[22px] bg-pxi-field px-4 py-3 text-[15px] text-white/35"
         >
           Type a message...
         </div>
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#d946ef] opacity-40 shadow-[0_0_8px_rgba(217,70,239,0.6)]">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-pxi-purple opacity-40">
           <HugeiconsIcon icon={SentIcon} size={20} className="text-white" />
         </div>
       </div>

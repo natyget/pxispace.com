@@ -16,8 +16,8 @@ export default function MyShotsCtaModal({ open, onClose, albumId, matchCount = 0
   const openInAppUrl = albumId ? `pxi://album/${albumId}` : null;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-sm rounded-3xl bg-[#0b0b0e]/95 p-8 text-center shadow-[0_0_60px_rgba(216,74,255,0.15)] backdrop-blur-xl">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 px-4">
+      <div className="relative w-full max-w-sm rounded-[28px] bg-pxi-surface p-8 text-center">
         <button
           type="button"
           onClick={onClose}
@@ -44,7 +44,7 @@ export default function MyShotsCtaModal({ open, onClose, albumId, matchCount = 0
         {openInAppUrl ? (
           <a
             href={openInAppUrl}
-            className="mt-6 block w-full rounded-full bg-pxi-purple px-8 py-3.5 text-sm font-black uppercase tracking-widest text-white shadow-[0_0_30px_rgba(216,74,255,0.4)]"
+            className="mt-6 block w-full rounded-full bg-pxi-purple px-8 py-3.5 text-sm font-black uppercase tracking-widest text-white"
           >
             Open in PXI
           </a>

@@ -125,7 +125,7 @@ export default function WishlistPage() {
             style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}
           >
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-zinc-900" />
+              <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-pxi-field" />
             ))}
           </div>
         ) : events.length === 0 ? (
@@ -136,7 +136,7 @@ export default function WishlistPage() {
             </p>
             <Link
               href="/events"
-              className="mt-2 inline-flex items-center justify-center rounded-full bg-white px-7 py-2.5 text-xs font-black uppercase tracking-widest text-black transition hover:scale-105"
+              className="mt-2 inline-flex items-center justify-center rounded-full bg-pxi-purple px-7 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:scale-105"
             >
               Discover events
             </Link>

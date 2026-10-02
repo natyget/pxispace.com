@@ -142,7 +142,7 @@ function EarningsHero({ heroValue, heroLabel, gross, retainedPct, retainedLabel,
                 <div className="max-w-2xl">
                     <p className="flex items-center gap-2.5 text-[13px] font-medium text-zinc-500">
                         Business
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-pxi-field px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">
                             <span className={`h-1.5 w-1.5 rounded-full ${sseStatus === 'connected' ? 'bg-emerald-400' : sseStatus === 'connecting' ? 'bg-amber-400' : 'bg-zinc-600'}`} />
                             {statusLabel}
                         </span>
@@ -156,7 +156,7 @@ function EarningsHero({ heroValue, heroLabel, gross, retainedPct, retainedLabel,
                             type="button"
                             onClick={onRefresh}
                             disabled={loading}
-                            className="inline-flex items-center justify-center gap-2 rounded-full bg-white/[0.06] px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-40"
+                            className="inline-flex items-center justify-center gap-2 rounded-full bg-pxi-field px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-40"
                         >
                             {loading ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" /> : <HugeiconsIcon icon={RefreshIcon} size={14} />}
                             Refresh
@@ -166,10 +166,10 @@ function EarningsHero({ heroValue, heroLabel, gross, retainedPct, retainedLabel,
                             onClick={onToggleCosts}
                             role="switch"
                             aria-checked={includeCosts}
-                            className="inline-flex items-center gap-2.5 rounded-full bg-white/[0.06] px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:bg-white/[0.09] hover:text-white"
+                            className="inline-flex items-center gap-2.5 rounded-full bg-pxi-field px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:bg-white/[0.09] hover:text-white"
                         >
                             Include costs
-                            <span className={`relative h-4 w-7 shrink-0 rounded-full transition ${includeCosts ? 'bg-[#d84aff]' : 'bg-white/[0.12]'}`}>
+                            <span className={`relative h-4 w-7 shrink-0 rounded-full transition ${includeCosts ? 'bg-pxi-purple' : 'bg-pxi-cancel'}`}>
                                 <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${includeCosts ? 'left-[14px]' : 'left-0.5'}`} />
                             </span>
                         </button>
@@ -396,7 +396,7 @@ export default function EarningsPage() {
             <div className="mx-auto max-w-4xl space-y-6 md:space-y-8">
                 <section className="dashboard-surface-b relative overflow-hidden rounded-[1.25rem] px-5 py-10 text-center md:px-8">
                     <div className="relative mx-auto max-w-xl">
-                        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.055]">
+                        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-pxi-field">
                             <HugeiconsIcon icon={HelpCircleIcon} size={28} className="text-white opacity-75" />
                         </div>
                         <p className="text-[13px] font-medium text-zinc-500">Business</p>
@@ -406,7 +406,7 @@ export default function EarningsPage() {
                         </p>
                         <Link
                             href="/dashboard/vendor-upgrade"
-                            className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-bold tracking-[0.02em] text-black transition hover:bg-zinc-200"
+                            className="mt-6 inline-flex items-center gap-2 rounded-full bg-pxi-purple px-5 py-2.5 text-xs font-bold text-white transition hover:brightness-110 uppercase tracking-[0.08em]"
                         >
                             <HugeiconsIcon icon={StarIcon} size={14} />
                             Start hosting
@@ -562,7 +562,7 @@ export default function EarningsPage() {
                                     {eventRows.map((row) => {
                                         const profit = row.netCents - row.costCents;
                                         return (
-                                            <div key={row.eventId} className="grid gap-3 rounded-2xl bg-white/[0.035] p-4 md:grid-cols-[1.4fr_110px_110px_110px] md:items-center">
+                                            <div key={row.eventId} className="grid gap-3 rounded-2xl bg-pxi-field p-4 md:grid-cols-[1.4fr_110px_110px_110px] md:items-center">
                                                 <div className="min-w-0">
                                                     <p className="truncate text-sm font-bold text-white">{row.name}</p>
                                                     <p className="mt-0.5 text-xs text-zinc-500">{fmtDate(row.startDate)}</p>
@@ -584,7 +584,7 @@ export default function EarningsPage() {
                                     })}
                                 </div>
                             ) : (
-                                <div className="rounded-2xl bg-white/[0.025] px-4 py-8 text-center">
+                                <div className="rounded-2xl bg-pxi-field px-4 py-8 text-center">
                                     <p className="text-sm font-semibold text-white">No event revenue or costs yet.</p>
                                     <p className="mt-1 text-xs text-zinc-500">Sell tickets or log expenses in the budget below to see per-event profit.</p>
                                 </div>
@@ -639,12 +639,12 @@ export default function EarningsPage() {
 
                 <div className="space-y-4">
                     {sortedEvents.length ? (
-                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/[0.045] px-4 py-3">
+                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-pxi-field px-4 py-3">
                             <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Budget for event</p>
                             <select
                                 value={budgetEventId}
                                 onChange={(e) => setBudgetEventId(e.target.value)}
-                                className="glass-field max-w-[260px] rounded-xl px-3 py-2 text-sm text-white"
+                                className="glass-field max-w-[260px] rounded-2xl px-3 py-2 text-sm text-white"
                             >
                                 {sortedEvents.map((event) => (
                                     <option key={event.id} value={event.id}>{event.name}</option>
@@ -672,16 +672,16 @@ export default function EarningsPage() {
                     {loading ? (
                         <div className="flex min-h-40 items-center justify-center"><HugeiconsIcon icon={Loading02Icon} size={20} className="animate-spin text-zinc-600" /></div>
                     ) : payouts.length === 0 ? (
-                        <div className="rounded-2xl bg-white/[0.025] px-5 py-10 text-center">
+                        <div className="rounded-2xl bg-pxi-field px-5 py-10 text-center">
                             <p className="text-sm font-semibold text-white">No payouts yet.</p>
                             <p className="mt-1 text-xs text-zinc-500">Completed payouts will appear here with destination and status.</p>
                         </div>
                     ) : (
                         <div className="space-y-2">
                             {payouts.map((payout) => (
-                                <div key={payout.id} className="grid gap-3 rounded-2xl bg-white/[0.035] p-4 md:grid-cols-[1fr_140px_170px_auto] md:items-center">
+                                <div key={payout.id} className="grid gap-3 rounded-2xl bg-pxi-field p-4 md:grid-cols-[1fr_140px_170px_auto] md:items-center">
                                     <div className="flex min-w-0 items-center gap-3">
-                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.055]">
+                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pxi-field">
                                             <HugeiconsIcon icon={Calendar01Icon} className="h-4 w-4 text-white opacity-55" />
                                         </span>
                                         <div className="min-w-0">

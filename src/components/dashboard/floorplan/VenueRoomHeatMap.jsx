@@ -116,7 +116,7 @@ export default function VenueRoomHeatMap({ venueId }) {
     }, [draw]);
 
     if (error) return <p className="text-sm text-red-300">{error}</p>;
-    if (!data) return <div className="h-64 animate-pulse rounded-2xl bg-white/[0.035]" />;
+    if (!data) return <div className="h-64 animate-pulse rounded-2xl bg-pxi-field" />;
 
     const timelineMax = Math.max(1, ...data.timeline.map((t) => t.captures + t.scans));
     const hasTimeline = data.timeline.some((t) => t.captures + t.scans > 0);
@@ -135,7 +135,7 @@ export default function VenueRoomHeatMap({ venueId }) {
                         const total = data.gates.find((g) => g.gate === pin.gate)?.scans ?? 0;
                         return (
                             <span key={pin.gate} className="absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left: `${(pin.xPx / plan.imageWidthPx) * 100}%`, top: `${(pin.yPx / plan.imageHeightPx) * 100}%` }}>
-                                <span className="block rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-white/20">
+                                <span className="block rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-white">
                                     {pin.gate} · {total.toLocaleString()}
                                 </span>
                             </span>
@@ -144,7 +144,7 @@ export default function VenueRoomHeatMap({ venueId }) {
                     {view.mode === 'map' ? <p className="absolute bottom-1.5 right-2 z-10 text-[9px] text-white/40">© OpenStreetMap contributors, © Geoapify</p> : null}
                 </div>
             ) : (
-                <div className="rounded-2xl bg-white/[0.035] p-6">
+                <div className="rounded-2xl bg-pxi-field p-6">
                     <p className="text-sm font-semibold text-white">The room map fills in as nights happen</p>
                     <p className="mt-1 max-w-xl text-sm leading-6 text-white/50">
                         When guests take photos at your events, the busiest spots in the room light up here, combined over every night.
@@ -159,7 +159,7 @@ export default function VenueRoomHeatMap({ venueId }) {
             </p>
 
             <div className="grid gap-4 lg:grid-cols-[1fr_2fr]">
-                <div className="rounded-2xl bg-white/[0.035] p-4">
+                <div className="rounded-2xl bg-pxi-field p-4">
                     <p className="mb-2 text-[11px] font-medium text-white/40">Doors used</p>
                     {data.gates.length ? (
                         <ul className="space-y-1.5">
@@ -173,7 +173,7 @@ export default function VenueRoomHeatMap({ venueId }) {
                         </ul>
                     ) : <p className="text-[13px] text-white/45">No scans yet.</p>}
                 </div>
-                <div className="rounded-2xl bg-white/[0.035] p-4">
+                <div className="rounded-2xl bg-pxi-field p-4">
                     <p className="mb-2 text-[11px] font-medium text-white/40">An average night</p>
                     {hasTimeline ? (
                         <>

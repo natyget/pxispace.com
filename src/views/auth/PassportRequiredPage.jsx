@@ -17,9 +17,8 @@ export default function PassportRequiredPage() {
   const store = storeLabelForPlatform(platform);
 
   return (
-    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center px-4 py-16">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4 py-16">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-pxi-purple/8 rounded-full blur-[140px]" />
       </div>
 
       <div className="relative w-full max-w-md text-center">
@@ -39,7 +38,7 @@ export default function PassportRequiredPage() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
           <IosDownloadLink
             href={storeUrlForPlatform(platform)}
-            className="flex items-center gap-3 px-6 py-3.5 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-100 transition-all w-full sm:w-auto justify-center"
+            className="flex items-center gap-3 px-6 py-3.5 rounded-full bg-pxi-purple text-white font-semibold text-sm hover:brightness-110 transition-all w-full sm:w-auto justify-center uppercase tracking-[0.08em]"
           >
             <StoreGlyph className="w-5 h-5 text-black" />
             {store.eyebrow} {store.name}

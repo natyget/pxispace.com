@@ -30,7 +30,7 @@ function GalleryGridTile({ item, index, onPressItem }) {
     <button
       type="button"
       onClick={() => onPressItem(index)}
-      className="group relative block aspect-square w-full overflow-hidden border-[0.5px] border-white/5 bg-[#111] focus:outline-none focus-visible:ring-2 focus-visible:ring-pxi-purple"
+      className="group relative block aspect-square w-full overflow-hidden border-[0.5px] border-white/5 bg-pxi-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-pxi-purple"
     >
       <Image
         src={src}
@@ -51,7 +51,7 @@ function GalleryGridTile({ item, index, onPressItem }) {
         </span>
       ) : null}
       {badge.kind !== 'none' ? (
-        <span className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 rounded-lg border border-white/15 bg-black/50 px-1.5 py-0.5 text-[10px] font-bold text-white/90">
+        <span className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 rounded-lg bg-black/50 px-1.5 py-0.5 text-[10px] font-bold text-white/90">
           <span>{badge.emoji}</span>
           {badge.kind === 'reaction' && badge.count ? <span>{badge.count}</span> : null}
         </span>

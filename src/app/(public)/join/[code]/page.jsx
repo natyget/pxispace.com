@@ -31,8 +31,8 @@ export default async function JoinCodePage({ params }) {
   const openHref = `${site}/join/${encodeURIComponent(String(code ?? ''))}`;
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#0a0a0a] px-4 py-24 text-center text-white">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/60 px-6 py-10">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-black px-4 py-24 text-center text-white">
+      <div className="w-full max-w-md rounded-2xl bg-pxi-field px-6 py-10">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-pxi-purple">Invitation</p>
         <h1 className="mt-3 text-2xl font-bold tracking-tight">
           You&apos;ve been invited to join an album on PXI

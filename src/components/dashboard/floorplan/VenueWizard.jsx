@@ -39,10 +39,10 @@ function StepIndicator({ step, maxStep, onJump }) {
                         onClick={() => onJump(s.n)}
                         className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold tracking-[0.02em] transition ${
                             step === s.n
-                                ? 'bg-[#d84aff] text-white'
+                                ? 'bg-pxi-purple text-white'
                                 : s.n < step
                                   ? 'bg-white/[0.09] text-zinc-300 hover:bg-white/[0.14]'
-                                  : 'bg-white/[0.04] text-zinc-600'
+                                  : 'bg-pxi-field text-zinc-600'
                         } ${s.n > maxStep ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-black/25 text-[10px]">{s.n}</span>
@@ -238,7 +238,7 @@ export default function VenueWizard({ existingVenue = null, eventId = null, seed
                         </div>
                         <div className="flex items-center gap-2">
                             {onCancel ? (
-                                <button type="button" onClick={onCancel} className="pill-ghost px-4 py-2 text-sm font-bold">
+                                <button type="button" onClick={onCancel} className="pill-cancel px-4 py-2 text-sm font-bold">
                                     Cancel
                                 </button>
                             ) : null}
@@ -263,10 +263,10 @@ export default function VenueWizard({ existingVenue = null, eventId = null, seed
                     </label>
                     <div className="mt-4 max-w-xl">{addressSearch('Search to change the address...')}</div>
                     {mapPreviewUrl ? (
-                        <div className="mt-4 max-w-xl overflow-hidden rounded-2xl ring-1 ring-white/[0.07]">
+                        <div className="mt-4 max-w-xl overflow-hidden rounded-2xl">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={mapPreviewUrl} alt="" className="h-44 w-full bg-[#0b0b0f] object-cover" />
-                            <div className="bg-white/[0.035] px-4 py-2.5 text-xs font-semibold text-zinc-300">{address}</div>
+                            <img src={mapPreviewUrl} alt="" className="h-44 w-full bg-pxi-surface object-cover" />
+                            <div className="bg-pxi-field px-4 py-2.5 text-xs font-semibold text-zinc-300">{address}</div>
                         </div>
                     ) : null}
                 </section>
@@ -298,7 +298,7 @@ export default function VenueWizard({ existingVenue = null, eventId = null, seed
                     <h2 className="mt-1 text-xl font-bold text-white">Add a venue</h2>
                 </div>
                 {onCancel ? (
-                    <button type="button" onClick={onCancel} className="pill-ghost px-4 py-2 text-sm font-bold">
+                    <button type="button" onClick={onCancel} className="pill-cancel px-4 py-2 text-sm font-bold">
                         Cancel
                     </button>
                 ) : null}
@@ -322,10 +322,10 @@ export default function VenueWizard({ existingVenue = null, eventId = null, seed
                         </p>
                         <div className="mt-4">{addressSearch('Search the venue address...')}</div>
                         {mapPreviewUrl ? (
-                            <div className="mt-4 overflow-hidden rounded-2xl ring-1 ring-white/[0.07]">
+                            <div className="mt-4 overflow-hidden rounded-2xl">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={mapPreviewUrl} alt="" className="h-56 w-full bg-[#0b0b0f] object-cover" />
-                                <div className="bg-white/[0.035] px-4 py-2.5 text-xs font-semibold text-zinc-300">
+                                <img src={mapPreviewUrl} alt="" className="h-56 w-full bg-pxi-surface object-cover" />
+                                <div className="bg-pxi-field px-4 py-2.5 text-xs font-semibold text-zinc-300">
                                     {reverseGeocoding ? 'Looking up the address...' : address}
                                 </div>
                             </div>
@@ -362,7 +362,7 @@ export default function VenueWizard({ existingVenue = null, eventId = null, seed
                             />
                         </label>
 
-                        <div className="mt-5 rounded-2xl bg-white/[0.035] p-4">
+                        <div className="mt-5 rounded-2xl bg-pxi-field p-4">
                             <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Gates</p>
                             <div className="mt-2">
                                 <GateListEditor gates={gates} onChange={setGates} />

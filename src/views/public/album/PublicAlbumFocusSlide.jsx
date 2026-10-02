@@ -41,13 +41,13 @@ function FocusCommentCard({ comment, index }) {
         transform: `rotate(${tilt}deg) translateX(${shift}px)`,
       }}
     >
-      <div className="relative overflow-hidden rounded-[14px] border-[1.5px] border-[rgba(138,144,158,0.48)] bg-[rgba(24,26,32,0.35)]">
+      <div className="relative overflow-hidden rounded-[14px] border-[1.5px] border-[rgba(138,144,158,0.48)] bg-pxi-field">
         <div
           className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-white/[0.03] to-black/20"
           aria-hidden
         />
         <div className="relative z-[2] flex items-start gap-2 px-[9px] py-[7px]">
-          <span className="size-8 shrink-0 overflow-hidden rounded-full border border-white/30">
+          <span className="size-8 shrink-0 overflow-hidden rounded-full">
             <UserAvatar user={{ avatarUrl: actor.avatarUrl }} size={32} className="size-full" />
           </span>
           <span className="min-w-0 flex-1">

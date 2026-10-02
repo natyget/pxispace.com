@@ -58,12 +58,12 @@ export default function TicketEmailPreview({ preview, className = '', compact = 
   return (
     <div className={className}>
       <div
-        className={`relative mx-auto w-full max-w-[300px] overflow-hidden rounded-2xl border border-white/10 aspect-[3/4] flex flex-col ${
+        className={`relative mx-auto w-full max-w-[300px] overflow-hidden rounded-2xl aspect-[3/4] flex flex-col ${
           compact ? 'max-w-[280px]' : ''
         }`}
         style={frameStyle}
       >
-        <div className="absolute -inset-4 backdrop-blur-md bg-black/10" aria-hidden />
+        <div className="absolute -inset-4 bg-black/10" aria-hidden />
         <div className="absolute inset-0" style={FIRE_NUGGET_OVERLAY_STYLE} aria-hidden />
         <div
           className={`relative z-10 flex flex-1 flex-col justify-between ${
@@ -113,7 +113,7 @@ export default function TicketEmailPreview({ preview, className = '', compact = 
                 >
                   {locationPrimary}
                 </p>
-                <p className="text-[10px] font-medium text-purple-300/90 mt-0.5 truncate">
+                <p className="text-[10px] font-medium text-pxi-purple mt-0.5 truncate">
                   {locationSecondary}
                 </p>
               </div>
@@ -124,7 +124,7 @@ export default function TicketEmailPreview({ preview, className = '', compact = 
                 <p className={`font-semibold text-white leading-tight ${compact ? 'text-xs' : 'text-sm'}`}>
                   {tier}
                 </p>
-                <p className="text-[10px] font-medium text-fuchsia-400 mt-0.5">{typeLabel}</p>
+                <p className="text-[10px] font-medium text-pxi-purple mt-0.5">{typeLabel}</p>
                 <p className="text-[9px] text-white/40 mt-1">{priceLabel}</p>
               </div>
             </div>

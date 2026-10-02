@@ -49,7 +49,7 @@ function Panel({ title, hint, children }) {
 
 function ClaimRow({ claim, children }) {
     return (
-        <li className="flex flex-col gap-3 rounded-2xl bg-white/[0.035] px-4 py-3 md:flex-row md:items-center md:justify-between">
+        <li className="flex flex-col gap-3 rounded-2xl bg-pxi-field px-4 py-3 md:flex-row md:items-center md:justify-between">
             <div className="min-w-0">
                 <p className="truncate text-[14px] font-semibold text-white">{claim.venue.name}</p>
                 <p className="mt-0.5 text-[12px] text-white/45">
@@ -89,7 +89,7 @@ function QueueActions({ claim, onDone }) {
     };
     return (
         <div className="flex flex-wrap items-center gap-2">
-            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (optional)" className="rounded-full bg-white/[0.055] px-3 py-1.5 text-[12px] text-white placeholder:text-white/35 outline-none" />
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (optional)" className="rounded-full bg-pxi-field px-3 py-1.5 text-[12px] text-white placeholder:text-white/35 outline-none" />
             <button type="button" disabled={busy} onClick={() => act(approveSalesClaim)} className="rounded-full bg-emerald-500/10 px-4 py-1.5 text-[12px] text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-40">
                 Approve
             </button>
@@ -236,7 +236,7 @@ export default function SalesClaimsPage() {
                                         type="button"
                                         disabled={unavailable}
                                         onClick={() => setSelected(v)}
-                                        className={`flex w-full items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left ${active ? 'bg-white/[0.1]' : 'bg-white/[0.03] hover:bg-white/[0.06]'} disabled:opacity-40`}
+                                        className={`flex w-full items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left ${active ? 'bg-white/[0.1]' : 'bg-pxi-field hover:bg-white/[0.06]'} disabled:opacity-40`}
                                     >
                                         <span className="min-w-0">
                                             <span className="block truncate text-[14px] font-semibold text-white">{v.name}</span>
@@ -252,14 +252,14 @@ export default function SalesClaimsPage() {
                         {venues.length === 0 ? <li className="px-1 text-sm text-white/45">No venues found.</li> : null}
                     </ul>
                     {selected && (
-                        <div className="space-y-3 rounded-2xl bg-white/[0.03] p-4">
+                        <div className="space-y-3 rounded-2xl bg-pxi-field p-4">
                             <p className="text-[13px] text-white/70">
                                 Claiming <span className="font-semibold text-white">{selected.name}</span>
                             </p>
                             <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Vendor account username (exact)" className={inputCls} />
                             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note for the approver (optional)" className={inputCls} />
                             <div className="flex flex-wrap gap-2">
-                                <button type="button" disabled={busy || !username.trim()} onClick={submit} className="rounded-full bg-white px-5 py-2 text-[13px] font-bold text-black disabled:opacity-40">
+                                <button type="button" disabled={busy || !username.trim()} onClick={submit} className="rounded-full bg-pxi-purple px-5 py-2 text-[13px] font-bold text-white disabled:opacity-40 uppercase tracking-[0.08em]">
                                     {busy ? 'Sending...' : 'Send for approval'}
                                 </button>
                                 <button type="button" disabled={busy} onClick={() => setSelected(null)} className={pillBtn}>

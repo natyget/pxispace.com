@@ -295,8 +295,6 @@ const Events = ({ detailBasePath = '/events' }) => {
 
   return (
     <div className="pt-32 pb-24 min-h-screen bg-black overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pxi-purple/10 blur-[150px] rounded-full -z-10" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 blur-[150px] rounded-full -z-10" />
 
       <div className="container mx-auto px-6">
         <EventsHero
@@ -327,7 +325,7 @@ const Events = ({ detailBasePath = '/events' }) => {
         />
 
         {sortMode === 'match' && !isLoggedIn ? (
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-10 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4 text-sm text-zinc-400">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-10 rounded-2xl bg-pxi-field px-5 py-4 text-sm text-zinc-400">
             <p>Log in and connect Spotify to rank events by your taste.</p>
             <Link href="/login" className="text-pxi-purple hover:text-white font-bold uppercase text-xs tracking-widest shrink-0">
               Log in →
@@ -336,7 +334,7 @@ const Events = ({ detailBasePath = '/events' }) => {
         ) : null}
 
         {sortMode === 'match' && isLoggedIn && musicConnected === false ? (
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-10 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4 text-sm text-zinc-400">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-10 rounded-2xl bg-pxi-field px-5 py-4 text-sm text-zinc-400">
             <p>Connect Spotify to rank events by your taste.</p>
             <button
               type="button"

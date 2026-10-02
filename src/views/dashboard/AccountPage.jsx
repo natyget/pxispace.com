@@ -85,7 +85,7 @@ function SettingsHero({ user, activeTab }) {
             <div className="max-w-2xl">
                 <p className="flex items-center gap-2.5 text-[13px] font-medium text-zinc-500">
                     Account
-                    <span className="rounded-full bg-white/[0.05] px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">@{user?.username || 'account'}</span>
+                    <span className="rounded-full bg-pxi-field px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">@{user?.username || 'account'}</span>
                 </p>
                 <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Settings</h1>
                 <p className="mt-1.5 max-w-xl text-sm leading-6 text-zinc-500">
@@ -249,9 +249,9 @@ function ProfileEditor({ user, updateUser }) {
                 <div className="relative">
                     {avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={avatarUrl} alt="Profile" className="h-[72px] w-[72px] rounded-full object-cover ring-1 ring-white/10" />
+                        <img src={avatarUrl} alt="Profile" className="h-[72px] w-[72px] rounded-full object-cover" />
                     ) : (
-                        <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-white/[0.055] ring-1 ring-white/10">
+                        <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-pxi-field">
                             <HugeiconsIcon icon={UserIcon} size={28} className="text-zinc-500" />
                         </div>
                     )}
@@ -260,7 +260,7 @@ function ProfileEditor({ user, updateUser }) {
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploadingAvatar}
                         aria-label="Change profile photo"
-                        className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-lg transition hover:bg-zinc-200 disabled:opacity-50"
+                        className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-pxi-purple text-white shadow-lg transition hover:brightness-110 disabled:opacity-50"
                     >
                         {uploadingAvatar
                             ? <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
@@ -274,11 +274,11 @@ function ProfileEditor({ user, updateUser }) {
                 </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-                <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
+                <label className="rounded-[1.25rem] bg-pxi-field px-4 py-3">
                     <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Display name</span>
                     <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={profileInputCls} />
                 </label>
-                <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
+                <label className="rounded-[1.25rem] bg-pxi-field px-4 py-3">
                     <span className="flex items-center justify-between text-[11px] font-bold tracking-[0.02em] text-zinc-500">
                         Username
                         {usernameHint ? <span className={`font-medium ${usernameHint.cls}`}>{usernameHint.text}</span> : null}
@@ -290,7 +290,7 @@ function ProfileEditor({ user, updateUser }) {
                         className={profileInputCls}
                     />
                 </label>
-                <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3 sm:col-span-2">
+                <label className="rounded-[1.25rem] bg-pxi-field px-4 py-3 sm:col-span-2">
                     <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Bio</span>
                     <textarea
                         value={bio}
@@ -302,7 +302,7 @@ function ProfileEditor({ user, updateUser }) {
                     />
                     <span className="mt-1 block text-right text-[10px] text-zinc-600">{bio.length}/280</span>
                 </label>
-                <div className="relative rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
+                <div className="relative rounded-[1.25rem] bg-pxi-field px-4 py-3">
                     <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">City</span>
                     <input
                         value={cityInput}
@@ -315,7 +315,7 @@ function ProfileEditor({ user, updateUser }) {
                         className={profileInputCls}
                     />
                     {cityOpen && citySuggestions.length > 0 && (
-                        <div className="absolute left-0 top-full z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-[1.25rem] bg-[#1a1a1a] shadow-xl ring-1 ring-white/10">
+                        <div className="absolute left-0 top-full z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-[1.25rem] bg-pxi-field shadow-xl">
                             {citySuggestions.map((c, i) => (
                                 <button
                                     key={c.code || i}
@@ -329,14 +329,14 @@ function ProfileEditor({ user, updateUser }) {
                         </div>
                     )}
                 </div>
-                <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
+                <label className="rounded-[1.25rem] bg-pxi-field px-4 py-3">
                     <span className="flex items-center gap-2 text-[11px] font-bold tracking-[0.02em] text-zinc-500">
                         <HugeiconsIcon icon={InstagramIcon} size={13} />
                         Instagram
                     </span>
                     <input value={instagramHandle} onChange={(e) => setInstagramHandle(e.target.value)} placeholder="@handle" className={profileInputCls} />
                 </label>
-                <label className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
+                <label className="rounded-[1.25rem] bg-pxi-field px-4 py-3">
                     <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Birthday</span>
                     <input
                         type="date"
@@ -345,7 +345,7 @@ function ProfileEditor({ user, updateUser }) {
                         className={`${profileInputCls} [color-scheme:dark]`}
                     />
                 </label>
-                <div className="flex items-center justify-between rounded-[1.25rem] bg-white/[0.035] px-4 py-3">
+                <div className="flex items-center justify-between rounded-[1.25rem] bg-pxi-field px-4 py-3">
                     <div>
                         <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Show age</p>
                         <p className="mt-1 text-xs text-zinc-500">Display your age on your profile</p>
@@ -355,12 +355,12 @@ function ProfileEditor({ user, updateUser }) {
                         role="switch"
                         aria-checked={showAge}
                         onClick={() => setShowAge((v) => !v)}
-                        className={`relative h-6 w-11 shrink-0 rounded-full transition ${showAge ? 'bg-[#d84aff]' : 'bg-white/[0.08]'}`}
+                        className={`relative h-6 w-11 shrink-0 rounded-full transition ${showAge ? 'bg-pxi-purple' : 'bg-pxi-cancel'}`}
                     >
                         <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${showAge ? 'left-[22px]' : 'left-0.5'}`} />
                     </button>
                 </div>
-                <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-3 sm:col-span-2">
+                <div className="rounded-[1.25rem] bg-pxi-field px-4 py-3 sm:col-span-2">
                     <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Email</p>
                     <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-white">
                         <HugeiconsIcon icon={Mail01Icon} size={14} className="text-zinc-500" />
@@ -374,7 +374,7 @@ function ProfileEditor({ user, updateUser }) {
                 type="button"
                 onClick={save}
                 disabled={saving || uploadingAvatar}
-                className="mt-4 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:opacity-50"
+                className="mt-4 rounded-full bg-pxi-purple px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-50 uppercase tracking-[0.08em]"
             >
                 {saving ? 'Saving...' : 'Save profile'}
             </button>
@@ -445,7 +445,7 @@ function MusicConnectionsCard() {
 
     return (
         <SettingsSurface eyebrow="Personalization" title="Music">
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-[1.25rem] bg-pxi-field px-4 py-4">
                 <div className="flex min-w-0 items-start gap-3">
                     <div
                         className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
@@ -609,7 +609,7 @@ function AccountPageContent() {
         <div className="mx-auto max-w-6xl space-y-5 md:space-y-6">
             <SettingsHero user={user} activeTab={activeTab} />
 
-            <div className="grid w-full grid-cols-2 gap-1 rounded-[1rem] bg-white/[0.045] p-1 sm:flex sm:w-fit sm:rounded-full" role="tablist" aria-label="Account settings sections">
+            <div className="grid w-full grid-cols-2 gap-1 rounded-[1rem] bg-pxi-field p-1 sm:flex sm:w-fit sm:rounded-full" role="tablist" aria-label="Account settings sections">
                 {TABS.map((tab) => (
                     <a
                         key={tab.id}
@@ -639,12 +639,12 @@ function AccountPageContent() {
                                 <p className="text-sm text-zinc-500">Loading real payout data...</p>
                             ) : (
                                 <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
+                                    <div className="rounded-[1.25rem] bg-pxi-field px-4 py-4">
                                         <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Available balance</p>
                                         <p className="mt-2 text-2xl font-bold text-white">${(availableBalanceCents / 100).toFixed(2)}</p>
                                         <p className="mt-1 text-xs text-zinc-500">Net of PXI fees, not yet paid out by Stripe</p>
                                     </div>
-                                    <div className="rounded-[1.25rem] bg-white/[0.035] px-4 py-4">
+                                    <div className="rounded-[1.25rem] bg-pxi-field px-4 py-4">
                                         <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Most recent payout</p>
                                         <p className="mt-2 text-2xl font-bold text-white">
                                             {lastPayout ? `$${(lastPayout.amount / 100).toFixed(2)}` : '—'}
@@ -668,7 +668,7 @@ function AccountPageContent() {
                                 <>
                                     <div className="grid gap-3 sm:grid-cols-2">
                                         {usageBreakdown.map((item) => (
-                                            <div key={item.name} className="rounded-[1.25rem] bg-white/[0.035] p-4">
+                                            <div key={item.name} className="rounded-[1.25rem] bg-pxi-field p-4">
                                                 <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">{item.name}</p>
                                                 <p className="mt-2 text-2xl font-bold text-white">${item.value.toFixed(2)}</p>
                                             </div>
@@ -730,7 +730,7 @@ function AccountPageContent() {
                                         type="button"
                                         onClick={() => { setShowConfirm(false); setError(''); }}
                                         disabled={deleting}
-                                        className="pill-ghost px-4 py-2.5 text-sm font-medium"
+                                        className="pill-cancel px-4 py-2.5 text-sm font-medium"
                                     >
                                         Cancel
                                     </button>
