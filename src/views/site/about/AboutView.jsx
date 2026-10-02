@@ -27,17 +27,7 @@ export default function AboutView() {
                 <span>the product.</span>
               </span>
             </h1>
-            <p className="hero-lead">We're six people building the app we wanted on our own nights out: a ticket in the host's name, one camera roll for everyone in the room, and a scrapbook waiting the next morning.</p>
-          </div>
-        </section>
-        {/* ============ A NOTE FROM THE SIX OF US ============ */}
-        <section className="note" id="note" aria-labelledby="note-h">
-          <div className="note-in">
-            <p className="eyebrow">A note from us</p>
-            <h2 id="note-h" className="display">There are six of us.</h2>
-            <p>No departments, no layers. The same six people design PXI, write the code, answer the support inbox and work the door on event nights. If something in the app made your night better, one of us built it. If something broke, one of us is already fixing it.</p>
-            <p>We are building this because the best nights disappear. The photos end up in forty camera rolls, the ticket is a dead link by morning, and nothing is left to show you were all there.</p>
-            <p>We don't have it all figured out. We ship, we watch what happens in a real room, and we fix what didn't hold up. That only works if you tell us the truth.</p>
+            <p className="hero-lead">PXI is event technology built around what people keep: tickets in the organizer's own name, one shared camera roll for everyone in the room, and a scrapbook that's ready the next morning.</p>
           </div>
         </section>
         {/* ============ MISSION ============ */}
@@ -89,18 +79,38 @@ export default function AboutView() {
         {/* ============ HOW WE BUILD ============ */}
         <section className="build" id="build" aria-labelledby="build-h">
           <div className="build-in">
-            <h2 id="build-h" className="display">Made by six people<br />who run rooms.</h2>
+            <h2 id="build-h" className="display">Made by people<br />who run rooms.</h2>
             <div className="build-cols">
-              <p>We host, produce and photograph live events ourselves, so PXI gets tested where it has to work: on a crowded floor, at a busy door, on a phone at 2 AM.</p>
-              <p>We ship what holds up on a real night and cut what doesn't. When we get it wrong, we would rather hear it from you than guess.</p>
+              <p>PXI is designed by people who host, produce and photograph live events. The product is tested where it has to work: on a crowded floor, at a busy door, on a phone at 2 AM.</p>
+              <p>We ship what holds up on a real night and cut what doesn't. That's why the same app handles the ticket, the door and the memory, instead of handing guests off between tools.</p>
             </div>
           </div>
         </section>
-        {/* ============ THE ASK: help a team of six ============ */}
+        {/* ============ A NOTE, said once, just before the ask ============ */}
+        <section className="note" id="note" aria-labelledby="note-h">
+          <div className="note-paper">
+            <i className="note-tape" aria-hidden="true"></i>
+            <h2 id="note-h" className="note-h">
+              There are{' '}
+              <span className="note-ul">
+                six
+                <svg viewBox="0 0 120 18" preserveAspectRatio="none" aria-hidden="true">
+                  <path pathLength="1" d="M3 11 C 24 4, 44 15, 62 9 S 98 5, 117 10" />
+                </svg>
+              </span>{' '}
+              of us.
+            </h2>
+            <p>No departments, no layers. The same six people design PXI, write the code, answer the support inbox and work the door on event nights. If something in the app made your night better, one of us built it. If something broke, one of us is already fixing it.</p>
+            <p>We are building this because the best nights disappear. The photos end up in forty camera rolls, the ticket is a dead link by morning, and nothing is left to show you were all there.</p>
+            <p>We don't have it all figured out. We ship, we watch what happens in a real room, and we fix what didn't hold up. That only works if you tell us the truth.</p>
+            <img className="note-mark" src="/site/img/pxi-mark.svg?v=grit5" alt="" width="56" height="56" aria-hidden="true" />
+          </div>
+        </section>
+        {/* ============ THE ASK ============ */}
         <section className="contact" id="help" aria-labelledby="help-h">
           <div className="help-in">
             <h2 id="help-h" className="display">We can't do this<br />without you.</h2>
-            <p className="lead center">We don't have a marketing department. We have you. If PXI made one of your nights better, these four things help a team our size more than anything.</p>
+            <p className="lead center">If PXI made one of your nights better, these four things help more than anything.</p>
           </div>
           <div className="cards">
             <article className="ccard">
@@ -121,7 +131,7 @@ export default function AboutView() {
             <article className="ccard">
               <span className="ci" data-i="BubbleChatIcon" aria-hidden="true"></span>
               <h3>Tell us what's broken.</h3>
-              <p>A confusing screen, a missing feature, a bug at the worst moment. We want to hear all of it, and one of the six of us will read it.</p>
+              <p>A confusing screen, a missing feature, a bug at the worst moment. We want to hear all of it.</p>
               <a className="ccta" href="/contact">Send feedback</a>
             </article>
             <article className="ccard">
@@ -138,7 +148,6 @@ export default function AboutView() {
           </div>
           <div className="signoff">
             <p>Thank you for being here this early.</p>
-            <small>The six of us at PXI</small>
           </div>
         </section>
       </main>

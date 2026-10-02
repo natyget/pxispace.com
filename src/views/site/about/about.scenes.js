@@ -194,7 +194,13 @@ export default async function initAbout(PXR, L) {
   /* ═════════════ BELIEFS, BUILD, PEOPLE, CONTACT ═════════════ */
   function initRest() {
     if (!gsap || REDUCED) return;
-    gsap.from(['#note .note-in > *'], { y: 30, opacity: 0, duration: 1, ease: 'expo.out', stagger: 0.08, scrollTrigger: { trigger: '#note', start: 'top 75%' } });
+    // the note lands like a sheet set down on the page, then its lines come in one after another
+    // and the pen goes back to underline "six"
+    const noteAt = { trigger: '#note', start: 'top 78%' };
+    gsap.from('#note .note-paper', { y: 70, rotation: 5, opacity: 0, duration: 1.2, ease: 'expo.out', scrollTrigger: noteAt });
+    gsap.from(['#note .note-h', '#note .note-paper p'], { y: 10, opacity: 0, duration: 0.7, ease: 'power2.out', stagger: 0.22, delay: 0.35, scrollTrigger: noteAt });
+    gsap.fromTo('#note .note-ul path', { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.6, ease: 'power2.out', delay: 1.05, scrollTrigger: noteAt });
+    gsap.from('#note .note-mark', { scale: 0.4, opacity: 0, rotation: -30, duration: 0.7, ease: 'back.out(2)', delay: 1.5, scrollTrigger: noteAt });
     gsap.from(['#build .build-in > *'], { y: 30, opacity: 0, duration: 1, ease: 'expo.out', stagger: 0.08, scrollTrigger: { trigger: '#build', start: 'top 75%' } });
     gsap.from(['#help .help-in > *'], { y: 30, opacity: 0, duration: 1, ease: 'expo.out', stagger: 0.08, scrollTrigger: { trigger: '#help', start: 'top 75%' } });
     gsap.from(['#help .ccard'], { y: 36, opacity: 0, duration: 1, ease: 'expo.out', stagger: 0.08, scrollTrigger: { trigger: '#help .cards', start: 'top 88%' } });

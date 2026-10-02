@@ -33,13 +33,20 @@ div.pxr.about .appstore small { font-size: 11px; letter-spacing: .08em; }
 .pxr:where(.about) .ab-cue i { width: 36px; height: 1px; background: linear-gradient(90deg, var(--orange), transparent); transform-origin: left; animation: pxr-cueline 2.2s var(--ease-out) infinite; }
 @keyframes pxr-cueline { 0% { transform: scaleX(0); } 55% { transform: scaleX(1); } 100% { transform: scaleX(1); opacity: 0; } }
 
-/* ───────── a note from the six of us ───────── */
-.pxr:where(.about) .note { position: relative; padding: 18vh var(--gutter) 10vh; }
-.pxr:where(.about) .note-in { max-width: 680px; margin: 0 auto; width: 100%; text-align: left; }
-.pxr:where(.about) .note-in .eyebrow { margin-bottom: 22px; }
-.pxr:where(.about) .note-in .display { margin-bottom: 36px; }
-.pxr:where(.about) .note-in p:not(.eyebrow) { font: 500 clamp(1.05rem, 1.45vw, 1.25rem)/1.8 var(--f-body); letter-spacing: -.005em; color: #d4d4d8; text-wrap: pretty; }
-.pxr:where(.about) .note-in p:not(.eyebrow) + p { margin-top: 1.4em; }
+/* ───────── the note: said once, on paper, just before the ask ─────────
+   A sheet of paper taped to the page, written by hand. No kicker, no card chrome: it should read
+   as something a person left for you, not as a section of a website. */
+.pxr:where(.about) .note { position: relative; display: grid; place-items: center; padding: 16vh var(--gutter) 4vh; }
+.pxr:where(.about) .note-paper { position: relative; width: min(640px, 100%); padding: 58px 56px 92px; border-radius: 3px; rotate: -1.4deg; color: #23211a; background: linear-gradient(178deg, #f8f5ee 0%, #f1ede3 62%, #ebe6da 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 -1px 0 rgba(0, 0, 0, .06), 0 44px 80px -34px rgba(0, 0, 0, .8), 0 14px 26px -14px rgba(0, 0, 0, .6); transition: rotate .6s var(--ease-out), translate .6s var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { .pxr:where(.about) .note-paper:hover { rotate: -.3deg; translate: 0 -5px; } }
+.pxr:where(.about) .note-tape { position: absolute; left: 50%; top: -17px; width: 138px; height: 36px; translate: -50% 0; rotate: -3deg; background: rgba(240, 228, 176, .7); clip-path: polygon(0 6%, 3% 0, 97% 3%, 100% 10%, 99% 92%, 96% 100%, 4% 97%, 1% 90%); box-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
+.pxr:where(.about) .note-h { margin: 0 0 20px; font: 700 clamp(2.7rem, 4.6vw, 3.7rem)/1.02 "Caveat", "Bradley Hand", "Segoe Print", cursive; letter-spacing: -.01em; color: #17160f; }
+.pxr:where(.about) .note-ul { position: relative; display: inline-block; white-space: nowrap; }
+.pxr:where(.about) .note-ul svg { position: absolute; left: -6%; bottom: -.16em; width: 112%; height: .34em; overflow: visible; }
+.pxr:where(.about) .note-ul path { fill: none; stroke: #FF5A1F; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.pxr:where(.about) .note-paper p { font: 500 clamp(1.5rem, 2.05vw, 1.78rem)/1.36 "Caveat", "Bradley Hand", "Segoe Print", cursive; color: #2b2920; text-wrap: pretty; }
+.pxr:where(.about) .note-paper p + p { margin-top: .78em; }
+.pxr:where(.about) .note-mark { position: absolute; right: 34px; bottom: 24px; width: 54px; height: 54px; rotate: 9deg; }
 
 /* ───────── mission ───────── */
 .pxr:where(.about) .mission { position: relative; min-height: 100vh; min-height: 100svh; display: flex; align-items: center; justify-content: center; padding: 12vh var(--gutter); }
@@ -140,9 +147,11 @@ div.pxr.about .appstore small { font-size: 11px; letter-spacing: .08em; }
   .pxr:where(.about) .build-in { grid-template-columns: 1fr; }
   .pxr:where(.about) .build-cols { grid-template-columns: 1fr; gap: 16px; }
   .pxr:where(.about) .build-cols p { font-size: 15.5px; }
-  .pxr:where(.about) .note { padding: 96px 18px 24px; }
-  .pxr:where(.about) .note-in .display { margin-bottom: 26px; }
-  .pxr:where(.about) .note-in p:not(.eyebrow) { font-size: 16.5px; line-height: 1.75; }
+  .pxr:where(.about) .note { padding: 96px 18px 8px; }
+  .pxr:where(.about) .note-paper { padding: 46px 26px 86px; rotate: -1deg; }
+  .pxr:where(.about) .note-h { font-size: 2.55rem; margin-bottom: 16px; }
+  .pxr:where(.about) .note-paper p { font-size: 1.42rem; line-height: 1.34; }
+  .pxr:where(.about) .note-mark { right: 24px; bottom: 22px; width: 48px; height: 48px; }
   .pxr:where(.about) .contact { padding: 72px 18px 56px; }
   .pxr:where(.about) .cards { margin-top: 40px; gap: 12px; }
   .pxr:where(.about) .ccard { min-height: 0; padding: 22px 22px 8px; }
