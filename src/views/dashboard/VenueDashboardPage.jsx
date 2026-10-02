@@ -68,7 +68,7 @@ function formatCents(cents) {
 
 function Tile({ label, value, hint }) {
     return (
-        <div className="rounded-2xl bg-white/[0.04] p-5">
+        <div className="rounded-2xl bg-pxi-field p-5">
             <p className="text-[11px] font-medium tracking-[0.02em] text-white/40">{label}</p>
             <p className="mt-3 text-[28px] font-bold leading-none text-white tabular-nums">{value}</p>
             {hint ? <p className="mt-2 text-xs font-semibold leading-5 text-white/45">{hint}</p> : null}
@@ -106,7 +106,7 @@ function EmptyRoom({ venueName, eventCount }) {
                         ['Your audience', 'the people who came, with their permission'],
                         ['Plan a night', 'who to reach for a genre, and a realistic range'],
                     ].map(([title, detail]) => (
-                        <li key={title} className="rounded-xl bg-white/[0.035] px-4 py-3">
+                        <li key={title} className="rounded-xl bg-pxi-field px-4 py-3">
                             <span className="font-semibold text-white">{title}</span>
                             <span className="text-white/45">: {detail}</span>
                         </li>
@@ -186,7 +186,7 @@ function Overview({ venueId, venueName }) {
                         <SectionCard title="Night by night">
                             <ul className="space-y-2">
                                 {data.perEvent.slice(0, 12).map((e) => (
-                                    <li key={e.eventId} className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.035] px-4 py-2.5">
+                                    <li key={e.eventId} className="flex items-center justify-between gap-3 rounded-xl bg-pxi-field px-4 py-2.5">
                                         <span className="min-w-0">
                                             <span className="block truncate text-[14px] font-semibold text-white">{e.name}</span>
                                             <span className="block text-[12px] text-white/45">{formatDate(e.startDate)}</span>
@@ -321,7 +321,7 @@ function Audience({ venueId, crmEnabled, adminView }) {
                         {segments.map((s) => {
                             const active = activeSegment?.id === s.id;
                             return (
-                                <li key={s.id} className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] ${active ? 'bg-white text-black' : 'bg-white/[0.065] text-white/75'}`}>
+                                <li key={s.id} className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] ${active ? 'bg-pxi-purple text-white' : 'bg-pxi-field text-white/75'}`}>
                                     <button
                                         type="button"
                                         onClick={() => { setTicketTier(s.filterJson?.ticketTier || ''); setEngagement(s.filterJson?.minEngagementTier || ''); setPage(1); }}
@@ -342,7 +342,7 @@ function Audience({ venueId, crmEnabled, adminView }) {
                 )}
                 <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center">
                     <input value={segmentName} onChange={(e) => setSegmentName(e.target.value)} placeholder={`Name these filters (${segmentLabel({ ticketTier, minEngagementTier: engagement })})`} className={`${inputCls} md:flex-1`} />
-                    <button type="button" disabled={segmentBusy || !segmentName.trim() || Boolean(activeSegment)} onClick={saveSegment} className="rounded-full bg-white px-5 py-2 text-[13px] font-bold text-black disabled:opacity-40">
+                    <button type="button" disabled={segmentBusy || !segmentName.trim() || Boolean(activeSegment)} onClick={saveSegment} className="rounded-full bg-pxi-purple px-5 py-2 text-[13px] font-bold text-white disabled:opacity-40 uppercase tracking-[0.08em]">
                         Save segment
                     </button>
                 </div>
@@ -412,9 +412,9 @@ function Audience({ venueId, crmEnabled, adminView }) {
                     )}
                     {totalPages > 1 ? (
                         <div className="mt-4 flex items-center justify-end gap-2 text-[12px] text-white/60">
-                            <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-full bg-white/[0.065] px-3 py-1.5 disabled:opacity-40">Previous</button>
+                            <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-full bg-pxi-field px-3 py-1.5 disabled:opacity-40">Previous</button>
                             <span>Page {page} of {totalPages}</span>
-                            <button type="button" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="rounded-full bg-white/[0.065] px-3 py-1.5 disabled:opacity-40">Next</button>
+                            <button type="button" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="rounded-full bg-pxi-field px-3 py-1.5 disabled:opacity-40">Next</button>
                         </div>
                     ) : null}
                     <p className="mt-4 text-[12px] leading-5 text-white/35">
@@ -478,7 +478,7 @@ function PlanANight({ venueId, adminView, forecastVisible }) {
                         ))}
                     </select>
                     <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} aria-label="Date" />
-                    <button type="button" disabled={!genre || loading} onClick={run} className="rounded-full bg-white px-5 py-2 text-[13px] font-bold text-black disabled:opacity-40">
+                    <button type="button" disabled={!genre || loading} onClick={run} className="rounded-full bg-pxi-purple px-5 py-2 text-[13px] font-bold text-white disabled:opacity-40 uppercase tracking-[0.08em]">
                         {loading ? 'Working...' : 'See the numbers'}
                     </button>
                 </div>
@@ -545,7 +545,7 @@ function PlanANight({ venueId, adminView, forecastVisible }) {
                                 <div className="flex flex-wrap gap-2">
                                     {suggestion.composition.alsoLikes.length
                                         ? suggestion.composition.alsoLikes.map((g) => (
-                                            <span key={g.genre} className="rounded-full bg-white/[0.06] px-3 py-1 text-[12px] text-white/70">{g.genre}</span>
+                                            <span key={g.genre} className="rounded-full bg-pxi-field px-3 py-1 text-[12px] text-white/70">{g.genre}</span>
                                         ))
                                         : <span className="text-[13px] text-white/45">Nothing that stands out yet.</span>}
                                 </div>
@@ -590,10 +590,10 @@ function Guarantees({ venueId }) {
         <SectionCard title="Attendance guarantees">
             <ul className="space-y-2">
                 {rows.map((g) => (
-                    <li key={g.id} className="rounded-xl bg-white/[0.035] px-4 py-3 text-[13px] text-white/70">
+                    <li key={g.id} className="rounded-xl bg-pxi-field px-4 py-3 text-[13px] text-white/70">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <span className="font-semibold text-white">{g.event?.name}</span>
-                            <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px]">{g.status}</span>
+                            <span className="rounded-full bg-pxi-field px-2.5 py-1 text-[11px]">{g.status}</span>
                         </div>
                         <p className="mt-1 text-white/55">
                             {formatInteger(g.guaranteedAttendees)} people guaranteed, {formatCents(g.refundPerShortfallCents)} in credits per missing person, up to {formatCents(g.maxPayoutCents)}.
@@ -682,7 +682,7 @@ export default function VenueDashboardPage() {
                             key={t.key}
                             type="button"
                             onClick={() => setTab(t.key)}
-                            className={`rounded-full px-4 py-1.5 text-[13px] font-semibold ${tab === t.key ? 'bg-white text-black' : 'bg-white/[0.065] text-white/70 hover:bg-white/[0.1]'}`}
+                            className={`rounded-full px-4 py-1.5 text-[13px] font-semibold ${tab === t.key ? 'bg-pxi-purple text-white' : 'bg-pxi-field text-white/70 hover:bg-white/[0.1]'}`}
                         >
                             {t.label}
                         </button>

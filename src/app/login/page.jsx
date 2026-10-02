@@ -4,7 +4,7 @@ import EmailAuthPage from '@/views/auth/EmailAuthPage';
 function LoginFallback() {
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center">
-      <div className="w-10 h-10 border-2 border-[#B026FF] border-t-transparent rounded-full animate-spin" />
+      <div className="w-10 h-10 border-2 border-pxi-purple border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }

@@ -10,7 +10,7 @@ export const NOTIFICATION_BOLD = 'text-white font-bold';
 export const NOTIFICATION_NAME = 'text-white font-bold';
 
 export const HIDE_NOTIF_BTN_CLASS =
-  'absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-black/45 backdrop-blur-sm border border-white/10 text-zinc-300 hover:text-white hover:bg-black/60 transition-colors';
+  'absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-black/45 text-zinc-300 hover:text-white hover:bg-black/60 transition-colors';
 
 export const SECTION_HEADER_CLASS =
   'text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/35 mb-3 mt-2 first:mt-0';

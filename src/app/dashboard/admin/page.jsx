@@ -23,7 +23,7 @@ function totalEvents(events = {}) {
 
 function SummaryTile({ label, value, hint }) {
     return (
-        <div className="rounded-2xl bg-white/[0.04] p-5">
+        <div className="rounded-2xl bg-pxi-field p-5">
             <p className="text-[11px] font-medium tracking-[0.02em] text-white/40">{label}</p>
             <p className="mt-3 text-[28px] font-bold leading-none tracking-normal text-white tabular-nums">{value}</p>
             {hint ? <p className="mt-2 text-xs font-semibold leading-5 text-white/45">{hint}</p> : null}
@@ -33,11 +33,11 @@ function SummaryTile({ label, value, hint }) {
 
 function StatBlock({ title, rows }) {
     return (
-        <div className="rounded-[1.25rem] bg-white/[0.04] p-5">
+        <div className="rounded-[1.25rem] bg-pxi-field p-5">
             <h2 className="mb-4 text-[11px] font-medium tracking-[0.02em] text-zinc-500">{title}</h2>
             <dl className="space-y-2">
                 {rows.map(({ label, value }) => (
-                    <div key={label} className="flex items-center justify-between gap-4 rounded-2xl bg-white/[0.035] px-4 py-3">
+                    <div key={label} className="flex items-center justify-between gap-4 rounded-2xl bg-pxi-field px-4 py-3">
                         <dt className="min-w-0 truncate text-sm font-semibold text-white/55">{label}</dt>
                         <dd className="shrink-0 text-lg font-bold tabular-nums text-white">{formatInteger(value)}</dd>
                     </div>
@@ -123,7 +123,7 @@ export default function AdminOverviewPage() {
             <AdminOverviewHero stats={resolvedStats} isLiveAdmin={isLiveAdmin} cityScope={isLiveAdmin ? cityScope : null} />
 
             {resolvedLoading && (
-                <div className="rounded-2xl bg-white/[0.04] px-6 py-12 text-center text-sm text-white/50">
+                <div className="rounded-2xl bg-pxi-field px-6 py-12 text-center text-sm text-white/50">
                     Loading statistics...
                 </div>
             )}
@@ -132,7 +132,7 @@ export default function AdminOverviewPage() {
             )}
             {!resolvedLoading && !error && resolvedStats && (
                 <>
-                <div className="rounded-[1.25rem] bg-white/[0.04] p-5">
+                <div className="rounded-[1.25rem] bg-pxi-field p-5">
                     <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Operating mode</p>
                     <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
                         {isLiveAdmin

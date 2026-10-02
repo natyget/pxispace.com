@@ -725,7 +725,7 @@ export default function FaceScanCapture({ onFrames, onCancel, poseCount = 3 }) {
 
       {/* Portrait oval — ring goes green only on a real pose lock */}
       <div
-        className="relative overflow-hidden bg-[#111] transition-[border-color,box-shadow] duration-300"
+        className="relative overflow-hidden bg-pxi-surface transition-[border-color,box-shadow] duration-300"
         style={{
           width: ovalW,
           height: ovalH,

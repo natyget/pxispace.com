@@ -404,7 +404,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
 
   if (!albumId) {
     return (
-      <div className="rounded-2xl bg-white/[0.04] p-6 text-sm text-zinc-400">
+      <div className="rounded-2xl bg-pxi-field p-6 text-sm text-zinc-400">
         <p>No album linked to this event.</p>
         <Link href={`/dashboard/events/${eventId}`} className="mt-4 inline-block text-xs font-bold tracking-[0.02em] text-white/60 hover:text-white">
           Details
@@ -446,7 +446,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
       </div> : null}
 
       {isFinalized ? (
-        <p className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[11px] font-bold tracking-[0.02em] text-zinc-500">
+        <p className="rounded-2xl bg-pxi-field px-4 py-3 text-[11px] font-bold tracking-[0.02em] text-zinc-500">
           Scrapbook — finalized · this event has ended, invites are closed
         </p>
       ) : null}
@@ -485,7 +485,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
               <button
                 type="button"
                 onClick={handleShareLink}
-                className="flex flex-1 items-center justify-between gap-2 rounded-xl bg-white/[0.045] px-3.5 py-2.5 text-left transition-colors hover:bg-white/[0.07]"
+                className="flex flex-1 items-center justify-between gap-2 rounded-xl bg-pxi-field px-3.5 py-2.5 text-left transition-colors hover:bg-white/[0.07]"
               >
                 <div className="min-w-0">
                   <p className="text-[9px] font-bold tracking-[0.02em] text-zinc-500 mb-0.5">TAP TO SHARE</p>
@@ -515,7 +515,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
               <button
                 type="button"
                 onClick={() => setShowQR(true)}
-                className="flex w-[68px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-white/[0.045] py-2.5 transition-colors hover:bg-white/[0.07]"
+                className="flex w-[68px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-pxi-field py-2.5 transition-colors hover:bg-white/[0.07]"
               >
                 <span className="text-[9px] font-bold tracking-[0.02em] text-white">SCAN</span>
                 <HugeiconsIcon icon={QrCodeIcon} size={20} className="text-white" />
@@ -533,8 +533,8 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                   onClick={() => setInviteRoleKind(key)}
                   className={`flex-1 py-2 rounded-full text-xs font-bold transition-colors ${
                     inviteRoleKind === key
-                      ? 'bg-white text-black'
-                      : 'bg-white/[0.055] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.08]'
+                      ? 'bg-pxi-purple text-white'
+                      : 'bg-pxi-field text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.08]'
                   }`}
                 >
                   {label}
@@ -584,8 +584,8 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                   onClick={() => setListFilter(listFilter === f.id ? 'all' : f.id)}
                   className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
                     listFilter === f.id
-                      ? 'bg-white text-black'
-                      : 'bg-white/[0.055] text-zinc-400 hover:text-zinc-200'
+                      ? 'bg-pxi-purple text-white'
+                      : 'bg-pxi-field text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   {f.label}
@@ -696,12 +696,12 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
 
           {/* Floating send bar — appears when ≥1 user selected */}
           {selectedIds.size > 0 && (
-            <div className="sticky bottom-0 left-0 right-0 bg-zinc-950/95 p-4 backdrop-blur">
+            <div className="sticky bottom-0 left-0 right-0 bg-zinc-950/95 p-4">
               <button
                 type="button"
                 disabled={sending}
                 onClick={() => setConfirmOpen(true)}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-white text-black text-sm font-bold tracking-wide disabled:opacity-50 hover:brightness-95 transition-all"
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-pxi-purple text-white text-sm font-bold tracking-wide disabled:opacity-50 hover:brightness-110 transition-all"
               >
                 {sending
                   ? <><HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin" /> Sending...</>
@@ -722,7 +722,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
               type="button"
               disabled={directInvitesLoading}
               onClick={loadDirectInvites}
-              className="rounded-xl bg-white/[0.055] px-3 py-2 text-xs font-bold tracking-[0.02em] text-zinc-300 hover:bg-white/[0.08] disabled:opacity-50"
+              className="rounded-xl bg-pxi-field px-3 py-2 text-xs font-bold tracking-[0.02em] text-zinc-300 hover:bg-white/[0.08] disabled:opacity-50"
             >
               Refresh
             </button>
@@ -740,8 +740,8 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 onClick={() => setInviteStatusSegment(seg.id)}
                 className={`rounded-xl px-4 py-2 text-xs font-bold tracking-[0.02em] transition-colors ${
                   inviteStatusSegment === seg.id
-                    ? 'bg-white text-black'
-                    : 'bg-white/[0.055] text-zinc-400 hover:bg-white/[0.08]'
+                    ? 'bg-pxi-purple text-white'
+                    : 'bg-pxi-field text-zinc-400 hover:bg-white/[0.08]'
                 }`}
               >
                 {seg.label} <span className="tabular-nums text-zinc-500">({seg.count})</span>
@@ -765,7 +765,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 {filteredByStatusSegment.map((inv) => {
                   const handle = String(inv.user?.username || '').trim();
                   return (
-                    <li key={inv.id} className="flex flex-col gap-2 rounded-xl bg-white/[0.04] px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
+                    <li key={inv.id} className="flex flex-col gap-2 rounded-xl bg-pxi-field px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex items-center gap-3 min-w-0">
                         <UserAvatar user={inv.user} size={34} />
                         <div className="min-w-0">
@@ -829,7 +829,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
             <button
               type="button"
               onClick={handleShareQr}
-              className="flex items-center gap-2 rounded-full bg-white/[0.06] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10"
+              className="flex items-center gap-2 rounded-full bg-pxi-field px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10"
             >
               <HugeiconsIcon icon={Share01Icon} size={14} /> Share QR
             </button>
@@ -881,7 +881,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
               <button
                 type="button"
                 onClick={() => setConfirmOpen(false)}
-                className="pill-ghost flex-1 py-3.5 text-sm font-bold text-zinc-300"
+                className="pill-cancel flex-1 py-3.5 text-sm font-bold text-zinc-300"
               >
                 Cancel
               </button>
@@ -889,7 +889,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                 type="button"
                 disabled={sending}
                 onClick={handleSend}
-                className="flex-1 py-3.5 rounded-xl bg-white text-black text-sm font-black disabled:opacity-50 hover:brightness-95 transition-all"
+                className="flex-1 py-3.5 rounded-xl bg-pxi-purple text-white text-sm font-black disabled:opacity-50 hover:brightness-110 transition-all"
               >
                 {sending ? 'Sending...' : 'Send'}
               </button>

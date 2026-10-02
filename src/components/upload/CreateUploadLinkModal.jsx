@@ -52,8 +52,8 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-[20px] bg-[rgba(26,26,26,0.6)] backdrop-blur-xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+      <div className="w-full max-w-md rounded-[20px] bg-pxi-field shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
@@ -83,7 +83,7 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
                   max={5000}
                   value={maxUploads}
                   onChange={(e) => setMaxUploads(Number(e.target.value))}
-                  className="w-full rounded-xl bg-[rgba(26,26,26,0.6)] backdrop-blur-xl px-3 py-2.5 text-sm text-white outline-none focus:shadow-[0_0_0_1.5px_rgba(216,74,255,0.55)]"
+                  className="w-full rounded-2xl bg-pxi-field px-3 py-2.5 text-sm text-white outline-none focus:shadow-[0_0_0_1.5px_rgba(165,35,239,0.55)]"
                 />
               </div>
 
@@ -98,7 +98,7 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
                   max={50000}
                   value={maxMb}
                   onChange={(e) => setMaxMb(Number(e.target.value))}
-                  className="w-full rounded-xl bg-[rgba(26,26,26,0.6)] backdrop-blur-xl px-3 py-2.5 text-sm text-white outline-none focus:shadow-[0_0_0_1.5px_rgba(216,74,255,0.55)]"
+                  className="w-full rounded-2xl bg-pxi-field px-3 py-2.5 text-sm text-white outline-none focus:shadow-[0_0_0_1.5px_rgba(165,35,239,0.55)]"
                 />
               </div>
 
@@ -114,7 +114,7 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
                       className={`py-2 rounded-xl text-xs font-bold transition-colors ${
                         expiresInHours === value
                           ? 'bg-pxi-purple text-white'
-                          : 'bg-[rgba(26,26,26,0.6)] backdrop-blur-xl text-zinc-400 hover:text-white'
+                          : 'bg-pxi-field text-zinc-400 hover:text-white'
                       }`}
                     >
                       {label}
@@ -129,7 +129,7 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-2.5 rounded-xl bg-[rgba(26,26,26,0.6)] backdrop-blur-xl text-sm text-zinc-400 hover:text-white transition-colors font-bold"
+                  className="flex-1 py-2.5 rounded-xl bg-pxi-field text-sm text-zinc-400 hover:text-white transition-colors font-bold"
                 >
                   Cancel
                 </button>
@@ -150,12 +150,12 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
                 Share this link with your photographer(s). They can upload directly without logging in.
               </p>
 
-              <div className="rounded-xl bg-[rgba(26,26,26,0.6)] backdrop-blur-xl p-3 flex items-center gap-3">
+              <div className="rounded-xl bg-pxi-field p-3 flex items-center gap-3">
                 <p className="flex-1 text-xs text-white break-all font-mono leading-relaxed">{createdLink}</p>
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="shrink-0 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                  className="shrink-0 p-2 rounded-lg bg-pxi-field hover:bg-white/10 transition-colors"
                 >
                   {copied ? <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} className="text-emerald-400" /> : <HugeiconsIcon icon={Copy01Icon} size={16} className="text-zinc-400" />}
                 </button>
@@ -173,7 +173,7 @@ export default function CreateUploadLinkModal({ albumId, eventId, onClose }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-2.5 rounded-xl bg-[rgba(26,26,26,0.6)] backdrop-blur-xl text-sm text-zinc-400 hover:text-white transition-colors font-bold"
+                  className="flex-1 py-2.5 rounded-xl bg-pxi-field text-sm text-zinc-400 hover:text-white transition-colors font-bold"
                 >
                   Done
                 </button>

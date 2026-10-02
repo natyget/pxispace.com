@@ -31,7 +31,7 @@ import { resolveEventCity } from '@/lib/seo/cities';
 
 /** Branded gradient stand-in for events without cover art (no external fallback image). */
 const COVER_PLACEHOLDER_BG =
-  'bg-[radial-gradient(circle_at_18%_20%,rgba(216,74,255,0.38),transparent_52%),radial-gradient(circle_at_82%_80%,rgba(124,42,232,0.3),transparent_55%),linear-gradient(160deg,#1a1024_0%,#0a0611_55%,#050505_100%)]';
+  'bg-[radial-gradient(circle_at_18%_20%,rgba(165,35,239,0.38),transparent_52%),radial-gradient(circle_at_82%_80%,rgba(124,42,232,0.3),transparent_55%),linear-gradient(160deg,#1a1024_0%,#0a0611_55%,#050505_100%)]';
 
 function CoverArt({ src, alt = '', className = '' }) {
   if (src) {
@@ -109,7 +109,7 @@ function formatCheckoutDate(value) {
 
 function CheckoutMeta({ icon, label, value }) {
   return (
-    <div className="flex min-w-0 items-center gap-3 rounded-[20px] bg-white/[0.055] px-3.5 py-3 backdrop-blur-xl">
+    <div className="flex min-w-0 items-center gap-3 rounded-[20px] bg-pxi-field px-3.5 py-3">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/35 text-white">
         <HugeiconsIcon icon={icon} size={16} />
       </div>
@@ -127,7 +127,7 @@ function TicketStep({ state, label, hint }) {
     <div className="flex items-start gap-3">
       <div className="flex h-5 w-5 shrink-0 items-center justify-center pt-px">
         {state === 'done' ? (
-          <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} className="text-[#d84aff]" />
+          <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} className="text-pxi-purple" />
         ) : state === 'active' ? (
           <PxiSpinner size="sm" />
         ) : (
@@ -143,16 +143,16 @@ function TicketStep({ state, label, hint }) {
 }
 
 const CONFETTI_PIECES = [
-  { x: -78, y: -52, c: '#d84aff', d: 0 },
+  { x: -78, y: -52, c: '#A523EF', d: 0 },
   { x: -44, y: -84, c: '#ffffff', d: 40 },
-  { x: -16, y: -66, c: '#d84aff', d: 90 },
-  { x: 18, y: -88, c: '#a855f7', d: 20 },
+  { x: -16, y: -66, c: '#A523EF', d: 90 },
+  { x: 18, y: -88, c: '#A523EF', d: 20 },
   { x: 48, y: -60, c: '#ffffff', d: 70 },
-  { x: 82, y: -46, c: '#d84aff', d: 110 },
-  { x: -66, y: -14, c: '#a855f7', d: 60 },
-  { x: 66, y: -10, c: '#d84aff', d: 30 },
+  { x: 82, y: -46, c: '#A523EF', d: 110 },
+  { x: -66, y: -14, c: '#A523EF', d: 60 },
+  { x: 66, y: -10, c: '#A523EF', d: 30 },
   { x: -30, y: -34, c: '#ffffff', d: 130 },
-  { x: 34, y: -32, c: '#a855f7', d: 100 },
+  { x: 34, y: -32, c: '#A523EF', d: 100 },
 ];
 
 /**
@@ -179,7 +179,7 @@ function SuccessCelebration({ title, subtitle }) {
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.08, ease: [0.34, 1.56, 0.64, 1] }}
-        className="flex h-16 w-16 items-center justify-center rounded-full bg-[#d84aff]/15 text-[#d84aff] shadow-[0_0_44px_-4px_rgba(216,74,255,0.6)] backdrop-blur-xl"
+        className="flex h-16 w-16 items-center justify-center rounded-full bg-pxi-purple/15 text-pxi-purple"
       >
         <HugeiconsIcon icon={CheckmarkCircle02Icon} size={34} />
       </motion.div>
@@ -563,7 +563,7 @@ export default function EventCheckout({ basePath = '/events' }) {
 
   return (
     <>
-      <div className="relative h-dvh overflow-y-auto overflow-x-hidden bg-[#050505] font-sans text-white [scrollbar-color:rgba(255,255,255,0.14)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar-thumb:hover]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5">
+      <div className="relative h-dvh overflow-y-auto overflow-x-hidden bg-black font-sans text-white [scrollbar-color:rgba(255,255,255,0.14)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar-thumb:hover]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5">
         <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
           {coverSrc ? (
             <img
@@ -572,14 +572,14 @@ export default function EventCheckout({ basePath = '/events' }) {
               className="absolute inset-0 h-full w-full scale-125 object-cover opacity-[0.22] blur-[54px]"
             />
           ) : null}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_12%,rgba(255,255,255,0.12),transparent_28%),radial-gradient(circle_at_75%_85%,rgba(216,74,255,0.08),transparent_40%),linear-gradient(180deg,rgba(0,0,0,0.78),#050505_46%,#000)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_12%,rgba(255,255,255,0.12),transparent_28%),radial-gradient(circle_at_75%_85%,rgba(165,35,239,0.08),transparent_40%),linear-gradient(180deg,rgba(0,0,0,0.78),#050505_46%,#000)]" />
         </div>
 
         <div className="relative z-10">
           <div className="fixed left-5 top-5 z-30 md:left-8 md:top-6">
             <Link
               href={`${basePath}/${apiEvent.id}`}
-              className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-white/70 shadow-[0_10px_32px_rgba(0,0,0,0.4)] backdrop-blur-2xl transition-all hover:bg-white/[0.14] hover:text-white"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-white/70 shadow-[0_10px_32px_rgba(0,0,0,0.4)] transition-all hover:bg-white/[0.14] hover:text-white"
             >
               <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
               Event
@@ -589,17 +589,15 @@ export default function EventCheckout({ basePath = '/events' }) {
           <main className="mx-auto flex min-h-dvh w-full max-w-5xl items-center px-4 pb-12 pt-24 sm:px-6 lg:px-8">
             <div className="w-full">
               <section className="min-w-0">
-                <div className="overflow-hidden rounded-[2rem] bg-white/[0.045] shadow-[0_30px_100px_rgba(0,0,0,0.55)] backdrop-blur-2xl border border-white/10 lg:rounded-[2.5rem]">
+                <div className="overflow-hidden rounded-[2rem] bg-pxi-field shadow-[0_30px_100px_rgba(0,0,0,0.55)] lg:rounded-[2.5rem]">
                   <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] gap-6 p-5 md:p-8 items-start">
                     {/* Left Column: 3:4 Cover Art & Event Details */}
                     <div className="flex flex-col gap-4">
                       <div className="relative group">
-                        {/* Ambient glow behind poster */}
-                        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-[#d84aff]/30 via-[#7c2ae8]/20 to-transparent blur-xl opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
-                        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-white/10 shadow-2xl bg-black">
+                        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl shadow-2xl bg-black">
                           <CoverArt src={coverSrc} alt={apiEvent.name} className="h-full w-full object-cover" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
-                          <span className="absolute left-3.5 top-3.5 rounded-full bg-black/60 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/80 backdrop-blur-md border border-white/10">
+                          <span className="absolute left-3.5 top-3.5 rounded-full bg-black/60 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/80">
                             PXI Checkout
                           </span>
                         </div>
@@ -624,7 +622,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Order summary</p>
                             <h2 className="mt-1.5 text-4xl font-black leading-none text-white">{priceDisplay}</h2>
                           </div>
-                          <div className="rounded-full bg-white px-3.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-black">
+                          <div className="rounded-full bg-pxi-purple px-3.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-white">
                             {isPaidEvent ? 'Paid' : 'Free'}
                           </div>
                         </div>
@@ -646,10 +644,10 @@ export default function EventCheckout({ basePath = '/events' }) {
                                     type="button"
                                     onClick={() => setSelectedTierId(t.id)}
                                     aria-pressed={selected}
-                                    className={`flex items-center justify-between gap-3 rounded-[20px] p-4 text-left backdrop-blur-xl transition-all duration-200 ${
+                                    className={`flex items-center justify-between gap-3 rounded-[20px] p-4 text-left transition-all duration-200 ${
                                       selected
-                                        ? 'bg-[rgba(216,74,255,0.16)] shadow-[0_0_32px_-6px_rgba(216,74,255,0.6)] border border-[#d84aff]/40'
-                                        : 'bg-[rgba(26,26,26,0.6)] hover:bg-[rgba(26,26,26,0.78)] border border-white/5'
+                                        ? 'bg-[rgba(165,35,239,0.16)] border border-pxi-purple/40'
+                                        : 'bg-pxi-field hover:bg-[#3a3a3a]'
                                     }`}
                                   >
                                     <span className="min-w-0">
@@ -658,7 +656,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                                       </span>
                                       <span
                                         className={`mt-1 block text-[10px] font-black uppercase tracking-[0.18em] ${
-                                          selected ? 'text-[#d84aff]' : 'text-white/35'
+                                          selected ? 'text-pxi-purple' : 'text-white/35'
                                         }`}
                                       >
                                         {selected ? 'Selected' : 'Tap to select'}
@@ -674,7 +672,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                           </div>
                         ) : null}
 
-                        <div className="mt-5 rounded-[20px] bg-white/[0.035] p-4 border border-white/5">
+                        <div className="mt-5 rounded-[20px] bg-pxi-field p-4">
                           <div className="flex items-center justify-between gap-4 text-sm">
                             <span className="text-zinc-400">Ticket</span>
                             <span className="font-bold text-white">{selectedTier?.label || 'General admission'}</span>
@@ -698,10 +696,10 @@ export default function EventCheckout({ basePath = '/events' }) {
                           transition={{ duration: 0.4, ease: 'easeOut' }}
                           className="mt-6 space-y-4"
                         >
-                          <div className="space-y-5 rounded-[20px] bg-white/[0.045] p-5 backdrop-blur-xl">
+                          <div className="space-y-5 rounded-[20px] bg-pxi-field p-5">
                             <SuccessCelebration title="You’re in!" subtitle="Your spot is confirmed." />
 
-                            <div className="space-y-3 rounded-[20px] bg-white/[0.04] p-4">
+                            <div className="space-y-3 rounded-[20px] bg-pxi-field p-4">
                               <TicketStep state="done" label={isPaidEvent ? 'Payment confirmed' : 'Spot reserved'} />
                               <TicketStep
                                 state={ticketStatus === 'ready' ? 'done' : ticketStatus === 'issuing' ? 'active' : 'done'}
@@ -723,7 +721,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                             {eventAlbumId ? (
                               <Link
                                 href={`/album/${eventAlbumId}`}
-                                className="inline-flex w-full items-center justify-center rounded-full bg-white/10 py-3 text-xs font-black uppercase tracking-widest text-white backdrop-blur-md transition hover:scale-105 hover:bg-white/20"
+                                className="inline-flex w-full items-center justify-center rounded-full bg-white/10 py-3 text-xs font-black uppercase tracking-widest text-white transition hover:scale-105 hover:bg-white/20"
                               >
                                 Open album
                               </Link>
@@ -731,7 +729,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                             {successDeepLinkUrl ? (
                               <a
                                 href={successDeepLinkUrl}
-                                className="inline-flex w-full items-center justify-center rounded-full bg-white/5 py-3 text-center text-xs font-black uppercase tracking-widest text-white transition hover:bg-white/10"
+                                className="inline-flex w-full items-center justify-center rounded-full bg-pxi-field py-3 text-center text-xs font-black uppercase tracking-widest text-white transition hover:bg-white/10"
                               >
                                 Open in PXI app
                               </a>
@@ -747,7 +745,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                           {/* Browse More Events button once checked out */}
                           <Link
                             href="/events"
-                            className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-4 text-xs font-black uppercase tracking-widest text-black transition hover:bg-zinc-200"
+                            className="flex w-full items-center justify-center gap-2 rounded-full bg-pxi-purple py-4 text-xs font-black uppercase tracking-widest text-white transition hover:brightness-110"
                           >
                             Browse More Events
                           </Link>
@@ -755,7 +753,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                       ) : (
                         <div className="mt-6 space-y-4">
                           {!isAuthenticated ? (
-                            <div className="space-y-4 rounded-[20px] bg-white/[0.045] p-5 backdrop-blur-xl border border-white/5">
+                            <div className="space-y-4 rounded-[20px] bg-pxi-field p-5">
                               <p className="text-sm font-bold text-white">Sign in or create an account to continue</p>
                               <p className="text-xs leading-relaxed text-zinc-400">
                                 We need your PXI account to issue your ticket. After you log in, you can pay with Apple Pay, Google Pay, Link,
@@ -764,7 +762,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                               <div className="flex flex-col gap-3 sm:flex-row">
                                 <Link
                                   href={loginHref}
-                                  className="flex-1 rounded-full bg-white py-3.5 text-center text-xs font-black uppercase tracking-widest text-black transition hover:bg-zinc-200"
+                                  className="flex-1 rounded-full bg-pxi-purple py-3.5 text-center text-xs font-black uppercase tracking-widest text-white transition hover:brightness-110"
                                 >
                                   Log in
                                 </Link>
@@ -782,12 +780,12 @@ export default function EventCheckout({ basePath = '/events' }) {
 
                           {isAuthenticated ? (
                             <div className="space-y-2.5 pb-2">
-                              <label className="flex cursor-pointer items-start gap-3 rounded-[16px] bg-white/[0.03] px-4 py-3 transition hover:bg-white/[0.05] border border-white/5">
+                              <label className="flex cursor-pointer items-start gap-3 rounded-[16px] bg-pxi-field px-4 py-3 transition hover:bg-white/[0.05]">
                                 <input
                                   type="checkbox"
                                   checked={emailOptIn}
                                   onChange={(e) => setEmailOptIn(e.target.checked)}
-                                  className="mt-0.5 h-4 w-4 accent-[#d84aff]"
+                                  className="mt-0.5 h-4 w-4 accent-pxi-purple"
                                 />
                                 <span className="text-xs text-zinc-300">Email me about future events from this host and the venue</span>
                               </label>
@@ -798,7 +796,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                                 * number nobody proved is a wrong-number complaint waiting to happen
                                 * — so the code has to be confirmed before the consent counts.
                                 */}
-                              <div className="rounded-[16px] bg-white/[0.03] p-4 border border-white/5 space-y-2.5">
+                              <div className="rounded-[16px] bg-pxi-field p-4 space-y-2.5">
                                   <label className="flex cursor-pointer items-start gap-3">
                                     <input
                                       type="checkbox"
@@ -807,7 +805,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                                         setSmsOptIn(e.target.checked);
                                         setSmsVerifyError('');
                                       }}
-                                      className="mt-0.5 h-4 w-4 accent-[#d84aff]"
+                                      className="mt-0.5 h-4 w-4 accent-pxi-purple"
                                     />
                                     <span className="text-xs font-semibold text-zinc-200">Text me about events from this host and the venue</span>
                                   </label>
@@ -845,7 +843,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                                             value={smsCode}
                                             onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, ''))}
                                             placeholder="------"
-                                            className="h-9 w-32 rounded-full bg-white/5 px-4 text-center tracking-[0.4em] text-sm text-white border border-white/10"
+                                            className="h-9 w-32 rounded-full bg-pxi-field px-4 text-center tracking-[0.4em] text-sm text-white"
                                           />
                                           <div className="flex gap-2">
                                             <button
@@ -887,7 +885,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                           {isAuthenticated && isPaidEvent ? (
                             <div className="space-y-2 pt-2">
                               {creditBalanceCents > 0 ? (
-                                <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[20px] bg-white/[0.05] px-4 py-3 backdrop-blur-xl border border-white/5">
+                                <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[20px] bg-pxi-field px-4 py-3">
                                   <span className="text-xs text-zinc-300">
                                     Use my PXI credits
                                     <span className="ml-1.5 font-bold text-white">
@@ -901,7 +899,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                                     type="checkbox"
                                     checked={useCredits}
                                     onChange={(e) => setUseCredits(e.target.checked)}
-                                    className="h-4 w-4 accent-[#d84aff]"
+                                    className="h-4 w-4 accent-pxi-purple"
                                   />
                                 </label>
                               ) : null}
@@ -920,7 +918,7 @@ export default function EventCheckout({ basePath = '/events' }) {
                                       }
                                     }}
                                     placeholder="Promo / ambassador code (optional)"
-                                    className="w-full rounded-[20px] bg-white/[0.05] py-3 pl-4 pr-24 text-xs font-semibold uppercase tracking-widest text-white outline-none backdrop-blur-xl transition-shadow placeholder:normal-case placeholder:tracking-normal placeholder:text-zinc-500 focus:shadow-[0_0_0_1.5px_rgba(216,74,255,0.5)] border border-white/5"
+                                    className="w-full rounded-[20px] bg-pxi-field py-3 pl-4 pr-24 text-xs font-semibold uppercase tracking-widest text-white outline-none transition-shadow placeholder:normal-case placeholder:tracking-normal placeholder:text-zinc-500 focus:shadow-[0_0_0_1.5px_rgba(165,35,239,0.5)]"
                                   />
                                   <button
                                     type="button"

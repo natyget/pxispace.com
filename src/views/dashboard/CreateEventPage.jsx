@@ -922,7 +922,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                 type="button"
                 disabled={!canAddLineup}
                 onClick={commitLineup}
-                className="shrink-0 rounded-2xl bg-white px-5 text-xs font-bold tracking-[0.02em] text-black transition-opacity disabled:opacity-40"
+                className="shrink-0 rounded-full bg-pxi-purple px-5 text-xs font-bold text-white transition-opacity disabled:opacity-40 uppercase tracking-[0.08em]"
               >
                 Add
               </button>

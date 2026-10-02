@@ -82,7 +82,7 @@ export default function AccountCardPopover({
       <button
         type="button"
         onClick={() => onOpenChange?.(!isOpen)}
-        className={`group inline-flex items-center bg-white/[0.045] text-left transition hover:bg-white/[0.07] ${
+        className={`group inline-flex items-center bg-pxi-field text-left transition hover:bg-white/[0.07] ${
           collapsed ? 'h-11 w-11 justify-center rounded-full p-0' : 'w-full rounded-2xl p-2'
         }`}
       >
@@ -96,7 +96,7 @@ export default function AccountCardPopover({
             className="h-9 w-9 rounded-full object-cover"
           />
         ) : (
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#d84aff1f] text-sm font-bold text-[#d84aff]">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#A523EF1f] text-sm font-bold text-pxi-purple">
             {avatarFallback}
           </span>
         )}

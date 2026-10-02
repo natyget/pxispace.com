@@ -123,8 +123,8 @@ export default function AdminUgcModerationPage() {
                         onClick={() => setStatusFilter(status)}
                         className={`rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] ${
                             statusFilter === status
-                                ? 'bg-white text-black'
-                                : 'bg-white/[0.045] text-zinc-400 hover:bg-white/[0.075] hover:text-white'
+                                ? 'bg-pxi-purple text-white'
+                                : 'bg-pxi-field text-zinc-400 hover:bg-white/[0.075] hover:text-white'
                         }`}
                     >
                         {status}

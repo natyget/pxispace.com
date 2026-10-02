@@ -3,12 +3,12 @@ import { DynamicStamp } from '../passport/StampShapeGraphic';
 
 function CameraPill({ colorClass, stripeColor, hasFlash }) {
   return (
-    <div className={`relative flex h-14 w-20 items-center justify-center rounded-xl shadow-xl backdrop-blur-md overflow-hidden ${colorClass}`}>
+    <div className={`relative flex h-14 w-20 items-center justify-center rounded-xl shadow-xl overflow-hidden ${colorClass}`}>
       {stripeColor && (
         <div className={`absolute left-0 right-0 top-[26px] h-1.5 ${stripeColor}`} />
       )}
-      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/80 shadow-inner z-10">
-        <div className="h-4 w-4 rounded-full border border-white/10 bg-zinc-800" />
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/80 shadow-inner z-10">
+        <div className="h-4 w-4 rounded-full bg-pxi-field" />
       </div>
       {hasFlash === 'high' ? (
         <div className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-white shadow-[0_0_20px_8px_rgba(255,255,255,1)] z-10" />
@@ -98,7 +98,7 @@ export default function FloatingAuthElements() {
                 className="absolute w-32 h-20 opacity-95 drop-shadow-2xl"
                 style={{ top: '20%', right: '15%' }}
             >
-                <DynamicStamp shape="hologram-ticket" color="#d84aff" name="Sanaa Groove" date="JUL 2026" city="NEW YORK" role="OWNER" />
+                <DynamicStamp shape="hologram-ticket" color="#A523EF" name="Sanaa Groove" date="JUL 2026" city="NEW YORK" role="OWNER" />
             </motion.div>
 
             {/* Stamp 2: Wax Seal (e.g. Tropicale) */}

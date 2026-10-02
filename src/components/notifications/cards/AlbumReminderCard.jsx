@@ -6,7 +6,7 @@ export default function AlbumReminderCard({ albumName, time, onClick }) {
   return (
     <button type="button" onClick={onClick} className={`${NOTIFICATION_CARD_CLASS} w-full text-left`}>
       <div className={NOTIFICATION_ROW_CLASS}>
-        <div className="w-11 h-11 rounded-full bg-[#0c0c0c] flex items-center justify-center text-lg shrink-0">
+        <div className="w-11 h-11 rounded-full bg-pxi-surface flex items-center justify-center text-lg shrink-0">
           ⏰
         </div>
         <div className="flex-1 min-w-0">

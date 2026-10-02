@@ -369,7 +369,7 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
     progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
 
   return (
-    <section className="overflow-hidden rounded-2xl bg-white/[0.035]">
+    <section className="overflow-hidden rounded-2xl bg-pxi-field">
       <div className="flex items-center gap-2 px-5 pb-2 pt-5">
         <HugeiconsIcon icon={ImageAdd02Icon} size={18} className="text-white opacity-70" />
         <h2 className="font-bold text-white tracking-[0.02em] text-sm">Gallery / Mass upload</h2>
@@ -395,7 +395,7 @@ export default function GalleryMassUploadSection({ albumId, eventId, disabled })
           type="button"
           disabled={disabled || busy}
           onClick={() => inputRef.current?.click()}
-          className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold tracking-[0.02em] text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-full bg-pxi-purple px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 uppercase tracking-[0.08em]"
         >
           {busy ? <HugeiconsIcon icon={Loading02Icon} className="animate-spin" size={18} /> : <HugeiconsIcon icon={ImageAdd02Icon} size={18} />}
           {busy ? 'Uploading...' : 'Choose files'}

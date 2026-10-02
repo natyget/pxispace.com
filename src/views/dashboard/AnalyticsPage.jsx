@@ -242,9 +242,9 @@ function HypePanel({ behavior, capture, isMobile }) {
                             ))}
                         </div>
                     </div>
-                    <div className="mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-2xl bg-white/[0.06] ring-1 ring-white/[0.07] sm:grid-cols-6">
+                    <div className="mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-2xl bg-pxi-field sm:grid-cols-6">
                         {statStrip.map((item) => (
-                            <div key={item.label} className="bg-[#0e0e13] px-3 py-2.5">
+                            <div key={item.label} className="bg-pxi-surface px-3 py-2.5">
                                 <p className="text-[11px] font-medium text-zinc-500">{item.label}</p>
                                 <p className="mt-1 truncate text-sm font-semibold tabular-nums text-white">{item.value}</p>
                             </div>
@@ -259,7 +259,7 @@ function HypePanel({ behavior, capture, isMobile }) {
                     ) : null}
                 </>
             ) : (
-                <div className="rounded-2xl bg-white/[0.035] p-6 text-sm text-zinc-500">
+                <div className="rounded-2xl bg-pxi-field p-6 text-sm text-zinc-500">
                     No {channel === 'all' ? 'chat, reaction, or upload' : HYPE_CHANNELS.find((item) => item.id === channel)?.label.toLowerCase()} activity in the event window yet.
                 </div>
             )}
@@ -301,7 +301,7 @@ function TopMomentsPanel({ moments, onRemoved, onPromote }) {
                 <button
                     type="button"
                     onClick={onPromote}
-                    className="rounded-full bg-white px-4 py-1.5 text-xs font-bold tracking-[0.02em] text-black transition hover:bg-zinc-200"
+                    className="rounded-full bg-pxi-purple px-4 py-1.5 text-xs font-bold text-white transition hover:brightness-110 uppercase tracking-[0.08em]"
                 >
                     Marketing kit
                 </button>
@@ -313,7 +313,7 @@ function TopMomentsPanel({ moments, onRemoved, onPromote }) {
             {error ? <p className="mb-3 text-xs text-red-400">{error}</p> : null}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {moments.map((m) => (
-                    <div key={m.mediaId} className="group relative overflow-hidden rounded-2xl bg-white/[0.035]">
+                    <div key={m.mediaId} className="group relative overflow-hidden rounded-2xl bg-pxi-field">
                         <img
                             src={m.thumbnailUrl || m.r2Url}
                             alt=""
@@ -353,7 +353,7 @@ function SalesTooltip({ active, payload, label }) {
     if (!active || !payload?.length) return null;
     const point = payload[0]?.payload || {};
     return (
-        <div className="dashboard-glow-popover min-w-[180px] rounded-2xl bg-zinc-950 p-3.5 shadow-2xl">
+        <div className="dashboard-glow-popover min-w-[180px] rounded-2xl bg-pxi-field p-3.5 shadow-2xl">
             <p className="text-[11px] font-semibold tracking-wide text-zinc-300">{formatDayTick(label)}</p>
             <p className="mt-1 text-base font-bold text-white">{formatNumber(point.count)} tickets</p>
             {point.cumulative != null ? (
@@ -488,8 +488,8 @@ function EventPickerCard({ event, selected, order, onToggle }) {
             type="button"
             onClick={() => onToggle(event.id)}
             aria-pressed={selected}
-            className={`group relative aspect-[3/4] w-[168px] shrink-0 overflow-hidden rounded-2xl bg-[#0A0A0A] text-left transition ${
-                selected ? 'ring-2 ring-inset ring-[#d84aff]' : 'opacity-80 hover:opacity-100'
+            className={`group relative aspect-[3/4] w-[168px] shrink-0 overflow-hidden rounded-2xl bg-pxi-field text-left transition ${
+                selected ? 'ring-2 ring-inset ring-pxi-purple' : 'opacity-80 hover:opacity-100'
             }`}
         >
             {event.coverImage ? (
@@ -508,7 +508,7 @@ function EventPickerCard({ event, selected, order, onToggle }) {
                 <span className={`h-2 w-2 rounded-full ring-2 ring-black/40 ${event.status === 'LIVE' || event.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-white/40'}`} aria-hidden="true" />
             </span>
             {selected ? (
-                <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#d84aff] text-[11px] font-bold text-white">
+                <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-pxi-purple text-[11px] font-bold text-white">
                     {order}
                 </span>
             ) : null}
@@ -525,7 +525,7 @@ function EventPickerCard({ event, selected, order, onToggle }) {
 function EventPicker({ events, selectedIds, onToggle, loading }) {
     const [view, setView] = useState('cards');
     return (
-        <div className="rounded-[1.25rem] bg-white/[0.035] p-4">
+        <div className="rounded-[1.25rem] bg-pxi-field p-4">
             <div className="flex flex-col gap-3 pb-4 md:flex-row md:items-end md:justify-between">
                 <div>
                     <p className="text-xs font-bold tracking-[0.02em] text-white/40">Choose events</p>
@@ -580,9 +580,9 @@ const COMPARISON_COLORS = [DASHBOARD_BRAND_COLOR, getDashboardChartShade(1), get
 function EventComparisonChart({ details = [], loading }) {
     if (loading) {
         return (
-            <div className="rounded-[1.25rem] bg-white/[0.035] p-5">
+            <div className="rounded-[1.25rem] bg-pxi-field p-5">
                 <p className="text-xs font-bold tracking-[0.02em] text-white/35">Comparing</p>
-                <div className="mt-4 h-[280px] animate-pulse rounded-2xl bg-white/[0.035]" />
+                <div className="mt-4 h-[280px] animate-pulse rounded-2xl bg-pxi-field" />
             </div>
         );
     }
@@ -610,7 +610,7 @@ function EventComparisonChart({ details = [], loading }) {
     });
 
     return (
-        <section className="rounded-[1.25rem] bg-white/[0.035] p-5">
+        <section className="rounded-[1.25rem] bg-pxi-field p-5">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <p className="text-xs font-bold tracking-[0.02em] text-white/35">Comparing {rows.length} events</p>
@@ -657,7 +657,7 @@ function EventComparisonChart({ details = [], loading }) {
             </div>
             <div className="mt-4 space-y-1.5">
                 {rows.map((row) => (
-                    <div key={row.id} className="grid grid-cols-[16px_1.4fr_repeat(3,80px)] items-center gap-3 rounded-xl bg-white/[0.03] px-3 py-2 text-sm">
+                    <div key={row.id} className="grid grid-cols-[16px_1.4fr_repeat(3,80px)] items-center gap-3 rounded-xl bg-pxi-field px-3 py-2 text-sm">
                         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: row.color }} />
                         <span className="truncate font-semibold text-white">{row.name}</span>
                         <span className="text-right tabular-nums text-zinc-300">{formatNumber(row.tickets)}<span className="ml-1 text-[10px] text-zinc-600">sold</span></span>
@@ -697,7 +697,7 @@ function Leaderboard({ title, people = [], emptyLabel }) {
                     ))}
                 </div>
             ) : (
-                <div className="mt-2 rounded-2xl bg-white/[0.035] p-4 text-sm text-zinc-400">{emptyLabel}</div>
+                <div className="mt-2 rounded-2xl bg-pxi-field p-4 text-sm text-zinc-400">{emptyLabel}</div>
             )}
         </div>
     );
@@ -910,13 +910,13 @@ function AnalyticsPageContent() {
                     <MarketingPanel />
                 </>
             ) : !selectedEventId ? (
-                <div className="rounded-2xl bg-white/[0.035] p-6 text-sm text-zinc-400">Select an event above to see its full analytics.</div>
+                <div className="rounded-2xl bg-pxi-field p-6 text-sm text-zinc-400">Select an event above to see its full analytics.</div>
             ) : eventDetailLoading || !eventDetail ? (
                 <div className="space-y-4">
                     <ChartSkeleton className="h-[300px] md:h-[360px]" />
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         {[0, 1, 2].map((item) => (
-                            <div key={item} className="h-28 rounded-2xl bg-white/[0.035] animate-pulse" />
+                            <div key={item} className="h-28 rounded-2xl bg-pxi-field animate-pulse" />
                         ))}
                     </div>
                 </div>
@@ -989,7 +989,7 @@ function AnalyticsPageContent() {
 
                     <MarketingPanel selectedEventId={selectedEventId} />
 
-                    <div className="flex flex-wrap items-center justify-between gap-4 rounded-[1.25rem] bg-white/[0.035] p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-4 rounded-[1.25rem] bg-pxi-field p-5">
                         <div>
                             <p className="text-sm font-bold text-white">Ready for the sequel?</p>
                             <p className="mt-1 max-w-xl text-sm leading-6 text-zinc-500">

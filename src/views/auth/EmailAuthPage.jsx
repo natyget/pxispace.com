@@ -411,7 +411,7 @@ export default function EmailAuthPage() {
     const isLogin = mode === 'login';
 
     return (
-        <div className="relative flex min-h-screen flex-1 flex-col overflow-hidden bg-[#050505]">
+        <div className="relative flex min-h-screen flex-1 flex-col overflow-hidden bg-black">
             <FloatingAuthElements />
             {showVerifiedMessage && (
                 <div
@@ -419,7 +419,7 @@ export default function EmailAuthPage() {
                     style={{
                         background: 'rgba(255,255,255,0.05)',
                         border: '1px solid rgba(255,255,255,0.1)',
-                        color: 'rgba(216,74,255,0.95)',
+                        color: 'rgba(165,35,239,0.95)',
                     }}
                 >
                     Please log in again to complete your profile.
@@ -429,7 +429,7 @@ export default function EmailAuthPage() {
             {/* Back button — the only top chrome on this page */}
             <button
                 onClick={() => router.push('/')}
-                className="absolute left-5 top-5 z-20 flex items-center justify-center rounded-full bg-[rgba(26,26,26,0.6)] p-2.5 text-white/60 backdrop-blur-xl transition hover:bg-white/10 hover:text-white md:left-8 md:top-8"
+                className="absolute left-5 top-5 z-20 flex items-center justify-center rounded-full bg-pxi-field p-2.5 text-white/60 transition hover:bg-white/10 hover:text-white md:left-8 md:top-8"
                 aria-label="Back to home"
             >
                 <HugeiconsIcon icon={ArrowLeft01Icon} size={22} />
@@ -455,10 +455,10 @@ export default function EmailAuthPage() {
 
                     {/* Auth card — panel chrome on md+ only (mobile matches app: no card wrapper) */}
                     <div
-                        className="flex flex-col rounded-[2rem] bg-black/40 p-5 backdrop-blur-[40px] md:p-7"
+                        className="flex flex-col rounded-[2rem] bg-black/40 p-5 md:p-7"
                     >
                     {/* Mode toggle — glass segmented control, matches mobile */}
-                    <div className="relative mb-6 grid grid-cols-2 gap-0 overflow-hidden rounded-full bg-[rgba(26,26,26,0.6)] p-1 backdrop-blur-xl">
+                    <div className="relative mb-6 grid grid-cols-2 gap-0 overflow-hidden rounded-full bg-pxi-field p-1">
                         <div
                             className="absolute inset-y-1 w-[calc(50%-4px)] rounded-full bg-white transition-transform duration-300 ease-out"
                             style={{ transform: mode === 'signup' ? 'translateX(calc(100% + 8px))' : 'translateX(0)' }}
@@ -634,7 +634,7 @@ export default function EmailAuthPage() {
                                 disabled={!canSubmit}
                                 className={`relative z-[2] h-14 w-full rounded-full border-0 font-black uppercase text-[13px] tracking-[0.15em] transition-all ${
                                     canSubmit
-                                        ? 'cursor-pointer text-black bg-white shadow-xl'
+                                        ? 'cursor-pointer text-white bg-pxi-purple shadow-xl'
                                         : 'cursor-not-allowed bg-white/10 text-white/30'
                                 }`}
                             >
@@ -726,7 +726,7 @@ function AuthField({ children }) {
 
 function AuthInput({ focusColor, style = {}, ...props }) {
     const [focused, setFocused] = useState(false);
-    const defaultFocus = 'rgba(216,74,255,0.55)';
+    const defaultFocus = 'rgba(165,35,239,0.55)';
     const activeFocus = focusColor || defaultFocus;
 
     return (
@@ -734,7 +734,7 @@ function AuthInput({ focusColor, style = {}, ...props }) {
             {...props}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            className="auth-glass-input w-full text-sm font-semibold text-white outline-none backdrop-blur-xl transition-all placeholder:text-sm placeholder:font-semibold placeholder:text-white/30 placeholder:uppercase placeholder:tracking-[0.5px]"
+            className="auth-glass-input w-full text-sm font-semibold text-white outline-none transition-all placeholder:text-sm placeholder:font-semibold placeholder:text-white/30 placeholder:uppercase placeholder:tracking-[0.5px] bg-pxi-field"
             style={{
                 height: AUTH_INPUT_HEIGHT_PX,
                 borderRadius: 16,
@@ -772,7 +772,7 @@ function FieldHint({ color, children }) {
 
 function AuthFeature({ icon, title, body }) {
     return (
-        <div className="flex items-start gap-3 rounded-[1.5rem] bg-white/[0.045] p-4">
+        <div className="flex items-start gap-3 rounded-[1.5rem] bg-pxi-field p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/35 text-white">
                 <HugeiconsIcon icon={icon} size={18} />
             </div>
@@ -789,7 +789,7 @@ function FooterPill({ onClick, icon, children }) {
         <button
             type="button"
             onClick={onClick}
-            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-white/10 backdrop-blur-xl font-bold uppercase tracking-widest text-white transition-all hover:bg-white/15 active:scale-95"
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-white/10 font-bold uppercase tracking-widest text-white transition-all hover:bg-white/15 active:scale-95"
             style={{ fontSize: 11 }}
         ><span className="flex items-center justify-center gap-2">
                 {icon}

@@ -55,7 +55,7 @@ function formatRequirement(key) {
 
 function StatusRow({ label, enabled, description }) {
     return (
-        <div className="flex items-start gap-3 rounded-[1.25rem] bg-white/[0.035] px-4 py-3.5">
+        <div className="flex items-start gap-3 rounded-[1.25rem] bg-pxi-field px-4 py-3.5">
             <HugeiconsIcon
                 icon={enabled ? CheckmarkCircle02Icon : CancelCircleIcon}
                 size={16}
@@ -268,13 +268,13 @@ export default function VendorUpgradePage() {
                             One verification unlocks paid events, ticket sales, payouts, and the full operations desk.
                         </p>
                     </div>
-                    <div className="grid grid-cols-3 gap-px overflow-hidden rounded-[1.25rem] bg-white/[0.06] ring-1 ring-white/[0.07]">
+                    <div className="grid grid-cols-3 gap-px overflow-hidden rounded-[1.25rem] bg-pxi-field">
                         {[
                             { label: 'Status', value: statusLabel },
                             { label: 'Provider', value: 'Stripe' },
                             { label: 'Takes', value: '2–5 min' },
                         ].map((metric) => (
-                            <div key={metric.label} className="bg-[#0e0e13] px-4 py-3.5">
+                            <div key={metric.label} className="bg-pxi-surface px-4 py-3.5">
                                 <p className="text-[12px] font-medium text-zinc-500">{metric.label}</p>
                                 <p className="mt-1.5 truncate text-[19px] font-semibold leading-none tracking-tight text-white">
                                     {metric.value}
@@ -374,8 +374,8 @@ export default function VendorUpgradePage() {
                     <SurfaceHeader eyebrow="Included" title="What you're unlocking" />
                     <div className="mt-5 space-y-3">
                         {BENEFITS.map(({ icon, title, desc }) => (
-                            <div key={title} className="flex items-start gap-3.5 rounded-[1.25rem] bg-white/[0.035] p-4">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.055]">
+                            <div key={title} className="flex items-start gap-3.5 rounded-[1.25rem] bg-pxi-field p-4">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pxi-field">
                                     <HugeiconsIcon icon={icon} size={17} className="text-white opacity-60" />
                                 </div>
                                 <div className="min-w-0">
@@ -406,7 +406,7 @@ export default function VendorUpgradePage() {
                     </div>
 
                     {stripeStatus.currentlyDue?.length > 0 && (
-                        <div className="mt-4 rounded-[1.25rem] bg-white/[0.035] p-4">
+                        <div className="mt-4 rounded-[1.25rem] bg-pxi-field p-4">
                             <p className="text-[12px] font-medium text-zinc-500">Outstanding requirements</p>
                             <p className="mt-1 text-xs leading-5 text-zinc-500">
                                 Complete these items in Stripe to finish verification:

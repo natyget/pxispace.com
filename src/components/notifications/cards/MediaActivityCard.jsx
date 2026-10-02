@@ -101,7 +101,7 @@ export function PhotoCommentCard({ item, onClick }) {
       time={item.time}
       onClick={() => onClick?.(item)}
       avatarBadge={
-        <span className="absolute -bottom-0.5 -right-0.5 w-7 h-7 rounded-full bg-[#0a0a0a] border border-white/10 flex items-center justify-center">
+        <span className="absolute -bottom-0.5 -right-0.5 w-7 h-7 rounded-full bg-black flex items-center justify-center">
           <HugeiconsIcon icon={Message01Icon} size={16} color="#fff" strokeWidth={2} />
         </span>
       }

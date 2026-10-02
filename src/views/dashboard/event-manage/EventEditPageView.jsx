@@ -568,7 +568,7 @@ export default function EventEditPageView() {
           <button
             type="button"
             onClick={handleCropConfirm}
-            className="rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black transition hover:bg-zinc-200"
+            className="rounded-full bg-pxi-purple px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-110 uppercase tracking-[0.08em]"
           >
             Use photo
           </button>
@@ -590,7 +590,7 @@ export default function EventEditPageView() {
           </h2>
           <label className="relative block w-full sm:w-[300px] sm:mx-auto cursor-pointer" style={{ aspectRatio: '3/4' }}>
             <input type="file" accept="image/*" className="hidden" onChange={onCoverFile} disabled={isCoverUploading} />
-            <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-white/[0.045]">
+            <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-pxi-field">
               {(coverImage || coverPreview) ? (
                 <img src={coverImage || coverPreview} alt="" className="w-full h-full object-cover" />
               ) : !isCoverUploading ? (
@@ -640,7 +640,7 @@ export default function EventEditPageView() {
           <div className="space-y-2">
             <label className={labelClass}>Use a saved venue</label>
             {venueLoading || venuesLoading ? (
-              <div className="h-16 animate-pulse rounded-xl bg-white/[0.035]" />
+              <div className="h-16 animate-pulse rounded-xl bg-pxi-field" />
             ) : (
               <>
                 {attachedVenue ? (
@@ -672,7 +672,7 @@ export default function EventEditPageView() {
                           disabled={venueSaving}
                           onClick={() => pickVenue(venue)}
                           className={`rounded-xl px-3.5 py-2.5 text-left transition disabled:opacity-40 ${
-                            active ? 'bg-white/[0.08]' : 'bg-white/[0.035] hover:bg-white/[0.06]'
+                            active ? 'bg-white/[0.08]' : 'bg-pxi-field hover:bg-white/[0.06]'
                           }`}
                         >
                           <span className="block text-xs font-bold text-white">{venue.name}</span>
@@ -805,7 +805,7 @@ export default function EventEditPageView() {
         <section className="dashboard-surface rounded-2xl p-5 space-y-5">
           <h2 className="text-xs font-bold tracking-[0.02em] text-zinc-500">Configuration</h2>
 
-          <div className="flex items-center justify-between gap-4 rounded-xl bg-white/[0.04] px-4 py-3">
+          <div className="flex items-center justify-between gap-4 rounded-xl bg-pxi-field px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Public event</p>
               <p className="text-xs text-zinc-500">
@@ -830,7 +830,7 @@ export default function EventEditPageView() {
             </button>
           </div>
 
-          <div className="flex items-center justify-between gap-4 rounded-xl bg-white/[0.04] px-4 py-3">
+          <div className="flex items-center justify-between gap-4 rounded-xl bg-pxi-field px-4 py-3">
             <div>
               <p className="text-sm font-bold text-white">Paid ticket</p>
               <p className="text-xs text-zinc-500">Requires completed hosting payment setup.</p>
@@ -850,7 +850,7 @@ export default function EventEditPageView() {
 
           {isPaid && (
             <>
-              <div className="flex items-center justify-between gap-4 rounded-xl bg-white/[0.04] px-4 py-3">
+              <div className="flex items-center justify-between gap-4 rounded-xl bg-pxi-field px-4 py-3">
                 <div>
                   <p className="text-sm font-bold text-white">Ticket tiers</p>
                   <p className="text-xs text-zinc-500">VVIP, VIP, general admission, and more.</p>
@@ -879,7 +879,7 @@ export default function EventEditPageView() {
                   {ticketTiers.map((tier, index) => (
                     <div
                       key={tier.id}
-                      className="space-y-3 rounded-xl bg-white/[0.035] p-4"
+                      className="space-y-3 rounded-xl bg-pxi-field p-4"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[10px] font-bold tracking-[0.02em] text-zinc-500">
@@ -949,13 +949,13 @@ export default function EventEditPageView() {
                   <button
                     type="button"
                     onClick={() => setTicketTiers((prev) => [...prev, createEmptyTier()])}
-                    className="w-full rounded-xl bg-white/[0.045] py-2.5 text-xs font-semibold tracking-wider text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
+                    className="w-full rounded-xl bg-pxi-field py-2.5 text-xs font-semibold tracking-wider text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
                   >
                     + Add tier
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 rounded-xl bg-white/[0.045] px-3 py-2">
+                <div className="flex items-center gap-2 rounded-xl bg-pxi-field px-3 py-2">
                   <HugeiconsIcon icon={HelpCircleIcon} size={18} className="text-zinc-500 shrink-0" />
                   <input
                     className="flex-1 bg-transparent text-white text-sm outline-none placeholder-zinc-500"
@@ -1023,14 +1023,14 @@ export default function EventEditPageView() {
             </div>
             <Link
               href="/dashboard/team"
-              className="shrink-0 rounded-full bg-white/[0.06] px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] text-zinc-400 hover:bg-white/[0.1] hover:text-white"
+              className="shrink-0 rounded-full bg-pxi-field px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] text-zinc-400 hover:bg-white/[0.1] hover:text-white"
             >
               Manage teams
             </Link>
           </div>
 
           {teamRostersLoading ? (
-            <div className="h-20 animate-pulse rounded-xl bg-white/[0.035]" />
+            <div className="h-20 animate-pulse rounded-xl bg-pxi-field" />
           ) : teamRosters.length ? (
             <div className="space-y-3">
               {teamRosters.map((roster) => {
@@ -1039,7 +1039,7 @@ export default function EventEditPageView() {
                 const wholeTeam = Boolean(assignment && selectedMemberIds.length === 0);
 
                 return (
-                  <div key={roster.id} className={`rounded-xl px-4 py-4 transition ${assignment ? 'bg-white/[0.08]' : 'bg-white/[0.035]'}`}>
+                  <div key={roster.id} className={`rounded-xl px-4 py-4 transition ${assignment ? 'bg-white/[0.08]' : 'bg-pxi-field'}`}>
                     <div className="flex items-center justify-between gap-3">
                       <button type="button" onClick={() => toggleTeamRoster(roster)} className="min-w-0 flex-1 text-left">
                         <p className="truncate text-sm font-bold text-white">{roster.name}</p>
@@ -1051,7 +1051,7 @@ export default function EventEditPageView() {
                         type="button"
                         onClick={() => toggleTeamRoster(roster)}
                         className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] transition ${
-                          assignment ? 'bg-white text-black' : 'bg-white/[0.06] text-zinc-400 hover:bg-white/[0.1] hover:text-white'
+                          assignment ? 'bg-pxi-purple text-white' : 'bg-pxi-field text-zinc-400 hover:bg-white/[0.1] hover:text-white'
                         }`}
                       >
                         {assignment ? 'Selected' : 'Choose'}
@@ -1064,7 +1064,7 @@ export default function EventEditPageView() {
                           type="button"
                           onClick={() => setTeamRosterMembers(roster, [])}
                           className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] transition ${
-                            wholeTeam ? 'bg-white text-black' : 'bg-white/[0.06] text-zinc-400 hover:bg-white/[0.1] hover:text-white'
+                            wholeTeam ? 'bg-pxi-purple text-white' : 'bg-pxi-field text-zinc-400 hover:bg-white/[0.1] hover:text-white'
                           }`}
                         >
                           Whole team
@@ -1082,7 +1082,7 @@ export default function EventEditPageView() {
                                 setTeamRosterMembers(roster, memberIds);
                               }}
                               className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] transition ${
-                                active ? 'bg-white text-black' : 'bg-white/[0.06] text-zinc-400 hover:bg-white/[0.1] hover:text-white'
+                                active ? 'bg-pxi-purple text-white' : 'bg-pxi-field text-zinc-400 hover:bg-white/[0.1] hover:text-white'
                               }`}
                             >
                               {memberDisplayName(member)}
@@ -1096,7 +1096,7 @@ export default function EventEditPageView() {
               })}
             </div>
           ) : (
-            <div className="rounded-xl bg-white/[0.035] px-4 py-5 text-sm text-zinc-500">
+            <div className="rounded-xl bg-pxi-field px-4 py-5 text-sm text-zinc-500">
               Create a team in Teams &amp; Security, then return here to attach it.
             </div>
           )}
@@ -1110,13 +1110,13 @@ export default function EventEditPageView() {
             </div>
             {gatesError ? <p className="text-xs text-red-300">{gatesError}</p> : null}
             {gatesLoading ? (
-              <div className="h-16 animate-pulse rounded-xl bg-white/[0.035]" />
+              <div className="h-16 animate-pulse rounded-xl bg-pxi-field" />
             ) : gates.length ? (
               <div className="space-y-3">
                 {gates.map((gate) => {
                   const assignedIds = new Set((Array.isArray(gate.staffJson) ? gate.staffJson : []).map((person) => person.id));
                   return (
-                    <div key={gate.id} className="rounded-xl bg-white/[0.035] px-4 py-3">
+                    <div key={gate.id} className="rounded-xl bg-pxi-field px-4 py-3">
                       <p className="text-sm font-bold text-white">{gate.name}</p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {assignedTeamMembers.length ? assignedTeamMembers.map((member) => {
@@ -1128,7 +1128,7 @@ export default function EventEditPageView() {
                               disabled={savingGateId === gate.id}
                               onClick={() => toggleGateMember(gate, member)}
                               className={`rounded-full px-3 py-1.5 text-[10px] font-bold tracking-[0.02em] transition disabled:opacity-40 ${
-                                active ? 'bg-white text-black' : 'bg-white/[0.06] text-zinc-400 hover:bg-white/[0.1] hover:text-white'
+                                active ? 'bg-pxi-purple text-white' : 'bg-pxi-field text-zinc-400 hover:bg-white/[0.1] hover:text-white'
                               }`}
                             >
                               {member.label}
@@ -1165,14 +1165,14 @@ export default function EventEditPageView() {
         <div className="dashboard-surface flex flex-col-reverse gap-3 rounded-2xl p-4 sm:flex-row sm:items-center">
           <Link
             href={`/dashboard/events/${eventId}`}
-            className="pill-ghost inline-flex min-h-[48px] items-center justify-center px-5 text-sm font-semibold"
+            className="pill-cancel inline-flex min-h-[48px] items-center justify-center px-5 text-sm font-semibold"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={isPast || isSaving || isCoverUploading}
-            className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] rounded-full bg-white px-6 text-sm font-bold tracking-[0.02em] text-black transition hover:bg-zinc-200 disabled:opacity-45"
+            className="flex-1 inline-flex items-center justify-center gap-2 min-h-[48px] rounded-full bg-pxi-purple px-6 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-45 uppercase tracking-[0.08em]"
           >
             {isSaving ? <PxiSpinner size="sm" /> : null}
             {isSaving ? 'Saving...' : isPast ? 'Event ended (read-only)' : 'Save'}
@@ -1220,7 +1220,7 @@ export default function EventEditPageView() {
                   setIsPrivate(false);
                   setShowPublicConsent(false);
                 }}
-                className="rounded-full bg-white px-4 py-2.5 text-sm font-bold text-black"
+                className="rounded-full bg-pxi-purple px-4 py-2.5 text-sm font-bold text-white uppercase tracking-[0.08em]"
               >
                 I understand, make public
               </button>

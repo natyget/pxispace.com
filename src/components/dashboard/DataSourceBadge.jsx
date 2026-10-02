@@ -2,7 +2,7 @@
 
 const SOURCE_STYLES = {
     Live: 'bg-emerald-500/8 text-emerald-200 border-emerald-500/25',
-    Derived: 'bg-violet-500/8 text-violet-200 border-violet-500/25',
+    Derived: 'bg-pxi-purple/10 text-white border-pxi-purple/30',
     Mock: 'bg-amber-500/8 text-amber-200 border-amber-500/25',
 };
 

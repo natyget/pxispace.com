@@ -261,12 +261,12 @@ const EventDetails = ({ basePath = '/events' }) => {
     <>
       <div className="bg-black text-white min-h-screen">
         {/* Top CTAs */}
-        <div className="border-b border-white/10 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-30">
+        <div className="border-b border-white/10 bg-zinc-950/80 sticky top-0 z-30">
           <div className="container mx-auto px-6 py-4 flex flex-wrap gap-3 items-center justify-between">
             <div className="flex flex-wrap gap-2">
               <IosDownloadLink
                 href={storeUrlForPlatform(platform)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-colors"
               >
                 <HugeiconsIcon icon={SmartPhone01Icon} size={14} />
                 {store.name}
@@ -302,13 +302,13 @@ const EventDetails = ({ basePath = '/events' }) => {
             transition={{ duration: 0.6, ease: EASE_APPLE, delay: 0.15 }}
           >
             <div className="flex flex-wrap items-center gap-3 mb-4">
-              <span className="glass px-4 py-2 rounded-full text-xs uppercase">{apiEvent.effectiveStatus || 'Event'}</span>
+              <span className="bg-pxi-surface px-4 py-2 rounded-full text-xs uppercase">{apiEvent.effectiveStatus || 'Event'}</span>
               <button
                 type="button"
                 onClick={handleToggleFavorite}
-                className="glass px-4 py-2 rounded-full text-xs uppercase inline-flex items-center gap-2"
+                className="bg-pxi-surface px-4 py-2 rounded-full text-xs uppercase inline-flex items-center gap-2"
               >
-                <HugeiconsIcon icon={FavouriteIcon} size={16} className={favorited ? 'fill-[#d84aff] text-[#d84aff]' : ''} />
+                <HugeiconsIcon icon={FavouriteIcon} size={16} className={favorited ? 'fill-pxi-purple text-pxi-purple' : ''} />
                 {favorited ? 'On wishlist' : 'Wishlist'}
               </button>
             </div>
@@ -349,7 +349,7 @@ const EventDetails = ({ basePath = '/events' }) => {
         <div className="container mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-3 gap-16">
           <div className="lg:col-span-2 space-y-20">
             {/* Meta */}
-            <div className="glass-dark p-8 rounded-3xl grid grid-cols-2 md:grid-cols-4 gap-6 border border-white/5">
+            <div className="bg-pxi-surface p-8 rounded-3xl grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="flex items-center gap-3">
                 <HugeiconsIcon icon={Calendar01Icon} className="text-pxi-purple shrink-0" />
                 <span className="text-sm">
@@ -376,7 +376,7 @@ const EventDetails = ({ basePath = '/events' }) => {
             {mapSrc ? (
               <section>
                 <h2 className="text-3xl font-black uppercase tracking-tighter mb-4">Location</h2>
-                <div className="rounded-3xl overflow-hidden border border-white/10 h-[320px] bg-zinc-900">
+                <div className="rounded-3xl overflow-hidden h-[320px] bg-pxi-surface">
                   <iframe title="Event location" src={mapSrc} className="w-full h-full border-0" loading="lazy" />
                 </div>
               </section>
@@ -393,7 +393,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                       key={`${src}-${i}`}
                       src={src}
                       alt=""
-                      className="h-56 w-40 md:h-72 md:w-52 object-cover rounded-2xl border border-white/10 shrink-0"
+                      className="h-56 w-40 md:h-72 md:w-52 object-cover rounded-2xl shrink-0"
                       onError={onImageErrorToDefault}
                       referrerPolicy="no-referrer-when-downgrade"
                     />
@@ -430,7 +430,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                         src={playlistEmbed}
                         width="100%"
                         height="152"
-                        className="rounded-xl border border-white/10"
+                        className="rounded-xl"
                         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                         loading="lazy"
                       />
@@ -444,7 +444,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                         src={topTrackEmbed}
                         width="100%"
                         height="152"
-                        className="rounded-xl border border-white/10"
+                        className="rounded-xl"
                         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                         loading="lazy"
                       />
@@ -465,7 +465,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                     return (
                       <div
                         key={fp.id || fp.userId}
-                        className="glass-dark rounded-2xl border border-white/10 p-6 flex gap-4 items-center"
+                        className="bg-pxi-surface rounded-2xl p-6 flex gap-4 items-center"
                       >
                         <UserAvatar
                           user={{ avatarUrl: u.avatarUrl }}
@@ -490,7 +490,7 @@ const EventDetails = ({ basePath = '/events' }) => {
             ) : null}
 
             {/* Music match — replaces the old host passport block; host stays as a compact row */}
-            <section className="glass-dark rounded-[2rem] border border-white/10 p-10">
+            <section className="bg-pxi-surface rounded-[2rem] p-10">
               <h2 className="text-3xl font-black uppercase tracking-tighter mb-1 flex items-center gap-3">
                 <HugeiconsIcon icon={MusicNote01Icon} className="text-pxi-purple" />
                 Your music match
@@ -601,7 +601,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                       {apiEvent.scrapbookThumbnails.slice(0, 12).map((t, i) => (
                         <div
                           key={`${t}-${i}`}
-                          className="w-14 h-14 rounded-lg overflow-hidden border border-white/10 rotate-[-4deg] hover:rotate-0 transition-transform"
+                          className="w-14 h-14 rounded-lg overflow-hidden rotate-[-4deg] hover:rotate-0 transition-transform"
                         >
                           <img
                             src={displayImageSrc(t, DEFAULT_IMG)}
@@ -619,7 +619,7 @@ const EventDetails = ({ basePath = '/events' }) => {
           </div>
 
           {/* Sidebar tickets */}
-          <div className="lg:sticky lg:top-28 h-fit glass-dark p-10 rounded-3xl border border-white/10 space-y-6">
+          <div className="lg:sticky lg:top-28 h-fit bg-pxi-surface p-10 rounded-3xl space-y-6">
             <h3 className="text-3xl font-black">{priceDisplay}</h3>
             <p className="text-zinc-500 text-xs leading-relaxed">
               Total for paid tickets includes service and processing fees — see quote when you select a tier.
@@ -654,7 +654,7 @@ const EventDetails = ({ basePath = '/events' }) => {
             ) : null}
 
             {requireEula ? (
-              <div className="rounded-xl border border-white/10 bg-black/30 p-4 space-y-3">
+              <div className="rounded-xl bg-black/30 p-4 space-y-3">
                 <p className="text-[10px] font-black uppercase tracking-widest text-pxi-purple">EULA — public event</p>
                 <p className="text-zinc-400 text-xs leading-relaxed [&_a]:inline">{PUBLIC_EULA_COPY}</p>
                 <label className="flex items-start gap-3 text-sm text-zinc-300 cursor-pointer">

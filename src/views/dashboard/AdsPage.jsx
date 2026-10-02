@@ -89,8 +89,8 @@ function ChipPicker({ options, selected, onToggle }) {
                         onClick={() => onToggle(option.id)}
                         className={`rounded-full px-3.5 py-2 text-xs font-bold transition ${
                             active
-                                ? 'bg-white text-black'
-                                : 'bg-white/[0.06] text-zinc-300 hover:bg-white/[0.12]'
+                                ? 'bg-pxi-purple text-white'
+                                : 'bg-pxi-field text-zinc-300 hover:bg-white/[0.12]'
                         }`}
                     >
                         {option.label}
@@ -128,7 +128,7 @@ function EventCoverPicker({ events, selected, onToggle }) {
                         className={`group overflow-hidden rounded-2xl text-left transition ${
                             active
                                 ? 'ring-2 ring-white ring-offset-2 ring-offset-black'
-                                : 'ring-1 ring-white/10 hover:ring-white/25'
+                                : 'hover:ring-white/25'
                         }`}
                     >
                         <div className="relative aspect-[3/4] bg-zinc-900">
@@ -141,13 +141,13 @@ function EventCoverPicker({ events, selected, onToggle }) {
                                     loading="lazy"
                                 />
                             ) : (
-                                <div className="flex h-full w-full items-center justify-center bg-white/[0.04] text-xs font-bold text-zinc-600">
+                                <div className="flex h-full w-full items-center justify-center bg-pxi-field text-xs font-bold text-zinc-600">
                                     No cover
                                 </div>
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
                             {active ? (
-                                <span className="absolute right-2 top-2 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold tracking-wide text-black">
+                                <span className="absolute right-2 top-2 rounded-full bg-pxi-purple px-2 py-0.5 text-[10px] font-bold tracking-wide text-white">
                                     Selected
                                 </span>
                             ) : null}
@@ -575,7 +575,7 @@ export default function AdsPage() {
                                             Events to promote ({draft.eventIds.length} selected)
                                         </span>
                                         {upcomingEvents.length === 0 ? (
-                                            <p className="rounded-2xl bg-white/[0.035] px-4 py-4 text-sm text-zinc-500">
+                                            <p className="rounded-2xl bg-pxi-field px-4 py-4 text-sm text-zinc-500">
                                                 No upcoming events to promote — create a future event first, or wait
                                                 until one is scheduled.
                                             </p>
@@ -593,8 +593,8 @@ export default function AdsPage() {
                             {step === 1 ? (
                                 <>
                                     {audienceIntel ? (
-                                        <div className="rounded-2xl bg-[#d84aff]/[0.07] p-4 ring-1 ring-[#d84aff]/15">
-                                            <p className="text-[11px] font-medium tracking-[0.02em] text-[#e9a1ff]">Smart targeting — built from your real attendees</p>
+                                        <div className="rounded-2xl bg-pxi-purple/[0.07] p-4 ring-1 ring-pxi-purple/15">
+                                            <p className="text-[11px] font-medium tracking-[0.02em] text-white">Smart targeting — built from your real attendees</p>
                                             <p className="mt-1 text-xs leading-5 text-zinc-400">
                                                 Your money works hardest on people like the ones who already show up. One tap applies the profile.
                                             </p>
@@ -609,7 +609,7 @@ export default function AdsPage() {
                                                 }
                                                 className={`mt-3 flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left transition ${
                                                     draft.lookalikeOfOwnAttendees
-                                                        ? 'bg-[#d84aff] text-white'
+                                                        ? 'bg-pxi-purple text-white'
                                                         : 'bg-white/[0.07] text-zinc-100 hover:bg-white/[0.12]'
                                                 }`}
                                             >
@@ -658,7 +658,7 @@ export default function AdsPage() {
                                         </div>
                                     ) : null}
                                     {draft.lookalikeOfOwnAttendees ? (
-                                        <p className="rounded-2xl bg-white/[0.035] px-4 py-4 text-xs leading-5 text-zinc-500">
+                                        <p className="rounded-2xl bg-pxi-field px-4 py-4 text-xs leading-5 text-zinc-500">
                                             Cities, age brackets, and genres are set automatically from your attendee base while
                                             &ldquo;Target people like my crowd&rdquo; is on. Turn it off above to pick these by hand.
                                         </p>
@@ -718,7 +718,7 @@ export default function AdsPage() {
                                             />
                                         </label>
                                     </div>
-                                    <p className="rounded-2xl bg-white/[0.035] px-4 py-3 text-xs leading-5 text-zinc-500">
+                                    <p className="rounded-2xl bg-pxi-field px-4 py-3 text-xs leading-5 text-zinc-500">
                                         Any filter limits delivery to signed-in members who match. Leave everything empty to
                                         also reach logged-out visitors on the web surfaces.
                                     </p>
@@ -731,14 +731,14 @@ export default function AdsPage() {
                                         {AD_SURFACES.map((surface) => {
                                             const enabled = Boolean(draft.placements[surface.id]);
                                             return (
-                                                <div key={surface.id} className="rounded-2xl bg-white/[0.045] p-4">
+                                                <div key={surface.id} className="rounded-2xl bg-pxi-field p-4">
                                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                                         <button
                                                             type="button"
                                                             aria-pressed={enabled}
                                                             onClick={() => toggleSurface(surface.id)}
                                                             className={`rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] transition ${
-                                                                enabled ? 'bg-white text-black' : 'bg-white/[0.07] text-zinc-400 hover:bg-white/[0.12]'
+                                                                enabled ? 'bg-pxi-purple text-white' : 'bg-white/[0.07] text-zinc-400 hover:bg-white/[0.12]'
                                                             }`}
                                                         >
                                                             {surface.label}
@@ -756,26 +756,26 @@ export default function AdsPage() {
                                                 </div>
                                             );
                                         })}
-                                        <div className="rounded-2xl bg-white/[0.03] p-4 opacity-60">
+                                        <div className="rounded-2xl bg-pxi-field p-4 opacity-60">
                                             <div className="flex items-center justify-between gap-3">
-                                                <span className="rounded-full bg-white/[0.06] px-4 py-2 text-xs font-bold tracking-[0.02em] text-zinc-500">
+                                                <span className="rounded-full bg-pxi-field px-4 py-2 text-xs font-bold tracking-[0.02em] text-zinc-500">
                                                     SMS
                                                 </span>
-                                                <span className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-zinc-500">
+                                                <span className="rounded-full bg-pxi-field px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-zinc-500">
                                                     Coming soon
                                                 </span>
                                             </div>
                                             <p className="mt-2 text-xs text-zinc-600">Last-call texts to opted-in guests.</p>
                                         </div>
                                     </div>
-                                    <div className="rounded-2xl bg-white/[0.045] p-4">
+                                    <div className="rounded-2xl bg-pxi-field p-4">
                                         <div className="flex items-center justify-between gap-3">
                                             <button
                                                 type="button"
                                                 aria-pressed={draft.emailEnabled}
                                                 onClick={() => patchDraft({ emailEnabled: !draft.emailEnabled })}
                                                 className={`rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] transition ${
-                                                    draft.emailEnabled ? 'bg-white text-black' : 'bg-white/[0.07] text-zinc-400 hover:bg-white/[0.12]'
+                                                    draft.emailEnabled ? 'bg-pxi-purple text-white' : 'bg-white/[0.07] text-zinc-400 hover:bg-white/[0.12]'
                                                 }`}
                                             >
                                                 Email blast
@@ -829,7 +829,7 @@ export default function AdsPage() {
                                     {quote?.lineItems?.length ? (
                                         <div className="sm:col-span-2 space-y-2">
                                             {quote.lineItems.map((li) => (
-                                                <div key={li.surface} className="flex items-center justify-between rounded-2xl bg-white/[0.045] px-4 py-3 text-sm">
+                                                <div key={li.surface} className="flex items-center justify-between rounded-2xl bg-pxi-field px-4 py-3 text-sm">
                                                     <span className="font-bold text-white">
                                                         {SURFACE_LABELS[li.surface] || li.surface}
                                                         <span className="ml-2 text-xs font-semibold text-zinc-500">
@@ -840,7 +840,7 @@ export default function AdsPage() {
                                                 </div>
                                             ))}
                                             {draft.emailEnabled ? (
-                                                <div className="flex items-center justify-between rounded-2xl bg-white/[0.045] px-4 py-3 text-sm">
+                                                <div className="flex items-center justify-between rounded-2xl bg-pxi-field px-4 py-3 text-sm">
                                                     <span className="font-bold text-white">
                                                         Email blast
                                                         <span className="ml-2 text-xs font-semibold text-zinc-500">
@@ -864,7 +864,7 @@ export default function AdsPage() {
                                             { label: 'Total', value: quote ? formatUsd(quote.totalCents) : '—' },
                                         ]}
                                     />
-                                    <div className="rounded-2xl bg-white/[0.045] px-4 py-4 text-sm leading-6 text-zinc-400">
+                                    <div className="rounded-2xl bg-pxi-field px-4 py-4 text-sm leading-6 text-zinc-400">
                                         <p>
                                             <span className="font-bold text-white">{draft.name || 'Untitled campaign'}</span> ·{' '}
                                             {formatDay(draft.startAt)} → {formatDay(draft.endAt)}
@@ -935,7 +935,7 @@ export default function AdsPage() {
                             </div>
                         </div>
 
-                        <aside className="flex h-fit flex-col gap-4 rounded-[1rem] bg-white/[0.045] p-5">
+                        <aside className="flex h-fit flex-col gap-4 rounded-[1rem] bg-pxi-field p-5">
                             <div>
                                 <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Estimated reach</p>
                                 <p className="mt-2 text-3xl font-bold tabular-nums text-white">
@@ -958,7 +958,7 @@ export default function AdsPage() {
                                     <p className="mt-1 text-xs text-zinc-500">Enable a surface to price the run.</p>
                                 )}
                             </div>
-                            <p className="rounded-2xl bg-white/[0.035] px-3 py-3 text-xs leading-5 text-zinc-500">
+                            <p className="rounded-2xl bg-pxi-field px-3 py-3 text-xs leading-5 text-zinc-500">
                                 Creatives are always labeled “Sponsored”. PXI staff can pause any campaign that breaks
                                 the guidelines; unserved days refund as credits if you cancel.
                             </p>
@@ -971,7 +971,7 @@ export default function AdsPage() {
                 {loading ? (
                     <p className="px-2 py-4 text-sm text-zinc-500">Loading...</p>
                 ) : campaigns.length === 0 ? (
-                    <div className="rounded-2xl bg-white/[0.035] px-5 py-8 text-center">
+                    <div className="rounded-2xl bg-pxi-field px-5 py-8 text-center">
                         <p className="text-sm font-bold text-white">No ad campaigns yet.</p>
                         <p className="mt-2 text-sm text-zinc-500">
                             Launch your first campaign to pin your event on the featured hero and drop sponsored cards in the feed.
@@ -1062,7 +1062,7 @@ export default function AdsPage() {
                                                 type="button"
                                                 disabled={busyRow}
                                                 onClick={() => runAction(c.id, 'cancel')}
-                                                className="pill-ghost px-3.5 py-2 text-xs font-bold text-red-300/90 disabled:opacity-40"
+                                                className="pill-cancel px-3.5 py-2 text-xs font-bold text-red-300/90 disabled:opacity-40"
                                             >
                                                 Cancel
                                             </button>
@@ -1112,7 +1112,7 @@ export default function AdsPage() {
                                             }}
                                         />
                                         <Area type="monotone" dataKey="impressions" stroke="#ffffff" strokeWidth={2} fill="url(#adsImpr)" />
-                                        <Area type="monotone" dataKey="clicks" stroke="rgba(216,74,255,0.9)" strokeWidth={2} fill="transparent" />
+                                        <Area type="monotone" dataKey="clicks" stroke="rgba(165,35,239,0.9)" strokeWidth={2} fill="transparent" />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             )}
@@ -1126,7 +1126,7 @@ export default function AdsPage() {
                             ) : (
                                 <div className="space-y-2">
                                     {performance.bySurface.map((row) => (
-                                        <div key={row.surface} className="flex items-center justify-between rounded-2xl bg-white/[0.045] px-4 py-3 text-sm">
+                                        <div key={row.surface} className="flex items-center justify-between rounded-2xl bg-pxi-field px-4 py-3 text-sm">
                                             <span className="font-bold text-white">{SURFACE_LABELS[row.surface] || row.surface}</span>
                                             <span className="text-xs font-semibold text-zinc-400">
                                                 {row.impressions.toLocaleString()} impr · {row.clicks.toLocaleString()} clicks ·{' '}

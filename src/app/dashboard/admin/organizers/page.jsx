@@ -58,7 +58,7 @@ function ModalShell({ title, subtitle, onClose, children }) {
                     <button
                         type="button"
                         onClick={onClose}
-                        className="rounded-full bg-white/[0.065] px-2.5 py-1 text-[12px] font-semibold text-white/60 hover:bg-white/[0.1] hover:text-white"
+                        className="rounded-full bg-pxi-field px-2.5 py-1 text-[12px] font-semibold text-white/60 hover:bg-white/[0.1] hover:text-white"
                     >
                         ✕
                     </button>
@@ -116,7 +116,7 @@ function GrantCreditsModal({ organizer, onClose, onDone }) {
                     type="button"
                     onClick={submit}
                     disabled={busy || !amountUsd || !note.trim()}
-                    className="w-full rounded-full bg-white text-black px-5 py-2.5 text-[13px] font-bold disabled:opacity-40"
+                    className="w-full rounded-full bg-pxi-purple text-white px-5 py-2.5 text-[13px] font-bold disabled:opacity-40 uppercase tracking-[0.08em]"
                 >
                     {busy ? 'Granting...' : 'Grant'}
                 </button>
@@ -188,7 +188,7 @@ function SendMessageModal({ organizer, onClose, onDone }) {
                         type="button"
                         onClick={submit}
                         disabled={busy || !title.trim() || !body.trim() || badDeepLink}
-                        className="w-full rounded-full bg-white text-black px-5 py-2.5 text-[13px] font-bold disabled:opacity-40"
+                        className="w-full rounded-full bg-pxi-purple text-white px-5 py-2.5 text-[13px] font-bold disabled:opacity-40 uppercase tracking-[0.08em]"
                     >
                         {busy ? 'Sending...' : 'Send'}
                     </button>
@@ -252,7 +252,7 @@ export default function AdminOrganizersPage() {
                 <button
                     type="button"
                     onClick={() => { setTier(''); setPage(1); }}
-                    className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold ${tier === '' ? 'bg-white text-black' : 'bg-white/[0.065] text-white/70 hover:bg-white/[0.1] hover:text-white'}`}
+                    className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold ${tier === '' ? 'bg-pxi-purple text-white' : 'bg-pxi-field text-white/70 hover:bg-white/[0.1] hover:text-white'}`}
                 >
                     All tiers
                 </button>
@@ -264,7 +264,7 @@ export default function AdminOrganizersPage() {
                             key={t}
                             type="button"
                             onClick={() => { setTier(t); setPage(1); }}
-                            className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors ${active ? 'bg-white text-black' : 'bg-white/[0.065] text-white/70 hover:bg-white/[0.1] hover:text-white'}`}
+                            className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-colors ${active ? 'bg-pxi-purple text-white' : 'bg-pxi-field text-white/70 hover:bg-white/[0.1] hover:text-white'}`}
                             style={active ? undefined : { borderLeft: `3px solid ${theme.fill}` }}
                         >
                             {t.charAt(0) + t.slice(1).toLowerCase()}
@@ -321,7 +321,7 @@ export default function AdminOrganizersPage() {
                                         <button
                                             type="button"
                                             onClick={() => setCreditsTarget(o)}
-                                            className="rounded-full bg-white/[0.065] px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
+                                            className="rounded-full bg-pxi-field px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
                                         >
                                             Grant credits
                                         </button>
@@ -330,7 +330,7 @@ export default function AdminOrganizersPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setMessageTarget(o)}
-                                                className="rounded-full bg-white/[0.065] px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
+                                                className="rounded-full bg-pxi-field px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
                                             >
                                                 Message
                                             </button>

@@ -558,7 +558,7 @@ function TrendChartCard({ title, subtitle, data, hasData, loading, color, valueF
                 {loading ? (
                     <ChartSkeleton />
                 ) : !hasData ? (
-                    <div className="flex h-full items-center justify-center rounded-2xl bg-white/[0.03]">
+                    <div className="flex h-full items-center justify-center rounded-2xl bg-pxi-field">
                         <p className="text-xs font-bold tracking-[0.02em] text-white/30">No data yet</p>
                     </div>
                 ) : (

@@ -125,7 +125,7 @@ export default function MemberCommandCenter({ user }) {
                             {heroCopy}
                         </p>
                     </div>
-                    <div className="grid grid-cols-3 gap-px overflow-hidden rounded-[1.25rem] bg-white/[0.06] ring-1 ring-white/[0.07]">
+                    <div className="grid grid-cols-3 gap-px overflow-hidden rounded-[1.25rem] bg-pxi-field">
                         {[
                             // "Tier", never "Passport" — Citizen/Diplomat is the KYC
                             // ladder, not the passport LEVEL (Wanderer→Odyssey). Mixing
@@ -135,7 +135,7 @@ export default function MemberCommandCenter({ user }) {
                             { label: 'Next', value: accessTierLabel(ACCESS_TIER_META[tier].next) },
                             { label: 'Setup', value: setupLabel },
                         ].map((metric) => (
-                            <div key={metric.label} className="bg-[#0e0e13] px-4 py-3.5">
+                            <div key={metric.label} className="bg-pxi-surface px-4 py-3.5">
                                 <p className="text-[12px] font-medium text-zinc-500">{metric.label}</p>
                                 <p className="mt-1.5 truncate text-[22px] font-semibold leading-none tracking-tight text-white">
                                     {metric.value}
@@ -147,10 +147,6 @@ export default function MemberCommandCenter({ user }) {
             </section>
 
             <section className="dashboard-surface-b relative overflow-hidden rounded-[1.25rem] p-5 md:p-6">
-                <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#d84aff]/[0.07] blur-3xl"
-                />
                 <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] lg:items-center">
                     <div className="min-w-0">
                         <SurfaceHeader
@@ -181,7 +177,7 @@ export default function MemberCommandCenter({ user }) {
 
                     <ol className="space-y-2">
                         {steps.map((step, index) => (
-                            <li key={step.title} className="flex items-start gap-3 rounded-[1rem] bg-white/[0.035] px-4 py-3">
+                            <li key={step.title} className="flex items-start gap-3 rounded-[1rem] bg-pxi-field px-4 py-3">
                                 <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/[0.07] text-[11px] font-bold text-white/70">
                                     {index + 1}
                                 </span>
@@ -199,8 +195,8 @@ export default function MemberCommandCenter({ user }) {
                 <SurfaceHeader eyebrow="Locked today" title="What vendor setup unlocks" />
                 <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     {UNLOCKS.map(({ icon, title, desc }) => (
-                        <div key={title} className="rounded-[1.25rem] bg-white/[0.035] p-4">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.055]">
+                        <div key={title} className="rounded-[1.25rem] bg-pxi-field p-4">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-pxi-field">
                                 <HugeiconsIcon icon={icon} size={17} className="text-white opacity-60" />
                             </div>
                             <p className="mt-3.5 text-sm font-bold text-white">{title}</p>
@@ -214,8 +210,8 @@ export default function MemberCommandCenter({ user }) {
                 <SurfaceHeader eyebrow="After setup" title="What becomes achievable" />
                 <div className="mt-5 grid gap-3 lg:grid-cols-3">
                     {OUTCOMES.map(({ icon, title, desc }) => (
-                        <div key={title} className="flex items-start gap-3.5 rounded-[1.25rem] bg-white/[0.035] p-4">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.055]">
+                        <div key={title} className="flex items-start gap-3.5 rounded-[1.25rem] bg-pxi-field p-4">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pxi-field">
                                 <HugeiconsIcon icon={icon} size={17} className="text-white opacity-60" />
                             </div>
                             <div className="min-w-0">

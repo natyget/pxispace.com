@@ -96,7 +96,7 @@ export default function GateListEditor({ gates, onChange }) {
                                             setEditingValue('');
                                         }
                                     }}
-                                    className="w-28 rounded-md bg-black/30 px-1.5 py-0.5 text-xs text-white outline-none"
+                                    className="w-28 rounded-2xl bg-black/30 px-1.5 py-0.5 text-xs text-white outline-none"
                                 />
                             ) : (
                                 <button type="button" onClick={() => startRename(gate)} className="transition hover:text-white" title="Click to rename">

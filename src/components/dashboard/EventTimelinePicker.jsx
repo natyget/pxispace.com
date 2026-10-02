@@ -56,7 +56,7 @@ export default function EventTimelinePicker({ events, selectedIds = [], onToggle
                                     onClick={() => onToggle(event.id)}
                                     aria-pressed={selected}
                                     className={`flex w-full items-center gap-2.5 rounded-2xl p-2 text-left transition ${
-                                        selected ? 'bg-white/[0.09] ring-2 ring-inset ring-[#d84aff]' : 'bg-white/[0.045] text-zinc-300 hover:bg-white/[0.08] hover:text-white'
+                                        selected ? 'bg-white/[0.09] ring-2 ring-inset ring-pxi-purple' : 'bg-pxi-field text-zinc-300 hover:bg-white/[0.08] hover:text-white'
                                     }`}
                                 >
                                     <span className="relative shrink-0">
@@ -69,7 +69,7 @@ export default function EventTimelinePicker({ events, selectedIds = [], onToggle
                                             </span>
                                         )}
                                         {selected ? (
-                                            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#d84aff] text-[9px] font-bold text-white">
+                                            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-pxi-purple text-[9px] font-bold text-white">
                                                 {order}
                                             </span>
                                         ) : null}

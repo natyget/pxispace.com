@@ -337,7 +337,7 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center bg-[#0a0a0a] text-zinc-300 ${isPane ? 'absolute inset-0' : `min-h-screen ${DESKTOP_NAVBAR_OFFSET}`}`}>
+      <div className={`flex items-center justify-center bg-black text-zinc-300 ${isPane ? 'absolute inset-0' : `min-h-screen ${DESKTOP_NAVBAR_OFFSET}`}`}>
         <PxiSpinner size="md" />
       </div>
     );
@@ -345,7 +345,7 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
 
   if (!apiEvent) {
     return (
-      <div className={`flex flex-col items-center justify-center bg-[#0a0a0a] px-4 text-center text-white ${isPane ? 'absolute inset-0' : `min-h-[60vh] ${DESKTOP_NAVBAR_OFFSET}`}`}>
+      <div className={`flex flex-col items-center justify-center bg-black px-4 text-center text-white ${isPane ? 'absolute inset-0' : `min-h-[60vh] ${DESKTOP_NAVBAR_OFFSET}`}`}>
         <p className="text-lg font-semibold">Event not found</p>
         <p className="mt-2 max-w-sm text-sm text-zinc-500">
           This link may be invalid or the event was removed.
@@ -360,14 +360,14 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
   const isPublicEvent = apiEvent.visibility !== 'PRIVATE';
 
   return (
-    <div className={`bg-[#0a0a0a] font-sans text-white antialiased ${isPane ? 'absolute inset-0 overflow-y-auto no-scrollbar' : `min-h-screen ${DESKTOP_NAVBAR_OFFSET}`}`}>
+    <div className={`bg-black font-sans text-white antialiased ${isPane ? 'absolute inset-0 overflow-y-auto no-scrollbar' : `min-h-screen ${DESKTOP_NAVBAR_OFFSET}`}`}>
       {isPublicEvent && !isPane ? <JsonLd data={buildEventJsonLd(apiEvent, getSiteUrl())} /> : null}
       
       {!isPane ? (
         <div className="fixed left-4 z-50 top-20 md:top-24 md:left-8">
           <Link
             href="/events"
-            className="inline-flex items-center gap-1.5 rounded-full border-0 bg-black/45 hover:bg-black/65 backdrop-blur-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white transition-all shadow-lg"
+            className="inline-flex items-center gap-1.5 rounded-full border-0 bg-black/45 hover:bg-black/65 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-300 hover:text-white transition-all shadow-lg"
           >
             <HugeiconsIcon icon={ArrowLeftIcon} className="size-3.5" />
             event
@@ -376,7 +376,7 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
       ) : null}
 
       <div className="relative min-h-full">
-        <div className={`${isPane ? 'absolute' : 'fixed'} inset-0 top-0 z-0 h-full w-full overflow-hidden bg-[#0a0a0a]`}>
+        <div className={`${isPane ? 'absolute' : 'fixed'} inset-0 top-0 z-0 h-full w-full overflow-hidden bg-black`}>
           <div
             className="absolute inset-0 w-full opacity-100 transition-opacity duration-500 ease-in-out"
             style={{
@@ -393,7 +393,7 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
               WebkitMaskImage: 'linear-gradient(to bottom, #0a0a0a, transparent)',
             }}
           />
-          <div className="absolute inset-0 backdrop-blur-md" />
+          <div className="absolute inset-0" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/40 to-[#0a0a0a]/90" />
         </div>
 
@@ -445,7 +445,7 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
                         user={{ avatarUrl: apiEvent?.host?.avatarUrl }}
                         size={40}
                         alt={organizerName}
-                        className="shrink-0 border border-white/20"
+                        className="shrink-0"
                       />
                       <div className="min-w-0">
                         <p className="text-[9px] font-black uppercase tracking-widest text-pxi-purple">PXI Passport</p>
@@ -502,7 +502,7 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
                         {previewGuestTiles.map((tile, i) => (
                           <span
                             key={tile.key}
-                            className="relative inline-flex size-8 items-center justify-center overflow-hidden rounded-full bg-zinc-800 text-[11px] font-bold uppercase text-zinc-300"
+                            className="relative inline-flex size-8 items-center justify-center overflow-hidden rounded-full bg-pxi-field text-[11px] font-bold uppercase text-zinc-300"
                             style={{ zIndex: previewGuestTiles.length - i }}
                             title={tile.label || undefined}
                           >
@@ -516,7 +516,7 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
                           </span>
                         ))}
                         {previewExtraCount > 0 ? (
-                          <span className="inline-flex size-8 items-center justify-center rounded-full bg-white/5 text-[11px] font-semibold text-zinc-200">
+                          <span className="inline-flex size-8 items-center justify-center rounded-full bg-pxi-field text-[11px] font-semibold text-zinc-200">
                             +{previewExtraCount}
                           </span>
                         ) : null}
@@ -562,7 +562,7 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
                     {ticketTiers.map((tier) => (
                       <div
                         key={tier.id || tier.label}
-                        className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                        className="flex items-center justify-between rounded-xl bg-pxi-field px-3 py-2.5"
                       >
                         <span className="text-sm font-medium text-zinc-100">{tier.label}</span>
                         <span className="text-sm font-bold text-white">
@@ -617,7 +617,7 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
                 <SectionDivider />
                 <h2 className="text-base font-semibold tracking-tight text-white">Location</h2>
                 {hasMap ? (
-                  <div className="h-[320px] overflow-hidden rounded-3xl border border-white/10 bg-zinc-900">
+                  <div className="h-[320px] overflow-hidden rounded-3xl bg-pxi-surface">
                     <iframe title={`Event location - ${eventTitle}`} src={mapSrc} className="h-full w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
                   </div>
                 ) : null}
@@ -644,7 +644,7 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
                           : 'This host has not published their PXI Passport on the web yet.'}
                       </p>
                     )}
-                    <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl bg-white/[0.03] px-5 py-4 text-sm text-white/85">
+                    <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl bg-pxi-field px-5 py-4 text-sm text-white/85">
                       <span>
                         {hostEventsCreated} {hostEventsCreated === 1 ? 'event' : 'events'} created
                       </span>
@@ -663,7 +663,7 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
               <div className="flex flex-col gap-6">
                 <SectionDivider />
                 <h2 className="text-base font-semibold tracking-tight text-white">Get the app</h2>
-                <div className="flex flex-col items-center gap-4 rounded-xl bg-white/[0.03] px-6 py-8">
+                <div className="flex flex-col items-center gap-4 rounded-xl bg-pxi-field px-6 py-8">
                   <div className="flex flex-col items-center gap-2 text-center">
                     <HugeiconsIcon icon={SmartPhone01Icon} className="size-8 text-zinc-400" aria-hidden />
                     <h3 className={`text-center font-semibold text-white ${isPane ? 'text-xl' : 'text-xl md:text-2xl'}`}>More features in the app</h3>
@@ -690,10 +690,10 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
       {guestlistOpen ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60"
             onClick={() => setGuestlistOpen(false)}
           />
-          <div className="relative z-10 w-[92vw] max-w-3xl rounded-2xl bg-[#0a0a0a] p-5 shadow-xl">
+          <div className="relative z-10 w-[92vw] max-w-3xl rounded-2xl bg-pxi-surface p-5 shadow-xl">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="truncate text-lg font-semibold text-white">Guestlist</h2>
@@ -703,7 +703,7 @@ export default function EventDetailClient({ eventIdOverride, initialEvent, prese
               </div>
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white hover:bg-white/10"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-pxi-field text-white hover:bg-white/10"
                 aria-label="Close guestlist"
                 onClick={() => setGuestlistOpen(false)}
               >

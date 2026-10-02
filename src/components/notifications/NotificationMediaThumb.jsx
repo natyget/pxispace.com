@@ -27,13 +27,13 @@ export default function NotificationMediaThumb({
 
   return (
     <div
-      className={`relative overflow-hidden bg-[#0a0a0a] shrink-0 ${className}`}
+      className={`relative overflow-hidden bg-black shrink-0 ${className}`}
       style={sizeStyle}
     >
       {showImg ? (
         <>
           {!loaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-800">
+            <div className="absolute inset-0 flex items-center justify-center bg-pxi-field">
               <div
                 className="w-5 h-5 rounded-full border-2 border-white/20 border-t-white/50 animate-spin"
                 aria-hidden
@@ -53,7 +53,7 @@ export default function NotificationMediaThumb({
           />
         </>
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-zinc-800">
+        <div className="absolute inset-0 flex items-center justify-center bg-pxi-field">
           <HugeiconsIcon icon={ImageIcon} size={20} className="text-zinc-600" />
         </div>
       )}

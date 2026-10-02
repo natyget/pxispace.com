@@ -84,7 +84,7 @@ export default function BudgetPanel({ eventId, summary, onChanged, className = '
                     const row = byCategory.get(id) || { budgetedCents: 0, spentCents: 0 };
                     const pct = row.budgetedCents > 0 ? Math.min(100, Math.round((row.spentCents / row.budgetedCents) * 100)) : 0;
                     return (
-                        <div key={id} className="grid grid-cols-[100px_1fr_120px] items-center gap-3 rounded-2xl bg-white/[0.035] px-4 py-3">
+                        <div key={id} className="grid grid-cols-[100px_1fr_120px] items-center gap-3 rounded-2xl bg-pxi-field px-4 py-3">
                             <p className="text-sm font-bold text-white">{label}</p>
                             <div className="space-y-1">
                                 <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
@@ -101,7 +101,7 @@ export default function BudgetPanel({ eventId, summary, onChanged, className = '
                                 placeholder={(row.budgetedCents / 100).toFixed(0)}
                                 value={drafts[id] ?? ''}
                                 onChange={(e) => setDrafts((cur) => ({ ...cur, [id]: e.target.value }))}
-                                className="glass-field rounded-xl px-3 py-2 text-sm text-white outline-none"
+                                className="glass-field rounded-2xl px-3 py-2 text-sm text-white outline-none"
                             />
                         </div>
                     );
@@ -122,7 +122,7 @@ export default function BudgetPanel({ eventId, summary, onChanged, className = '
                     <select
                         value={expenseForm.category}
                         onChange={(e) => setExpenseForm((cur) => ({ ...cur, category: e.target.value }))}
-                        className="glass-field rounded-xl px-3 py-2 text-sm text-white"
+                        className="glass-field rounded-2xl px-3 py-2 text-sm text-white"
                     >
                         {BUDGET_CATEGORIES.map(({ id, label }) => (
                             <option key={id} value={id}>{label}</option>
@@ -133,7 +133,7 @@ export default function BudgetPanel({ eventId, summary, onChanged, className = '
                         placeholder="What was it for?"
                         value={expenseForm.label}
                         onChange={(e) => setExpenseForm((cur) => ({ ...cur, label: e.target.value }))}
-                        className="glass-field min-w-[160px] flex-1 rounded-xl px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-500"
+                        className="glass-field min-w-[160px] flex-1 rounded-2xl px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-500"
                     />
                     <input
                         type="number"
@@ -141,7 +141,7 @@ export default function BudgetPanel({ eventId, summary, onChanged, className = '
                         placeholder="Amount ($)"
                         value={expenseForm.amount}
                         onChange={(e) => setExpenseForm((cur) => ({ ...cur, amount: e.target.value }))}
-                        className="glass-field w-32 rounded-xl px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-500"
+                        className="glass-field w-32 rounded-2xl px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-500"
                     />
                     <button
                         type="button"
