@@ -7,8 +7,16 @@
 /** Brand accent (the app purple): single-series emphasis, sparklines, selected states. */
 export const DASHBOARD_BRAND_COLOR = '#A523EF';
 
-/** Second series: the app's orange. */
-export const DASHBOARD_MUTED_COLOR = '#FF5A1F';
+/** Secondary series / de-emphasized chart ink. (Orange is DASHBOARD_LIVE_COLOR and means live.) */
+export const DASHBOARD_MUTED_COLOR = '#8b8d98';
+
+/**
+ * The brand's "live" orange (--pxi-orange): the part of a progress ring still to fill, and live badges.
+ * Only ever paired with the brand purple. Validated against #131318 on 2026-10-02: contrast 5.9:1,
+ * OKLCH lightness 0.68 and chroma 0.21 (inside the series band), and 0.31 / 0.32 / 0.31 / 0.14 OKLab
+ * apart from the brand purple for normal, protan, deutan and tritan vision.
+ */
+export const DASHBOARD_LIVE_COLOR = '#ff5a1f';
 
 /**
  * Categorical series slots, fixed order (identity — a series keeps its slot even
@@ -74,6 +82,9 @@ export const DASHBOARD_AXIS_TICK = { fill: '#9A9A9A', fontSize: 11 };
 
 /** Hairline solid gridline — never dashed (dashing reads as projection/threshold). */
 export const DASHBOARD_GRID_STROKE = 'rgba(255,255,255,0.06)';
+
+/** A drawn axis, for the charts that show their two axes as lines instead of a grid (venue dashboard). */
+export const DASHBOARD_AXIS_LINE = { stroke: 'rgba(255,255,255,0.85)', strokeWidth: 1 };
 
 /** Spread onto a recharts <Tooltip> for the shared dashboard look. */
 export const DASHBOARD_TOOLTIP_PROPS = {
