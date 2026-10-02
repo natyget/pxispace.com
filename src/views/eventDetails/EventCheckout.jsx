@@ -454,7 +454,10 @@ export default function EventCheckout({ basePath = '/events' }) {
       await authService.sendVerification(smsPhone);
       setSmsVerifyStep('code');
     } catch (e) {
-      setSmsVerifyError(e?.response?.data?.error || 'Could not send the code. Check the number and try again.');
+      // The API client throws an Error with the response body on `data` (see services/api.js), so
+      // the server's own reason reaches the person: a refused number and "too many attempts" are
+      // different problems and should not both read "check the number".
+      setSmsVerifyError(e?.data?.error || 'Could not send the code. Check the number and try again.');
     } finally {
       setSmsVerifyBusy(false);
     }
@@ -476,7 +479,7 @@ export default function EventCheckout({ basePath = '/events' }) {
       setSmsCode('');
       setSmsVerifyStep('phone');
     } catch (e) {
-      setSmsVerifyError(e?.response?.data?.error || 'That code did not work. Try again or resend.');
+      setSmsVerifyError(e?.data?.error || 'That code did not work. Try again or resend.');
     } finally {
       setSmsVerifyBusy(false);
     }
