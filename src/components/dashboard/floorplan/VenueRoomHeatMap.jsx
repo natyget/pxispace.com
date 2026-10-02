@@ -1,13 +1,15 @@
 'use client';
 
 // VEN-3: the venue-level heat map. Every night in the room combined (GET /api/venue-analytics/:id/heatmap).
-// A still picture, not playback: where captures happen across all nights, gate totals, and an average night.
-// Cells under five captures never reach the client, so nothing here can point at one person. Projection uses the
-// same geo.js as the per-event VenueHeatMap, and the colour comes from chartStyles.js.
+// A still picture, not playback: where captures happen across all nights. Cells under five captures never reach
+// the client, so nothing here can point at one person. Projection uses the same geo.js as the per-event
+// VenueHeatMap, and the colour comes from chartStyles.js.
+//
+// This is the map alone. VEN-8's Spatial Intel card (venue/SpatialCard.jsx) loads the data once and puts the
+// doors and the average night around it.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DASHBOARD_BRAND_COLOR, getDashboardChartShade } from '@/components/dashboard/chartStyles';
-import { fetchVenueHeatmap } from '@/services/venues';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { DASHBOARD_BRAND_COLOR } from '@/components/dashboard/chartStyles';
 import { latLngToPlanPx, mapMetersPerPixel, staticMapUrl, METERS_PER_DEG } from './geo';
 
 const MAP_W = 1024;
@@ -18,26 +20,8 @@ function rgba(hex, alpha) {
     return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
-function minutesLabel(m) {
-    if (m === 0) return 'Doors';
-    const sign = m < 0 ? '-' : '+';
-    const abs = Math.abs(m);
-    return `${sign}${Math.floor(abs / 60)}h${abs % 60 ? String(abs % 60).padStart(2, '0') : ''}`;
-}
-
-export default function VenueRoomHeatMap({ venueId }) {
-    const [data, setData] = useState(null);
-    const [error, setError] = useState(null);
+export default function VenueRoomHeatMap({ data, className = '' }) {
     const canvasRef = useRef(null);
-
-    useEffect(() => {
-        let cancelled = false;
-        fetchVenueHeatmap(venueId)
-            .then((res) => { if (!cancelled) setData(res.heatmap); })
-            .catch((err) => { if (!cancelled) setError(err.message || 'Failed to load the heat map'); });
-        return () => { cancelled = true; };
-    }, [venueId]);
-
     const plan = data?.floorPlan || null;
     const cells = useMemo(() => data?.media?.cells ?? [], [data]);
     const bbox = data?.media?.bbox || null;
@@ -115,89 +99,27 @@ export default function VenueRoomHeatMap({ venueId }) {
         return () => window.removeEventListener('resize', draw);
     }, [draw]);
 
-    if (error) return <p className="text-sm text-red-300">{error}</p>;
-    if (!data) return <div className="h-64 animate-pulse rounded-2xl bg-white/[0.035]" />;
-
-    const timelineMax = Math.max(1, ...data.timeline.map((t) => t.captures + t.scans));
-    const hasTimeline = data.timeline.some((t) => t.captures + t.scans > 0);
+    if (!view) return null;
 
     return (
-        <div className="space-y-4">
-            {view ? (
-                <div className="relative w-full overflow-hidden rounded-2xl bg-black/40" style={{ aspectRatio: `${view.width} / ${view.height}` }}>
-                    {view.mode === 'plan' ? (
-                        <img src={plan.imageUrl} alt="Floor plan" className="absolute inset-0 h-full w-full object-contain" style={{ filter: 'brightness(0.7)' }} draggable={false} />
-                    ) : view.bgUrl ? (
-                        <img src={view.bgUrl} alt="Area map" className="absolute inset-0 h-full w-full object-cover" style={{ filter: 'brightness(0.75)' }} draggable={false} />
-                    ) : null}
-                    <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-                    {plan ? (plan.gatePins || []).map((pin) => {
-                        const total = data.gates.find((g) => g.gate === pin.gate)?.scans ?? 0;
-                        return (
-                            <span key={pin.gate} className="absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left: `${(pin.xPx / plan.imageWidthPx) * 100}%`, top: `${(pin.yPx / plan.imageHeightPx) * 100}%` }}>
-                                <span className="block rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-white/20">
-                                    {pin.gate} · {total.toLocaleString()}
-                                </span>
-                            </span>
-                        );
-                    }) : null}
-                    {view.mode === 'map' ? <p className="absolute bottom-1.5 right-2 z-10 text-[9px] text-white/40">© OpenStreetMap contributors, © Geoapify</p> : null}
-                </div>
-            ) : (
-                <div className="rounded-2xl bg-white/[0.035] p-6">
-                    <p className="text-sm font-semibold text-white">The room map fills in as nights happen</p>
-                    <p className="mt-1 max-w-xl text-sm leading-6 text-white/50">
-                        When guests take photos at your events, the busiest spots in the room light up here, combined over every night.
-                    </p>
-                </div>
-            )}
-
-            <p className="text-[12px] leading-5 text-white/45">
-                {data.nights} {data.nights === 1 ? 'night' : 'nights'} combined · {data.media.geotagged.toLocaleString()} located captures
-                {data.media.suppressed ? ` · ${data.media.suppressed.toLocaleString()} in quiet spots are not placed, so no one can be singled out` : ''}
-                {data.media.truncated ? ' · capped for speed' : ''}
-            </p>
-
-            <div className="grid gap-4 lg:grid-cols-[1fr_2fr]">
-                <div className="rounded-2xl bg-white/[0.035] p-4">
-                    <p className="mb-2 text-[11px] font-medium text-white/40">Doors used</p>
-                    {data.gates.length ? (
-                        <ul className="space-y-1.5">
-                            {data.gates.map((g, i) => (
-                                <li key={g.gate} className="flex items-center gap-2 text-[13px] text-white/70">
-                                    <span className="h-2 w-2 rounded-full" style={{ background: getDashboardChartShade(i) }} />
-                                    <span className="flex-1">{g.gate}</span>
-                                    <span className="tabular-nums text-white/50">{g.scans.toLocaleString()}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : <p className="text-[13px] text-white/45">No scans yet.</p>}
-                </div>
-                <div className="rounded-2xl bg-white/[0.035] p-4">
-                    <p className="mb-2 text-[11px] font-medium text-white/40">An average night</p>
-                    {hasTimeline ? (
-                        <>
-                            {/* Columns stretch to the strip's fixed height, so the bars' percentage heights resolve
-                                (QA 2026-09-17, V3-08b: with items-end the columns had no height and drew nothing). */}
-                            <div className="flex h-24 gap-px" role="img" aria-label="Captures and door scans per 15 minutes, averaged over nights">
-                                {data.timeline.map((t) => (
-                                    <div key={t.minutesFromDoors} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={`${minutesLabel(t.minutesFromDoors)}: ${t.scans} scans, ${t.captures} captures`}>
-                                        <div style={{ height: `${(t.captures / timelineMax) * 100}%`, background: getDashboardChartShade(0) }} className="rounded-t-sm" />
-                                        <div style={{ height: `${(t.scans / timelineMax) * 100}%`, background: getDashboardChartShade(1) }} />
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="mt-1 flex justify-between text-[10px] text-white/35">
-                                <span>2h before doors</span><span>Doors</span><span>+8h</span>
-                            </div>
-                            <div className="mt-2 flex gap-4 text-[11px] text-white/50">
-                                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: getDashboardChartShade(0) }} />Captures</span>
-                                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: getDashboardChartShade(1) }} />Door scans</span>
-                            </div>
-                        </>
-                    ) : <p className="text-[13px] text-white/45">Appears after the first night with scans or photos.</p>}
-                </div>
-            </div>
+        <div className={`relative w-full overflow-hidden rounded-xl bg-black/40 ${className}`.trim()} style={{ aspectRatio: `${view.width} / ${view.height}` }}>
+            {view.mode === 'plan' ? (
+                <img src={plan.imageUrl} alt="Floor plan" className="absolute inset-0 h-full w-full object-contain" style={{ filter: 'brightness(0.7)' }} draggable={false} />
+            ) : view.bgUrl ? (
+                <img src={view.bgUrl} alt="Area map" className="absolute inset-0 h-full w-full object-cover" style={{ filter: 'brightness(0.75)' }} draggable={false} />
+            ) : null}
+            <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+            {plan ? (plan.gatePins || []).map((pin) => {
+                const total = data.gates.find((g) => g.gate === pin.gate)?.scans ?? 0;
+                return (
+                    <span key={pin.gate} className="absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left: `${(pin.xPx / plan.imageWidthPx) * 100}%`, top: `${(pin.yPx / plan.imageHeightPx) * 100}%` }}>
+                        <span className="block rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-white/20">
+                            {pin.gate} · {total.toLocaleString()}
+                        </span>
+                    </span>
+                );
+            }) : null}
+            {view.mode === 'map' ? <p className="absolute bottom-1.5 right-2 z-10 text-[9px] text-white/40">© OpenStreetMap contributors, © Geoapify</p> : null}
         </div>
     );
 }
