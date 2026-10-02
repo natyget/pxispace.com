@@ -440,7 +440,7 @@ function HostBubble({ host, hostName, about }) {
 }
 
 /** "<N> MEMBERS", a row of round avatars (the last one "+N" past five), and the WHO'S GOING caption. */
-function MembersBlock({ count, participants }) {
+function MembersBlock({ count, participants, canJoin }) {
   const overflowing = count > 5;
   const shown = participants.slice(0, overflowing ? 4 : 5);
   const extra = overflowing ? count - shown.length : 0;
@@ -462,9 +462,9 @@ function MembersBlock({ count, participants }) {
             </div>
           ) : null}
         </div>
-      ) : (
+      ) : canJoin ? (
         <p className="mt-4 text-center text-[13px] font-semibold text-white/55">Be the first to join.</p>
-      )}
+      ) : null}
       <p
         className="mt-[18px] text-center text-[20px] text-white"
         style={{ fontFamily: DISPLAY_FONT, fontWeight: 700, letterSpacing: '-0.2px' }}
@@ -915,7 +915,7 @@ export default function EventDetailsModal({
 
       <HostBubble host={event.host} hostName={hostName} about={event.description} />
 
-      {showMembers ? <MembersBlock count={memberCount} participants={participants} /> : null}
+      {showMembers ? <MembersBlock count={memberCount} participants={participants} canJoin={!!mainActionable} /> : null}
 
       {hasTicketTiers ? <TicketTiers tiers={event.ticketTiers} /> : null}
 

@@ -22,7 +22,8 @@ function formatTicketPrice(event) {
 export default function PublicAlbumJoinEventButton({ album, albumId, className = '' }) {
     const eventId = album?.event?.id || null;
     const ticketLabel = formatTicketPrice(album?.event);
-    const buttonLabel = ticketLabel ? `Join Event · ${ticketLabel}` : 'Join Event';
+    // The app's wording: "Join", or "Get ticket $10.00" (no dot before the price).
+    const buttonLabel = !ticketLabel ? 'Join' : ticketLabel === 'PAID' ? 'Get ticket' : `Get ticket ${ticketLabel}`;
     const fallbackDeepLink = albumId ? `pxi://album/${albumId}` : null;
     // Finalized scrapbook (event passed + grace over): joining is closed server-side.
     const isFinalized = album?.event?.effectiveStatus === 'ARCHIVED';

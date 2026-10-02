@@ -1041,6 +1041,9 @@ html, body {
     height: 100%;
     min-height: 0;
     padding-bottom: 0;
+    /* Clear the fixed site header (62px; 92px from 768px), which otherwise sits on the album's
+       title row and its details button. */
+    padding-top: 62px;
   }
 
   .public-album-left-slot {
@@ -1074,6 +1077,12 @@ html, body {
     position: relative;
   }
 
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .public-album-page {
+    padding-top: 92px;
+  }
 }
 
 /* Thread column — phone frame on desktop only (no border on mobile) */

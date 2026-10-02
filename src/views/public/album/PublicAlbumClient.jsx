@@ -20,7 +20,6 @@ import {
   timelineRowKey,
 } from './buildPublicAlbumTimeline';
 import EventDetailsModal from '@/components/events/EventDetailsModal';
-import EventDetailClient from '@/views/events/EventDetailClient';
 import { buildAlbumEventDetails } from './albumEventDetailsAdapter';
 import PublicAlbumJoinEventButton from './PublicAlbumJoinEventButton';
 import IphonePane from './IphonePane';
@@ -582,28 +581,20 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
 
       </div>
 
-      {/* Right: album details — desktop only; mobile uses three-dot sheet. Renders the
-         full EventDetailClient layout constrained to the pane. */}
+      {/* Right: album details — desktop only; mobile opens the same sheet from the three-dot
+         button. It is the app's event view (EventDetailsModal), inline in the pane. */}
       <div className="album-details-pane relative bg-black">
-        {album?.event?.id || album?.eventId ? (
-          <EventDetailClient
-            eventIdOverride={album?.event?.id || album?.eventId}
-            initialEvent={album?.event}
-            presentation="pane"
-          />
-        ) : (
-          <div className="album-details-shell items-center justify-center p-6">
-            <div className="flex h-full max-h-[860px] w-full max-w-[480px] flex-col overflow-hidden">
-              <EventDetailsModal
-                open
-                presentation="inline"
-                event={albumDetails.event}
-                primaryAction={albumDetails.primaryAction}
-                secondaryAction={albumDetails.secondaryAction}
-              />
-            </div>
+        <div className="album-details-shell items-center justify-center p-3">
+          <div className="flex h-full w-full flex-col overflow-hidden">
+            <EventDetailsModal
+              open
+              presentation="inline"
+              event={albumDetails.event}
+              primaryAction={albumDetails.primaryAction}
+              secondaryAction={albumDetails.secondaryAction}
+            />
           </div>
-        )}
+        </div>
       </div>
 
       <EventDetailsModal
