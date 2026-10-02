@@ -41,7 +41,7 @@ export default function FunnelChart({ data = [] }) {
     }, [data]);
 
     if (!stages.length) {
-        return <div className="rounded-2xl bg-white/[0.035] p-6 text-sm text-zinc-400">No lifecycle data.</div>;
+        return <div className="rounded-2xl bg-pxi-field p-6 text-sm text-zinc-400">No lifecycle data.</div>;
     }
 
     const totalH = stages.length * BAND_H;
@@ -63,7 +63,7 @@ export default function FunnelChart({ data = [] }) {
     const rampBottom = getOrdinalStageColor(stages.length - 1, stages.length);
 
     return (
-        <div className="grid grid-cols-[150px_minmax(0,1fr)] gap-5 rounded-[1.25rem] bg-white/[0.02] p-4 sm:grid-cols-[190px_minmax(0,1fr)] md:p-6">
+        <div className="grid grid-cols-[150px_minmax(0,1fr)] gap-5 rounded-[1.25rem] bg-pxi-field p-4 sm:grid-cols-[190px_minmax(0,1fr)] md:p-6">
             {/* Left rail: the intel, in text ink. */}
             <div>
                 {stages.map((stage) => (
@@ -71,7 +71,7 @@ export default function FunnelChart({ data = [] }) {
                         key={stage.stage}
                         onMouseEnter={() => setHovered(stage.index)}
                         onMouseLeave={() => setHovered(null)}
-                        className={`flex flex-col justify-center rounded-xl px-3 transition-colors ${hovered === stage.index ? 'bg-white/[0.05]' : ''}`}
+                        className={`flex flex-col justify-center rounded-xl px-3 transition-colors ${hovered === stage.index ? 'bg-pxi-field' : ''}`}
                         style={{ height: BAND_H }}
                     >
                         <span className="flex items-center gap-2">
@@ -150,7 +150,7 @@ export default function FunnelChart({ data = [] }) {
                         className="pointer-events-none absolute left-1/2 -translate-x-1/2 -translate-y-1/2"
                         style={{ top: stage.index * BAND_H }}
                     >
-                        <span className="whitespace-nowrap rounded-full bg-[#0e0e13]/90 px-3 py-1 text-[11px] font-semibold text-zinc-300 ring-1 ring-white/[0.08]">
+                        <span className="whitespace-nowrap rounded-full bg-pxi-surface px-3 py-1 text-[11px] font-semibold text-zinc-300">
                             {Math.round(stage.conversion * 100)}% advance
                             {stage.dropoff > 0 ? <span className="text-zinc-500"> · {formatNumber(stage.dropoff)} drop</span> : null}
                         </span>

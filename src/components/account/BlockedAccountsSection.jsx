@@ -44,7 +44,7 @@ export default function BlockedAccountsSection() {
     };
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
+        <div className="rounded-2xl bg-pxi-surface p-5 space-y-4">
             <div className="flex items-center gap-2">
                 <HugeiconsIcon icon={ShieldBanIcon} size={16} className="text-zinc-400" />
                 <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-300">

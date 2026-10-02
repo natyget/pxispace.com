@@ -668,11 +668,13 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
     }
   };
 
+  // App look: one #1C1C1C panel, groups separated by space (no boxes), purple small-caps labels
+  // over flat #2E2E2E fields (16px radius, a 1.5px purple ring on focus).
   const inputClass =
     'glass-field min-h-[44px] w-full rounded-2xl px-4 py-3 text-sm text-white';
-  const labelClass = 'mb-1.5 block text-[11px] font-bold tracking-[0.02em] text-white/45';
-  const sectionClass = 'glass-panel rounded-[1.75rem] p-5';
-  const footerClass = 'glass-panel rounded-[1.75rem] p-4';
+  const labelClass = 'mb-1.5 block text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple';
+  const sectionClass = '';
+  const footerClass = 'pt-2';
 
   return (
     <>
@@ -693,7 +695,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           <button
             type="button"
             onClick={() => setCropSrc(null)}
-            className="pill-ghost px-5 py-2.5 text-sm"
+            className="pill-cancel px-5 py-2.5 text-[13px]"
           >
             Cancel
           </button>
@@ -712,7 +714,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           <button
             type="button"
             onClick={handleCropConfirm}
-            className="pill-solid px-5 py-2.5 text-sm"
+            className="pill-solid px-5 py-2.5 text-[13px]"
           >
             Use photo
           </button>
@@ -729,20 +731,20 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
           </Link>
           <div>
-            <h1 className="text-2xl md:text-3xl font-black text-white">Create event</h1>
+            <h1 className="text-2xl md:text-3xl font-black uppercase tracking-[-0.01em] text-white">Create event</h1>
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className={`space-y-8 ${embedded ? '' : 'rounded-[28px] bg-pxi-surface p-5 md:p-8'}`}>
         {formError && (
-          <div className="glass-panel rounded-2xl px-4 py-3 text-sm text-red-200">
+          <div className="rounded-2xl bg-pxi-field px-4 py-3 text-sm text-[#ff3b30]">
             {formError}
           </div>
         )}
 
         <section className={`${sectionClass} space-y-4`}>
-          <h2 className="flex items-center gap-2 text-xs font-bold tracking-[0.02em] text-white/60">
+          <h2 className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">
             <HugeiconsIcon icon={ImageIcon} size={16} />
             Cover image *
           </h2>
@@ -781,7 +783,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         </section>
 
         <section className={`${sectionClass} space-y-4`}>
-          <h2 className="text-xs font-bold tracking-[0.02em] text-white/60">Basics</h2>
+          <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Basics</h2>
           <div>
             <label className={labelClass}>Event name *</label>
             <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />
@@ -797,14 +799,14 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           <div className="space-y-2">
             <label className={labelClass}>Use a saved venue</label>
             {venuesLoading ? (
-              <div className="h-16 animate-pulse rounded-2xl bg-white/[0.035]" />
+              <div className="h-16 animate-pulse rounded-2xl bg-pxi-field" />
             ) : venues.length ? (
               <div className="grid gap-2 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => setSelectedVenueId(null)}
                   className={`rounded-2xl px-4 py-3 text-left transition ${
-                    !selectedVenueId ? 'glass-panel-strong' : 'glass-panel hover:bg-white/[0.05]'
+                    !selectedVenueId ? 'bg-pxi-purple/20 ring-[1.5px] ring-pxi-purple' : 'bg-pxi-field hover:bg-[#3a3a3a]'
                   }`}
                 >
                   <span className="block text-sm font-bold text-white">One-off location</span>
@@ -816,7 +818,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                     type="button"
                     onClick={() => pickVenue(venue)}
                     className={`rounded-2xl px-4 py-3 text-left transition ${
-                      selectedVenueId === venue.id ? 'glass-panel-strong' : 'glass-panel hover:bg-white/[0.05]'
+                      selectedVenueId === venue.id ? 'bg-pxi-purple/20 ring-[1.5px] ring-pxi-purple' : 'bg-pxi-field hover:bg-[#3a3a3a]'
                     }`}
                   >
                     <span className="block truncate text-sm font-bold text-white">{venue.name}</span>
@@ -920,7 +922,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                 type="button"
                 disabled={!canAddLineup}
                 onClick={commitLineup}
-                className="shrink-0 rounded-2xl bg-white px-5 text-xs font-bold tracking-[0.02em] text-black transition-opacity disabled:opacity-40"
+                className="shrink-0 rounded-full bg-pxi-purple px-5 text-xs font-bold text-white transition-opacity disabled:opacity-40 uppercase tracking-[0.08em]"
               >
                 Add
               </button>
@@ -932,7 +934,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                   key={r}
                   type="button"
                   onClick={() => setLineupRoleDraft(r)}
-                  className="rounded-full bg-white/[0.06] px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/60 hover:text-white"
+                  className="rounded-full bg-pxi-field px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-[#9a9a9a] hover:text-white"
                 >
                   {r} · staff
                 </button>
@@ -946,7 +948,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                     key={person.id}
                     type="button"
                     onClick={() => toggleSelectPerson(person)}
-                    className="rounded-full border border-fuchsia-400/50 bg-fuchsia-500/20 px-3 py-1 text-xs font-semibold text-fuchsia-100"
+                    className="rounded-full bg-pxi-purple/20 px-3 py-1 text-xs font-semibold text-white"
                   >
                     @{person.username}
                     {lineupRoleDraft.trim() ? ` · ${lineupRoleDraft.trim()}` : ''} ✕
@@ -956,7 +958,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             ) : null}
 
             {featuredLoading || featuredResults.length > 0 ? (
-              <div className="mt-2 overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+              <div className="mt-2 overflow-hidden rounded-2xl bg-pxi-field">
                 {featuredLoading && featuredResults.length === 0 ? (
                   <div className="px-4 py-3 text-xs text-white/40">Searching…</div>
                 ) : (
@@ -968,7 +970,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                         type="button"
                         onClick={() => toggleSelectPerson(person)}
                         className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                          isSelected ? 'bg-fuchsia-500/15' : 'hover:bg-white/[0.05]'
+                          isSelected ? 'bg-pxi-purple/20' : 'hover:bg-white/[0.06]'
                         }`}
                       >
                         {person.avatarUrl ? (
@@ -984,7 +986,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                             <span className="block truncate text-xs text-white/40">@{person.username}</span>
                           ) : null}
                         </span>
-                        {isSelected ? <span className="text-fuchsia-300">✓</span> : null}
+                        {isSelected ? <span className="text-pxi-purple">✓</span> : null}
                       </button>
                     );
                   })
@@ -999,7 +1001,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                     key={p.id}
                     type="button"
                     onClick={() => removePendingInvite(p.id)}
-                    className="rounded-full bg-white/[0.08] px-3 py-1 text-xs font-semibold text-white/75"
+                    className="rounded-full bg-pxi-field px-3 py-1 text-xs font-semibold text-white/75"
                   >
                     @{p.username} · {formatPendingLabel(p)} ✕
                   </button>
@@ -1080,7 +1082,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         </section>
 
         <section className={`${sectionClass} space-y-5`}>
-          <h2 className="text-xs font-bold tracking-[0.02em] text-white/60">Configuration</h2>
+          <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Configuration</h2>
 
           <div className="glass-field flex items-center justify-between gap-4 rounded-2xl px-4 py-3">
             <div>
@@ -1099,7 +1101,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                 if (isPrivate) setShowPublicConsent(true);
                 else setIsPrivate(true);
               }}
-              className={`relative h-7 w-12 rounded-full transition-colors ${!isPrivate ? 'bg-white/25' : 'bg-white/10'}`}
+              className={`relative h-7 w-12 rounded-full transition-colors ${!isPrivate ? 'bg-pxi-purple' : 'bg-pxi-cancel'}`}
             >
               <span
                 className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${!isPrivate ? 'left-6' : 'left-1'}`}
@@ -1117,7 +1119,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               role="switch"
               aria-checked={isPaid}
               onClick={() => handlePaidToggle(!isPaid)}
-              className={`relative h-7 w-12 rounded-full transition-colors ${isPaid ? 'bg-white/25' : 'bg-white/10'}`}
+              className={`relative h-7 w-12 rounded-full transition-colors ${isPaid ? 'bg-pxi-purple' : 'bg-pxi-cancel'}`}
             >
               <span
                 className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${isPaid ? 'left-6' : 'left-1'}`}
@@ -1143,7 +1145,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                       setTicketTiers([createEmptyTier()]);
                     }
                   }}
-                  className={`relative h-7 w-12 rounded-full transition-colors ${useTierList ? 'bg-white/25' : 'bg-white/10'}`}
+                  className={`relative h-7 w-12 rounded-full transition-colors ${useTierList ? 'bg-pxi-purple' : 'bg-pxi-cancel'}`}
                 >
                   <span
                     className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${useTierList ? 'left-6' : 'left-1'}`}
@@ -1156,7 +1158,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                   {ticketTiers.map((tier, index) => (
                     <div
                       key={tier.id}
-                      className="glass-field rounded-xl p-4 space-y-3"
+                      className="rounded-2xl bg-[#262626] p-4 space-y-3"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[10px] font-bold tracking-[0.02em] text-zinc-500">
@@ -1226,7 +1228,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                   <button
                     type="button"
                     onClick={() => setTicketTiers((prev) => [...prev, createEmptyTier()])}
-                    className="w-full rounded-xl bg-white/[0.045] py-2.5 text-xs font-semibold tracking-wider text-zinc-400 transition-colors hover:bg-white/[0.07] hover:text-white"
+                    className="w-full rounded-2xl bg-pxi-field py-3 text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#9a9a9a] transition-colors hover:bg-[#3a3a3a] hover:text-white"
                   >
                     + Add tier
                   </button>
@@ -1295,7 +1297,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         <section className={`${sectionClass} space-y-4`}>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-xs font-bold tracking-[0.02em] text-white/60">Event team</h2>
+              <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Event team</h2>
               <p className="mt-1 text-xs text-zinc-500">
                 {assignedTeamCount ? `${assignedTeamCount} team${assignedTeamCount === 1 ? '' : 's'} selected` : 'Optional'}
               </p>
@@ -1306,7 +1308,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
           </div>
 
           {teamAssignmentsLoading ? (
-            <div className="h-20 rounded-2xl bg-white/[0.035] animate-pulse" />
+            <div className="h-20 rounded-2xl bg-pxi-field animate-pulse" />
           ) : teamRosters.length ? (
             <div className="space-y-3">
               {orderedTeamRosters.map((roster, index) => {
@@ -1321,14 +1323,14 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                 return (
                   <div key={roster.id}>
                     {showSuggestedLabel ? (
-                      <p className="mb-2 text-[10px] font-bold tracking-[0.02em] text-fuchsia-300/70">
+                      <p className="mb-2 text-[10px] font-bold tracking-[0.02em] text-pxi-purple">
                         Suggested for this venue
                       </p>
                     ) : null}
                     {showAllTeamsLabel ? (
                       <p className="mb-2 mt-1 text-[10px] font-bold tracking-[0.02em] text-white/30">All teams</p>
                     ) : null}
-                    <div className={`rounded-2xl px-4 py-4 transition ${assignment ? 'glass-panel-strong' : 'glass-panel'}`}>
+                    <div className={`rounded-2xl px-4 py-4 transition ${assignment ? 'bg-pxi-purple/20 ring-[1.5px] ring-pxi-purple' : 'bg-pxi-field'}`}>
                       <div className="flex items-center justify-between gap-3">
                         <button type="button" onClick={() => toggleTeamRoster(roster.id)} className="min-w-0 flex-1 text-left">
                           <p className="truncate text-sm font-bold text-white">{roster.name}</p>
@@ -1389,7 +1391,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         {doorAssignmentsVisible ? (
           <section className={`${sectionClass} space-y-4`}>
             <div>
-              <h2 className="text-xs font-bold tracking-[0.02em] text-white/60">Door assignments</h2>
+              <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Door assignments</h2>
               <p className="mt-1 text-xs text-zinc-500">
                 Assign your team to {selectedVenue.name}&apos;s gates. Applied once the event is created.
               </p>
@@ -1428,7 +1430,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         ) : null}
 
         {paidGate && (
-          <div className="glass-panel rounded-2xl px-4 py-3 text-sm text-amber-200 space-y-2">
+          <div className="rounded-2xl bg-pxi-field px-4 py-3 text-sm text-pxi-orange space-y-2">
             {paidGate === 'no-account' ? (
               <p>To sell tickets, complete hosting setup with Stripe.</p>
             ) : (
@@ -1446,14 +1448,14 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               <button
                 type="button"
                 onClick={onCancel}
-                className="pill-ghost inline-flex min-h-[48px] items-center justify-center px-5 text-sm font-semibold"
+                className="pill-cancel inline-flex min-h-[48px] items-center justify-center px-6 text-[13px]"
               >
                 Cancel
               </button>
             ) : (
               <Link
                 href="/dashboard/events"
-                className="pill-ghost inline-flex min-h-[48px] items-center justify-center px-5 text-sm font-semibold"
+                className="pill-cancel inline-flex min-h-[48px] items-center justify-center px-6 text-[13px]"
               >
                 Cancel
               </Link>
@@ -1461,7 +1463,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             <button
               type="submit"
               disabled={isSubmitting || isCoverUploading || !coverImage}
-              className="pill-solid flex-1 inline-flex min-h-[48px] items-center justify-center gap-2 px-6 text-sm font-bold tracking-[0.02em] disabled:opacity-45"
+              className="pill-solid flex-1 inline-flex min-h-[48px] items-center justify-center gap-2 px-6 text-[13px] disabled:opacity-45"
             >
               {isSubmitting ? <PxiSpinner size="sm" /> : null}
               {isSubmitting ? 'Creating...' : isCoverUploading ? 'Uploading cover...' : 'Create event'}
@@ -1472,8 +1474,8 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
 
       {showPublicConsent && (
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-          <div className="glass-panel-strong w-full max-w-md rounded-2xl p-5 space-y-4">
-            <h3 className="text-lg font-bold text-white">Public event</h3>
+          <div className="w-full max-w-md rounded-[28px] bg-pxi-surface p-6 space-y-4">
+            <h3 className="text-[13px] font-black uppercase tracking-[0.12em] text-white">Public event</h3>
             <p className="text-sm text-zinc-300 leading-relaxed">
               By making this event public, you agree that photos and content from this event may be curated into public
               scrapbooks and used in PXI marketing materials. Attendees will be notified when they join.
@@ -1482,7 +1484,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               <button
                 type="button"
                 onClick={() => setShowPublicConsent(false)}
-                className="pill-ghost px-4 py-2.5 text-sm"
+                className="pill-cancel px-5 py-2.5 text-[13px]"
               >
                 Keep private
               </button>
@@ -1492,7 +1494,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                   setIsPrivate(false);
                   setShowPublicConsent(false);
                 }}
-                className="pill-solid px-4 py-2.5 text-sm font-bold"
+                className="pill-solid px-5 py-2.5 text-[13px]"
               >
                 I understand, make public
               </button>

@@ -161,7 +161,7 @@ export default function AdminAdsPage() {
                                 setPage(1);
                             }}
                             className={`rounded-full px-3.5 py-1.5 text-[12px] font-bold transition ${
-                                status === s ? 'bg-white text-black' : 'bg-white/[0.065] text-white/60 hover:bg-white/[0.1]'
+                                status === s ? 'bg-pxi-purple text-white' : 'bg-pxi-field text-white/60 hover:bg-white/[0.1]'
                             }`}
                         >
                             {s.replaceAll('_', ' ')}
@@ -233,7 +233,7 @@ export default function AdminAdsPage() {
                                                     type="button"
                                                     disabled={busy}
                                                     onClick={() => runAction(c, 'pause')}
-                                                    className="rounded-full bg-white/[0.065] px-3 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40"
+                                                    className="rounded-full bg-pxi-field px-3 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40"
                                                 >
                                                     Pause
                                                 </button>
@@ -243,7 +243,7 @@ export default function AdminAdsPage() {
                                                     type="button"
                                                     disabled={busy}
                                                     onClick={() => runAction(c, 'resume')}
-                                                    className="rounded-full bg-white/[0.065] px-3 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40"
+                                                    className="rounded-full bg-pxi-field px-3 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40"
                                                 >
                                                     Resume
                                                 </button>
@@ -276,7 +276,7 @@ export default function AdminAdsPage() {
                 ) : (
                     <div className="space-y-2">
                         {featuredPlacements.map((p) => (
-                            <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white/[0.045] px-4 py-3">
+                            <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-pxi-field px-4 py-3">
                                 <div className="min-w-0">
                                     <p className="truncate text-[13px] font-bold text-white">{p.campaignName}</p>
                                     <p className="text-[11px] text-white/40">
@@ -291,7 +291,7 @@ export default function AdminAdsPage() {
                                     onClick={() => togglePlacement(p)}
                                     className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold disabled:opacity-40 ${
                                         p.disabledByAdminAt
-                                            ? 'bg-white text-black'
+                                            ? 'bg-pxi-purple text-white'
                                             : 'bg-red-500/10 text-red-300 hover:bg-red-500/20'
                                     }`}
                                 >

@@ -51,11 +51,11 @@ function MemberAvatarStack({ previewMembers, totalMembers, sender }) {
       {slots.map((slot, index) => (
         <div
           key={slot.kind === 'overflow' ? `o-${slot.count}` : slot.member.userId}
-          className="absolute top-0 w-8 h-8 rounded-full border-2 border-[#050505] overflow-hidden bg-[#0c0c0c]"
+          className="absolute top-0 w-8 h-8 rounded-full border-2 border-[#050505] overflow-hidden bg-pxi-surface"
           style={{ left: index * AVATAR_STEP, zIndex: MAX_AVATARS - index }}
         >
           {slot.kind === 'overflow' ? (
-            <div className="w-full h-full flex items-center justify-center bg-[#101010] text-[10px] font-extrabold text-white/90">
+            <div className="w-full h-full flex items-center justify-center bg-pxi-surface text-[10px] font-extrabold text-white/90">
               +{slot.count}
             </div>
           ) : (

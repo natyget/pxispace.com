@@ -61,12 +61,12 @@ function ActionPanel({ report, onDone, onCancel }) {
     };
 
     return (
-        <div className="rounded-2xl bg-white/[0.035] p-4 space-y-3">
+        <div className="rounded-2xl bg-pxi-field p-4 space-y-3">
             <div className="flex flex-wrap gap-3">
                 <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="rounded-full bg-white/[0.065] px-3 py-1.5 text-[12px] text-white/80 outline-none"
+                    className="rounded-full bg-pxi-field px-3 py-1.5 text-[12px] text-white/80 outline-none"
                 >
                     <option value="RESOLVED">Resolve (report is valid)</option>
                     <option value="CANCELLED">Dismiss (no violation)</option>
@@ -75,7 +75,7 @@ function ActionPanel({ report, onDone, onCancel }) {
                     <select
                         value={action}
                         onChange={(e) => setAction(e.target.value)}
-                        className="rounded-full bg-white/[0.065] px-3 py-1.5 text-[12px] text-white/80 outline-none"
+                        className="rounded-full bg-pxi-field px-3 py-1.5 text-[12px] text-white/80 outline-none"
                     >
                         <option value="NONE">No enforcement</option>
                         <option value="WARN_USER">Warn user (audited)</option>
@@ -86,7 +86,7 @@ function ActionPanel({ report, onDone, onCancel }) {
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Reason / note for the audit log"
-                    className="flex-1 min-w-[220px] rounded-full bg-white/[0.055] px-4 py-1.5 text-[12px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]"
+                    className="flex-1 min-w-[220px] rounded-full bg-pxi-field px-4 py-1.5 text-[12px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]"
                 />
             </div>
             {error && <p className="text-red-300 text-[12px]">{error}</p>}
@@ -94,7 +94,7 @@ function ActionPanel({ report, onDone, onCancel }) {
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="rounded-full bg-white/[0.065] px-4 py-1.5 text-[12px] font-semibold text-white/60 hover:bg-white/[0.1] hover:text-white"
+                    className="rounded-full bg-pxi-field px-4 py-1.5 text-[12px] font-semibold text-white/60 hover:bg-white/[0.1] hover:text-white"
                 >
                     Cancel
                 </button>
@@ -102,7 +102,7 @@ function ActionPanel({ report, onDone, onCancel }) {
                     type="button"
                     onClick={submit}
                     disabled={busy}
-                    className="rounded-full bg-white text-black px-4 py-1.5 text-[12px] font-bold disabled:opacity-40"
+                    className="rounded-full bg-pxi-purple text-white px-4 py-1.5 text-[12px] font-bold disabled:opacity-40 uppercase tracking-[0.08em]"
                 >
                     {busy ? 'Applying...' : 'Apply'}
                 </button>
@@ -199,7 +199,7 @@ export default function AdminReportsPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setActingOn(actingOn === r.id ? null : r.id)}
-                                                    className="rounded-full bg-white/[0.065] px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white whitespace-nowrap"
+                                                    className="rounded-full bg-pxi-field px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white whitespace-nowrap"
                                                 >
                                                     Take action
                                                 </button>

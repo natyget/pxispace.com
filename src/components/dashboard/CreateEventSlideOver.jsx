@@ -7,9 +7,9 @@ const CreateEventPage = dynamic(() => import('@/views/dashboard/CreateEventPage'
     ssr: false,
     loading: () => (
         <div className="space-y-5">
-            <div className="h-5 w-40 animate-pulse rounded-full bg-white/[0.06]" />
-            <div className="h-80 animate-pulse rounded-2xl bg-white/[0.035]" />
-            <div className="h-56 animate-pulse rounded-2xl bg-white/[0.035]" />
+            <div className="h-5 w-40 animate-pulse rounded-full bg-pxi-field" />
+            <div className="h-80 animate-pulse rounded-2xl bg-pxi-field" />
+            <div className="h-56 animate-pulse rounded-2xl bg-pxi-field" />
         </div>
     ),
 });

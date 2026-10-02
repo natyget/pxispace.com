@@ -109,7 +109,7 @@ export default function MarketingPanel({ selectedEventId = null }) {
     }, [rows]);
 
     return (
-        <section className="rounded-[1.25rem] bg-white/[0.035] p-5">
+        <section className="rounded-[1.25rem] bg-pxi-field p-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <p className="text-xs font-bold tracking-[0.02em] text-white/40">Marketing</p>
@@ -123,7 +123,7 @@ export default function MarketingPanel({ selectedEventId = null }) {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-[#d84aff]/10 px-3.5 py-1.5 text-xs font-semibold text-[#e9a1ff]">
+                    <span className="rounded-full bg-pxi-purple/10 px-3.5 py-1.5 text-xs font-semibold text-white">
                         {fmtUsd(credits)} credits available
                     </span>
                     <Link href="/dashboard/campaigns" className="rounded-full bg-white/[0.07] px-3.5 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-white/[0.12] hover:text-white">
@@ -135,14 +135,14 @@ export default function MarketingPanel({ selectedEventId = null }) {
                 </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-white/[0.06] ring-1 ring-white/[0.07] sm:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-pxi-field sm:grid-cols-4">
                 {[
                     { label: 'Marketing spend', value: fmtUsd(totals.spend) },
                     { label: 'Attributed tickets', value: fmtInt(totals.conversions) },
                     { label: 'Attributed revenue', value: fmtUsd(totals.revenue) },
                     { label: 'Return on spend', value: totals.roi != null ? `${totals.roi.toFixed(1)}x` : '—' },
                 ].map((item) => (
-                    <div key={item.label} className="bg-[#0e0e13] px-4 py-3">
+                    <div key={item.label} className="bg-pxi-surface px-4 py-3">
                         <p className="text-[11px] font-medium text-zinc-500">{item.label}</p>
                         <p className="mt-1 truncate text-lg font-semibold tabular-nums text-white">{loading ? '...' : item.value}</p>
                     </div>
@@ -151,9 +151,9 @@ export default function MarketingPanel({ selectedEventId = null }) {
 
             <div className="mt-4 space-y-2">
                 {loading ? (
-                    <div className="h-16 animate-pulse rounded-2xl bg-white/[0.035]" />
+                    <div className="h-16 animate-pulse rounded-2xl bg-pxi-field" />
                 ) : rows.length === 0 ? (
-                    <div className="rounded-2xl bg-white/[0.035] px-4 py-6 text-center">
+                    <div className="rounded-2xl bg-pxi-field px-4 py-6 text-center">
                         <p className="text-sm font-semibold text-white">{selectedEventId ? 'No marketing spend on this event yet.' : 'No marketing runs yet.'}</p>
                         <p className="mt-1 text-xs text-zinc-500">
                             Your credits cover email/SMS campaigns and ad boosts in full before your card is touched — results land here with attributed tickets and revenue.
@@ -161,7 +161,7 @@ export default function MarketingPanel({ selectedEventId = null }) {
                     </div>
                 ) : (
                     rows.map((row) => (
-                        <div key={row.id} className="grid gap-3 rounded-2xl bg-white/[0.035] px-4 py-3 md:grid-cols-[90px_1.4fr_110px_130px_130px] md:items-center">
+                        <div key={row.id} className="grid gap-3 rounded-2xl bg-pxi-field px-4 py-3 md:grid-cols-[90px_1.4fr_110px_130px_130px] md:items-center">
                             <span className="w-fit rounded-full bg-white/[0.07] px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-zinc-300">{row.channel}</span>
                             <p className="min-w-0 truncate text-sm font-bold text-white">{row.name}</p>
                             <div className="md:text-right">

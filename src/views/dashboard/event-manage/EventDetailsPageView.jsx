@@ -105,7 +105,7 @@ export default function EventDetailsPageView() {
       )}
 
       <div id="event-details" className="glass-panel scroll-mt-6 overflow-hidden rounded-2xl">
-        <div className="relative aspect-[4/5] bg-white/[0.035] md:aspect-[16/11]">
+        <div className="relative aspect-[4/5] bg-pxi-field md:aspect-[16/11]">
           {cover ? (
             <Image src={cover} alt="" fill unoptimized className="object-cover" priority />
           ) : (

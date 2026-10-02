@@ -33,9 +33,9 @@ html, body {
 }
 
 .geoapify-autocomplete-items {
-  background: #1c1c1e !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 0.875rem !important;
+  background: #2e2e2e !important;
+  border: 0 !important;
+  border-radius: 1rem !important;
   z-index: 100 !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
   overflow: hidden !important;
@@ -49,7 +49,7 @@ html, body {
 /* Use a more specific selector to guarantee padding wins over base styles */
 .geoapify-autocomplete-items div.geoapify-autocomplete-item {
   padding: 0.75rem 1rem !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   cursor: pointer !important;
 }
 
@@ -101,19 +101,22 @@ html, body {
 
 /* Tailwind v4 @theme: custom colors for utilities (bg-pxi-purple, text-pxi-dark, etc.) */
 @theme {
-  --color-pxi-purple: #d84aff;
-  --color-newpurple-base: #d84aff;
-  /** `#d84aff` at 80% opacity */
-  --color-newpurple: rgb(216 74 255 / 0.8);
+  /* The app's look (mobile design system) for every platform screen: one purple, flat surfaces.
+     Marketing pages (.landing-v2) keep the palette they were designed with, see
+     "Marketing keeps its own palette" below. */
+  --color-pxi-purple: #a523ef;
+  --color-newpurple-base: #a523ef;
+  /** `#a523ef` at 80% opacity */
+  --color-newpurple: rgb(165 35 239 / 0.8);
   --color-pxi-dark: #050505;
-  --color-pxi-charcoal: #121212;
+  --color-pxi-charcoal: #1c1c1c;
   --color-pxi-violet: #2d1b4e;
   /* Landing page (v2) — matches Studio export tokens */
   --color-bg-primary: #050505;
   --color-bg-surface: #080808;
-  --color-bg-card: #111111;
-  --color-pxi-pink: #f472b6;
-  --color-accent-purple-light: #e070ff;
+  --color-bg-card: #1c1c1c;
+  --color-pxi-pink: #ff5a1f;
+  --color-accent-purple-light: #a523ef;
   --color-text-body: #f3f4f6;
   --color-text-muted: #9ca3af;
   --color-border-subtle: rgba(255, 255, 255, 0.1);
@@ -126,6 +129,39 @@ html, body {
   --color-legal-hub-border: #27272a;
   --color-pxi-orange: #ff5a1f;
   --color-pxi-orange-soft: #ff7a3c;
+  /* App surfaces: flat panels/cards/modals, fields and inner cards, cancel buttons */
+  --color-pxi-surface: #1c1c1c;
+  --color-pxi-field: #2e2e2e;
+  --color-pxi-cancel: #4c4c4c;
+}
+
+/* Marketing keeps its own palette. The pages under .landing-v2 were designed with the earlier
+   purple/pink and darker cards, and they use the same Tailwind tokens as the platform screens,
+   so the pre-app values are pinned here (custom properties inherit; no marketing file changes). */
+.landing-v2 {
+  --color-pxi-purple: #d84aff;
+  --color-newpurple-base: #d84aff;
+  --color-newpurple: rgb(216 74 255 / 0.8);
+  --color-pxi-charcoal: #121212;
+  --color-bg-card: #111111;
+  --color-pxi-pink: #f472b6;
+  --color-accent-purple-light: #e070ff;
+}
+/* The shared classes below were flattened for the platform; marketing keeps the originals. */
+.landing-v2 .glass-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0) 42%), #0e0e13;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 12px 32px rgba(0, 0, 0, 0.32);
+}
+.landing-v2 .pill-ghost {
+  background: rgba(255, 255, 255, 0.065);
+  color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.landing-v2 .pill-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 @layer base {
@@ -156,31 +192,30 @@ html, body {
     --pxi-charcoal: #121212;
     --pxi-violet: #2d1b4e;
     /* Dashboard tokens */
-    --dashboard-bg-base: #08080b;
-    --dashboard-bg-elev-1: #0d0d11;
-    --dashboard-bg-elev-2: #14141a;
-    --dashboard-bg-elev-3: #1a1a22;
-    --dashboard-surface-a-bg: #101016;
-    --dashboard-surface-a-soft: rgba(18, 18, 24, 0.86);
-    --dashboard-surface-b-bg: rgba(12, 12, 17, 0.72);
-    --dashboard-surface-b-strong: rgba(10, 10, 14, 0.84);
-    --dashboard-surface-b-blur: 32px;
+    --dashboard-bg-base: #000000;
+    --dashboard-bg-elev-1: #1c1c1c;
+    --dashboard-bg-elev-2: #1c1c1c;
+    --dashboard-bg-elev-3: #2e2e2e;
+    --dashboard-surface-a-bg: #1c1c1c;
+    --dashboard-surface-a-soft: #1c1c1c;
+    --dashboard-surface-b-bg: #1c1c1c;
+    --dashboard-surface-b-strong: #1c1c1c;
+    --dashboard-surface-b-blur: 0px;
     --dashboard-surface-matte: var(--dashboard-surface-a-soft);
     --dashboard-surface-frosted: var(--dashboard-surface-b-bg);
     --dashboard-surface-popover: var(--dashboard-surface-b-strong);
-    --dashboard-input-bg: rgba(255, 255, 255, 0.055);
+    --dashboard-input-bg: #2e2e2e;
     --dashboard-active-overlay: rgba(255, 255, 255, 0.1);
     --dashboard-border-subtle: rgba(255, 255, 255, 0.08);
     --dashboard-border-strong: rgba(255, 255, 255, 0.14);
-    --dashboard-text-primary: #f2f2f4;
-    --dashboard-text-secondary: #bbbcc3;
-    --dashboard-text-muted: #8b8d98;
-    --dashboard-accent: #d84aff;
-    --dashboard-accent-soft: rgba(216, 74, 255, 0.2);
-    --dashboard-brand-neon: #d84aff;
-    --dashboard-brand-glow: 0 0 10px rgba(216, 74, 255, 0.75), 0 0 24px rgba(216, 74, 255, 0.42);
-    --dashboard-blur-gradient: radial-gradient(circle at 20% 0%, rgba(216, 74, 255, 0.12), transparent 48%),
-      radial-gradient(circle at 85% 18%, rgba(115, 119, 255, 0.1), transparent 42%);
+    --dashboard-text-primary: #ffffff;
+    --dashboard-text-secondary: #9a9a9a;
+    --dashboard-text-muted: #808080;
+    --dashboard-accent: #a523ef;
+    --dashboard-accent-soft: rgba(165, 35, 239, 0.2);
+    --dashboard-brand-neon: #a523ef;
+    --dashboard-brand-glow: none;
+    --dashboard-blur-gradient: none;
     --dashboard-space-1: 0.25rem;
     --dashboard-space-2: 0.5rem;
     --dashboard-space-3: 0.75rem;
@@ -266,64 +301,64 @@ html, body {
   .dashboard-surface-a,
   .matte-surface,
   .dashboard-surface {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0) 42%), #0e0e13;
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: #1c1c1c;
+    border: 0;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 12px 32px rgba(0, 0, 0, 0.32);
+    box-shadow: none;
   }
 
   .dashboard-page-surface {
-    background:
-      radial-gradient(900px 420px at 12% -6%, rgba(216, 74, 255, 0.05), transparent 62%),
-      radial-gradient(720px 380px at 96% 4%, rgba(99, 102, 241, 0.035), transparent 60%),
-      var(--dashboard-bg-base);
+    background: var(--dashboard-bg-base);
     color: var(--dashboard-text-primary);
   }
 
+  /* App look: titles in heavy caps */
   .dashboard-page-surface :is(h1, h2, h3, h4, h5, h6) {
     font-family: var(--font-inter);
+    font-weight: 900;
     letter-spacing: -0.01em;
-    text-transform: none;
+    text-transform: uppercase;
   }
 
   .surface-b,
   .dashboard-surface-b,
   .dashboard-glass-surface,
   .dashboard-surface-frosted {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0) 46%), #0e0e13;
-    border: 1px solid rgba(255, 255, 255, 0.075);
+    background: #1c1c1c;
+    border: 0;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 14px 36px rgba(0, 0, 0, 0.34);
+    box-shadow: none;
   }
 
   .dashboard-popover-surface {
-    background: rgba(12, 12, 16, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    backdrop-filter: blur(var(--dashboard-surface-b-blur));
-    -webkit-backdrop-filter: blur(var(--dashboard-surface-b-blur));
+    background: #1c1c1c;
+    border: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
   }
 
+  /* Also used by marketing; .landing-v2 .glass-panel (above) keeps the original there */
   .glass-panel {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0) 42%), #0e0e13;
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: #1c1c1c;
+    border: 0;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 12px 32px rgba(0, 0, 0, 0.32);
+    box-shadow: none;
   }
 
   .glass-panel-strong {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 48%), #111117;
-    border: 1px solid rgba(255, 255, 255, 0.085);
+    background: #1c1c1c;
+    border: 0;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 16px 40px rgba(0, 0, 0, 0.36);
+    box-shadow: none;
   }
 
   .glass-field {
-    background: rgba(255, 255, 255, 0.035);
+    background: #2e2e2e;
     border: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -337,8 +372,8 @@ html, body {
   }
 
   .glass-field:focus {
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.11);
-    background: rgba(255, 255, 255, 0.055);
+    box-shadow: 0 0 0 1.5px #a523ef;
+    background: #2e2e2e;
   }
 
   @media (max-width: 767px) {
@@ -416,38 +451,62 @@ html, body {
     }
   }
 
+  /* Primary button: flat purple pill, heavy caps (app look) */
   .pill-solid {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-height: 44px;
     border-radius: 9999px;
-    background: #fff;
-    color: #08080b;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.24) inset, 0 8px 24px rgba(255, 255, 255, 0.07);
+    background: #a523ef;
+    color: #fff;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: none;
     transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
   }
 
   .pill-solid:hover {
-    background: #f0f0f0;
+    background: #b43df5;
   }
 
+  /* Cancel button: flat grey pill (app look) */
+  .pill-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border-radius: 9999px;
+    background: #4c4c4c;
+    color: #fff;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: none;
+    transition: background 0.18s ease, opacity 0.18s ease;
+  }
+
+  .pill-cancel:hover {
+    background: #5a5a5a;
+  }
+
+  /* Secondary button: flat pill. Marketing keeps its glass original via .landing-v2 .pill-ghost */
   .pill-ghost {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.065);
-    color: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    background: #2e2e2e;
+    color: #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     box-shadow: none;
     transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
   }
 
   .pill-ghost:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: #3a3a3a;
     color: #fff;
   }
 
@@ -456,9 +515,9 @@ html, body {
   }
 
   .dashboard-input {
-    background: rgba(255, 255, 255, 0.04);
+    background: #2e2e2e;
     border: none;
-    border-radius: 9999px;
+    border-radius: 1rem;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     color: var(--dashboard-text-primary);
@@ -472,24 +531,28 @@ html, body {
   }
 
   .dashboard-input:focus {
-    box-shadow: 0 0 0 1.5px rgba(216, 74, 255, 0.45);
-    background: rgba(255, 255, 255, 0.055);
+    box-shadow: 0 0 0 1.5px #a523ef;
+    background: #2e2e2e;
   }
 
   .dashboard-modal-panel :is(input, textarea, select) {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 9999px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: #2e2e2e;
+    border: 0;
+    border-radius: 1rem;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     color: var(--dashboard-text-primary);
     outline: none;
     box-shadow: none;
     padding: 0.75rem 1.25rem;
   }
 
+  .dashboard-modal-panel :is(input, textarea, select):focus {
+    box-shadow: 0 0 0 1.5px #a523ef;
+  }
+
   .dashboard-modal-panel textarea {
-    border-radius: 1.25rem;
+    border-radius: 1rem;
   }
 
   .dashboard-modal-panel :is(input, textarea, select)::placeholder {
@@ -504,7 +567,7 @@ html, body {
     gap: 0.25rem;
     overflow-x: auto;
     border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.045);
+    background: #2e2e2e;
     padding: 0.25rem;
     scrollbar-width: none;
     box-shadow: none;
@@ -537,8 +600,8 @@ html, body {
   }
 
   .dashboard-segmented-toggle__item[data-active='true'] {
-    background: #fff;
-    color: #050506;
+    background: #a523ef;
+    color: #fff;
     box-shadow: none;
     border: 0;
   }
@@ -664,8 +727,8 @@ html, body {
   }
 
   .neon-pill {
-    background: var(--accent-purple);
-    box-shadow: 0 0 30px var(--glow-purple);
+    background: #a523ef;
+    box-shadow: none;
   }
 
   /* Match navbar active "Home" purple/glow exactly */
@@ -712,7 +775,7 @@ html, body {
 
   /* Dashboard borderless glow surfaces */
   .glow-surface {
-    background: rgba(255, 255, 255, 0.035);
+    background: #1c1c1c;
     border: 0;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -720,7 +783,7 @@ html, body {
   }
 
   .glow-surface-soft {
-    background: rgba(255, 255, 255, 0.035);
+    background: #1c1c1c;
     border: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -728,7 +791,7 @@ html, body {
   }
 
   .glow-chip {
-    background: rgba(255, 255, 255, 0.055);
+    background: #2e2e2e;
     border: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -736,7 +799,7 @@ html, body {
   }
 
   .glow-active {
-    background: rgba(255, 255, 255, 0.08);
+    background: #3a3a3a;
     border: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -748,12 +811,12 @@ html, body {
   }
 
   .glow-interactive:hover {
-    background: rgba(255, 255, 255, 0.07);
+    background: #2e2e2e;
     box-shadow: none;
   }
 
   .dashboard-glow-popover {
-    background: rgba(10, 10, 12, 0.96);
+    background: #1c1c1c;
     box-shadow: 0 18px 44px rgba(0, 0, 0, 0.48);
   }
 }
@@ -782,18 +845,18 @@ html, body {
   width: 100%;
   height: 3.5rem;
   padding: 0 1rem;
-  background: rgba(26, 26, 26, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: #2e2e2e;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: none;
-  border-radius: 20px;
-  --PhoneInput-color--focus: #B026FF;
+  border-radius: 16px;
+  --PhoneInput-color--focus: #a523ef;
   --PhoneInputCountryFlag-borderColor: rgba(255, 255, 255, 0.2);
 }
 
 .verify-phone-input-wrapper .PhoneInput:focus-within {
   outline: none;
-  box-shadow: 0 0 0 1.5px rgba(216, 74, 255, 0.55);
+  box-shadow: 0 0 0 1.5px #a523ef;
 }
 
 .verify-phone-input-wrapper .PhoneInputInput {
@@ -861,20 +924,19 @@ html, body {
   justify-content: center;
   width: 2.75rem;
   height: 2.75rem;
-  border-radius: 0.75rem;
-  background: #1c1c1c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 1rem;
+  background: #2e2e2e;
+  border: 0;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .verification-code-input__slot--active {
-  border-color: rgba(168, 85, 247, 0.55);
-  background: #252525;
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+  background: #2e2e2e;
+  box-shadow: 0 0 0 1.5px #a523ef;
 }
 
 .verification-code-input__slot--filled {
-  border-color: rgba(255, 255, 255, 0.12);
+  background: #2e2e2e;
 }
 
 .verification-code-input__slot--disabled {
@@ -902,7 +964,7 @@ html, body {
   width: 2px;
   height: 1.125rem;
   border-radius: 1px;
-  background: rgba(168, 85, 247, 0.9);
+  background: #a523ef;
   animation: verification-code-caret-blink 1s step-end infinite;
 }
 
@@ -961,7 +1023,7 @@ html, body {
 }
 
 .album-pane-scroll::-webkit-scrollbar-thumb:hover {
-  background: #c44ef0;
+  background: #b43df5;
 }
 
 /* Public album: stacked on mobile (details → thread), split on desktop */
@@ -979,6 +1041,9 @@ html, body {
     height: 100%;
     min-height: 0;
     padding-bottom: 0;
+    /* Clear the fixed site header (62px; 92px from 768px), which otherwise sits on the album's
+       title row and its details button. */
+    padding-top: 62px;
   }
 
   .public-album-left-slot {
@@ -1012,6 +1077,12 @@ html, body {
     position: relative;
   }
 
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .public-album-page {
+    padding-top: 92px;
+  }
 }
 
 /* Thread column — phone frame on desktop only (no border on mobile) */

@@ -4,6 +4,24 @@
 import SiteShell from '../runtime/SiteShell';
 import SiteNav from '../chrome/SiteNav';
 import SiteFooter from '../chrome/SiteFooter';
+import DoorsDiscover from './DoorsDiscover';
+
+// The app's six-point scrapbook star (ScrapbookStar.tsx): sharp tips, softly concave sides, drawn in 40 x 46.
+const STAR_PATH = (() => {
+  const W = 40, H = 46, cx = W / 2, cy = H / 2, R = 23, inner = R * 0.44, pull = 0.88;
+  const polar = (r, deg) => [cx + r * Math.cos((deg * Math.PI) / 180), cy + r * Math.sin((deg * Math.PI) / 180)];
+  const toCentre = ([x, y]) => [cx + (x - cx) * pull, cy + (y - cy) * pull];
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const f = (n) => n.toFixed(2);
+  const tips = Array.from({ length: 6 }, (_, k) => polar(R, -90 + 60 * k));
+  const notches = Array.from({ length: 6 }, (_, k) => polar(inner, -60 + 60 * k));
+  let d = `M ${f(tips[0][0])} ${f(tips[0][1])}`;
+  for (let k = 0; k < 6; k += 1) {
+    const n = notches[k], next = tips[(k + 1) % 6], c1 = toCentre(mid(tips[k], n)), c2 = toCentre(mid(n, next));
+    d += ` Q ${f(c1[0])} ${f(c1[1])} ${f(n[0])} ${f(n[1])} Q ${f(c2[0])} ${f(c2[1])} ${f(next[0])} ${f(next[1])}`;
+  }
+  return `${d} Z`;
+})();
 
 export default function HomeView() {
   return (
@@ -51,10 +69,10 @@ export default function HomeView() {
         {/* ============ HERO — lights out, tap to shoot ============ */}
         <section className="hero" id="hero">
           <div className="room" aria-hidden="true">
-            <img src="/site/img/hero-crew.jpg" alt="" />
+            <picture><source media="(max-width: 860px) and (orientation: portrait)" srcSet="/site/img/hero-lounge-portrait.jpg" /><img src="/site/img/hero-roxbury-crew.jpg" alt="" /></picture>
           </div>
           <div className="room-lit" aria-hidden="true">
-            <img src="/site/img/hero-crew.jpg" alt="" />
+            <picture><source media="(max-width: 860px) and (orientation: portrait)" srcSet="/site/img/hero-lounge-portrait.jpg" /><img src="/site/img/hero-roxbury-crew.jpg" alt="" /></picture>
           </div>
           <div className="hero-scrim" aria-hidden="true"></div>
           <div className="shots" aria-hidden="true"></div>
@@ -68,7 +86,7 @@ export default function HomeView() {
                 <span>Never lose</span>
               </span>{' '}
               <span className="ln">
-                <span>the moment.</span>
+                <span>the moment</span>
               </span>
             </h1>
             <p className="hero-lead">Tickets, one shared camera for the whole room, and a scrapbook that <b>builds itself by morning.</b></p>
@@ -89,13 +107,9 @@ export default function HomeView() {
               </div>
             </div>
             <div className="stage-box">
-              <div className="stage" data-w="560" data-h="600" data-mw="500" data-mh="540" data-mtop=".22" aria-hidden="true">
-                <div className="printer">
-                  <span className="printer-label">Box office · Late Checkout — Amapiano &amp; Afrobeats</span>{' '}
-                  <div className="printer-body">
-                    <span className="slot"></span>
-                  </div>
-                </div>
+              <div className="stage" data-w="560" data-h="600" data-mw="500" data-mh="640" data-mtop=".22" aria-hidden="true">
+                <div className="iphone dd-phone" data-pw="272"></div>
+                <DoorsDiscover />
                 <div className="feed">
                   <div className="ticket-pair">
                     <div className="aticket-wrap t-body"></div>
@@ -130,7 +144,7 @@ export default function HomeView() {
               </div>
             </div>
             <div className="stage-box">
-              <div className="stage" data-w="640" data-h="664" data-mw="312" data-mh="640" data-mbleed="72">
+              <div className="stage" data-w="640" data-h="664" data-mw="312" data-mh="640">
                 <div className="iphone cam-phone" data-pw="300" data-time="10:31" aria-hidden="true"></div>
                 <div className="cam-chip" aria-hidden="true">
                   <p className="cc-lbl">
@@ -186,18 +200,14 @@ export default function HomeView() {
           <div className="tiles" aria-hidden="true">
             <div className="sb-frame">
               <div className="sb-card">
-                <div className="sb-head">
-                  <div>
-                    <p className="sb-title">Late Checkout</p>
-                    <p className="sb-meta">Fri Oct 2 · Seaport, Boston</p>
-                  </div>
-                  <div className="sb-stats">
-                    <span><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M9 4 7.5 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.5L15 4H9zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z" /></svg>214</span>
-                    <i></i>
-                    <span><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm7 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3.3 3.1-6 7-6s7 2.7 7 6H2zm15 0c0-1.8-.7-3.4-1.9-4.6.6-.3 1.200-.4 1.9-.4 2.8 0 5 2 5 5h-5z" /></svg>38</span>
-                  </div>
-                </div>
-                <p className="sb-more">+210 more in the album</p>
+                <p className="sb-label">Recent</p>
+                <div className="sb-print"><img src="/site/img/posters/late-checkout.jpg" alt="" /></div>
+                <p className="sb-date">Oct 3, 2026</p>
+                <p className="sb-line">
+                  <svg className="sb-star" viewBox="0 0 40 46" aria-hidden="true"><path d={STAR_PATH} /></svg>
+                  <span>Time Travel Through Your Memories</span>
+                  <svg className="sb-star" viewBox="0 0 40 46" aria-hidden="true"><path d={STAR_PATH} /></svg>
+                </p>
               </div>
             </div>
           </div>
@@ -220,7 +230,7 @@ export default function HomeView() {
               </div>
             </div>
             <div className="stage-box">
-              <div className="stage" data-w="600" data-h="690" data-mw="372" data-mh="672" data-mbleed="72" aria-hidden="true">
+              <div className="stage" data-w="600" data-h="690" data-mw="372" data-mh="672" aria-hidden="true">
                 <div className="bursts"></div>
                 <div className="iphone thread-phone" data-pw="316" data-time="11:52"></div>
                 <div className="flythumbs"></div>
@@ -324,7 +334,7 @@ export default function HomeView() {
               </div>
             </div>
             <div className="stage-box">
-              <div className="stage" data-w="560" data-h="720" data-mw="320" data-mh="664">
+              <div className="stage" data-w="560" data-h="720" data-mw="320" data-mh="644">
                 <div className="share">
                   <div className="canvas">
                     <div className="canvas-bg" aria-hidden="true">

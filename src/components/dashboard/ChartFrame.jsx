@@ -14,13 +14,13 @@ import {
 
 export function ChartSkeleton({ className = '' }) {
     return (
-        <div className={`flex h-full min-h-[220px] w-full items-center justify-center rounded-2xl bg-white/[0.035] ${className}`.trim()}>
+        <div className={`flex h-full min-h-[220px] w-full items-center justify-center rounded-2xl bg-pxi-field ${className}`.trim()}>
             <div className="w-2/3 max-w-sm space-y-3">
                 <div className="h-3 w-1/3 animate-pulse rounded-full bg-white/10" />
-                <div className="h-24 animate-pulse rounded-2xl bg-white/[0.04]" />
+                <div className="h-24 animate-pulse rounded-2xl bg-pxi-field" />
                 <div className="grid grid-cols-4 gap-2">
                     {Array.from({ length: 4 }).map((_, index) => (
-                        <div key={index} className="h-2 animate-pulse rounded-full bg-white/[0.05]" />
+                        <div key={index} className="h-2 animate-pulse rounded-full bg-pxi-field" />
                     ))}
                 </div>
             </div>
@@ -175,14 +175,14 @@ const LazySparkRecharts = dynamic(
     }),
     {
         ssr: false,
-        loading: () => <div className="h-full w-full animate-pulse rounded-lg bg-white/[0.05]" />,
+        loading: () => <div className="h-full w-full animate-pulse rounded-lg bg-pxi-field" />,
     }
 );
 
 function SparkEmpty({ height, label }) {
     return (
         <div
-            className="flex w-full items-center justify-center rounded-lg bg-white/[0.03]"
+            className="flex w-full items-center justify-center rounded-lg bg-pxi-field"
             style={{ height }}
         >
             <span className="text-[11px] font-medium tracking-[0.02em] text-white/30">{label}</span>

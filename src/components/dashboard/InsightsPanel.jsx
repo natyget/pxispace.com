@@ -17,11 +17,11 @@ export default function InsightsPanel({ insights = [], eyebrow = 'What we notice
     if (!insights.length) return null;
 
     return (
-        <section className="rounded-[1.25rem] bg-white/[0.035] p-5">
+        <section className="rounded-[1.25rem] bg-pxi-field p-5">
             <p className="text-xs font-bold tracking-[0.02em] text-white/40">{eyebrow}</p>
             <div className="mt-4 grid gap-3 lg:grid-cols-2">
                 {insights.map((insight) => (
-                    <article key={insight.id} className="rounded-2xl bg-white/[0.035] p-4">
+                    <article key={insight.id} className="rounded-2xl bg-pxi-field p-4">
                         <div className="flex items-center gap-2.5">
                             <span className={`h-2 w-2 shrink-0 rounded-full ${SEVERITY_DOT[insight.severity] || SEVERITY_DOT.info}`} aria-hidden="true" />
                             <h3 className="min-w-0 truncate text-sm font-bold text-white">{insight.title}</h3>

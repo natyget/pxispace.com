@@ -143,7 +143,7 @@ function ComposeAnnouncementCard({ onCreated }) {
                 type="button"
                 onClick={submit}
                 disabled={busy || !title.trim() || !body.trim() || badCta}
-                className="rounded-full bg-white text-black px-5 py-2 text-[13px] font-bold disabled:opacity-40"
+                className="rounded-full bg-pxi-purple text-white px-5 py-2 text-[13px] font-bold disabled:opacity-40 uppercase tracking-[0.08em]"
             >
                 {busy ? 'Publishing...' : 'Publish'}
             </button>
@@ -261,7 +261,7 @@ export default function AdminAnnouncementsPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => toggleActive(a)}
-                                                className="rounded-full bg-white/[0.065] px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
+                                                className="rounded-full bg-pxi-field px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
                                             >
                                                 {a.active ? 'Deactivate' : 'Reactivate'}
                                             </button>

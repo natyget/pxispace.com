@@ -26,11 +26,11 @@ function TeamHero({ rosterCount, memberCount }) {
                     </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-2xl bg-white/[0.055] p-4">
+                    <div className="rounded-2xl bg-pxi-field p-4">
                         <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Rosters</p>
                         <p className="mt-2 text-2xl font-bold text-white">{rosterCount.toLocaleString()}</p>
                     </div>
-                    <div className="rounded-2xl bg-white/[0.055] p-4">
+                    <div className="rounded-2xl bg-pxi-field p-4">
                         <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">People</p>
                         <p className="mt-2 text-2xl font-bold text-white">{memberCount.toLocaleString()}</p>
                     </div>
@@ -150,10 +150,10 @@ export default function TeamSecurityPage() {
     if (loading) {
         return (
             <div className="mx-auto max-w-6xl space-y-8">
-                <div className="h-48 animate-pulse rounded-[1.25rem] bg-white/[0.035]" />
+                <div className="h-48 animate-pulse rounded-[1.25rem] bg-pxi-field" />
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
-                    <div className="h-72 animate-pulse rounded-[1.25rem] bg-white/[0.035]" />
-                    <div className="h-72 animate-pulse rounded-[1.25rem] bg-white/[0.035]" />
+                    <div className="h-72 animate-pulse rounded-[1.25rem] bg-pxi-field" />
+                    <div className="h-72 animate-pulse rounded-[1.25rem] bg-pxi-field" />
                 </div>
             </div>
         );
@@ -174,14 +174,14 @@ export default function TeamSecurityPage() {
         <div className="mx-auto max-w-6xl space-y-6 md:space-y-8">
             <TeamHero rosterCount={rosters.length} memberCount={memberCount} />
 
-            <div className="flex flex-wrap items-center gap-2 rounded-[1.25rem] bg-white/[0.035] p-3">
+            <div className="flex flex-wrap items-center gap-2 rounded-[1.25rem] bg-pxi-field p-3">
                 {rosters.map((r) => (
                     <button
                         key={r.id}
                         type="button"
                         onClick={() => setSelectedId(r.id)}
                         className={`rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] transition ${
-                            roster?.id === r.id ? 'bg-white text-black' : 'bg-white/[0.055] text-zinc-400 hover:bg-white/[0.08] hover:text-white'
+                            roster?.id === r.id ? 'bg-pxi-purple text-white' : 'bg-pxi-field text-zinc-400 hover:bg-white/[0.08] hover:text-white'
                         }`}
                     >
                         {r.name}
@@ -209,7 +209,7 @@ export default function TeamSecurityPage() {
                     <button
                         type="button"
                         onClick={() => setCreating(true)}
-                        className="rounded-full bg-white/[0.055] px-4 py-2 text-xs font-bold tracking-[0.02em] text-zinc-400 hover:bg-white/[0.08] hover:text-white"
+                        className="rounded-full bg-pxi-field px-4 py-2 text-xs font-bold tracking-[0.02em] text-zinc-400 hover:bg-white/[0.08] hover:text-white"
                     >
                         New roster
                     </button>
@@ -300,7 +300,7 @@ export default function TeamSecurityPage() {
                                                 type="button"
                                                 onClick={() => handleToggleVenue(venue.id)}
                                                 className={`rounded-full px-3 py-1.5 text-[11px] font-bold tracking-[0.02em] transition ${
-                                                    active ? 'bg-white text-black' : 'bg-white/[0.055] text-zinc-400 hover:bg-white/[0.08] hover:text-white'
+                                                    active ? 'bg-pxi-purple text-white' : 'bg-pxi-field text-zinc-400 hover:bg-white/[0.08] hover:text-white'
                                                 }`}
                                             >
                                                 {venue.name}
@@ -313,7 +313,7 @@ export default function TeamSecurityPage() {
                             </div>
                             <div className="space-y-3 px-1 py-1">
                                 {roster.members.map(member => (
-                                    <div key={member.id} className="flex flex-col justify-between gap-4 rounded-[1.25rem] bg-white/[0.035] p-4 sm:flex-row sm:items-center">
+                                    <div key={member.id} className="flex flex-col justify-between gap-4 rounded-[1.25rem] bg-pxi-field p-4 sm:flex-row sm:items-center">
                                         <div>
                                             <p className="text-sm font-bold text-white">{member.name}</p>
                                             <p className="text-xs text-zinc-500">
@@ -323,7 +323,7 @@ export default function TeamSecurityPage() {
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <span className="rounded-full bg-white/[0.055] px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-zinc-300">
+                                            <span className="rounded-full bg-pxi-field px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-zinc-300">
                                                 {member.role}
                                             </span>
                                             <button type="button" onClick={() => handleRemove(member.id)} className="text-[11px] tracking-[0.02em] font-bold text-red-400 hover:text-red-300 transition-colors">
@@ -333,7 +333,7 @@ export default function TeamSecurityPage() {
                                     </div>
                                 ))}
                                 {roster.members.length === 0 && (
-                                    <div className="rounded-[1.25rem] bg-white/[0.035] p-6 text-center">
+                                    <div className="rounded-[1.25rem] bg-pxi-field p-6 text-center">
                                         <p className="text-sm font-semibold text-white">No members yet.</p>
                                         <p className="mt-1 text-sm text-zinc-500">Add people from the form to build this roster.</p>
                                     </div>

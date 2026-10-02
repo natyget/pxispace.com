@@ -30,7 +30,7 @@ export default function EventDetailBottomBar({ albumId, eventId }) {
         {openInAppUrl ? (
           <a
             href={openInAppUrl}
-            className="inline-flex h-[3.375rem] w-full min-w-0 items-center justify-center rounded-full border border-white/15 bg-black/85 text-sm font-semibold uppercase tracking-wide text-white shadow-lg backdrop-blur-md transition hover:bg-black/95 md:hidden"
+            className="inline-flex h-[3.375rem] w-full min-w-0 items-center justify-center rounded-full bg-black/85 text-sm font-semibold uppercase tracking-wide text-white shadow-lg transition hover:bg-black/95 md:hidden"
             rel="noopener noreferrer"
           >
             Open in PXI

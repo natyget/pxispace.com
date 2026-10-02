@@ -66,12 +66,12 @@ function RealAudienceOverview() {
             ) : (
                 <div className="space-y-4">
                     {story.length ? (
-                        <div className="rounded-2xl bg-white/[0.035] px-4 py-3.5">
+                        <div className="rounded-2xl bg-pxi-field px-4 py-3.5">
                             <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">What this means</p>
                             <ul className="mt-2 space-y-1.5">
                                 {story.map((line) => (
                                     <li key={line} className="flex items-start gap-2 text-sm leading-6 text-zinc-300">
-                                        <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#d84aff]/70" aria-hidden="true" />
+                                        <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pxi-purple/70" aria-hidden="true" />
                                         {line}
                                     </li>
                                 ))}
@@ -81,21 +81,21 @@ function RealAudienceOverview() {
                             </p>
                         </div>
                     ) : null}
-                    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-white/[0.06] ring-1 ring-white/[0.07] sm:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-pxi-field sm:grid-cols-4">
                         {[
                             { label: 'Attendees', value: data.totalAttendees },
                             { label: 'Passport holders', value: data.tiers.citizen },
                             { label: 'Email reachable', value: data.marketing.emailOptIn },
                             { label: 'Repeat guests', value: `${Math.round((data.repeat.repeatRate || 0) * 100)}%` },
                         ].map((t) => (
-                            <div key={t.label} className="bg-[#0e0e13] px-4 py-3.5">
+                            <div key={t.label} className="bg-pxi-surface px-4 py-3.5">
                                 <p className="text-[12px] font-medium text-zinc-500">{t.label}</p>
                                 <p className="mt-1.5 text-[22px] font-semibold leading-none tracking-tight tabular-nums text-white">{t.value}</p>
                             </div>
                         ))}
                     </div>
                     {data.demographicsWithheld ? (
-                        <p className="rounded-xl bg-white/[0.035] px-4 py-3 text-xs leading-5 text-zinc-500">
+                        <p className="rounded-xl bg-pxi-field px-4 py-3 text-xs leading-5 text-zinc-500">
                             City and age breakdowns appear once 10 or more people have attended your events. Until then they are hidden, so no small group can be identified.
                         </p>
                     ) : null}
@@ -264,7 +264,7 @@ function TicketTierBadge({ tier }) {
     return (
         <span
             className={`rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${
-                paid ? 'bg-amber-500/15 text-amber-300' : 'bg-white/5 text-zinc-400'
+                paid ? 'bg-amber-500/15 text-amber-300' : 'bg-pxi-field text-zinc-400'
             }`}
         >
             {paid ? 'Paid' : 'Free'}
@@ -274,7 +274,7 @@ function TicketTierBadge({ tier }) {
 
 function EngagementBadge({ tier }) {
     return (
-        <span className="rounded-full bg-[#d84aff]/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-[#e9a6ff]">
+        <span className="rounded-full bg-pxi-purple/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-white">
             {tier?.label || 'Wanderer'}
         </span>
     );
@@ -469,7 +469,7 @@ export default function AudiencePage() {
                                                 <div
                                                     key={segment.id}
                                                     className={`flex items-center gap-1.5 rounded-full py-1 pl-1 pr-1.5 transition ${
-                                                        active ? 'bg-[#d84aff]/15 ring-1 ring-[#d84aff]/40' : 'glass-field'
+                                                        active ? 'bg-pxi-purple/15 ring-1 ring-pxi-purple/40' : 'glass-field'
                                                     }`}
                                                 >
                                                     <button
@@ -511,12 +511,12 @@ export default function AudiencePage() {
                                     <p className="mt-1 text-sm leading-6 text-zinc-400">Ticket and engagement filters show names. Campaign targeting filters count people without listing them.</p>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <p className="rounded-full bg-white/[0.06] px-3 py-1.5 text-xs font-bold tracking-[0.02em] text-zinc-300">
+                                    <p className="rounded-full bg-pxi-field px-3 py-1.5 text-xs font-bold tracking-[0.02em] text-zinc-300">
                                         {total.toLocaleString()} {namesHidden ? 'match' : 'attendees'}
                                     </p>
                                     {!namesHidden && hiddenCount > 0 ? (
                                         <p
-                                            className="rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-semibold tracking-[0.02em] text-zinc-500"
+                                            className="rounded-full bg-pxi-field px-3 py-1.5 text-xs font-semibold tracking-[0.02em] text-zinc-500"
                                             title="These people opted out of personalized sharing, or are in a region where they have not said yes. They are counted but not shown by name."
                                         >
                                             {hiddenCount.toLocaleString()} not shown by name
@@ -674,7 +674,7 @@ export default function AudiencePage() {
                                     <button
                                         type="button"
                                         onClick={toggleVisibleRows}
-                                        className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-zinc-300"
+                                        className="rounded-full bg-pxi-field px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-zinc-300"
                                     >
                                         Select all
                                     </button>
@@ -687,7 +687,7 @@ export default function AudiencePage() {
                                             type="button"
                                             onClick={() => toggleRow(row.id)}
                                             className={`w-full rounded-2xl px-4 py-4 text-left transition ${
-                                                selected ? 'bg-white/[0.09]' : 'bg-white/[0.035]'
+                                                selected ? 'bg-white/[0.09]' : 'bg-pxi-field'
                                             }`}
                                         >
                                             <div className="flex items-start justify-between gap-3">
@@ -707,11 +707,11 @@ export default function AudiencePage() {
                                                 <EngagementBadge tier={row.engagementTier} />
                                             </div>
                                             <div className="mt-4 grid grid-cols-2 gap-2">
-                                                <div className="rounded-xl bg-white/[0.04] px-3 py-2">
+                                                <div className="rounded-xl bg-pxi-field px-3 py-2">
                                                     <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Events</p>
                                                     <p className="mt-1 font-mono text-sm font-bold text-zinc-100">{row.eventsAttended}</p>
                                                 </div>
-                                                <div className="rounded-xl bg-white/[0.04] px-3 py-2">
+                                                <div className="rounded-xl bg-pxi-field px-3 py-2">
                                                     <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Last check-in</p>
                                                     <p className="mt-1 text-sm font-bold text-zinc-100">{formatLastCheckIn(row.lastCheckInAt)}</p>
                                                 </div>
@@ -728,7 +728,7 @@ export default function AudiencePage() {
                                                 <button
                                                     type="button"
                                                     onClick={toggleVisibleRows}
-                                                    className="rounded-full bg-white/[0.06] px-3 py-1 text-[11px] font-medium text-zinc-300 transition hover:bg-white/[0.1]"
+                                                    className="rounded-full bg-pxi-field px-3 py-1 text-[11px] font-medium text-zinc-300 transition hover:bg-white/[0.1]"
                                                 >
                                                     All
                                                 </button>
@@ -743,7 +743,7 @@ export default function AudiencePage() {
                                     <tbody>
                                         {rows.map((row) => {
                                             const selected = selectedRowIds.includes(row.id);
-                                            const rowSurface = selected ? 'bg-[#d84aff]/[0.06]' : 'hover:bg-white/[0.03]';
+                                            const rowSurface = selected ? 'bg-pxi-purple/[0.06]' : 'hover:bg-white/[0.03]';
                                             return (
                                                 <tr key={row.id} className={`border-b border-white/[0.04] transition-colors ${rowSurface}`}>
                                                     <td className="px-4 py-3.5 align-middle">
@@ -751,7 +751,7 @@ export default function AudiencePage() {
                                                             type="checkbox"
                                                             checked={selected}
                                                             onChange={() => toggleRow(row.id)}
-                                                            className="h-4 w-4 rounded-md bg-white/10 accent-[#d84aff] [border:0] focus:outline-none"
+                                                            className="h-4 w-4 rounded-md bg-white/10 accent-pxi-purple [border:0] focus:outline-none"
                                                             aria-label={`Select ${row.name || row.username || row.id}`}
                                                         />
                                                     </td>

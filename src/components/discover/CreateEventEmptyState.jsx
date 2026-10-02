@@ -1,8 +1,9 @@
+import './discover.css';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 /**
- * WEB-1: what a city or genre hub shows when it has nothing on.
+ * WEB-1: what /events, a city hub or a genre hub shows when it has nothing on.
  *
  * The founder's ask was specific — "a CTA to create events instead of trying to load them
  * constantly when there isnt any events. the cta tells them to create one." An empty hub used
@@ -20,22 +21,29 @@ import { ArrowRight } from 'lucide-react';
  * `secondary` replaces the default "Browse everything on PXI" link; pass `null` for none.
  * /events uses it because that link would point at the page the reader is already on, where
  * the useful second action is clearing the filters that emptied the list.
+ *
+ * The artwork is an empty album sleeve with its record tucked behind: the Discover look, with
+ * nothing on the shelf yet. No card around it — our surfaces don't use borders.
  */
 export default function CreateEventEmptyState({ title, blurb, className = '', secondary }) {
     return (
-        // No card: our surfaces don't use borders, and the words stand on their own.
-        <div className={`p-6 text-center sm:p-10 ${className}`}>
-            <h2 className="display-3">{title}</h2>
-            <p className="body-lead mx-auto mt-4 max-w-md">{blurb}</p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:mt-8">
-                <Link href="/dashboard/events/new" className="glow-cta inline-flex px-8 py-4 text-sm">
+        <div className={`dsc-empty ${className}`}>
+            <div className="dsc-empty-art" aria-hidden="true">
+                <span className="dsc-empty-disc" />
+                <span className="dsc-empty-cover">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                        <path d="M12 5v14M5 12h14" />
+                    </svg>
+                </span>
+            </div>
+            <h2 className="dsc-empty-title">{title}</h2>
+            <p className="dsc-empty-blurb">{blurb}</p>
+            <div className="dsc-empty-actions">
+                <Link href="/dashboard/events/new" className="dsc-join">
                     Create an event <ArrowRight className="h-4 w-4" />
                 </Link>
                 {secondary === undefined ? (
-                    <Link
-                        href="/events"
-                        className="inline-flex px-6 py-4 text-sm text-zinc-400 underline underline-offset-4 hover:text-white"
-                    >
+                    <Link href="/events" className="dsc-link">
                         Browse everything on PXI
                     </Link>
                 ) : (

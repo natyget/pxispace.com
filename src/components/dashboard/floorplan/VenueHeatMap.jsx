@@ -200,9 +200,9 @@ export default function VenueHeatMap({ eventId }) {
             const x = tuple.x * displayScale;
             const y = tuple.y * displayScale;
             const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-            gradient.addColorStop(0, `rgba(216, 74, 255, ${alpha})`);
-            gradient.addColorStop(0.55, `rgba(216, 74, 255, ${alpha * 0.4})`);
-            gradient.addColorStop(1, 'rgba(216, 74, 255, 0)');
+            gradient.addColorStop(0, `rgba(165, 35, 239, ${alpha})`);
+            gradient.addColorStop(0.55, `rgba(165, 35, 239, ${alpha * 0.4})`);
+            gradient.addColorStop(1, 'rgba(165, 35, 239, 0)');
             ctx.fillStyle = gradient;
             ctx.beginPath();
             ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -300,17 +300,17 @@ export default function VenueHeatMap({ eventId }) {
 
     // ── states ──────────────────────────────────────────────────────────────
     if (loading) {
-        return <div className="h-72 animate-pulse rounded-2xl bg-white/[0.035]" />;
+        return <div className="h-72 animate-pulse rounded-2xl bg-pxi-field" />;
     }
     if (error && !payload) {
-        return <div className="rounded-2xl bg-white/[0.035] p-6 text-sm text-zinc-400">{error}</div>;
+        return <div className="rounded-2xl bg-pxi-field p-6 text-sm text-zinc-400">{error}</div>;
     }
     if (!payload) return null;
 
     // Nothing to place anywhere: no plan AND no geotagged media.
     if (!view) {
         return (
-            <div className="rounded-2xl bg-white/[0.035] p-6">
+            <div className="rounded-2xl bg-pxi-field p-6">
                 <p className="text-sm font-bold text-white">The heat map fills in as the night happens</p>
                 <p className="mt-1 max-w-xl text-sm leading-6 text-zinc-500">
                     No geotagged photos yet — as guests shoot, activity heats a map of the venue automatically.
@@ -333,7 +333,7 @@ export default function VenueHeatMap({ eventId }) {
                                     type="button"
                                     disabled={attaching}
                                     onClick={() => attach(item.id)}
-                                    className="flex w-full items-center gap-3 rounded-2xl bg-white/[0.045] p-3 text-left transition hover:bg-white/[0.08] disabled:opacity-50"
+                                    className="flex w-full items-center gap-3 rounded-2xl bg-pxi-field p-3 text-left transition hover:bg-white/[0.08] disabled:opacity-50"
                                 >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img src={item.imageUrl} alt="" className="h-10 w-14 rounded-lg object-cover" />
@@ -369,7 +369,7 @@ export default function VenueHeatMap({ eventId }) {
                 <div className="flex items-center gap-2.5">
                     <p className="text-sm font-bold text-white">{plan ? plan.name : 'Where the night happened'}</p>
                     {view.mode === 'map' ? (
-                        <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium text-zinc-400">
+                        <span className="rounded-full bg-pxi-field px-2.5 py-1 text-[11px] font-medium text-zinc-400">
                             Auto-mapped from photo GPS
                         </span>
                     ) : null}
@@ -423,7 +423,7 @@ export default function VenueHeatMap({ eventId }) {
                             {autoMapCenter ? (
                                 <Link
                                     href={`/dashboard/floor-plans?eventId=${eventId}&seedLat=${autoMapCenter.lat}&seedLng=${autoMapCenter.lng}`}
-                                    className="rounded-full bg-[#d84aff]/10 px-3.5 py-1.5 text-xs font-medium text-[#e9a1ff] transition hover:bg-[#d84aff]/20"
+                                    className="rounded-full bg-pxi-purple/10 px-3.5 py-1.5 text-xs font-medium text-white transition hover:bg-pxi-purple/20"
                                 >
                                     Turn this into a venue →
                                 </Link>
@@ -434,7 +434,7 @@ export default function VenueHeatMap({ eventId }) {
             </div>
 
             {myPlans && !plan ? (
-                <div className="space-y-2 rounded-2xl bg-white/[0.035] p-3">
+                <div className="space-y-2 rounded-2xl bg-pxi-field p-3">
                     {myPlans.length === 0 ? (
                         <p className="text-xs text-zinc-500">
                             No saved plans yet — <Link href={`/dashboard/floor-plans?eventId=${eventId}`} className="text-zinc-300 underline">calibrate one</Link>.
@@ -446,7 +446,7 @@ export default function VenueHeatMap({ eventId }) {
                                 type="button"
                                 disabled={attaching}
                                 onClick={() => attach(item.id)}
-                                className="flex w-full items-center gap-3 rounded-2xl bg-white/[0.045] p-3 text-left transition hover:bg-white/[0.08] disabled:opacity-50"
+                                className="flex w-full items-center gap-3 rounded-2xl bg-pxi-field p-3 text-left transition hover:bg-white/[0.08] disabled:opacity-50"
                             >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={item.imageUrl} alt="" className="h-10 w-14 rounded-lg object-cover" />
@@ -461,7 +461,7 @@ export default function VenueHeatMap({ eventId }) {
             ) : null}
 
             <div
-                className="relative w-full overflow-hidden rounded-[1.25rem] bg-[#0b0b0f] ring-1 ring-white/[0.07]"
+                className="relative w-full overflow-hidden rounded-[1.25rem] bg-pxi-field"
                 style={{ aspectRatio: `${view.width} / ${view.height}`, maxHeight: 560 }}
             >
                 {view.mode === 'plan' ? (
@@ -492,7 +492,7 @@ export default function VenueHeatMap({ eventId }) {
                             cy={ring.y}
                             r={ring.r}
                             fill="none"
-                            stroke="rgba(216,74,255,0.35)"
+                            stroke="rgba(165,35,239,0.35)"
                             strokeWidth={Math.max(1.5, view.width / 500)}
                             strokeDasharray={`${view.width / 120} ${view.width / 200}`}
                         />
@@ -506,7 +506,7 @@ export default function VenueHeatMap({ eventId }) {
                             className="absolute z-10 -translate-x-1/2 -translate-y-1/2"
                             style={{ left: `${(pin.xPx / plan.imageWidthPx) * 100}%`, top: `${(pin.yPx / plan.imageHeightPx) * 100}%` }}
                         >
-                            <span className={`block rounded-full px-2 py-0.5 text-[10px] font-bold shadow-lg ${recent > 0 ? 'bg-emerald-400 text-black' : 'bg-black/70 text-white ring-1 ring-white/20'}`}>
+                            <span className={`block rounded-full px-2 py-0.5 text-[10px] font-bold shadow-lg ${recent > 0 ? 'bg-emerald-400 text-black' : 'bg-black/70 text-white'}`}>
                                 {pin.gate}{recent > 0 ? ` +${recent}` : ''}
                             </span>
                         </span>
@@ -525,14 +525,14 @@ export default function VenueHeatMap({ eventId }) {
             </div>
 
             {/* Transport: play/scrub + activity ribbon. */}
-            <div className="rounded-2xl bg-white/[0.035] p-3">
+            <div className="rounded-2xl bg-pxi-field p-3">
                 <div className="flex items-center gap-3">
                     <button
                         type="button"
                         onClick={() => { setLive(false); setPlaying((v) => !v); }}
                         disabled={!hasAnyData}
                         aria-label={playing ? 'Pause playback' : 'Play the night back'}
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-black transition hover:bg-zinc-200 disabled:opacity-40"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pxi-purple text-white transition hover:brightness-110 disabled:opacity-40"
                     >
                         <HugeiconsIcon icon={playing ? PauseIcon : PlayIcon} size={16} />
                     </button>
@@ -543,7 +543,7 @@ export default function VenueHeatMap({ eventId }) {
                         step="1"
                         value={pos}
                         onChange={(e) => { setLive(false); setPlaying(false); setPos(Number(e.target.value)); }}
-                        className="w-full accent-[#d84aff]"
+                        className="w-full accent-pxi-purple"
                         aria-label="Scrub through the event window"
                     />
                     <span className="shrink-0 text-xs font-bold tabular-nums text-zinc-300">{bucketLabel}</span>
@@ -560,7 +560,7 @@ export default function VenueHeatMap({ eventId }) {
                                 className="min-w-0 flex-1 rounded-t-sm transition-colors"
                                 style={{
                                     height: `${Math.max(6, (total / ribbonMax) * 100)}%`,
-                                    backgroundColor: t === pos ? '#d84aff' : total > 0 ? 'rgba(216,74,255,0.35)' : 'rgba(255,255,255,0.06)',
+                                    backgroundColor: t === pos ? '#A523EF' : total > 0 ? 'rgba(165,35,239,0.35)' : 'rgba(255,255,255,0.06)',
                                 }}
                             />
                         );

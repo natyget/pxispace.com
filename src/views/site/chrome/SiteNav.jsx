@@ -44,6 +44,7 @@ export default function SiteNav({ page }) {
   const [mounted, setMounted] = useState(false);
   const [sheet, setSheet] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [outPop, setOutPop] = useState(false);
   const meRef = useRef(null);
   const btnRef = useRef(null);
   const signedIn = mounted && Boolean(auth.isAuthenticated && auth.user);
@@ -129,7 +130,7 @@ export default function SiteNav({ page }) {
             <a className="nav-login" href={LOGIN[page]} style={mounted ? undefined : { visibility: 'hidden' }}>Log in</a>
           )}{' '}
           <a className="nav-events" href="/events">Events</a>{' '}
-          <button ref={btnRef} className="nav-menu" type="button" aria-label={sheet ? 'Close menu' : 'Open menu'} aria-expanded={sheet} aria-controls="mnav" onClick={() => setSheet((v) => !v)}>
+          <button ref={btnRef} className="nav-menu" type="button" aria-label={sheet ? 'Close menu' : 'Open menu'} aria-expanded={sheet} aria-controls="mnav" onClick={() => { setOutPop(false); setSheet((v) => !v); }}>
             <span className="nm-bars" aria-hidden="true"><i></i><i></i></span>
           </button>
         </div>
@@ -147,21 +148,27 @@ export default function SiteNav({ page }) {
               ))}
             </nav>
             {signedIn ? (
-              <div className="mnav-me" style={{ '--i': LINKS.length }}>
-                <div className="mnav-me-head">
-                  <UserAvatar user={auth.user} size={44} alt="" />
-                  <div><b>{auth.user.name || firstName(auth.user)}</b><small>{handle(auth.user)}</small></div>
-                </div>
-                <div className="mnav-me-grid">
-                  {ACCOUNT.map((a) => (
-                    <a key={a.href} href={a.href}><Ic d={a.d} />{a.label}</a>
-                  ))}
-                </div>
-                <div className="mnav-foot">
-                  <button type="button" className="btn btn-secondary" onClick={signOut}>Sign out</button>
+              <>
+                {/* signed in: two quiet rows, then your avatar (tap for Log out) beside Events */}
+                <nav className="mnav-sub" aria-label="Your account" style={{ '--i': LINKS.length }}>
+                  <a href="/dashboard">Dashboard</a>
+                  <a href="/wishlist">Wishlist</a>
+                </nav>
+                <div className="mnav-bottom" style={{ '--i': LINKS.length + 1 }}>
+                  <div className="mnav-av">
+                    <button type="button" aria-label={`Account: ${auth.user.name || firstName(auth.user)}`} aria-expanded={outPop} onClick={() => setOutPop((v) => !v)}>
+                      <UserAvatar user={auth.user} size={44} alt="" />
+                    </button>
+                    {outPop ? (
+                      <div className="mnav-out" role="menu">
+                        <small>{handle(auth.user) || firstName(auth.user)}</small>
+                        <button type="button" role="menuitem" onClick={signOut}>Log out</button>
+                      </div>
+                    ) : null}
+                  </div>
                   <a className="btn btn-primary" href="/events">Events</a>
                 </div>
-              </div>
+              </>
             ) : (
               <div className="mnav-foot" style={{ '--i': LINKS.length }}>
                 <a className="btn btn-secondary" href={LOGIN[page]}>Log in</a>

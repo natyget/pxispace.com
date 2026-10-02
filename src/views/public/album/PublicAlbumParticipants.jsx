@@ -18,7 +18,7 @@ export default function PublicAlbumParticipants({ participants = [], pinned = fa
             <div
               className={`size-16 overflow-hidden rounded-[20px] border-2 ${
                 p.role === 'OWNER'
-                  ? 'border-[#d946ef] shadow-[0_0_10px_rgba(217,70,239,0.5)]'
+                  ? 'border-pxi-purple'
                   : 'border-white/10'
               }`}
             >
@@ -26,7 +26,7 @@ export default function PublicAlbumParticipants({ participants = [], pinned = fa
             </div>
             <span
               className={`text-[8px] font-bold uppercase tracking-[0.12em] ${
-                p.role === 'OWNER' ? 'text-fuchsia-400' : 'text-white/40'
+                p.role === 'OWNER' ? 'text-pxi-purple' : 'text-white/40'
               }`}
             >
               {p.role}

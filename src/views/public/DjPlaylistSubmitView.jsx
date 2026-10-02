@@ -81,11 +81,11 @@ export default function DjPlaylistSubmitView({ token }) {
         {/* Event cover + name */}
         <div className="text-center space-y-3">
           {linkInfo.eventCover ? (
-            <div className="relative w-24 h-24 mx-auto rounded-2xl overflow-hidden border border-white/10">
+            <div className="relative w-24 h-24 mx-auto rounded-2xl overflow-hidden">
               <Image src={linkInfo.eventCover} alt={linkInfo.eventName} fill unoptimized className="object-cover" />
             </div>
           ) : (
-            <div className="w-24 h-24 mx-auto rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center">
+            <div className="w-24 h-24 mx-auto rounded-2xl bg-pxi-field flex items-center justify-center">
               <HugeiconsIcon icon={MusicNote01Icon} size={32} className="text-zinc-600" />
             </div>
           )}
@@ -96,7 +96,7 @@ export default function DjPlaylistSubmitView({ token }) {
         </div>
 
         {/* Submit card */}
-        <div className="rounded-2xl border border-white/10 bg-zinc-900/60 overflow-hidden">
+        <div className="rounded-2xl bg-pxi-field overflow-hidden">
           <div className="p-5 border-b border-white/5">
             <h2 className="text-lg font-black text-white mb-1">Drop your set</h2>
             <p className="text-xs text-zinc-500 leading-relaxed">
@@ -132,14 +132,14 @@ export default function DjPlaylistSubmitView({ token }) {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               disabled={submitting}
-              className="w-full rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 px-4 py-3 text-sm focus:border-pxi-purple/50 focus:outline-none"
+              className="w-full rounded-2xl bg-pxi-field text-white placeholder-zinc-500 px-4 py-3 text-sm focus:ring-[1.5px] focus:ring-pxi-purple focus:outline-none"
             />
 
             <button
               type="button"
               onClick={handleSubmit}
               disabled={submitting || !url.trim()}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-40 hover:opacity-90 transition-opacity shadow-[0_0_24px_rgba(168,85,247,0.35)]"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-pxi-purple text-white text-sm font-bold uppercase tracking-widest disabled:opacity-40 hover:opacity-90 transition-opacity"
             >
               {submitting ? <HugeiconsIcon icon={Loading02Icon} className="animate-spin" size={18} /> : <HugeiconsIcon icon={MusicNote01Icon} size={18} />}
               {submitting ? 'Reading playlist…' : result ? 'Submit another' : 'Submit playlist'}

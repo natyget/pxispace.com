@@ -35,7 +35,7 @@ function StripeRefreshContent() {
                 </p>
                 <a
                     href="pxi://vendor-onboarding-refresh"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest hover:brightness-110 transition-all"
                 >
                     <HugeiconsIcon icon={SmartPhone01Icon} size={14} />
                     Return to PXI App
@@ -60,7 +60,7 @@ function StripeRefreshContent() {
             </p>
             <button
                 onClick={() => router.replace('/dashboard/vendor-upgrade?stripe=refresh')}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest shadow-[0_0_24px_rgba(216,74,255,0.3)] hover:brightness-110 transition-all"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pxi-purple text-white font-bold text-sm uppercase tracking-widest hover:brightness-110 transition-all"
             >
                 <HugeiconsIcon icon={RefreshIcon} size={14} />
                 Try Again
@@ -77,7 +77,6 @@ export default function StripeRefreshPage() {
     return (
         <div className="min-h-screen bg-black flex items-center justify-center px-6">
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-amber-500/5 blur-3xl" />
             </div>
             <Suspense fallback={<HugeiconsIcon icon={Loading02Icon} size={24} className="animate-spin text-pxi-purple" />}>
                 <StripeRefreshContent />

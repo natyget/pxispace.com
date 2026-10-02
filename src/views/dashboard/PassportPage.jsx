@@ -62,7 +62,7 @@ function ShareProfileLinkButton({ userId }) {
         <button
             type="button"
             onClick={onClick}
-            className="mx-auto flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs font-bold tracking-[0.02em] text-white transition hover:bg-white/10"
+            className="mx-auto flex items-center gap-2 rounded-full bg-pxi-field px-4 py-2 text-xs font-bold tracking-[0.02em] text-white transition hover:bg-white/10"
         >
             {copied ? <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} className="shrink-0 text-emerald-400" /> : <HugeiconsIcon icon={Share01Icon} size={16} className="shrink-0" />}
             {copied ? 'Copied link' : 'Share profile link'}
@@ -107,7 +107,7 @@ function PassportIssued({ user, rolesReady }) {
         ) : (
             <Link
                 href="/dashboard/vendor-upgrade"
-                className="inline-flex items-center rounded-full bg-white px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-black hover:bg-zinc-200"
+                className="inline-flex items-center rounded-full bg-pxi-purple px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white hover:brightness-110"
             >
                 Start hosting
             </Link>
@@ -199,7 +199,7 @@ function PassportNotIssued({ user, rolesReady }) {
                             ['Events', 'Stamps'],
                             ['Social', 'Friends'],
                         ].map(([label, value]) => (
-                            <div key={label} className="rounded-2xl bg-white/[0.055] p-4">
+                            <div key={label} className="rounded-2xl bg-pxi-field p-4">
                                 <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">{label}</p>
                                 <p className="mt-2 text-lg font-bold text-white">{value}</p>
                             </div>
@@ -209,8 +209,8 @@ function PassportNotIssued({ user, rolesReady }) {
             </section>
 
             <div className="grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-                <div className="rounded-[1.25rem] bg-white/[0.04] p-6">
-                    <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.055]">
+                <div className="rounded-[1.25rem] bg-pxi-field p-6">
+                    <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-pxi-field">
                         <HugeiconsIcon icon={SmartPhone01Icon} size={24} className="text-white opacity-75" />
                     </div>
                     <h2 className="text-lg font-bold text-white">Use the PXI mobile app</h2>
@@ -224,7 +224,7 @@ function PassportNotIssued({ user, rolesReady }) {
                     </IosDownloadLink>
                 </div>
 
-                <div className="rounded-[1.25rem] bg-white/[0.04] p-5">
+                <div className="rounded-[1.25rem] bg-pxi-field p-5">
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Hosting setup</p>
@@ -272,7 +272,7 @@ function PassportNotIssued({ user, rolesReady }) {
                         </button>
                         <Link
                             href="/dashboard/vendor-upgrade"
-                            className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-bold text-black hover:bg-zinc-200"
+                            className="inline-flex items-center justify-center gap-2 rounded-full bg-pxi-purple px-3 py-2 text-xs font-bold text-white hover:brightness-110"
                         >
                             Continue hosting setup
                             <HugeiconsIcon icon={ArrowRight02Icon} size={13} />

@@ -81,7 +81,7 @@ export default async function PublicPostPage({ params }) {
 
   if (!post) {
     return (
-      <div className="relative flex min-h-[60vh] flex-col items-center justify-center bg-[#0a0a0a] px-4 pb-40 pt-28 text-center text-white md:pt-32">
+      <div className="relative flex min-h-[60vh] flex-col items-center justify-center bg-black px-4 pb-40 pt-28 text-center text-white md:pt-32">
         <p className="text-lg font-semibold">Post not found</p>
         <p className="mt-2 max-w-sm text-sm text-zinc-500">This link may be invalid or the post was removed.</p>
         <Link href="/" className="mt-6 text-sm font-medium text-pxi-purple hover:text-white">
@@ -95,16 +95,16 @@ export default async function PublicPostPage({ params }) {
   const resolvedImg = post.imageUrl ? resolveDisplayImageUrl(post.imageUrl) : null;
 
   return (
-    <div className="relative min-h-screen bg-[#0a0a0a] pb-32 pt-18 text-white md:pb-24 md:pt-24">
+    <div className="relative min-h-screen bg-black pb-32 pt-18 text-white md:pb-24 md:pt-24">
       <div className="mx-auto flex max-w-lg flex-col px-4">
         {/* Image first in DOM for fast LCP — no lazy loading */}
         {post.isPrivateAccount ? (
-          <div className="relative aspect-[3/4] w-full max-h-[85vh] overflow-hidden rounded-2xl border border-white/10 bg-zinc-900">
+          <div className="relative aspect-[3/4] w-full max-h-[85vh] overflow-hidden rounded-2xl bg-pxi-field">
             <div
               className="absolute inset-0 opacity-90"
               style={{
                 background:
-                  'radial-gradient(circle at 30% 20%, rgba(168,85,247,0.35), transparent 55%), radial-gradient(circle at 70% 60%, rgba(59,130,246,0.25), transparent 50%), linear-gradient(180deg, #18181b, #09090b)',
+                  'radial-gradient(circle at 30% 20%, rgba(165,35,239,0.35), transparent 55%), radial-gradient(circle at 70% 60%, rgba(59,130,246,0.25), transparent 50%), linear-gradient(180deg, #18181b, #09090b)',
                 filter: 'blur(24px)',
                 transform: 'scale(1.08)',
               }}
@@ -121,10 +121,10 @@ export default async function PublicPostPage({ params }) {
             alt=""
             fetchPriority="high"
             decoding="async"
-            className="w-full rounded-2xl border border-white/10 bg-black object-contain max-h-[85vh]"
+            className="w-full rounded-2xl bg-black object-contain max-h-[85vh]"
           />
         ) : (
-          <div className="flex aspect-[3/4] w-full items-center justify-center rounded-2xl border border-white/10 bg-zinc-900 text-zinc-500">
+          <div className="flex aspect-[3/4] w-full items-center justify-center rounded-2xl bg-pxi-field text-zinc-500">
             Preview unavailable
           </div>
         )}
@@ -142,14 +142,14 @@ export default async function PublicPostPage({ params }) {
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-200">{post.caption}</p>
             ) : null}
 
-            <div className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3">
+            <div className="rounded-xl bg-pxi-field px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Reactions</p>
               {post.reactionCounts?.length ? (
                 <ul className="mt-2 flex flex-wrap gap-2">
                   {post.reactionCounts.map((r) => (
                     <li
                       key={r.emoji}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-sm"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1 text-sm"
                     >
                       <span>{r.emoji}</span>
                       <span className="text-zinc-300">{r.count}</span>

@@ -1,13 +1,13 @@
 /**
  * Dashboard chart tokens. Colors are validated (lightness band, chroma floor,
  * adjacent-pair CVD separation, 3:1 contrast) against the effective dark chart
- * surface (#131318) — don't eyeball replacements, re-validate.
+ * surface (the app's flat #1C1C1C card) — don't eyeball replacements, re-validate.
  */
 
-/** Brand accent: single-series emphasis, sparklines, selected states. */
-export const DASHBOARD_BRAND_COLOR = '#d84aff';
+/** Brand accent (the app purple): single-series emphasis, sparklines, selected states. */
+export const DASHBOARD_BRAND_COLOR = '#A523EF';
 
-/** Secondary series / de-emphasized chart ink. */
+/** Secondary series / de-emphasized chart ink. (Orange is DASHBOARD_LIVE_COLOR and means live.) */
 export const DASHBOARD_MUTED_COLOR = '#8b8d98';
 
 /**
@@ -23,11 +23,11 @@ export const DASHBOARD_LIVE_COLOR = '#ff5a1f';
  * when others are filtered out). Never cycle past the set; fold extras into "Other".
  */
 export const DASHBOARD_SERIES_COLORS = [
-    '#c93df2', // purple (brand)
+    '#A523EF', // purple (brand)
+    '#FF5A1F', // orange (second accent)
     '#0d9488', // teal
-    '#d97706', // amber
     '#3b82f6', // blue
-    '#f43f5e', // rose
+    '#9A9A9A', // grey
 ];
 
 /**
@@ -35,11 +35,11 @@ export const DASHBOARD_SERIES_COLORS = [
  * order reads as a scale instead of unrelated colors.
  */
 export const DASHBOARD_ORDINAL_RAMP = [
-    '#efc7ff',
-    '#e39bff',
-    '#d76bff',
-    '#b83ee6',
-    '#8f2bb8',
+    '#EDD3FC',
+    '#DBA7F9',
+    '#C470F5',
+    '#A523EF',
+    '#7318A7',
 ];
 
 /**
@@ -55,9 +55,9 @@ export function getOrdinalStageColor(index = 0, total = DASHBOARD_ORDINAL_RAMP.l
 
 /** Shared recharts <Tooltip contentStyle> so every chart pops the same panel. */
 export const DASHBOARD_TOOLTIP_CONTENT_STYLE = {
-    background: '#0c0c11',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 14,
+    background: '#2E2E2E',
+    border: 'none',
+    borderRadius: 16,
     fontSize: 12,
     boxShadow: '0 18px 44px rgba(0,0,0,0.45)',
     padding: '10px 12px',
@@ -78,7 +78,7 @@ export const DASHBOARD_TOOLTIP_ITEM_STYLE = {
 };
 
 /** Shared axis tick styling for recharts XAxis/YAxis. */
-export const DASHBOARD_AXIS_TICK = { fill: 'rgba(255,255,255,0.46)', fontSize: 11 };
+export const DASHBOARD_AXIS_TICK = { fill: '#9A9A9A', fontSize: 11 };
 
 /** Hairline solid gridline — never dashed (dashing reads as projection/threshold). */
 export const DASHBOARD_GRID_STROKE = 'rgba(255,255,255,0.06)';
@@ -98,7 +98,7 @@ export const DASHBOARD_TOOLTIP_PROPS = {
 export const DASHBOARD_CHART_SHADES = DASHBOARD_SERIES_COLORS;
 
 export const DASHBOARD_DONUT_SEGMENT_PROPS = {
-    stroke: '#0e0e13',
+    stroke: '#1c1c1c',
     strokeWidth: 2,
 };
 
@@ -112,11 +112,11 @@ export const TIME_SERIES_KEYS = {
 export const TIME_SERIES_STYLES = {
     current: {
         stroke: DASHBOARD_BRAND_COLOR,
-        fill: 'rgba(216,74,255,0.14)',
+        fill: 'rgba(165,35,239,0.14)',
     },
     previous: {
-        stroke: 'rgba(139,141,152,0.65)',
-        fill: 'rgba(139,141,152,0.07)',
+        stroke: 'rgba(255,90,31,0.7)',
+        fill: 'rgba(255,90,31,0.07)',
         strokeDasharray: '4 5',
     },
 };

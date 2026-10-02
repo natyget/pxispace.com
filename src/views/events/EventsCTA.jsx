@@ -7,7 +7,7 @@ import IosDownloadLink from "@/components/links/IosDownloadLink";
 const EventsCTA = () => {
   return (
     <section className="mt-48 mb-20">
-      <div className="ticket-shape bg-gradient-to-r from-pxi-purple via-pink-600 to-indigo-600 p-14 md:p-24 rounded-[4rem] text-center relative overflow-hidden shadow-[0_0_100px_rgba(216,74,255,0.2)]">
+      <div className="ticket-shape bg-pxi-purple p-14 md:p-24 rounded-[4rem] text-center relative overflow-hidden">
 
         <div className="relative z-10">
           <h2 className="text-5xl md:text-8xl font-black text-white uppercase tracking-tighter mb-10 leading-[0.85]">
@@ -23,7 +23,7 @@ const EventsCTA = () => {
             <Link href="/dashboard/events">
               <Button
                 variant="glass"
-                className="bg-white text-black hover:bg-white/90 border-transparent px-16 py-5 text-lg"
+                className="bg-pxi-purple text-white hover:brightness-110 border-transparent px-16 py-5 text-lg"
               >
                 Create an event
               </Button>
@@ -31,7 +31,7 @@ const EventsCTA = () => {
 
             <IosDownloadLink
               href={PXI_GET_APP_HREF}
-              className="inline-flex items-center justify-center gap-2 px-16 py-5 text-lg rounded-full font-bold transition-all duration-300 ease-out transform active:scale-95 whitespace-nowrap glass text-white hover:bg-white/10 bg-black/20 hover:bg-black/40 border border-white/20"
+              className="inline-flex items-center justify-center gap-2 px-16 py-5 text-lg rounded-full font-bold transition-all duration-300 ease-out transform active:scale-95 whitespace-nowrap bg-pxi-surface text-white hover:bg-white/10 bg-black/20 hover:bg-black/40"
             >
               Download the app
             </IosDownloadLink>
@@ -39,8 +39,6 @@ const EventsCTA = () => {
         </div>
 
         <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/30 blur-[150px] rounded-full" />
-          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-black/60 blur-[150px] rounded-full" />
         </div>
 
       </div>

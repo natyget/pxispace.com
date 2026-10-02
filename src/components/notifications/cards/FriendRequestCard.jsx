@@ -78,7 +78,7 @@ export default function FriendRequestCard({ notification, onAccept, onReject }) 
                 type="button"
                 onClick={() => setShowRejectConfirm(true)}
                 disabled={!!busy}
-                className="w-10 h-10 rounded-full border border-white/[0.14] bg-[#0a0a0a] flex items-center justify-center hover:bg-white/5 disabled:opacity-50"
+                className="w-10 h-10 rounded-full bg-black flex items-center justify-center hover:bg-white/5 disabled:opacity-50"
                 aria-label="Decline"
               >
                 {busy === 'reject' ? (

@@ -10,7 +10,7 @@ export default function ThreadMessageCard({ item, onClick }) {
   return (
     <button type="button" onClick={() => onClick?.(item)} className={`${NOTIFICATION_CARD_CLASS} w-full text-left`}>
       <div className={NOTIFICATION_ROW_CLASS}>
-        <div className="w-12 h-12 rounded-full bg-[#0a0a0a] flex items-center justify-center shrink-0">
+        <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center shrink-0">
           <HugeiconsIcon icon={Message01Icon} size={28} color="rgba(255,255,255,0.42)" strokeWidth={2} />
         </div>
         <div className="flex-1 min-w-0">

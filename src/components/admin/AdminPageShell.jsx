@@ -22,7 +22,7 @@ export function AdminPageShell({ title, copy, source, metrics = [], actions = nu
                         {metrics.length ? (
                             <div className="grid grid-cols-2 gap-2 sm:min-w-[360px]">
                                 {metrics.map((metric) => (
-                                    <div key={metric.label} className="rounded-2xl bg-white/[0.045] p-4">
+                                    <div key={metric.label} className="rounded-2xl bg-pxi-field p-4">
                                         <p className="text-[10px] font-black uppercase tracking-widest text-white/35">{metric.label}</p>
                                         <p className="mt-2 truncate text-2xl font-black tracking-normal text-white tabular-nums">{metric.value}</p>
                                         {metric.hint ? <p className="mt-1 truncate text-xs font-semibold text-zinc-500">{metric.hint}</p> : null}
