@@ -440,7 +440,7 @@ function HostBubble({ host, hostName, about }) {
 }
 
 /** "<N> MEMBERS", a row of round avatars (the last one "+N" past five), and the WHO'S GOING caption. */
-function MembersBlock({ count, participants, canJoin }) {
+function MembersBlock({ count, participants }) {
   const overflowing = count > 5;
   const shown = participants.slice(0, overflowing ? 4 : 5);
   const extra = overflowing ? count - shown.length : 0;
@@ -462,7 +462,7 @@ function MembersBlock({ count, participants, canJoin }) {
             </div>
           ) : null}
         </div>
-      ) : canJoin ? (
+      ) : count === 0 ? (
         <p className="mt-4 text-center text-[13px] font-semibold text-white/55">Be the first to join.</p>
       ) : null}
       <p
@@ -516,8 +516,23 @@ function Vinyl({ size = 152, artwork }) {
   );
 }
 
-/** Music block: the record beside the match / provider line and the purple playlist links. */
-function MusicSection({ playlist, cover }) {
+/** The event's top song ({ title, artist, artworkUrl }); `topSongArtworkUrl`, the art the host uploaded, wins over the song's own. */
+function readTopSong(event) {
+  const raw = event?.topSong;
+  if (!raw || typeof raw !== 'object') return null;
+  const title = typeof raw.title === 'string' ? raw.title.trim() : '';
+  if (!title) return null;
+  const artist = typeof raw.artist === 'string' ? raw.artist.trim() : '';
+  const hostArt = typeof event?.topSongArtworkUrl === 'string' ? event.topSongArtworkUrl.trim() : '';
+  const artwork = hostArt || (typeof raw.artworkUrl === 'string' ? raw.artworkUrl.trim() : '');
+  return { title, artist, artwork: artwork ? displayImageSrc(artwork, null) : null };
+}
+
+/**
+ * Music block (the app's MusicBlock): the record beside the top song and its artist — or the
+ * match / provider line when there is no song — and the purple playlist links, each with its sleeve.
+ */
+function MusicSection({ playlist, cover, topSong }) {
   const eventId = playlist?.eventId || null;
   const [playlists, setPlaylists] = useState([]);
   const [averageScore, setAverageScore] = useState(null);
@@ -545,52 +560,54 @@ function MusicSection({ playlist, cover }) {
     };
   }, [eventId]);
 
-  if (eventId) {
-    if (!loaded || playlists.length === 0) return null;
+  if (eventId || topSong) {
+    // The block hides when the event has no song and no playlists (the app's `music: null`).
+    if (!topSong && (!loaded || playlists.length === 0)) return null;
     const hasMatch = averageScore != null && averageScore > 0;
-    const primary = hasMatch ? `${averageScore}% match` : playlists.length > 1 ? 'Playlists' : 'Playlist';
-    const secondary = hasMatch
-      ? 'with your taste'
-      : Array.from(new Set(playlists.map((p) => PROVIDER_LABEL[p.provider] || p.provider))).join(' · ');
+    const primary = topSong
+      ? topSong.title
+      : hasMatch
+        ? `${averageScore}% match`
+        : playlists.length > 1
+          ? 'Playlists'
+          : 'Playlist';
+    const secondary = topSong
+      ? topSong.artist
+      : hasMatch
+        ? 'with your taste'
+        : Array.from(new Set(playlists.map((p) => PROVIDER_LABEL[p.provider] || 'Playlist'))).join(' · ');
     const visible = playlists.slice(0, 4);
     const hidden = playlists.length - visible.length;
     const matched = matchDetail?.matchedArtists || [];
     return (
       <section className="mt-[26px] px-[29px]" aria-label="Music">
         <div className="flex items-center gap-3.5">
-          <Vinyl size={152} artwork={cover} />
+          <Vinyl size={152} artwork={topSong?.artwork || cover} />
           <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
             <p className="line-clamp-2 text-[20px] font-extrabold leading-[1.15] tracking-[-0.2px] text-white">{primary}</p>
             {secondary ? <p className="line-clamp-2 text-[13px] font-bold text-white">{secondary}</p> : null}
-            <ul className="mt-3 flex w-full flex-col items-center gap-[7px]">
-              {visible.map((row) => {
-                const meta = [
-                  PROVIDER_LABEL[row.provider] || row.provider,
-                  row.trackCount != null ? `${row.trackCount} tracks` : null,
-                  row.matchScore != null && row.matchScore > 0 ? `${row.matchScore}%` : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ');
-                const genres = Array.isArray(row.topGenres) ? row.topGenres.slice(0, 4).join(', ') : '';
-                return (
-                  <li key={row.id || row.sourceUrl} className="flex w-full min-w-0 flex-col items-center">
-                    <a
-                      href={row.shareToken ? `/playlist/${row.shareToken}` : row.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="max-w-full truncate text-[15px] font-black leading-[18px] transition-colors hover:text-white"
-                      style={{ color: PURPLE }}
-                    >
-                      {row.ownerLabel ? `${row.ownerLabel} · ` : ''}
-                      {row.title || 'Untitled playlist'}
-                    </a>
-                    {meta ? <span className="max-w-full truncate text-[10px] font-bold uppercase tracking-[0.08em] text-white/45">{meta}</span> : null}
-                    {genres ? <span className="max-w-full truncate text-[10px] font-semibold text-white/45">{genres}</span> : null}
-                  </li>
-                );
-              })}
-              {hidden > 0 ? <li className="mt-0.5 text-[12px] font-bold text-white/55">+{hidden} more</li> : null}
-            </ul>
+            {visible.length > 0 || hidden > 0 ? (
+              <ul className="mt-3 flex w-full flex-col items-center gap-[3px]">
+                {visible.map((row) => {
+                  const sleeve = row.coverUrl ? displayImageSrc(row.coverUrl, null) : null;
+                  return (
+                    <li key={row.id || row.sourceUrl} className="flex max-w-full min-w-0 items-center justify-center gap-1.5">
+                      {sleeve ? <Image src={sleeve} alt="" width={18} height={18} unoptimized className="size-[18px] shrink-0 rounded-[4px] bg-[#2E2E2E] object-cover" /> : null}
+                      <a
+                        href={row.shareToken ? `/playlist/${row.shareToken}` : row.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="min-w-0 truncate text-[15px] font-black leading-[18px] transition-colors hover:text-white"
+                        style={{ color: PURPLE }}
+                      >
+                        {row.title || 'Untitled playlist'}
+                      </a>
+                    </li>
+                  );
+                })}
+                {hidden > 0 ? <li className="mt-0.5 text-[12px] font-bold text-white/55">+{hidden} more</li> : null}
+              </ul>
+            ) : null}
           </div>
         </div>
         {matched.length > 0 ? (
@@ -626,7 +643,7 @@ function MusicSection({ playlist, cover }) {
   );
 }
 
-/** Line-up circles with names: two per row, an odd last one centred. */
+/** Line-up circles with names: two per row, an odd last one centred (the app's LineupGrid). */
 function LineupGrid({ people }) {
   return (
     <section className="mt-[34px] px-5" aria-label="Line up">
@@ -636,13 +653,10 @@ function LineupGrid({ people }) {
           return (
             <li key={person.id || person.userId || name} className="flex w-1/2 min-w-0 flex-col items-center px-1.5 text-center">
               <UserAvatar user={{ avatarUrl: person.avatarUrl }} size={94} className="shrink-0" />
-              <p className="mt-3.5 line-clamp-2 max-w-full break-words text-[20px] font-extrabold leading-[1.15] tracking-[-0.2px] text-white">
-                {name}
-              </p>
-              {person.name?.trim() && person.username ? (
-                <p className="mt-0.5 max-w-full truncate text-[12px] font-semibold text-white/55">@{person.username}</p>
-              ) : null}
-              {person.role ? <p className={`mt-1 ${CAPS_GREY}`}>{person.role}</p> : null}
+              <div className="mt-3.5 w-full font-extrabold leading-[1.15] tracking-[-0.2px] text-white">
+                <FitLabel max={20}>{name}</FitLabel>
+              </div>
+              {person.role ? <p className={`mt-1 max-w-full truncate ${CAPS_GREY}`}>{person.role}</p> : null}
             </li>
           );
         })}
@@ -754,19 +768,19 @@ function MapCard({ place }) {
   );
 }
 
-/** Web-only: the ticket tiers, as flat rows in the sheet's card grey. */
+/** The ticket tiers, as the app's join sheet draws them: raised #2A2A2C rows, the label and capacity left, the price in PXI orange. */
 function TicketTiers({ tiers }) {
   return (
     <section className="mt-[34px] px-5" aria-label="Ticket tiers">
-      <p className={`pl-[15px] ${CAPS_GREY}`}>Ticket tiers</p>
-      <ul className="mt-3 space-y-2">
+      <p className="text-[12px] font-extrabold uppercase leading-[14px] tracking-[0.4px] text-white">Ticket tier</p>
+      <ul className="mt-2.5 flex flex-col gap-2.5">
         {tiers.map((tier) => (
-          <li key={tier.id || tier.label} className="flex items-center justify-between gap-3 rounded-[22px] bg-[#2A2A2C] px-4 py-3 text-left">
-            <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-bold text-white">{tier.label}</p>
-              {tier.capacity != null ? <p className="mt-0.5 text-[11px] font-semibold text-white/55">Capacity {tier.capacity}</p> : null}
+          <li key={tier.id || tier.label} className="flex items-center gap-3 rounded-[20px] bg-[#2A2A2C] px-4 py-3.5">
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <p className="line-clamp-2 text-[16px] font-extrabold text-white">{tier.label}</p>
+              {tier.capacity != null ? <p className="text-[12px] font-semibold text-white/55">Capacity {tier.capacity}</p> : null}
             </div>
-            <p className="shrink-0 text-[15px] font-extrabold text-white">{tier.priceLabel}</p>
+            <p className="shrink-0 text-[18px] font-black text-[#FF5A1F]">{tier.priceLabel}</p>
           </li>
         ))}
       </ul>
@@ -842,7 +856,7 @@ export default function EventDetailsModal({
   const capsLine = toCapsLine(event);
   const hostName = event.host ? event.host.name || event.host.username || 'Host' : '';
   const memberCount = event.memberCount != null ? event.memberCount : participants.length;
-  const showMembers = participants.length > 0 || event.memberCount != null;
+  const topSong = readTopSong(event);
   const whenSize = when.date.length > 12 ? 20 : 24;
 
   const canDismiss = !isInline;
@@ -883,7 +897,7 @@ export default function EventDetailsModal({
         {capsLine ? <p className={`mt-2.5 text-center ${CAPS_GREY}`}>{capsLine}</p> : null}
       </div>
 
-      <div className="relative mx-5 mt-4 aspect-[352/397] overflow-hidden rounded-[40px] bg-[#2A2A2C]" role="img" aria-label="Event cover">
+      <div className="relative mx-5 mt-4 aspect-[352/397] overflow-hidden rounded-[40px] bg-[#2A2A2C]" role="img" aria-label="Album cover">
         {coverSrc ? <Image src={coverSrc} alt="" fill loading="eager" unoptimized className="object-cover" sizes="(max-width: 430px) 100vw, 430px" /> : null}
       </div>
 
@@ -915,11 +929,11 @@ export default function EventDetailsModal({
 
       <HostBubble host={event.host} hostName={hostName} about={event.description} />
 
-      {showMembers ? <MembersBlock count={memberCount} participants={participants} canJoin={!!mainActionable} /> : null}
+      <MembersBlock count={memberCount} participants={participants} />
 
       {hasTicketTiers ? <TicketTiers tiers={event.ticketTiers} /> : null}
 
-      <MusicSection playlist={event.playlist} cover={coverSrc} />
+      <MusicSection playlist={event.playlist} cover={coverSrc} topSong={topSong} />
 
       {hasLineup ? <LineupGrid people={event.lineup} /> : null}
 
