@@ -109,6 +109,9 @@ function normalizeApiEvent(e) {
     city: resolveEventCity(e)?.name || null,
     // `genre` is not sent yet (handoff item 9); `playlist` only comes with match scores.
     genre: e.genre || e.playlist?.topGenres?.[0] || null,
+    // The host's song: the pulled-out record plays its preview, and the event view shows it.
+    topSong: e.topSong && typeof e.topSong === 'object' ? e.topSong : null,
+    topSongArtworkUrl: e.topSongArtworkUrl || null,
     value: priceUsd,
   };
 }

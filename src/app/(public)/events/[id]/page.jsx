@@ -39,16 +39,9 @@ export async function generateMetadata({ params }) {
       ? String(event.description).trim().slice(0, 160)
       : `Join ${eventName} on PXI — plan, capture, and relive the night.`;
 
-    const scrapbookThumb = Array.isArray(event.scrapbookThumbnails)
-      ? event.scrapbookThumbnails[0]
-      : null;
-
-    const ogImage = resolveShareOgImage(
-      site,
-      event.ogImageUrl,
-      event.coverImage,
-      scrapbookThumb,
-    );
+    // The link preview is the app's invite card (/og/event): the poster with one flat band for the
+    // name, the day and hours, and the venue (no cover: the same lettering on the dark card).
+    const ogImage = `${site}/og/event?event=${encodeURIComponent(String(event.id || id))}`;
 
     return buildShareMetadata({
       site,
@@ -57,6 +50,8 @@ export async function generateMetadata({ params }) {
       description: rawDesc,
       ogImage,
       ogAlt: eventName,
+      ogWidth: 1200,
+      ogHeight: 630,
       robots: isPrivate ? { index: false, follow: false } : undefined,
       privatePreview: isPrivate,
     });

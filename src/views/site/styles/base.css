@@ -150,23 +150,6 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .nav-me-menu button:hover { background: rgba(255, 255, 255, .06); color: #fff; }
 .pxr .nav-me-menu .out { margin-top: 4px; color: #ffb08f; }
 .pxr .nav-me-menu .out svg { color: var(--orange); }
-/* phone sheet, signed in: two quiet rows, then your avatar (tap → Log out) beside Events */
-.pxr .mnav-sub,
-.pxr .mnav-bottom { opacity: 0; transform: translateY(18px); transition: opacity .45s var(--ease-out), transform .55s var(--ease-out); transition-delay: calc(var(--i) * 55ms + 60ms); }
-.pxr .mnav.in .mnav-sub,
-.pxr .mnav.in .mnav-bottom { opacity: 1; transform: none; }
-.pxr .mnav-sub { display: flex; flex-direction: column; margin-top: 18px; }
-.pxr .mnav-sub a { padding: 12px 2px; font: 600 20px/1 var(--f-body); color: rgba(255, 255, 255, .6); }
-.pxr .mnav-sub a:active { color: #fff; }
-.pxr .mnav-bottom { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: auto; }
-.pxr .mnav-bottom .btn { flex: 1; max-width: 220px; height: 54px; }
-.pxr .mnav-av { position: relative; }
-.pxr .mnav-av > button { display: block; border-radius: 50%; }
-.pxr .mnav-av > button img { display: block; }
-.pxr .mnav-out { position: absolute; left: 0; bottom: calc(100% + 12px); min-width: 180px; padding: 8px; border-radius: 18px; background: rgba(24, 24, 27, .96); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); box-shadow: 0 18px 40px rgba(0, 0, 0, .6); animation: pxr-drop .2s var(--ease-out); }
-.pxr .mnav-out small { display: block; padding: 6px 10px 8px; font: 500 12px/1.2 var(--f-body); color: #71717a; }
-.pxr .mnav-out button { display: block; width: 100%; height: 44px; padding: 0 10px; border-radius: 12px; text-align: left; font: 600 16px/1 var(--f-body); color: #ffb08f; }
-.pxr .mnav-out button:active { background: rgba(255, 255, 255, .06); }
 
 /* ───────── the night clock: a small dial + time pill and the app CTA pill ───────── */
 .pxr .clock { position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); z-index: 60; display: flex; align-items: center; gap: 8px; translate: -50% 140%; opacity: 0; transition: translate .8s var(--ease-out), opacity .5s; }
@@ -737,28 +720,10 @@ html.pxr-doc body { background: transparent; overflow-x: clip; }
 .pxr .nm-bars i:first-child { top: 2px; } .pxr .nm-bars i:last-child { top: 10px; }
 .pxr .nav.menu-open .nm-bars i:first-child { top: 6px; transform: rotate(45deg); }
 .pxr .nav.menu-open .nm-bars i:last-child { top: 6px; transform: rotate(-45deg); }
-.pxr .mnav { position: fixed; inset: 0; z-index: 49; display: flex; flex-direction: column; padding: calc(84px + env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom)); background: rgba(5, 5, 5, .9); -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2); opacity: 0; transition: opacity .35s var(--ease-out); overscroll-behavior: contain; }
-.pxr .mnav[hidden] { display: none !important; }
-.pxr .mnav.in { opacity: 1; }
-.pxr .mnav::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(70% 40% at 80% 0%, rgba(216, 74, 255, .16), transparent 70%), radial-gradient(60% 35% at 0% 100%, rgba(255, 90, 31, .12), transparent 70%); }
-.pxr .mnav-in { position: relative; display: flex; flex-direction: column; justify-content: space-between; flex: 1; max-width: 520px; width: 100%; margin: 0 auto; }
-.pxr .mnav-links { display: flex; flex-direction: column; }
-.pxr .mnav-links a { display: flex; align-items: center; justify-content: space-between; padding: 18px 2px; border-bottom: 1px solid rgba(255, 255, 255, .08); font: 700 clamp(2rem, 9vw, 2.6rem)/1 var(--f-display); letter-spacing: -.03em; color: rgba(255, 255, 255, .72); opacity: 0; transform: translateY(18px); transition: opacity .45s var(--ease-out), transform .55s var(--ease-out), color .2s; transition-delay: calc(var(--i) * 55ms + 60ms); }
-.pxr .mnav-links a svg { color: rgba(255, 255, 255, .35); }
-.pxr .mnav-links a.on { color: #fff; }
-.pxr .mnav-links a.on svg { color: var(--purple); }
-.pxr .mnav-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; opacity: 0; transform: translateY(18px); transition: opacity .45s var(--ease-out), transform .55s var(--ease-out); transition-delay: calc(var(--i) * 55ms + 60ms); }
-.pxr .mnav-foot .btn { width: 100%; height: 54px; }
-.pxr .mnav.in .mnav-links a,
-.pxr .mnav.in .mnav-foot { opacity: 1; transform: none; }
 html.pxr-doc.mnav-open,
 html.pxr-doc.mnav-open body { overflow: hidden; }
 html.pxr-doc.mnav-open .pxr .clock { opacity: 0 !important; pointer-events: none; }
-@media (min-width: 861px) { .pxr .mnav { display: none; } }
-@media (prefers-reduced-motion: reduce) { .pxr .mnav,
-.pxr .mnav-links a,
-.pxr .mnav-foot,
-.pxr .nm-bars i { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .pxr .nm-bars i { transition: none; } }
 /* no sideways rubber-banding on iOS (the grain layer is oversized on purpose) */
 html.pxr-doc { overflow-x: clip; }
 
