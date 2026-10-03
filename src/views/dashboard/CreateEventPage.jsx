@@ -82,7 +82,7 @@ function fromDatetimeLocalValue(v) {
   return new Date(v);
 }
 
-export default function CreateEventPage({ embedded = false, onCancel, onCreated }) {
+function CreateEventForm({ embedded = false, onCancel, onCreated }) {
   const router = useRouter();
   const { user, updateUser } = useAuth();
   const { invalidate } = useEvents({ limit: 100, offset: 0 });
@@ -1505,4 +1505,28 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
     </div>
     </>
   );
+}
+
+/* The form never renders for a signed-out visitor: they get the sign-in page first and are sent
+   back here afterwards. Middleware already does this for a missing cookie; this covers a session
+   the browser has lost (cleared storage, expired token) while the cookie lingers. */
+export default function CreateEventPage(props) {
+  const router = useRouter();
+  const { isAuthenticated, authReady } = useAuth();
+  const signedOut = authReady && !isAuthenticated;
+
+  useEffect(() => {
+    if (!signedOut) return;
+    const back = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/dashboard/events/new';
+    router.replace(`/login?redirect=${encodeURIComponent(back)}`);
+  }, [signedOut, router]);
+
+  if (!authReady || signedOut) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center" aria-busy="true">
+        <PxiSpinner />
+      </div>
+    );
+  }
+  return <CreateEventForm {...props} />;
 }
