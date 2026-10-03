@@ -45,6 +45,9 @@ function normalize(e, city) {
     city: city?.name || null,
     // Only present when the fetch asked for match scores; harmless when it did not.
     genre: e.playlist?.topGenres?.[0] || null,
+    // The host's song: the pulled-out record plays its preview, and the event view shows it.
+    topSong: e.topSong && typeof e.topSong === 'object' ? e.topSong : null,
+    topSongArtworkUrl: e.topSongArtworkUrl || null,
     value: priceUsd,
   };
 }

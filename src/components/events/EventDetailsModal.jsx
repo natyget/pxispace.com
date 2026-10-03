@@ -5,12 +5,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Cancel01Icon, LinkForwardIcon, Navigation03Icon, Tick02Icon } from '@hugeicons/core-free-icons';
+import { Cancel01Icon, LinkForwardIcon, Navigation03Icon, PauseIcon, PlayIcon, Tick02Icon } from '@hugeicons/core-free-icons';
 import UserAvatar from '@/components/ui/UserAvatar';
 import Portal from '@/components/ui/Portal';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { spotifyEmbedSrc } from '@/lib/spotify';
 import { musicService } from '@/services/music';
+import { previewSrc, useSongPreview } from '@/lib/songPreview';
 
 /*
  * The app's event view (pxi-mobile-app/src/components/event), on the web: a flat #1C1C1C sheet with
@@ -475,13 +476,20 @@ function MembersBlock({ count, participants }) {
   );
 }
 
-/** A flat spinning record: grooves and the label turn, the disc stays put (reduced motion: it sits still). */
-function Vinyl({ size = 152, artwork }) {
+/**
+ * A flat spinning record: grooves and the label turn, the disc stays put (reduced motion: it sits still).
+ * With `onToggle` it is the song's play button: a flat 55% black circle on the label shows play or pause.
+ */
+function Vinyl({ size = 152, artwork, playing = false, onToggle }) {
   const label = Math.round(size * 0.37);
   const hole = Math.max(5, Math.round(size * 0.04));
   const rings = [0.96, 0.89, 0.82, 0.75, 0.68, 0.61, 0.54];
+  const Wrapper = onToggle ? 'button' : 'div';
+  const wrapperProps = onToggle
+    ? { type: 'button', onClick: onToggle, 'aria-pressed': playing, 'aria-label': playing ? 'Pause the song' : 'Play the song' }
+    : { 'aria-hidden': true };
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }} aria-hidden="true">
+    <Wrapper className="relative shrink-0 rounded-full" style={{ width: size, height: size }} {...wrapperProps}>
       <div className="absolute inset-0 animate-[spin_9s_linear_infinite] overflow-hidden rounded-full bg-[#0A0A0C] motion-reduce:animate-none">
         <svg className="absolute inset-0" viewBox="0 0 100 100">
           {rings.map((r, i) => (
@@ -512,7 +520,12 @@ function Vinyl({ size = 152, artwork }) {
           style={{ width: hole, height: hole }}
         />
       </div>
-    </div>
+      {onToggle ? (
+        <span className="absolute left-1/2 top-1/2 flex size-[38px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white">
+          <HugeiconsIcon icon={playing ? PauseIcon : PlayIcon} size={17} strokeWidth={2.2} />
+        </span>
+      ) : null}
+    </Wrapper>
   );
 }
 
@@ -525,7 +538,7 @@ function readTopSong(event) {
   const artist = typeof raw.artist === 'string' ? raw.artist.trim() : '';
   const hostArt = typeof event?.topSongArtworkUrl === 'string' ? event.topSongArtworkUrl.trim() : '';
   const artwork = hostArt || (typeof raw.artworkUrl === 'string' ? raw.artworkUrl.trim() : '');
-  return { title, artist, artwork: artwork ? displayImageSrc(artwork, null) : null };
+  return { title, artist, artwork: artwork ? displayImageSrc(artwork, null) : null, previewUrl: previewSrc(raw.previewUrl) };
 }
 
 /**
@@ -538,6 +551,10 @@ function MusicSection({ playlist, cover, topSong }) {
   const [averageScore, setAverageScore] = useState(null);
   const [matchDetail, setMatchDetail] = useState(null);
   const [loaded, setLoaded] = useState(false);
+  // The record plays the song's ~30 s preview from a tap (the app pops it on Discover); it stops on close.
+  const preview = useSongPreview();
+  const songSrc = topSong?.previewUrl || null;
+  const songPlaying = Boolean(songSrc) && preview.playingSrc === songSrc;
 
   useEffect(() => {
     if (!eventId) return undefined;
@@ -582,7 +599,12 @@ function MusicSection({ playlist, cover, topSong }) {
     return (
       <section className="mt-[26px] px-[29px]" aria-label="Music">
         <div className="flex items-center gap-3.5">
-          <Vinyl size={152} artwork={topSong?.artwork || cover} />
+          <Vinyl
+            size={152}
+            artwork={topSong?.artwork || cover}
+            playing={songPlaying}
+            onToggle={songSrc ? () => (songPlaying ? preview.stop() : preview.start(songSrc)) : undefined}
+          />
           <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
             <p className="line-clamp-2 text-[20px] font-extrabold leading-[1.15] tracking-[-0.2px] text-white">{primary}</p>
             {secondary ? <p className="line-clamp-2 text-[13px] font-bold text-white">{secondary}</p> : null}

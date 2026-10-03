@@ -15,6 +15,7 @@ import {
 import Sleeve from './Sleeve';
 import EventStamp from './EventStamp';
 import { ctaFor, formatShortDate, formatTime, formatWhen, priceLabel, splitLocation } from './discoverEvent';
+import { useSongPreview } from '@/lib/songPreview';
 
 /**
  * The Discover stage: an album-cover carousel with the selected event's details beside it
@@ -287,6 +288,15 @@ export default function DiscoverStage({
     go(e.deltaX > 0 ? 1 : -1);
   };
 
+  // The record's song (the app's useDiscPreview). It starts from the tab's own click — browsers only
+  // let a page make sound inside a tap — and stops when the record goes back or the slide moves.
+  const preview = useSongPreview();
+  const stopPreview = preview.stop;
+  const outKey = active ? slideKey(active) : null;
+  useEffect(() => {
+    if (popped == null || popped !== outKey) stopPreview();
+  }, [popped, outKey, stopPreview]);
+
   if (!n || !active) return null;
 
   const activeKey = slideKey(active);
@@ -358,7 +368,15 @@ export default function DiscoverStage({
                           className="dsc-tab"
                           aria-pressed={isPopped}
                           aria-label={isPopped ? 'Put the record back' : 'Pull out the record'}
-                          onClick={() => setPopped((p) => (p === activeKey ? null : activeKey))}
+                          onClick={() => {
+                            if (isPopped) {
+                              setPopped(null);
+                              preview.stop();
+                            } else {
+                              setPopped(activeKey);
+                              preview.start(ev.topSong?.previewUrl);
+                            }
+                          }}
                         >
                           <HugeiconsIcon icon={MusicNote01Icon} size={20} strokeWidth={2.2} />
                         </button>
