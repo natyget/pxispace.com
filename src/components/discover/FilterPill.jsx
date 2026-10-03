@@ -35,6 +35,18 @@ function useDismiss(ref, active, onClose) {
   }, [ref, active, onClose]);
 }
 
+// What the city button shows. The menu keeps the full names; the pill itself stays short so it
+// never grows or shrinks and shove sort and search sideways.
+const CITY_SHORT = {
+  'new york city': 'NYC',
+  'new york': 'NYC',
+  'los angeles': 'LA',
+  'san francisco': 'SF',
+  'washington dc': 'DC',
+  'washington, dc': 'DC',
+};
+const shortCity = (name) => CITY_SHORT[String(name).trim().toLowerCase()] || name;
+
 function Menu({ id, label, children, className = '' }) {
   return (
     <div id={id} role="listbox" aria-label={label} className={`dsc-menu ${className}`}>
@@ -152,7 +164,7 @@ export default function FilterPill({
       <div className="dsc-pop">
         <button
           type="button"
-          className="dsc-pill-sel"
+          className="dsc-pill-sel dsc-pill-sel-time"
           aria-haspopup="listbox"
           aria-expanded={menu === 'time'}
           aria-label={`Time: ${timeLabel}`}
@@ -184,13 +196,14 @@ export default function FilterPill({
       <div className="dsc-pop dsc-pop-r">
         <button
           type="button"
-          className="dsc-pill-sel"
+          className="dsc-pill-sel dsc-pill-sel-city"
+          title={cityLabel === 'All' ? undefined : cityLabel}
           aria-haspopup="listbox"
           aria-expanded={menu === 'city'}
           aria-label={`City: ${cityLabel}`}
           onClick={() => setMenu((m) => (m === 'city' ? null : 'city'))}
         >
-          <span className="dsc-pill-val">{cityLabel === 'All' ? 'City' : cityLabel}</span>
+          <span className="dsc-pill-val">{cityLabel === 'All' ? 'City' : shortCity(cityLabel)}</span>
           <HugeiconsIcon icon={ArrowDown01Icon} size={14} strokeWidth={2.6} />
         </button>
         {menu === 'city' ? (

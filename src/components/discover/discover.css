@@ -142,7 +142,23 @@
 }
 .dsc-pill-sel:hover,
 .dsc-pill-sel[aria-expanded='true'] { background: rgba(255, 255, 255, 0.08); }
-.dsc-pill-sel svg { opacity: 0.7; }
+.dsc-pill-sel svg { opacity: 0.7; flex: none; }
+/* Time and City are fixed-width so picking a value never moves sort and search. The value
+   truncates with an ellipsis; the city button shows the short form (NYC) anyway. */
+.dsc-pill-sel-time { width: 7.8rem; }
+.dsc-pill-sel-city { width: 6.4rem; }
+/* on a phone the row is tight: both give way together, by the same rule, whatever they show */
+.dsc-pop:has(> .dsc-pill-sel-time),
+.dsc-pop:has(> .dsc-pill-sel-city) { flex: 0 1 auto; min-width: 0; }
+.dsc-pill-sel-time,
+.dsc-pill-sel-city { flex: 0 1 auto; min-width: 0; }
+@media (max-width: 480px) {
+  .dsc-pill { padding-left: 16px; }
+  .dsc-pill-sel { font-size: 1.02rem; padding: 10px 6px; }
+  .dsc-pill-lbl + .dsc-pop + .dsc-pill-lbl { margin-left: 6px; }
+}
+.dsc-pill-sel-time .dsc-pill-val,
+.dsc-pill-sel-city .dsc-pill-val { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: left; }
 .dsc-pill-fill { flex: 1 1 0; min-width: 4px; }
 .dsc-pill-sep { width: 1px; height: 26px; margin: 0 6px; background: rgba(255, 255, 255, 0.14); }
 .dsc-pill-btn {
