@@ -404,7 +404,8 @@ const Events = ({ detailBasePath = '/events' }) => {
                   label: ticketCtaLabel(previewEvent),
                   onClick: () => {
                     setPreviewEvent(null);
-                    router.push(`${String(detailBasePath).replace(/\/$/, '')}/${previewEvent.id}`);
+                    // Always the new event page (the app's event view), never the legacy /events-old detail.
+                    router.push(`/events/${previewEvent.id}`);
                   },
                 }
               : null
