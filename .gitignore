@@ -56,3 +56,6 @@ CLAUDE.md
 
 # PXI-WEB browser QA inputs and screenshots (tokens live here — never commit)
 scripts/qa/.artifacts/
+
+# local recovery folder
+/.restore-from-transcripts
