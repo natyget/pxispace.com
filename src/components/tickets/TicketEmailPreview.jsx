@@ -14,7 +14,8 @@ import {
 } from '@/lib/ticketEmailPreview';
 
 const HEADER_LOGO = '/ticket-email/nobglogo_128x128.png';
-const QR_LOGO = '/ticket-email/logo_128x128.png';
+// The round mark in a white circle cut out of the QR's middle (error level H covers it), like the email.
+const QR_LOGO = '/ticket-email/qr-logo.png';
 
 /** Dark purple nuggets + edge vignette (upper band + QR zone). */
 const FIRE_NUGGET_OVERLAY_STYLE = {
@@ -131,16 +132,13 @@ export default function TicketEmailPreview({ preview, className = '', compact = 
           </div>
 
           <div className="flex flex-col items-center shrink-0">
-            <div className={`rounded-2xl bg-white ${compact ? 'p-1.5' : 'p-2.5'}`}>
-              <QRCode
-                value={preview.qrValue}
-                size={qrSize}
-                color="#000000"
-                bgColor="#ffffff"
-                icon={QR_LOGO}
-                iconSize={Math.round(qrSize * 0.25)}
-                bordered={false}
-              />
+            <div className={`relative rounded-2xl bg-white ${compact ? 'p-1.5' : 'p-2.5'}`}>
+              <QRCode value={preview.qrValue} size={qrSize} color="#000000" bgColor="#ffffff" errorLevel="H" bordered={false} />
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden="true">
+                <span className="flex items-center justify-center rounded-full bg-white" style={{ padding: Math.max(2, Math.round(qrSize * 0.016)) }}>
+                  <img src={QR_LOGO} alt="" width={Math.round(qrSize * 0.26)} height={Math.round(qrSize * 0.26)} className="block" />
+                </span>
+              </span>
             </div>
             <p
               className={`font-medium tracking-widest text-white/45 uppercase ${
