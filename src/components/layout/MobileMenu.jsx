@@ -30,6 +30,7 @@ const handle = (u) => (u?.username ? `@${u.username}` : u?.email || '');
  *   onSignOut?: () => void,
  *   LinkComponent?: any,
  *   desktopMin?: number,   // px width at which the hamburger disappears and the sheet closes
+ *   links?: { page: string, href: string, label: string }[],  // replaces Home / Platform / About (the dashboard lists its own pages)
  * }} props
  */
 export default function MobileMenu({ open, ...rest }) {
@@ -37,7 +38,7 @@ export default function MobileMenu({ open, ...rest }) {
   return open ? <Sheet {...rest} /> : null;
 }
 
-function Sheet({ onClose, page, linkHref, user = null, loginHref = '/login', onSignOut, LinkComponent = 'a', desktopMin = 861 }) {
+function Sheet({ onClose, page, linkHref, user = null, loginHref = '/login', onSignOut, LinkComponent = 'a', desktopMin = 861, links = MENU_LINKS }) {
   const [outPop, setOutPop] = useState(false);
   const A = LinkComponent;
   const href = (l) => (linkHref ? linkHref(l) : l.href);
@@ -57,12 +58,14 @@ function Sheet({ onClose, page, linkHref, user = null, loginHref = '/login', onS
     };
   }, [onClose, desktopMin]);
 
-  const n = MENU_LINKS.length;
+  const n = links.length;
+  // a long list (the dashboard's pages) is set smaller and scrolls, so the account row stays in reach
+  const compact = links !== MENU_LINKS;
   return (
     <div className="pxm" id="mnav" role="dialog" aria-modal="true" aria-label="Menu" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="pxm-in">
-        <nav className="pxm-links" aria-label="Mobile">
-          {MENU_LINKS.map((l, i) => (
+        <nav className={compact ? 'pxm-links pxm-compact' : 'pxm-links'} aria-label="Mobile">
+          {links.map((l, i) => (
             <A key={l.page} href={href(l)} style={{ '--i': i }} className={l.page === page ? 'on' : undefined} aria-current={l.page === page ? 'page' : undefined} onClick={onClose}>
               <span>{l.label}</span>
               <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
