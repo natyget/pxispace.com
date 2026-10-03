@@ -24,7 +24,7 @@ export const runtime = 'nodejs';
 
 const ORANGE = '#FF5A1F';
 const SHEET = '#1C1C1C';
-const BAND = 'rgba(0,0,0,0.7)';
+const BAND = 'rgba(0,0,0,0.88)';
 const WIDTH = 1200;
 const HEIGHT = 630;
 const IMAGE_TYPES = /^image\/(png|jpe?g|gif)/i;
