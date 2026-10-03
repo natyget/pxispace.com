@@ -47,7 +47,10 @@ export async function generateMetadata({ params }) {
       canonical: `${site}/album/${id}`,
       title: eventName,
       description,
-      ogImage: resolveShareOgImage(site, album.ogImageUrl, album.coverImage),
+      // The app's invite card (/og/event): the cover with one flat band for the name, day and venue.
+      ogImage: `${site}/og/event?album=${encodeURIComponent(String(id))}`,
+      ogWidth: 1200,
+      ogHeight: 630,
       ogAlt: eventName,
     });
   } catch (error) {
