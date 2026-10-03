@@ -38,7 +38,7 @@ export default function CreateEventSlideOver({ open, onClose }) {
             onClose={onClose}
             title="Create event"
             maxWidth="max-w-4xl"
-            className="max-h-[calc(100vh-2rem)] overflow-y-auto"
+            className="max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden"
         >
             <CreateEventPage embedded onCancel={onClose} onCreated={onClose} />
         </Modal>
