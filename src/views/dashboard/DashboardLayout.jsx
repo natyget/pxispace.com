@@ -542,6 +542,26 @@ export default function DashboardLayout({ children }) {
                         <HugeiconsIcon icon={menuOpen ? Cancel01Icon : Menu01Icon} size={22} />
                     </button>
                     <img src="/logo-mark.png" alt="PXI" className="h-[38px] w-auto object-contain" />
+                    {rolesReady && canAccessAdminDashboard(user) && (
+                        <div
+                            className="ml-auto flex rounded-full bg-pxi-field p-0.5"
+                            role="group"
+                            aria-label="Switch between platform admin and workspace dashboard"
+                        >
+                            {[['admin', 'ADMIN'], ['user', 'WORKSPACE']].map(([mode, label]) => (
+                                <button
+                                    key={mode}
+                                    type="button"
+                                    onClick={() => setAdminSidebarModeAndNavigate(mode)}
+                                    className={`rounded-full px-3 py-1.5 text-[11px] font-bold tracking-wide transition-colors ${
+                                        adminSidebarMode === mode ? 'bg-pxi-purple text-white' : 'text-white/50'
+                                    }`}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </header>
 
                 <MobileMenu

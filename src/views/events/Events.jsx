@@ -41,6 +41,8 @@ function toEventDetailsModalEvent(event) {
       : null,
     memberCount: event.members > 0 ? event.members : undefined,
     playlist: { spotifyPlaylistUrl: event.spotifyPlaylistUrl, spotifyTopTrackUrl: event.spotifyTopTrackUrl },
+    topSong: event.topSong ?? undefined,
+    topSongArtworkUrl: event.topSongArtworkUrl ?? undefined,
   };
 }
 
@@ -113,6 +115,8 @@ const normalizeApiEvent = (e) => {
     ticketType: e.ticketType ?? null,
     spotifyPlaylistUrl: e.spotifyPlaylistUrl ?? null,
     spotifyTopTrackUrl: e.spotifyTopTrackUrl ?? null,
+    topSong: e.topSong ?? null,
+    topSongArtworkUrl: e.topSongArtworkUrl ?? null,
   };
 };
 
