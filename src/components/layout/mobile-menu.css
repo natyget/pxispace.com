@@ -1,0 +1,29 @@
+/* The shared phone menu (MobileMenu.jsx). Flat: solid surfaces, no glow, no gradient. */
+.pxm { position: fixed; inset: 0; z-index: 49; display: flex; flex-direction: column; padding: calc(84px + env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom)); background: #050505; overscroll-behavior: contain; animation: pxm-fade .3s ease-out; }
+@keyframes pxm-fade { from { opacity: 0; } }
+@keyframes pxm-rise { from { opacity: 0; transform: translateY(18px); } }
+.pxm-in { display: flex; flex-direction: column; justify-content: space-between; flex: 1; min-height: 0; max-width: 520px; width: 100%; margin: 0 auto; }
+.pxm-links { display: flex; flex-direction: column; }
+.pxm-links a { display: flex; align-items: center; justify-content: space-between; padding: 18px 2px; border-bottom: 1px solid rgba(255, 255, 255, .08); font: 700 clamp(2rem, 9vw, 2.6rem)/1 var(--font-heading, "Stack Sans Notch", "Inter", system-ui, sans-serif); letter-spacing: -.03em; text-transform: none; color: rgba(255, 255, 255, .72); animation: pxm-rise .55s cubic-bezier(.22, 1, .36, 1) both; animation-delay: calc(var(--i) * 55ms + 60ms); }
+.pxm-links a svg { color: rgba(255, 255, 255, .35); }
+.pxm-links a.on { color: #fff; }
+.pxm-links a.on svg { color: #A523EF; }
+.pxm-bottom { display: flex; flex-direction: column; gap: 10px; animation: pxm-rise .55s cubic-bezier(.22, 1, .36, 1) both; animation-delay: calc(var(--i) * 55ms + 60ms); }
+.pxm-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pxm-pair > a { display: flex; align-items: center; justify-content: center; min-width: 0; height: 54px; border-radius: 999px; background: #1b1b1d; font: 600 16px/1 system-ui, -apple-system, "Inter", sans-serif; color: #fff; white-space: nowrap; }
+.pxm-pair > a:active { background: #242427; }
+.pxm-pair > .pxm-primary,
+.pxm-me .pxm-primary { background: #fff; color: #050505; }
+.pxm-me { display: flex; align-items: center; gap: 10px; }
+.pxm-me .pxm-primary { display: flex; flex: 1; align-items: center; justify-content: center; height: 54px; border-radius: 999px; font: 600 16px/1 system-ui, -apple-system, "Inter", sans-serif; }
+.pxm-av { position: relative; flex-shrink: 0; }
+.pxm-av > button { display: block; border-radius: 50%; }
+.pxm-av > button img { display: block; }
+.pxm-out { position: absolute; left: 0; bottom: calc(100% + 12px); min-width: 180px; padding: 8px; border-radius: 18px; background: #18181b; }
+.pxm-out small { display: block; padding: 6px 10px 8px; font: 500 12px/1.2 system-ui, sans-serif; color: #71717a; }
+.pxm-out button { display: block; width: 100%; height: 44px; padding: 0 10px; border-radius: 12px; text-align: left; font: 600 16px/1 system-ui, sans-serif; color: #ffb08f; }
+.pxm-out button:active { background: rgba(255, 255, 255, .06); }
+/* a long list of links (dashboard pages): smaller type, scrolls inside the sheet */
+.pxm-links.pxm-compact { min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin-bottom: 14px; }
+.pxm-links.pxm-compact a { padding: 13px 2px; font-size: clamp(1.3rem, 6vw, 1.6rem); }
+@media (prefers-reduced-motion: reduce) { .pxm, .pxm-links a, .pxm-bottom { animation: none; } }

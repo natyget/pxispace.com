@@ -5,9 +5,10 @@
 // menu is rendered here too so it always matches that state. Links are plain <a> on purpose:
 // every page switch is a full load, so each page's scene script starts from a clean document.
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import UserAvatar from '@/components/ui/UserAvatar';
+import MobileMenu from '@/components/layout/MobileMenu';
 
 const LINKS = [
   { page: 'home', href: '/', label: 'Home' },
@@ -44,9 +45,9 @@ export default function SiteNav({ page }) {
   const [mounted, setMounted] = useState(false);
   const [sheet, setSheet] = useState(false);
   const [menu, setMenu] = useState(false);
-  const [outPop, setOutPop] = useState(false);
   const meRef = useRef(null);
   const btnRef = useRef(null);
+  const closeSheet = useCallback(() => setSheet(false), []);
   const signedIn = mounted && Boolean(auth.isAuthenticated && auth.user);
 
   useEffect(() => {
@@ -130,54 +131,21 @@ export default function SiteNav({ page }) {
             <a className="nav-login" href={LOGIN[page]} style={mounted ? undefined : { visibility: 'hidden' }}>Log in</a>
           )}{' '}
           <a className="nav-events" href="/events">Events</a>{' '}
-          <button ref={btnRef} className="nav-menu" type="button" aria-label={sheet ? 'Close menu' : 'Open menu'} aria-expanded={sheet} aria-controls="mnav" onClick={() => { setOutPop(false); setSheet((v) => !v); }}>
+          <button ref={btnRef} className="nav-menu" type="button" aria-label={sheet ? 'Close menu' : 'Open menu'} aria-expanded={sheet} aria-controls="mnav" onClick={() => setSheet((v) => !v)}>
             <span className="nm-bars" aria-hidden="true"><i></i><i></i></span>
           </button>
         </div>
       </header>
 
-      {sheet ? (
-        <div className="mnav in" id="mnav" role="dialog" aria-modal="true" aria-label="Menu" onClick={(e) => { if (e.target === e.currentTarget) setSheet(false); }}>
-          <div className="mnav-in">
-            <nav className="mnav-links" aria-label="Mobile">
-              {LINKS.map((l, i) => (
-                <a key={l.page} href={linkHref(l)} style={{ '--i': i }} className={l.page === page ? 'on' : undefined} aria-current={l.page === page ? 'page' : undefined} onClick={() => setSheet(false)}>
-                  <span>{l.label}</span>
-                  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                </a>
-              ))}
-            </nav>
-            {signedIn ? (
-              <>
-                {/* signed in: two quiet rows, then your avatar (tap for Log out) beside Events */}
-                <nav className="mnav-sub" aria-label="Your account" style={{ '--i': LINKS.length }}>
-                  <a href="/dashboard">Dashboard</a>
-                  <a href="/wishlist">Wishlist</a>
-                </nav>
-                <div className="mnav-bottom" style={{ '--i': LINKS.length + 1 }}>
-                  <div className="mnav-av">
-                    <button type="button" aria-label={`Account: ${auth.user.name || firstName(auth.user)}`} aria-expanded={outPop} onClick={() => setOutPop((v) => !v)}>
-                      <UserAvatar user={auth.user} size={44} alt="" />
-                    </button>
-                    {outPop ? (
-                      <div className="mnav-out" role="menu">
-                        <small>{handle(auth.user) || firstName(auth.user)}</small>
-                        <button type="button" role="menuitem" onClick={signOut}>Log out</button>
-                      </div>
-                    ) : null}
-                  </div>
-                  <a className="btn btn-primary" href="/events">Events</a>
-                </div>
-              </>
-            ) : (
-              <div className="mnav-foot" style={{ '--i': LINKS.length }}>
-                <a className="btn btn-secondary" href={LOGIN[page]}>Log in</a>
-                <a className="btn btn-primary" href="/events">Events</a>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : null}
+      <MobileMenu
+        open={sheet}
+        onClose={closeSheet}
+        page={page}
+        linkHref={linkHref}
+        user={signedIn ? auth.user : null}
+        loginHref={LOGIN[page]}
+        onSignOut={signOut}
+      />
     </>
   );
 }

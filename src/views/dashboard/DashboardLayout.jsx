@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -14,6 +14,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { authService, authStorage } from '../../services/auth';
 import { canAccessAdminDashboard } from '@/lib/adminAccess';
 import { isVendorUser } from '@/lib/accountTier';
+import MobileMenu from '@/components/layout/MobileMenu';
 import AccountCardPopover from '@/components/dashboard/AccountCardPopover';
 import SidebarIconTooltip from '@/components/dashboard/SidebarIconTooltip';
 import DashboardModalHost from '@/components/dashboard/DashboardModalHost';
@@ -119,7 +120,7 @@ export default function DashboardLayout({ children }) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const fromMobile = searchParams.get('from') === 'mobile';
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [phoneCheckDone, setPhoneCheckDone] = useState(false);
     const [liveNow, setLiveNow] = useState(0);
@@ -405,21 +406,24 @@ export default function DashboardLayout({ children }) {
         });
     }, [isAdminNav, navItems, sidebarCollapsed]);
 
-    const closeMobileSidebar = () => setSidebarOpen(false);
+    const closeMobileMenu = useCallback(() => setMenuOpen(false), []);
+    // The phone menu is the shared one: the sidebar's pages on top, then Dashboard / Wishlist and the account row.
+    const menuLinks = useMemo(
+        () => navItems.map((item) => ({
+            page: item.key,
+            href: item.path,
+            label: item.label,
+            active: isNavItemActive(pathname, item, searchParams),
+        })),
+        [navItems, pathname, searchParams],
+    );
+    const activeMenuPage = menuLinks.find((l) => l.active)?.page;
 
     return (
         <div className="dashboard-page-surface flex h-screen overflow-hidden">
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 z-40 bg-black/60 md:hidden"
-                    onClick={closeMobileSidebar}
-                />
-            )}
-
             <aside
-                className={`dashboard-sidebar fixed top-0 left-0 z-50 flex h-full flex-col overflow-hidden bg-pxi-surface transition-all duration-300 ease-in-out
-                    ${sidebarCollapsed ? 'md:w-[72px] w-[240px]' : 'w-[240px]'}
-                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:static md:z-auto md:translate-x-0`}
+                className={`dashboard-sidebar hidden h-full flex-col overflow-hidden bg-pxi-surface transition-all duration-300 ease-in-out md:flex
+                    ${sidebarCollapsed ? 'md:w-[72px] w-[240px]' : 'w-[240px]'}`}
             >
                 <div className="flex h-full flex-col justify-between">
                     <div className="flex min-h-0 flex-col">
@@ -438,13 +442,6 @@ export default function DashboardLayout({ children }) {
                                     <img src="/logo-mark.png" alt="PXI" className="absolute inset-0 m-auto h-[38px] w-auto object-contain transition duration-200 group-hover:scale-75 group-hover:opacity-0" />
                                 ) : null}
                                 <HugeiconsIcon icon={sidebarCollapsed ? PanelLeftCloseIcon : PanelLeftOpenIcon} size={sidebarCollapsed ? 26 : 18} className={sidebarCollapsed ? 'opacity-0 transition duration-200 group-hover:opacity-100' : ''} />
-                            </button>
-                            <button
-                                className="ml-auto text-zinc-600 hover:text-zinc-400 md:hidden"
-                                onClick={closeMobileSidebar}
-                                type="button"
-                            >
-                                <HugeiconsIcon icon={Cancel01Icon} size={18} />
                             </button>
                         </div>
 
@@ -497,7 +494,6 @@ export default function DashboardLayout({ children }) {
                                         searchParams={searchParams}
                                         sidebarCollapsed={sidebarCollapsed}
                                         isLiveEvent={hasLiveEvent}
-                                        onNavigate={closeMobileSidebar}
                                     />
                                 </div>
                                 )
@@ -534,16 +530,53 @@ export default function DashboardLayout({ children }) {
             />
 
             <div className="flex min-w-0 flex-1 flex-col">
-                <header className="glass-panel flex items-center gap-4 rounded-none px-5 py-4 md:hidden">
+                <header className={`glass-panel flex items-center gap-4 rounded-none px-5 py-4 md:hidden ${menuOpen ? 'relative z-50 bg-[#050505]' : ''}`}>
                     <button
-                        onClick={() => setSidebarOpen(true)}
+                        onClick={() => setMenuOpen((v) => !v)}
                         className="text-zinc-400 hover:text-white"
                         type="button"
+                        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                        aria-expanded={menuOpen}
+                        aria-controls="mnav"
                     >
-                        <HugeiconsIcon icon={Menu01Icon} size={22} />
+                        <HugeiconsIcon icon={menuOpen ? Cancel01Icon : Menu01Icon} size={22} />
                     </button>
                     <img src="/logo-mark.png" alt="PXI" className="h-[38px] w-auto object-contain" />
+                    {rolesReady && canAccessAdminDashboard(user) && (
+                        <div
+                            className="ml-auto flex rounded-full bg-pxi-field p-0.5"
+                            role="group"
+                            aria-label="Switch between platform admin and workspace dashboard"
+                        >
+                            {[['admin', 'ADMIN'], ['user', 'WORKSPACE']].map(([mode, label]) => (
+                                <button
+                                    key={mode}
+                                    type="button"
+                                    onClick={() => setAdminSidebarModeAndNavigate(mode)}
+                                    className={`rounded-full px-3 py-1.5 text-[11px] font-bold tracking-wide transition-colors ${
+                                        adminSidebarMode === mode ? 'bg-pxi-purple text-white' : 'text-white/50'
+                                    }`}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </header>
+
+                <MobileMenu
+                    open={menuOpen}
+                    onClose={closeMobileMenu}
+                    page={activeMenuPage}
+                    links={menuLinks}
+                    user={rolesReady ? user : null}
+                    LinkComponent={Link}
+                    desktopMin={768}
+                    onSignOut={() => {
+                        closeMobileMenu();
+                        dashboardShellActions.openModal('logoutConfirm');
+                    }}
+                />
 
                 <main className="flex-1 overflow-auto p-6 md:p-8">
                     {children}

@@ -91,6 +91,9 @@ export function buildAlbumEventDetails(album, albumId) {
     lineup,
     participants,
     memberCount: album.memberCount ?? participants.length,
+    // The record's song (the host's own artwork wins over the song's), as the app's event view shows it.
+    topSong: event?.topSong ?? undefined,
+    topSongArtworkUrl: event?.topSongArtworkUrl ?? undefined,
     playlist: event?.id ? { eventId: event.id } : null,
   };
 
