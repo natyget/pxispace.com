@@ -798,6 +798,9 @@ function TicketTiers({ tiers }) {
  * `presentation="sheet"` — full-width sheet, drag-down (touch/pointer) to dismiss (mobile web).
  * `presentation="inline"` — fills its parent with its own scroll region, no portal/scrim/dismiss
  *   (the desktop album page's phone-sized right pane).
+ * `presentation="page"` — the event's own page (/events/:id): a centred phone-width column under
+ *   the site's navbar on desktop, full width on phones; the page scrolls (no inner scroll region),
+ *   the footer sticks to the bottom of the screen, and there is no dismiss or scrim.
  */
 export default function EventDetailsModal({
   open,
@@ -811,24 +814,25 @@ export default function EventDetailsModal({
   const scrimOpacity = useTransform(y, [0, 420], [1, 0], { clamp: true });
 
   const isInline = presentation === 'inline';
+  const isPage = presentation === 'page';
 
   useEffect(() => {
-    // Inline never owns the page — no scroll lock.
-    if (!open || isInline) return undefined;
+    // Inline and page never own the page — no scroll lock.
+    if (!open || isInline || isPage) return undefined;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = '';
     };
-  }, [open, isInline]);
+  }, [open, isInline, isPage]);
 
   useEffect(() => {
-    if (!open || isInline) return undefined;
+    if (!open || isInline || isPage) return undefined;
     const onKey = (e) => {
       if (e.key === 'Escape') onClose?.();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose, isInline]);
+  }, [open, onClose, isInline, isPage]);
 
   useEffect(() => {
     if (open) y.set(0);
@@ -859,7 +863,7 @@ export default function EventDetailsModal({
   const topSong = readTopSong(event);
   const whenSize = when.date.length > 12 ? 20 : 24;
 
-  const canDismiss = !isInline;
+  const canDismiss = !isInline && !isPage;
   // OPEN ALBUM: the caller's own link (events list), else — on the album page itself — the way back to it.
   const openAlbum = secondaryAction || (canDismiss ? { label: 'Open album', onClick: dismiss } : null);
   const mainActionable = primaryAction && !primaryAction.disabled && (primaryAction.href || primaryAction.onClick);
@@ -944,7 +948,7 @@ export default function EventDetailsModal({
   // Deny | Join, flat pills on the sheet: Deny closes the sheet, the main action is the caller's.
   const footer = primaryAction ? (
     <div
-      className="flex shrink-0 gap-3.5 px-[18px] pt-3"
+      className={`flex shrink-0 gap-3.5 px-[18px] pt-3${isPage ? ' sticky bottom-0 z-10' : ''}`}
       style={{ background: SHEET, paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 10px)' }}
       onPointerDown={(e) => e.stopPropagation()}
     >
@@ -969,7 +973,13 @@ export default function EventDetailsModal({
     </div>
   ) : null;
 
-  const content = (
+  const content = isPage ? (
+    <>
+      {header}
+      <div className="flex-1">{body}</div>
+      {footer}
+    </>
+  ) : (
     <>
       {header}
       <div
@@ -995,6 +1005,20 @@ export default function EventDetailsModal({
         style={{ background: SHEET, fontFamily: BODY_FONT, borderRadius: RADIUS_PX }}
       >
         {content}
+      </div>
+    );
+  }
+
+  // `presentation="page"` — the route's own content: the document scrolls, the column is centred.
+  if (isPage) {
+    return (
+      <div className="min-h-screen bg-black pt-[var(--public-navbar-height)] md:pt-[calc(var(--public-navbar-height)+12px)]">
+        <div
+          className="mx-auto flex min-h-[calc(100vh-var(--public-navbar-height))] w-full max-w-[430px] flex-col md:min-h-[calc(100vh-var(--public-navbar-height)-12px)]"
+          style={sheetStyle}
+        >
+          {content}
+        </div>
       </div>
     );
   }
