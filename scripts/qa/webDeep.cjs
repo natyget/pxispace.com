@@ -33,16 +33,21 @@ const UNSEEDED = process.env.UNSEEDED || 'http://localhost:5173';
 const OUT = process.env.PXI_QA_DIR || path.join(__dirname, '.artifacts');
 const SHOTS = path.join(OUT, 'deep');
 
-const ORGANIZER = { email: 'pxiqa.relay.tester@example.com', password: 'RelayQa2026Test!' };
+const ORGANIZER = { email: 'pxiqa.relay.tester@example.com', password: process.env.QA_ORGANIZER_PASSWORD };
 const CITIZEN = {
     email: 'pxiqa.web.citizen@example.com',
-    password: 'WebCitizen2026Qa!',
+    password: process.env.QA_CITIZEN_PASSWORD,
     username: 'qa_web_citizen',
 };
 // An event created by somebody else, for the refusal cases.
 const FOREIGN_EVENT = '809ce876-c6c8-43f6-9db3-9404a3e5960b';
 
 fs.mkdirSync(SHOTS, { recursive: true });
+
+if (!ORGANIZER.password || !CITIZEN.password) {
+    console.error('Set QA_ORGANIZER_PASSWORD and QA_CITIZEN_PASSWORD (the two QA accounts) to run this.');
+    process.exit(1);
+}
 
 let pass = 0;
 let fail = 0;
