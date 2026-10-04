@@ -82,7 +82,7 @@ function fromDatetimeLocalValue(v) {
   return new Date(v);
 }
 
-export default function CreateEventPage({ embedded = false, onCancel, onCreated }) {
+function CreateEventForm({ embedded = false, onCancel, onCreated }) {
   const router = useRouter();
   const { user, updateUser } = useAuth();
   const { invalidate } = useEvents({ limit: 100, offset: 0 });
@@ -671,7 +671,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
   // App look: one #1C1C1C panel, groups separated by space (no boxes), purple small-caps labels
   // over flat #2E2E2E fields (16px radius, a 1.5px purple ring on focus).
   const inputClass =
-    'glass-field min-h-[44px] w-full rounded-2xl px-4 py-3 text-sm text-white';
+    'glass-field min-h-[44px] w-full min-w-0 max-w-full rounded-2xl px-4 py-3 text-sm text-white';
   const labelClass = 'mb-1.5 block text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple';
   const sectionClass = '';
   const footerClass = 'pt-2';
@@ -721,7 +721,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
         </div>
       </div>
     )}
-    <div className={`${embedded ? 'space-y-6 pb-6' : 'max-w-4xl mx-auto space-y-6 pb-16'}`}>
+    <div className={`min-w-0 ${embedded ? 'max-w-full space-y-6 pb-6' : 'max-w-4xl mx-auto space-y-6 pb-16'}`}>
       {!embedded && (
         <div className="flex items-center gap-3">
           <Link
@@ -801,7 +801,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             {venuesLoading ? (
               <div className="h-16 animate-pulse rounded-2xl bg-pxi-field" />
             ) : venues.length ? (
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 [&>*]:min-w-0">
                 <button
                   type="button"
                   onClick={() => setSelectedVenueId(null)}
@@ -863,7 +863,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               </GeoapifyContext>
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 [&>*]:min-w-0">
             <div>
               <label className={labelClass}>Venue name</label>
               <input
@@ -1057,12 +1057,12 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               </div>
             </div>
           ) : null}
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 [&>*]:min-w-0">
             <div>
               <label className={labelClass}>Start *</label>
               <input
                 type="datetime-local"
-                className={inputClass}
+                className={`${inputClass} [&::-webkit-date-and-time-value]:min-w-0 [&::-webkit-date-and-time-value]:text-left`}
                 value={startLocal}
                 onChange={(e) => setStartLocal(e.target.value)}
                 required
@@ -1072,7 +1072,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
               <label className={labelClass}>End *</label>
               <input
                 type="datetime-local"
-                className={inputClass}
+                className={`${inputClass} [&::-webkit-date-and-time-value]:min-w-0 [&::-webkit-date-and-time-value]:text-left`}
                 value={endLocal}
                 onChange={(e) => setEndLocal(e.target.value)}
                 required
@@ -1187,7 +1187,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
                           placeholder="e.g. VIP"
                         />
                       </div>
-                      <div className="grid sm:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 [&>*]:min-w-0">
                         <div>
                           <label className={labelClass}>Capacity</label>
                           <input
@@ -1251,7 +1251,7 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
             </>
           )}
 
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 [&>*]:min-w-0">
             <div>
               <label className={labelClass}>Grace period after event</label>
               <div className="flex items-center gap-2">
@@ -1505,4 +1505,28 @@ export default function CreateEventPage({ embedded = false, onCancel, onCreated 
     </div>
     </>
   );
+}
+
+/* The form never renders for a signed-out visitor: they get the sign-in page first and are sent
+   back here afterwards. Middleware already does this for a missing cookie; this covers a session
+   the browser has lost (cleared storage, expired token) while the cookie lingers. */
+export default function CreateEventPage(props) {
+  const router = useRouter();
+  const { isAuthenticated, authReady } = useAuth();
+  const signedOut = authReady && !isAuthenticated;
+
+  useEffect(() => {
+    if (!signedOut) return;
+    const back = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/dashboard/events/new';
+    router.replace(`/login?redirect=${encodeURIComponent(back)}`);
+  }, [signedOut, router]);
+
+  if (!authReady || signedOut) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center" aria-busy="true">
+        <PxiSpinner />
+      </div>
+    );
+  }
+  return <CreateEventForm {...props} />;
 }

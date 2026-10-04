@@ -5,12 +5,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Cancel01Icon, LinkForwardIcon, Navigation03Icon, Tick02Icon } from '@hugeicons/core-free-icons';
+import { Cancel01Icon, LinkForwardIcon, Navigation03Icon, PauseIcon, PlayIcon, Tick02Icon } from '@hugeicons/core-free-icons';
 import UserAvatar from '@/components/ui/UserAvatar';
 import Portal from '@/components/ui/Portal';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { spotifyEmbedSrc } from '@/lib/spotify';
 import { musicService } from '@/services/music';
+import { previewSrc, useSongPreview } from '@/lib/songPreview';
 
 /*
  * The app's event view (pxi-mobile-app/src/components/event), on the web: a flat #1C1C1C sheet with
@@ -440,7 +441,7 @@ function HostBubble({ host, hostName, about }) {
 }
 
 /** "<N> MEMBERS", a row of round avatars (the last one "+N" past five), and the WHO'S GOING caption. */
-function MembersBlock({ count, participants, canJoin }) {
+function MembersBlock({ count, participants }) {
   const overflowing = count > 5;
   const shown = participants.slice(0, overflowing ? 4 : 5);
   const extra = overflowing ? count - shown.length : 0;
@@ -462,7 +463,7 @@ function MembersBlock({ count, participants, canJoin }) {
             </div>
           ) : null}
         </div>
-      ) : canJoin ? (
+      ) : count === 0 ? (
         <p className="mt-4 text-center text-[13px] font-semibold text-white/55">Be the first to join.</p>
       ) : null}
       <p
@@ -475,13 +476,20 @@ function MembersBlock({ count, participants, canJoin }) {
   );
 }
 
-/** A flat spinning record: grooves and the label turn, the disc stays put (reduced motion: it sits still). */
-function Vinyl({ size = 152, artwork }) {
+/**
+ * A flat spinning record: grooves and the label turn, the disc stays put (reduced motion: it sits still).
+ * With `onToggle` it is the song's play button: a flat 55% black circle on the label shows play or pause.
+ */
+function Vinyl({ size = 152, artwork, playing = false, onToggle }) {
   const label = Math.round(size * 0.37);
   const hole = Math.max(5, Math.round(size * 0.04));
   const rings = [0.96, 0.89, 0.82, 0.75, 0.68, 0.61, 0.54];
+  const Wrapper = onToggle ? 'button' : 'div';
+  const wrapperProps = onToggle
+    ? { type: 'button', onClick: onToggle, 'aria-pressed': playing, 'aria-label': playing ? 'Pause the song' : 'Play the song' }
+    : { 'aria-hidden': true };
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }} aria-hidden="true">
+    <Wrapper className="relative shrink-0 rounded-full" style={{ width: size, height: size }} {...wrapperProps}>
       <div className="absolute inset-0 animate-[spin_9s_linear_infinite] overflow-hidden rounded-full bg-[#0A0A0C] motion-reduce:animate-none">
         <svg className="absolute inset-0" viewBox="0 0 100 100">
           {rings.map((r, i) => (
@@ -512,17 +520,41 @@ function Vinyl({ size = 152, artwork }) {
           style={{ width: hole, height: hole }}
         />
       </div>
-    </div>
+      {onToggle ? (
+        <span className="absolute left-1/2 top-1/2 flex size-[38px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white">
+          <HugeiconsIcon icon={playing ? PauseIcon : PlayIcon} size={17} strokeWidth={2.2} />
+        </span>
+      ) : null}
+    </Wrapper>
   );
 }
 
-/** Music block: the record beside the match / provider line and the purple playlist links. */
-function MusicSection({ playlist, cover }) {
+/** The event's top song ({ title, artist, artworkUrl }); `topSongArtworkUrl`, the art the host uploaded, wins over the song's own. */
+function readTopSong(event) {
+  const raw = event?.topSong;
+  if (!raw || typeof raw !== 'object') return null;
+  const title = typeof raw.title === 'string' ? raw.title.trim() : '';
+  if (!title) return null;
+  const artist = typeof raw.artist === 'string' ? raw.artist.trim() : '';
+  const hostArt = typeof event?.topSongArtworkUrl === 'string' ? event.topSongArtworkUrl.trim() : '';
+  const artwork = hostArt || (typeof raw.artworkUrl === 'string' ? raw.artworkUrl.trim() : '');
+  return { title, artist, artwork: artwork ? displayImageSrc(artwork, null) : null, previewUrl: previewSrc(raw.previewUrl) };
+}
+
+/**
+ * Music block (the app's MusicBlock): the record beside the top song and its artist — or the
+ * match / provider line when there is no song — and the purple playlist links, each with its sleeve.
+ */
+function MusicSection({ playlist, cover, topSong }) {
   const eventId = playlist?.eventId || null;
   const [playlists, setPlaylists] = useState([]);
   const [averageScore, setAverageScore] = useState(null);
   const [matchDetail, setMatchDetail] = useState(null);
   const [loaded, setLoaded] = useState(false);
+  // The record plays the song's ~30 s preview from a tap (the app pops it on Discover); it stops on close.
+  const preview = useSongPreview();
+  const songSrc = topSong?.previewUrl || null;
+  const songPlaying = Boolean(songSrc) && preview.playingSrc === songSrc;
 
   useEffect(() => {
     if (!eventId) return undefined;
@@ -545,52 +577,59 @@ function MusicSection({ playlist, cover }) {
     };
   }, [eventId]);
 
-  if (eventId) {
-    if (!loaded || playlists.length === 0) return null;
+  if (eventId || topSong) {
+    // The block hides when the event has no song and no playlists (the app's `music: null`).
+    if (!topSong && (!loaded || playlists.length === 0)) return null;
     const hasMatch = averageScore != null && averageScore > 0;
-    const primary = hasMatch ? `${averageScore}% match` : playlists.length > 1 ? 'Playlists' : 'Playlist';
-    const secondary = hasMatch
-      ? 'with your taste'
-      : Array.from(new Set(playlists.map((p) => PROVIDER_LABEL[p.provider] || p.provider))).join(' · ');
+    const primary = topSong
+      ? topSong.title
+      : hasMatch
+        ? `${averageScore}% match`
+        : playlists.length > 1
+          ? 'Playlists'
+          : 'Playlist';
+    const secondary = topSong
+      ? topSong.artist
+      : hasMatch
+        ? 'with your taste'
+        : Array.from(new Set(playlists.map((p) => PROVIDER_LABEL[p.provider] || 'Playlist'))).join(' · ');
     const visible = playlists.slice(0, 4);
     const hidden = playlists.length - visible.length;
     const matched = matchDetail?.matchedArtists || [];
     return (
       <section className="mt-[26px] px-[29px]" aria-label="Music">
         <div className="flex items-center gap-3.5">
-          <Vinyl size={152} artwork={cover} />
+          <Vinyl
+            size={152}
+            artwork={topSong?.artwork || cover}
+            playing={songPlaying}
+            onToggle={songSrc ? () => (songPlaying ? preview.stop() : preview.start(songSrc)) : undefined}
+          />
           <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
             <p className="line-clamp-2 text-[20px] font-extrabold leading-[1.15] tracking-[-0.2px] text-white">{primary}</p>
             {secondary ? <p className="line-clamp-2 text-[13px] font-bold text-white">{secondary}</p> : null}
-            <ul className="mt-3 flex w-full flex-col items-center gap-[7px]">
-              {visible.map((row) => {
-                const meta = [
-                  PROVIDER_LABEL[row.provider] || row.provider,
-                  row.trackCount != null ? `${row.trackCount} tracks` : null,
-                  row.matchScore != null && row.matchScore > 0 ? `${row.matchScore}%` : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ');
-                const genres = Array.isArray(row.topGenres) ? row.topGenres.slice(0, 4).join(', ') : '';
-                return (
-                  <li key={row.id || row.sourceUrl} className="flex w-full min-w-0 flex-col items-center">
-                    <a
-                      href={row.shareToken ? `/playlist/${row.shareToken}` : row.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="max-w-full truncate text-[15px] font-black leading-[18px] transition-colors hover:text-white"
-                      style={{ color: PURPLE }}
-                    >
-                      {row.ownerLabel ? `${row.ownerLabel} · ` : ''}
-                      {row.title || 'Untitled playlist'}
-                    </a>
-                    {meta ? <span className="max-w-full truncate text-[10px] font-bold uppercase tracking-[0.08em] text-white/45">{meta}</span> : null}
-                    {genres ? <span className="max-w-full truncate text-[10px] font-semibold text-white/45">{genres}</span> : null}
-                  </li>
-                );
-              })}
-              {hidden > 0 ? <li className="mt-0.5 text-[12px] font-bold text-white/55">+{hidden} more</li> : null}
-            </ul>
+            {visible.length > 0 || hidden > 0 ? (
+              <ul className="mt-3 flex w-full flex-col items-center gap-[3px]">
+                {visible.map((row) => {
+                  const sleeve = row.coverUrl ? displayImageSrc(row.coverUrl, null) : null;
+                  return (
+                    <li key={row.id || row.sourceUrl} className="flex max-w-full min-w-0 items-center justify-center gap-1.5">
+                      {sleeve ? <Image src={sleeve} alt="" width={18} height={18} unoptimized className="size-[18px] shrink-0 rounded-[4px] bg-[#2E2E2E] object-cover" /> : null}
+                      <a
+                        href={row.shareToken ? `/playlist/${row.shareToken}` : row.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="min-w-0 truncate text-[15px] font-black leading-[18px] transition-colors hover:text-white"
+                        style={{ color: PURPLE }}
+                      >
+                        {row.title || 'Untitled playlist'}
+                      </a>
+                    </li>
+                  );
+                })}
+                {hidden > 0 ? <li className="mt-0.5 text-[12px] font-bold text-white/55">+{hidden} more</li> : null}
+              </ul>
+            ) : null}
           </div>
         </div>
         {matched.length > 0 ? (
@@ -626,7 +665,7 @@ function MusicSection({ playlist, cover }) {
   );
 }
 
-/** Line-up circles with names: two per row, an odd last one centred. */
+/** Line-up circles with names: two per row, an odd last one centred (the app's LineupGrid). */
 function LineupGrid({ people }) {
   return (
     <section className="mt-[34px] px-5" aria-label="Line up">
@@ -636,13 +675,10 @@ function LineupGrid({ people }) {
           return (
             <li key={person.id || person.userId || name} className="flex w-1/2 min-w-0 flex-col items-center px-1.5 text-center">
               <UserAvatar user={{ avatarUrl: person.avatarUrl }} size={94} className="shrink-0" />
-              <p className="mt-3.5 line-clamp-2 max-w-full break-words text-[20px] font-extrabold leading-[1.15] tracking-[-0.2px] text-white">
-                {name}
-              </p>
-              {person.name?.trim() && person.username ? (
-                <p className="mt-0.5 max-w-full truncate text-[12px] font-semibold text-white/55">@{person.username}</p>
-              ) : null}
-              {person.role ? <p className={`mt-1 ${CAPS_GREY}`}>{person.role}</p> : null}
+              <div className="mt-3.5 w-full font-extrabold leading-[1.15] tracking-[-0.2px] text-white">
+                <FitLabel max={20}>{name}</FitLabel>
+              </div>
+              {person.role ? <p className={`mt-1 max-w-full truncate ${CAPS_GREY}`}>{person.role}</p> : null}
             </li>
           );
         })}
@@ -754,19 +790,19 @@ function MapCard({ place }) {
   );
 }
 
-/** Web-only: the ticket tiers, as flat rows in the sheet's card grey. */
+/** The ticket tiers, as the app's join sheet draws them: raised #2A2A2C rows, the label and capacity left, the price in PXI orange. */
 function TicketTiers({ tiers }) {
   return (
     <section className="mt-[34px] px-5" aria-label="Ticket tiers">
-      <p className={`pl-[15px] ${CAPS_GREY}`}>Ticket tiers</p>
-      <ul className="mt-3 space-y-2">
+      <p className="text-[12px] font-extrabold uppercase leading-[14px] tracking-[0.4px] text-white">Ticket tier</p>
+      <ul className="mt-2.5 flex flex-col gap-2.5">
         {tiers.map((tier) => (
-          <li key={tier.id || tier.label} className="flex items-center justify-between gap-3 rounded-[22px] bg-[#2A2A2C] px-4 py-3 text-left">
-            <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-bold text-white">{tier.label}</p>
-              {tier.capacity != null ? <p className="mt-0.5 text-[11px] font-semibold text-white/55">Capacity {tier.capacity}</p> : null}
+          <li key={tier.id || tier.label} className="flex items-center gap-3 rounded-[20px] bg-[#2A2A2C] px-4 py-3.5">
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <p className="line-clamp-2 text-[16px] font-extrabold text-white">{tier.label}</p>
+              {tier.capacity != null ? <p className="text-[12px] font-semibold text-white/55">Capacity {tier.capacity}</p> : null}
             </div>
-            <p className="shrink-0 text-[15px] font-extrabold text-white">{tier.priceLabel}</p>
+            <p className="shrink-0 text-[18px] font-black text-[#FF5A1F]">{tier.priceLabel}</p>
           </li>
         ))}
       </ul>
@@ -784,6 +820,9 @@ function TicketTiers({ tiers }) {
  * `presentation="sheet"` — full-width sheet, drag-down (touch/pointer) to dismiss (mobile web).
  * `presentation="inline"` — fills its parent with its own scroll region, no portal/scrim/dismiss
  *   (the desktop album page's phone-sized right pane).
+ * `presentation="page"` — the event's own page (/events/:id): a centred phone-width column under
+ *   the site's navbar on desktop, full width on phones; the page scrolls (no inner scroll region),
+ *   the footer sticks to the bottom of the screen, and there is no dismiss or scrim.
  */
 export default function EventDetailsModal({
   open,
@@ -797,24 +836,25 @@ export default function EventDetailsModal({
   const scrimOpacity = useTransform(y, [0, 420], [1, 0], { clamp: true });
 
   const isInline = presentation === 'inline';
+  const isPage = presentation === 'page';
 
   useEffect(() => {
-    // Inline never owns the page — no scroll lock.
-    if (!open || isInline) return undefined;
+    // Inline and page never own the page — no scroll lock.
+    if (!open || isInline || isPage) return undefined;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = '';
     };
-  }, [open, isInline]);
+  }, [open, isInline, isPage]);
 
   useEffect(() => {
-    if (!open || isInline) return undefined;
+    if (!open || isInline || isPage) return undefined;
     const onKey = (e) => {
       if (e.key === 'Escape') onClose?.();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose, isInline]);
+  }, [open, onClose, isInline, isPage]);
 
   useEffect(() => {
     if (open) y.set(0);
@@ -842,10 +882,10 @@ export default function EventDetailsModal({
   const capsLine = toCapsLine(event);
   const hostName = event.host ? event.host.name || event.host.username || 'Host' : '';
   const memberCount = event.memberCount != null ? event.memberCount : participants.length;
-  const showMembers = participants.length > 0 || event.memberCount != null;
+  const topSong = readTopSong(event);
   const whenSize = when.date.length > 12 ? 20 : 24;
 
-  const canDismiss = !isInline;
+  const canDismiss = !isInline && !isPage;
   // OPEN ALBUM: the caller's own link (events list), else — on the album page itself — the way back to it.
   const openAlbum = secondaryAction || (canDismiss ? { label: 'Open album', onClick: dismiss } : null);
   const mainActionable = primaryAction && !primaryAction.disabled && (primaryAction.href || primaryAction.onClick);
@@ -883,7 +923,7 @@ export default function EventDetailsModal({
         {capsLine ? <p className={`mt-2.5 text-center ${CAPS_GREY}`}>{capsLine}</p> : null}
       </div>
 
-      <div className="relative mx-5 mt-4 aspect-[352/397] overflow-hidden rounded-[40px] bg-[#2A2A2C]" role="img" aria-label="Event cover">
+      <div className="relative mx-5 mt-4 aspect-[352/397] overflow-hidden rounded-[40px] bg-[#2A2A2C]" role="img" aria-label="Album cover">
         {coverSrc ? <Image src={coverSrc} alt="" fill loading="eager" unoptimized className="object-cover" sizes="(max-width: 430px) 100vw, 430px" /> : null}
       </div>
 
@@ -915,11 +955,11 @@ export default function EventDetailsModal({
 
       <HostBubble host={event.host} hostName={hostName} about={event.description} />
 
-      {showMembers ? <MembersBlock count={memberCount} participants={participants} canJoin={!!mainActionable} /> : null}
+      <MembersBlock count={memberCount} participants={participants} />
 
       {hasTicketTiers ? <TicketTiers tiers={event.ticketTiers} /> : null}
 
-      <MusicSection playlist={event.playlist} cover={coverSrc} />
+      <MusicSection playlist={event.playlist} cover={coverSrc} topSong={topSong} />
 
       {hasLineup ? <LineupGrid people={event.lineup} /> : null}
 
@@ -930,7 +970,7 @@ export default function EventDetailsModal({
   // Deny | Join, flat pills on the sheet: Deny closes the sheet, the main action is the caller's.
   const footer = primaryAction ? (
     <div
-      className="flex shrink-0 gap-3.5 px-[18px] pt-3"
+      className={`flex shrink-0 gap-3.5 px-[18px] pt-3${isPage ? ' sticky bottom-0 z-10' : ''}`}
       style={{ background: SHEET, paddingBottom: 'calc(max(env(safe-area-inset-bottom), 14px) + 10px)' }}
       onPointerDown={(e) => e.stopPropagation()}
     >
@@ -955,7 +995,13 @@ export default function EventDetailsModal({
     </div>
   ) : null;
 
-  const content = (
+  const content = isPage ? (
+    <>
+      {header}
+      <div className="flex-1">{body}</div>
+      {footer}
+    </>
+  ) : (
     <>
       {header}
       <div
@@ -981,6 +1027,20 @@ export default function EventDetailsModal({
         style={{ background: SHEET, fontFamily: BODY_FONT, borderRadius: RADIUS_PX }}
       >
         {content}
+      </div>
+    );
+  }
+
+  // `presentation="page"` — the route's own content: the document scrolls, the column is centred.
+  if (isPage) {
+    return (
+      <div className="min-h-screen bg-black pt-[var(--public-navbar-height)] md:pt-[calc(var(--public-navbar-height)+12px)]">
+        <div
+          className="mx-auto flex min-h-[calc(100vh-var(--public-navbar-height))] w-full max-w-[430px] flex-col md:min-h-[calc(100vh-var(--public-navbar-height)-12px)]"
+          style={sheetStyle}
+        >
+          {content}
+        </div>
       </div>
     );
   }

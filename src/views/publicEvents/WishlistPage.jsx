@@ -50,6 +50,9 @@ function normalizeApiEvent(e) {
     hostId: e.createdBy || e.host?.id || null,
     city: resolveEventCity(e)?.name || null,
     value: priceUsd,
+    // The host's song: the event view's record plays its preview.
+    topSong: e.topSong && typeof e.topSong === 'object' ? e.topSong : null,
+    topSongArtworkUrl: e.topSongArtworkUrl || null,
   };
 }
 
