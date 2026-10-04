@@ -14,14 +14,14 @@ function trendIconFor(trend) {
 export function StatRow({ items = [], className = '' }) {
     return (
         <div
-            className={`glass-field grid gap-3 rounded-[1.25rem] p-4 ${className}`.trim()}
+            className={`glass-field grid gap-3 rounded-3xl p-4 ${className}`.trim()}
             style={{ gridTemplateColumns: `repeat(${Math.min(Math.max(items.length, 1), 3)}, minmax(0, 1fr))` }}
         >
             {items.map((item) => (
                 <div key={item.label} className="min-w-0">
-                    <p className="truncate text-[11px] font-medium tracking-[0.02em] text-white/40">{item.label}</p>
-                    <p className="mt-1 truncate text-xl font-bold tracking-normal text-white">{item.value}</p>
-                    {item.detail ? <p className="mt-0.5 truncate text-xs text-zinc-500">{item.detail}</p> : null}
+                    <p className="truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">{item.label}</p>
+                    <p className="mt-1 truncate text-xl font-black tracking-normal text-white">{item.value}</p>
+                    {item.detail ? <p className="mt-0.5 truncate text-xs text-[#9a9a9a]">{item.detail}</p> : null}
                 </div>
             ))}
         </div>
@@ -99,24 +99,24 @@ export default function MetricCard({
     const TrendIcon = trendIconFor(trend);
 
     return (
-        <div className={`glass-panel relative flex min-h-[132px] flex-col justify-between rounded-[1.25rem] ${dense ? 'p-4 md:p-5' : 'p-5 md:p-6'}`}>
+        <div className={`glass-panel relative flex min-h-[132px] flex-col justify-between rounded-3xl ${dense ? 'p-4 md:p-5' : 'p-5 md:p-6'}`}>
             <div className="mb-4 flex items-center justify-between gap-3">
-                <span className="text-[11px] md:text-[12px] font-bold tracking-[0.02em] text-white/40">{title}</span>
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">{title}</span>
                 {actions ? (
                     actions
                 ) : icon ? (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pxi-field">
                         <HugeiconsIcon icon={icon} className="h-4 w-4 text-white opacity-75" />
                     </div>
                 ) : null}
             </div>
             {loading ? (
-                <div className="h-10 w-24 bg-white/5 rounded animate-pulse" />
+                <div className="h-10 w-24 bg-pxi-field rounded animate-pulse" />
             ) : (
                 <div className="mt-auto flex flex-col items-start gap-3">
                     <div className="max-w-full truncate text-2xl font-[900] leading-none tracking-normal text-white">{value}</div>
                     {sparkline ? (
-                        <div className="w-full overflow-hidden rounded-md bg-white/[0.035]">
+                        <div className="w-full overflow-hidden rounded-xl bg-pxi-field">
                             {Array.isArray(sparkline?.points) ? (
                                 <MicroChart
                                     points={sparkline.points}

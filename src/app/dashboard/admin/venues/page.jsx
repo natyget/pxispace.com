@@ -90,7 +90,7 @@ function CreateVenue({ cityScope, onCreated }) {
                 </div>
             </div>
             {error ? <p className="text-[12px] text-red-300">{error}</p> : null}
-            <button type="button" disabled={busy || !form.name.trim()} onClick={submit} className="rounded-full bg-white px-5 py-2 text-[13px] font-bold text-black disabled:opacity-40">
+            <button type="button" disabled={busy || !form.name.trim()} onClick={submit} className="rounded-full bg-pxi-purple px-5 py-2 text-[13px] font-bold text-white disabled:opacity-40 uppercase tracking-[0.08em]">
                 {busy ? 'Adding...' : 'Add venue'}
             </button>
         </AdminPanel>
@@ -157,7 +157,7 @@ function Proposals({ venueId, onChanged }) {
                     {items.map((p) => {
                         const s = p.signalsJson || {};
                         return (
-                            <li key={p.id} className="rounded-xl bg-white/[0.035] px-4 py-3">
+                            <li key={p.id} className="rounded-xl bg-pxi-field px-4 py-3">
                                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                                     <div className="min-w-0">
                                         <p className="truncate text-[14px] font-semibold text-white">{p.event?.name}</p>
@@ -264,7 +264,7 @@ function Claims({ venue, onChanged }) {
                         <ul className="space-y-1">
                             {candidates.map((u) => (
                                 <li key={u.id}>
-                                    <button type="button" onClick={() => setBeneficiary(u)} className="w-full rounded-xl bg-white/[0.03] px-4 py-2 text-left text-[13px] text-white/80 hover:bg-white/[0.06]">
+                                    <button type="button" onClick={() => setBeneficiary(u)} className="w-full rounded-xl bg-pxi-field px-4 py-2 text-left text-[13px] text-white/80 hover:bg-white/[0.06]">
                                         @{u.username || 'account'} <span className="text-white/40">{u.email}</span>
                                     </button>
                                 </li>
@@ -273,7 +273,7 @@ function Claims({ venue, onChanged }) {
                         </ul>
                     ) : null}
                     {beneficiary ? (
-                        <div className="space-y-2 rounded-xl bg-white/[0.03] p-3">
+                        <div className="space-y-2 rounded-xl bg-pxi-field p-3">
                             <p className="text-[13px] text-white/70">Claim for <span className="font-semibold text-white">@{beneficiary.username}</span></p>
                             {!exposure ? (
                                 <button type="button" disabled={busy} onClick={preview} className={pill}>See what this exposes</button>
@@ -287,7 +287,7 @@ function Claims({ venue, onChanged }) {
                                         <input type="checkbox" checked={acknowledged} onChange={(e) => setAcknowledged(e.target.checked)} />
                                         I have checked this account really is the venue.
                                     </label>
-                                    <button type="button" disabled={busy || !acknowledged} onClick={claim} className="rounded-full bg-white px-5 py-2 text-[13px] font-bold text-black disabled:opacity-40">
+                                    <button type="button" disabled={busy || !acknowledged} onClick={claim} className="rounded-full bg-pxi-purple px-5 py-2 text-[13px] font-bold text-white disabled:opacity-40 uppercase tracking-[0.08em]">
                                         Claim venue
                                     </button>
                                 </>
@@ -300,7 +300,7 @@ function Claims({ venue, onChanged }) {
             {claims && claims.length ? (
                 <ul className="space-y-2 pt-2">
                     {claims.map((c) => (
-                        <li key={c.id} className="flex flex-col gap-2 rounded-xl bg-white/[0.035] px-4 py-3 text-[12px] text-white/60 md:flex-row md:items-center md:justify-between">
+                        <li key={c.id} className="flex flex-col gap-2 rounded-xl bg-pxi-field px-4 py-3 text-[12px] text-white/60 md:flex-row md:items-center md:justify-between">
                             <span>
                                 <span className="font-semibold text-white">{c.status}</span> · raised {formatDate(c.raisedAt)} by {c.raisedByRole.toLowerCase().replaceAll('_', ' ')} ·
                                 {' '}{c.exposedEventCount} events, {c.exposedAttendeeCount} people
@@ -422,7 +422,7 @@ export default function AdminVenuesPage() {
                                         <button
                                             type="button"
                                             onClick={() => setSelectedId(v.id)}
-                                            className={`flex w-full items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left ${selectedId === v.id ? 'bg-white/[0.1]' : 'bg-white/[0.03] hover:bg-white/[0.06]'}`}
+                                            className={`flex w-full items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left ${selectedId === v.id ? 'bg-white/[0.1]' : 'bg-pxi-field hover:bg-white/[0.06]'}`}
                                         >
                                             <span className="min-w-0">
                                                 <span className="block truncate text-[14px] font-semibold text-white">{v.name}</span>

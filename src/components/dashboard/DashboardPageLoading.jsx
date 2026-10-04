@@ -3,9 +3,9 @@ export default function DashboardPageLoading({ label = 'Loading workspace' }) {
     <div className="mx-auto flex min-h-[min(640px,calc(100vh-8rem))] max-w-6xl items-center justify-center">
       <div className="dashboard-surface-b w-full max-w-md rounded-[1.25rem] p-6">
         <div className="flex items-center gap-4">
-          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/[0.055]">
+          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-pxi-field">
             <img src="/logo-mark.png" alt="PXI" className="h-9 w-auto object-contain" />
-            <span className="absolute inset-0 rounded-full border border-white/10" />
+            <span className="absolute inset-0 rounded-full" />
           </div>
           <div className="min-w-0">
             <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">PXI</p>

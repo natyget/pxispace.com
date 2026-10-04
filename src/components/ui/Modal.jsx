@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId } from 'react';
+import { X } from 'lucide-react';
 import Portal from './Portal';
 
 /**
@@ -30,18 +31,33 @@ export default function Modal({ open, title, description, onClose, children, foo
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md" onClick={onClose}>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
         {/* Announced as a dialog, named by its title, so screen readers do not read it as page text. */}
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby={title ? titleId : undefined}
           aria-describedby={description ? descriptionId : undefined}
-          className={`dashboard-modal-panel glass-panel-strong w-full ${maxWidth} rounded-2xl p-6 text-white ${className}`.trim()}
+          className={`dashboard-modal-panel w-full ${maxWidth} rounded-[28px] bg-pxi-surface p-6 text-white ${className}`.trim()}
           onClick={(event) => event.stopPropagation()}
         >
-          {title ? <h2 id={titleId} className="text-lg font-black tracking-tight text-white">{title}</h2> : null}
-          {description ? <p id={descriptionId} className="mt-2 text-sm text-zinc-400">{description}</p> : null}
+          {/* App look: a small white caps title top-left, a close X top-right */}
+          {title || onClose ? (
+            <div className="flex items-start justify-between gap-4">
+              {title ? <h2 id={titleId} className="pt-1.5 text-[13px] font-black uppercase tracking-[0.12em] text-white">{title}</h2> : <span />}
+              {onClose ? (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="-mr-1 -mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pxi-field text-white/70 transition hover:text-white"
+                  aria-label="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+          {description ? <p id={descriptionId} className="mt-2 text-sm text-[#9a9a9a]">{description}</p> : null}
           {children ? <div className="mt-5">{children}</div> : null}
           {footer ? <div className="mt-6 flex flex-nowrap gap-3">{footer}</div> : null}
         </div>

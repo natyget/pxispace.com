@@ -194,13 +194,13 @@ function CampaignsPageContent() {
                         </a>
                     </p>
                 </div>
-                <div className="grid shrink-0 grid-cols-3 gap-px overflow-hidden rounded-2xl bg-white/[0.06] ring-1 ring-white/[0.07] sm:min-w-[330px]">
+                <div className="grid shrink-0 grid-cols-3 gap-px overflow-hidden rounded-2xl bg-pxi-field sm:min-w-[330px]">
                     {[
                         { label: 'Reach', value: quote?.recipientCount ?? '—' },
                         { label: 'Cost', value: quote ? formatUsd(quote.priceCents) : '—' },
                         { label: 'Sent', value: loading ? '—' : campaigns.length },
                     ].map((item) => (
-                        <div key={item.label} className="bg-[#0e0e13] px-4 py-3">
+                        <div key={item.label} className="bg-pxi-surface px-4 py-3">
                             <p className="text-[12px] font-medium text-zinc-500">{item.label}</p>
                             <p className="mt-1 truncate text-lg font-semibold tabular-nums tracking-tight text-white">{item.value}</p>
                         </div>
@@ -245,7 +245,7 @@ function CampaignsPageContent() {
                         </div>
 
                         {/* The message itself, framed like the email/SMS the attendee receives. */}
-                        <div className="overflow-hidden rounded-[1.25rem] bg-white/[0.03] ring-1 ring-white/[0.06]">
+                        <div className="overflow-hidden rounded-[1.25rem] bg-pxi-field">
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.06] px-4 py-3 sm:px-5">
                                 <span className="w-14 shrink-0 text-[11px] font-medium tracking-[0.02em] text-zinc-500">To</span>
                                 <span className="relative min-w-0 flex-1">
@@ -253,7 +253,7 @@ function CampaignsPageContent() {
                                         value={audience}
                                         onChange={(e) => setAudience(e.target.value)}
                                         aria-label="Audience"
-                                        className="w-full cursor-pointer appearance-none rounded-lg bg-transparent py-1 pl-1 pr-7 text-sm font-bold text-white outline-none transition focus-visible:ring-1 focus-visible:ring-white/20 [&>option]:bg-zinc-950"
+                                        className="w-full cursor-pointer appearance-none rounded-2xl bg-transparent py-1 pl-1 pr-7 text-sm font-bold text-white outline-none transition focus-visible:ring-1 focus-visible:ring-white/20 [&>option]:bg-zinc-950"
                                     >
                                         <option value="ALL_PAST">All past attendees (opted-in)</option>
                                         <option value="ATTENDEES">One event&apos;s attendees (opted-in)</option>
@@ -264,7 +264,7 @@ function CampaignsPageContent() {
                                     </svg>
                                 </span>
                                 {quote?.recipientCount > 0 ? (
-                                    <span className="shrink-0 rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium tabular-nums text-zinc-300">
+                                    <span className="shrink-0 rounded-full bg-pxi-field px-2.5 py-1 text-[11px] font-medium tabular-nums text-zinc-300">
                                         {formatNumber(quote.recipientCount)}
                                     </span>
                                 ) : null}
@@ -277,7 +277,7 @@ function CampaignsPageContent() {
                                             value={eventId}
                                             onChange={(e) => setEventId(e.target.value)}
                                             aria-label="Event"
-                                            className="w-full cursor-pointer appearance-none rounded-lg bg-transparent py-1 pl-1 pr-7 text-sm font-bold text-white outline-none transition focus-visible:ring-1 focus-visible:ring-white/20 [&>option]:bg-zinc-950"
+                                            className="w-full cursor-pointer appearance-none rounded-2xl bg-transparent py-1 pl-1 pr-7 text-sm font-bold text-white outline-none transition focus-visible:ring-1 focus-visible:ring-white/20 [&>option]:bg-zinc-950"
                                         >
                                             <option value="">Choose event...</option>
                                             {events.map((ev) => (
@@ -298,7 +298,7 @@ function CampaignsPageContent() {
                                             value={segmentId}
                                             onChange={(e) => setSegmentId(e.target.value)}
                                             aria-label="Segment"
-                                            className="w-full cursor-pointer appearance-none rounded-lg bg-transparent py-1 pl-1 pr-7 text-sm font-bold text-white outline-none transition focus-visible:ring-1 focus-visible:ring-white/20 [&>option]:bg-zinc-950"
+                                            className="w-full cursor-pointer appearance-none rounded-2xl bg-transparent py-1 pl-1 pr-7 text-sm font-bold text-white outline-none transition focus-visible:ring-1 focus-visible:ring-white/20 [&>option]:bg-zinc-950"
                                         >
                                             <option value="">Choose segment...</option>
                                             {segments.map((seg) => (
@@ -333,7 +333,7 @@ function CampaignsPageContent() {
                                 aria-label="Message body"
                                 className="block w-full resize-y bg-transparent px-4 py-4 text-sm font-medium leading-6 text-white outline-none placeholder:text-white/30 sm:px-5"
                             />
-                            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.06] bg-white/[0.02] px-4 py-2.5 sm:px-5">
+                            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.06] bg-pxi-field px-4 py-2.5 sm:px-5">
                                 <span className="text-[11px] font-semibold text-zinc-500">
                                     {isSms
                                         ? relay.senderName
@@ -355,7 +355,7 @@ function CampaignsPageContent() {
                             </div>
                         ) : null}
                     </div>
-                    <aside className="flex flex-col justify-between rounded-[1rem] bg-white/[0.045] p-5">
+                    <aside className="flex flex-col justify-between rounded-[1rem] bg-pxi-field p-5">
                         <div>
                             <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Send quote</p>
                             <p className="mt-2 text-3xl font-bold tabular-nums text-white">
@@ -371,7 +371,7 @@ function CampaignsPageContent() {
                                         : 'Pricing audience...'}
                             </p>
                             {quote && creditApplied > 0 ? (
-                                <p className="mt-3 rounded-xl bg-[#d84aff]/10 px-3 py-2 text-xs font-semibold leading-5 text-[#e9a1ff]">
+                                <p className="mt-3 rounded-xl bg-pxi-purple/10 px-3 py-2 text-xs font-semibold leading-5 text-white">
                                     {fullyCredits
                                         ? `Credits cover the full ${formatUsd(quote.priceCents)} — no card needed.`
                                         : `Credits cover ${formatUsd(creditApplied)} · ${formatUsd(cardRemainder)} on card.`}
@@ -385,11 +385,11 @@ function CampaignsPageContent() {
                         </div>
                         <div className="mt-6 space-y-3">
                             <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div className="rounded-2xl bg-white/[0.04] px-3 py-3">
+                                <div className="rounded-2xl bg-pxi-field px-3 py-3">
                                     <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Consent</p>
                                     <p className="mt-1 font-bold text-white">Enforced</p>
                                 </div>
-                                <div className="rounded-2xl bg-white/[0.04] px-3 py-3">
+                                <div className="rounded-2xl bg-pxi-field px-3 py-3">
                                     <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Unsubscribe</p>
                                     <p className="mt-1 font-bold text-white">Automatic</p>
                                 </div>
@@ -411,7 +411,7 @@ function CampaignsPageContent() {
                         </div>
                     </aside>
                 </div>
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white/[0.035] px-4 py-3">
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-pxi-field px-4 py-3">
                     <p className="text-sm text-zinc-400">
                         {bodyTooLong
                             ? `That is ${formatNumber(body.length - bodyMaxLength)} over what ${isSms ? 'a text' : 'an email'} can hold. Shorten the message to send it.`
@@ -431,7 +431,7 @@ function CampaignsPageContent() {
                 {loading ? (
                     <p className="px-2 py-4 text-sm text-zinc-500">Loading...</p>
                 ) : campaigns.length === 0 ? (
-                    <div className="rounded-2xl bg-white/[0.035] px-5 py-8 text-center">
+                    <div className="rounded-2xl bg-pxi-field px-5 py-8 text-center">
                         <p className="text-sm font-bold text-white">No campaigns yet.</p>
                         <p className="mt-2 text-sm text-zinc-500">Your first paid send will appear here with status, reach, and receipt detail.</p>
                     </div>

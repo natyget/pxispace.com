@@ -72,7 +72,7 @@ export default function EventMembersPageView() {
 
   if (!albumId) {
     return (
-      <div className="rounded-2xl bg-white/[0.04] p-6 text-sm text-zinc-400">
+      <div className="rounded-2xl bg-pxi-field p-6 text-sm text-zinc-400">
         <p>No album linked to this event.</p>
         <Link href={`/dashboard/events/${eventId}`} className="mt-4 inline-block text-xs font-bold tracking-[0.02em] text-white/60 hover:text-white">
           Details
@@ -115,14 +115,14 @@ export default function EventMembersPageView() {
                 {isPast ? 'Attended people' : `${event?.name || 'Event'} members`}
               </h2>
             </div>
-            <span className="rounded-full bg-white/[0.06] px-3 py-1 text-xs font-bold text-zinc-300">
+            <span className="rounded-full bg-pxi-field px-3 py-1 text-xs font-bold text-zinc-300">
               {participants.length} {participants.length === 1 ? 'person' : 'people'}
             </span>
           </div>
 
           <div className="space-y-2 p-5">
             {sortedParticipants.length === 0 ? (
-              <div className="rounded-2xl bg-white/[0.025] px-5 py-8 text-center">
+              <div className="rounded-2xl bg-pxi-field px-5 py-8 text-center">
                 <p className="text-sm font-semibold text-white">
                   {isPast ? 'No scanned attendees recorded.' : 'No album members yet.'}
                 </p>
@@ -135,7 +135,7 @@ export default function EventMembersPageView() {
                 return (
                   <div
                     key={member.userId}
-                    className="flex flex-col gap-3 rounded-2xl bg-white/[0.035] p-4 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 rounded-2xl bg-pxi-field p-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <UserAvatar

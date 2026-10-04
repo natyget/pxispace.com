@@ -37,7 +37,7 @@ export default function PublicAlbumBlurUpImage({
     : { width, height };
 
   return (
-    <div className={`relative size-full overflow-hidden bg-[#0d0f15] ${className}`}>
+    <div className={`relative size-full overflow-hidden bg-pxi-surface ${className}`}>
       {/* Skeleton pulse — visible immediately before any image data is available */}
       {!hiResLoaded && !(showBlurLayer && blurLoaded) ? (
         <div className="absolute inset-0 animate-pulse bg-[#1e2130]" aria-hidden />

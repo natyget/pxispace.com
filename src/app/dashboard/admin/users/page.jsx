@@ -67,7 +67,7 @@ function StaffAccessControls({ row, busy, act }) {
         (salesRole === 'AMBASSADOR' && managerId !== (row.salesManagerId || ''));
 
     return (
-        <div className="space-y-2 rounded-xl bg-white/[0.03] p-3">
+        <div className="space-y-2 rounded-xl bg-pxi-field p-3">
             <p className="text-[11px] font-medium text-white/40">City and sales access</p>
             <div className="flex flex-wrap items-center gap-2">
                 <select
@@ -109,7 +109,7 @@ function StaffAccessControls({ row, busy, act }) {
                     type="button"
                     disabled={busy || !salesChanged}
                     onClick={() => act(() => updateSalesRole(row.id, salesBody()))}
-                    className="rounded-full bg-white/[0.065] px-4 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40"
+                    className="rounded-full bg-pxi-field px-4 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40"
                 >
                     Save sales role
                 </button>
@@ -140,13 +140,13 @@ function UserActions({ user: row, canManageRoles, canSuspend, onDone }) {
     };
 
     return (
-        <div className="rounded-2xl bg-white/[0.035] p-4 space-y-3">
+        <div className="rounded-2xl bg-pxi-field p-4 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
                 <button
                     type="button"
                     disabled={busy}
                     onClick={() => act(() => updateAdminUser(row.id, { isVendor: !row.isVendor }))}
-                    className="rounded-full bg-white/[0.065] px-4 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40"
+                    className="rounded-full bg-pxi-field px-4 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40"
                 >
                     {row.isVendor ? 'Remove organizer' : 'Make organizer'}
                 </button>
@@ -154,7 +154,7 @@ function UserActions({ user: row, canManageRoles, canSuspend, onDone }) {
                     type="button"
                     disabled={busy}
                     onClick={() => act(() => updateAdminUser(row.id, { isVerified: !row.isVerified }))}
-                    className="rounded-full bg-white/[0.065] px-4 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40"
+                    className="rounded-full bg-pxi-field px-4 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40"
                 >
                     {row.isVerified ? 'Unverify' : 'Verify'}
                 </button>
@@ -164,7 +164,7 @@ function UserActions({ user: row, canManageRoles, canSuspend, onDone }) {
                             defaultValue={row.accountTier}
                             disabled={busy}
                             onChange={(e) => act(() => updateAdminUser(row.id, { accountTier: e.target.value }))}
-                            className="rounded-full bg-white/[0.065] px-3 py-1.5 text-[12px] text-white/80 outline-none"
+                            className="rounded-full bg-pxi-field px-3 py-1.5 text-[12px] text-white/80 outline-none"
                         >
                             <option value="PARTIAL">PARTIAL</option>
                             <option value="CITIZEN">CITIZEN</option>
@@ -174,7 +174,7 @@ function UserActions({ user: row, canManageRoles, canSuspend, onDone }) {
                             defaultValue={row.adminRole || 'NONE'}
                             disabled={busy}
                             onChange={(e) => act(() => updateAdminUser(row.id, { adminRole: e.target.value }))}
-                            className="rounded-full bg-white/[0.065] px-3 py-1.5 text-[12px] text-white/80 outline-none"
+                            className="rounded-full bg-pxi-field px-3 py-1.5 text-[12px] text-white/80 outline-none"
                         >
                             <option value="NONE">Role: none</option>
                             <option value="SUPPORT">Role: support</option>
@@ -202,7 +202,7 @@ function UserActions({ user: row, canManageRoles, canSuspend, onDone }) {
                             value={suspendReason}
                             onChange={(e) => setSuspendReason(e.target.value)}
                             placeholder="Reason for suspension"
-                            className="flex-1 min-w-[220px] rounded-full bg-white/[0.055] px-4 py-1.5 text-[12px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]"
+                            className="flex-1 min-w-[220px] rounded-full bg-pxi-field px-4 py-1.5 text-[12px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]"
                         />
                         <button
                             type="button"
@@ -298,9 +298,9 @@ export default function AdminUsersPage() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Search accounts..."
-                    className="w-full rounded-full bg-white/[0.055] px-5 py-3 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]"
+                    className="w-full rounded-full bg-pxi-field px-5 py-3 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]"
                 />
-                <p className="w-fit rounded-full bg-white/[0.045] px-3 py-1.5 text-xs font-semibold text-zinc-400">
+                <p className="w-fit rounded-full bg-pxi-field px-3 py-1.5 text-xs font-semibold text-zinc-400">
                     {isLiveAdmin ? 'Live management enabled' : 'Previewing mock users'}
                 </p>
             </AdminPanel>
@@ -332,7 +332,7 @@ export default function AdminUsersPage() {
                                         </td>
                                         <td data-label="Username" className={`${adminTdClass} text-[14px]`}>{u.username || '—'}</td>
                                         <td data-label="Tier / role" className="px-6 py-4">
-                                            <span className="inline-flex rounded-full bg-white/[0.055] px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-white/70">
+                                            <span className="inline-flex rounded-full bg-pxi-field px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-white/70">
                                                 {u.accountTier}
                                             </span>
                                             {u.adminRole && u.adminRole !== 'NONE' ? (

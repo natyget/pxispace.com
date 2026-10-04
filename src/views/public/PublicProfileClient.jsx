@@ -57,15 +57,15 @@ export default function PublicProfileClient({ userId, initialProfile }) {
 
     if (initialProfile.isPrivateAccount) {
         return (
-            <div className="relative min-h-screen bg-[#0a0a0a] pb-40 pt-24 text-white md:pb-40 md:pt-28">
+            <div className="relative min-h-screen bg-black pb-40 pt-24 text-white md:pb-40 md:pt-28">
                 <div className="mx-auto flex max-w-lg flex-col px-4">
                     {/* Same blurred preview treatment as `/p/[postId]` when the account is private */}
-                    <div className="relative aspect-[3/4] w-full max-h-[85vh] overflow-hidden rounded-2xl border border-white/10 bg-zinc-900">
+                    <div className="relative aspect-[3/4] w-full max-h-[85vh] overflow-hidden rounded-2xl bg-pxi-field">
                         <div
                             className="absolute inset-0 opacity-90"
                             style={{
                                 background:
-                                    'radial-gradient(circle at 30% 20%, rgba(168,85,247,0.35), transparent 55%), radial-gradient(circle at 70% 60%, rgba(59,130,246,0.25), transparent 50%), linear-gradient(180deg, #18181b, #09090b)',
+                                    'radial-gradient(circle at 30% 20%, rgba(165,35,239,0.35), transparent 55%), radial-gradient(circle at 70% 60%, rgba(59,130,246,0.25), transparent 50%), linear-gradient(180deg, #18181b, #09090b)',
                                 filter: 'blur(24px)',
                                 transform: 'scale(1.08)',
                             }}
@@ -78,7 +78,7 @@ export default function PublicProfileClient({ userId, initialProfile }) {
                                     Passport details are only visible in the PXI app for approved connections.
                                 </p>
                             </div>
-                            <div className="shrink-0 border-t border-white/10 bg-black/30 p-3 backdrop-blur-md md:hidden pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                            <div className="shrink-0 border-t border-white/10 bg-black/30 p-3 md:hidden pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                                 <AppStoreCtaPair variant="row" />
                             </div>
                         </div>
@@ -91,9 +91,9 @@ export default function PublicProfileClient({ userId, initialProfile }) {
 
     if (!initialProfile.isPassportIssued) {
         return (
-            <div className="relative min-h-screen bg-[#0a0a0a] pb-40 pt-24 text-white md:pb-40 md:pt-28">
+            <div className="relative min-h-screen bg-black pb-40 pt-24 text-white md:pb-40 md:pt-28">
                 <div className="mx-auto max-w-lg px-4">
-                    <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-8 text-center">
+                    <div className="rounded-2xl bg-pxi-surface p-8 text-center">
                         <div className="mx-auto mb-5 flex justify-center">
                             <AnonymousAvatarSilhouette size={64} />
                         </div>
@@ -114,7 +114,7 @@ export default function PublicProfileClient({ userId, initialProfile }) {
     }
 
     return (
-        <div className="relative min-h-screen bg-[#0a0a0a] pb-40 pt-24 text-white md:pb-40 md:pt-28">
+        <div className="relative min-h-screen bg-black pb-40 pt-24 text-white md:pb-40 md:pt-28">
             <PassportReadOnly user={initialProfile} />
             <PublicProfileBottomBar userId={userId} />
         </div>

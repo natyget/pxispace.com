@@ -67,7 +67,7 @@ function SpotifyCallbackInner() {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-black px-6 text-center text-white">
-      <div className="w-full max-w-md rounded-3xl border border-white/[0.08] bg-white/[0.02] p-10 backdrop-blur-xl">
+      <div className="w-full max-w-md rounded-3xl bg-pxi-field p-10">
         {status === 'working' ? (
           <>
             <h1 className="text-xl font-black uppercase tracking-[0.18em]">
@@ -115,7 +115,7 @@ function SpotifyCallbackInner() {
             </p>
             <Link
               href="/events"
-              className="mt-6 inline-flex rounded-full border border-white/10 px-8 py-3.5 text-sm font-black uppercase tracking-widest text-zinc-300 hover:text-white"
+              className="mt-6 inline-flex rounded-full px-8 py-3.5 text-sm font-black uppercase tracking-widest text-zinc-300 hover:text-white"
             >
               Back to events
             </Link>

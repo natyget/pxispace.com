@@ -26,6 +26,7 @@ const MAX_LIST_ITEMS = 50;
 
 function normalizeApiEvent(e) {
   const paid = e.ticketType === 'PAID';
+  const priceUsd = paid && Number(e.ticketPrice) > 0 ? Number(e.ticketPrice) : 0;
   return {
     id: e.id,
     title: e.name,
@@ -38,12 +39,20 @@ function normalizeApiEvent(e) {
       ? new Date(e.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       : 'Date TBA',
     musicMatchScore: e.musicMatchScore ?? null,
+    // What the album card prints under the cover: price, and who is hosting / going.
+    price: priceUsd > 0 ? `${e.currency === 'EUR' ? '€' : '$'}${priceUsd.toFixed(2)}` : 'Free',
+    ticketType: e.ticketType || null,
+    organizer: e.organizer || e.host || null,
+    attendees: e._count?.tickets ?? 0,
 
     // GA4 taxonomy fields — GET /api/events/:id returns the full row plus `host`,
     // so host_id / event_city / items[].price are all available here.
     hostId: e.createdBy || e.host?.id || null,
     city: resolveEventCity(e)?.name || null,
-    value: paid && Number(e.ticketPrice) > 0 ? Number(e.ticketPrice) : 0,
+    value: priceUsd,
+    // The host's song: the event view's record plays its preview.
+    topSong: e.topSong && typeof e.topSong === 'object' ? e.topSong : null,
+    topSongArtworkUrl: e.topSongArtworkUrl || null,
   };
 }
 
@@ -119,7 +128,7 @@ export default function WishlistPage() {
             style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))' }}
           >
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-zinc-900" />
+              <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-pxi-field" />
             ))}
           </div>
         ) : events.length === 0 ? (
@@ -130,7 +139,7 @@ export default function WishlistPage() {
             </p>
             <Link
               href="/events"
-              className="mt-2 inline-flex items-center justify-center rounded-full bg-white px-7 py-2.5 text-xs font-black uppercase tracking-widest text-black transition hover:scale-105"
+              className="mt-2 inline-flex items-center justify-center rounded-full bg-pxi-purple px-7 py-2.5 text-xs font-black uppercase tracking-widest text-white transition hover:scale-105"
             >
               Discover events
             </Link>

@@ -251,13 +251,13 @@ export default function PlanCalibrationStage({
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
             <div>
                 {placingGate ? (
-                    <p className="mb-2 rounded-xl bg-[#d84aff]/15 px-3 py-2 text-xs font-bold text-[#f0b8ff]">
+                    <p className="mb-2 rounded-xl bg-pxi-purple/15 px-3 py-2 text-xs font-bold text-white">
                         Placing &ldquo;{placingGate.gate}&rdquo; — click the plan to drop its pin.
                     </p>
                 ) : null}
                 <div
                     ref={stageRef}
-                    className="relative w-full touch-none select-none overflow-hidden rounded-[1.25rem] bg-[#0b0b0f] ring-1 ring-white/[0.07]"
+                    className="relative w-full touch-none select-none overflow-hidden rounded-[1.25rem] bg-pxi-field"
                     style={{ aspectRatio: `${CANVAS_W} / ${CANVAS_H}`, cursor: placingGateId ? 'crosshair' : 'grab' }}
                     onPointerDown={onStagePointerDown}
                     onPointerMove={onStagePointerMove}
@@ -335,7 +335,7 @@ export default function PlanCalibrationStage({
                                         >
                                             <span
                                                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow-lg ${
-                                                    active ? 'bg-emerald-400 text-black' : 'bg-[#d84aff]'
+                                                    active ? 'bg-emerald-400 text-black' : 'bg-pxi-purple'
                                                 }`}
                                             >
                                                 <button type="button" onClick={() => setPlacingGateId(gate.id)} title="Click to reposition">
@@ -372,7 +372,7 @@ export default function PlanCalibrationStage({
                     ) : null}
 
                     {/* Zoom controls */}
-                    <div className="absolute right-3 top-3 z-10 flex flex-col overflow-hidden rounded-xl bg-black/60 ring-1 ring-white/10">
+                    <div className="absolute right-3 top-3 z-10 flex flex-col overflow-hidden rounded-xl bg-black/60">
                         <button
                             type="button"
                             onClick={(e) => {
@@ -407,7 +407,7 @@ export default function PlanCalibrationStage({
             </div>
 
             <aside className="space-y-3">
-                <div className="rounded-2xl bg-white/[0.035] p-3">
+                <div className="rounded-2xl bg-pxi-field p-3">
                     <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Floor-plan image</p>
                     <div className="mt-2 flex items-center gap-2">
                         <label className="pill-ghost inline-flex cursor-pointer items-center gap-2 px-4 py-2 text-xs font-bold tracking-[0.02em]">
@@ -433,7 +433,7 @@ export default function PlanCalibrationStage({
 
                 {imageUrl && imageDims ? (
                     <>
-                        <div className="rounded-2xl bg-white/[0.035] p-3">
+                        <div className="rounded-2xl bg-pxi-field p-3">
                             <div className="flex items-center justify-between">
                                 <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Rotation</p>
                                 <span className="text-xs font-bold tabular-nums text-white">{Math.round(calib.rotationDeg)}°</span>
@@ -445,7 +445,7 @@ export default function PlanCalibrationStage({
                                 step="1"
                                 value={((calib.rotationDeg % 360) + 360) % 360}
                                 onChange={(e) => setCalib((cur) => ({ ...cur, rotationDeg: Number(e.target.value) }))}
-                                className="mt-2 w-full accent-[#d84aff]"
+                                className="mt-2 w-full accent-pxi-purple"
                             />
                             <div className="mt-3 flex items-center justify-between">
                                 <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Plan opacity</p>
@@ -458,11 +458,11 @@ export default function PlanCalibrationStage({
                                 step="0.05"
                                 value={opacity}
                                 onChange={(e) => setOpacity(Number(e.target.value))}
-                                className="mt-2 w-full accent-[#d84aff]"
+                                className="mt-2 w-full accent-pxi-purple"
                             />
                         </div>
 
-                        <div className="rounded-2xl bg-white/[0.035] p-3">
+                        <div className="rounded-2xl bg-pxi-field p-3">
                             <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Numeric calibration</p>
                             <div className="mt-2 grid grid-cols-2 gap-2">
                                 <label className="block">
@@ -513,7 +513,7 @@ export default function PlanCalibrationStage({
                             </p>
                         ) : null}
 
-                        <div className="rounded-2xl bg-white/[0.035] p-3">
+                        <div className="rounded-2xl bg-pxi-field p-3">
                             <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">
                                 Gates {placedCount}/{gates.length} placed
                             </p>
@@ -529,7 +529,7 @@ export default function PlanCalibrationStage({
                                                 onClick={() => setPlacingGateId(active ? null : gate.id)}
                                                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
                                                     active
-                                                        ? 'bg-[#d84aff] text-white'
+                                                        ? 'bg-pxi-purple text-white'
                                                         : placed
                                                           ? 'bg-emerald-400/15 text-emerald-200 hover:bg-emerald-400/25'
                                                           : 'bg-white/[0.07] text-zinc-300 hover:bg-white/[0.12]'

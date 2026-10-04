@@ -86,7 +86,7 @@ function UsernameInput({ value, onChange, placeholder }) {
                 className={inputCls}
             />
             {open && results.length > 0 ? (
-                <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border border-white/10 bg-[#101013] shadow-2xl">
+                <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl bg-pxi-field shadow-2xl">
                     {results.map((u) => (
                         <button
                             key={u.id}
@@ -191,7 +191,7 @@ function CreatePromoCard({ onCreated }) {
                 type="button"
                 onClick={submit}
                 disabled={busy}
-                className="rounded-full bg-white text-black px-5 py-2 text-[13px] font-bold disabled:opacity-40"
+                className="rounded-full bg-pxi-purple text-white px-5 py-2 text-[13px] font-bold disabled:opacity-40 uppercase tracking-[0.08em]"
             >
                 {busy ? 'Creating...' : 'Create code'}
             </button>
@@ -242,7 +242,7 @@ function GrantCreditsCard() {
                 type="button"
                 onClick={submit}
                 disabled={busy || !username.trim() || !amountUsd || !note.trim()}
-                className="rounded-full bg-white text-black px-5 py-2 text-[13px] font-bold disabled:opacity-40"
+                className="rounded-full bg-pxi-purple text-white px-5 py-2 text-[13px] font-bold disabled:opacity-40 uppercase tracking-[0.08em]"
             >
                 {busy ? 'Granting...' : 'Grant'}
             </button>
@@ -345,7 +345,7 @@ export default function AdminPromosPage() {
                                         <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${
                                             p.isActive
                                                 ? 'bg-emerald-500/10 text-emerald-300'
-                                                : 'bg-white/[0.055] text-white/55'
+                                                : 'bg-pxi-field text-white/55'
                                         }`}>
                                             {p.isActive ? 'Active' : 'Inactive'}
                                         </span>
@@ -354,7 +354,7 @@ export default function AdminPromosPage() {
                                         <button
                                             type="button"
                                             onClick={() => toggleActive(p)}
-                                            className="rounded-full bg-white/[0.065] px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
+                                            className="rounded-full bg-pxi-field px-3.5 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white"
                                         >
                                             {p.isActive ? 'Deactivate' : 'Reactivate'}
                                         </button>

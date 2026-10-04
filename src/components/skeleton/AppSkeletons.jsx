@@ -3,7 +3,7 @@ export function DashboardRouteSkeleton() {
     <div className="dashboard-route-fade mx-auto max-w-6xl space-y-6">
       <div className="space-y-3">
         <div className="h-8 w-48 rounded-lg bg-white/[0.08] animate-pulse" />
-        <div className="h-4 w-72 max-w-full rounded bg-white/[0.04] animate-pulse" />
+        <div className="h-4 w-72 max-w-full rounded bg-pxi-field animate-pulse" />
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
@@ -22,9 +22,9 @@ export function DashboardSegmentSkeleton({ variant = 'default' }) {
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div className="space-y-3">
           <div className="h-8 w-56 rounded-lg bg-white/10 animate-pulse" />
-          <div className="h-4 w-80 max-w-full rounded bg-white/5 animate-pulse" />
+          <div className="h-4 w-80 max-w-full rounded bg-pxi-field animate-pulse" />
         </div>
-        <div className="h-9 w-28 rounded-full bg-white/5 animate-pulse" />
+        <div className="h-9 w-28 rounded-full bg-pxi-field animate-pulse" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {Array.from({ length: cardCount }).map((_, i) => (
@@ -48,9 +48,9 @@ export function DashboardListSkeleton() {
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-3">
           <div className="h-8 w-40 rounded-lg bg-white/10 animate-pulse" />
-          <div className="h-4 w-72 rounded bg-white/5 animate-pulse" />
+          <div className="h-4 w-72 rounded bg-pxi-field animate-pulse" />
         </div>
-        <div className="h-10 w-32 rounded-xl bg-white/5 animate-pulse" />
+        <div className="h-10 w-32 rounded-xl bg-pxi-field animate-pulse" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 6 }).map((_, i) => (
@@ -70,10 +70,10 @@ export function PublicRouteSkeleton() {
       <main className="flex-1 p-6 md:p-10">
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="h-10 w-64 rounded-lg bg-white/10 animate-pulse" />
-          <div className="h-4 w-96 rounded bg-white/5 animate-pulse" />
+          <div className="h-4 w-96 rounded bg-pxi-field animate-pulse" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] rounded-2xl bg-white/5 animate-pulse" />
+              <div key={i} className="aspect-[3/4] rounded-2xl bg-pxi-field animate-pulse" />
             ))}
           </div>
         </div>
@@ -89,12 +89,12 @@ export { PxiLoadingLanding as PublicLogoLoading } from '@/components/loading/Pxi
 
 export function GenericPageSkeleton() {
   return (
-    <div className="dashboard-route-fade min-h-screen bg-[#050505] p-6 md:p-10">
+    <div className="dashboard-route-fade min-h-screen bg-black p-6 md:p-10">
       <div className="max-w-3xl mx-auto space-y-5">
         <div className="h-8 w-48 rounded-lg bg-white/10 animate-pulse" />
-        <div className="h-4 w-72 rounded bg-white/5 animate-pulse" />
-        <div className="h-40 rounded-2xl bg-white/5 animate-pulse" />
-        <div className="h-40 rounded-2xl bg-white/5 animate-pulse" />
+        <div className="h-4 w-72 rounded bg-pxi-field animate-pulse" />
+        <div className="h-40 rounded-2xl bg-pxi-field animate-pulse" />
+        <div className="h-40 rounded-2xl bg-pxi-field animate-pulse" />
       </div>
     </div>
   );

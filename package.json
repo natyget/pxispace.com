@@ -8,10 +8,10 @@
     "build": "next build",
     "start": "next start -p 5173",
     "lint": "eslint .",
-    "check:sitemap": "node scripts/check-sitemap.mjs"
+    "check:sitemap": "node scripts/check-sitemap.mjs",
+    "test:venue": "node --test src/lib/venueDashboard.test.mjs"
   },
   "dependencies": {
-    "@ant-design/icons": "^6.1.0",
     "@geoapify/geocoder-autocomplete": "^3.0.1",
     "@geoapify/react-geocoder-autocomplete": "^3.0.0",
     "@hugeicons/core-free-icons": "^4.1.4",
@@ -26,14 +26,12 @@
     "gsap": "^3.13.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.564.0",
-    "next": "^16.2.6",
-    "papaparse": "^5.5.3",
+    "next": "^16.3.8",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-easy-crop": "^5.5.7",
     "react-icons": "^5.5.0",
     "react-phone-number-input": "^3.4.16",
-    "react-router-dom": "^7.13.1",
     "recharts": "^3.8.1",
     "sonner": "^2.0.7",
     "swiper": "^12.0.3"

@@ -142,14 +142,14 @@ const PaymentForm = ({ onSuccess, onCancel, returnUrl, analytics }) => {
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 py-3.5 rounded-full border-0 bg-white/5 text-white/80 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all hover:scale-105"
+            className="flex-1 py-3.5 rounded-full border-0 bg-pxi-field text-white/80 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all hover:scale-105"
           >
             Cancel
           </button>
           <Button
             type="submit"
             variant="primary"
-            className="flex-1 uppercase tracking-widest py-3.5 rounded-full !bg-gradient-to-r from-[#d84aff] to-[#a855f7] text-white font-black text-xs shadow-[0_0_22px_rgba(216,74,255,0.5),0_0_8px_rgba(216,74,255,0.3)] hover:scale-105 transition-all border-0"
+            className="flex-1 uppercase tracking-widest py-3.5 rounded-full !bg-pxi-purple text-white font-black text-xs hover:scale-105 transition-all border-0"
             disabled={!stripe || loading}
           >
             {loading ? <HugeiconsIcon icon={Loading02Icon} size={18} className="animate-spin mx-auto" /> : 'Pay now'}
@@ -179,12 +179,12 @@ export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open, re
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center sm:py-6">
-      <div className="absolute inset-0 bg-black/75 backdrop-blur-[16px]" onClick={onCancel} aria-hidden />
+      <div className="absolute inset-0 bg-black/75" onClick={onCancel} aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="pxi-stripe-modal-title"
-        className="relative z-[1] w-full max-w-md overflow-hidden rounded-[2.5rem] bg-[rgba(26,26,26,0.6)] backdrop-blur-[36px] shadow-2xl border-0"
+        className="relative z-[1] w-full max-w-md overflow-hidden rounded-[2.5rem] bg-pxi-field shadow-2xl border-0"
       >
         <div className="flex shrink-0 items-center justify-between px-6 pt-6 pb-2">
           <h3 id="pxi-stripe-modal-title" className="text-white text-xl font-black uppercase tracking-tight">
@@ -211,7 +211,7 @@ export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open, re
                 appearance: {
                   theme: 'night',
                   variables: {
-                    colorPrimary: '#d84aff',
+                    colorPrimary: '#A523EF',
                     colorBackground: 'rgba(255, 255, 255, 0.03)',
                     colorText: '#ffffff',
                     colorTextSecondary: '#a1a1aa',
@@ -233,7 +233,7 @@ export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open, re
                       minWidth: '95px',
                     },
                     '.Tab--selected': {
-                      backgroundColor: 'rgba(216, 74, 255, 0.15)',
+                      backgroundColor: 'rgba(165, 35, 239, 0.15)',
                       color: '#ffffff',
                     },
                     '.Input': {
@@ -244,7 +244,7 @@ export function StripePaymentModal({ clientSecret, onSuccess, onCancel, open, re
                       borderRadius: '9999px',
                     },
                     '.Input:focus': {
-                      boxShadow: '0 0 0 2px rgba(216, 74, 255, 0.4)',
+                      boxShadow: '0 0 0 2px rgba(165, 35, 239, 0.4)',
                     },
                     '.Label': {
                       color: '#e4e4e7',

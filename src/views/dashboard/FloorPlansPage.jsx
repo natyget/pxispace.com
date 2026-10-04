@@ -90,7 +90,7 @@ function FloorPlansPageContent() {
             </section>
 
             {attachEventId && !editing ? (
-                <div className="rounded-2xl bg-white/[0.045] px-4 py-3 text-xs font-semibold text-zinc-300">
+                <div className="rounded-2xl bg-pxi-field px-4 py-3 text-xs font-semibold text-zinc-300">
                     Pick or add a venue — it will be attached to your event automatically.
                 </div>
             ) : null}
@@ -109,7 +109,7 @@ function FloorPlansPageContent() {
             ) : plans === null ? (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {[0, 1, 2].map((item) => (
-                        <div key={item} className="h-48 animate-pulse rounded-[1.25rem] bg-white/[0.035]" />
+                        <div key={item} className="h-48 animate-pulse rounded-[1.25rem] bg-pxi-field" />
                     ))}
                 </div>
             ) : plans.length === 0 ? (
@@ -128,9 +128,9 @@ function FloorPlansPageContent() {
                             <article key={plan.id} className="dashboard-surface overflow-hidden rounded-[1.25rem]">
                                 {plan.imageUrl ? (
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={plan.imageUrl} alt="" className="h-36 w-full bg-[#0b0b0f] object-contain" loading="lazy" />
+                                    <img src={plan.imageUrl} alt="" className="h-36 w-full bg-pxi-surface object-contain" loading="lazy" />
                                 ) : (
-                                    <div className="flex h-36 w-full items-center justify-center bg-[#0b0b0f]">
+                                    <div className="flex h-36 w-full items-center justify-center bg-pxi-surface">
                                         <p className="text-xs font-semibold text-zinc-600">No floor plan yet</p>
                                     </div>
                                 )}

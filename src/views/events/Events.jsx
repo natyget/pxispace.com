@@ -4,8 +4,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Calendar01Icon, Ticket01Icon } from '@hugeicons/core-free-icons';
 import EventsHero from './EventsHero';
 import EventsFilters from './EventsFilters';
 import EventsGrid from './EventsGrid';
@@ -29,19 +27,30 @@ function toEventDetailsModalEvent(event) {
     title: event.title,
     image: event.image,
     badges: event.status ? [{ label: event.status, tone: 'purple' }] : [],
+    visibility: event.visibility ?? undefined,
+    startDate: event.startDate ?? undefined,
+    endDate: event.endDate ?? undefined,
     schedule: event.date,
     location: event.location,
+    latitude: event.latitude ?? undefined,
+    longitude: event.longitude ?? undefined,
+    shareUrl: `/album/${event.albumId || event.id}`,
     description: event.description,
     host: event.organizer
       ? { name: event.organizer.name, username: event.organizer.username, avatarUrl: event.organizer.avatarUrl }
       : null,
     memberCount: event.members > 0 ? event.members : undefined,
     playlist: { spotifyPlaylistUrl: event.spotifyPlaylistUrl, spotifyTopTrackUrl: event.spotifyTopTrackUrl },
+    topSong: event.topSong ?? undefined,
+    topSongArtworkUrl: event.topSongArtworkUrl ?? undefined,
   };
 }
 
+/** The app's footer wording: "Join", or "Get ticket $10.00" (no dot before the price). */
 function ticketCtaLabel(event) {
-  return event.ticketType === 'PAID' || (event.price && event.price !== 'Free') ? 'Get Ticket' : 'RSVP';
+  const paid = event.ticketType === 'PAID' || (event.price && event.price !== 'Free');
+  if (!paid) return 'Join';
+  return event.price && event.price !== 'Free' ? `Get ticket ${event.price}` : 'Get ticket';
 }
 
 const DEFAULT_IMG =
@@ -91,6 +100,9 @@ const normalizeApiEvent = (e) => {
           : String(e.visibility || 'Event'),
     price,
     description: typeof e.description === 'string' ? e.description : '',
+    visibility: e.visibility ?? null,
+    startDate: e.startDate ?? null,
+    endDate: e.endDate ?? null,
     latitude: e.latitude ?? null,
     longitude: e.longitude ?? null,
     vendorHint,
@@ -103,6 +115,8 @@ const normalizeApiEvent = (e) => {
     ticketType: e.ticketType ?? null,
     spotifyPlaylistUrl: e.spotifyPlaylistUrl ?? null,
     spotifyTopTrackUrl: e.spotifyTopTrackUrl ?? null,
+    topSong: e.topSong ?? null,
+    topSongArtworkUrl: e.topSongArtworkUrl ?? null,
   };
 };
 
@@ -295,8 +309,6 @@ const Events = ({ detailBasePath = '/events' }) => {
 
   return (
     <div className="pt-32 pb-24 min-h-screen bg-black overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pxi-purple/10 blur-[150px] rounded-full -z-10" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 blur-[150px] rounded-full -z-10" />
 
       <div className="container mx-auto px-6">
         <EventsHero
@@ -327,7 +339,7 @@ const Events = ({ detailBasePath = '/events' }) => {
         />
 
         {sortMode === 'match' && !isLoggedIn ? (
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-10 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4 text-sm text-zinc-400">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-10 rounded-2xl bg-pxi-field px-5 py-4 text-sm text-zinc-400">
             <p>Log in and connect Spotify to rank events by your taste.</p>
             <Link href="/login" className="text-pxi-purple hover:text-white font-bold uppercase text-xs tracking-widest shrink-0">
               Log in →
@@ -336,7 +348,7 @@ const Events = ({ detailBasePath = '/events' }) => {
         ) : null}
 
         {sortMode === 'match' && isLoggedIn && musicConnected === false ? (
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-10 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4 text-sm text-zinc-400">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-10 rounded-2xl bg-pxi-field px-5 py-4 text-sm text-zinc-400">
             <p>Connect Spotify to rank events by your taste.</p>
             <button
               type="button"
@@ -390,10 +402,10 @@ const Events = ({ detailBasePath = '/events' }) => {
             previewEvent
               ? {
                   label: ticketCtaLabel(previewEvent),
-                  icon: <HugeiconsIcon icon={Ticket01Icon} size={16} />,
                   onClick: () => {
                     setPreviewEvent(null);
-                    router.push(`${String(detailBasePath).replace(/\/$/, '')}/${previewEvent.id}`);
+                    // Always the new event page (the app's event view), never the legacy /events-old detail.
+                    router.push(`/events/${previewEvent.id}`);
                   },
                 }
               : null
@@ -402,7 +414,6 @@ const Events = ({ detailBasePath = '/events' }) => {
             previewEvent
               ? {
                   label: 'Open Album',
-                  icon: <HugeiconsIcon icon={Calendar01Icon} size={16} />,
                   href: `/album/${previewEvent.albumId || previewEvent.id}`,
                   onClick: () => setPreviewEvent(null),
                 }

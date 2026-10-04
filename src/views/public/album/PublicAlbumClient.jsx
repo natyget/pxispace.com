@@ -20,7 +20,6 @@ import {
   timelineRowKey,
 } from './buildPublicAlbumTimeline';
 import EventDetailsModal from '@/components/events/EventDetailsModal';
-import EventDetailClient from '@/views/events/EventDetailClient';
 import { buildAlbumEventDetails } from './albumEventDetailsAdapter';
 import PublicAlbumJoinEventButton from './PublicAlbumJoinEventButton';
 import IphonePane from './IphonePane';
@@ -361,7 +360,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
           {denied && joinEventId ? (
             <Link
               href={`/events/${joinEventId}/checkout`}
-              className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-[#d946ef] px-6 text-[13px] font-black uppercase tracking-[0.18em] text-white shadow-[0_0_20px_rgba(217,70,239,0.5)] transition hover:opacity-90"
+              className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-pxi-purple px-6 text-[13px] font-black uppercase tracking-[0.18em] text-white transition hover:opacity-90"
             >
               Join event
             </Link>
@@ -420,7 +419,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
             className="pb-4 pt-4"
             style={{ paddingLeft: THREAD_PAGE_HORIZONTAL_GUTTER, paddingRight: THREAD_PAGE_HORIZONTAL_GUTTER }}
           >
-            <div className="flex w-full rounded-full border border-white/5 bg-[#1c1c1c] p-1.5">
+            <div className="flex w-full rounded-full bg-[#1c1c1c] p-1.5">
               {['thread', 'gallery'].map((v) => {
                 const label = v === 'thread' ? 'THREAD' : 'GALLERY';
                 const active = tab === v;
@@ -435,7 +434,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
                   >
                     {active ? (
                       <span
-                        className="absolute inset-0 rounded-full bg-[#d946ef] shadow-[0_0_15px_rgba(217,70,239,0.8)]"
+                        className="absolute inset-0 rounded-full bg-pxi-purple"
                         aria-hidden
                       />
                     ) : null}
@@ -484,8 +483,8 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
                     onClick={() => setOnlyMyShots((v) => !v)}
                     className={`rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition ${
                       onlyMyShots
-                        ? 'border-pxi-purple bg-pxi-purple/20 text-white shadow-[0_0_20px_rgba(216,74,255,0.3)]'
-                        : 'border-white/10 bg-white/[0.03] text-zinc-400 hover:text-white'
+                        ? 'border-pxi-purple bg-pxi-purple/20 text-white'
+                        : 'border-white/10 bg-pxi-field text-zinc-400 hover:text-white'
                     }`}
                   >
                     My shots ({myMatchIds.size})
@@ -494,7 +493,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
                 <button
                   type="button"
                   onClick={() => setFindMyselfOpen(true)}
-                  className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 transition hover:border-pxi-purple/50 hover:text-white"
+                  className="rounded-full border border-white/10 bg-pxi-field px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 transition hover:border-pxi-purple/50 hover:text-white"
                 >
                   {myMatchIds ? 'Rescan' : 'Find my shots'}
                 </button>
@@ -582,28 +581,20 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
 
       </div>
 
-      {/* Right: album details — desktop only; mobile uses three-dot sheet. Renders the
-         full EventDetailClient layout constrained to the pane. */}
-      <div className="album-details-pane relative bg-[#0a0a0a]">
-        {album?.event?.id || album?.eventId ? (
-          <EventDetailClient
-            eventIdOverride={album?.event?.id || album?.eventId}
-            initialEvent={album?.event}
-            presentation="pane"
-          />
-        ) : (
-          <div className="album-details-shell items-center justify-center p-6">
-            <div className="flex h-full max-h-[860px] w-full max-w-[480px] flex-col overflow-hidden">
-              <EventDetailsModal
-                open
-                presentation="inline"
-                event={albumDetails.event}
-                primaryAction={albumDetails.primaryAction}
-                secondaryAction={albumDetails.secondaryAction}
-              />
-            </div>
+      {/* Right: album details — desktop only; mobile opens the same sheet from the three-dot
+         button. It is the app's event view (EventDetailsModal), inline in the pane. */}
+      <div className="album-details-pane relative bg-black">
+        <div className="album-details-shell items-center justify-center p-3">
+          <div className="flex h-full w-full flex-col overflow-hidden">
+            <EventDetailsModal
+              open
+              presentation="inline"
+              event={albumDetails.event}
+              primaryAction={albumDetails.primaryAction}
+              secondaryAction={albumDetails.secondaryAction}
+            />
           </div>
-        )}
+        </div>
       </div>
 
       <EventDetailsModal

@@ -46,7 +46,7 @@ const NeonButton = ({
     ...props
 }) => {
     const baseStyles =
-        "font-bold rounded-lg transition-all duration-300 inline-flex items-center justify-center cursor-pointer border";
+        "font-black uppercase tracking-[0.08em] rounded-full transition-all duration-200 inline-flex items-center justify-center cursor-pointer border-0";
 
     const sizes = {
         sm: "px-4 py-2 text-sm",
@@ -54,11 +54,10 @@ const NeonButton = ({
         lg: "px-8 py-4 text-lg",
     };
 
+    // App look: flat purple primary, flat grey secondary; no gradient, no glow.
     const variants = {
-        primary:
-            "bg-gradient-to-r from-purple-600 to-cyan-600 text-white border-purple-500 hover:from-purple-500 hover:to-cyan-500 shadow-lg shadow-purple-500/50 hover:shadow-xl  hover:shadow-purple-500/70",
-        outline:
-            "border-2 border-purple-500 text-purple-400 hover:bg-purple-500/10 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/50",
+        primary: "bg-pxi-purple text-white hover:brightness-110",
+        outline: "bg-pxi-cancel text-white hover:bg-[#5a5a5a]",
     };
 
     return (

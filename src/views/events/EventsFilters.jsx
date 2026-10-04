@@ -53,7 +53,7 @@ const EventsFilters = ({
             onClick={() => setFilter(opt)}
             className={`px-10 py-3 rounded-full text-[11px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all duration-300 border ${
               filter === opt
-                ? 'bg-pxi-purple text-white border-pxi-purple shadow-[0_0_30px_rgba(216,74,255,0.4)] scale-105'
+                ? 'bg-pxi-purple text-white border-pxi-purple scale-105'
                 : 'bg-zinc-900/50 text-zinc-500 border-white/5 hover:text-white hover:border-white/20'
             }`}
           >
@@ -78,7 +78,7 @@ const EventsFilters = ({
             Music{genresActive ? ` (${genreFilter.size})` : ''}
           </button>
           {musicOpen ? (
-            <div className="absolute right-0 top-full mt-2 z-40 w-72 rounded-2xl border border-white/10 bg-zinc-950/95 backdrop-blur-xl p-4 space-y-4 shadow-2xl">
+            <div className="absolute right-0 top-full mt-2 z-40 w-72 rounded-2xl bg-pxi-field p-4 space-y-4 shadow-2xl">
               {!isLoggedIn || musicConnected === false ? (
                 <div className="space-y-3">
                   <p className="text-sm text-zinc-400 leading-relaxed">
@@ -172,7 +172,7 @@ const EventsFilters = ({
           onClick={() => setNearMe(!nearMe)}
           className={`flex items-center justify-center gap-2 px-6 py-3 rounded-full text-[11px] font-black uppercase tracking-widest border shrink-0 transition-all ${
             nearMe
-              ? 'bg-pxi-purple text-white border-pxi-purple shadow-[0_0_30px_rgba(216,74,255,0.4)]'
+              ? 'bg-pxi-purple text-white border-pxi-purple'
               : 'bg-zinc-900/50 text-zinc-500 border-white/5 hover:text-white hover:border-white/20'
           }`}
         >
@@ -185,7 +185,7 @@ const EventsFilters = ({
           value={radiusKm}
           onChange={(e) => setRadiusKm(Number(e.target.value))}
           aria-label="Search radius"
-          className="bg-zinc-900/50 border border-white/5 rounded-full px-4 py-3 text-[11px] uppercase text-zinc-400 shrink-0 focus:outline-none focus:border-pxi-purple/50"
+          className="bg-zinc-900/50 border border-white/5 rounded-full px-4 py-3 text-[11px] uppercase text-zinc-400 shrink-0 focus:outline-none focus:ring-[1.5px] focus:ring-pxi-purple"
         >
           {RADIUS_OPTIONS.map((km) => (
             <option key={km} value={km}>

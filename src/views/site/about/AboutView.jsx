@@ -86,6 +86,70 @@ export default function AboutView() {
             </div>
           </div>
         </section>
+        {/* ============ A NOTE, said once, just before the ask ============ */}
+        <section className="note" id="note" aria-labelledby="note-h">
+          <div className="note-paper">
+            <i className="note-tape" aria-hidden="true"></i>
+            <h2 id="note-h" className="note-h">
+              There are{' '}
+              <span className="note-ul">
+                six
+                <svg viewBox="0 0 120 18" preserveAspectRatio="none" aria-hidden="true">
+                  <path pathLength="1" d="M3 11 C 24 4, 44 15, 62 9 S 98 5, 117 10" />
+                </svg>
+              </span>{' '}
+              of us.
+            </h2>
+            <p>No departments, no layers. The same six people design PXI, write the code, answer the support inbox and work the door on event nights. If something in the app made your night better, one of us built it. If something broke, one of us is already fixing it.</p>
+            <p>We are building this because the best nights disappear. The photos end up in forty camera rolls, the ticket is a dead link by morning, and nothing is left to show you were all there.</p>
+            <p>We don't have it all figured out. We ship, we watch what happens in a real room, and we fix what didn't hold up. That only works if you tell us the truth.</p>
+            <img className="note-mark" src="/site/img/pxi-mark.svg?v=grit5" alt="" width="56" height="56" aria-hidden="true" />
+          </div>
+        </section>
+        {/* ============ THE ASK ============ */}
+        <section className="contact" id="help" aria-labelledby="help-h">
+          <div className="help-in">
+            <h2 id="help-h" className="display">We can't do this<br />without you.</h2>
+            <p className="lead center">If PXI made one of your nights better, these four things help more than anything.</p>
+          </div>
+          <div className="cards">
+            <article className="ccard">
+              <span className="ci" data-i="Share08Icon" aria-hidden="true"></span>
+              <h3>Tell your people.</h3>
+              <p>Send PXI to the friend who always hosts, the cousin planning a wedding, the family group chat. Most people find us because someone they trust showed them.</p>
+              <button type="button" className="ccta" data-share>
+                <span className="ccta-label">Share PXI</span>
+              </button>
+              <span className="sr-only" role="status" aria-live="polite" data-share-status></span>
+            </article>
+            <article className="ccard">
+              <span className="ci" data-i="StarIcon" aria-hidden="true"></span>
+              <h3>Rate us on the App Store.</h3>
+              <p>It takes ten seconds and it decides whether the next person gives us a try. Honest ratings only.</p>
+              <a className="ccta" href="https://apps.apple.com/app/pxi/id6751762197?action=write-review" target="_blank" rel="noopener">Rate PXI</a>
+            </article>
+            <article className="ccard">
+              <span className="ci" data-i="BubbleChatIcon" aria-hidden="true"></span>
+              <h3>Tell us what's broken.</h3>
+              <p>A confusing screen, a missing feature, a bug at the worst moment. We want to hear all of it.</p>
+              <a className="ccta" href="/contact">Send feedback</a>
+            </article>
+            <article className="ccard">
+              <span className="ci" data-i="Camera01Icon" aria-hidden="true"></span>
+              <h3>Follow the journey.</h3>
+              <p>We post what we're building, what we got wrong and what's next, as it happens.</p>
+              <div className="ccta-row" role="group" aria-label="PXI on social media">
+                <a href="https://www.instagram.com/pxilabs/" target="_blank" rel="noopener noreferrer me">Instagram</a>
+                <a href="https://www.tiktok.com/@pxilabs" target="_blank" rel="noopener noreferrer me">TikTok</a>
+                <a href="https://www.youtube.com/@PXILabs" target="_blank" rel="noopener noreferrer me">YouTube</a>
+                <a href="https://x.com/PXILabs" target="_blank" rel="noopener noreferrer me">X</a>
+              </div>
+            </article>
+          </div>
+          <div className="signoff">
+            <p>Thank you for being here this early.</p>
+          </div>
+        </section>
       </main>
       <SiteFooter page="about" />
     </SiteShell>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -8,6 +8,7 @@ import { Menu01Icon, Cancel01Icon, Logout01Icon, DashboardSquare01Icon, ArrowDow
 import { useAuth } from "../../contexts/AuthContext";
 import { PxiLoadingIcon } from '@/components/loading/PxiLoading';
 import UserAvatar from '@/components/ui/UserAvatar';
+import MobileMenu from '@/components/layout/MobileMenu';
 
 const Navbar = () => {
     const [mounted, setMounted] = useState(false);
@@ -49,6 +50,8 @@ const Navbar = () => {
     }, []);
 
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+    const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
     const handleLogout = () => {
         logout();
@@ -216,84 +219,18 @@ const Navbar = () => {
                 </div>
             </div>
 
-            {mobileMenuOpen && (
-                <>
-                    <div
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="fixed inset-0 z-40"
-                    />
-                    <div className="md:hidden absolute top-full left-0 w-full p-8 flex flex-col gap-6 animate-fade-up h-screen z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
-                        {navLinks.map((link) => (
-                            <Link
-                                key={link.path}
-                                href={link.path}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className={`text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 ${
-                                    pathname === link.path ? "text-white" : "text-zinc-400"
-                                }`}
-                            >
-                                {link.name}
-                            </Link>
-                        ))}
-
-                        {mounted && isAuthenticated ? (
-                            <>
-                                <Link
-                                    href="/dashboard"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-zinc-400"
-                                >
-                                    Dashboard
-                                </Link>
-                                <Link
-                                    href="/events?wishlist=1"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-zinc-400"
-                                >
-                                    Wishlist
-                                </Link>
-                                <button
-                                    onClick={() => { setMobileMenuOpen(false); setShowLogoutModal(true); }}
-                                    className="text-left text-2xl font-black uppercase tracking-widest pb-4 border-b border-white/5 text-pxi-purple"
-                                >
-                                    Sign Out
-                                </button>
-                            </>
-                        ) : null}
-
-                        {/* Log in / Create belong in the hamburger on EVERY page —
-                            gating them to /events left landing and event-detail
-                            pages with no way to sign in from mobile. */}
-                        {mounted && !isAuthenticated ? (
-                            <div className="mt-4 grid grid-cols-2 gap-3">
-                                <Link
-                                    href={`/login?redirect=${encodeURIComponent(pathname || '/')}`}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="flex h-12 w-full items-center justify-center rounded-full bg-white/8 text-sm font-black uppercase tracking-widest text-white transition-colors hover:bg-white/12"
-                                >
-                                    Log in
-                                </Link>
-                                <Link
-                                    href="/login?mode=signup&redirect=/dashboard/events/new"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="glow-cta flex h-12 w-full items-center justify-center text-sm font-black uppercase tracking-widest"
-                                >
-                                    Create
-                                </Link>
-                            </div>
-                        ) : showEventsButton ? (
-                            <Link
-                                href="/events"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="glow-cta mt-4 flex h-12 w-full items-center justify-center text-sm font-black uppercase tracking-widest"
-                            >
-                                Events
-                            </Link>
-                        ) : null}
-                    </div>
-                </>
-            )}
         </header>
+
+        <MobileMenu
+            open={mobileMenuOpen}
+            onClose={closeMobileMenu}
+            page={pathname === "/" ? "home" : pathname === "/platform" ? "platform" : pathname === "/about" ? "about" : undefined}
+            user={mounted && isAuthenticated ? user : null}
+            loginHref={`/login?redirect=${encodeURIComponent(pathname || '/')}`}
+            onSignOut={() => { setMobileMenuOpen(false); setShowLogoutModal(true); }}
+            LinkComponent={Link}
+            desktopMin={768}
+        />
 
         {/* Sign-out confirmation modal */}
         {showLogoutModal && (
@@ -310,7 +247,7 @@ const Navbar = () => {
                     <div className="flex gap-3">
                         <button
                             onClick={handleLogout}
-                            className="flex-1 px-5 py-3 rounded-full bg-pxi-purple text-white font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all border-0"
+                            className="flex-1 px-5 py-3 rounded-full bg-[#d84aff] text-white font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all border-0"
                         >
                             Sign Out
                         </button>

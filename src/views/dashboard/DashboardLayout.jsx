@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -14,6 +14,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { authService, authStorage } from '../../services/auth';
 import { canAccessAdminDashboard } from '@/lib/adminAccess';
 import { isVendorUser } from '@/lib/accountTier';
+import MobileMenu from '@/components/layout/MobileMenu';
 import AccountCardPopover from '@/components/dashboard/AccountCardPopover';
 import SidebarIconTooltip from '@/components/dashboard/SidebarIconTooltip';
 import DashboardModalHost from '@/components/dashboard/DashboardModalHost';
@@ -56,28 +57,29 @@ function NavLink({
 }) {
     const isActive = isNavItemActive(pathname, item, searchParams);
     const isLiveOperations = item.key === 'operations' && isLiveEvent;
+    // App look: the active item is a flat purple pill; "live" is the orange accent.
     const activeClasses = isLiveOperations
-        ? 'bg-emerald-500/[0.07] text-emerald-200'
-        : 'bg-white/[0.055] text-white';
+        ? 'bg-pxi-orange/15 text-pxi-orange'
+        : 'bg-pxi-purple text-white';
     const inactiveClasses = isLiveOperations
-        ? 'group bg-transparent hover:bg-emerald-500/[0.04]'
-        : 'group bg-transparent hover:bg-white/[0.03]';
+        ? 'group bg-transparent hover:bg-pxi-orange/10'
+        : 'group bg-transparent hover:bg-white/[0.06]';
     const iconClasses = isLiveOperations
-        ? 'text-emerald-300 opacity-60 group-hover:opacity-80 transition-opacity duration-300'
+        ? 'text-pxi-orange opacity-80 group-hover:opacity-100 transition-opacity duration-300'
         : isActive
-            ? 'text-white opacity-90'
-            : 'text-white opacity-40 group-hover:opacity-70 transition-opacity duration-300';
+            ? 'text-white opacity-100'
+            : 'text-white opacity-50 group-hover:opacity-80 transition-opacity duration-300';
     const labelClasses = isLiveOperations
-        ? 'text-emerald-300/60 group-hover:text-emerald-200/80 transition-colors duration-300'
+        ? 'text-pxi-orange/80 group-hover:text-pxi-orange transition-colors duration-300'
         : isActive
             ? 'text-white'
-            : 'text-white/45 group-hover:text-white/75 transition-colors duration-300';
+            : 'text-[#9a9a9a] group-hover:text-white transition-colors duration-300';
 
     const linkClasses = sidebarCollapsed
-        ? `w-10 h-10 rounded-xl flex items-center justify-center mx-auto transition-all duration-300 ease-in-out ${
+        ? `w-10 h-10 rounded-full flex items-center justify-center mx-auto transition-all duration-300 ease-in-out ${
             isActive ? activeClasses : inactiveClasses
         }`
-        : `relative w-full inline-flex items-center px-4 py-[9px] rounded-xl transition-all duration-300 ease-in-out ${
+        : `relative w-full inline-flex items-center px-4 py-[10px] rounded-full transition-all duration-300 ease-in-out ${
             isActive ? activeClasses : inactiveClasses
         }`;
 
@@ -88,12 +90,6 @@ function NavLink({
             className={linkClasses}
             title={sidebarCollapsed ? item.label : undefined}
         >
-            {isActive && !sidebarCollapsed ? (
-                <span
-                    aria-hidden="true"
-                    className={`absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full ${isLiveOperations ? 'bg-emerald-300' : 'bg-[#d84aff]'}`}
-                />
-            ) : null}
             <span className="relative flex-shrink-0">
                 <HugeiconsIcon
                     icon={item.icon}
@@ -102,7 +98,7 @@ function NavLink({
                 />
             </span>
             <span
-                className={`block overflow-hidden whitespace-nowrap text-[13px] font-semibold tracking-wide transition-all duration-300 ease-in-out ${labelClasses} ${
+                className={`block overflow-hidden whitespace-nowrap text-[13px] font-bold tracking-wide transition-all duration-300 ease-in-out ${labelClasses} ${
                     sidebarCollapsed ? 'max-w-0 opacity-0 ml-0' : 'max-w-[180px] opacity-100 ml-2.5'
                 }`}
             >
@@ -124,7 +120,7 @@ export default function DashboardLayout({ children }) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const fromMobile = searchParams.get('from') === 'mobile';
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [phoneCheckDone, setPhoneCheckDone] = useState(false);
     const [liveNow, setLiveNow] = useState(0);
@@ -333,7 +329,7 @@ export default function DashboardLayout({ children }) {
                     </button>
                     <button
                         onClick={() => dashboardShellActions.closeTopLayer()}
-                        className="pill-ghost flex-1 px-4 py-2.5 text-sm font-medium"
+                        className="pill-cancel flex-1 px-4 py-2.5 text-sm font-medium"
                     >
                         Cancel
                     </button>
@@ -410,21 +406,24 @@ export default function DashboardLayout({ children }) {
         });
     }, [isAdminNav, navItems, sidebarCollapsed]);
 
-    const closeMobileSidebar = () => setSidebarOpen(false);
+    const closeMobileMenu = useCallback(() => setMenuOpen(false), []);
+    // The phone menu is the shared one: the sidebar's pages on top, then Dashboard / Wishlist and the account row.
+    const menuLinks = useMemo(
+        () => navItems.map((item) => ({
+            page: item.key,
+            href: item.path,
+            label: item.label,
+            active: isNavItemActive(pathname, item, searchParams),
+        })),
+        [navItems, pathname, searchParams],
+    );
+    const activeMenuPage = menuLinks.find((l) => l.active)?.page;
 
     return (
         <div className="dashboard-page-surface flex h-screen overflow-hidden">
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
-                    onClick={closeMobileSidebar}
-                />
-            )}
-
             <aside
-                className={`dashboard-sidebar fixed top-0 left-0 z-50 flex h-full flex-col overflow-hidden border-r border-white/[0.06] bg-[#0b0b0f] transition-all duration-300 ease-in-out
-                    ${sidebarCollapsed ? 'md:w-[72px] w-[240px]' : 'w-[240px]'}
-                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:static md:z-auto md:translate-x-0`}
+                className={`dashboard-sidebar hidden h-full flex-col overflow-hidden bg-pxi-surface transition-all duration-300 ease-in-out md:flex
+                    ${sidebarCollapsed ? 'md:w-[72px] w-[240px]' : 'w-[240px]'}`}
             >
                 <div className="flex h-full flex-col justify-between">
                     <div className="flex min-h-0 flex-col">
@@ -435,7 +434,7 @@ export default function DashboardLayout({ children }) {
 
                             <button
                                 onClick={() => dashboardShellActions.toggleSidebar()}
-                                className={`group relative hidden items-center justify-center overflow-hidden rounded-full transition md:flex ${sidebarCollapsed ? 'bg-transparent hover:bg-white/[0.08]' : 'bg-white/[0.04] hover:bg-white/[0.08]'} text-white/70 hover:text-white ${sidebarCollapsed ? 'h-11 w-11' : 'h-9 w-9 shrink-0'}`}
+                                className={`group relative hidden items-center justify-center overflow-hidden rounded-full transition md:flex ${sidebarCollapsed ? 'bg-transparent hover:bg-white/[0.08]' : 'bg-pxi-field hover:bg-[#3a3a3a]'} text-white/70 hover:text-white ${sidebarCollapsed ? 'h-11 w-11' : 'h-9 w-9 shrink-0'}`}
                                 aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                                 type="button"
                             >
@@ -444,19 +443,12 @@ export default function DashboardLayout({ children }) {
                                 ) : null}
                                 <HugeiconsIcon icon={sidebarCollapsed ? PanelLeftCloseIcon : PanelLeftOpenIcon} size={sidebarCollapsed ? 26 : 18} className={sidebarCollapsed ? 'opacity-0 transition duration-200 group-hover:opacity-100' : ''} />
                             </button>
-                            <button
-                                className="ml-auto text-zinc-600 hover:text-zinc-400 md:hidden"
-                                onClick={closeMobileSidebar}
-                                type="button"
-                            >
-                                <HugeiconsIcon icon={Cancel01Icon} size={18} />
-                            </button>
                         </div>
 
                         {rolesReady && canAccessAdminDashboard(user) && (
                             <div className={`mb-2 px-3 md:px-4 ${sidebarCollapsed ? 'flex flex-col items-center' : ''}`}>
                                 <div
-                                    className={`flex rounded-full bg-white/[0.045] p-0.5 ${sidebarCollapsed ? 'w-11 flex-col gap-0.5 py-1' : 'w-full'}`}
+                                    className={`flex rounded-full bg-pxi-field p-0.5 ${sidebarCollapsed ? 'w-11 flex-col gap-0.5 py-1' : 'w-full'}`}
                                     role="group"
                                     aria-label="Switch between platform admin and workspace dashboard"
                                 >
@@ -465,8 +457,8 @@ export default function DashboardLayout({ children }) {
                                         onClick={() => setAdminSidebarModeAndNavigate('admin')}
                                         className={`${sidebarCollapsed ? 'py-2 text-[10px]' : 'flex-1 py-2 text-xs'} rounded-full font-bold tracking-wide transition-colors ${
                                             adminSidebarMode === 'admin'
-                                                ? 'bg-white/[0.04] text-white/90'
-                                                : 'text-white/40 hover:text-white/70'
+                                                ? 'bg-pxi-purple text-white'
+                                                : 'text-white/50 hover:text-white/80'
                                         }`}
                                         title="Platform admin"
                                     >
@@ -477,8 +469,8 @@ export default function DashboardLayout({ children }) {
                                         onClick={() => setAdminSidebarModeAndNavigate('user')}
                                         className={`${sidebarCollapsed ? 'py-2 text-[10px]' : 'flex-1 py-2 text-xs'} rounded-full font-bold tracking-wide transition-colors ${
                                             adminSidebarMode === 'user'
-                                                ? 'bg-white/[0.04] text-white/90'
-                                                : 'text-white/40 hover:text-white/70'
+                                                ? 'bg-pxi-purple text-white'
+                                                : 'text-white/50 hover:text-white/80'
                                         }`}
                                         title="Workspace dashboard"
                                     >
@@ -491,7 +483,7 @@ export default function DashboardLayout({ children }) {
                         <nav className={`dashboard-scrollbar-none mt-1 flex-1 overflow-hidden ${sidebarCollapsed ? 'flex flex-col items-center gap-1.5 px-0' : 'space-y-1.5 px-3 md:px-4'}`}>
                             {navEntries.map((entry) => (
                                 entry.type === 'section' ? (
-                                    <div key={entry.key} className="px-4 pt-4 pb-1 text-[11px] font-medium tracking-[0.02em] text-white/[0.28] first:pt-1">
+                                    <div key={entry.key} className="px-4 pt-4 pb-1 text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple first:pt-1">
                                         {entry.label}
                                     </div>
                                 ) : (
@@ -502,7 +494,6 @@ export default function DashboardLayout({ children }) {
                                         searchParams={searchParams}
                                         sidebarCollapsed={sidebarCollapsed}
                                         isLiveEvent={hasLiveEvent}
-                                        onNavigate={closeMobileSidebar}
                                     />
                                 </div>
                                 )
@@ -520,7 +511,7 @@ export default function DashboardLayout({ children }) {
                             onSignOut={() => dashboardShellActions.openModal('logoutConfirm')}
                         />
                         {showDevCaps && (
-                            <div className={`mt-2 rounded-xl bg-white/[0.045] px-2 py-1 text-[10px] text-white/70 ${sidebarCollapsed ? 'text-center' : ''}`}>
+                            <div className={`mt-2 rounded-xl bg-pxi-field px-2 py-1 text-[10px] text-white/70 ${sidebarCollapsed ? 'text-center' : ''}`}>
                                 {capabilities.hasBouncerAccess ? 'LiveOps: enabled' : 'LiveOps: disabled'} ·
                                 {' '}events:{capabilities.source?.events ? 'Y' : 'N'}
                                 {' '}notif:{capabilities.source?.notifications ? 'Y' : 'N'}
@@ -539,16 +530,53 @@ export default function DashboardLayout({ children }) {
             />
 
             <div className="flex min-w-0 flex-1 flex-col">
-                <header className="glass-panel flex items-center gap-4 rounded-none px-5 py-4 md:hidden">
+                <header className={`glass-panel flex items-center gap-4 rounded-none px-5 py-4 md:hidden ${menuOpen ? 'relative z-50 bg-[#050505]' : ''}`}>
                     <button
-                        onClick={() => setSidebarOpen(true)}
+                        onClick={() => setMenuOpen((v) => !v)}
                         className="text-zinc-400 hover:text-white"
                         type="button"
+                        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                        aria-expanded={menuOpen}
+                        aria-controls="mnav"
                     >
-                        <HugeiconsIcon icon={Menu01Icon} size={22} />
+                        <HugeiconsIcon icon={menuOpen ? Cancel01Icon : Menu01Icon} size={22} />
                     </button>
                     <img src="/logo-mark.png" alt="PXI" className="h-[38px] w-auto object-contain" />
+                    {rolesReady && canAccessAdminDashboard(user) && (
+                        <div
+                            className="ml-auto flex rounded-full bg-pxi-field p-0.5"
+                            role="group"
+                            aria-label="Switch between platform admin and workspace dashboard"
+                        >
+                            {[['admin', 'ADMIN'], ['user', 'WORKSPACE']].map(([mode, label]) => (
+                                <button
+                                    key={mode}
+                                    type="button"
+                                    onClick={() => setAdminSidebarModeAndNavigate(mode)}
+                                    className={`rounded-full px-3 py-1.5 text-[11px] font-bold tracking-wide transition-colors ${
+                                        adminSidebarMode === mode ? 'bg-pxi-purple text-white' : 'text-white/50'
+                                    }`}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </header>
+
+                <MobileMenu
+                    open={menuOpen}
+                    onClose={closeMobileMenu}
+                    page={activeMenuPage}
+                    links={menuLinks}
+                    user={rolesReady ? user : null}
+                    LinkComponent={Link}
+                    desktopMin={768}
+                    onSignOut={() => {
+                        closeMobileMenu();
+                        dashboardShellActions.openModal('logoutConfirm');
+                    }}
+                />
 
                 <main className="flex-1 overflow-auto p-6 md:p-8">
                     {children}

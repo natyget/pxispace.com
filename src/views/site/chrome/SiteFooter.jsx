@@ -1,6 +1,8 @@
 // Shared footer for the redesign pages (ported from pxispace-redesign/site). The one per-page
 // difference: the Fashion Week Brooklyn guide loads no icon script, so it inlines the Instagram glyph.
 // (Home's "Replay the night" lives at the end of its finale, just above this footer.)
+import GooglePlayMark from '@/components/links/GooglePlayMark';
+import { PXI_PLAY_STORE_URL } from '@/lib/appStoreLinks';
 
 /** @param {{ page: 'home' | 'platform' | 'about' | 'fwbk' }} props */
 export default function SiteFooter({ page }) {
@@ -13,11 +15,17 @@ export default function SiteFooter({ page }) {
       <div className="foot-inner">
         <div className="foot-grid">
           <div className="foot-brand">
-            <p>Tickets, one shared camera roll, and the morning-after scrapbook. Never lose the night.</p>{' '}
-            <a className="appstore" href="https://apps.apple.com/app/pxi/id6751762197" target="_blank" rel="noopener noreferrer" aria-label="Download on App Store">
-              <img src="/site/img/apple-logo-white.svg" alt="" width="18" height="22" />
-              <span><small>Download on</small>App Store</span>
-            </a>
+            <p>Tickets, one shared camera roll, and the morning-after scrapbook. Never lose the night.</p>
+            <div className="appstores">
+              <a className="appstore" href="https://apps.apple.com/app/pxi/id6751762197" target="_blank" rel="noopener noreferrer" aria-label="Download on App Store">
+                <img src="/site/img/apple-logo-white.svg" alt="" width="18" height="22" />
+                <span><small>Download on</small>App Store</span>
+              </a>
+              <a className="appstore" href={PXI_PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" aria-label="Get it on Google Play">
+                <GooglePlayMark />
+                <span><small>Get it on</small>Google Play</span>
+              </a>
+            </div>
           </div>
           <nav className="foot-col" aria-label="Explore">
             <h4>Explore</h4>

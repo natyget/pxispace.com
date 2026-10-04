@@ -18,7 +18,7 @@ const EventsHero = ({ searchQuery, setSearchQuery, sortMode, setSortMode }) => {
       <div className="flex-1 lg:max-w-[60%]">
         <h1 className="text-6xl md:text-9xl font-black uppercase tracking-tighter leading-[0.85] mb-6">
           Public <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-pxi-purple via-pink-400 to-white">
+          <span className="text-pxi-purple">
             Events
           </span>
         </h1>
@@ -38,7 +38,7 @@ const EventsHero = ({ searchQuery, setSearchQuery, sortMode, setSortMode }) => {
           <input
             type="search"
             placeholder="Search events, cities…"
-            className="w-full bg-zinc-900/40 border border-white/10 rounded-[2rem] py-5 pl-16 pr-8 text-lg text-white focus:outline-none focus:border-pxi-purple/50 focus:bg-zinc-900 transition-all backdrop-blur-sm"
+            className="w-full bg-pxi-surface border border-white/10 rounded-[2rem] py-5 pl-16 pr-8 text-lg text-white focus:outline-none focus:ring-[1.5px] focus:ring-pxi-purple focus:bg-zinc-900 transition-all"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -52,7 +52,7 @@ const EventsHero = ({ searchQuery, setSearchQuery, sortMode, setSortMode }) => {
             id="pxi-discover-sort"
             value={sortMode}
             onChange={(e) => setSortMode(e.target.value)}
-            className="w-full sm:w-auto min-w-[200px] bg-zinc-900/80 border border-white/10 rounded-2xl py-4 px-5 text-sm font-black uppercase tracking-widest text-white focus:outline-none focus:border-pxi-purple/50"
+            className="w-full sm:w-auto min-w-[200px] bg-pxi-field border border-white/10 rounded-2xl py-4 px-5 text-sm font-black uppercase tracking-widest text-white focus:outline-none focus:ring-[1.5px] focus:ring-pxi-purple"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>

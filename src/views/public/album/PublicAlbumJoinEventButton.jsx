@@ -22,14 +22,15 @@ function formatTicketPrice(event) {
 export default function PublicAlbumJoinEventButton({ album, albumId, className = '' }) {
     const eventId = album?.event?.id || null;
     const ticketLabel = formatTicketPrice(album?.event);
-    const buttonLabel = ticketLabel ? `Join Event · ${ticketLabel}` : 'Join Event';
+    // The app's wording: "Join", or "Get ticket $10.00" (no dot before the price).
+    const buttonLabel = !ticketLabel ? 'Join' : ticketLabel === 'PAID' ? 'Get ticket' : `Get ticket ${ticketLabel}`;
     const fallbackDeepLink = albumId ? `pxi://album/${albumId}` : null;
     // Finalized scrapbook (event passed + grace over): joining is closed server-side.
     const isFinalized = album?.event?.effectiveStatus === 'ARCHIVED';
     const alreadyIn = album?.shareAccess?.tier === 'FULL';
 
     const wrapperClass = [
-        'album-thread-chatbar shrink-0 border-t border-white/10 bg-black/90 backdrop-blur-md',
+        'album-thread-chatbar shrink-0 border-t border-white/10 bg-black/90',
         className,
     ]
         .filter(Boolean)
@@ -50,20 +51,20 @@ export default function PublicAlbumJoinEventButton({ album, albumId, className =
                 }}
             >
                 {isFinalized ? (
-                    <div className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-6 text-[12px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                    <div className="flex h-12 w-full items-center justify-center rounded-full bg-pxi-field px-6 text-[12px] font-black uppercase tracking-[0.18em] text-zinc-500">
                         Scrapbook — finalized
                     </div>
                 ) : eventId && !alreadyIn ? (
                     <Link
                         href={`/events/${eventId}/checkout`}
-                        className="flex h-12 w-full items-center justify-center rounded-full bg-[#d946ef] px-6 text-[13px] font-black uppercase tracking-[0.18em] text-white shadow-[0_0_20px_rgba(217,70,239,0.5)] transition hover:opacity-90"
+                        className="flex h-12 w-full items-center justify-center rounded-full bg-pxi-purple px-6 text-[13px] font-black uppercase tracking-[0.18em] text-white transition hover:opacity-90"
                     >
                         {buttonLabel}
                     </Link>
                 ) : (
                     <a
                         href={fallbackDeepLink}
-                        className="flex h-12 w-full items-center justify-center rounded-full bg-white px-6 text-[13px] font-black uppercase tracking-[0.18em] text-black shadow-lg transition hover:bg-zinc-200"
+                        className="flex h-12 w-full items-center justify-center rounded-full bg-pxi-purple px-6 text-[13px] font-black uppercase tracking-[0.18em] text-white shadow-lg transition hover:brightness-110"
                     >
                         Open album in app
                     </a>

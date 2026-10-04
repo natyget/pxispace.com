@@ -40,7 +40,7 @@ const EventsDiscoverMap = ({ events }) => {
 
   if (!src) {
     return (
-      <div className="glass-dark rounded-[2rem] border border-white/10 p-10 text-center text-zinc-500 mb-12">
+      <div className="bg-pxi-surface rounded-[2rem] p-10 text-center text-zinc-500 mb-12">
         <HugeiconsIcon icon={Location01Icon} className="mx-auto mb-3 opacity-40" size={32} />
         <p className="text-sm font-medium">No map locations yet — add coordinates to events in the dashboard.</p>
       </div>
@@ -53,7 +53,7 @@ const EventsDiscoverMap = ({ events }) => {
       <p className="text-zinc-500 text-sm mb-4 max-w-2xl">
         Explore where public events are happening. Pan and zoom inside the frame (OpenStreetMap).
       </p>
-      <div className="relative rounded-[2rem] overflow-hidden border border-white/10 h-[min(420px,50vh)] bg-zinc-900">
+      <div className="relative rounded-[2rem] overflow-hidden h-[min(420px,50vh)] bg-pxi-surface">
         <iframe title="Event locations map" src={src} className="absolute inset-0 w-full h-full border-0" loading="lazy" />
       </div>
     </section>
