@@ -291,7 +291,7 @@ export default async function initPlatform(PXR, L) {
           <div class="dcard cc-chart"><p class="d-eb">Sold per day, 30 days</p><p class="d-h">Tickets</p>${tix.svg}</div>
           <div class="dcard cc-next">
             <div class="d-headrow"><div><p class="d-eb">Now / next</p><p class="d-h">Upcoming + live</p></div><span class="va">View all</span></div>
-            <div class="nx-list">${nx('Late Checkout', 'Live · Fri, Oct 2 · 180 tickets', 'Live', 'ok', 'live')}${nx('Sunday Session', 'Upcoming · Sun, Oct 11', 'Upcoming', 'warn', 'up')}</div>
+            <div class="nx-list">${nx('Late Checkout', 'Fri Oct 2, 180 tickets', 'Live', 'ok', 'live')}${nx('Sunday Session', 'Sun Oct 11', 'Upcoming', 'warn', 'up')}</div>
           </div>
         </div>
         <div class="dcard cc-band">
@@ -467,7 +467,7 @@ export default async function initPlatform(PXR, L) {
       txt(go, t > 7.85 ? 'CREATING...' : 'CREATE EVENT');
     });
     tl.eventCallback('onUpdate')();
-    register(sec, 'Launch', tl, (t) => t < 8.3 ? { k: 'Late Checkout', v: `Draft · ${Math.round(seg(t, 0.1, 7.4) * 100)}% set up`, p: seg(t, 0.1, 7.4) } : { k: 'Late Checkout', v: 'On sale', p: 1 });
+    register(sec, 'Launch', tl, (t) => t < 8.3 ? { k: 'Late Checkout', v: `Draft, ${Math.round(seg(t, 0.1, 7.4) * 100)}% set up`, p: seg(t, 0.1, 7.4) } : { k: 'Late Checkout', v: 'On sale', p: 1 });
     done(tl, rm);
   }
 
@@ -491,7 +491,7 @@ export default async function initPlatform(PXR, L) {
         <div class="sell-cum"><span>Cumulative</span><div class="cum-bar"><i></i></div><span class="cum-n">0 / 180</span></div>
       </div>`;
     const MK = [['Marketing spend', '$126', ''], ['Attributed tickets', '0', 'n-att'], ['Attributed revenue', '$0', 'n-attr'], ['Return on spend', '0x', 'n-ros']];
-    const sold = `<div class="soldout"><span>Sold out</span><small>${M ? '180 / 180 sold' : '180 / 180 · 4 days early'}</small></div>`;
+    const sold = `<div class="soldout"><span>Sold out</span><small>${M ? '180 / 180 sold' : '180 / 180, 4 days early'}</small></div>`;
     if (!M) {
       stage.innerHTML = card + `<div class="ins-panel"><p class="ins-eb">What we noticed at this event</p><p class="ins-empty">Insights appear here as sales come in.</p><div class="ins-list">${INS.map((x) => insHTML(x)).join('')}</div></div>
         <div class="dcard mkt"><div class="d-headrow"><div><p class="d-eb">Marketing</p><p class="d-h">Spend → tickets, attributed</p></div><div class="mkt-r"><span class="d-chip brand">7-day attribution</span><span class="d-chip">Campaigns</span><span class="d-chip">Ads</span></div></div>
@@ -548,7 +548,7 @@ export default async function initPlatform(PXR, L) {
     tl.eventCallback('onUpdate')();
     register(sec, 'Sell', tl, (t) => {
       const f = seg(t, W0, W1) * (DAYS - 1), d = Math.floor(f), s = Math.round(lerp(CUM[d], CUM[Math.min(d + 1, DAYS - 1)], f - d)) * (t > W0 ? 1 : 0);
-      return s >= 180 ? { k: 'Late Checkout', v: 'Sold out · 180/180', p: 1 } : { k: 'Late Checkout', v: `On sale · ${s}/180`, p: s / 180 };
+      return s >= 180 ? { k: 'Late Checkout', v: 'Sold out, 180/180', p: 1 } : { k: 'Late Checkout', v: `On sale, ${s}/180`, p: s / 180 };
     });
     done(tl, rm);
   }
@@ -674,11 +674,11 @@ export default async function initPlatform(PXR, L) {
       if (res && cardKey !== k) {
         cardKey = k;
         card.className = 'sc-card' + (s.ok ? '' : ' bad');
-        card.innerHTML = s.ok ? `<img src="${P[s.p].img}" alt=""><div><b>${P[s.p].n}</b><small>@${P[s.p].u}</small><em>Valid Ticket · Door 2</em></div>` : `<span class="bad-ic">${lu(LU.alert, 28)}</span><div><b>Ticket already scanned</b><small>Door 2 at ${clockStr(clockAt(SCANS[1].a + 0.5))}</small><em>Tap to Retry</em></div>`;
+        card.innerHTML = s.ok ? `<img src="${P[s.p].img}" alt=""><div><b>${P[s.p].n}</b><small>@${P[s.p].u}</small><em>Valid Ticket, Door 2</em></div>` : `<span class="bad-ic">${lu(LU.alert, 28)}</span><div><b>Ticket already scanned</b><small>Door 2 at ${clockStr(clockAt(SCANS[1].a + 0.5))}</small><em>Tap to Retry</em></div>`;
       }
     });
     tl.eventCallback('onUpdate')();
-    register(sec, 'Doors', tl, (t) => { const c = clockAt(t), n = ARR_CUM[clamp(Math.floor(c - 1290), 0, 120)]; return { k: `Doors · ${clockStr(c)}`, v: `${n} in · ${Math.round((n / 180) * 100)}% full`, p: n / 180 }; });
+    register(sec, 'Doors', tl, (t) => { const c = clockAt(t), n = ARR_CUM[clamp(Math.floor(c - 1290), 0, 120)]; return { k: `Doors, ${clockStr(c)}`, v: `${n} in, ${Math.round((n / 180) * 100)}% full`, p: n / 180 }; });
     done(tl, rm);
   }
 
@@ -725,8 +725,8 @@ export default async function initPlatform(PXR, L) {
       const ch = areaChart({ w: 560, h: 150, series: [{ values: H_CHAT, color: '#c93df2' }, { values: H_RX, color: '#0d9488' }, { values: H_CAP.map((v) => v * 2), color: '#d97706' }], max: 480, ticks: [0, 200, 400], xl: HOURS.map((h, i) => [i, h]), padL: 38, fs: 14, stacked: true, fill: [0.18, 0.02] });
       stage.innerHTML = `<div class="dcard heat">
           <div class="d-headrow"><div><p class="d-eb">Spatial intelligence</p><p class="d-h">Seaport Loft<span class="d-chip">Auto-mapped from photo GPS</span></p></div><span class="d-pill ghost sm">Recalibrate</span></div>
-          <div class="heat-map">${heatSVG(plan, cl)}<span class="heat-time">9:30 PM</span><span class="heat-peak">Peak · 11:42 PM · Main room</span></div>
-          <div class="play"><span class="pb">${hi('PlayIcon', 15)}</span><span class="lbl">Play the night back</span><div class="hist">${'<i></i>'.repeat(48)}</div><span class="pfoot"><b class="h-geo">0</b> geotagged photos · <b class="h-sc">0</b> scans</span></div>
+          <div class="heat-map">${heatSVG(plan, cl)}<span class="heat-time">9:30 PM</span><span class="heat-peak">Peak 11:42 PM, Main room</span></div>
+          <div class="play"><span class="pb">${hi('PlayIcon', 15)}</span><span class="lbl">Play the night back</span><div class="hist">${'<i></i>'.repeat(48)}</div><span class="pfoot"><b class="h-geo">0</b> geotagged photos, <b class="h-sc">0</b> scans</span></div>
         </div>
         <div class="dcard hype">
           <div class="d-headrow"><div><p class="d-eb">Run the night</p><p class="d-h">Hype through the night</p></div><div class="seg"><span class="on">All activity</span><span>Chat</span><span>Reactions</span><span>Captures</span></div></div>
@@ -789,7 +789,7 @@ export default async function initPlatform(PXR, L) {
       txt(q('.h-chat'), int(cumAt(H_CHAT, c))); txt(q('.h-rx'), int(cumAt(H_RX, c))); txt(q('.h-cap'), int(cumAt(H_CAP, c)));
     });
     tl.eventCallback('onUpdate')();
-    register(sec, 'The room', tl, (t) => { const c = lerp(C0, C1, seg(t, A, B)), s = hypeAt(c); return { k: `Live · ${clockStr(21 * 60 + c)}`, v: `Hype ${s} · ${tierOf(s)}`, p: s / 150 }; });
+    register(sec, 'The room', tl, (t) => { const c = lerp(C0, C1, seg(t, A, B)), s = hypeAt(c); return { k: `Live, ${clockStr(21 * 60 + c)}`, v: `Hype ${s}, ${tierOf(s)}`, p: s / 150 }; });
     done(tl, rm);
   }
 
@@ -847,7 +847,7 @@ export default async function initPlatform(PXR, L) {
       txt(dl, got ? '8 photos saved' : 'Download 8 photos');
     });
     tl.eventCallback('onUpdate')();
-    register(sec, 'The recap', tl, (t) => ({ k: 'Wrapped', v: t > 6 ? 'Kit · 8 photos' : '214 photos', p: 1 }));
+    register(sec, 'The recap', tl, (t) => ({ k: 'Wrapped', v: t > 6 ? 'Kit, 8 photos' : '214 photos', p: 1 }));
     done(tl, rm);
   }
 
@@ -857,9 +857,9 @@ export default async function initPlatform(PXR, L) {
     const L = M ? mLayout(sec, rm) : null;
     const F = [['Sold', 180, '#efc7ff'], ['Scanned', 164, '#d76bff'], ['Posted media', 38, '#8f2bb8']];
     const funnel = `<div class="dcard funnel${M ? ' crowd-b' : ''}"><p class="d-eb">Audience</p><p class="d-h">Attendance path</p>
-      <div class="fun">${F.map(([n, v, c], i) => `${i ? `<span class="fun-chip">${Math.round((v / F[i - 1][1]) * 100)}% advance <em>· ${F[i - 1][1] - v} drop</em></span>` : ''}<div class="fun-r"><div class="fun-l"><b><i style="background:${c}"></i>${n}</b><small>${Math.round((v / 180) * 100)}% of sold</small></div><div class="fun-t"><div class="bar" style="width:${Math.max(10, (v / 180) * 100)}%;background:${c}"><b class="fv" data-v="${v}">0</b></div></div></div>`).join('')}</div></div>`;
+      <div class="fun">${F.map(([n, v, c], i) => `${i ? `<span class="fun-chip">${Math.round((v / F[i - 1][1]) * 100)}% advance <em>${F[i - 1][1] - v} drop</em></span>` : ''}<div class="fun-r"><div class="fun-l"><b><i style="background:${c}"></i>${n}</b><small>${Math.round((v / 180) * 100)}% of sold</small></div><div class="fun-t"><div class="bar" style="width:${Math.max(10, (v / 180) * 100)}%;background:${c}"><b class="fv" data-v="${v}">0</b></div></div></div>`).join('')}</div></div>`;
     const strip = `<div class="d-strip s4"><div><small>Attendees</small><b class="cv" data-v="164">0</b></div><div><small>Passports</small><b class="cv" data-v="131">0</b></div><div><small>Emailable</small><b class="cv" data-v="118">0</b></div><div><small>Repeat</small><b class="cv" data-v="31" data-f="pct">0%</b></div></div>`;
-    const filters = '<div class="filters"><span class="flt">Email opt-in</span><span class="flt">City · Boston</span><span class="flt">Passport holder</span></div>';
+    const filters = '<div class="filters"><span class="flt">Email opt-in</span><span class="flt">City, Boston</span><span class="flt">Passport holder</span></div>';
     const saved = '<span class="seg-saved">Boston regulars <em>86</em><span>Send →</span></span>';
     const crm = M ? `<div class="dcard crm crowd-b"><div class="d-headrow"><div><p class="d-eb">CRM</p><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 12)}Scanned</span></div>${strip}${filters}
         <div class="match-m"><span class="match-l"><b class="match">164</b>attendees match</span></div>
@@ -909,7 +909,7 @@ export default async function initPlatform(PXR, L) {
       txt(sendbtn, sent ? 'Sent to 86 guests' : 'Send campaign');
     });
     tl.eventCallback('onUpdate')();
-    register(sec, 'Your crowd', tl, (t) => t > T.sent ? { k: 'Campaign · Email', v: 'Sent to 86', p: 1 } : t > T.save[1] ? { k: 'Segment saved', v: 'Boston regulars · 86', p: 86 / 164 } : { k: 'After the night', v: '164 verified guests', p: 164 / 180 });
+    register(sec, 'Your crowd', tl, (t) => t > T.sent ? { k: 'Campaign, Email', v: 'Sent to 86', p: 1 } : t > T.save[1] ? { k: 'Segment saved', v: 'Boston regulars, 86', p: 86 / 164 } : { k: 'After the night', v: '164 verified guests', p: 164 / 180 });
     done(tl, rm);
   }
 
@@ -940,7 +940,7 @@ export default async function initPlatform(PXR, L) {
       <div class="iv-chips"><span class="og">OG Attendees</span><span>All Friends</span><span>Clear</span></div>
       <div class="iv-sec"><span>OG ATTENDEES</span><span class="all">INVITE ALL (212)</span></div>
       <div class="iv-list">${OG.map((p) => `<div class="iv-row"><img src="${P[p].img}" alt=""><div><b>${P[p].n}</b><small>@${P[p].u}</small></div><span class="ck">+</span></div>`).join('')}</div>
-    </div><div class="iv-send"><span>Send Invites · 212</span></div><div class="iv-dim"></div><div class="iv-alert"><b>Sent 212/212 invites.</b><p>Everyone from your past nights is on the list for Late Checkout II.</p><span>OK</span></div></div>`);
+    </div><div class="iv-send"><span>Send Invites (212)</span></div><div class="iv-dim"></div><div class="iv-alert"><b>Sent 212/212 invites.</b><p>Everyone from your past nights is on the list for Late Checkout II.</p><span>OK</span></div></div>`);
     const rows = $$('.iv-row', scr), cks = $$('.ck', scr), og = $('.iv-chips .og', scr), all = $('.iv-sec .all', scr), plan = q('.sq-plan'), sendb = $('.iv-send', scr);
     const tl = mkTL(sec, mode, rm, 2.2);
     tl.fromTo(q('.sequel'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 0);
@@ -967,7 +967,7 @@ export default async function initPlatform(PXR, L) {
       cks.forEach((c, i) => { const on = t > 5.45 + i * 0.12; c.classList.toggle('on', on); txt(c, on ? '✓' : '+'); });
     });
     tl.eventCallback('onUpdate')();
-    register(sec, 'The next one', tl, (t) => t > 7.35 ? { k: 'Late Checkout II', v: '212 invites sent', p: 1 } : { k: 'Late Checkout II', v: 'Draft · inviting', p: seg(t, 3.1, 7) });
+    register(sec, 'The next one', tl, (t) => t > 7.35 ? { k: 'Late Checkout II', v: '212 invites sent', p: 1 } : { k: 'Late Checkout II', v: 'Draft, inviting', p: seg(t, 3.1, 7) });
     done(tl, rm);
   }
 
