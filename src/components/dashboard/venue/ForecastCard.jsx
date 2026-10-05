@@ -60,7 +60,7 @@ export default function ForecastCard({ venueId, available = true, adminView = fa
                             {nights.map((night) => (
                                 <li key={night.eventId} className="rounded-xl bg-white/[0.04] px-3 py-2">
                                     <p className="truncate text-[11px] text-white/50">
-                                        {formatNightDate(night.startDate, night.timeZone)} · {night.name}
+                                        {formatNightDate(night.startDate, night.timeZone)}, {night.name}
                                     </p>
                                     <p className="mt-0.5 text-[14px] font-bold text-white tabular-nums">
                                         {night.forecast ? rangeText(night.forecast) : 'Not enough history yet'}

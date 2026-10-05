@@ -338,13 +338,13 @@ export default function AdminUsersPage() {
                                             {u.adminRole && u.adminRole !== 'NONE' ? (
                                                 <span className="ml-1.5 inline-flex rounded-full bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-sky-300">
                                                     {u.adminRole.replaceAll('_', ' ')}
-                                                    {u.adminCityCode ? ` · ${cityLabel(u.adminCityCode)}` : ''}
+                                                    {u.adminCityCode ? `, ${cityLabel(u.adminCityCode)}` : ''}
                                                 </span>
                                             ) : null}
                                             {u.salesRole && u.salesRole !== 'NONE' ? (
                                                 <span className="ml-1.5 inline-flex rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-amber-300">
                                                     {SALES_ROLE_LABELS[u.salesRole]}
-                                                    {u.salesRole === 'REGIONAL_MANAGER' && u.adminCityCode ? ` · ${cityLabel(u.adminCityCode)}` : ''}
+                                                    {u.salesRole === 'REGIONAL_MANAGER' && u.adminCityCode ? `, ${cityLabel(u.adminCityCode)}` : ''}
                                                 </span>
                                             ) : null}
                                         </td>

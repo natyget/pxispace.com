@@ -79,7 +79,7 @@ const normalizeApiEvent = (e) => {
   const vs = e.vendorStats;
   const vendorHint =
     vs && typeof vs.hostEventsCreated === 'number'
-      ? `Host · ${vs.hostEventsCreated} events · ${vs.hostTicketsSold ?? 0} tickets sold`
+      ? `Host, ${vs.hostEventsCreated} events, ${vs.hostTicketsSold ?? 0} tickets sold`
       : null;
 
   return {

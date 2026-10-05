@@ -568,9 +568,9 @@ export default function VenueHeatMap({ eventId }) {
                 </div>
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] font-medium text-zinc-500">
                     <span>
-                        {payload.media.totalGeotagged.toLocaleString('en-US')} geotagged photos · {payload.scans.total.toLocaleString('en-US')} scans
-                        {payload.media.truncated ? ' · capped at 3,000 photos' : ''}
-                        {payload.media.outsideWindow > 0 ? ` · ${payload.media.outsideWindow} outside the window` : ''}
+                        {payload.media.totalGeotagged.toLocaleString('en-US')} geotagged photos, {payload.scans.total.toLocaleString('en-US')} scans
+                        {payload.media.truncated ? ', capped at 3,000 photos' : ''}
+                        {payload.media.outsideWindow > 0 ? `, ${payload.media.outsideWindow} outside the window` : ''}
                     </span>
                     <span>Heat reads as ~8 m areas — GPS is approximate by nature.</span>
                 </div>

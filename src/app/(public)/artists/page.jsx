@@ -68,7 +68,7 @@ export default async function ArtistsIndexPage() {
                 >
                   <h2 className="text-lg font-semibold text-white">{artist.name}</h2>
                   {artist.roles.length ? (
-                    <p className="mt-1 text-sm text-zinc-500">{artist.roles.join(' · ')}</p>
+                    <p className="mt-1 text-sm text-zinc-500">{artist.roles.join(', ')}</p>
                   ) : null}
                   <p className="mt-3 text-xs font-semibold uppercase tracking-[0.15em] text-pxi-purple">
                     {artist.events.length === 1 ? '1 upcoming event' : `${artist.events.length} upcoming events`}

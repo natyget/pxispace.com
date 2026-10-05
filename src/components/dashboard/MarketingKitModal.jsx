@@ -18,7 +18,7 @@ function downloadBlob(blob, filename) {
 function buildCaption({ eventName, dateLabel, venueName, eventUrl }) {
     return [
         `${eventName} — straight from the crowd 📸`,
-        [dateLabel, venueName].filter(Boolean).join(' · '),
+        [dateLabel, venueName].filter(Boolean).join(', '),
         '',
         eventUrl ? `Relive it / get in next time: ${eventUrl}` : null,
         '',
