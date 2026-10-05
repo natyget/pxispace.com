@@ -158,7 +158,7 @@ export default function PhotographerUploadView({ token }) {
       });
     }
     if (errors.length) {
-      setUploadError(errors.slice(0, 5).join(' · ') + (errors.length > 5 ? ` +${errors.length - 5} more` : ''));
+      setUploadError(errors.slice(0, 5).join(', ') + (errors.length > 5 ? ` +${errors.length - 5} more` : ''));
     } else {
       setResult(`${files.length} photo${files.length === 1 ? '' : 's'} uploaded successfully!`);
     }
@@ -248,7 +248,7 @@ export default function PhotographerUploadView({ token }) {
                   <div className="h-full bg-pxi-purple transition-all duration-300" style={{ width: `${pct}%` }} />
                 </div>
                 <p className="text-xs text-zinc-400 text-center">
-                  {progress.done}/{progress.total} · {pct}%
+                  {progress.done}/{progress.total}, {pct}%
                 </p>
               </div>
             )}

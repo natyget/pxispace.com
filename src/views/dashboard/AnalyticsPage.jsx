@@ -143,7 +143,7 @@ function HypePanel({ behavior, capture, isMobile }) {
     const peakHour = activeSeries.reduce((peak, p) => (p.value > peak.value ? p : peak), { hourIso: null, value: 0 });
 
     const statStrip = [
-        { label: 'Hype score', value: `${formatNumber(behavior.hypeScore)} · ${behavior.hypeTierLabel || 'Quiet'}` },
+        { label: 'Hype score', value: `${formatNumber(behavior.hypeScore)} ${behavior.hypeTierLabel || 'Quiet'}` },
         { label: 'Peak hour', value: peakHour.hourIso ? formatHourTick(peakHour.hourIso) : '—' },
         { label: 'Chat', value: formatNumber(behavior.totals?.messages) },
         { label: 'Reactions', value: formatNumber(behavior.totals?.reactions) },
@@ -405,7 +405,7 @@ function SalesVelocityChart({ byDay, velocityPerDay7d, totalSold, grossCents, ne
             title="Ticket sales"
             subheading={paceNote || 'Tickets sold per day, with the running total tracked beneath.'}
             liveValue={formatMoney(grossCents)}
-            unit={`ticket sales · ${formatMoney(netCents)} to you`}
+            unit={`ticket sales, ${formatMoney(netCents)} to you`}
             change={{ label: `${formatNumber(totalSold)} sold total`, tone: 'neutral' }}
             timeframes={null}
             chartClassName="relative h-[300px] md:h-[360px]"
@@ -515,7 +515,7 @@ function EventPickerCard({ event, selected, order, onToggle }) {
             <div className="absolute inset-x-0 bottom-0 p-3">
                 <p className="truncate text-sm font-bold text-white">{event.name}</p>
                 <p className="mt-0.5 truncate text-[11px] text-white/60">
-                    {event.dateLabel}{event.venueName ? ` · ${event.venueName}` : ''}
+                    {event.dateLabel}{event.venueName ? `, ${event.venueName}` : ''}
                 </p>
             </div>
         </button>

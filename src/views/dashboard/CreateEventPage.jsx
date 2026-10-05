@@ -398,7 +398,7 @@ function CreateEventForm({ embedded = false, onCancel, onCreated }) {
   };
 
   const formatPendingLabel = (p) => {
-    if (p.kind === 'lineup') return `Line-up • ${p.lineupSubrole || 'Line up'}`;
+    if (p.kind === 'lineup') return `Line-up: ${p.lineupSubrole || 'Line up'}`;
     if (p.kind === 'cohost') return 'Co-host';
     if (p.kind === 'bouncer') return 'Bouncer';
     return 'Member';
@@ -936,7 +936,7 @@ function CreateEventForm({ embedded = false, onCancel, onCreated }) {
                   onClick={() => setLineupRoleDraft(r)}
                   className="rounded-full bg-pxi-field px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-[#9a9a9a] hover:text-white"
                 >
-                  {r} · staff
+                  {r}, staff
                 </button>
               ))}
             </div>
@@ -951,7 +951,7 @@ function CreateEventForm({ embedded = false, onCancel, onCreated }) {
                     className="rounded-full bg-pxi-purple/20 px-3 py-1 text-xs font-semibold text-white"
                   >
                     @{person.username}
-                    {lineupRoleDraft.trim() ? ` · ${lineupRoleDraft.trim()}` : ''} ✕
+                    {lineupRoleDraft.trim() ? `, ${lineupRoleDraft.trim()}` : ''} ✕
                   </button>
                 ))}
               </div>
@@ -1003,7 +1003,7 @@ function CreateEventForm({ embedded = false, onCancel, onCreated }) {
                     onClick={() => removePendingInvite(p.id)}
                     className="rounded-full bg-pxi-field px-3 py-1 text-xs font-semibold text-white/75"
                   >
-                    @{p.username} · {formatPendingLabel(p)} ✕
+                    @{p.username}, {formatPendingLabel(p)} ✕
                   </button>
                 ))}
               </div>

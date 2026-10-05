@@ -147,7 +147,7 @@ export default function EventMembersPageView() {
                       <div className="min-w-0">
                         <p className="text-sm text-white truncate font-semibold">
                           {handle ? `@${handle}` : member.userId}
-                          {member.name ? <span className="text-zinc-500 font-normal"> · {member.name}</span> : null}
+                          {member.name ? <span className="ml-1.5 text-zinc-500 font-normal">{member.name}</span> : null}
                         </p>
                         <p className="text-[11px] tracking-wider text-zinc-500 mt-0.5">
                           {member.role || 'MEMBER'}

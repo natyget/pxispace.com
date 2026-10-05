@@ -439,7 +439,7 @@ function MusicConnectionsCard() {
     const connected = Boolean(profile?.connected);
     const provider = profile?.provider || null;
     const isLegacyAppleMusic = connected && provider === 'APPLE_MUSIC';
-    const genresSuffix = profile?.topGenres?.length ? ` · ${profile.topGenres.slice(0, 3).join(', ')}` : '';
+    const genresSuffix = profile?.topGenres?.length ? `, ${profile.topGenres.slice(0, 3).join(', ')}` : '';
     const accentColor = isLegacyAppleMusic ? '#fa2d48' : '#1DB954';
     const providerLabel = isLegacyAppleMusic ? 'Apple Music' : 'Spotify';
 
@@ -651,7 +651,7 @@ function AccountPageContent() {
                                         </p>
                                         <p className="mt-1 text-xs text-zinc-500">
                                             {lastPayout
-                                                ? `${lastPayout.status === 'paid' ? 'Paid' : 'Failed'}${lastPayout.arrivalDate ? ' · ' + new Date(lastPayout.arrivalDate).toLocaleDateString() : ''}`
+                                                ? `${lastPayout.status === 'paid' ? 'Paid' : 'Failed'}${lastPayout.arrivalDate ? ', ' + new Date(lastPayout.arrivalDate).toLocaleDateString() : ''}`
                                                 : 'No payouts yet'}
                                         </p>
                                     </div>

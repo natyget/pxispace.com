@@ -38,7 +38,7 @@ export default function ChildSafety() {
             Child Safety Standards
           </h1>
           <p className="text-sm text-white/50 font-mono uppercase tracking-widest">
-            PXI LABS LLC · Updated May 2026
+            PXI LABS LLC, Updated May 2026
           </p>
         </header>
 
@@ -60,7 +60,7 @@ export default function ChildSafety() {
           <Section title="In-App Reporting">
             <p className="text-white/70 leading-relaxed">
               Every user profile, photo, and piece of content on PXI Studio has a built-in{' '}
-              <strong className="text-white">Report</strong> button (tap the ••• menu or long-press any
+              <strong className="text-white">Report</strong> button (tap the more menu or long-press any
               content). Users can report child safety concerns at any time, with no account required to
               view the reporting flow.
             </p>

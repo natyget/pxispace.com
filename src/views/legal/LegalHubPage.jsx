@@ -635,7 +635,7 @@ const SECTIONS = [
           <h3 className="text-xl font-bold mb-3 text-white">In-App Reporting</h3>
           <p className="leading-relaxed mb-4">
             Every profile and piece of content has a built-in <strong className="text-white">Report</strong> button
-            (••• menu or long-press). Child safety reports are reviewed within 24 hours; zero-tolerance violations
+            (more menu or long-press). Child safety reports are reviewed within 24 hours; zero-tolerance violations
             are acted upon immediately.
           </p>
           <p>

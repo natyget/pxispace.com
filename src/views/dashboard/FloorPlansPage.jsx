@@ -140,9 +140,9 @@ function FloorPlansPageContent() {
                                     <p className="mt-1 text-xs text-zinc-500">
                                         {plan.attachedEventCount || 0} event{(plan.attachedEventCount || 0) === 1 ? '' : 's'}
                                         {plan.imageWidthPx && plan.metersPerPixel
-                                            ? ` · ~${Math.round(plan.imageWidthPx * plan.metersPerPixel)} m wide`
-                                            : ' · no plan yet'}
-                                        {gateCount ? ` · ${gateCount} gate${gateCount === 1 ? '' : 's'}` : ''}
+                                            ? `, ~${Math.round(plan.imageWidthPx * plan.metersPerPixel)} m wide`
+                                            : ', no plan yet'}
+                                        {gateCount ? `, ${gateCount} gate${gateCount === 1 ? '' : 's'}` : ''}
                                     </p>
                                     <div className="mt-3 flex items-center gap-2">
                                         <button type="button" onClick={() => setEditing(plan)} className="pill-ghost px-3.5 py-1.5 text-xs font-bold tracking-[0.02em]">
