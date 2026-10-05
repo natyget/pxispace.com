@@ -29,7 +29,7 @@ export default function LiveScanMock() {
           <p className="mt-1 text-3xl font-black md:text-4xl">
             <CountUpNumber to={1122} />
           </p>
-          <p className="text-xs text-zinc-500">admitted · 78% of capacity</p>
+          <p className="text-xs text-zinc-500">admitted, 78% of capacity</p>
         </div>
         {/* velocity sparkline — draws in left to right like a live trace */}
         <svg viewBox="0 0 100 40" className="h-12 w-32" preserveAspectRatio="none">
@@ -69,7 +69,7 @@ export default function LiveScanMock() {
 
       <div className="mt-3 flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-xs text-zinc-400">
         <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-        Duplicate ticket flagged at Main Entrance · resolved
+        Duplicate ticket flagged at Main Entrance, resolved
       </div>
     </div>
   );

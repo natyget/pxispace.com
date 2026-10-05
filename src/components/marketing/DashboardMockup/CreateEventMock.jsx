@@ -107,21 +107,21 @@ export default function CreateEventMock() {
           <div className="rounded-xl bg-black/20 p-3 flex justify-between items-center">
             <div>
               <p className="text-[11px] font-bold text-white">General Admission</p>
-              <p className="text-[9px] text-zinc-400">Available • 150 capacity</p>
+              <p className="text-[9px] text-zinc-400">Available, 150 capacity</p>
             </div>
             <p className="text-[11px] font-bold text-white">$25.00</p>
           </div>
           <div className="rounded-xl bg-black/20 p-3 flex justify-between items-center">
             <div>
               <p className="text-[11px] font-bold text-white">VIP Table (Group of 6)</p>
-              <p className="text-[9px] text-zinc-400">Available • 10 capacity</p>
+              <p className="text-[9px] text-zinc-400">Available, 10 capacity</p>
             </div>
             <p className="text-[11px] font-bold text-white">$300.00</p>
           </div>
           <div className="rounded-xl bg-black/20 p-3 flex justify-between items-center opacity-60">
             <div>
               <p className="text-[11px] font-bold text-white">Early Bird</p>
-              <p className="text-[9px] text-zinc-400">Sold out • 50 capacity</p>
+              <p className="text-[9px] text-zinc-400">Sold out, 50 capacity</p>
             </div>
             <p className="text-[11px] font-bold text-white">$15.00</p>
           </div>

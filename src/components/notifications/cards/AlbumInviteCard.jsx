@@ -125,8 +125,8 @@ export default function AlbumInviteCard({ item, onAccept, onReject, onCoverClick
             }`}
           >
             {ir === 'declined'
-              ? `You passed on this invite${at ? ` · ${at}` : ''}`
-              : `${inviteAcceptedStatusText(roleLabel, lineupInvite)}${at ? ` · ${at}` : ''}`}
+              ? `You passed on this invite${at ? `, ${at}` : ''}`
+              : `${inviteAcceptedStatusText(roleLabel, lineupInvite)}${at ? `, ${at}` : ''}`}
           </div>
         ) : (
           <div className="flex flex-row gap-2.5 mt-1">

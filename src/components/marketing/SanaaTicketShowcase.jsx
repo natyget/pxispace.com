@@ -208,7 +208,7 @@ export default function SanaaTicketShowcase({ className = '' }) {
       <SanaaCheckoutCard />
       <SanaaAppTicket />
       <p className="text-center text-[10px] uppercase tracking-[0.2em] text-zinc-600">
-        A real client night · Sanaa Groove, Boston
+        A real client night, Sanaa Groove, Boston
       </p>
     </div>
   );
