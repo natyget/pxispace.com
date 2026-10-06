@@ -10,7 +10,6 @@ import {
     directionsUrl,
     formatClock,
     formatNightLine,
-    formatNightShort,
     formatNightWeekday,
     formatTimeLine,
     isAppleDevice,
@@ -27,6 +26,7 @@ import {
     safeRedirectUrl,
     sourceDisplayName,
     ticketLabel,
+    ticketSourceName,
     venueLabel,
     viaKey,
     visitorFromHeaders,
@@ -64,10 +64,10 @@ const listing = {
 
 // ————— the id —————
 
-test('a listing id is a token, not a path', () => {
+test('a listing id is a UUID, nothing else', () => {
     assert.equal(isListingId(listing.id), true);
-    assert.equal(isListingId('abc123'), true);
-    for (const bad of ['', 'abc', '../etc/passwd', 'a/b/c/d/e/f', 'id with spaces', '-leading', 'x'.repeat(65), null, undefined, 42]) {
+    assert.equal(isListingId('3F2B6C1E-6F0A-4A4E-9D7E-2B0F6A9C1D11'), true);
+    for (const bad of ['', 'abc123', 'wp-login', 'admin', 'favicon.ico', '../etc/passwd', 'a/b/c/d/e/f', 'id with spaces', '-leading', 'x'.repeat(65), '3f2b6c1e6f0a4a4e9d7e2b0f6a9c1d11', `${listing.id}0`, ` ${listing.id}`, `${listing.id}/out`, null, undefined, 42]) {
         assert.equal(isListingId(bad), false, String(bad));
     }
 });
@@ -122,7 +122,6 @@ test('a listing longer than a day names the weekday it ends', () => {
 test('the night line is the night, in words', () => {
     assert.equal(formatNightLine(listing), 'Friday, Oct 9');
     assert.equal(formatNightWeekday(listing), 'Friday');
-    assert.equal(formatNightShort(listing), 'Oct 9');
     // The API's night wins over the clock: a 1 AM start printed with its own night.
     assert.equal(formatNightLine({ ...listing, startsAt: '2026-10-10T05:00:00Z', night: '2026-10-09' }), 'Friday, Oct 9');
 });
@@ -287,6 +286,29 @@ test('the button says what the source is: tickets, or an invitation to open for 
     assert.equal(ticketLabel(null), 'Get tickets');
 });
 
+test('Partiful is an RSVP page whichever way the API sends it: as the name, as the bare code, or only as the code', () => {
+    assert.equal(ticketLabel({ source: 'PARTIFUL', sourceName: 'Partiful' }), 'Open on Partiful');
+    assert.equal(ticketLabel({ source: 'PARTIFUL', sourceName: 'PARTIFUL' }), 'Open on Partiful');
+    assert.equal(ticketLabel({ source: 'PARTIFUL' }), 'Open on Partiful');
+    assert.equal(ticketLabel({ sourceName: 'Partiful' }), 'Open on Partiful');
+    assert.equal(ticketSourceName({ source: 'PARTIFUL', sourceName: 'PARTIFUL' }), 'Partiful');
+});
+
+test('a source name is kept the way the API wrote it, unless it is a bare code', () => {
+    // A name with lower case in it is the API's own spelling, known to us or not.
+    assert.equal(ticketSourceName({ source: 'STUBHUB', sourceName: 'StubHub' }), 'StubHub');
+    assert.equal(ticketLabel({ source: 'STUBHUB', sourceName: 'StubHub' }), 'Tickets on StubHub');
+    // Known names are written our way whatever case they arrive in.
+    assert.equal(ticketSourceName({ source: 'POSH', sourceName: 'POSH' }), 'Posh');
+    assert.equal(ticketSourceName({ source: 'DICE', sourceName: 'dice' }), 'DICE');
+    assert.equal(ticketSourceName({ source: 'TICKETMASTER', sourceName: 'TICKETMASTER' }), 'Ticketmaster');
+    // A bare capital code we have never heard of is written out, and with no name the code is the name.
+    assert.equal(ticketSourceName({ source: 'NEWSITE', sourceName: 'NEWSITE' }), 'Newsite');
+    assert.equal(ticketSourceName({ source: 'SOME_NEW_SITE' }), 'Some New Site');
+    assert.equal(ticketSourceName({ source: 'POSH' }), 'Posh');
+    assert.equal(ticketSourceName({}), '');
+});
+
 test('sources are written the way people write them', () => {
     assert.equal(sourceDisplayName('DICE'), 'DICE');
     assert.equal(sourceDisplayName('posh'), 'Posh');
@@ -318,6 +340,11 @@ test('the other places a night is sold: once each, never the listing\'s own, wit
         { key: 'eventbrite', name: 'Eventbrite', label: 'Also on Eventbrite', url: null },
         { key: 'partiful', name: 'Partiful', label: 'Also on Partiful', url: null },
     ]);
+    // The same night on Partiful, sent as a bare code with a name that is the code.
+    assert.deepEqual(
+        alsoOnEntries({ source: 'DICE', alsoOn: [{ source: 'PARTIFUL', sourceName: 'PARTIFUL', url: 'https://partiful.com/e/abc' }] }),
+        [{ key: 'partiful', name: 'Partiful', label: 'Also on Partiful', url: 'https://partiful.com/e/abc' }],
+    );
     assert.deepEqual(alsoOnEntries({ source: 'DICE' }), []);
     assert.deepEqual(alsoOnEntries(null), []);
 });
@@ -423,6 +450,21 @@ test('the visitor forwarded to the API: their agent, and the address Netlify vou
     assert.equal(visitorFromHeaders(headers({ 'x-forwarded-for': '::ffff:198.51.100.2' })).ip, '198.51.100.2');
     assert.equal(visitorFromHeaders(headers({ 'x-forwarded-for': '[2001:db8::1]:443' })).ip, '2001:db8::1');
     assert.equal(visitorFromHeaders(headers({ 'x-forwarded-for': '2001:db8::1' })).ip, '2001:db8::1');
+});
+
+test('only a public address is forwarded: the API skips the rest and would count the site instead', () => {
+    const headers = (o) => new Headers(o);
+    // A dev server writes ::1, and a proxy chain can start with an internal hop: the first public one is the visitor.
+    assert.equal(visitorFromHeaders(headers({ 'x-forwarded-for': '::1' })).ip, '');
+    assert.equal(visitorFromHeaders(headers({ 'x-forwarded-for': '127.0.0.1' })).ip, '');
+    assert.equal(visitorFromHeaders(headers({ 'x-forwarded-for': '10.0.0.2, 203.0.113.5, 10.9.9.9' })).ip, '203.0.113.5');
+    assert.equal(visitorFromHeaders(headers({ 'x-forwarded-for': '192.168.1.20, 172.20.3.4' })).ip, '');
+    assert.equal(visitorFromHeaders(headers({ 'x-forwarded-for': 'fd12:3456::1, 2001:db8::7' })).ip, '2001:db8::7');
+    // Netlify's header still wins, and a private one is passed over like any other.
+    assert.equal(visitorFromHeaders(headers({ 'x-nf-client-connection-ip': '10.1.1.1', 'x-forwarded-for': '198.51.100.8' })).ip, '198.51.100.8');
+    assert.equal(visitorFromHeaders(headers({ 'x-nf-client-connection-ip': '203.0.113.9', 'x-forwarded-for': '198.51.100.8' })).ip, '203.0.113.9');
+    assert.equal(visitorFromHeaders(headers({ 'x-forwarded-for': '100.64.0.1' })).ip, ''); // carrier-grade NAT
+    assert.equal(visitorFromHeaders(headers({ 'x-forwarded-for': '100.128.0.1' })).ip, '100.128.0.1'); // just outside it
 });
 
 test('an address that is not an address is not forwarded, and an agent is kept short', () => {

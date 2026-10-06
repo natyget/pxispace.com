@@ -5,8 +5,11 @@
 
 // ————— The listing id —————
 
-/** Listing ids are UUIDs today. Anything shaped like a plain token is let through so a later id format still works. */
-const LISTING_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{5,63}$/;
+/**
+ * Listing ids are UUIDs (ExternalEvent.id). Anything else is answered as "not found" without asking the API, so a
+ * scanner walking /go/wp-login or /go/admin cannot spend the site's one rate-limited address on junk.
+ */
+const LISTING_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function isListingId(id) {
     return typeof id === 'string' && LISTING_ID.test(id);
@@ -102,12 +105,6 @@ export function formatNightLine(listing) {
 export function formatNightWeekday(listing) {
     const d = nightDate(nightOf(listing));
     return d ? formatter({ weekday: 'long' }, UTC).format(d) : '';
-}
-
-/** "Oct 9": the night's date alone, for the handwriting on the album polaroid. */
-export function formatNightShort(listing) {
-    const d = nightDate(nightOf(listing));
-    return d ? formatter({ month: 'short', day: 'numeric' }, UTC).format(d) : '';
 }
 
 /** The night is over: the API says so (`ended`), and that is the only thing that decides it. */
@@ -247,16 +244,31 @@ export function sourceDisplayName(source) {
     return words ? words.replace(/\b\w/g, (c) => c.toUpperCase()) : '';
 }
 
-/** The name of the listing's own source: what the API calls it, else the code written out. */
+/**
+ * A source as a person writes it. The API sends `sourceName` already written ("Posh"), but a source it has no word for
+ * yet comes as the bare code ("PARTIFUL"). A name we know is written our way, a name with lower case in it is kept
+ * as the API wrote it ("StubHub"), and a bare capital code is written out. With no name at all, the code is.
+ */
+function writeSource(given, code) {
+    const name = String(given || '').trim();
+    const known = SOURCE_NAMES[sourceKey(name)];
+    if (known) return known;
+    if (name && name !== name.toUpperCase()) return name;
+    return sourceDisplayName(name || code);
+}
+
+/** The name of the listing's own source, for the ticket button. */
 export function ticketSourceName(listing) {
-    return String(listing?.sourceName || '').trim() || sourceDisplayName(listing?.source);
+    return writeSource(listing?.sourceName, listing?.source);
 }
 
 /** The primary button: "Tickets on DICE", "Open on Partiful" for an RSVP page, plain "Get tickets" when the source is unknown. */
 export function ticketLabel(listing) {
     const name = ticketSourceName(listing);
     if (!name) return 'Get tickets';
-    return RSVP_SOURCES.has(sourceKey(listing?.source)) ? `Open on ${name}` : `Tickets on ${name}`;
+    // Either the code or the name says it: the API may send one without the other.
+    const rsvp = RSVP_SOURCES.has(sourceKey(listing?.source)) || RSVP_SOURCES.has(sourceKey(listing?.sourceName));
+    return rsvp ? `Open on ${name}` : `Tickets on ${name}`;
 }
 
 const VIA_KEY = /^[a-z0-9][a-z0-9-]{0,31}$/;
@@ -283,7 +295,7 @@ export function alsoOnEntries(listing) {
     const out = [];
     for (const entry of Array.isArray(listing?.alsoOn) ? listing.alsoOn : []) {
         const obj = entry && typeof entry === 'object' ? entry : { source: entry };
-        const name = String(obj.sourceName || '').trim() || sourceDisplayName(obj.source);
+        const name = writeSource(obj.sourceName, obj.source);
         const key = viaKey(obj.source) || viaKey(name);
         if (!name || !key || key === own || out.some((o) => o.key === key)) continue;
         out.push({ key, name, label: `Also on ${name}`, url: safeRedirectUrl(obj.url) });
@@ -356,14 +368,28 @@ function cleanIp(raw) {
     return ip.length <= 45 && /^[0-9a-f.:]+$/i.test(ip) && /[.:]/.test(ip) ? ip : '';
 }
 
+// Loopback, private ranges, link-local, carrier-grade NAT and IPv6 unique-local: never a real visitor. The same list
+// the API skips when it reads X-Forwarded-For, so what is sent is always an address it will use.
+const PRIVATE_IP = /^(127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|::1$|f[cd])/i;
+
+/** The first public address among the candidates, in order, or an empty string. */
+function firstPublicIp(candidates) {
+    for (const candidate of candidates) {
+        const ip = cleanIp(candidate);
+        if (ip && !PRIVATE_IP.test(ip)) return ip;
+    }
+    return '';
+}
+
 /**
- * The visitor's agent and address, from the request headers, to be forwarded with the traffic call. Netlify's own
- * header comes first (a visitor cannot write it); then the first address of X-Forwarded-For; then X-Real-IP.
+ * The visitor's agent and address, from the request headers, to be forwarded with the API calls (the address as
+ * X-Forwarded-For, the agent in the traffic body). Netlify's own header comes first (a visitor cannot write it); then
+ * the first public address of X-Forwarded-For; then X-Real-IP. An address that is private or looks like none (a dev
+ * server's ::1, an internal hop) is not sent: the API would skip it and count the site's own address instead.
  */
 export function visitorFromHeaders(headers) {
     const get = (name) => String(headers?.get?.(name) || '');
     const userAgent = get('user-agent').trim().slice(0, 300);
-    const forwarded = get('x-forwarded-for').split(',')[0];
-    const ip = cleanIp(get('x-nf-client-connection-ip')) || cleanIp(forwarded) || cleanIp(get('x-real-ip'));
+    const ip = firstPublicIp([get('x-nf-client-connection-ip'), ...get('x-forwarded-for').split(','), get('x-real-ip')]);
     return { userAgent, ip };
 }
