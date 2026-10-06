@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getSiteUrl } from '@/lib/siteUrl';
-import { formatNightLine, isListingId, venueLabel } from '@/lib/goListing';
+import { formatNightLine, isListingId, venueLabel, visitorFromHeaders } from '@/lib/goListing';
 import { cardTitleSize, posterColors } from '@/lib/goPoster';
 import { loadDisplayFont } from '@/lib/ogFonts';
 import { getPublicListing } from '@/lib/publicListing';
@@ -35,7 +35,7 @@ export async function GET(request) {
 
   let listing = null;
   try {
-    const result = await getPublicListing(id);
+    const result = await getPublicListing(id, visitorFromHeaders(request.headers).ip);
     listing = result.status === 'ok' ? result.listing : null;
   } catch (error) {
     console.error('[og/go]', error);

@@ -6,8 +6,7 @@ import { isListingId } from '@/lib/goListing';
 // Server-side reads and writes for the /go page (contract: BRIEF-W2-CONTRACT.md, sections 2 and 3). The base is
 // the same one every other server call uses (API_BASE_URL), so a local backend is one environment variable away.
 
-/** The API caches an answer for 60 seconds as well, so asking again sooner learns nothing. */
-const REVALIDATE_SECONDS = 60;
+/** The API asks every caller for the visitor's address (see the note on `fetchPublicListing`), so no answer is shared between visitors here. */
 
 /**
  * One outside listing, from GET /api/public/listings/:id.
@@ -20,16 +19,20 @@ const REVALIDATE_SECONDS = 60;
  *                                      pretend the night does not exist
  *
  * `ssrFetchJson` is not used because it drops the body of a 410, and the city's name is in it.
+ *
+ * `ip` is the visitor's address, sent as X-Forwarded-For. The API limits each visitor (240 a minute) and, far more
+ * loosely, each connecting address (6,000 a minute); every visitor of this site connects from the site's own
+ * address, so without it they would all be one visitor and one busy link could lock out every other page.
+ * The API caches an answer for 60 seconds itself, so nothing is kept here: a copy kept per visitor would only
+ * add a cache write to every visit.
  */
-export async function fetchPublicListing(id) {
+export async function fetchPublicListing(id, ip = '') {
   if (!isListingId(id)) return { status: 'missing' };
   const url = `${getServerApiBaseUrl()}/api/public/listings/${encodeURIComponent(id)}`;
   try {
-    // `revalidate` keeps one visitor's read useful to the next: every visitor reaches the API from the site's one
-    // server address, and the API limits each caller. Only 200s are stored, so a missing night is asked again.
     const res = await fetch(url, {
-      headers: SSR_FETCH_HEADERS,
-      next: { revalidate: REVALIDATE_SECONDS },
+      headers: { ...SSR_FETCH_HEADERS, ...(ip ? { 'X-Forwarded-For': ip } : {}) },
+      cache: 'no-store',
       signal: AbortSignal.timeout(SSR_FETCH_TIMEOUT_MS),
     });
     if (res.status === 404) return { status: 'missing' };
@@ -54,7 +57,7 @@ export async function fetchPublicListing(id) {
   }
 }
 
-/** The same read, once per request: the page and its metadata both ask. */
+/** The same read, once per request (the page and its metadata both ask, with the same arguments). */
 export const getPublicListing = cache(fetchPublicListing);
 
 /**

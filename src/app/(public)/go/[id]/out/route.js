@@ -1,5 +1,5 @@
 import { fetchPublicListing, logListingTraffic } from '@/lib/publicListing';
-import { isEnded, isListingId, isPreviewBot, outTarget, visitorFromHeaders } from '@/lib/goListing';
+import { isEnded, isListingId, isPreviewBot, isSpeculativeRequest, outTarget, visitorFromHeaders } from '@/lib/goListing';
 
 /**
  * GET /go/[id]/out: the "Tickets on DICE" button.
@@ -35,15 +35,16 @@ export async function GET(request, { params }) {
   const page = `/go/${encodeURIComponent(String(id))}`;
   if (!isListingId(id)) return redirectTo(page);
 
-  const result = await fetchPublicListing(id);
+  const visitor = visitorFromHeaders(request.headers);
+  const result = await fetchPublicListing(id, visitor.ip);
   if (result.status !== 'ok' || isEnded(result.listing)) return redirectTo(page);
 
   const target = outTarget(result.listing, request.nextUrl.searchParams.get('via') || '');
   if (!target) return redirectTo(page);
 
-  const visitor = visitorFromHeaders(request.headers);
-  // A link-preview bot or a scanner following the button is not somebody buying a ticket.
-  if (!isPreviewBot(visitor.userAgent)) {
+  // A link-preview bot, a link checker (HEAD) or a browser fetching ahead of time is not somebody buying a ticket.
+  const counted = !isPreviewBot(visitor.userAgent) && !isSpeculativeRequest(request.headers) && request.method !== 'HEAD';
+  if (counted) {
     await logListingTraffic(id, { kind: 'CLICK', surface: 'go_page', ...visitor }, LOGGING_BUDGET_MS);
   }
   return redirectTo(target);

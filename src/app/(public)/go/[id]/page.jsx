@@ -27,7 +27,8 @@ const STATE_TITLES = {
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
-  const result = await getPublicListing(id);
+  const { ip } = visitorFromHeaders(await headers());
+  const result = await getPublicListing(id, ip);
   if (result.status !== 'ok') return { title: STATE_TITLES[result.status] || STATE_TITLES.missing, robots: NOINDEX };
 
   const { listing } = result;
@@ -57,9 +58,9 @@ export async function generateMetadata({ params }) {
 
 export default async function GoPage({ params }) {
   const { id } = await params;
-  const result = await getPublicListing(id);
   const requestHeaders = await headers();
   const visitor = visitorFromHeaders(requestHeaders);
+  const result = await getPublicListing(id, visitor.ip);
   // Desktop gets the App Store, like every other store button on the site.
   const platform = detectAppPlatform(visitor.userAgent);
 
