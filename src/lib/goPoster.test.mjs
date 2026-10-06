@@ -3,7 +3,7 @@
 //   npm run test:go
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { FALLBACK_INKS, GENRE_INKS, cardTitleSize, posterColors } from './goPoster.js';
+import { FALLBACK_INKS, GENRE_INKS, cardTitleSize, posterColors, posterTitleSize } from './goPoster.js';
 
 /** WCAG relative luminance of a #rrggbb colour. */
 function luminance(hex) {
@@ -58,8 +58,29 @@ test('a listing with nothing to go on still gets a colour', () => {
 });
 
 test('the card title steps down as it gets longer', () => {
-    const sizes = ['Rave', 'Late Checkout', 'After Dark: Nacho Isa', 'After Dark: Nacho Isa, Santelises and more', 'x'.repeat(70)].map(cardTitleSize);
-    assert.deepEqual(sizes, [168, 128, 100, 78, 62]);
+    const sizes = ['Rave', 'Late Checkout', 'After Dark: Nacho Isa', 'After Dark: Nacho Isa, Santelises and more', 'x'.repeat(70), 'x'.repeat(100)].map(cardTitleSize);
+    assert.deepEqual(sizes, [168, 128, 104, 86, 70, 58]);
     assert.equal(cardTitleSize(''), 168);
     assert.equal(cardTitleSize(null), 168);
+});
+
+test('the poster title: a short word is huge, a sentence steps down, and the longest word always has its own line', () => {
+    assert.equal(posterTitleSize('Rave'), 30);
+    const word = posterTitleSize('Rooftop');
+    const sentence = posterTitleSize('Sunday Sessions with the Brooklyn Brass Collective');
+    const essay = posterTitleSize('A Very Long Title For A Night That Goes On And On: The Official Afterparty Of The Neighbourhood Block Association Annual Gala');
+    assert.ok(word > sentence && sentence > essay, `${word} ${sentence} ${essay}`);
+    assert.ok(essay >= 6.5 && word <= 30);
+    // The longest word never needs more than the width: size times 0.66 em times its letters stays inside 86.
+    for (const title of ['Rooftop', 'Sunday Sessions', 'Supercalifragilistic Night', 'A B C D E F G H I J K L M N O P']) {
+        const size = posterTitleSize(title);
+        const longest = Math.max(...title.split(' ').map((w) => w.length));
+        assert.ok(size * 0.66 * longest <= 86 + 1e-9 || size === 6.5, `${title}: ${size}`);
+    }
+});
+
+test('the poster title copes with nothing, and with one word too long for any size', () => {
+    assert.equal(posterTitleSize(''), 30);
+    assert.equal(posterTitleSize(null), 30);
+    assert.equal(posterTitleSize('x'.repeat(60)), 6.5);
 });

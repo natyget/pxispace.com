@@ -63,7 +63,40 @@ export function cardTitleSize(title) {
     const length = String(title || '').trim().length;
     if (length <= 10) return 168;
     if (length <= 18) return 128;
-    if (length <= 30) return 100;
-    if (length <= 48) return 78;
-    return 62;
+    if (length <= 30) return 104;
+    if (length <= 48) return 86;
+    if (length <= 72) return 70;
+    return 58;
+}
+
+// An average capital in the display face, in em, at the poster's tight tracking. The server cannot measure text, so
+// the poster's title is sized by counting characters; this is the width each one is counted at.
+const CAPITAL_WIDTH = 0.66;
+const LEADING = 0.92;
+
+/**
+ * The poster title's size, in units of the poster's width (1cqw is 1% of it). The largest size at which the title,
+ * set in capitals, keeps its longest word on one line and fits in the top of the poster, wrapping words the way a
+ * browser does. "RAVE" fills the width, a sentence steps down to a few lines of type.
+ */
+export function posterTitleSize(title, { width = 86, height = 64, min = 6.5, max = 30 } = {}) {
+    const words = String(title || '').trim().toUpperCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return max;
+    const longest = Math.max(...words.map((w) => w.length));
+    for (let size = max; size > min; size -= 0.5) {
+        const perLine = Math.floor(width / (size * CAPITAL_WIDTH));
+        if (perLine < longest) continue;
+        let lines = 1;
+        let used = 0;
+        for (const word of words) {
+            const next = used ? used + 1 + word.length : word.length;
+            if (next <= perLine) used = next;
+            else {
+                lines += 1;
+                used = word.length;
+            }
+        }
+        if (lines * size * LEADING <= height) return size;
+    }
+    return min;
 }

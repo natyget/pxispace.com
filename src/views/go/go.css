@@ -1,0 +1,623 @@
+/* /go/[id]: one outside event on a PXI page. Everything is namespaced go-*.
+   Flat surfaces, one purple (#a523ef), type by weight, colour and size, never by a dot. */
+
+.go {
+  --go-ground: #050505;
+  --go-card: #1c1c1c;
+  --go-raised: #2e2e2e;
+  --go-purple: #a523ef;
+  --go-dim: #a1a1aa;
+  --go-faint: #71717a;
+  --go-display: var(--font-heading, 'Stack Sans Notch'), 'Inter', system-ui, sans-serif;
+  --go-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --go-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  position: relative;
+  min-height: 100svh;
+  padding: 10px 20px calc(64px + env(safe-area-inset-bottom, 0px));
+  background: var(--go-ground);
+  color: #fff;
+  font-family: var(--go-body);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+.go a:focus-visible,
+.go button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+/* ── the bar ───────────────────────────────────────────────────────────────────────────── */
+
+.go-bar {
+  display: flex;
+  align-items: center;
+  max-width: 1080px;
+  height: 52px;
+  margin: 0 auto;
+}
+.go-mark {
+  display: grid;
+  place-items: center start;
+  min-width: 44px;
+  min-height: 44px;
+}
+.go-mark img {
+  display: block;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+/* ── the night: the print, then everything about it ────────────────────────────────────── */
+
+.go-night {
+  display: grid;
+  gap: 32px;
+  max-width: 1080px;
+  margin: 8px auto 0;
+}
+@media (min-width: 900px) {
+  .go-night {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(48px, 7vw, 96px);
+    align-items: center;
+    margin-top: 28px;
+  }
+}
+
+.go-art {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px 0;
+  min-width: 0;
+}
+
+/* The flyer as it comes off a printer: a white border, a little tilt, a neutral shadow. */
+.go-print {
+  width: fit-content;
+  max-width: min(100%, 440px);
+  padding: clamp(9px, 2.6vw, 14px);
+  background: #fff;
+  border-radius: 3px;
+  box-shadow: 0 26px 50px -14px rgba(0, 0, 0, 0.75);
+  transform: rotate(-1.6deg);
+}
+.go-print img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(66svh, 640px);
+}
+.go-print-poster {
+  width: min(100%, 440px);
+}
+.go-credit {
+  margin-top: 20px;
+  font: 500 11px/1.3 var(--go-body);
+  color: var(--go-faint);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* "backwards" only: once it has landed, the hover below is free to move it. */
+  .go-print {
+    animation: go-land 0.5s var(--go-ease) backwards;
+  }
+  @keyframes go-land {
+    from {
+      opacity: 0;
+      transform: translateY(22px) rotate(-5deg) scale(0.97);
+    }
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .go-print {
+    transition: transform 0.35s var(--go-ease);
+  }
+  .go-print:hover {
+    transform: rotate(-0.4deg) translateY(-4px);
+  }
+}
+
+/* The typographic poster, for a night with no flyer. Sizes are in container units, so it prints the same
+   at 300px and at 440px. */
+.go-poster {
+  container-type: inline-size;
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--on);
+}
+.go-poster .go-poster-title {
+  position: absolute;
+  top: 7cqw;
+  right: 7cqw;
+  left: 7cqw;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+  font-family: var(--go-display);
+  font-weight: 700;
+  font-size: max(12px, calc(var(--fs) * 1cqw));
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.go-poster .go-poster-foot {
+  position: absolute;
+  right: 7cqw;
+  bottom: 7cqw;
+  left: 7cqw;
+}
+.go-poster .go-poster-venue,
+.go-poster .go-poster-night {
+  display: block;
+  font-family: var(--go-body);
+  font-size: 3.9cqw;
+  line-height: 1.25;
+}
+.go-poster .go-poster-venue {
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.go-poster .go-poster-night {
+  margin-top: 1cqw;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+/* ── the facts ─────────────────────────────────────────────────────────────────────────── */
+
+.go-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
+  min-width: 0;
+}
+.go .go-title {
+  font-family: var(--go-display);
+  font-size: clamp(2.4rem, 10.4vw, 3.9rem);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  text-transform: none;
+  color: #fff;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.go .go-title[data-long] {
+  font-size: clamp(1.9rem, 7.8vw, 2.9rem);
+}
+.go-when {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.go-day {
+  font: 700 clamp(1.2rem, 5vw, 1.5rem) / 1.2 var(--go-display);
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+.go-time {
+  font: 500 clamp(1.02rem, 4.3vw, 1.2rem) / 1.3 var(--go-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--go-dim);
+}
+
+.go-where {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+.go-venue {
+  min-width: 0;
+}
+.go-venue-name {
+  font: 700 1.1rem / 1.25 var(--go-body);
+  overflow-wrap: anywhere;
+}
+.go-venue-address {
+  margin-top: 2px;
+  font: 500 0.875rem / 1.4 var(--go-body);
+  color: var(--go-dim);
+  overflow-wrap: anywhere;
+}
+.go-dir {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px 0 15px;
+  border-radius: 999px;
+  background: var(--go-card);
+  font: 700 13px / 1 var(--go-body);
+  transition: background 0.2s;
+}
+.go-dir:hover {
+  background: var(--go-raised);
+}
+
+.go-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.go-price {
+  font: 700 1.1rem / 1.25 var(--go-body);
+}
+.go-host {
+  font: 500 0.875rem / 1.4 var(--go-body);
+  color: var(--go-dim);
+  overflow-wrap: anywhere;
+}
+
+/* The song: a small record, the artwork on its label. */
+.go-song {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.go-record {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #fff;
+}
+button.go-record {
+  cursor: pointer;
+}
+.go-record-disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #111;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    inset 0 0 0 6px #111,
+    inset 0 0 0 7px rgba(255, 255, 255, 0.07),
+    inset 0 0 0 11px #111,
+    inset 0 0 0 12px rgba(255, 255, 255, 0.06);
+}
+.go-record-label {
+  position: absolute;
+  inset: 19px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--go-purple);
+}
+.go-record-label img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.go-record-hole {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: #050505;
+}
+.go-record-play {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.62);
+}
+.go-song-text {
+  min-width: 0;
+}
+.go-song-label {
+  font: 800 11px / 1 var(--go-body);
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--go-purple);
+}
+.go-song-title {
+  margin-top: 6px;
+  font: 700 1rem / 1.25 var(--go-body);
+  overflow-wrap: anywhere;
+}
+.go-song-artist {
+  margin-top: 1px;
+  font: 500 0.875rem / 1.35 var(--go-body);
+  color: var(--go-dim);
+  overflow-wrap: anywhere;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .go-record-disc.is-playing {
+    animation: go-spin 3.6s linear infinite;
+  }
+  @keyframes go-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+/* ── the button that leaves, and the rows under it ─────────────────────────────────────── */
+
+.go-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+@media (min-width: 900px) {
+  /* The venue row and the button share one width, so Directions sits over the button's right edge. */
+  .go-where,
+  .go-cta {
+    max-width: 440px;
+  }
+}
+.go-tickets {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: var(--go-purple);
+  color: #fff;
+  font: 800 15px / 1 var(--go-body);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: translate 0.2s var(--go-ease), scale 0.15s;
+}
+.go-tickets:hover {
+  translate: 0 -2px;
+}
+.go-tickets:active {
+  translate: 0 0;
+  scale: 0.98;
+}
+.go-also {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font: 500 0.8125rem / 1.4 var(--go-body);
+  color: var(--go-faint);
+}
+.go-also a {
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.28);
+  text-underline-offset: 4px;
+  transition: color 0.2s;
+}
+.go-also a:hover {
+  color: #fff;
+}
+.go-ended {
+  font: 600 1rem / 1.3 var(--go-body);
+  color: var(--go-dim);
+}
+
+/* ── the invitation: why this page exists ──────────────────────────────────────────────── */
+
+.go-pxi {
+  display: grid;
+  gap: 30px;
+  justify-items: center;
+  max-width: 1080px;
+  margin: 72px auto 0;
+  padding: 36px 24px 40px;
+  border-radius: 28px;
+  background: var(--go-card);
+  text-align: center;
+}
+@media (min-width: 900px) {
+  .go-pxi {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'copy stack';
+    gap: 56px;
+    justify-items: start;
+    margin-top: 96px;
+    padding: 48px 64px;
+    text-align: left;
+  }
+  .go-pxi .go-stack {
+    grid-area: stack;
+    justify-self: center;
+  }
+  .go-pxi .go-pxi-copy {
+    grid-area: copy;
+  }
+}
+.go-pxi-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: inherit;
+  max-width: 30rem;
+}
+.go .go-pxi-title {
+  font-family: var(--go-display);
+  font-size: clamp(1.9rem, 7.4vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: none;
+  color: #fff;
+  text-wrap: balance;
+}
+.go-pxi-lead {
+  margin-top: 12px;
+  font: 500 1rem / 1.5 var(--go-body);
+  color: var(--go-dim);
+  text-wrap: pretty;
+}
+.go-pxi-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 26px;
+}
+@media (min-width: 900px) {
+  .go-pxi-actions {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 899px) {
+  .go-pxi-actions > * {
+    flex: 1 1 100%;
+  }
+}
+
+.go-store {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 0 30px;
+  border-radius: 999px;
+  background: #fff;
+  color: #000;
+  transition: translate 0.2s cubic-bezier(0.16, 1, 0.3, 1), scale 0.15s;
+}
+.go-store:hover {
+  translate: 0 -2px;
+}
+.go-store:active {
+  translate: 0 0;
+  scale: 0.98;
+}
+.go-store-mark {
+  display: block;
+  flex: none;
+}
+.go-store-text {
+  display: flex;
+  flex-direction: column;
+  font: 800 17px / 1 'Inter', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+  text-align: left;
+}
+.go-store-text small {
+  margin-bottom: 4px;
+  font: 700 9.5px / 1 'Inter', system-ui, -apple-system, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.6);
+}
+.go-store-solo {
+  margin-top: 28px;
+}
+.go-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 58px;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: var(--go-raised);
+  font: 800 15px / 1 var(--go-body);
+  letter-spacing: 0.04em;
+  transition: background 0.2s, translate 0.2s var(--go-ease);
+}
+.go-open:hover {
+  background: #3a3a3a;
+  translate: 0 -2px;
+}
+
+/* The album idea: three polaroids in a hand. */
+.go-stack {
+  position: relative;
+  width: 236px;
+  height: 262px;
+}
+.go-pol {
+  position: absolute;
+  top: 0;
+  left: 46px;
+  width: 138px;
+  padding: 7px 7px 28px;
+  background: #fff;
+  border-radius: 3px;
+  box-shadow: 0 14px 28px -8px rgba(0, 0, 0, 0.6);
+  transform: translate(var(--x), var(--y)) rotate(var(--r));
+  transform-origin: 50% 85%;
+}
+.go-pol img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: #111;
+}
+.go-pol:nth-child(1) {
+  --x: -46px;
+  --y: 34px;
+  --r: -11deg;
+}
+.go-pol:nth-child(2) {
+  --x: 50px;
+  --y: 14px;
+  --r: 8deg;
+}
+.go-pol:nth-child(3) {
+  --x: 0px;
+  --y: 6px;
+  --r: -2deg;
+  z-index: 2;
+}
+.go-pol-cap {
+  position: absolute;
+  right: 10px;
+  bottom: 5px;
+  left: 10px;
+  overflow: hidden;
+  font: 600 18px / 1 'Caveat', 'Bradley Hand', 'Segoe Print', cursive;
+  color: #2b2920;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .go-pol {
+    transition: transform 0.34s var(--go-ease), opacity 0.2s;
+  }
+  .go-pol:nth-child(2) {
+    transition-delay: 70ms;
+  }
+  .go-pol:nth-child(3) {
+    transition-delay: 140ms;
+  }
+  /* Gathered into one pile, waiting to be dealt. */
+  .go-stack.is-armed .go-pol {
+    --x: 0px;
+    --y: 20px;
+    --r: 0deg;
+    opacity: 0;
+  }
+}
