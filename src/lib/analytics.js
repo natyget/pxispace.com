@@ -683,6 +683,23 @@ export function trackSpotifyConnected(input = {}) {
 }
 
 /**
+ * The visitor opened the Apple Music connect step (after the disclosure is on screen).
+ * @param {{ entryPoint: string }|string} input
+ */
+export function trackAppleMusicConnectStart(input) {
+    const entryPoint = typeof input === 'string' ? input : input?.entryPoint;
+    track(EVENTS.APPLE_MUSIC_CONNECT_START, { entry_point: str(entryPoint, 80) });
+}
+
+/**
+ * Apple Music came back connected (the API built the taste profile).
+ * @param {{ entryPoint?: string }} [input]
+ */
+export function trackAppleMusicConnected(input = {}) {
+    track(EVENTS.APPLE_MUSIC_CONNECTED, { entry_point: str(input.entryPoint, 80) });
+}
+
+/**
  * @param {Object} input
  * @param {string} input.artist
  * @param {string} [input.eventId]
