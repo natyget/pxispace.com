@@ -73,6 +73,19 @@
   padding: 10px 8px 0;
   min-width: 0;
 }
+.go-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+@media (max-width: 899px) {
+  /* The flyer's size is not known until it arrives, and most are square or 4 by 5: hold that room until it does
+     (GoArt lets it go). Without this the title and the button jump down by the flyer's whole height. */
+  .go-slot.is-waiting {
+    min-height: min(92vw, 420px);
+  }
+}
 
 /* The flyer as it comes off a printer: a white border, a little tilt, a neutral shadow. */
 .go-print {
@@ -103,7 +116,7 @@
 @media (prefers-reduced-motion: no-preference) {
   /* "backwards" only: once it has landed, the hover below is free to move it. */
   .go-print {
-    animation: go-land 0.5s var(--go-ease) backwards;
+    animation: go-land 0.35s var(--go-ease) backwards;
   }
   @keyframes go-land {
     from {

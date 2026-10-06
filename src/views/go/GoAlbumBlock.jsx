@@ -78,7 +78,7 @@ export default function GoAlbumBlock({ storeHref, openHref, platform, caption = 
       </div>
       <div className="go-pxi-copy">
         <h2 id="go-pxi-title" className="go-pxi-title">Make the album with your friends.</h2>
-        <p className="go-pxi-lead">One shared camera for the whole night. Wake up to the scrapbook.</p>
+        <p className="go-pxi-lead">One shared camera for this night. Wake up to the scrapbook.</p>
         <div className="go-pxi-actions">
           <GoStoreButton href={storeHref} platform={device === 'android' ? 'android' : 'ios'} />
           {canOpenApp ? (

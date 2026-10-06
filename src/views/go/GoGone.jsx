@@ -8,17 +8,17 @@ import { appStoreHref } from '@/lib/goListing';
 const COPY = {
   // 404: unknown, hidden or taken down. We do not say which.
   missing: {
-    title: 'We couldn’t find that night.',
+    title: "We couldn't find that night.",
     line: () => 'This link may be old, or the night was taken down.',
   },
   // 410: it ended more than a day ago. The city is named so the next step has somewhere to go.
   gone: {
     title: 'This night has passed.',
-    line: (cityName) => (cityName ? `See what’s on in ${cityName} tonight, in the app.` : 'See what’s on tonight, in the app.'),
+    line: (cityName) => (cityName ? `See what's on in ${cityName} tonight, in the app.` : "See what's on tonight, in the app."),
   },
   // The API did not answer. Not the same as the night not existing, so it does not say so.
   unavailable: {
-    title: 'We couldn’t load that night.',
+    title: "We couldn't load that night.",
     line: () => 'Give it a moment and try again.',
   },
 };
