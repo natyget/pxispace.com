@@ -121,61 +121,6 @@
   }
 }
 
-/* The typographic poster, for a night with no flyer. Sizes are in container units, so it prints the same
-   at 300px and at 440px. */
-.go-poster {
-  container-type: inline-size;
-  position: relative;
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  background: var(--ink);
-  color: var(--on);
-}
-.go-poster .go-poster-title {
-  position: absolute;
-  top: 7cqw;
-  right: 7cqw;
-  left: 7cqw;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 7;
-  overflow: hidden;
-  padding-bottom: 0.06em;
-  font-family: var(--go-display);
-  font-weight: 700;
-  font-size: max(12px, calc(var(--fs) * 1cqw));
-  line-height: 0.92;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
-  text-wrap: balance;
-  overflow-wrap: anywhere;
-}
-.go-poster .go-poster-foot {
-  position: absolute;
-  right: 7cqw;
-  bottom: 7cqw;
-  left: 7cqw;
-}
-.go-poster .go-poster-venue,
-.go-poster .go-poster-night {
-  display: block;
-  font-family: var(--go-body);
-  font-size: 3.9cqw;
-  line-height: 1.25;
-}
-.go-poster .go-poster-venue {
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-}
-.go-poster .go-poster-night {
-  margin-top: 1cqw;
-  font-weight: 600;
-  opacity: 0.8;
-}
-
 /* ── the facts ─────────────────────────────────────────────────────────────────────────── */
 
 .go-info {

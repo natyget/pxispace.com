@@ -830,6 +830,12 @@ html.pxr-doc { overflow-x: clip; }
   .pxr.home .scene-roll .ls-time { font-size: clamp(64px, 19vw, 84px); }
   .pxr.home .scene-roll .ls-clock { margin-bottom: 12px; }
 
+  /* city: the stage is hardly wider than the phone, so the flyers are small and only touch its edges */
+  .pxr.home #city .cm-print { width: 76px; padding: 4px; }
+  .pxr.home #city .cm-print-late { left: -12px; top: 300px; }
+  .pxr.home #city .cm-print-echoes { left: 298px; top: 190px; width: 72px; }
+  .pxr.home #city .cm-print-cypher { left: 304px; top: 410px; width: 68px; }
+
   .pxr.home #stamp .lead { max-width: none; }
   .pxr.home .xp-float { font-size: 58px; }
 
@@ -848,7 +854,8 @@ html.pxr-doc { overflow-x: clip; }
   /* phones fill the space between the copy and the screen's bottom edge — never past it (the section
      clips there). Their foot sits behind the fixed time/app pills while pinned and comes into view as
      the scene scrolls away. (The passport keeps its own layout: #stamp rules above.) */
-  .pxr.home #camera .scene-grid,
+  .pxr.home #city .scene-grid,
+.pxr.home #camera .scene-grid,
 .pxr.home #roll .scene-grid,
 .pxr.home #post .scene-grid { padding-top: 62px; padding-bottom: 0; row-gap: 4px; }
   .pxr.home #post .stage-box { margin-top: 8px; }
@@ -979,3 +986,75 @@ html.pxr-doc { overflow-x: clip; }
 .pxr .dd-mini .dsc-ttl { font-size: calc(var(--fs) * 1cqw); padding: 0 0 .06em; }
 .pxr .dd-mini .dsc-by { margin: 2.4cqw 0 0; font-size: 3.5cqw; }
 .pxr .dd-mini .dsc-meta { top: 6cqw; left: 6.5cqw; right: 9cqw; }
+
+/* ───────── 8:12 PM, EVERY EVENT IN YOUR CITY: the app's map, drawn (CityMap.jsx, initCity in home.scenes.js) ─────────
+   Flat like the app: the pins are small black records, the strip is a row of flat cards, no gradients, no glows. */
+.pxr .cm-src { display: none; }
+.pxr .dd-screen.cm-screen { background: #1d2e43; }
+.pxr .cm-map { position: absolute; left: 0; top: 0; will-change: transform; }
+.pxr .cm-svg { position: absolute; inset: 0; }
+.pxr .cm-svg svg { display: block; max-width: none; }
+.pxr .cm-veil { position: absolute; inset: 0; z-index: 5; background: #050505; opacity: 0; pointer-events: none; }
+/* you are here: the system's blue dot in its white ring, and the soft ring around it */
+.pxr .cm-user { position: absolute; width: 0; height: 0; opacity: 0; }
+.pxr .cm-user i { position: absolute; left: -11px; top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #fff; }
+.pxr .cm-user b { position: absolute; left: -7.5px; top: -7.5px; width: 15px; height: 15px; border-radius: 50%; background: #0a84ff; }
+.pxr .cm-user::before { content: ''; position: absolute; left: -26px; top: -26px; width: 52px; height: 52px; border-radius: 50%; background: rgba(10, 132, 255, .2); }
+/* the tab bar over the map is flat here: no blur to redraw while the map moves under it, and no glow on its icon */
+.pxr #city .tabbar { background: rgba(26, 26, 26, .94); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.pxr #city .tabbar span.on { filter: none; }
+/* a pin: a 30-point black record with two hairline grooves and a label (white, or PXI purple for a PXI night) */
+.pxr .cm-pin { position: absolute; width: 0; height: 0; }
+.pxr .cm-disc { position: absolute; left: -15px; top: -15px; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #111; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); transform-origin: 50% 50%; }
+.pxr .cm-g1,
+.pxr .cm-g2 { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .08); translate: -50% -50%; }
+.pxr .cm-g1 { width: 25px; height: 25px; }
+.pxr .cm-g2 { width: 20px; height: 20px; }
+.pxr .cm-lab { position: relative; z-index: 1; display: grid; place-items: center; width: 12px; height: 12px; border-radius: 50%; background: #e4e4e7; color: #000; overflow: hidden; }
+.pxr .cm-lab-n { width: 18px; height: 18px; }
+.pxr .cm-lab b { font: 900 10px/1 var(--f-ios); letter-spacing: -.2px; }
+.pxr .cm-pxi .cm-lab { background: var(--app-purple); color: #fff; }
+.pxr .cm-cov { position: absolute; inset: 0; box-sizing: border-box; border: 1.5px solid var(--app-purple); border-radius: 50%; overflow: hidden; opacity: 0; }
+.pxr .cm-cov img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pxr .cm-ring { position: absolute; left: -15px; top: -15px; width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .7); opacity: 0; pointer-events: none; }
+.pxr .cm-pxi .cm-ring { border-color: var(--app-purple); }
+/* venues close together fold into one pile of three discs and a count */
+.pxr .cm-pin-stack .cm-d1 { left: -21px; top: -20px; }
+.pxr .cm-pin-stack .cm-d2 { left: -9px; top: -20px; }
+.pxr .cm-pin-stack .cm-d3 { left: -15px; top: -13px; }
+.pxr .cm-pin-stack .cm-lab-n { width: 20px; height: 20px; }
+/* the header floats over the map: the title, the round "show cards" button, the filter pill */
+.pxr .cm-title-row { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+.pxr .cm-toggle { position: absolute; right: 20px; top: 62px; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #232323; color: #fff; }
+.pxr .cm-screen .dd-pillrow { z-index: 6; }
+.pxr .cm-swap { display: grid; text-align: left; }
+.pxr .cm-swap > span { grid-area: 1 / 1; white-space: nowrap; }
+.pxr .cm-sw-b { opacity: 0; }
+/* the strip of cards under the map: each one a flat card, the flyer left, the night's details right */
+.pxr .cm-strip { position: absolute; left: 0; right: 0; top: 660px; height: 116px; z-index: 6; }
+.pxr .cm-track { position: absolute; left: 24px; top: 0; display: flex; gap: 10px; will-change: transform; }
+.pxr .cm-card { display: flex; flex: none; width: 354px; height: 116px; border-radius: 18px; background: #1c1c1c; overflow: hidden; }
+.pxr .cm-card[data-wk] { opacity: 0; }
+.pxr .cm-cover { position: relative; flex: none; width: 87px; height: 116px; background: #161616; overflow: hidden; }
+.pxr .cm-cover img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+.pxr .cm-cover .gig-poster { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
+.pxr .cm-body { display: flex; flex: 1; flex-direction: column; justify-content: space-between; min-width: 0; padding: 11px 14px; font-family: var(--f-ios); }
+.pxr .cm-when { display: flex; gap: 7px; font: 800 11px/1 var(--f-ios); letter-spacing: .9px; text-transform: uppercase; }
+.pxr .cm-when b { font-weight: 800; color: var(--app-purple); }
+.pxr .cm-when i { font-style: normal; color: rgba(255, 255, 255, .6); }
+.pxr .cm-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; margin-top: 3px; overflow: hidden; font: 700 18px/20px var(--f-display); letter-spacing: -.4px; color: #fff; }
+.pxr .cm-where { display: flex; justify-content: space-between; gap: 10px; font: 600 13px/1.25 var(--f-ios); color: rgba(255, 255, 255, .55); }
+.pxr .cm-venue { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pxr .cm-dist { flex: none; color: rgba(255, 255, 255, .35); font-variant-numeric: tabular-nums; }
+.pxr .cm-meta { display: flex; align-items: baseline; gap: 8px; min-height: 16px; }
+.pxr .cm-price { font: 900 14px/1 var(--f-ios); letter-spacing: .2px; color: #fff; }
+.pxr .cm-via { font: 600 12px/1 var(--f-ios); color: rgba(255, 255, 255, .35); }
+/* three printed flyers float out of the card and settle around the phone (the rest pose comes from the script) */
+.pxr .cm-prints { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.pxr .cm-print { position: absolute; width: 156px; padding: 7px; border-radius: 2px; background: #fff; box-shadow: 0 22px 40px -12px rgba(0, 0, 0, .7); opacity: 0; will-change: transform; }
+.pxr .cm-print img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; }
+.pxr .cm-print .gig-poster { aspect-ratio: 4 / 5; }
+.pxr .cm-print-late { left: 6px; top: 96px; }
+.pxr .cm-print-echoes { left: 514px; top: 44px; width: 150px; }
+.pxr .cm-print-cypher { left: 508px; top: 372px; width: 140px; }
+
