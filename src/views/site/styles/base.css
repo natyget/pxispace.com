@@ -1010,7 +1010,7 @@ html.pxr-doc { overflow-x: clip; }
 .pxr .cm-g2 { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .08); translate: -50% -50%; }
 .pxr .cm-g1 { width: 25px; height: 25px; }
 .pxr .cm-g2 { width: 20px; height: 20px; }
-.pxr .cm-lab { position: relative; z-index: 1; display: grid; place-items: center; width: 12px; height: 12px; border-radius: 50%; background: #e4e4e7; color: #000; overflow: hidden; }
+.pxr .cm-lab { position: relative; z-index: 1; display: grid; place-items: center; width: 12px; height: 12px; border-radius: 50%; background: #c6c6ce; color: #000; overflow: hidden; }
 .pxr .cm-lab-n { width: 18px; height: 18px; }
 .pxr .cm-lab b { font: 900 10px/1 var(--f-ios); letter-spacing: -.2px; }
 .pxr .cm-pxi .cm-lab { background: var(--app-purple); color: #fff; }
@@ -1039,7 +1039,7 @@ html.pxr-doc { overflow-x: clip; }
 .pxr .cm-cover img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
 .pxr .cm-cover .gig-poster { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
 .pxr .cm-body { display: flex; flex: 1; flex-direction: column; justify-content: space-between; min-width: 0; padding: 11px 14px; font-family: var(--f-ios); }
-.pxr .cm-when { display: flex; gap: 7px; font: 800 11px/1 var(--f-ios); letter-spacing: .9px; text-transform: uppercase; }
+.pxr .cm-when { display: flex; gap: 7px; font: 800 11px/1 var(--f-ios); letter-spacing: .9px; text-transform: uppercase; font-variant-numeric: tabular-nums; }
 .pxr .cm-when b { font-weight: 800; color: var(--app-purple); }
 .pxr .cm-when i { font-style: normal; color: rgba(255, 255, 255, .6); }
 .pxr .cm-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; margin-top: 3px; overflow: hidden; font: 700 18px/20px var(--f-display); letter-spacing: -.4px; color: #fff; }

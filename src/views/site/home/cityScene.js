@@ -79,6 +79,8 @@ const EXTRA_PINS = [
   { key: 'n4', x: 260, y: 830, wave: 1 },
   { key: 'stack', x: 250, y: 910, wave: 0, stack: 3 },
   { key: 'c1', x: 440, y: 640, wave: 0 },
+  { key: 'p1', x: 295, y: 735, wave: 0, pxi: true },
+  { key: 'p2', x: 590, y: 870, wave: 1, pxi: true },
   { key: 'c2', x: 470, y: 700, wave: 1, count: 2 },
   { key: 'e1', x: 570, y: 770, wave: 0 },
   { key: 'e2', x: 555, y: 925, wave: 0 },
