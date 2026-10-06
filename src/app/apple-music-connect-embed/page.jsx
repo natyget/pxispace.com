@@ -54,7 +54,7 @@ export default function AppleMusicConnectEmbedPage() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-black px-6 text-white">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-black tracking-tight">{APPLE_MUSIC_DISCLOSURE.title}</h1>
+        <h1 className="text-2xl font-black normal-case tracking-tight">{APPLE_MUSIC_DISCLOSURE.title}</h1>
 
         {state === 'loading' ? <p className="mt-4 text-sm text-zinc-400">Loading Apple Music</p> : null}
 

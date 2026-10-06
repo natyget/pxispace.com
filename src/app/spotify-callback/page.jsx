@@ -14,7 +14,7 @@ export default function SpotifyCallbackPage() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-black px-6 text-white">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-black tracking-tight">Spotify is no longer connected to PXI</h1>
+        <h1 className="text-2xl font-black normal-case tracking-tight">Spotify is no longer connected to PXI</h1>
         <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
           Music Match now uses Apple Music, or the sound you pick in the app. Open PXI to set yours up.
         </p>
