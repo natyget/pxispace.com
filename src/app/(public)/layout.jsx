@@ -8,15 +8,15 @@ import { PxiLoadingLanding } from '@/components/loading/PxiLoading';
 
 export default function PublicLayout({ children }) {
   const pathname = usePathname();
-  const [hydrated, setHydrated] = useState(false);
+  // Only the landing page holds its loader; every other page starts hydrated, so nothing has to be set in an effect.
+  const [hydrated, setHydrated] = useState(() => pathname !== '/' && pathname !== '/home');
 
   useEffect(() => {
     if (pathname === '/' || pathname === '/home') {
       const timer = setTimeout(() => setHydrated(true), 900);
       return () => clearTimeout(timer);
-    } else {
-      setHydrated(true);
     }
+    return undefined;
   }, [pathname]);
 
   const isLanding = pathname === '/' || pathname === '/home';
