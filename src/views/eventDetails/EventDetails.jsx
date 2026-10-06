@@ -504,7 +504,7 @@ const EventDetails = ({ basePath = '/events' }) => {
               ) : !isLoggedIn || !musicMatch?.connected ? (
                 <div className="space-y-4">
                   <p className="text-zinc-400 leading-relaxed">
-                    Connect Spotify and we&apos;ll score this lineup against your taste.
+                    Connect Apple Music and we&apos;ll score this lineup against your taste.
                   </p>
                   <Link
                     href={isLoggedIn ? '/dashboard/account' : '/login'}

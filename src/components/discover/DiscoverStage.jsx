@@ -113,7 +113,7 @@ function TasteMatch({ event, isLoggedIn, musicConnected }) {
   } else if (musicConnected === false) {
     body = (
       <Link href="/dashboard/account" className="dsc-fact-link">
-        Connect Spotify
+        Connect Apple Music
       </Link>
     );
   }
