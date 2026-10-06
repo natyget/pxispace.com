@@ -22,7 +22,7 @@ import { api } from '@/services/api';
 import { listAdCampaigns } from '@/services/ads';
 import { uploadImageToR2 } from '@/services/media';
 import { getSingleShadeDonutCellProps } from '@/components/dashboard/chartStyles';
-import { stashAttributionForRedirect, trackSpotifyConnectStart } from '@/lib/analytics';
+import AppleMusicConnectPanel from '@/components/music/AppleMusicConnectPanel';
 
 const DELETION_ITEMS = [
     'Your profile, name, username, and avatar',
@@ -383,17 +383,23 @@ function ProfileEditor({ user, updateUser }) {
 }
 
 /**
- * Spotify connect/disconnect. Apple Music was removed as a connect option
- * (App Store Guideline 4.5.2(iii) + a product decision to keep a single
- * provider). Accounts that connected Apple Music before the removal keep
- * their stored taste profile and can disconnect or swap to Spotify here,
- * but there is no way to newly connect Apple Music anymore.
+ * Music Match connection: Apple Music (2026-10-06, the founder brought it back and retired Spotify, whose
+ * development mode allows only a handful of users). Connecting opens AppleMusicConnectPanel, which shows the
+ * disclosure before MusicKit asks Apple. A Spotify profile from before the switch still counts until its owner
+ * disconnects it, but there is no new Spotify connect.
  */
 function MusicConnectionsCard() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    const [connecting, setConnecting] = useState(false);
+
+    const loadProfile = () =>
+        musicService
+            .getProfile()
+            .then((res) => setProfile(res))
+            .catch(() => setProfile(null));
 
     useEffect(() => {
         let cancelled = false;
@@ -404,24 +410,6 @@ function MusicConnectionsCard() {
             .finally(() => { if (!cancelled) setLoading(false); });
         return () => { cancelled = true; };
     }, []);
-
-    const connect = async () => {
-        setBusy(true);
-        setError('');
-        try {
-            const { authorizeUrl } = await musicService.startSpotifyConnect();
-            trackSpotifyConnectStart({ entryPoint: 'account_settings' });
-            // Deliberately awaited (self-capped at ~800ms, button already reads
-            // "Opening..."): the stash has to reach sessionStorage BEFORE we leave,
-            // or the GA client_id and the ad click id do not survive the round-trip
-            // and Spotify becomes the referrer that acquired this user.
-            await stashAttributionForRedirect();
-            window.location.href = authorizeUrl;
-        } catch (err) {
-            setError(err?.message || 'Could not start Spotify connect');
-            setBusy(false);
-        }
-    };
 
     const disconnect = async () => {
         setBusy(true);
@@ -438,64 +426,59 @@ function MusicConnectionsCard() {
 
     const connected = Boolean(profile?.connected);
     const provider = profile?.provider || null;
-    const isLegacyAppleMusic = connected && provider === 'APPLE_MUSIC';
+    const isLegacySpotify = connected && provider === 'SPOTIFY';
     const genresSuffix = profile?.topGenres?.length ? `, ${profile.topGenres.slice(0, 3).join(', ')}` : '';
-    const accentColor = isLegacyAppleMusic ? '#fa2d48' : '#1DB954';
-    const providerLabel = isLegacyAppleMusic ? 'Apple Music' : 'Spotify';
+    const providerLabel = isLegacySpotify ? 'Spotify' : 'Apple Music';
+    const status = loading
+        ? 'Checking connection...'
+        : isLegacySpotify
+            ? 'Spotify is no longer supported. Disconnect it, then connect Apple Music.'
+            : connected
+                ? `Connected${genresSuffix}. Powers your event match scores.`
+                : 'Connect to get events matched to your music taste.';
 
     return (
         <SettingsSurface eyebrow="Personalization" title="Music">
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-[1.25rem] bg-pxi-field px-4 py-4">
                 <div className="flex min-w-0 items-start gap-3">
-                    <div
-                        className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                        style={{ backgroundColor: `${accentColor}26`, color: accentColor }}
-                    >
+                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#A523EF]/15 text-[#A523EF]">
                         <HugeiconsIcon icon={MusicNote01Icon} size={18} />
                     </div>
                     <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white">{providerLabel}</p>
-                    <p className="mt-0.5 text-xs text-zinc-500">
-                        {loading
-                            ? 'Checking connection...'
-                            : connected
-                                ? `Connected${genresSuffix}. Powers your event match scores.`
-                                : 'Connect to get events matched to your music taste.'}
-                    </p>
+                        <p className="text-sm font-semibold text-white">{providerLabel}</p>
+                        <p className="mt-0.5 text-xs text-zinc-500">{status}</p>
                     </div>
                 </div>
                 {connected ? (
-                    <div className="flex items-center gap-2">
-                        {isLegacyAppleMusic ? (
-                            <button
-                                type="button"
-                                onClick={connect}
-                                disabled={busy}
-                                className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em] disabled:opacity-50"
-                            >
-                                Swap to Spotify
-                            </button>
-                        ) : null}
-                        <button
-                            type="button"
-                            onClick={disconnect}
-                            disabled={busy}
-                            className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em] disabled:opacity-50"
-                        >
-                            Disconnect
-                        </button>
-                    </div>
-                ) : (
                     <button
                         type="button"
-                        onClick={connect}
-                        disabled={busy || loading}
-                        className="rounded-full bg-[#1DB954] px-5 py-2 text-xs font-bold tracking-[0.02em] text-black disabled:opacity-50"
+                        onClick={disconnect}
+                        disabled={busy}
+                        className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em] disabled:opacity-50"
                     >
-                        {busy ? 'Opening...' : 'Connect Spotify'}
+                        Disconnect
                     </button>
-                )}
+                ) : !connecting ? (
+                    <button
+                        type="button"
+                        onClick={() => setConnecting(true)}
+                        disabled={loading}
+                        className="rounded-full bg-[#A523EF] px-5 py-2 text-xs font-bold tracking-[0.02em] text-white disabled:opacity-50"
+                    >
+                        Connect Apple Music
+                    </button>
+                ) : null}
             </div>
+            {!connected && connecting ? (
+                <AppleMusicConnectPanel
+                    entryPoint="account_settings"
+                    onConnected={() => {
+                        setConnecting(false);
+                        void loadProfile();
+                    }}
+                    onCancel={() => setConnecting(false)}
+                />
+            ) : null}
             {error ? <p className="mt-2 text-xs text-red-400">{error}</p> : null}
         </SettingsSurface>
     );
