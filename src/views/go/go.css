@@ -579,3 +579,21 @@ button.go-record {
     opacity: 0;
   }
 }
+
+/* Reduce Motion: the buttons keep their colour change but do not lift or press. */
+@media (prefers-reduced-motion: reduce) {
+  .go-tickets,
+  .go-store,
+  .go-open,
+  .go-dir {
+    transition: none;
+  }
+  .go-tickets:hover,
+  .go-tickets:active,
+  .go-store:hover,
+  .go-store:active,
+  .go-open:hover {
+    translate: none;
+    scale: none;
+  }
+}
