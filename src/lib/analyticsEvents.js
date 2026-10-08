@@ -9,7 +9,7 @@
 //   event_title      NOT event_name
 //   host_lead        NOT generate_lead
 //   event_create_publish  NOT event_created
-//   spotify_connected     NOT music_connect
+//   spotify_connected     NOT music_connect (retired; apple_music_connected replaces it)
 //   join_event       NOT rsvp / join_group
 
 export const EVENTS = {
@@ -31,8 +31,12 @@ export const EVENTS = {
     HOST_LEAD: 'host_lead',
     EVENT_CREATE_START: 'event_create_start',
     EVENT_CREATE_PUBLISH: 'event_create_publish',
+    // Spotify connect was retired on 2026-10-06 (its development mode allows only a handful of users). The two names
+    // stay for history; Apple Music replaces them (docs/analytics-taxonomy.md in PXIStudio-App).
     SPOTIFY_CONNECT_START: 'spotify_connect_start',
     SPOTIFY_CONNECTED: 'spotify_connected',
+    APPLE_MUSIC_CONNECT_START: 'apple_music_connect_start',
+    APPLE_MUSIC_CONNECTED: 'apple_music_connected',
     ARTIST_FOLLOW: 'artist_follow',
     GENRE_FOLLOW: 'genre_follow',
     PLAYLIST_OPEN: 'playlist_open',

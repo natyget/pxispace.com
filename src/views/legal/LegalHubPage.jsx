@@ -112,12 +112,12 @@ const SECTIONS = [
             </div>
 
             <div>
-              <h4 className="text-lg font-semibold text-white/90">2.10 Music Match (Spotify / Apple Music)</h4>
+              <h4 className="text-lg font-semibold text-white/90">2.10 Music Match (Apple Music)</h4>
               <p className="text-gray-400 mb-3">
-                Music Match is an optional feature. If you connect Spotify or Apple Music, we receive listening-history and taste signals (for example artists, genres, and related metadata available via that provider&apos;s APIs) solely to score how well your music taste overlaps with events and to help rank or recommend matches. We do not post to your music accounts.
+                Music Match is an optional feature. It uses the sound you pick in the app and the events you save, join and attend. If you also connect Apple Music, we receive your library songs, recently played and heavy rotation (artists, genres and related metadata) solely to score how well your taste overlaps with events. Apple Music data is never used for advertising, never shared with organizers or other third parties, and never used to identify you. We do not change anything in your music library. Spotify connections made before October 6, 2026 are treated the same way until you disconnect them; new Spotify connections are no longer offered.
               </p>
               <ul className="list-disc pl-5 space-y-2 text-sm text-gray-400">
-                <li>Connection is affirmative opt-in via the provider&apos;s OAuth flow.</li>
+                <li>Connecting Apple Music is an affirmative opt-in through Apple&apos;s own authorization, after PXI shows what it reads.</li>
                 <li>You may disconnect at any time; disconnecting deletes your Music Match profile/taste data stored by PXI.</li>
                 <li>Music providers process your account data under their own privacy policies when you authorize the connection.</li>
               </ul>
@@ -133,7 +133,7 @@ const SECTIONS = [
             <li>Running the Event Lock: computing your Haversine proximity to an event venue to unlock albums.</li>
             <li>Biometric photo matching: identifying photos you appear in at events you attend (opt-in only; enrollment frames processed to create vectors that are stored; raw enrollment images discarded after processing).</li>
             <li>Operating in-app messaging, including voice notes you send to other users.</li>
-            <li>Music Match: ranking events and social matches from listening taste you optionally connect (Spotify / Apple Music).</li>
+            <li>Music Match: ranking events by the taste you pick in the app and, if you connect it, Apple Music.</li>
             <li>Running the Odyssey gamification system: awarding XP, Stamps, and Leaderboard rankings.</li>
             <li>Processing ticket purchases, distributing payouts to vendors via Stripe Connect.</li>
             <li>Personalizing your feed, event recommendations, and suggested connections based on attendance history.</li>
@@ -188,7 +188,7 @@ const SECTIONS = [
 
             <div>
               <h4 className="text-lg font-semibold text-white/90">4.4 With Service Providers</h4>
-              <p className="text-gray-400">Stripe, Inc. (payments), Cloudflare (Edge middleware, CDN, R2 storage for photos, videos, and voice notes), facial geometry processing on PXI servers for Face Matching, Analytics providers (aggregated, non-PII data only), music platform APIs when you connect Music Match (Spotify / Apple Music), and SMS/Push notification providers (including Twilio, Inc., which processes mobile numbers and message content solely to deliver messages on our behalf).</p>
+              <p className="text-gray-400">Stripe, Inc. (payments), Cloudflare (Edge middleware, CDN, R2 storage for photos, videos, and voice notes), facial geometry processing on PXI servers for Face Matching, Analytics providers (aggregated, non-PII data only), Apple&apos;s Apple Music API when you connect Apple Music to Music Match, and SMS/Push notification providers (including Twilio, Inc., which processes mobile numbers and message content solely to deliver messages on our behalf).</p>
               <p className="text-gray-400 mt-3 text-sm border-l-2 border-legal-hub-accent pl-4">
                 <strong className="text-white">SMS consent &amp; mobile numbers — no third-party marketing sharing:</strong> Mobile phone numbers collected for SMS/text messaging, and the associated opt-in consent records, will not be shared, sold, rented, or otherwise disclosed to third parties, affiliates, or any other entities for those parties&apos; marketing or promotional purposes. We share mobile numbers only with our SMS delivery provider as a data processor necessary to transmit messages you requested, or when required by applicable law.
               </p>
