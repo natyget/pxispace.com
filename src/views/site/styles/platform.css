@@ -103,7 +103,8 @@ div.pxr.platform {
 .pxr:where(.platform) .d-pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: 999px; white-space: nowrap; font: 900 var(--t-pill)/18px var(--f-ui); letter-spacing: .08em; text-transform: uppercase; color: #fff; transition: background .2s, color .2s; }
 .pxr:where(.platform) .d-pill.sm { min-height: 0; padding: 8px 16px; font-size: calc(var(--t-pill) - 1px); line-height: 16px; }
 .pxr:where(.platform) .d-pill.solid { background: var(--d-brand); }
-.pxr:where(.platform) .d-pill.ghost { background: var(--d-field); }
+.pxr:where(.platform) .d-pill.ghost { background: var(--d-field); font-weight: 700; letter-spacing: .02em; text-transform: none; }
+.pxr:where(.platform) .cc-head .d-pill.ghost { font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
 .pxr:where(.platform) .d-pill.solid.pressed { background: #b43df5; }
 .pxr:where(.platform) .d-pill.ghost.pressed { background: var(--d-field-hi); }
 /* dashboard-segmented-toggle: a #2e2e2e capsule, the chosen item in purple */
@@ -433,12 +434,7 @@ div.pxr.platform {
 .pxr:where(.platform) .hype-score .lab { font: 700 var(--t-lab)/1.4 var(--f-ui); letter-spacing: .02em; color: rgba(255, 255, 255, .4); }
 .pxr:where(.platform) .hype-score .v { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
 .pxr:where(.platform) .hype-score .v b { font: 700 var(--t-hype, 44px)/1 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
-.pxr:where(.platform) .tier { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font: 600 var(--t-chip)/1.5 var(--f-ui); letter-spacing: .02em; white-space: nowrap; transition: background .3s, color .3s; }
-.pxr:where(.platform) .tier[data-t="Quiet"] { background: rgba(255, 255, 255, .07); color: var(--z2); }
-.pxr:where(.platform) .tier[data-t="Warm"] { background: rgba(254, 154, 0, .10); color: #fee685; }
-.pxr:where(.platform) .tier[data-t="Buzzing"] { background: rgba(255, 90, 31, .12); color: #ff9a70; }
-.pxr:where(.platform) .tier[data-t="Electric"] { background: rgba(165, 35, 239, .16); color: #d796f8; }
-.pxr:where(.platform) .tier[data-t="Wildfire"] { background: rgba(251, 44, 54, .10); color: var(--rd3); }
+.pxr:where(.platform) .tier { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, .07); color: #fff; font: 600 var(--t-chip)/1.5 var(--f-ui); letter-spacing: .02em; white-space: nowrap; }
 .pxr:where(.platform) .hype-strip { margin-top: 12px; border-radius: 16px; }
 .pxr:where(.platform) .hype-strip > div { padding: 10px 14px; }
 .pxr:where(.platform) .hype-strip small { display: flex; align-items: center; gap: 6px; }
@@ -446,12 +442,7 @@ div.pxr.platform {
 .pxr:where(.platform) .hype-strip > div:nth-child(3) small::before { background: #ff5a1f; }
 .pxr:where(.platform) .hype-strip > div:nth-child(4) small::before { background: #0d9488; }
 .pxr:where(.platform) .hype-strip b { margin-top: 2px; font: 600 calc(var(--t-body) + 4px)/1.3 var(--f-ui); letter-spacing: 0; }
-.pxr:where(.platform) .hype-strip .tier { margin-left: 10px; padding: 0; background: none !important; font: 600 calc(var(--t-body) + 4px)/1.3 var(--f-ui); }
-.pxr:where(.platform) .hype-strip .tier[data-t="Quiet"] { color: var(--z3); }
-.pxr:where(.platform) .hype-strip .tier[data-t="Warm"] { color: #fee685; }
-.pxr:where(.platform) .hype-strip .tier[data-t="Buzzing"] { color: #ff9a70; }
-.pxr:where(.platform) .hype-strip .tier[data-t="Electric"] { color: #d796f8; }
-.pxr:where(.platform) .hype-strip .tier[data-t="Wildfire"] { color: var(--rd3); }
+.pxr:where(.platform) .hype-strip .tier { margin-left: 10px; padding: 0; background: none; font: 600 calc(var(--t-body) + 4px)/1.3 var(--f-ui); letter-spacing: 0; }
 .pxr:where(.platform) .hype-mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .pxr:where(.platform) .hype-mini small { display: flex; align-items: center; gap: 5px; font: 500 var(--t-lab)/1.4 var(--f-ui); color: var(--z4); }
 /* the chart's legend: each count wears its series colour (messages purple, reactions orange, captures teal) */
@@ -477,7 +468,7 @@ div.pxr.platform {
 .pxr:where(.platform) .kit .kit-d { margin-top: 6px; font: 400 var(--t-body)/1.45 var(--f-ui); color: var(--d-sec); }
 .pxr:where(.platform) .kit-x { width: 34px; height: 34px; border-radius: 50%; background: var(--d-field); display: grid; place-items: center; color: rgba(255, 255, 255, .7); flex: none; }
 .pxr:where(.platform) .kit-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
-.pxr:where(.platform) .kit-grid div { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--d-field); }
+.pxr:where(.platform) .kit-grid div { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--d-field); box-shadow: 0 0 0 2px var(--d-brand); }
 .pxr:where(.platform) .kit-grid img { width: 100%; height: 100%; object-fit: cover; }
 .pxr:where(.platform) .kit-grid div::after { content: ''; position: absolute; right: 5px; top: 5px; width: 18px; height: 18px; border-radius: 50%; background: var(--d-brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/11px no-repeat; }
 .pxr:where(.platform) .kit-cap { margin-top: 14px; padding: 12px 14px; border-radius: 16px; background: var(--d-field); }
@@ -798,6 +789,16 @@ div.pxr.platform .scene-grid.flip { display: block; padding: 0; }
   .pxr:where(.platform) .p-final { padding-top: 12vh; }
   .pxr:where(.platform) .stack { padding-top: 16vh; padding-bottom: 56px; }
   .pxr:where(.platform) .terms { padding-top: 0; }
+}
+
+/* the narrowest phones (320px): caps labels are wider than the sentence-case ones were, so the cards tighten */
+@media (max-width: 359px) {
+  .pxr:where(.platform) .mc { padding: 12px; }
+  .pxr:where(.platform) .mc small { font-size: 10px; letter-spacing: .05em; }
+  .pxr:where(.platform) .mc .ic { width: 22px; height: 22px; }
+  .pxr:where(.platform) .mc .ic svg { width: 12px; height: 12px; }
+  .pxr:where(.platform) .stage.m .hype-m .top { flex-direction: column; align-items: stretch; gap: 8px; }
+  .pxr:where(.platform) .stage.m .hype-m .hype-mini { width: 100%; }
 }
 
 /* ───────── reduced motion: no pin, no scrub, end states ───────── */
