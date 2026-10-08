@@ -67,7 +67,7 @@ function formatCaptureLag(minutes) {
  * strip, and spike markers flagging moments worth investigating (a song, a
  * shoutout, a drop — the chart can't know which, but it can point at when).
  */
-export default function HypePanel({ behavior, capture, isMobile }) {
+export default function HypePanel({ behavior, capture, isMobile, chartClassName = 'h-[280px] md:h-[340px]', statsClassName = 'grid-cols-3 sm:grid-cols-6' }) {
     const [channel, setChannel] = useState('all');
     if (!behavior) return null;
     const series = (behavior.byHour || []).map((d) => ({
@@ -128,7 +128,7 @@ export default function HypePanel({ behavior, capture, isMobile }) {
         >
             {hasActivity ? (
                 <>
-                    <div className="relative h-[280px] md:h-[340px]">
+                    <div className={`relative ${chartClassName}`}>
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={series} margin={{ top: 16, right: 14, bottom: 0, left: isMobile ? -18 : 0 }}>
                                 <defs>
@@ -184,16 +184,16 @@ export default function HypePanel({ behavior, capture, isMobile }) {
                                 ))}
                             </AreaChart>
                         </ResponsiveContainer>
-                        <div className="absolute bottom-2 left-4 flex flex-wrap items-center gap-4 text-[11px] font-bold text-zinc-500">
-                            {activeKeys.map((key) => (
-                                <span key={key} className="inline-flex items-center gap-1.5">
-                                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: HYPE_SERIES[key].color }} />
-                                    {HYPE_SERIES[key].label}
-                                </span>
-                            ))}
-                        </div>
                     </div>
-                    <div className="mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-2xl bg-pxi-field sm:grid-cols-6">
+                    <div className="mt-3 flex flex-wrap items-center gap-4 px-1 text-[11px] font-bold text-zinc-500">
+                        {activeKeys.map((key) => (
+                            <span key={key} className="inline-flex items-center gap-1.5">
+                                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: HYPE_SERIES[key].color }} />
+                                {HYPE_SERIES[key].label}
+                            </span>
+                        ))}
+                    </div>
+                    <div className={`mt-4 grid gap-px overflow-hidden rounded-2xl bg-pxi-field ${statsClassName}`}>
                         {statStrip.map((item) => (
                             <div key={item.label} className="bg-pxi-surface px-3 py-2.5">
                                 <p className="text-[11px] font-medium text-zinc-500">{item.label}</p>

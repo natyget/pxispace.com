@@ -80,8 +80,10 @@ export function CapacityIndicator({ isLive, capacity, scanned, sold }) {
 }
 
 /** Per-minute entry velocity over the last hour, from real TicketScanEvent buckets. */
-export function EntryVelocityPanel({ isLive, velocity }) {
+export function EntryVelocityPanel({ isLive, velocity, bars: fixedBars = null }) {
+    // `bars` (sixty counts, oldest first) stands in for the live buckets: the marketing mockups draw a fixed hour
     const bars = useMemo(() => {
+        if (fixedBars) return fixedBars;
         const now = new Date();
         now.setSeconds(0, 0);
         const counts = new Map((velocity || []).map((bucket) => [bucket.minute, bucket.count]));
@@ -91,7 +93,7 @@ export function EntryVelocityPanel({ isLive, velocity }) {
             series.push(counts.get(minute) || 0);
         }
         return series;
-    }, [velocity]);
+    }, [velocity, fixedBars]);
     const max = Math.max(1, ...bars);
     const lastFive = bars.slice(-5).reduce((sum, n) => sum + n, 0);
 
@@ -140,7 +142,7 @@ export function RecentScansSection({ isLive, scans, onIncident }) {
                         <p className="text-sm font-semibold text-zinc-300">{scan.gate}</p>
                         <div className="flex items-center gap-3">
                             <StateChip state={scan.state} muted={!isLive} />
-                            <span className="text-xs text-zinc-500">{scan.at}</span>
+                            <span className="whitespace-nowrap text-xs text-zinc-500">{scan.at}</span>
                         </div>
                         <button
                             type="button"
