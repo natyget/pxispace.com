@@ -746,7 +746,8 @@ div.pxr.platform .scene-grid.flip { display: block; padding: 0; }
   .pxr:where(.platform) .stage.m .hype-m { opacity: 0; }
   .pxr:where(.platform) .stage.m .hype-m .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
   .pxr:where(.platform) .stage.m .hype-m .spark { margin-top: 12px; }
-  .pxr:where(.platform) .stage.m .hype-m .hype-mini { flex: none; width: 52%; gap: 6px; }
+  .pxr:where(.platform) .stage.m .hype-m .hype-mini { flex: none; width: 60%; gap: 4px; }
+  .pxr:where(.platform) .stage.m .hype-m .hype-mini small { gap: 4px; font-size: 10.5px; }
   .pxr:where(.platform) .stage.m .hype-m .hype-mini b { font-size: 15px; }
   /* recap */
   .pxr:where(.platform) .stage.m .album { top: 0; }
