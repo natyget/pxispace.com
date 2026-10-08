@@ -129,30 +129,46 @@ export default async function initPlatform(PXR, L) {
     lu: { n: 'Lu Chen', u: 'luchen', img: AV('A11') }, kev: { n: 'Kev Owens', u: 'kevo', img: AV('A9') },
   };
 
-  /* ───────────────────────── charts (Recharts look, chartStyles.js tokens) ───────────────────────── */
-  function curve(pts, base) {
-    let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
-    for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
-      const c1 = [p1[0] + (p2[0] - p0[0]) / 6, Math.min(base, p1[1] + (p2[1] - p0[1]) / 6)];
-      const c2 = [p2[0] - (p3[0] - p1[0]) / 6, Math.min(base, p2[1] - (p3[1] - p1[1]) / 6)];
-      d += ` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  /* ───────────────────────── charts (what Recharts draws in the dashboard, chartStyles.js tokens) ───────────────────────── */
+  // d3's curveMonotoneX, the interpolation Recharts uses for type="monotone": no overshoot, flat on the peaks.
+  const sgn = (v) => (v < 0 ? -1 : 1);
+  function slope3(x0, y0, x1, y1, x2, y2) {
+    const h0 = x1 - x0, h1 = x2 - x1, s0 = (y1 - y0) / (h0 || (h1 < 0 ? -0 : 0)), s1 = (y2 - y1) / (h1 || (h0 < 0 ? -0 : 0)), p = (s0 * h1 + s1 * h0) / (h0 + h1);
+    return (sgn(s0) + sgn(s1)) * Math.min(Math.abs(s0), Math.abs(s1), 0.5 * Math.abs(p)) || 0;
+  }
+  const slope2 = (x0, y0, x1, y1, t) => { const h = x1 - x0; return h ? ((3 * (y1 - y0)) / h - t) / 2 : t; };
+  function curve(pts) {
+    const f = (v) => +v.toFixed(2);
+    let d = '', x0, y0, x1, y1, t0, k = 0;
+    const seg = (ta, tb) => { const dx = (x1 - x0) / 3; d += `C${f(x0 + dx)},${f(y0 + dx * ta)},${f(x1 - dx)},${f(y1 - dx * tb)},${f(x1)},${f(y1)}`; };
+    for (const [x, y] of pts) {
+      let t1;
+      if (x === x1 && y === y1) continue;
+      if (k === 0) { k = 1; d += `M${f(x)},${f(y)}`; }
+      else if (k === 1) k = 2;
+      else if (k === 2) { k = 3; t1 = slope3(x0, y0, x1, y1, x, y); seg(slope2(x0, y0, x1, y1, t1), t1); }
+      else { t1 = slope3(x0, y0, x1, y1, x, y); seg(t0, t1); }
+      x0 = x1; x1 = x; y0 = y1; y1 = y; t0 = t1;
     }
+    if (k === 2) d += `L${f(x1)},${f(y1)}`;
+    else if (k === 3) seg(t0, slope2(x0, y0, x1, y1, t0));
     return d;
   }
+  // chartStyles.js: the app purple, the muted grey for the second series, the series ladder (purple, orange, teal, blue)
+  const BRAND = '#A523EF', MUTED = '#8b8d98', ORANGE = '#FF5A1F', TEAL = '#0d9488', BLUE = '#3b82f6';
   let gid = 0;
   /** series: [{values, color}] stacked bottom→top. fs = tick size in px at 1:1. */
-  function areaChart({ w, h, series, max, ticks = [], xl = [], padL = 30, padT = 8, fs = 11, fill = [0.34, 0], stacked = false, yfmt = (v) => v, noAxis = false }) {
+  function areaChart({ w, h, series, max, ticks = [], xl = [], padL = 30, padT = 8, fs = 11, fill = [0.34, 0], stacked = false, yfmt = (v) => v, noAxis = false, lineW = 2.2, fillOp = 0.6 }) {
     const id = 'c' + (++gid), n = series[0].values.length, padB = noAxis ? 2 : Math.round(fs * 1.9), pl = noAxis ? 0 : padL;
     const X = (i) => pl + (i / (n - 1)) * (w - pl - 3), Y = (v) => padT + (1 - v / max) * (h - padT - padB), base = Y(0);
     let acc = new Array(n).fill(0), defs = '', body = '';
     series.forEach((s, k) => {
       const lo = acc.slice(), hiV = s.values.map((v, i) => (stacked ? acc[i] : 0) + v);
       if (stacked) acc = hiV;
-      const line = curve(hiV.map((v, i) => [X(i), Y(v)]), base);
-      const bottom = stacked && k > 0 ? curve(lo.map((v, i) => [X(i), Y(v)]).reverse(), base).replace(/^M/, 'L') : `L${X(n - 1)},${base} L${X(0)},${base}`;
+      const line = curve(hiV.map((v, i) => [X(i), Y(v)]));
+      const bottom = stacked && k > 0 ? curve(lo.map((v, i) => [X(i), Y(v)]).reverse()).replace(/^M/, 'L') : `L${X(n - 1)},${base} L${X(0)},${base}`;
       defs += `<linearGradient id="${id}g${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${s.color}" stop-opacity="${fill[0]}"/><stop offset="1" stop-color="${s.color}" stop-opacity="${fill[1]}"/></linearGradient>`;
-      body += `<path d="${line} ${bottom} Z" fill="url(#${id}g${k})"/><path d="${line}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linecap="round"/>`;
+      body += `<path d="${line} ${bottom} Z" fill="url(#${id}g${k})" fill-opacity="${fillOp}"/><path d="${line}" fill="none" stroke="${s.color}" stroke-width="${lineW}"/>`;
     });
     const grid = ticks.map((v) => `<line x1="${pl}" x2="${w}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.06)"/><text x="${pl - 8}" y="${(Y(v) + fs * 0.36).toFixed(1)}" text-anchor="end">${yfmt(v)}</text>`).join('');
     const xs = xl.map(([i, t], j) => `<text x="${X(i)}" y="${h - 2}" text-anchor="${xl.length > 1 && j === 0 && i === 0 ? 'start' : j === xl.length - 1 && i === n - 1 ? 'end' : 'middle'}">${t}</text>`).join('');
@@ -271,8 +287,8 @@ export default async function initPlatform(PXR, L) {
   function buildCC(el) {
     const nav = [['Hub'], ['DashboardSquare01Icon', 'Command Center', 'on'], ['Calendar01Icon', 'My Events'], ['Business'], ['Wallet01Icon', 'Earnings'], ['Shield01Icon', 'Teams & Security'],
       ['People'], ['UserGroupIcon', 'CRM'], ['Megaphone01Icon', 'Ads Manager'], ['Mail01Icon', 'Email Campaigns'], ['Intelligence'], ['Activity01Icon', 'Analytics'], ['QrCodeIcon', 'Live Operations', 'cc-ops'], ['FloorPlanIcon', 'Venues']];
-    const rev = areaChart({ w: 237, h: 122, series: [{ values: R30, color: '#d84aff' }], max: 900, ticks: [0, 400, 800], xl: X30, padL: 44, fs: 14, yfmt: (v) => '$' + v });
-    const tix = areaChart({ w: 237, h: 122, series: [{ values: T30, color: '#8b8d98' }], max: 32, ticks: [0, 15, 30], xl: X30, padL: 30, fs: 14 });
+    const rev = areaChart({ w: 237, h: 134, series: [{ values: R30, color: BRAND }], max: 800, ticks: [0, 200, 400, 600, 800], xl: X30, padL: 44, fs: 13, yfmt: (v) => '$' + v });
+    const tix = areaChart({ w: 237, h: 134, series: [{ values: T30, color: MUTED }], max: 24, ticks: [0, 6, 12, 18, 24], xl: X30, padL: 30, fs: 13 });
     const nx = (n, sub, chip, cls, dot) => `<div class="nx"><i class="dot ${dot}"></i><div><b>${n}</b><small>${sub}</small></div></div>`;
     el.innerHTML = `
       <aside class="cc-side">
@@ -297,15 +313,15 @@ export default async function initPlatform(PXR, L) {
         <div class="dcard cc-band">
           <p class="d-eb">Only on PXI</p><p class="d-h">What you get here and nowhere else</p>
           <div class="trio">
-            <div class="cc-tile"><p class="stat"><b>91%</b>turnout verified</p><h5>Where the room was alive</h5><p>Photo capture points, on your floor plan.</p></div>
-            <div class="cc-tile"><p class="stat"><b>214</b>moments captured</p><h5>Your crowd shot your marketing</h5><p>Every album photo, ranked by reaction.</p></div>
-            <div class="cc-tile"><p class="stat"><b>164</b>verified attendees</p><h5>Guests you can prove came</h5><p>Scanned at the door, then segmented.</p></div>
+            <div class="cc-tile"><span class="ico">${hi('FloorPlanIcon', 17)}</span><h5>Where the room was alive</h5><p class="stat"><b>91%</b>turnout verified</p><p>Photo capture points, on your floor plan.</p></div>
+            <div class="cc-tile"><span class="ico">${hi('Image01Icon', 17)}</span><h5>Your crowd shot your marketing</h5><p class="stat"><b>214</b>moments captured</p><p>Every album photo, ranked by reaction.</p></div>
+            <div class="cc-tile"><span class="ico">${hi('UserGroupIcon', 17)}</span><h5>Guests you can prove came</h5><p class="stat"><b>164</b>verified attendees</p><p>Scanned at the door, then segmented.</p></div>
           </div>
         </div>
       </div>`;
   }
   function buildMCC(el, W) {
-    const rev = areaChart({ w: W - 32, h: Math.round(clamp(window.innerHeight - 670, 100, 150)), series: [{ values: R30, color: '#d84aff' }], max: 900, ticks: [0, 400, 800], xl: X30, padL: 36, fs: 11, yfmt: (v) => '$' + v });
+    const rev = areaChart({ w: W - 32, h: Math.round(clamp(window.innerHeight - 670, 100, 150)), series: [{ values: R30, color: BRAND }], max: 800, ticks: [0, 200, 400, 600, 800], xl: X30, padL: 36, fs: 11, yfmt: (v) => '$' + v });
     el.innerHTML = `<div class="mcc-grid">${METRICS.map(([l, i, v, f]) => `<div class="mc"><div class="top"><small>${l}</small><span class="ic">${hi(i, 14)}</span></div><b data-to="${v}" data-f="${f}">0</b></div>`).join('')}</div>
       <div class="dcard mcc-chart"><p class="d-eb">Ticket sales per day, last 30 days</p><p class="d-h">Revenue</p>${rev.svg}</div>
       <div class="dcard mcc-only"><p class="d-eb">Only on PXI</p><p class="d-h">What you get here and nowhere else</p>
@@ -485,30 +501,34 @@ export default async function initPlatform(PXR, L) {
     const sec = $('#sell'), stage = prep(sec, mode), M = mode === 'm', q = (s) => $(s, stage);
     const L = M ? mLayout(sec, rm) : null;
     const card = `<div class="dcard sell-card">
-        <p class="d-eb">Before doors</p><p class="d-h">Sell the room</p><p class="d-sub pace"></p>
+        <p class="d-eb q">Before doors</p><p class="d-h">Sell the room</p><p class="d-sub pace"></p>
         <div class="sell-value"><b class="n-gross">$0</b><span>ticket sales</span><span class="d-chip change"><span class="n-sold">0</span>&nbsp;sold</span></div>
         <div class="sell-chart"></div>
-        <div class="sell-cum"><span>Cumulative</span><div class="cum-bar"><i></i></div><span class="cum-n">0 / 180</span></div>
+        <div class="sell-cum"><span class="cum-l">Cumulative</span><span class="cum-n">0 / 180</span><div class="cum-chart"></div></div>
       </div>`;
     const MK = [['Marketing spend', '$126', ''], ['Attributed tickets', '0', 'n-att'], ['Attributed revenue', '$0', 'n-attr'], ['Return on spend', '0x', 'n-ros']];
     const sold = `<div class="soldout"><span>Sold out</span><small>${M ? '180 / 180 sold' : '180 / 180, 4 days early'}</small></div>`;
     if (!M) {
       stage.innerHTML = card + `<div class="ins-panel"><p class="ins-eb">What we noticed at this event</p><p class="ins-empty">Insights appear here as sales come in.</p><div class="ins-list">${INS.map((x) => insHTML(x)).join('')}</div></div>
-        <div class="dcard mkt"><div class="d-headrow"><div><p class="d-eb">Marketing</p><p class="d-h">Spend → tickets, attributed</p></div><div class="mkt-r"><span class="d-chip brand">7-day attribution</span><span class="d-chip">Campaigns</span><span class="d-chip">Ads</span></div></div>
+        <div class="dcard mkt"><div class="d-headrow"><div><p class="d-eb q">Marketing</p><p class="d-h">Spend → tickets, attributed</p></div><div class="mkt-r"><span class="d-chip brand">7-day attribution</span><span class="d-chip">Campaigns</span><span class="d-chip">Ads</span></div></div>
           <div class="d-strip s4">${MK.map(([l, v, c]) => `<div><small>${l}</small><b class="${c}">${v}</b></div>`).join('')}</div></div>` + sold;
     } else {
       stage.innerHTML = INS.slice(0, 2).map((x) => insHTML(x, 'toast')).join('') + card +
         `<div class="mkt-m">${MK.map(([l, v, c]) => `<div class="mtile"><small>${l}</small><b class="${c}">${v}</b></div>`).join('')}</div>` + sold;
     }
     const cw = M ? L.W - 32 : 492;
-    const ch = M ? areaChart({ w: cw, h: 146, series: [{ values: LC_DAILY, color: '#d84aff' }], max: 24, ticks: [0, 10, 20], xl: [[0, 'Sep 8'], [10, 'Sep 18'], [20, 'Sep 28']], padL: 26, fs: 11 })
-      : areaChart({ w: cw, h: 196, series: [{ values: LC_DAILY, color: '#d84aff' }], max: 24, ticks: [0, 10, 20], xl: [[0, 'Sep 8'], [7, 'Sep 15'], [14, 'Sep 22'], [20, 'Sep 28']], padL: 34, fs: 14 });
+    const ch = M ? areaChart({ w: cw, h: 146, series: [{ values: LC_DAILY, color: BRAND }], max: 24, ticks: [0, 6, 12, 18, 24], xl: [[0, 'Sep 8'], [10, 'Sep 18'], [20, 'Sep 28']], padL: 26, fs: 11 })
+      : areaChart({ w: cw, h: 180, series: [{ values: LC_DAILY, color: BRAND }], max: 24, ticks: [0, 6, 12, 18, 24], xl: [[0, 'Sep 8'], [7, 'Sep 15'], [14, 'Sep 22'], [20, 'Sep 28']], padL: 34, fs: 13 });
     q('.sell-chart').innerHTML = ch.svg;
+    // the whole run under it, as the dashboard draws it: a flat grey area with a 1.6 line, no axes (it fills in with the sales)
+    const cumChart = areaChart({ w: cw - 20, h: M ? 36 : 44, series: [{ values: CUM, color: MUTED }], max: 180, padT: 2, noAxis: true, fill: [1, 1], fillOp: 0.14, lineW: 1.6 });
+    q('.cum-chart').innerHTML = cumChart.svg;
+    const cumClip = $('.clip', q('.cum-chart'));
     const svg = $('svg', q('.sell-chart')), clip = $('.clip', svg), mfs = M ? 11 : 13, mw = M ? 44 : 54, mh = M ? 18 : 22;
     const mk = (d, lab, col) => `<g class="mk" data-d="${d}" opacity="0"><line x1="${ch.X(d)}" x2="${ch.X(d)}" y1="${mh}" y2="${ch.base}" stroke="${col}" stroke-dasharray="3 4" stroke-width="1.2"/><rect x="${ch.X(d) - mw / 2}" y="0" width="${mw}" height="${mh}" rx="${mh / 2}" fill="${col}"/><text x="${ch.X(d)}" y="${mh / 2 + mfs * 0.36}" text-anchor="middle" style="fill:#fff;font-weight:700;font-size:${mfs}px">${lab}</text></g>`;
-    svg.insertAdjacentHTML('beforeend', mk(10, 'Email', '#0d9488') + mk(15, 'Ads', '#d97706') + `<line class="cur" y1="${mh + 4}" y2="${ch.base}" stroke="rgba(255,255,255,.14)" stroke-width="1"/><circle class="pdot" r="4" fill="#fff" stroke="#09090b" stroke-width="2"/>`);
+    svg.insertAdjacentHTML('beforeend', mk(10, 'Email', TEAL) + mk(15, 'Ads', BLUE) + `<line class="cur" y1="${mh + 4}" y2="${ch.base}" stroke="rgba(255,255,255,.14)" stroke-width="1"/><circle class="pdot" r="4" fill="#fff" stroke="#09090b" stroke-width="1.5"/>`);
     const cur = $('.cur', svg), dot = $('.pdot', svg), marks = $$('.mk', svg);
-    const nSold = q('.n-sold'), nGross = q('.n-gross'), cum = q('.cum-bar i'), cumN = q('.cum-n'), pace = q('.pace');
+    const nSold = q('.n-sold'), nGross = q('.n-gross'), cumN = q('.cum-n'), pace = q('.pace');
     const nAtt = q('.n-att'), nAttr = q('.n-attr'), nRos = q('.n-ros');
     const tl = mkTL(sec, mode, rm, 2.6);
     tl.fromTo(q('.sell-card'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 0);
@@ -535,11 +555,11 @@ export default async function initPlatform(PXR, L) {
       const s = Math.round(lerp(CUM[d], CUM[Math.min(d + 1, DAYS - 1)], fr) * (t > W0 ? 1 : 0));
       const x = ch.X(f), y = ch.Y(lerp(LC_DAILY[d], LC_DAILY[Math.min(d + 1, DAYS - 1)], fr));
       clip.setAttribute('width', x + 1);
+      cumClip.setAttribute('width', cumChart.X(f) + 1);
       cur.setAttribute('x1', x); cur.setAttribute('x2', x); dot.setAttribute('cx', x); dot.setAttribute('cy', y);
       cur.style.opacity = dot.style.opacity = t > W1 + 0.2 ? 0 : 1;
       marks.forEach((m) => m.setAttribute('opacity', f >= +m.dataset.d ? 1 : 0));
       txt(nSold, s); txt(nGross, money(gross(s))); txt(cumN, s + ' / 180');
-      cum.style.transform = `scaleX(${s / 180})`;
       const last = LC_DAILY.slice(Math.max(0, d - 6), d + 1), pc = last.reduce((a, v) => a + v, 0) / last.length, away = DOORS_DAY - d;
       html(pace, s >= 180 ? `Sold out <b>${away} days</b> before doors.` : t < W0 ? 'Waiting on the first sale.' : `Selling <b>${Math.round(pc)}/day</b>. At this pace, about <b>${Math.min(180, Math.round(s + pc * away))}</b> sold by doors.`);
       const a = seg(t, 7.9, 8.7);
@@ -588,7 +608,7 @@ export default async function initPlatform(PXR, L) {
     const gates = `<div class="gates"><div class="gate g1"><i class="gdot"></i><div><b>Main door</b><small class="gm">0 issues flagged</small></div><span class="n o-g1">0</span></div><div class="gate g2"><i class="gdot"></i><div><b>Door 2</b><small class="gm">0 issues flagged</small></div><span class="n o-g2">0</span></div></div>`;
     if (!M) {
       stage.innerHTML = `<div class="dcard ops">
-        <div class="ops-head"><p class="d-eb">Live Operations</p><h4>Live control room</h4><p>Gate flow, entry pace and incidents, updated from every scan.</p></div>
+        <div class="ops-head"><p class="d-eb q">Live Operations</p><h4>Live control room</h4><p>Gate flow, entry pace and incidents, updated from every scan.</p></div>
         <div class="ops-tiles"><div><small>Mode</small><b>Live</b></div><div><small>Gates</small><b>2</b></div><div class="t-flags"><small>Flags</small><b class="o-flags">0</b></div><div><small>Staff</small><b>6</b></div></div>
         <div class="ops-2">${capBox}${velBox(60)}</div>
         ${gates}
@@ -708,7 +728,7 @@ export default async function initPlatform(PXR, L) {
   function heatSVG(plan, cl) {
     const pin = ([x, y], cls) => `<g class="pin ${cls}" transform="translate(${x} ${y})"><circle r="4"/><rect x="-${plan.fs * 2}" y="-${plan.fs * 2.4}" width="${plan.fs * 4}" height="${plan.fs * 1.6}" rx="${plan.fs * 0.8}"/><text y="-${(plan.fs * 1.6 - plan.fs * 0.36).toFixed(1)}" style="font-size:${plan.fs}px">+0</text></g>`;
     return `<svg viewBox="${plan.vb}" preserveAspectRatio="xMidYMid meet">
-      <defs><radialGradient id="hb${plan.fs}"><stop offset="0" stop-color="#f2c2ff" stop-opacity=".92"/><stop offset=".3" stop-color="#e98bff" stop-opacity=".62"/><stop offset=".68" stop-color="#d84aff" stop-opacity=".22"/><stop offset="1" stop-color="#d84aff" stop-opacity="0"/></radialGradient></defs>
+      <defs><radialGradient id="hb${plan.fs}"><stop offset="0" stop-color="${BRAND}" stop-opacity=".9"/><stop offset=".55" stop-color="${BRAND}" stop-opacity=".36"/><stop offset="1" stop-color="${BRAND}" stop-opacity="0"/></radialGradient></defs>
       <g class="plan" style="font-size:${plan.fs}px">${plan.body}</g>
       <g class="blobs">${cl.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#hb${plan.fs})" opacity="0"/>`).join('')}</g>
       <g class="rings">${cl.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r * 0.55}" opacity="0"/>`).join('')}</g>
@@ -722,23 +742,23 @@ export default async function initPlatform(PXR, L) {
     const act = (h) => H_RX[h] + H_CHAT[h] + H_CAP[h] * 2;
     const rib = Array.from({ length: 73 }, (_, i) => { const c = 30 + i * 5, x = clamp((c - 30) / 60, 0, 6), h = Math.floor(x), f = x - h; return lerp(act(h), act(Math.min(6, h + 1)), ease(f)); });
     if (!M) {
-      const ch = areaChart({ w: 560, h: 150, series: [{ values: H_CHAT, color: '#c93df2' }, { values: H_RX, color: '#0d9488' }, { values: H_CAP.map((v) => v * 2), color: '#d97706' }], max: 480, ticks: [0, 200, 400], xl: HOURS.map((h, i) => [i, h]), padL: 38, fs: 14, stacked: true, fill: [0.18, 0.02] });
+      const ch = areaChart({ w: 832, h: 124, series: [{ values: H_CHAT, color: BRAND }, { values: H_RX, color: ORANGE }, { values: H_CAP, color: TEAL }], max: 380, ticks: [0, 95, 190, 285, 380], xl: HOURS.map((h, i) => [i, h]), padL: 38, fs: 13, stacked: true, fill: [0.18, 0.02] });
       stage.innerHTML = `<div class="dcard heat">
-          <div class="d-headrow"><div><p class="d-eb">Spatial intelligence</p><p class="d-h">Seaport Loft<span class="d-chip">Auto-mapped from photo GPS</span></p></div><span class="d-pill ghost sm">Recalibrate</span></div>
+          <p class="d-eb">Spatial intelligence</p>
+          <div class="heat-row"><span class="pn">Seaport Loft</span><span class="d-chip">Auto-mapped from photo GPS</span><span class="d-btn">Recalibrate</span></div>
           <div class="heat-map">${heatSVG(plan, cl)}<span class="heat-time">9:30 PM</span><span class="heat-peak">Peak 11:42 PM, Main room</span></div>
           <div class="play"><span class="pb">${hi('PlayIcon', 15)}</span><span class="lbl">Play the night back</span><div class="hist">${'<i></i>'.repeat(48)}</div><span class="pfoot"><b class="h-geo">0</b> geotagged photos, <b class="h-sc">0</b> scans</span></div>
         </div>
         <div class="dcard hype">
-          <div class="d-headrow"><div><p class="d-eb">Run the night</p><p class="d-h">Hype through the night</p></div><div class="seg"><span class="on">All activity</span><span>Chat</span><span>Reactions</span><span>Captures</span></div></div>
-          <div class="hype-body"><div class="hype-chart">${ch.svg}</div>
-            <div class="hype-score"><p class="lab">Hype score</p><div class="v"><b class="h-score">0</b><span class="tier" data-t="Quiet">Quiet</span></div>
-              <div class="hype-mini"><div><small>Chat</small><b class="h-chat">0</b></div><div><small>Reactions</small><b class="h-rx">0</b></div><div><small>Captures</small><b class="h-cap">0</b></div></div></div></div>
+          <div class="d-headrow"><div><p class="d-eb q">Run the night</p><p class="d-h">Hype through the night</p></div><div class="seg"><span class="on">All activity</span><span>Chat</span><span>Reactions</span><span>Captures</span></div></div>
+          <div class="hype-chart">${ch.svg}</div>
+          <div class="d-strip s4 hype-strip"><div class="hs-score"><small>Hype score</small><b><span class="h-score">0</span><span class="tier" data-t="Quiet">Quiet</span></b></div><div><small>Chat</small><b class="h-chat">0</b></div><div><small>Reactions</small><b class="h-rx">0</b></div><div><small>Captures</small><b class="h-cap">0</b></div></div>
         </div>`;
       const hsvg = $('.hype-chart svg', stage);
-      hsvg.insertAdjacentHTML('beforeend', `<line class="hc" y1="6" y2="${ch.base}" stroke="rgba(255,255,255,.14)"/><circle class="spike" cx="${ch.X(3)}" cy="${ch.Y(H_CAP[3] * 2 + H_CHAT[3] + H_RX[3])}" r="5" fill="#d84aff" stroke="#0e0e13" stroke-width="2" opacity="0"/>`);
+      hsvg.insertAdjacentHTML('beforeend', `<line class="hc" y1="6" y2="${ch.base}" stroke="rgba(255,255,255,.14)"/><circle class="spike" cx="${ch.X(3)}" cy="${ch.Y(H_CAP[3] + H_CHAT[3] + H_RX[3])}" r="5" fill="${BRAND}" stroke="#0e0e13" stroke-width="2" opacity="0"/>`);
       stage._ch = ch;
     } else {
-      const sp = areaChart({ w: L.W - 32, h: 44, series: [{ values: rib, color: '#d84aff' }], max: Math.max(...rib) * 1.05, noAxis: true, fill: [0.3, 0.02] });
+      const sp = areaChart({ w: L.W - 32, h: 44, series: [{ values: rib, color: BRAND }], max: Math.max(...rib) * 1.05, noAxis: true, fill: [0.3, 0.02] });
       stage.innerHTML = `<div class="dcard heat">
           <div class="d-headrow"><div><p class="d-eb">Spatial intelligence</p><p class="d-h">Seaport Loft</p></div><span class="d-chip">From photo GPS</span></div>
           <div class="heat-map" style="height:${Math.round((L.W - 32) * 0.8)}px">${heatSVG(plan, cl)}<span class="heat-time">9:30 PM</span></div>
@@ -855,18 +875,28 @@ export default async function initPlatform(PXR, L) {
   function initCrowd(mode, rm) {
     const sec = $('#crowd'), stage = prep(sec, mode), M = mode === 'm', q = (s) => $(s, stage);
     const L = M ? mLayout(sec, rm) : null;
-    const F = [['Sold', 180, '#efc7ff'], ['Scanned', 164, '#d76bff'], ['Posted media', 38, '#8f2bb8']];
-    const funnel = `<div class="dcard funnel${M ? ' crowd-b' : ''}"><p class="d-eb">Audience</p><p class="d-h">Attendance path</p>
-      <div class="fun">${F.map(([n, v, c], i) => `${i ? `<span class="fun-chip">${Math.round((v / F[i - 1][1]) * 100)}% advance <em>${F[i - 1][1] - v} drop</em></span>` : ''}<div class="fun-r"><div class="fun-l"><b><i style="background:${c}"></i>${n}</b><small>${Math.round((v / 180) * 100)}% of sold</small></div><div class="fun-t"><div class="bar" style="width:${Math.max(10, (v / 180) * 100)}%;background:${c}"><b class="fv" data-v="${v}">0</b></div></div></div>`).join('')}</div></div>`;
+    // FunnelChart: one purple ramp, straight edges only (each band narrows to the next stage's width), the figures in a rail on the left
+    const F = [['Sold', 180, '#EDD3FC'], ['Scanned', 164, '#C470F5'], ['Posted media', 38, '#7318A7']];
+    const BH = M ? 58 : 60, HH = BH * F.length, halves = F.map(([, v]) => Math.max(4, (v / F[0][1]) * 50));
+    const edge = [...F.map((_, i) => [50 - halves[i], i * BH]), [50 - halves[F.length - 1], HH]];
+    const outline = [...edge, ...edge.map(([x, y]) => [100 - x, y]).reverse()].map(([x, y]) => `${+x.toFixed(2)},${y}`).join(' ');
+    const rid = 'fun' + (++gid);
+    const funnel = `<div class="dcard funnel${M ? ' crowd-b' : ''}"><p class="d-eb q">Audience</p><p class="d-h">Attendance path</p>
+      <div class="fun" style="--fun-h:${BH}px">
+        <div class="fun-rail">${F.map(([n, v, c]) => `<div><b><i style="background:${c}"></i>${n}</b><span class="fun-n"><em class="fv" data-v="${v}">0</em><small>${Math.round((v / F[0][1]) * 100)}% of sold</small></span></div>`).join('')}</div>
+        <div class="fun-shape" style="height:${HH}px"><svg viewBox="0 0 100 ${HH}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${rid}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${F[0][2]}"/><stop offset="1" stop-color="${F[F.length - 1][2]}"/></linearGradient><clipPath id="${rid}c"><rect class="fun-clip" x="0" y="0" width="100" height="0"/></clipPath></defs>
+          <g clip-path="url(#${rid}c)"><polygon points="${outline}" fill="url(#${rid}g)"/>${F.slice(1).map((_, i) => `<line x1="${50 - halves[i + 1]}" x2="${50 + halves[i + 1]}" y1="${(i + 1) * BH}" y2="${(i + 1) * BH}" stroke="rgba(14,14,19,.55)" stroke-width="2" vector-effect="non-scaling-stroke"/>`).join('')}</g></svg>
+          ${F.slice(1).map(([, v], i) => `<span class="fun-chip" style="top:${(i + 1) * BH}px">${Math.round((v / F[i][1]) * 100)}% advance <em>${F[i][1] - v} drop</em></span>`).join('')}</div>
+      </div></div>`;
     const strip = `<div class="d-strip s4"><div><small>Attendees</small><b class="cv" data-v="164">0</b></div><div><small>Passports</small><b class="cv" data-v="131">0</b></div><div><small>Emailable</small><b class="cv" data-v="118">0</b></div><div><small>Repeat</small><b class="cv" data-v="31" data-f="pct">0%</b></div></div>`;
     const filters = '<div class="filters"><span class="flt">Email opt-in</span><span class="flt">City, Boston</span><span class="flt">Passport holder</span></div>';
     const saved = '<span class="seg-saved">Boston regulars <em>86</em><span>Send →</span></span>';
-    const crm = M ? `<div class="dcard crm crowd-b"><div class="d-headrow"><div><p class="d-eb">CRM</p><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 12)}Scanned</span></div>${strip}${filters}
+    const crm = M ? `<div class="dcard crm crowd-b"><div class="d-headrow"><div><p class="d-eb q">CRM</p><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 12)}Scanned</span></div>${strip}${filters}
         <div class="match-m"><span class="match-l"><b class="match">164</b>attendees match</span></div>
         <div class="seg-act"><span class="d-pill ghost seg-save">Save as segment</span>${saved}</div></div>`
-      : `<div class="dcard crm"><div class="d-headrow"><div><p class="d-eb">CRM</p><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 14)}Scanned, not self-reported</span></div>${strip}${filters}
+      : `<div class="dcard crm"><div class="d-headrow"><div><p class="d-eb q">CRM</p><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 14)}Scanned, not self-reported</span></div>${strip}${filters}
         <div class="seg-row"><span class="match-l"><b class="match">164</b>attendees match</span><span class="seg-act" style="position:relative;display:inline-grid"><span class="d-pill ghost sm seg-save" style="grid-area:1/1">Save as segment</span><span style="grid-area:1/1;justify-self:end">${saved}</span></span></div></div>`;
-    const send = `<div class="dcard send${M ? ' crowd-b' : ''}"><div class="d-headrow"><div><p class="d-eb">Campaigns</p><p class="d-h">Compose send</p></div><div class="seg"><span class="on">Email</span><span>SMS</span></div></div>
+    const send = `<div class="dcard send${M ? ' crowd-b' : ''}"><div class="d-headrow"><div><p class="d-eb q">Campaigns</p><p class="d-h">Compose send</p></div><div class="seg"><span class="on">Email</span><span>SMS</span></div></div>
       <div class="send-body"><div class="composer"><div class="snd-f"><small>To</small>Boston regulars (86)</div><div class="snd-f"><small>Subject</small><span class="subj"></span></div></div>
         <div class="quote"><div class="q2"><div><small>Consent</small><b>Enforced</b></div><div><small>Unsubscribe</small><b>Automatic</b></div></div><span class="d-pill solid sendbtn">Send campaign</span></div></div></div>`;
     stage.innerHTML = funnel + crm + send;
@@ -886,7 +916,7 @@ export default async function initPlatform(PXR, L) {
     const tl = mkTL(sec, mode, rm, 2.5);
     if (M) mLead(tl, sec, stage, rm);
     tl.fromTo(q('.funnel'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 0)
-      .to($$('.fun .bar', stage), { scaleX: 1, duration: 0.6, stagger: 0.25, ease: 'power3.out' }, T.bars)
+      .fromTo($('.fun-clip', stage), { attr: { height: 0 } }, { attr: { height: HH }, duration: 1.1, ease: 'power3.out' }, T.bars)
       .to($$('.fun-chip', stage), { opacity: 1, duration: 0.2, stagger: 0.25 }, T.chips);
     if (M) { fadeOut(tl, q('.funnel'), 3.25); fadeIn(tl, q('.crm'), T.crm); fadeOut(tl, q('.crm'), 6.45); fadeIn(tl, q('.send'), T.send); }
     else { tl.fromTo(q('.crm'), { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, T.crm); fadeIn(tl, q('.send'), T.send, 50); }
@@ -919,7 +949,7 @@ export default async function initPlatform(PXR, L) {
     const sec = $('#next'), stage = prep(sec, mode), M = mode === 'm', q = (s) => $(s, stage);
     const L = M ? mLayout(sec, rm) : null;
     stage.innerHTML = `<div class="dcard sequel">
-        <p class="d-eb">Afterglow</p><p class="d-h">Ready for the sequel?</p>
+        <p class="d-eb q">Afterglow</p><p class="d-h">Ready for the sequel?</p>
         <p class="d-sub">164 people scanned in. 38 of them shot the night. Bring them back.</p>
         <div class="d-strip s3"><div><small>Scanned in</small><b>164</b></div><div><small>Shot the night</small><b>38</b></div><div><small>Past guests</small><b>212</b></div></div>
         <div class="sq-actions"><span class="d-pill solid sm sq-plan">Plan the next event</span><span class="d-pill ghost sm">Message past attendees</span></div>
