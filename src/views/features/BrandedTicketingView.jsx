@@ -15,13 +15,14 @@ import CheckoutThreadMock from '@/components/marketing/CheckoutThreadMock';
 const CREATE_HREF = '/login?redirect=/dashboard/events/new';
 
 // The dashboard panels draw their charts with recharts, so they load after the page rather than with it.
+// The skeletons are the loaded panels' heights at phone, tablet and desktop widths, so nothing jumps when the charts arrive.
 const EarningsMock = dynamic(() => import('@/components/marketing/DashboardMockup/EarningsMock'), {
   ssr: false,
-  loading: () => <MockSkeleton className="h-[560px]" />,
+  loading: () => <MockSkeleton className="h-[681px] md:h-[649px]" />,
 });
 const LiveScanMock = dynamic(() => import('@/components/marketing/DashboardMockup/LiveScanMock'), {
   ssr: false,
-  loading: () => <MockSkeleton className="h-[460px]" />,
+  loading: () => <MockSkeleton className="h-[791px] md:h-[429px]" />,
 });
 
 export default function BrandedTicketingView() {

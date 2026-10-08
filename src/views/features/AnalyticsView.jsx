@@ -11,17 +11,18 @@ import FeatureRow from '@/components/marketing/FeatureRow';
 import { MockSkeleton } from '@/components/marketing/DashboardMockup/DashboardMock';
 
 // The dashboard panels draw their charts with recharts, so they load after the page rather than with it.
+// The skeletons are the loaded panels' heights at phone, tablet and desktop widths, so nothing jumps when the charts arrive.
 const AnalyticsMock = dynamic(() => import('@/components/marketing/DashboardMockup/AnalyticsMock'), {
   ssr: false,
-  loading: () => <MockSkeleton className="h-[460px]" />,
+  loading: () => <MockSkeleton className="h-[541px] md:h-[507px]" />,
 });
 const LiveScanMock = dynamic(() => import('@/components/marketing/DashboardMockup/LiveScanMock'), {
   ssr: false,
-  loading: () => <MockSkeleton className="h-[460px]" />,
+  loading: () => <MockSkeleton className="h-[791px] md:h-[429px]" />,
 });
 const VenueMapMock = dynamic(() => import('@/components/marketing/DashboardMockup/VenueMapMock'), {
   ssr: false,
-  loading: () => <MockSkeleton className="h-[560px]" />,
+  loading: () => <MockSkeleton className="h-[455px] sm:h-[544px] md:h-[592px] xl:h-[544px]" />,
 });
 
 const CREATE_HREF = '/login?redirect=/dashboard/events/new';

@@ -9,7 +9,8 @@ import ScrubReveal from '../motion/ScrubReveal';
  * other. Pass `chip` for a DOM mockup, `chipSrc` for an image, or `phone`
  * for a full uncropped app screenshot rendered inside a device frame.
  * Optional `href`/`linkLabel` adds a deep-dive link under the copy. `chipBare` drops the glass frame around a `chip`
- * that is a set of dashboard cards already.
+ * that is a set of dashboard cards already, and keeps the row to one column until 1280px: the dashboard's panels
+ * switch layout on the width of the window, not of their box, so they need a column as wide as they are designed for.
  */
 export default function FeatureRow({
   title,
@@ -25,12 +26,15 @@ export default function FeatureRow({
   reverse = false,
   className = '',
 }) {
+  const twoColumns = chipBare && !phone ? 'xl:grid-cols-2 xl:gap-12' : 'md:grid-cols-2 md:gap-12';
+  const swap = chipBare && !phone ? 'xl:[&>*:first-child]:order-2' : 'md:[&>*:first-child]:order-2';
   return (
     <ScrubReveal
       distance={40}
       className={[
-        'grid grid-cols-1 items-center gap-6 md:grid-cols-2 md:gap-12',
-        reverse ? 'md:[&>*:first-child]:order-2' : '',
+        'grid grid-cols-1 items-center gap-6',
+        twoColumns,
+        reverse ? swap : '',
         className,
       ]
         .filter(Boolean)
