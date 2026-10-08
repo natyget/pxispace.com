@@ -230,8 +230,8 @@ export function resolveUserType(user, overrides = {}) {
 
 /**
  * Derive and set all four user-scoped dimensions from an auth user object.
- * `passport_level` is the uppercase Odyssey tier id (WANDERER · SEEKER ·
- * VOYAGER · PATHFINDER · LUMINARY · ODYSSEY) — the app must send the same
+ * `passport_level` is the uppercase Odyssey tier id (WANDERER, SEEKER,
+ * VOYAGER, PATHFINDER, LUMINARY, ODYSSEY); the app must send the same
  * casing or the dimension splits in two.
  * @param {Object|null} user
  * @param {{ isPromoter?: boolean, spotifyConnected?: boolean|null }} [extra]

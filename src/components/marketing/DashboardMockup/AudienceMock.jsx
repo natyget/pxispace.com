@@ -10,25 +10,25 @@ const GUESTS = [
   {
     avatar: '/landing/album/thread/profiles/trina.jpg',
     name: 'Trina M.',
-    line: '9 nights · $412 lifetime · Afrobeats, Amapiano',
+    line: '9 nights, $412 lifetime', genres: 'Afrobeats, Amapiano',
     chips: ['Early buyer', 'Brings friends'],
   },
   {
     avatar: '/landing/album/thread/profiles/kevin.jpg',
     name: 'Kevin O.',
-    line: '5 nights · $180 lifetime · House, Disco',
+    line: '5 nights, $180 lifetime', genres: 'House, Disco',
     chips: ['Bar spender'],
   },
   {
     avatar: '/landing/album/thread/profiles/baba.jpg',
     name: 'Baba K.',
-    line: '11 nights · $560 lifetime · Amapiano, Gqom',
+    line: '11 nights, $560 lifetime', genres: 'Amapiano, Gqom',
     chips: ['VIP regular', 'High engagement'],
   },
   {
     avatar: '/landing/album/thread/profiles/gift.jpg',
     name: 'Gift A.',
-    line: '4 nights · $145 lifetime · Afrobeats, R&B',
+    line: '4 nights, $145 lifetime', genres: 'Afrobeats, R&B',
     chips: ['Early buyer'],
   },
 ];
@@ -43,7 +43,7 @@ export default function AudienceMock() {
   return (
     <div className="text-white">
       <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-400">
-        Audience · behavioral profiles
+        Audience, behavioral profiles
       </p>
 
       <div className="mt-2.5 space-y-1.5">
@@ -52,7 +52,7 @@ export default function AudienceMock() {
             <img src={g.avatar} alt="" aria-hidden className="h-9 w-9 rounded-full object-cover" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">{g.name}</p>
-              <p className="truncate text-[11px] text-zinc-500">{g.line}</p>
+              <p className="truncate text-[11px] text-zinc-500">{g.line}<span className="ml-2 text-zinc-600">{g.genres}</span></p>
             </div>
             <div className="hidden shrink-0 flex-col items-end gap-1 sm:flex">
               {g.chips.map((c) => (
@@ -76,10 +76,10 @@ export default function AudienceMock() {
 
       <div className="mt-2.5 flex items-center justify-between rounded-xl border border-pxi-purple/20 bg-pxi-purple/[0.06] px-3 py-2.5">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-pxi-purple">Segment · Warm crowd</p>
-          <p className="text-[11px] text-zinc-400">234 people · showed up 2+ times this season</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-pxi-purple">Segment: Warm crowd</p>
+          <p className="text-[11px] text-zinc-400">234 people who showed up 2+ times this season</p>
         </div>
-        <span className="text-[10px] font-semibold text-zinc-400">SMS · email · feed</span>
+        <span className="text-[10px] font-semibold text-zinc-400">SMS, email, feed</span>
       </div>
     </div>
   );

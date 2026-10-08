@@ -25,7 +25,7 @@ const BOX = {
   seal: { w: 110, h: 82, charW: 0.66, maxChars: 9, maxLines: 3, maxFs: 30, font: SANS, weight: 700, fill: '#ff3b2b' },
 };
 
-/** Smooth n-lobed blob: r = R(1 + a·cos(n(θ − θ0))), one lobe pointing up. */
+/** Smooth n-lobed blob: r = R(1 + a*cos(n(θ − θ0))), one lobe pointing up. */
 function blob(radius, amp, lobes = 5, steps = 220) {
   const rot = -Math.PI / 2;
   let d = '';

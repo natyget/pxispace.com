@@ -34,7 +34,7 @@ export default function VenueMapMock() {
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 animate-pulse rounded-full bg-pxi-orange shadow-[0_0_8px_var(--pxi-orange)]" />
           <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-400">
-            Live density · Warehouse 12
+            Live density, Warehouse 12
           </span>
         </div>
         <span className="text-[10px] text-zinc-600">11:42 PM</span>
@@ -93,7 +93,7 @@ export default function VenueMapMock() {
 
       {/* set engagement */}
       <p className="mb-1.5 mt-2.5 text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-500">
-        Set engagement · time-stamped
+        Set engagement, time-stamped
       </p>
       <div className="space-y-1.5">
         {SETS.map((s, i) => (
@@ -121,7 +121,7 @@ export default function VenueMapMock() {
       {/* artifact intel */}
       <div className="mt-1.5 flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
         <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">Top artifact</span>
-        <span className="text-[10px] font-semibold text-white">Neon LOVE wall · 212 shots · +9 min dwell</span>
+        <span className="text-[10px] font-semibold text-white">Neon LOVE wall, 212 shots, +9 min dwell</span>
       </div>
     </div>
   );

@@ -18,7 +18,7 @@ export default function EarningsMock() {
 
       <div className="mt-3 flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-xs">
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-        <span className="text-zinc-400">Paid directly to you via Stripe · 0% held</span>
+        <span className="text-zinc-400">Paid directly to you via Stripe, 0% held</span>
       </div>
 
       {/* bar chart — the week's takings climbing in, left to right */}

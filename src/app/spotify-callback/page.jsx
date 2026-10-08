@@ -84,7 +84,7 @@ function SpotifyCallbackInner() {
             </h1>
             {topGenres.length > 0 ? (
               <p className="mt-4 text-sm text-zinc-400">
-                Your sound: <span className="text-white">{topGenres.slice(0, 3).join(' · ')}</span>
+                Your sound: <span className="text-white">{topGenres.slice(0, 3).join(', ')}</span>
               </p>
             ) : null}
             <p className="mt-3 text-sm text-zinc-400">

@@ -175,7 +175,7 @@ export function PxiPassportCard({ user, attendedEvents = [], className = '', ani
                             <div className="flex min-w-0 flex-1 items-center" style={{ gap: 2 }}>
                                 <PassportChipIcon filterId={chipFilterId} />
                                 <span className="truncate text-[8px] font-semibold uppercase tracking-[0.04em] text-white">
-                                    PASSPORT • PASS • PORT
+                                    PASSPORT PASS PORT
                                 </span>
                             </div>
                             <div className="flex shrink-0 flex-col items-stretch" style={{ width: 108 }}>

@@ -65,12 +65,12 @@ export default async function ArtistPage({ params }) {
     : indexableArtists(index).filter((a) => a.slug !== slug).slice(0, 6);
 
   const intro = [
-    artist.roles.length ? artist.roles.join(' · ') : null,
+    artist.roles.length ? artist.roles.join(', ') : null,
     artist.genres.length ? artist.genres.map((g) => g.name).join(', ') : null,
     artist.cities.length ? artist.cities.map((c) => c.name).join(', ') : null,
   ]
     .filter(Boolean)
-    .join('  ·  ');
+    .join(', ');
 
   return (
     <>

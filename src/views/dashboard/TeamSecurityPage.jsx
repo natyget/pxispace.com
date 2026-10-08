@@ -187,7 +187,7 @@ export default function TeamSecurityPage() {
                         {r.name}
                         <span className="ml-1.5 opacity-60">{r.members?.length ?? 0}</span>
                         {r.venueIds?.length ? (
-                            <span className="ml-1.5 opacity-40">· {r.venueIds.length} venue{r.venueIds.length === 1 ? '' : 's'}</span>
+                            <span className="ml-1.5 opacity-40">{r.venueIds.length} venue{r.venueIds.length === 1 ? '' : 's'}</span>
                         ) : null}
                     </button>
                 ))}
@@ -318,7 +318,7 @@ export default function TeamSecurityPage() {
                                             <p className="text-sm font-bold text-white">{member.name}</p>
                                             <p className="text-xs text-zinc-500">
                                                 {member.contact}
-                                                {member.contact && member.handle ? ' · ' : ''}
+                                                {member.contact && member.handle ? ', ' : ''}
                                                 {member.handle}
                                             </p>
                                         </div>

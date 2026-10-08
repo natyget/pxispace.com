@@ -236,7 +236,7 @@ export default function AudiencePanel({
                                         <select value={filters.eventId} onChange={(e) => patch({ eventId: e.target.value, weekday: '' })} className={`${fieldCls} mt-1`}>
                                             <option value="">Any night</option>
                                             {events.map((e) => (
-                                                <option key={e.eventId} value={e.eventId}>{formatNightDate(e.startDate, timeZone)} · {e.name}</option>
+                                                <option key={e.eventId} value={e.eventId}>{formatNightDate(e.startDate, timeZone)}, {e.name}</option>
                                             ))}
                                         </select>
                                     </label>

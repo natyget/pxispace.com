@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 /**
  * The event link-preview card (1200×630) — the app's invite card (EventInviteStoryCanvas):
  * the poster fills the card, one flat band along the bottom carries the event name in orange
- * heavy caps, then "SAT, OCT 4 · 9 PM – 2 AM", then the venue or street (never the full address).
+ * heavy caps, then "SAT, OCT 4, 9 PM – 2 AM", then the venue or street (never the full address).
  * No gradients. "Don't cover my poster with the name" (`hideNameOnCover`) sends the poster alone.
  *
  *   /og/event?event=<eventId>     /og/event?album=<albumId>
@@ -113,7 +113,7 @@ export async function GET(request) {
   const name = String(card.name || '').trim() || 'PXI Event';
   const timeZone = event.timezone || resolveEventCity(event)?.timezone || undefined;
   const when = formatInviteWhen(event.startDate, event.endDate, timeZone);
-  const whenLine = when ? `${when.day}  ·  ${when.hours}` : '';
+  const whenLine = when ? `${when.day}, ${when.hours}` : '';
   const venue = formatInviteVenue(event.location, event.venueName);
 
   const hasCover = !!coverSrc;

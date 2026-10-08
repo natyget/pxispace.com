@@ -73,7 +73,7 @@ function formatTimeParts(start, end) {
 
 /**
  * The callers send either ISO `startDate` / `endDate` (formatted here the app's way) or an older
- * `schedule` of { primary, secondary }: the album adapter's is a weekday plus "OCT 12 · 9:00 PM –
+ * `schedule` of { primary, secondary }: the album adapter's is a weekday plus "OCT 12, 9:00 PM –
  * 2:00 AM", which becomes DATE "SATURDAY, OCT 12" and TIME "9:00 PM – 2:00 AM". Anything without a
  * time stays under DATE as a note.
  */
@@ -89,9 +89,10 @@ function toWhen(event) {
   if (!primary) return { date: '', time: '', until: '', note: '' };
   if (!secondary) return { date: primary.toUpperCase(), time: '', until: '', note: '' };
   if (!/\d/.test(secondary)) return { date: primary.toUpperCase(), time: '', until: '', note: secondary };
-  const parts = secondary.split(' · ');
+  // The first comma ends the date; older callers used a middle dot there.
+  const parts = secondary.split(/\s*(?:,|\u00b7)\s*/); // allow-dot
   if (parts.length >= 2) {
-    return { date: `${primary}, ${parts[0]}`.toUpperCase(), time: parts.slice(1).join(' · '), until: '', note: '' };
+    return { date: `${primary}, ${parts[0]}`.toUpperCase(), time: parts.slice(1).join(', '), until: '', note: '' };
   }
   return { date: primary.toUpperCase(), time: secondary, until: '', note: '' };
 }
@@ -110,8 +111,8 @@ function toPlace(event) {
   const isObj = typeof loc === 'object';
   const raw = String((isObj ? loc.primary : loc) || '').trim();
   if (!raw) return null;
-  const parts = raw.split(/\n|,|\u2022/).map((p) => p.trim()).filter(Boolean);
-  const secondary = isObj ? String(loc.secondary || '').trim().replace(/\s*·\s*/g, ', ') : '';
+  const parts = raw.split(/\n|,|\u2022/).map((p) => p.trim()).filter(Boolean); // allow-dot: older callers separate with a bullet
+  const secondary = isObj ? String(loc.secondary || '').trim().replace(/\s*\u00b7\s*/g, ', ') : ''; // allow-dot
   const isPin = parts.length === 2 && parts.every((p) => COORDINATE.test(p));
   const none = NO_PLACE.test(raw);
   const num = (v) => (v != null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null);
@@ -141,7 +142,7 @@ function toCapsLine(event) {
   return [vis, ...labels.filter((l) => !isVis(l))]
     .filter(Boolean)
     .map((s) => s.toUpperCase())
-    .join(' · ');
+    .join(', ');
 }
 
 /* ───────────────────────────── pieces ───────────────────────────── */
@@ -592,7 +593,7 @@ function MusicSection({ playlist, cover, topSong }) {
       ? topSong.artist
       : hasMatch
         ? 'with your taste'
-        : Array.from(new Set(playlists.map((p) => PROVIDER_LABEL[p.provider] || 'Playlist'))).join(' · ');
+        : Array.from(new Set(playlists.map((p) => PROVIDER_LABEL[p.provider] || 'Playlist'))).join(', ');
     const visible = playlists.slice(0, 4);
     const hidden = playlists.length - visible.length;
     const matched = matchDetail?.matchedArtists || [];

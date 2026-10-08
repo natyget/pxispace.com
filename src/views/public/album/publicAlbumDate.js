@@ -11,7 +11,7 @@ export function formatAlbumSchedule(event) {
     const primary = start.toLocaleDateString(PUBLIC_ALBUM_LOCALE, { weekday: 'long' });
     let secondary = `${start
       .toLocaleDateString(PUBLIC_ALBUM_LOCALE, { month: 'short', day: 'numeric' })
-      .toUpperCase()} · ${start
+      .toUpperCase()}, ${start
       .toLocaleTimeString(PUBLIC_ALBUM_LOCALE, { hour: 'numeric', minute: '2-digit' })
       .toUpperCase()}`;
     if (event.endDate) {
@@ -24,7 +24,7 @@ export function formatAlbumSchedule(event) {
             minute: '2-digit',
           }).toUpperCase()}`;
         } else {
-          secondary += ` · ENDS ${end
+          secondary += `, ENDS ${end
             .toLocaleDateString(PUBLIC_ALBUM_LOCALE, {
               month: 'short',
               day: 'numeric',

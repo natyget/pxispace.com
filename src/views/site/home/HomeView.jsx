@@ -78,7 +78,7 @@ export default function HomeView() {
           <div className="shots" aria-hidden="true"></div>
           <div className="hero-copy">
             <div className="kicker-wrap">
-              <p className="hero-kicker">The ticket · the camera · the morning after</p>
+              <p className="hero-kicker">The ticket, the camera, the morning after</p>
               <p className="tap-cue" aria-hidden="true">Tap to shoot</p>
             </div>
             <h1 className="display-1">
@@ -349,7 +349,7 @@ export default function HomeView() {
                           <b>Late Checkout</b>
                           <span className="pp-no">№ 0214</span>
                         </p>
-                        <p className="pp-meta">Seaport, Boston · Fri Oct 2, 2026</p>
+                        <p className="pp-meta">Seaport, Boston on Fri Oct 2, 2026</p>
                         <p className="pp-by">shot by @lu</p>
                       </div>
                     </div>

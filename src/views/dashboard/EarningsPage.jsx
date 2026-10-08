@@ -182,7 +182,7 @@ function EarningsHero({ heroValue, heroLabel, gross, retainedPct, retainedLabel,
                     </p>
                     <p className="mt-3 text-sm text-zinc-500">
                         <span className="font-semibold text-zinc-300">{fmtCompact(gross)}</span> gross
-                        <span className="mx-2 text-zinc-700">·</span>
+                        <span className="mx-2" />
                         <span className="font-semibold text-zinc-300">{retainedPct.toFixed(0)}%</span> {retainedLabel}
                     </p>
                 </div>
@@ -687,7 +687,7 @@ export default function EarningsPage() {
                                         <div className="min-w-0">
                                             <p className="text-sm font-bold text-white">{fmtDate(payout.arrivalDate ?? payout.createdAt)}</p>
                                             <p className="mt-0.5 truncate text-xs text-zinc-500">
-                                                {payout.stripePayoutId ? `Stripe • ${String(payout.stripePayoutId).slice(-6)}` : 'Stripe payout'}
+                                                {payout.stripePayoutId ? `Stripe ${String(payout.stripePayoutId).slice(-6)}` : 'Stripe payout'}
                                             </p>
                                         </div>
                                     </div>

@@ -61,7 +61,7 @@ export default function PayoutCard({ venueEventIds, timeZone = null, adminView =
                     </div>
                     <div className="mt-2 flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-1.5 text-[11px] ring-1 ring-white/[0.06]">
                         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                        <span className="text-zinc-400">Paid directly to you via Stripe · 0% held</span>
+                        <span className="text-zinc-400">Paid directly to you via Stripe, 0% held</span>
                     </div>
                     <div className="mt-3 flex min-h-[64px] flex-1 items-end gap-1.5" role="img" aria-label="Payout per day this week">
                         {week.days.map((day) => (

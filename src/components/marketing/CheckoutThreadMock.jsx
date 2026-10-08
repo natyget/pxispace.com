@@ -25,7 +25,7 @@ export default function CheckoutThreadMock() {
         <img src={SANAA_COVER} alt="" className="absolute inset-x-0 top-0 h-28 w-full object-cover opacity-45 blur-sm" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-zinc-950/85 to-zinc-950" />
         <div className="relative z-10 flex items-center justify-between gap-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">1 · Web checkout</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">1. Web checkout</p>
           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/70">
             Browser
           </span>
@@ -33,7 +33,7 @@ export default function CheckoutThreadMock() {
         <div className="relative z-10 mt-16">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f2688c]">Groove n&rsquo; find Love</p>
           <h3 className="mt-2 text-3xl font-black text-white">$25.00</h3>
-          <p className="mt-1 text-xs font-semibold text-zinc-500">Feb 13 · Revere, MA</p>
+          <p className="mt-1 text-xs font-semibold text-zinc-500">Feb 13, Revere, MA</p>
         </div>
 
         <div className="relative z-10 mt-5 space-y-2.5">
@@ -74,7 +74,7 @@ export default function CheckoutThreadMock() {
       {/* Beat 2 — confirmation prompts the thread */}
       <div className="flex min-h-[420px] flex-col rounded-[2rem] border border-white/8 bg-zinc-950/70 p-6 shadow-2xl backdrop-blur-xl">
         <div className="flex items-center justify-between gap-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">2 · Straight into the thread</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">2. Straight into the thread</p>
           <MessageCircle className="h-4 w-4 text-[#f2688c]" />
         </div>
 

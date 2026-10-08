@@ -373,7 +373,7 @@ export default async function initHome(PXR, L) {
       .to(touch, { scale: 1.5, opacity: 0, duration: 0.4, ease: 'power1.out' }, t + 0.3);
 
     const tl = gsap.timeline({ paused: REDUCED, defaults: { ease: 'power2.inOut' }, scrollTrigger: pinST(sec, 2.5) });
-    // 1 · swipe: Late Checkout comes to the centre, the details below swap
+    // 1. swipe: Late Checkout comes to the centre, the details below swap
     tl.set(touch, { x: 292, y: 360, scale: 0.8, opacity: 0 }, 0.35)
       .to(touch, { opacity: 1, scale: 1, duration: 0.12, ease: 'power1.out' }, 0.35)
       .to(touch, { x: 150, duration: 0.7, ease: 'power3.inOut' }, 0.47)
@@ -381,7 +381,7 @@ export default async function initHome(PXR, L) {
       .to(sw, { p: 1, duration: 0.7, ease: 'power3.inOut', onUpdate: place }, 0.47)
       .to(detO, { opacity: 0, y: -8, duration: 0.3, ease: 'power1.in' }, 0.6)
       .fromTo(detL, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', immediateRender: false }, 0.9);
-    // 2 · tap the orange tab: the record slides out from behind the cover, lettered AMAPIANO, with two polaroids
+    // 2. tap the orange tab: the record slides out from behind the cover, lettered AMAPIANO, with two polaroids
     tap(tl, tabAt, 1.5);
     tl.to($('.dsc-tab', sLate), { scale: 0.88, duration: 0.1, transformOrigin: '100% 50%' }, 1.58)
       .to($('.dsc-tab', sLate), { scale: 1, duration: 0.2, ease: 'back.out(2)' }, 1.68)
@@ -392,11 +392,11 @@ export default async function initHome(PXR, L) {
       .to(lateInfo, { opacity: 0, duration: 0.2, ease: 'none' }, 3.05)
       .to(lateDisc, { xPercent: 0, duration: 0.55, ease: 'power3.inOut' }, 3.1)
       .to(track, { x: 0, duration: 0.55, ease: 'power3.inOut' }, 3.1);
-    // 3 · two taps: JOIN
+    // 3. two taps: JOIN
     tap(tl, joinAt, 3.85);
     tl.to(join, { scale: 0.93, duration: 0.1, ease: 'power1.out' }, 3.93)
       .to(join, { scale: 1, duration: 0.25, ease: 'back.out(2.4)' }, 4.03);
-    // 4 · the centred cover lifts out of the phone and settles as the ticket's artwork; the ticket opens around it
+    // 4. the centred cover lifts out of the phone and settles as the ticket's artwork; the ticket opens around it
     tl.set(sLate, { visibility: 'hidden' }, 4.35)
       .set(fly, { opacity: 1 }, 4.35)
       .to(fly, { scale: 1.07, y: c0.y - 14, rotation: -2.5, duration: 0.3, ease: 'power2.out' }, 4.35)
@@ -409,7 +409,7 @@ export default async function initHome(PXR, L) {
       .set(fly, { opacity: 0 }, 5.62)
       .set(q('.at-art'), { visibility: 'visible' }, 5.62);
 
-    // 5 · the ending, unchanged: who's going, the scan, ADMIT, the tear, the stub, the note
+    // 5. the ending, unchanged: who's going, the scan, ADMIT, the tear, the stub, the note
     const E = 2.8; // the old timeline's 0 → this timeline's 2.8 (the ticket is already on stage)
     tl.from(q('.going-txt'), { y: 14, opacity: 0, duration: 0.6, ease: 'power3.out' }, 3.3 + E)
       .from(q('.facepile > *'), { y: 18, scale: 0.6, opacity: 0, stagger: 0.09, duration: 0.45, ease: 'back.out(1.8)' }, 2.9 + E)
