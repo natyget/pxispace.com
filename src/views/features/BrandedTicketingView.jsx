@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+// eslint-disable-next-line no-unused-vars -- motion.* is used in the JSX below; this config does not count that as a use
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
