@@ -7,6 +7,7 @@ import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, LinkForwardIcon, Navigation03Icon, PauseIcon, PlayIcon, Tick02Icon } from '@hugeicons/core-free-icons';
 import UserAvatar from '@/components/ui/UserAvatar';
+import { organizerHref } from '@/lib/organizerPage';
 import Portal from '@/components/ui/Portal';
 import { displayImageSrc } from '@/lib/mediaUrl';
 import { spotifyEmbedSrc } from '@/lib/spotify';
@@ -377,8 +378,12 @@ function ShareButton({ title, url }) {
   );
 }
 
-/** The host's avatar, their ABOUT bubble (the event description) and HOSTED BY under the avatar. */
+/**
+ * The host's avatar, their ABOUT bubble (the event description) and HOSTED BY under the avatar. The avatar and the
+ * name lead to the host's organizer page (/u/<username>, else /u/<id>); a host with neither is not a link.
+ */
 function HostBubble({ host, hostName, about }) {
+  const href = organizerHref(host);
   const text = String(about || '').trim();
   const textRef = useRef(null);
   const [expanded, setExpanded] = useState(false);
@@ -393,7 +398,14 @@ function HostBubble({ host, hostName, about }) {
   return (
     <section className="mt-[46px] px-5" aria-label="Host">
       <div className="flex items-end pl-[22px]">
-        <UserAvatar user={{ avatarUrl: host?.avatarUrl }} size={94} className="shrink-0" />
+        {href ? (
+          // The name below is the link the keyboard and a screen reader reach; the picture is the same link for a tap.
+          <Link href={href} tabIndex={-1} aria-hidden="true" className="shrink-0 rounded-full">
+            <UserAvatar user={{ avatarUrl: host?.avatarUrl }} size={94} className="block shrink-0" />
+          </Link>
+        ) : (
+          <UserAvatar user={{ avatarUrl: host?.avatarUrl }} size={94} className="shrink-0" />
+        )}
         <div className="relative mb-1.5 ml-[22px] min-w-0 flex-1">
           <svg
             className="pointer-events-none absolute bottom-0 -left-[31px]"
@@ -432,9 +444,22 @@ function HostBubble({ host, hostName, about }) {
         </div>
       </div>
       {hostName ? (
-        <div className="mt-[15px] flex flex-col gap-0.5 pl-[15px]">
-          <p className="text-[12.5px] font-extrabold uppercase leading-[15px] tracking-[0.02em] text-white">Hosted by {hostName}</p>
-          {host?.username ? <p className="text-[12px] font-semibold leading-[14px] text-white/55">@{host.username}</p> : null}
+        <div className="mt-[15px] pl-[15px]">
+          {href ? (
+            // The invisible `before` box widens the tap target past the two lines of text without moving anything.
+            <Link
+              href={href}
+              className="relative flex w-fit max-w-full flex-col gap-0.5 rounded-sm outline-offset-4 transition-opacity before:absolute before:-inset-x-3 before:-inset-y-2.5 before:content-[''] hover:underline focus-visible:underline focus-visible:outline-2 focus-visible:outline-white active:opacity-70"
+            >
+              <span className="text-[12.5px] font-extrabold uppercase leading-[15px] tracking-[0.02em] text-white">Hosted by {hostName}</span>
+              {host?.username ? <span className="text-[12px] font-semibold leading-[14px] text-white/55">@{host.username}</span> : null}
+            </Link>
+          ) : (
+            <div className="flex flex-col gap-0.5">
+              <p className="text-[12.5px] font-extrabold uppercase leading-[15px] tracking-[0.02em] text-white">Hosted by {hostName}</p>
+              {host?.username ? <p className="text-[12px] font-semibold leading-[14px] text-white/55">@{host.username}</p> : null}
+            </div>
+          )}
         </div>
       ) : null}
     </section>

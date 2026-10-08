@@ -37,7 +37,7 @@ function toEventDetailsModalEvent(event) {
     shareUrl: `/album/${event.albumId || event.id}`,
     description: event.description,
     host: event.organizer
-      ? { name: event.organizer.name, username: event.organizer.username, avatarUrl: event.organizer.avatarUrl }
+      ? { id: event.organizer.id, name: event.organizer.name, username: event.organizer.username, avatarUrl: event.organizer.avatarUrl }
       : null,
     memberCount: event.members > 0 ? event.members : undefined,
     playlist: { spotifyPlaylistUrl: event.spotifyPlaylistUrl, spotifyTopTrackUrl: event.spotifyTopTrackUrl },
