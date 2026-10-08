@@ -99,9 +99,9 @@ test('the door ring is scanned out of sold, and zero before anyone is in', () =>
     assert.equal(doorPercent({ turnoutRate: null }), 0);
     assert.equal(doorPercent(null), 0);
     assert.equal(doorCaption({ state: 'LIVE', name: 'Friday', startDate: '2026-10-02T02:00:00Z', timeZone: NY }), 'Friday');
-    assert.equal(doorCaption({ state: 'TONIGHT', name: 'Friday', startDate: '2026-10-02T02:00:00Z', timeZone: NY }), 'Friday · doors 10PM');
-    assert.equal(doorCaption({ state: 'LAST', name: 'Friday', scanned: 7, startDate: '2026-09-18T01:49:00Z', timeZone: NY }), 'Last scanned night · Thu, Sep 17');
-    assert.equal(doorCaption({ state: 'LAST', name: 'Friday', scanned: 0, startDate: '2026-09-18T01:49:00Z', timeZone: NY }), 'Last night here · Thu, Sep 17');
+    assert.equal(doorCaption({ state: 'TONIGHT', name: 'Friday', startDate: '2026-10-02T02:00:00Z', timeZone: NY }), 'Friday, doors 10PM');
+    assert.equal(doorCaption({ state: 'LAST', name: 'Friday', scanned: 7, startDate: '2026-09-18T01:49:00Z', timeZone: NY }), 'Last scanned night: Thu, Sep 17');
+    assert.equal(doorCaption({ state: 'LAST', name: 'Friday', scanned: 0, startDate: '2026-09-18T01:49:00Z', timeZone: NY }), 'Last night here: Thu, Sep 17');
 });
 
 test('the chart trims the quiet ends and reads as clock time at the venue', () => {

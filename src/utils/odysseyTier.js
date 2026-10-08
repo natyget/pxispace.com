@@ -1,7 +1,7 @@
 /**
  * Odyssey passport LEVEL tiers — MUST match pxi-backend/src/utils/odyssey-tier.ts
  *
- * Wanderer 0–750 · Seeker 751–4K · Voyager 4K–18K · Pathfinder 18K–70K · Luminary 70K–250K · Odyssey 250K+
+ * Wanderer 0–750, Seeker 751–4K, Voyager 4K–18K, Pathfinder 18K–70K, Luminary 70K–250K, Odyssey 250K+
  *
  * Band widths grow ~4x per step, so each level costs roughly four times the last and
  * Odyssey needs a year-plus of genuinely heavy event activity.

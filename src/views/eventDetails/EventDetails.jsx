@@ -316,7 +316,7 @@ const EventDetails = ({ basePath = '/events' }) => {
               {apiEvent.name}
             </h1>
             <p className="text-zinc-400 text-lg md:text-xl mt-4 max-w-2xl">
-              {apiEvent.location || 'Location TBA'} ·{' '}
+              {apiEvent.location || 'Location TBA'},{' '}
               {apiEvent.startDate
                 ? new Date(apiEvent.startDate).toLocaleDateString(undefined, { dateStyle: 'long' })
                 : 'Date TBA'}
@@ -504,7 +504,7 @@ const EventDetails = ({ basePath = '/events' }) => {
               ) : !isLoggedIn || !musicMatch?.connected ? (
                 <div className="space-y-4">
                   <p className="text-zinc-400 leading-relaxed">
-                    Connect Spotify and we&apos;ll score this lineup against your taste.
+                    Connect Apple Music and we&apos;ll score this lineup against your taste.
                   </p>
                   <Link
                     href={isLoggedIn ? '/dashboard/account' : '/login'}
@@ -565,7 +565,7 @@ const EventDetails = ({ basePath = '/events' }) => {
                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Hosted by</p>
                     <p className="font-black text-white truncate">
                       {host.name || host.username || 'Host'}
-                      {host.username ? <span className="text-zinc-500 font-normal"> · @{host.username}</span> : null}
+                      {host.username ? <span className="ml-1.5 text-zinc-500 font-normal">@{host.username}</span> : null}
                     </p>
                   </div>
                   <div className="ml-auto flex gap-3 shrink-0">

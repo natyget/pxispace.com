@@ -18,6 +18,16 @@ const TRAIL_DECAY = 0.55;
 const MAP_W = 1024;
 const MAP_H = 640;
 
+/** The last bucket with a photo or a scan in it (where the playback opens). */
+function lastActiveBucket(data) {
+    const lastActive = Math.max(
+        ...data.media.tuples.map((tuple) => tuple.t),
+        data.scans.totalsByBucket.reduce((max, n, t) => (n > 0 ? t : max), -1),
+        0
+    );
+    return Math.min(lastActive, data.window.bucketCount - 1);
+}
+
 function formatBucketTime(windowStartIso, bucketMinutes, t) {
     const at = new Date(new Date(windowStartIso).getTime() + t * bucketMinutes * 60000);
     return at.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }) + ' UTC';
@@ -31,12 +41,17 @@ function formatBucketTime(windowStartIso, bucketMinutes, t) {
  *   is an upgrade, not a requirement.
  * Both share the scrubber/playback/live plumbing. Blob radius is the honesty
  * mechanism — indoor GPS reads as areas, not seats.
+ *
+ * `sample` is a heat-map payload (the shape getEventHeatmap returns) to draw instead of
+ * fetching one: the marketing pages show this very component on invented data. A sample
+ * never touches the API, so there is nothing to attach, detach or follow live, and
+ * `readOnly` leaves those controls out. `startAt` is the bucket it opens on.
  */
-export default function VenueHeatMap({ eventId }) {
-    const [payload, setPayload] = useState(null);
-    const [loading, setLoading] = useState(true);
+export default function VenueHeatMap({ eventId, sample = null, readOnly = false, startAt = null }) {
+    const [payload, setPayload] = useState(sample);
+    const [loading, setLoading] = useState(!sample);
     const [error, setError] = useState('');
-    const [pos, setPos] = useState(0);
+    const [pos, setPos] = useState(() => (sample ? (startAt ?? lastActiveBucket(sample)) : 0));
     const [playing, setPlaying] = useState(false);
     const [live, setLive] = useState(false);
     const [myPlans, setMyPlans] = useState(null);
@@ -50,14 +65,7 @@ export default function VenueHeatMap({ eventId }) {
             const data = await getEventHeatmap(eventId);
             setPayload(data);
             setError('');
-            if (!keepPosition) {
-                const lastActive = Math.max(
-                    ...data.media.tuples.map((tuple) => tuple.t),
-                    data.scans.totalsByBucket.reduce((max, n, t) => (n > 0 ? t : max), -1),
-                    0
-                );
-                setPos(Math.min(lastActive, data.window.bucketCount - 1));
-            }
+            if (!keepPosition) setPos(lastActiveBucket(data));
         } catch (err) {
             setError(err?.data?.error || err?.message || 'Failed to load the heat map');
         } finally {
@@ -66,6 +74,7 @@ export default function VenueHeatMap({ eventId }) {
     }, [eventId]);
 
     useEffect(() => {
+        if (sample) return undefined;
         setLoading(true);
         setPayload(null);
         setPlaying(false);
@@ -73,7 +82,7 @@ export default function VenueHeatMap({ eventId }) {
         setMyPlans(null);
         const timer = setTimeout(() => load(), 0);
         return () => clearTimeout(timer);
-    }, [load]);
+    }, [load, sample]);
 
     const bucketCount = payload?.window.bucketCount ?? 0;
     const plan = payload?.floorPlan || null;
@@ -382,6 +391,7 @@ export default function VenueHeatMap({ eventId }) {
                         </span>
                     ) : null}
                 </div>
+                {readOnly ? null : (
                 <div className="flex items-center gap-2">
                     {isLiveWindow ? (
                         <button
@@ -431,6 +441,7 @@ export default function VenueHeatMap({ eventId }) {
                         </>
                     )}
                 </div>
+                )}
             </div>
 
             {myPlans && !plan ? (
@@ -568,9 +579,9 @@ export default function VenueHeatMap({ eventId }) {
                 </div>
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] font-medium text-zinc-500">
                     <span>
-                        {payload.media.totalGeotagged.toLocaleString('en-US')} geotagged photos · {payload.scans.total.toLocaleString('en-US')} scans
-                        {payload.media.truncated ? ' · capped at 3,000 photos' : ''}
-                        {payload.media.outsideWindow > 0 ? ` · ${payload.media.outsideWindow} outside the window` : ''}
+                        {payload.media.totalGeotagged.toLocaleString('en-US')} geotagged photos, {payload.scans.total.toLocaleString('en-US')} scans
+                        {payload.media.truncated ? ', capped at 3,000 photos' : ''}
+                        {payload.media.outsideWindow > 0 ? `, ${payload.media.outsideWindow} outside the window` : ''}
                     </span>
                     <span>Heat reads as ~8 m areas — GPS is approximate by nature.</span>
                 </div>

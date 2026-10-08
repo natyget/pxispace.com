@@ -9,13 +9,19 @@ function asDate(value) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/** "Sat, Oct 4 · 10:00 PM" — or "Date TBA". Local time of the viewer. */
-export function formatWhen(value) {
+/** { day: "Sat, Oct 4", time: "10:00 PM" } (empty time when the date is unknown). Local time of the viewer. */
+export function formatWhenParts(value) {
   const d = asDate(value);
-  if (!d) return 'Date TBA';
+  if (!d) return { day: 'Date TBA', time: '' };
   const day = d.toLocaleDateString('en-US', { ...WEEKDAY_SHORT, month: 'short', day: 'numeric' });
   const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  return `${day} · ${time}`;
+  return { day, time };
+}
+
+/** "Sat, Oct 4, 10:00 PM" or "Date TBA", for plain text. */
+export function formatWhen(value) {
+  const { day, time } = formatWhenParts(value);
+  return time ? `${day}, ${time}` : day;
 }
 
 /** "10:00 PM" — or an empty string when there is no start time. */

@@ -53,7 +53,7 @@ function ClaimRow({ claim, children }) {
             <div className="min-w-0">
                 <p className="truncate text-[14px] font-semibold text-white">{claim.venue.name}</p>
                 <p className="mt-0.5 text-[12px] text-white/45">
-                    For @{claim.beneficiary.username || 'account'} · raised {formatDate(claim.raisedAt)} ·{' '}
+                    For @{claim.beneficiary.username || 'account'}, raised {formatDate(claim.raisedAt)},{' '}
                     {claim.exposedEventCount} events, {claim.exposedAttendeeCount} attendees
                 </p>
                 {claim.decidedNote ? <p className="mt-1 text-[12px] text-white/55">Note: {claim.decidedNote}</p> : null}
@@ -240,7 +240,7 @@ export default function SalesClaimsPage() {
                                     >
                                         <span className="min-w-0">
                                             <span className="block truncate text-[14px] font-semibold text-white">{v.name}</span>
-                                            <span className="block truncate text-[12px] text-white/45">{v.address || 'No address'} · {v.eventCount} events</span>
+                                            <span className="block truncate text-[12px] text-white/45">{v.address || 'No address'}, {v.eventCount} events</span>
                                         </span>
                                         <span className="shrink-0 text-[11px] text-white/45">
                                             {v.claimed ? 'Claimed' : v.claimPending ? 'Claim waiting' : active ? 'Selected' : ''}

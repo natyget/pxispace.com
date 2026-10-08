@@ -39,7 +39,7 @@ export async function generateMetadata({ params }) {
       Number(album.memberCount) > 0 ? `${album.memberCount} people` : null,
     ].filter(Boolean);
     const description = counts.length
-      ? `${counts.join(' · ')} — see the night from ${eventName} on PXI.`
+      ? `${counts.join(', ')} — see the night from ${eventName} on PXI.`
       : `See the night from ${eventName} on PXI.`;
 
     return buildShareMetadata({

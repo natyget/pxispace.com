@@ -94,7 +94,7 @@ function GrantCreditsModal({ organizer, onClose, onDone }) {
     };
 
     return (
-        <ModalShell title="Grant credits" subtitle={`@${organizer.username} · balance ${formatUsd(organizer.creditBalanceCents)}`} onClose={onClose}>
+        <ModalShell title="Grant credits" subtitle={`@${organizer.username}, balance ${formatUsd(organizer.creditBalanceCents)}`} onClose={onClose}>
             <div className="space-y-3">
                 <input
                     value={amountUsd}

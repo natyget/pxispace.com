@@ -10,6 +10,7 @@ import { authService, authStorage } from '../../services/auth';
 import SectionCard from '@/components/dashboard/SectionCard';
 import BudgetPanel from '@/components/dashboard/BudgetPanel';
 import { RechartsChart } from '@/components/dashboard/ChartFrame';
+import { MoneyTooltip, RevenueByMonthChart, RevenueTableRow } from '@/components/dashboard/EarningsPanels';
 import { getDashboardChartShade } from '@/components/dashboard/chartStyles';
 import { useEvents } from '@/lib/dashboardStore';
 import { getBudgetSummary } from '@/services/budget';
@@ -51,14 +52,6 @@ function fmtCompact(cents) {
     }).format(dollars(cents));
 }
 
-function fmtChartMoney(value) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0,
-    }).format(value ?? 0);
-}
-
 const CATEGORY_LABELS = {
     STAFF: 'Staff',
     VENUE: 'Venue',
@@ -97,39 +90,6 @@ function buildMonthlySeries(payments) {
             ...entry,
             month: new Date(`${entry.key}-01T00:00:00`).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
         }));
-}
-
-function MoneyTooltip({ active, payload, label }) {
-    if (!active || !payload?.length) return null;
-    return (
-        <div className="rounded-xl bg-black/90 px-3 py-2 text-xs shadow-2xl">
-            {label ? <p className="mb-1 font-bold text-white">{label}</p> : null}
-            <div className="space-y-1">
-                {payload
-                    .filter((item) => item.value !== null && item.value !== undefined)
-                    .map((item) => (
-                        <div key={`${item.name}-${item.dataKey}`} className="flex items-center justify-between gap-4">
-                            <span className="text-zinc-400">{item.name}</span>
-                            <span className="font-mono font-bold text-white">{fmtChartMoney(item.value)}</span>
-                        </div>
-                    ))}
-            </div>
-        </div>
-    );
-}
-
-function RevenueTableRow({ title, value, unit, subheading, emphasize = false }) {
-    return (
-        <div className="flex items-center justify-between border-b border-white/[0.05] py-3.5 last:border-b-0">
-            <div>
-                <p className="text-sm font-semibold text-white">{title}</p>
-                <p className="mt-0.5 text-xs text-zinc-500">{subheading}</p>
-            </div>
-            <p className={`text-sm font-semibold tabular-nums ${emphasize ? 'text-emerald-300' : 'text-white'}`}>
-                {value}<span className="ml-1 text-[11px] font-medium text-zinc-500">{unit}</span>
-            </p>
-        </div>
-    );
 }
 
 function EarningsHero({ heroValue, heroLabel, gross, retainedPct, retainedLabel, sseStatus, loading, onRefresh, includeCosts, onToggleCosts }) {
@@ -182,7 +142,7 @@ function EarningsHero({ heroValue, heroLabel, gross, retainedPct, retainedLabel,
                     </p>
                     <p className="mt-3 text-sm text-zinc-500">
                         <span className="font-semibold text-zinc-300">{fmtCompact(gross)}</span> gross
-                        <span className="mx-2 text-zinc-700">·</span>
+                        <span className="mx-2" />
                         <span className="font-semibold text-zinc-300">{retainedPct.toFixed(0)}%</span> {retainedLabel}
                     </p>
                 </div>
@@ -529,24 +489,7 @@ export default function EarningsPage() {
                 <div className="lg:col-span-2 space-y-6">
                     <SectionCard title="Revenue by month">
                         {monthlySeries.length ? (
-                            <RechartsChart className="h-[300px]">
-                                {(charts) =>
-                                    createElement(
-                                        charts.ResponsiveContainer,
-                                        { width: '100%', height: '100%' },
-                                        createElement(
-                                            charts.ComposedChart,
-                                            { data: monthlySeries, margin: { top: 12, right: 8, bottom: 0, left: -12 } },
-                                            createElement(charts.CartesianGrid, { stroke: 'rgba(255,255,255,0.05)', vertical: false }),
-                                            createElement(charts.XAxis, { dataKey: 'month', axisLine: false, tickLine: false, tick: { fill: 'rgba(255,255,255,0.45)', fontSize: 11 } }),
-                                            createElement(charts.YAxis, { axisLine: false, tickLine: false, tickFormatter: fmtChartMoney, tick: { fill: 'rgba(255,255,255,0.35)', fontSize: 10 }, width: 54 }),
-                                            createElement(charts.Tooltip, { cursor: { fill: 'rgba(255,255,255,0.03)' }, content: createElement(MoneyTooltip) }),
-                                            createElement(charts.Area, { type: 'monotone', dataKey: 'gross', name: 'Gross', stroke: getDashboardChartShade(1), fill: 'rgba(13,148,136,0.14)', strokeWidth: 2 }),
-                                            createElement(charts.Line, { type: 'monotone', dataKey: 'net', name: 'Net to you', stroke: getDashboardChartShade(0), strokeWidth: 2, dot: false })
-                                        )
-                                    )
-                                }
-                            </RechartsChart>
+                            <RevenueByMonthChart series={monthlySeries} />
                         ) : (
                             <div className="px-5 py-16 text-center">
                                 <p className="text-sm font-semibold text-white">No sales yet.</p>
@@ -599,24 +542,28 @@ export default function EarningsPage() {
                     <SectionCard title="Cost breakdown">
                         {breakdownData.length ? (
                             <>
-                                <RechartsChart className="h-[280px]">
-                                    {(charts) =>
-                                        createElement(
-                                            charts.ResponsiveContainer,
-                                            { width: '100%', height: '100%' },
+                                {/* The chart frame is 100% of its parent, so the parent carries the height (a bare
+                                    h-full frame collapses to nothing, as "Revenue by month" did). */}
+                                <div className="h-[280px]">
+                                    <RechartsChart className="h-[280px]">
+                                        {(charts) =>
                                             createElement(
-                                                charts.PieChart,
-                                                { margin: { top: 0, right: 0, bottom: 0, left: 0 } },
+                                                charts.ResponsiveContainer,
+                                                { width: '100%', height: '100%' },
                                                 createElement(
-                                                    charts.Pie,
-                                                    { data: breakdownData, dataKey: 'value', nameKey: 'name', cx: '50%', cy: '50%', innerRadius: 70, outerRadius: 100, stroke: '#0e0e13', strokeWidth: 2, paddingAngle: breakdownData.length > 1 ? 2 : 0 },
-                                                    breakdownData.map((entry, index) => createElement(charts.Cell, { key: entry.name, fill: getDashboardChartShade(index) }))
-                                                ),
-                                                createElement(charts.Tooltip, { content: createElement(MoneyTooltip) })
+                                                    charts.PieChart,
+                                                    { margin: { top: 0, right: 0, bottom: 0, left: 0 } },
+                                                    createElement(
+                                                        charts.Pie,
+                                                        { data: breakdownData, dataKey: 'value', nameKey: 'name', cx: '50%', cy: '50%', innerRadius: 70, outerRadius: 100, stroke: '#0e0e13', strokeWidth: 2, paddingAngle: breakdownData.length > 1 ? 2 : 0 },
+                                                        breakdownData.map((entry, index) => createElement(charts.Cell, { key: entry.name, fill: getDashboardChartShade(index) }))
+                                                    ),
+                                                    createElement(charts.Tooltip, { content: createElement(MoneyTooltip) })
+                                                )
                                             )
-                                        )
-                                    }
-                                </RechartsChart>
+                                        }
+                                    </RechartsChart>
+                                </div>
                                 {marketingCreditCents > 0 ? (
                                     <p className="px-5 pb-4 text-xs leading-5 text-zinc-500">
                                         Cash costs only — {fmtCompact(marketingCreditCents)} more marketing was covered by credits and isn&apos;t counted here or deducted from profit.
@@ -687,7 +634,7 @@ export default function EarningsPage() {
                                         <div className="min-w-0">
                                             <p className="text-sm font-bold text-white">{fmtDate(payout.arrivalDate ?? payout.createdAt)}</p>
                                             <p className="mt-0.5 truncate text-xs text-zinc-500">
-                                                {payout.stripePayoutId ? `Stripe • ${String(payout.stripePayoutId).slice(-6)}` : 'Stripe payout'}
+                                                {payout.stripePayoutId ? `Stripe ${String(payout.stripePayoutId).slice(-6)}` : 'Stripe payout'}
                                             </p>
                                         </div>
                                     </div>

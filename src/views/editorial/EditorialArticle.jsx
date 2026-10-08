@@ -32,7 +32,7 @@ export default function EditorialArticle({ story }) {
           <h1 className="display-2 mt-5">{story.title}</h1>
           <p className="body-lead mt-6">{story.dek}</p>
           <p className="mt-6 text-xs uppercase tracking-[0.18em] text-zinc-600">
-            {date} · {story.readMinutes} min read
+            {date}, {story.readMinutes} min read
           </p>
         </div>
       </section>

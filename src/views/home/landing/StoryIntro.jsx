@@ -66,7 +66,6 @@ function TicketVisual() {
               <p className="mt-1 text-sm font-black text-white">NUIT TROPICALE</p>
               <div className="mt-1.5 flex gap-2 text-[9px] text-zinc-400">
                 <span>Fri 10PM</span>
-                <span>·</span>
                 <span>GA</span>
               </div>
             </div>

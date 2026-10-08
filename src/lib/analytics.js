@@ -230,8 +230,8 @@ export function resolveUserType(user, overrides = {}) {
 
 /**
  * Derive and set all four user-scoped dimensions from an auth user object.
- * `passport_level` is the uppercase Odyssey tier id (WANDERER · SEEKER ·
- * VOYAGER · PATHFINDER · LUMINARY · ODYSSEY) — the app must send the same
+ * `passport_level` is the uppercase Odyssey tier id (WANDERER, SEEKER,
+ * VOYAGER, PATHFINDER, LUMINARY, ODYSSEY); the app must send the same
  * casing or the dimension splits in two.
  * @param {Object|null} user
  * @param {{ isPromoter?: boolean, spotifyConnected?: boolean|null }} [extra]
@@ -680,6 +680,23 @@ export function trackSpotifyConnectStart(input) {
  */
 export function trackSpotifyConnected(input = {}) {
     track(EVENTS.SPOTIFY_CONNECTED, { entry_point: str(input.entryPoint, 80) });
+}
+
+/**
+ * The visitor opened the Apple Music connect step (after the disclosure is on screen).
+ * @param {{ entryPoint: string }|string} input
+ */
+export function trackAppleMusicConnectStart(input) {
+    const entryPoint = typeof input === 'string' ? input : input?.entryPoint;
+    track(EVENTS.APPLE_MUSIC_CONNECT_START, { entry_point: str(entryPoint, 80) });
+}
+
+/**
+ * Apple Music came back connected (the API built the taste profile).
+ * @param {{ entryPoint?: string }} [input]
+ */
+export function trackAppleMusicConnected(input = {}) {
+    track(EVENTS.APPLE_MUSIC_CONNECTED, { entry_point: str(input.entryPoint, 80) });
 }
 
 /**

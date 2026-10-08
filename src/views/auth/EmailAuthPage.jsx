@@ -567,7 +567,7 @@ export default function EmailAuthPage() {
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="e.g. •••••••••••"
+                                    placeholder="Your password"
                                     required
                                     style={{ paddingRight: 48 }}
                                 />
@@ -611,7 +611,7 @@ export default function EmailAuthPage() {
                                     type={showPassword ? 'text' : 'password'}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="e.g. •••••••••••"
+                                    placeholder="Your password"
                                     required
                                     focusColor={
                                         confirmPassword

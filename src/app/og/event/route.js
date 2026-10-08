@@ -6,6 +6,7 @@ import { getPublicAlbumMeta } from '@/lib/publicAlbum';
 import { resolveEventCity } from '@/lib/seo/cities';
 import { toOpenGraphImageUrl } from '@/lib/ogImageUrl';
 import { formatInviteVenue, formatInviteWhen } from '@/lib/eventInviteCard';
+import { loadDisplayFont } from '@/lib/ogFonts';
 
 // Node, like /og: next/og's wasm renderer is the fragile part, and this card sits behind every event link.
 export const runtime = 'nodejs';
@@ -13,7 +14,7 @@ export const runtime = 'nodejs';
 /**
  * The event link-preview card (1200×630) — the app's invite card (EventInviteStoryCanvas):
  * the poster fills the card, one flat band along the bottom carries the event name in orange
- * heavy caps, then "SAT, OCT 4 · 9 PM – 2 AM", then the venue or street (never the full address).
+ * heavy caps, then "SAT, OCT 4, 9 PM – 2 AM", then the venue or street (never the full address).
  * No gradients. "Don't cover my poster with the name" (`hideNameOnCover`) sends the poster alone.
  *
  *   /og/event?event=<eventId>     /og/event?album=<albumId>
@@ -30,20 +31,6 @@ const HEIGHT = 630;
 const IMAGE_TYPES = /^image\/(png|jpe?g|gif)/i;
 
 const redirect = (url) => new Response(null, { status: 302, headers: { Location: url, 'Cache-Control': 'public, max-age=300' } });
-
-/** Stack Sans Notch (the site's display face) as TTF from Google Fonts, subset to the card's own text. */
-async function loadDisplayFont(text) {
-  try {
-    const css = await (
-      await fetch(`https://fonts.googleapis.com/css2?family=Stack+Sans+Notch:wght@700&text=${encodeURIComponent(text)}`)
-    ).text();
-    const url = css.match(/src: url\((.+?)\) format\('(?:opentype|truetype)'\)/)?.[1];
-    if (!url) return null;
-    return await (await fetch(url)).arrayBuffer();
-  } catch {
-    return null;
-  }
-}
 
 /** The cover fetched here and handed over as a data URI, so a slow or broken image can never fail the card half-way. */
 async function loadCover(url) {
@@ -113,7 +100,7 @@ export async function GET(request) {
   const name = String(card.name || '').trim() || 'PXI Event';
   const timeZone = event.timezone || resolveEventCity(event)?.timezone || undefined;
   const when = formatInviteWhen(event.startDate, event.endDate, timeZone);
-  const whenLine = when ? `${when.day}  ·  ${when.hours}` : '';
+  const whenLine = when ? `${when.day}, ${when.hours}` : '';
   const venue = formatInviteVenue(event.location, event.venueName);
 
   const hasCover = !!coverSrc;

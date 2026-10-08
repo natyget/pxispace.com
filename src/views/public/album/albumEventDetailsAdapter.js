@@ -28,8 +28,8 @@ function formatLocation(event) {
   const lng = event?.longitude != null ? Number(event.longitude) : NaN;
   const coords = Number.isFinite(lat) && Number.isFinite(lng) ? { latitude: lat, longitude: lng } : {};
   if (raw) {
-    const split = raw.split(/\n|,|•/).map((s) => s.trim()).filter(Boolean);
-    if (split.length >= 2) return { primary: split[0], secondary: split.slice(1).join(' · '), address: raw, ...coords };
+    const split = raw.split(/\n|,|\u2022/).map((s) => s.trim()).filter(Boolean); // allow-dot: older addresses use a bullet
+    if (split.length >= 2) return { primary: split[0], secondary: split.slice(1).join(', '), address: raw, ...coords };
     return { primary: raw, secondary: '', address: raw, ...coords };
   }
   if (coords.latitude != null) {
@@ -75,7 +75,7 @@ export function buildAlbumEventDetails(album, albumId) {
     // badge: the footer pill says it ("Get ticket $10.00" or "Join") and the tiers list the prices.
     badges: [
       { label: isPublic ? 'Public' : 'Private', tone: isPublic ? 'purple' : 'neutral' },
-      ...(isFinalized ? [{ label: 'Scrapbook · Finalized', tone: 'neutral' }] : []),
+      ...(isFinalized ? [{ label: 'Scrapbook finalized', tone: 'neutral' }] : []),
     ],
     visibility: event?.visibility,
     startDate: event?.startDate,

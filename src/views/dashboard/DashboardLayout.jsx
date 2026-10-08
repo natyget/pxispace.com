@@ -512,7 +512,7 @@ export default function DashboardLayout({ children }) {
                         />
                         {showDevCaps && (
                             <div className={`mt-2 rounded-xl bg-pxi-field px-2 py-1 text-[10px] text-white/70 ${sidebarCollapsed ? 'text-center' : ''}`}>
-                                {capabilities.hasBouncerAccess ? 'LiveOps: enabled' : 'LiveOps: disabled'} ·
+                                {capabilities.hasBouncerAccess ? 'LiveOps: enabled' : 'LiveOps: disabled'}
                                 {' '}events:{capabilities.source?.events ? 'Y' : 'N'}
                                 {' '}notif:{capabilities.source?.notifications ? 'Y' : 'N'}
                                 {' '}user:{capabilities.source?.user ? 'Y' : 'N'}

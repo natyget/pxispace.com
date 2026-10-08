@@ -78,8 +78,8 @@ function AdminAnalyticsHero({ days, setDays, isLiveAdmin, loading, signups, tick
         ...(revenueWithheld
             ? []
             : [
-                  { label: 'Ticket sales (GMV)', value: formatUsd(rangeGross), detail: `Face value · ${days}-day window` },
-                  { label: 'PXI revenue', value: formatUsd(rangeTake), detail: `$0.99 + 5.49% − credits · ${takeRate}` },
+                  { label: 'Ticket sales (GMV)', value: formatUsd(rangeGross), detail: `Face value, ${days}-day window` },
+                  { label: 'PXI revenue', value: formatUsd(rangeTake), detail: `$0.99 + 5.49% − credits, ${takeRate}` },
               ]),
         { label: 'New users', value: formatInteger(rangeSignups), detail: `${activeDays(signups)} active signup days` },
         { label: 'Tickets issued', value: formatInteger(rangeTickets), detail: `${activeDays(tickets)} active ticket days` },
@@ -158,12 +158,12 @@ function DailyBars({ title, data, color, format = (v) => String(v) }) {
                     <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Daily flow</p>
                     <h2 className="mt-2 text-lg font-bold tracking-normal text-white">{title}</h2>
                     <p className="mt-1 text-xs font-semibold text-white/40">
-                        {daysWithActivity} active days · {format(total)} total
+                        {daysWithActivity} active days, {format(total)} total
                     </p>
                 </div>
                 <span className="w-fit rounded-full bg-pxi-field px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/55 tabular-nums">
                     {hover != null
-                        ? `${shortDate(data[hover].key)} · ${format(data[hover].value)}`
+                        ? `${shortDate(data[hover].key)}, ${format(data[hover].value)}`
                         : `Peak ${format(max)}`}
                 </span>
             </div>
@@ -287,7 +287,7 @@ function RevenueLines({ data }) {
                 </div>
                 {hover != null ? (
                     <span className="rounded-full bg-pxi-field px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/70 tabular-nums">
-                        {shortDate(data[hover].key)} · sales {formatUsd(data[hover].gross)} · PXI {formatUsd(data[hover].take)}
+                        {shortDate(data[hover].key)}, sales {formatUsd(data[hover].gross)}, PXI {formatUsd(data[hover].take)}
                     </span>
                 ) : null}
             </div>
@@ -379,7 +379,7 @@ export default function AdminAnalyticsPage() {
         () => (data ? fillDays(data.days, data.series.tickets, (r) => r?.count ?? 0) : []),
         [data]
     );
-    // gross = ticket face value (GMV) · take = PXI's actual revenue ($0.99 + 5.49% − credits)
+    // gross = ticket face value (GMV), take = PXI's actual revenue ($0.99 + 5.49% − credits)
     // buyerPaid/processing = money that moved through Stripe, never PXI revenue.
     const revenue = useMemo(
         () =>
@@ -440,7 +440,7 @@ export default function AdminAnalyticsPage() {
                             hint={
                                 data.cityScope
                                     ? 'Chose the city, holds a ticket there, or hosts there'
-                                    : `${data.totals.openSupportTickets} open tickets · ${data.totals.pendingReports} pending reports`
+                                    : `${data.totals.openSupportTickets} open tickets, ${data.totals.pendingReports} pending reports`
                             }
                         />
                         <StatTile label="Tickets issued" value={formatInteger(data.totals.tickets)} hint={`${formatInteger(data.totals.events)} events`} />
@@ -449,7 +449,7 @@ export default function AdminAnalyticsPage() {
                         <StatTile
                             label="Lifetime ticket sales"
                             value={formatUsd(data.totals.lifetimeGrossCents)}
-                            hint={`Face value · ${formatInteger(data.totals.lifetimePayments)} payments`}
+                            hint={`Face value, ${formatInteger(data.totals.lifetimePayments)} payments`}
                         />
                         <StatTile
                             label="Lifetime PXI revenue"

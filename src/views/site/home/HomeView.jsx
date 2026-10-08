@@ -1,10 +1,11 @@
-// Home — "One Night": scroll is time, from the door at 9:47 PM to the story post the next morning.
+// Home — "One Night": scroll is time, from finding the night on the map at 8:12 PM, through the door at 9:47 PM, to the story post the next morning.
 // Ported 1:1 from pxispace-redesign/site/index.html; styles in ../styles, motion in ./home.scenes.js.
 
 import SiteShell from '../runtime/SiteShell';
 import SiteNav from '../chrome/SiteNav';
 import SiteFooter from '../chrome/SiteFooter';
 import DoorsDiscover from './DoorsDiscover';
+import CityMap from './CityMap';
 
 // The app's six-point scrapbook star (ScrapbookStar.tsx): sharp tips, softly concave sides, drawn in 40 x 46.
 const STAR_PATH = (() => {
@@ -78,7 +79,7 @@ export default function HomeView() {
           <div className="shots" aria-hidden="true"></div>
           <div className="hero-copy">
             <div className="kicker-wrap">
-              <p className="hero-kicker">The ticket · the camera · the morning after</p>
+              <p className="hero-kicker">The ticket, the camera, the morning after</p>
               <p className="tap-cue" aria-hidden="true">Tap to shoot</p>
             </div>
             <h1 className="display-1">
@@ -93,6 +94,24 @@ export default function HomeView() {
             <div className="ctas">
               <a className="btn btn-warm" href="https://apps.apple.com/app/pxi/id6751762197" target="_blank" rel="noopener noreferrer" aria-label="Get the app on the App Store"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z" /></svg>Get the app</a>{' '}
               <a className="btn btn-secondary" href="/events">Explore events</a>
+            </div>
+          </div>
+        </section>
+        {/* ============ 8:12 PM — EVERY EVENT IN YOUR CITY ============ */}
+        <section className="scene" id="city">
+          <div className="scene-grid flip">
+            <div className="copy">
+              <div className="beat">
+                <p className="tc" data-t="8:12 pm" aria-hidden="true"></p>
+                <h2 className="display">Every event <span className="kw-mute">in your city</span><br /> in one place.</h2>
+                <p className="lead">DICE, Posh, Eventbrite and Ticketmaster, pulled into one map and list. <b>In 16 cities.</b></p>
+              </div>
+            </div>
+            <div className="stage-box">
+              <div className="stage" data-w="680" data-h="680" data-mw="372" data-mh="640" aria-hidden="true">
+                <div className="iphone city-phone" data-pw="300"></div>
+                <CityMap />
+              </div>
             </div>
           </div>
         </section>
@@ -349,7 +368,7 @@ export default function HomeView() {
                           <b>Late Checkout</b>
                           <span className="pp-no">№ 0214</span>
                         </p>
-                        <p className="pp-meta">Seaport, Boston · Fri Oct 2, 2026</p>
+                        <p className="pp-meta">Seaport, Boston on Fri Oct 2, 2026</p>
                         <p className="pp-by">shot by @lu</p>
                       </div>
                     </div>

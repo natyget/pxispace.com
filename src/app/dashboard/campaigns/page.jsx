@@ -374,7 +374,7 @@ function CampaignsPageContent() {
                                 <p className="mt-3 rounded-xl bg-pxi-purple/10 px-3 py-2 text-xs font-semibold leading-5 text-white">
                                     {fullyCredits
                                         ? `Credits cover the full ${formatUsd(quote.priceCents)} — no card needed.`
-                                        : `Credits cover ${formatUsd(creditApplied)} · ${formatUsd(cardRemainder)} on card.`}
+                                        : `Credits cover ${formatUsd(creditApplied)}, ${formatUsd(cardRemainder)} on card.`}
                                 </p>
                             ) : null}
                             {quote && quote.creditBalanceCents > 0 && creditApplied === 0 ? (
@@ -417,7 +417,7 @@ function CampaignsPageContent() {
                             ? `That is ${formatNumber(body.length - bodyMaxLength)} over what ${isSms ? 'a text' : 'an email'} can hold. Shorten the message to send it.`
                             : quote
                             ? quote.recipientCount > 0
-                                ? <>Reaches <span className="font-bold text-white">{quote.recipientCount}</span> opted-in {quote.recipientCount === 1 ? 'person' : 'people'} · <span className="font-bold text-white">{formatUsd(quote.priceCents)}</span></>
+                                ? <>Reaches <span className="font-bold text-white">{quote.recipientCount}</span> opted-in {quote.recipientCount === 1 ? 'person' : 'people'}, <span className="font-bold text-white">{formatUsd(quote.priceCents)}</span></>
                                 : 'No opted-in recipients yet — attendees enable event updates in their PXI settings.'
                             : audience === 'ATTENDEES' && !eventId
                                 ? 'Pick an event to see the audience.'
@@ -443,8 +443,8 @@ function CampaignsPageContent() {
                                     <p className="truncate text-sm font-bold text-white">{c.name}</p>
                                     <p className="truncate text-xs text-zinc-500">
                                         {/* A text has no subject line, so the row would start with a stray separator. */}
-                                        {c.channel === 'SMS' ? 'Text message' : c.subject} · {c.recipientCount} {c.recipientCount === 1 ? 'recipient' : 'recipients'} · {formatUsd(c.priceCents)}
-                                        {c.creditAppliedCents > 0 ? ` (${formatUsd(c.creditAppliedCents)} credits)` : ''} · {formatDate(c.sentAt || c.createdAt)}
+                                        {c.channel === 'SMS' ? 'Text message' : c.subject}, {c.recipientCount} {c.recipientCount === 1 ? 'recipient' : 'recipients'}, {formatUsd(c.priceCents)}
+                                        {c.creditAppliedCents > 0 ? ` (${formatUsd(c.creditAppliedCents)} credits)` : ''}, {formatDate(c.sentAt || c.createdAt)}
                                     </p>
                                 </div>
                                 <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${statusStyle[c.status] || statusStyle.DRAFT}`}>
