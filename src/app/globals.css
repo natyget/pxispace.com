@@ -163,6 +163,40 @@ html, body {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
+/* A piece of the real dashboard on a marketing page (DashboardMock). The rules above pin the earlier palette, glass
+   cards and Inter for the whole page, so inside the mock the app's own values go back on: its purple, flat #1c1c1c
+   cards and grey pills, and Cabin for text (headings stay the dashboard's Inter caps via .dashboard-page-surface). */
+.landing-v2 .dashboard-mock {
+  --color-pxi-purple: #a523ef;
+  --color-newpurple-base: #a523ef;
+  --color-newpurple: rgb(165 35 239 / 0.8);
+  --color-pxi-charcoal: #1c1c1c;
+  --color-bg-card: #1c1c1c;
+  --color-pxi-pink: #ff5a1f;
+  --color-accent-purple-light: #a523ef;
+  font-family: var(--font-body);
+}
+.landing-v2 .dashboard-mock .glass-panel {
+  background: #1c1c1c;
+  border: 0;
+  box-shadow: none;
+}
+.landing-v2 .dashboard-mock .pill-ghost {
+  background: #2e2e2e;
+  color: #fff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* The segmented toggle scrolls sideways in the dashboard on a phone; in a mockup nobody can scroll it, so it tightens to fit. */
+@media (max-width: 480px) {
+  .landing-v2 .dashboard-mock .dashboard-segmented-toggle {
+    gap: 0.125rem;
+  }
+  .landing-v2 .dashboard-mock .dashboard-segmented-toggle__item {
+    padding: 0.5rem 0.55rem;
+    font-size: 0.75rem;
+  }
+}
 
 @layer base {
   :root {

@@ -9,8 +9,10 @@ import React from 'react';
  * @param {string} [src] — screenshot to object-cover
  * @param {'4/3'|'9/16'|'16/9'} [aspect]
  * @param {React.ReactNode} [children] — render a DOM mockup instead of an image
+ * @param {boolean} [bare] — with children, skip the frame: the mockup is a set of cards already (DashboardMock)
  */
-export default function UiChip({ src, alt = '', aspect = '4/3', className = '', children }) {
+export default function UiChip({ src, alt = '', aspect = '4/3', className = '', bare = false, children }) {
+  if (children && bare) return <div className={className || undefined}>{children}</div>;
   // DOM mockups size to their content; only images use a fixed aspect crop.
   const style = children ? undefined : { aspectRatio: aspect.replace('/', ' / ') };
   return (
