@@ -2,17 +2,27 @@
 
 import React from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 import SectionShell from '@/components/marketing/SectionShell';
 import FeatureRow from '@/components/marketing/FeatureRow';
-import EarningsMock from '@/components/marketing/DashboardMockup/EarningsMock';
-import LiveScanMock from '@/components/marketing/DashboardMockup/LiveScanMock';
+import { MockSkeleton } from '@/components/marketing/DashboardMockup/DashboardMock';
 import SanaaTicketShowcase from '@/components/marketing/SanaaTicketShowcase';
 import CheckoutThreadMock from '@/components/marketing/CheckoutThreadMock';
 
 const CREATE_HREF = '/login?redirect=/dashboard/events/new';
+
+// The dashboard panels draw their charts with recharts, so they load after the page rather than with it.
+const EarningsMock = dynamic(() => import('@/components/marketing/DashboardMockup/EarningsMock'), {
+  ssr: false,
+  loading: () => <MockSkeleton className="h-[560px]" />,
+});
+const LiveScanMock = dynamic(() => import('@/components/marketing/DashboardMockup/LiveScanMock'), {
+  ssr: false,
+  loading: () => <MockSkeleton className="h-[460px]" />,
+});
 
 export default function BrandedTicketingView() {
   return (
@@ -70,7 +80,8 @@ export default function BrandedTicketingView() {
           <FeatureRow
             title="Revenue flows straight to you"
             body="No hidden fees, no delayed payouts. PXI handles the infrastructure while you keep full financial control over every transaction."
-            chip={<div className="p-5"><EarningsMock /></div>}
+            chip={<EarningsMock />}
+            chipBare
             href="/pricing"
             linkLabel="See pricing"
           />
@@ -98,7 +109,8 @@ export default function BrandedTicketingView() {
             reverse
             title="Control the whole lifecycle"
             body="One command center runs every phase, from dormant announcement through live door operations to the post-event grace period. Ticketing, capacity, and attendee communication stay in your hands."
-            chip={<div className="p-5"><LiveScanMock /></div>}
+            chip={<LiveScanMock />}
+            chipBare
             href="/features/event-promoter-analytics"
             linkLabel="Promoter analytics in depth"
           />

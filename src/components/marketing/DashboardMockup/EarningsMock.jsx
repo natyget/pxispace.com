@@ -1,42 +1,28 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import CountUpNumber from '@/components/motion/CountUpNumber';
+import SectionCard from '@/components/dashboard/SectionCard';
+import { RevenueByMonthChart, RevenueTableRow } from '@/components/dashboard/EarningsPanels';
+import DashboardMock from './DashboardMock';
+import { EARNINGS_SAMPLE } from './sampleData';
 
-/** Stylized earnings scene: payout total, "paid directly to you via Stripe"
- *  row, a small bar chart. Purple accent. */
-const BARS = [40, 62, 48, 78, 90, 72, 100];
-
+/**
+ * Where the money goes: the Earnings page's Key metrics card (gross, the one $0.99 fee, the payout Stripe makes) and its
+ * Revenue by month chart, on sample figures. The rows and the chart are the page's own components.
+ */
 export default function EarningsMock() {
   return (
-    <div className="text-white">
-      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">Net payout</p>
-      <p className="mt-1 text-3xl font-black md:text-4xl">
-        <CountUpNumber to={18430} prefix="$" />
-      </p>
-
-      <div className="mt-3 flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-xs">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-        <span className="text-zinc-400">Paid directly to you via Stripe, 0% held</span>
-      </div>
-
-      {/* bar chart — the week's takings climbing in, left to right */}
-      <div className="mt-5 flex h-24 items-end gap-2">
-        {BARS.map((h, i) => (
-          <motion.div
-            key={i}
-            className="flex-1 overflow-hidden rounded-t-md bg-gradient-to-t from-pxi-purple/30 to-pxi-purple"
-            initial={{ height: '0%' }}
-            whileInView={{ height: `${h}%` }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.55, delay: 0.1 + i * 0.07, ease: 'easeOut' }}
-          />
-        ))}
-      </div>
-      <div className="mt-2 flex justify-between text-[10px] uppercase tracking-wider text-zinc-600">
-        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-      </div>
-    </div>
+    <DashboardMock className="space-y-4">
+      <SectionCard title="Key Metrics">
+        <div className="px-5 py-2">
+          {EARNINGS_SAMPLE.keyMetrics.map((row) => (
+            <RevenueTableRow key={row.title} {...row} />
+          ))}
+        </div>
+      </SectionCard>
+      <SectionCard title="Revenue by month">
+        <RevenueByMonthChart series={EARNINGS_SAMPLE.monthly} className="h-[220px]" animate={false} />
+      </SectionCard>
+    </DashboardMock>
   );
 }

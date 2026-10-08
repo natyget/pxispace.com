@@ -2,14 +2,27 @@
 
 import React from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 import SectionShell from '@/components/marketing/SectionShell';
 import FeatureRow from '@/components/marketing/FeatureRow';
-import AnalyticsMock from '@/components/marketing/DashboardMockup/AnalyticsMock';
-import VenueMapMock from '@/components/marketing/DashboardMockup/VenueMapMock';
-import LiveScanMock from '@/components/marketing/DashboardMockup/LiveScanMock';
+import { MockSkeleton } from '@/components/marketing/DashboardMockup/DashboardMock';
+
+// The dashboard panels draw their charts with recharts, so they load after the page rather than with it.
+const AnalyticsMock = dynamic(() => import('@/components/marketing/DashboardMockup/AnalyticsMock'), {
+  ssr: false,
+  loading: () => <MockSkeleton className="h-[460px]" />,
+});
+const LiveScanMock = dynamic(() => import('@/components/marketing/DashboardMockup/LiveScanMock'), {
+  ssr: false,
+  loading: () => <MockSkeleton className="h-[460px]" />,
+});
+const VenueMapMock = dynamic(() => import('@/components/marketing/DashboardMockup/VenueMapMock'), {
+  ssr: false,
+  loading: () => <MockSkeleton className="h-[560px]" />,
+});
 
 const CREATE_HREF = '/login?redirect=/dashboard/events/new';
 
@@ -96,18 +109,21 @@ export default function AnalyticsView() {
           <FeatureRow
             title="One hype metric"
             body="The Hype Index is a real time pulse of your event's momentum, built from RSVP velocity, chat activity, ticket sales rate, and social sharing. Know whether hype is building or stalling before the first person walks in."
-            chip={<div className="p-5"><AnalyticsMock /></div>}
+            chip={<AnalyticsMock />}
+            chipBare
           />
           <FeatureRow
             reverse
             title="The door tells the truth"
             body="Ticket-to-door conversion shows exactly how many ticket holders actually show up. Compare across events to spot day-of-week trends and pricing sensitivity, then plan the next one on evidence."
-            chip={<div className="p-5"><LiveScanMock /></div>}
+            chip={<LiveScanMock />}
+            chipBare
           />
           <FeatureRow
             title="Spatial intel on the venue"
             body="Density by zone, bar queue times, and VIP dwell while the night is live. Move staff before the bottleneck forms, not after."
-            chip={<div className="p-5"><VenueMapMock /></div>}
+            chip={<VenueMapMock />}
+            chipBare
             href="/features/branded-event-ticketing"
             linkLabel="The ticketing behind it"
           />

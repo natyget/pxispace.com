@@ -8,7 +8,8 @@ import ScrubReveal from '../motion/ScrubReveal';
  * Feature row: bold caption + a short sentence on one side, a visual on the
  * other. Pass `chip` for a DOM mockup, `chipSrc` for an image, or `phone`
  * for a full uncropped app screenshot rendered inside a device frame.
- * Optional `href`/`linkLabel` adds a deep-dive link under the copy.
+ * Optional `href`/`linkLabel` adds a deep-dive link under the copy. `chipBare` drops the glass frame around a `chip`
+ * that is a set of dashboard cards already.
  */
 export default function FeatureRow({
   title,
@@ -17,6 +18,7 @@ export default function FeatureRow({
   chipAlt = '',
   chipAspect = '4/3',
   chip,
+  chipBare = false,
   phone,
   href,
   linkLabel = 'Read more',
@@ -50,7 +52,7 @@ export default function FeatureRow({
         {phone ? (
           <div className="flex justify-center">{phone}</div>
         ) : (
-          <UiChip src={chipSrc} alt={chipAlt} aspect={chipAspect}>
+          <UiChip src={chipSrc} alt={chipAlt} aspect={chipAspect} bare={chipBare}>
             {chip}
           </UiChip>
         )}
