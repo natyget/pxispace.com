@@ -542,24 +542,28 @@ export default function EarningsPage() {
                     <SectionCard title="Cost breakdown">
                         {breakdownData.length ? (
                             <>
-                                <RechartsChart className="h-[280px]">
-                                    {(charts) =>
-                                        createElement(
-                                            charts.ResponsiveContainer,
-                                            { width: '100%', height: '100%' },
+                                {/* The chart frame is 100% of its parent, so the parent carries the height (a bare
+                                    h-full frame collapses to nothing, as "Revenue by month" did). */}
+                                <div className="h-[280px]">
+                                    <RechartsChart className="h-[280px]">
+                                        {(charts) =>
                                             createElement(
-                                                charts.PieChart,
-                                                { margin: { top: 0, right: 0, bottom: 0, left: 0 } },
+                                                charts.ResponsiveContainer,
+                                                { width: '100%', height: '100%' },
                                                 createElement(
-                                                    charts.Pie,
-                                                    { data: breakdownData, dataKey: 'value', nameKey: 'name', cx: '50%', cy: '50%', innerRadius: 70, outerRadius: 100, stroke: '#0e0e13', strokeWidth: 2, paddingAngle: breakdownData.length > 1 ? 2 : 0 },
-                                                    breakdownData.map((entry, index) => createElement(charts.Cell, { key: entry.name, fill: getDashboardChartShade(index) }))
-                                                ),
-                                                createElement(charts.Tooltip, { content: createElement(MoneyTooltip) })
+                                                    charts.PieChart,
+                                                    { margin: { top: 0, right: 0, bottom: 0, left: 0 } },
+                                                    createElement(
+                                                        charts.Pie,
+                                                        { data: breakdownData, dataKey: 'value', nameKey: 'name', cx: '50%', cy: '50%', innerRadius: 70, outerRadius: 100, stroke: '#0e0e13', strokeWidth: 2, paddingAngle: breakdownData.length > 1 ? 2 : 0 },
+                                                        breakdownData.map((entry, index) => createElement(charts.Cell, { key: entry.name, fill: getDashboardChartShade(index) }))
+                                                    ),
+                                                    createElement(charts.Tooltip, { content: createElement(MoneyTooltip) })
+                                                )
                                             )
-                                        )
-                                    }
-                                </RechartsChart>
+                                        }
+                                    </RechartsChart>
+                                </div>
                                 {marketingCreditCents > 0 ? (
                                     <p className="px-5 pb-4 text-xs leading-5 text-zinc-500">
                                         Cash costs only — {fmtCompact(marketingCreditCents)} more marketing was covered by credits and isn&apos;t counted here or deducted from profit.
