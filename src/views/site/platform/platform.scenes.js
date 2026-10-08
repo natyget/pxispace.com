@@ -787,7 +787,13 @@ export default async function initPlatform(PXR, L) {
       if (peak) {
         const pk = c >= 162;
         peak.style.opacity = pk ? 1 : 0;
-        if (pk && !peak._placed) { const box = q('.heat-map'); peak.style.left = Math.round((236 - 14) / 872 * box.clientWidth - 40) + 'px'; peak.style.top = Math.round((60 / 290) * box.clientHeight) + 'px'; peak._placed = 1; }
+        if (pk && !peak._placed) {
+          // the plan is fitted into the box (xMidYMid meet), so find where its main-room blob (236, 150 in the plan) lands
+          const box = q('.heat-map'), [vx, vy, vw, vh] = plan.vb.split(' ').map(Number), k = Math.min(box.clientWidth / vw, box.clientHeight / vh);
+          peak.style.left = Math.round((box.clientWidth - vw * k) / 2 + (236 - vx) * k - 40) + 'px';
+          peak.style.top = Math.round((box.clientHeight - vh * k) / 2 + (60 - vy) * k) + 'px';
+          peak._placed = 1;
+        }
       }
       const cur = Math.round(p * (hist.length - 1));
       hist.forEach((b, i) => { b.className = i === cur ? 'cur' : i < cur ? 'on' : ''; b.style.height = (6 + (rib[Math.round((i / (hist.length - 1)) * 72)] / 540) * 30) + 'px'; });
