@@ -6,6 +6,7 @@ import { getPublicAlbumMeta } from '@/lib/publicAlbum';
 import { resolveEventCity } from '@/lib/seo/cities';
 import { toOpenGraphImageUrl } from '@/lib/ogImageUrl';
 import { formatInviteVenue, formatInviteWhen } from '@/lib/eventInviteCard';
+import { loadDisplayFont } from '@/lib/ogFonts';
 
 // Node, like /og: next/og's wasm renderer is the fragile part, and this card sits behind every event link.
 export const runtime = 'nodejs';
@@ -30,20 +31,6 @@ const HEIGHT = 630;
 const IMAGE_TYPES = /^image\/(png|jpe?g|gif)/i;
 
 const redirect = (url) => new Response(null, { status: 302, headers: { Location: url, 'Cache-Control': 'public, max-age=300' } });
-
-/** Stack Sans Notch (the site's display face) as TTF from Google Fonts, subset to the card's own text. */
-async function loadDisplayFont(text) {
-  try {
-    const css = await (
-      await fetch(`https://fonts.googleapis.com/css2?family=Stack+Sans+Notch:wght@700&text=${encodeURIComponent(text)}`)
-    ).text();
-    const url = css.match(/src: url\((.+?)\) format\('(?:opentype|truetype)'\)/)?.[1];
-    if (!url) return null;
-    return await (await fetch(url)).arrayBuffer();
-  } catch {
-    return null;
-  }
-}
 
 /** The cover fetched here and handed over as a data URI, so a slow or broken image can never fail the card half-way. */
 async function loadCover(url) {

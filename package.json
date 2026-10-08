@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "lint:dots": "node scripts/check-separator-dots.mjs",
     "check:sitemap": "node scripts/check-sitemap.mjs",
-    "test:venue": "node --test src/lib/venueDashboard.test.mjs"
+    "test:venue": "node --test src/lib/venueDashboard.test.mjs",
+    "test:go": "node --test src/lib/goListing.test.mjs src/lib/goPoster.test.mjs"
   },
   "dependencies": {
     "@geoapify/geocoder-autocomplete": "^3.0.1",

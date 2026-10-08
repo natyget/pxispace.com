@@ -158,6 +158,8 @@ const nextConfig = {
       '/apple-music-connect-embed',
       '/spotify-callback',
       '/get',
+      // Share links for outside events (the page, and /go/<id>/out, the redirect behind its ticket button).
+      '/go/:path*',
       '/403',
       '/503',
     ];

@@ -9,6 +9,7 @@
  */
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { CAMERA as CITY_CAMERA, MAP_CROP as CITY_CROP } from './cityScene';
 
 export default async function initHome(PXR, L) {
   const { setTimeout, requestAnimationFrame, matchMedia } = L.scope;
@@ -196,7 +197,7 @@ export default async function initHome(PXR, L) {
 
     // reduced motion: the roll is three still panels (#roll, #roll-d, #roll-e) and has no lights-out beat
     const JUMPS = [
-      ['9:48 PM', 'Doors', 'doors', 0], ['10:31 PM', 'The camera', 'camera', 0], ['11:52 PM', 'The roll', 'roll', 0],
+      ['8:12 PM', 'Every event', 'city', 0], ['9:48 PM', 'Doors', 'doors', 0], ['10:31 PM', 'The camera', 'camera', 0], ['11:52 PM', 'The roll', 'roll', 0],
       ...(REDUCED ? [['9:40 AM', 'The morning after', 'roll-d', 0]] : [['4:12 AM', 'Lights out', 'roll', 'c'], ['9:40 AM', 'The morning after', 'roll', 'dd']]),
       ['9:41 AM', 'The stamp', 'stamp', 0], ['10:02 AM', 'Post it', 'post', 0], ['Fri 10 PM', 'The next one', 'finale', 1],
     ];
@@ -432,6 +433,107 @@ export default async function initHome(PXR, L) {
       .to(q('.t-stub'), { x: MOB ? 40 : 300, y: MOB ? -760 : -620, rotation: MOB ? 14 : 28, scale: 0.8, duration: 1.3, ease: 'power2.in' }, 8.3 + E)
       .to(q('.t-stub'), { opacity: 0, duration: 0.45, ease: 'power1.in' }, 8.95 + E);
     register('doors', tl, [[0, T(21, 48)], [3.85, T(21, 49)], [4.3 + E, T(21, 51)], [5.6 + E, T(21, 52)], [tl.duration(), T(21, 58)]], REDUCED ? still(tl, sec, 5.5 + E) : undefined);
+  }
+
+  /* ───────────────────────── 8:12 PM — EVERY EVENT IN YOUR CITY ───────────────────────── */
+  // The app's Discover map (CityMap.jsx, moved into the phone the way DoorsDiscover is), played as scroll goes by:
+  //   arrival  the scene scrolls into place: the viewer's dot, the strip and tonight's pins drop in, the PXI night last
+  //   pinned   1. a tap on "Tonight" widens the window to the weekend: more pins drop, the strip gains its cards
+  //            2. a swipe along the strip settles on Late Checkout, and the map glides to its venue
+  //            3. three printed flyers float out of the card and settle around the phone, then drift
+  // The arrival is its own scrubbed run (so the map is never an empty frame when the scene reaches the top, the
+  // way every other scene's first frame is complete); the rest is the pinned one. Only transforms and opacity
+  // move. With reduced motion both are a still of their last frame.
+  function initCity() {
+    const sec = $('#city');
+    const phone = $('.city-phone', sec);
+    const PW = 300;
+    phone.dataset.pw = PW;
+    phone.style.left = ((MOB ? 372 : 680) - PW) / 2 + 'px';
+    phone.style.top = (MOB ? 6 : 26) + 'px';
+    const scr = buildPhone(phone);
+    scr.appendChild($('.cm-screen', sec));
+    scr.insertAdjacentHTML('beforeend', `${sbar('8:12')}<div class="tabbar"><span>${hi('Home05Icon')}</span><span>${hi('Camera02Icon')}</span><span class="on">${hi('DashboardSquare03Icon')}</span><span>${hi('Passport01Icon')}</span></div><i class="home-ind"></i><i class="dd-touch"></i>`);
+
+    const map = $('.cm-map', scr), user = $('.cm-user', scr), touch = $('.dd-touch', scr);
+    const pins = $$('.cm-pin', scr), byWave = (n) => pins.filter((p) => p.dataset.wave === String(n));
+    const discOf = (k) => $(`.cm-pin[data-k="${k}"] .cm-disc`, scr);
+    const strip = $('.cm-strip', scr), track = $('.cm-track', scr);
+    const weekendCards = $$('.cm-card[data-wk]', scr);
+    const timeSel = $('.dsc-pill-sel', scr), swNow = $('.cm-sw-a', scr), swWeekend = $('.cm-sw-b', scr);
+    const prints = $$('.cm-print', sec);
+    const STEP = 354 + 10; // a card and the gap after it
+
+    /* ---- where everything starts ---- */
+    // the map is cropped to what the camera shows, so its corner is the crop's, not the whole map's
+    const camAt = (c) => ({ x: CITY_CROP.x - c.x, y: CITY_CROP.y - c.y });
+    gsap.set(map, camAt(CITY_CAMERA.start));
+    gsap.set(user, { opacity: 0, scale: 0.6 });
+    gsap.set(pins, { opacity: 0, y: -46, scale: 0.55 });
+    gsap.set(strip, { y: 230 });
+    gsap.set(swWeekend, { opacity: 0, y: 6 });
+    gsap.set(weekendCards, { opacity: 0, scale: 0.94 });
+    // the flyers wait inside the strip, where the Late Checkout card's cover is, and are drawn out from there
+    const from = scrToStage(phone, 24 + 44, 660 + 58);
+    const REST = { late: -7, echoes: 6, cypher: -4 };
+    prints.forEach((el) => {
+      const cx = el.offsetLeft + el.offsetWidth / 2, cy = el.offsetTop + el.offsetHeight / 2;
+      gsap.set(el, { x: from.x - cx, y: from.y - cy, scale: 0.2, rotation: 0, opacity: 0, transformOrigin: '50% 50%' });
+    });
+
+    /* ---- arrival: the map fills as the scene scrolls into place ---- */
+    const arrive = gsap.timeline({
+      paused: REDUCED,
+      defaults: { ease: 'power2.inOut' },
+      scrollTrigger: REDUCED ? undefined : { trigger: sec, start: 'top 88%', end: 'top top', scrub: 0.6 },
+    });
+    arrive.to(user, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, 0.05)
+      .to(strip, { y: 0, duration: 0.55, ease: 'power3.out' }, 0.2)
+      .to(byWave(0), { opacity: 1, y: 0, scale: 1, duration: 0.42, ease: 'back.out(1.9)', stagger: 0.08 }, 0.35)
+      // the nearest night is lit, as in the app
+      .fromTo(discOf('echoes'), { scale: 1 }, { scale: 1.35, duration: 0.3, ease: 'back.out(2.2)', immediateRender: false }, 1.55);
+    if (REDUCED) arrive.progress(1);
+
+    // the system's own touch circle, as in the doors scene
+    const tap = (tl, at, t) => tl
+      .set(touch, { x: at.x, y: at.y }, t)
+      .fromTo(touch, { scale: 0.45, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.18, ease: 'power2.out', immediateRender: false }, t)
+      .to(touch, { scale: 1.5, opacity: 0, duration: 0.4, ease: 'power1.out' }, t + 0.3);
+
+    /* ---- pinned ---- */
+    const tl = gsap.timeline({ paused: REDUCED, defaults: { ease: 'power2.inOut' }, scrollTrigger: pinST(sec, 2.1) });
+
+    // 1. "Tonight" becomes "This weekend": more pins drop, the weekend's cards join the strip
+    tap(tl, { x: 112, y: 145 }, 0.3);
+    tl.to(timeSel, { scale: 0.94, duration: 0.1, ease: 'power1.out' }, 0.38)
+      .to(timeSel, { scale: 1, duration: 0.22, ease: 'back.out(2)' }, 0.48)
+      .to(swNow, { opacity: 0, y: -6, duration: 0.2, ease: 'power1.in' }, 0.45)
+      .to(swWeekend, { opacity: 1, y: 0, duration: 0.25, ease: 'power2.out' }, 0.57)
+      .to(byWave(1), { opacity: 1, y: 0, scale: 1, duration: 0.42, ease: 'back.out(1.9)', stagger: 0.09 }, 0.65)
+      .to(weekendCards, { opacity: 1, scale: 1, duration: 0.3, ease: 'power2.out' }, 1.0);
+
+    // 2. a swipe along the strip settles on Late Checkout; the map follows to its venue and lights its pin
+    tl.set(touch, { x: 330, y: 718, scale: 0.8, opacity: 0 }, 1.9)
+      .to(touch, { opacity: 1, scale: 1, duration: 0.12, ease: 'power1.out' }, 1.9)
+      .to(touch, { x: 130, duration: 0.55, ease: 'power3.inOut' }, 2.02)
+      .to(touch, { opacity: 0, scale: 0.8, duration: 0.15 }, 2.52)
+      .to(track, { x: -STEP, duration: 0.6, ease: 'power3.inOut' }, 2.02)
+      .to(map, { ...camAt(CITY_CAMERA.end), duration: 0.95, ease: 'power2.inOut' }, 2.4)
+      .fromTo(discOf('echoes'), { scale: 1.35 }, { scale: 1, duration: 0.3, immediateRender: false }, 2.4)
+      .to(discOf('late'), { scale: 1.35, duration: 0.35, ease: 'back.out(2.2)' }, 3.1)
+      .to($('.cm-pin[data-k="late"] .cm-cov', scr), { opacity: 1, duration: 0.25, ease: 'none' }, 3.15)
+      .fromTo($('.cm-pin[data-k="late"] .cm-ring', scr), { scale: 1, opacity: 0.9 }, { scale: 2.6, opacity: 0, duration: 0.6, ease: 'power2.out', immediateRender: false }, 3.1);
+
+    // 3. three printed flyers float out of the card and settle around the phone (Late Checkout's first), then drift
+    prints.forEach((el, i) => {
+      tl.to(el, { x: 0, y: 0, scale: 1, rotation: REST[el.dataset.k], opacity: 1, duration: 0.8, ease: 'power3.out' }, 3.5 + i * 0.22);
+    });
+    tl.to(prints, { yPercent: (i) => -(3 + i * 2), duration: 1.5, ease: 'sine.inOut' }, 4.3)
+      .to({}, { duration: 0.5 }, 5.8);
+
+    // the night clock reads 8:12 PM as soon as the scene starts to arrive, then runs on to 8:34 PM while it is held
+    if (!REDUCED) register('city-arrive', arrive, [[0, T(20, 12)], [arrive.duration(), T(20, 12)]]);
+    register('city', tl, [[0, T(20, 12)], [tl.duration(), T(20, 34)]], REDUCED ? still(tl, sec) : undefined);
   }
 
   /* ───────────────────────── 10:31 PM — CAMERA (one camera, one film look) ───────────────────────── */
@@ -925,6 +1027,7 @@ export default async function initHome(PXR, L) {
   /* ───────────────────────── boot ───────────────────────── */
   L.on(ScrollTrigger, 'refreshInit', fitStages);
   initHero();
+  initCity();
   initDoors();
   initCamera();
   if (REDUCED) {
