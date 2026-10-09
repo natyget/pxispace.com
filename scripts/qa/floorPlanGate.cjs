@@ -58,21 +58,25 @@ const note = (m) => console.log(`NOTE  ${m}`);
     let answer = null;
     let origin = '';
     const cors = { 'content-type': 'application/json', 'access-control-allow-origin': SITE, 'access-control-allow-credentials': 'true' };
-    await ctx.route(/\/api\/floor-plans(\?|$)/, async (route) => {
-        const req = route.request();
-        const url = new URL(req.url());
-        if (!origin) {
-            const res = await route.fetch();
-            if (req.method() === 'GET' && res.ok()) answer = await res.json().catch(() => null);
-            return route.fulfill({ response: res });
-        }
-        const res = await ctx.request.fetch(`${origin}${url.pathname}${url.search}`, {
-            method: req.method(), headers: { origin: SITE, 'content-type': 'application/json' }, data: req.postData() || undefined, failOnStatusCode: false,
+    if (APIS.length) {
+        await ctx.route(/\/api\/floor-plans(\?|$)/, async (route) => {
+            const req = route.request();
+            const url = new URL(req.url());
+            const res = await ctx.request.fetch(`${origin}${url.pathname}${url.search}`, {
+                method: req.method(), headers: { origin: SITE, 'content-type': 'application/json' }, data: req.postData() || undefined, failOnStatusCode: false,
+            });
+            const body = await res.body();
+            if (req.method() === 'GET' && res.ok()) { try { answer = JSON.parse(body.toString('utf8')); } catch { answer = null; } }
+            return route.fulfill({ status: res.status(), headers: cors, body });
         });
-        const body = await res.body();
-        if (req.method() === 'GET' && res.ok()) { try { answer = JSON.parse(body.toString('utf8')); } catch { answer = null; } }
-        return route.fulfill({ status: res.status(), headers: cors, body });
-    });
+    } else {
+        // Against the deployed API the request is left alone and only its answer is read: a request re-sent
+        // from Node is not the browser's, and Cloudflare answers it with a check instead of the API.
+        page.on('response', async (r) => {
+            if (r.request().method() !== 'GET' || !/\/api\/floor-plans(\?|$)/.test(new URL(r.url()).pathname + new URL(r.url()).search) || !r.ok()) return;
+            try { answer = await r.json(); } catch { /* not JSON */ }
+        });
+    }
 
     const settle = (ms = 1800) => page.waitForTimeout(ms);
     const open = async (pathAndQuery, wait = 3500) => {
