@@ -86,6 +86,29 @@ QA_EMAIL=... QA_PASSWORD=... node scripts/qa/floorPlanGate.cjs
 A create is only attempted for an account the API says cannot create, so the run writes nothing.
 How each screen reads the answer has its own tests, no browser needed: `npm run test:floor-plans`.
 
+## `staffSetup.cjs`: staff setup in one choice, and a manager's own team (PART-7)
+
+Uses both screens from start to finish: on Venue claims, a regional manager adds an ambassador, is
+refused the eight kinds of account they may not add, and removes one; on Admin, Accounts, a super
+admin sets a person up as city admin and regional manager with one Save, switches on a role that was
+saved without its tier, and is shown a refusal; a city admin sees staff access and cannot change it.
+After each step it reads back what the backend stored. Results: `PXIStudio-App/docs/PART7_DECISIONS.md`.
+
+```bash
+# in PXIStudio-App: this checkout's real admin and sales routes, on made-up accounts in memory
+STAFF_LOCAL_API_CONFIRM=yes npm run staff:local-api
+# here
+QA_EMAIL=... QA_PASSWORD=... node scripts/qa/staffSetup.cjs
+```
+
+Read the header of the script before trusting a green run. The sign-in, the build and the route code
+are real; the accounts are made up, nothing reaches a database, and the admin pages are opened by
+giving the page an admin role in its own "who am I" answer, because there is no super admin sign-in
+to test with. It is for a branch that is not deployed. It does not replace one run on dev with real
+staff sign-ins. Restart the local API before each run: the run changes its accounts.
+
+The choices and the wording have their own tests, no browser needed: `npm run test:staff-setup`.
+
 ## `webLive.cjs` / `webLiveDown.cjs` — the earlier pass
 
 Kept because they cover the first HTML response directly and are proxy-based, so they still
