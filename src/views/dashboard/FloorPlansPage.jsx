@@ -4,7 +4,10 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import VenueWizard from '@/components/dashboard/floorplan/VenueWizard';
 import { listFloorPlans, deleteFloorPlan, attachFloorPlan } from '@/services/floorPlans';
+import { NO_FLOOR_PLAN_ACCESS, floorPlanAccess } from '@/lib/floorPlanAccess';
 
+// PART-3: only a venue account adds a venue. One saved before that keeps working, so its owner still
+// reaches this page to edit it or use it for an event; they are just not offered a new one.
 function FloorPlansPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -16,15 +19,17 @@ function FloorPlansPageContent() {
     const seedLng = seedLngParam ? Number(seedLngParam) : null;
     const hasSeed = Number.isFinite(seedLat) && Number.isFinite(seedLng);
 
-    const [plans, setPlans] = useState(null);
+    const [access, setAccess] = useState(null); // null while loading
+    const plans = access ? access.plans : null;
+    const canCreate = Boolean(access?.canCreate);
     const [editing, setEditing] = useState(null); // null | 'new' | plan object
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
 
     const load = () => {
         listFloorPlans()
-            .then((res) => setPlans(res.floorPlans || []))
-            .catch(() => setPlans([]));
+            .then((res) => setAccess(floorPlanAccess(res)))
+            .catch(() => setAccess(NO_FLOOR_PLAN_ACCESS));
     };
 
     useEffect(() => {
@@ -39,10 +44,10 @@ function FloorPlansPageContent() {
         if (openPlanId) {
             const plan = plans.find((item) => item.id === openPlanId);
             if (plan) setEditing(plan);
-        } else if (hasSeed || (attachEventId && plans.length === 0)) {
+        } else if (canCreate && (hasSeed || (attachEventId && plans.length === 0))) {
             setEditing('new');
         }
-    }, [plans, openPlanId, attachEventId, hasSeed, editing]);
+    }, [plans, canCreate, openPlanId, attachEventId, hasSeed, editing]);
 
     const handleSaved = async (plan) => {
         setEditing(null);
@@ -82,16 +87,23 @@ function FloorPlansPageContent() {
                         its photos, scans, and chat onto it as a heat map. Venue accounts co-hosted on an event can attach their venue to it.
                     </p>
                 </div>
-                {!editing ? (
+                {!editing && canCreate ? (
                     <button type="button" onClick={() => setEditing('new')} className="pill-solid shrink-0 px-5 py-2.5 text-sm">
                         New venue
                     </button>
                 ) : null}
             </section>
 
-            {attachEventId && !editing ? (
+            {attachEventId && !editing && (canCreate || plans?.length) ? (
                 <div className="rounded-2xl bg-pxi-field px-4 py-3 text-xs font-semibold text-zinc-300">
-                    Pick or add a venue — it will be attached to your event automatically.
+                    {canCreate
+                        ? 'Pick or add a venue — it will be attached to your event automatically.'
+                        : 'Pick a venue — it will be attached to your event automatically.'}
+                </div>
+            ) : null}
+            {access && !canCreate && plans.length && !editing ? (
+                <div data-floor-plans="kept" className="rounded-2xl bg-pxi-field px-4 py-3 text-xs font-semibold leading-5 text-zinc-300">
+                    Your saved venues keep working. Adding a new one is for venue accounts, which PXI sets up.
                 </div>
             ) : null}
             {error ? <div className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">{error}</div> : null}
@@ -111,6 +123,14 @@ function FloorPlansPageContent() {
                     {[0, 1, 2].map((item) => (
                         <div key={item} className="h-48 animate-pulse rounded-[1.25rem] bg-pxi-field" />
                     ))}
+                </div>
+            ) : plans.length === 0 && !canCreate ? (
+                <div data-floor-plans="venue-accounts-only" className="dashboard-surface rounded-[1.25rem] px-6 py-14 text-center">
+                    <p className="text-sm font-bold text-white">Venues are for venue accounts.</p>
+                    <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500">
+                        A venue account is a PXI account that PXI has set a venue up on. Ask your PXI contact to set yours up.
+                        Your events still get a heat map without one, drawn on a map of the area.
+                    </p>
                 </div>
             ) : plans.length === 0 ? (
                 <div className="dashboard-surface rounded-[1.25rem] px-6 py-14 text-center">

@@ -25,6 +25,7 @@ import {
   setCreateEventTeamAssignments,
 } from '@/services/teamRosters';
 import { listFloorPlans, attachFloorPlan } from '@/services/floorPlans';
+import { floorPlanAccess } from '@/lib/floorPlanAccess';
 import { listGates, updateGate } from '@/services/gates';
 import {
   buildTicketPricingPayload,
@@ -108,7 +109,9 @@ function CreateEventForm({ embedded = false, onCancel, onCreated }) {
   const [endLocal, setEndLocal] = useState(() => defaults.end);
 
   const [venues, setVenues] = useState([]);
-  const [venuesLoading, setVenuesLoading] = useState(true);
+  // PART-3: saved venues are for venue accounts, so the picker is shown only once the API says this account
+  // has one to pick or may add one. Most organizers never see it.
+  const [savedVenuesOffered, setSavedVenuesOffered] = useState(false);
   const [selectedVenueId, setSelectedVenueId] = useState(null);
   /** { [gateName]: assignedPerson[] } — staged locally until the event (and its
    *  auto-seeded EventGate rows) exist; flushed via updateGate after create. */
@@ -199,13 +202,13 @@ function CreateEventForm({ embedded = false, onCancel, onCreated }) {
     let alive = true;
     listFloorPlans()
       .then((res) => {
-        if (alive) setVenues(res.floorPlans || []);
+        if (!alive) return;
+        const access = floorPlanAccess(res);
+        setVenues(access.plans);
+        setSavedVenuesOffered(access.canOpen);
       })
       .catch(() => {
         if (alive) setVenues([]);
-      })
-      .finally(() => {
-        if (alive) setVenuesLoading(false);
       });
     return () => {
       alive = false;
@@ -796,11 +799,10 @@ function CreateEventForm({ embedded = false, onCancel, onCreated }) {
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
+          {savedVenuesOffered ? (
           <div className="space-y-2">
             <label className={labelClass}>Use a saved venue</label>
-            {venuesLoading ? (
-              <div className="h-16 animate-pulse rounded-2xl bg-pxi-field" />
-            ) : venues.length ? (
+            {venues.length ? (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 [&>*]:min-w-0">
                 <button
                   type="button"
@@ -832,6 +834,7 @@ function CreateEventForm({ embedded = false, onCancel, onCreated }) {
               <p className="text-xs text-white/40">No saved venues yet — use a one-off location below, or add one from Floor Plans.</p>
             )}
           </div>
+          ) : null}
           <div className="space-y-2">
             <label className={labelClass}>Venue / location</label>
             <div className={`${inputClass} overflow-visible p-0`}>

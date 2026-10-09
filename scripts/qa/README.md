@@ -61,6 +61,31 @@ Leave `LOCAL_API` out to test against the deployed API as the venue's real owner
 
 The pure decisions behind the cards have their own tests, no browser needed: `npm run test:venue`.
 
+## `floorPlanGate.cjs`: floor plans are for venue accounts (PART-3)
+
+Signs in through the login form as a vendor and checks that every screen offers what the API says
+that account may do with floor plans: the Venues entry in the sidebar, the Command Center card,
+the Venues page, a "turn this into a venue" link, the saved-venue picker on a new event, and the
+heat map on Analytics when the account has an event to draw one for. The expectations are read
+off the `GET /api/floor-plans` answer the page received. Results: `PXIStudio-App/docs/PART3_DECISIONS.md`.
+
+```bash
+QA_EMAIL=... QA_PASSWORD=... node scripts/qa/floorPlanGate.cjs
+```
+
+There are three cases (a venue account, an account that kept a venue from before the rule, an
+account with neither) and one sign-in is only one of them. `FLOOR_PLAN_APIS` takes a list of
+origins that answer the floor plan requests instead, one case each: `npm run floorplan:local-api`
+in PXIStudio-App, which serves a backend checkout as a named account and writes nothing.
+
+```bash
+FLOOR_PLAN_APIS=http://localhost:4330,http://localhost:4331,http://localhost:4332 \
+QA_EMAIL=... QA_PASSWORD=... node scripts/qa/floorPlanGate.cjs
+```
+
+A create is only attempted for an account the API says cannot create, so the run writes nothing.
+How each screen reads the answer has its own tests, no browser needed: `npm run test:floor-plans`.
+
 ## `webLive.cjs` / `webLiveDown.cjs` — the earlier pass
 
 Kept because they cover the first HTML response directly and are proxy-based, so they still
