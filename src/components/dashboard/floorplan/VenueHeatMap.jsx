@@ -6,6 +6,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { PauseIcon, PlayIcon } from '@hugeicons/core-free-icons';
 import { authStorage } from '@/services/auth';
 import { getEventHeatmap, listFloorPlans, attachFloorPlan, detachFloorPlan } from '@/services/floorPlans';
+import { NO_FLOOR_PLAN_ACCESS, floorPlanAccess } from '@/lib/floorPlanAccess';
 import { latLngToPlanPx, mapMetersPerPixel, staticMapUrl, METERS_PER_DEG } from './geo';
 
 // `process.env.NEXT_PUBLIC_*` verbatim — Next inlines this form only. Written as
@@ -56,6 +57,17 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
     const [live, setLive] = useState(false);
     const [myPlans, setMyPlans] = useState(null);
     const [attaching, setAttaching] = useState(false);
+    // PART-3: adding a venue is for venue accounts, and attaching one needs one to attach. Until the answer
+    // is in, neither is offered.
+    const [venueAccess, setVenueAccess] = useState(NO_FLOOR_PLAN_ACCESS);
+    useEffect(() => {
+        if (sample || readOnly) return undefined;
+        let alive = true;
+        listFloorPlans()
+            .then((res) => { if (alive) setVenueAccess(floorPlanAccess(res)); })
+            .catch(() => {});
+        return () => { alive = false; };
+    }, [sample, readOnly]);
     const canvasRef = useRef(null);
     const refetchTimerRef = useRef(null);
 
@@ -323,14 +335,18 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                 <p className="text-sm font-bold text-white">The heat map fills in as the night happens</p>
                 <p className="mt-1 max-w-xl text-sm leading-6 text-zinc-500">
                     No geotagged photos yet — as guests shoot, activity heats a map of the venue automatically.
-                    Attaching a calibrated floor plan upgrades it to room-level.
+                    {venueAccess.canOpen ? ' Attaching a calibrated floor plan upgrades it to room-level.' : null}
                 </p>
+                {venueAccess.canOpen ? (
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                     <button type="button" onClick={openAttachPicker} className="pill-solid px-4 py-2 text-xs">Attach a saved venue</button>
+                    {venueAccess.canCreate ? (
                     <Link href={`/dashboard/floor-plans?eventId=${eventId}`} className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em]">
                         Add a new venue
                     </Link>
+                    ) : null}
                 </div>
+                ) : null}
                 {myPlans ? (
                     <div className="mt-4 space-y-2">
                         {myPlans.length === 0 ? (
@@ -423,6 +439,7 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                         </>
                     ) : (
                         <>
+                            {venueAccess.canOpen ? (
                             <button
                                 type="button"
                                 onClick={openAttachPicker}
@@ -430,7 +447,8 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                             >
                                 Attach a saved venue
                             </button>
-                            {autoMapCenter ? (
+                            ) : null}
+                            {autoMapCenter && venueAccess.canCreate ? (
                                 <Link
                                     href={`/dashboard/floor-plans?eventId=${eventId}&seedLat=${autoMapCenter.lat}&seedLng=${autoMapCenter.lng}`}
                                     className="rounded-full bg-pxi-purple/10 px-3.5 py-1.5 text-xs font-medium text-white transition hover:bg-pxi-purple/20"
@@ -448,7 +466,9 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                 <div className="space-y-2 rounded-2xl bg-pxi-field p-3">
                     {myPlans.length === 0 ? (
                         <p className="text-xs text-zinc-500">
-                            No saved plans yet — <Link href={`/dashboard/floor-plans?eventId=${eventId}`} className="text-zinc-300 underline">calibrate one</Link>.
+                            {venueAccess.canCreate ? (
+                                <>No saved plans yet — <Link href={`/dashboard/floor-plans?eventId=${eventId}`} className="text-zinc-300 underline">calibrate one</Link>.</>
+                            ) : 'No saved plans on this account.'}
                         </p>
                     ) : (
                         myPlans.map((item) => (

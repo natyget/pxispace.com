@@ -32,6 +32,8 @@ import {
 import { fetchAdminWhoami } from '@/services/admin';
 import { fetchSalesAccess } from '@/services/sales';
 import { fetchMyVenues } from '@/services/venues';
+import { listFloorPlans } from '@/services/floorPlans';
+import { floorPlanAccess } from '@/lib/floorPlanAccess';
 
 function shouldClearAuth(error) {
     const status = error?.status;
@@ -346,6 +348,8 @@ export default function DashboardLayout({ children }) {
     const [hasSalesAccess, setHasSalesAccess] = useState(false);
     // VEN-8: the venue section appears only while this account owns a venue; a revoked claim removes it.
     const [isVenueOwner, setIsVenueOwner] = useState(false);
+    // PART-3: Venues (floor plans) is offered to venue accounts, and to an account that already holds one.
+    const [canOpenFloorPlans, setCanOpenFloorPlans] = useState(false);
     useEffect(() => {
         if (!isAdminNav) return undefined;
         let cancelled = false;
@@ -366,6 +370,14 @@ export default function DashboardLayout({ children }) {
             .catch(() => { if (!cancelled) setIsVenueOwner(false); });
         return () => { cancelled = true; };
     }, [rolesReady, user?.id]);
+    useEffect(() => {
+        if (!isVendor || !user?.id) return undefined;
+        let cancelled = false;
+        listFloorPlans()
+            .then((res) => { if (!cancelled) setCanOpenFloorPlans(floorPlanAccess(res).canOpen); })
+            .catch(() => { if (!cancelled) setCanOpenFloorPlans(false); });
+        return () => { cancelled = true; };
+    }, [isVendor, user?.id]);
 
     const navItems = useMemo(() => {
         if (!rolesReady) {
@@ -387,9 +399,10 @@ export default function DashboardLayout({ children }) {
             user,
             hasSalesAccess,
             isVenueOwner,
+            canOpenFloorPlans,
         });
         return items;
-    }, [isAdminNav, adminCityScope, rolesReady, hasLiveOpsAccess, hasLiveEvent, user, hasSalesAccess, isVenueOwner]);
+    }, [isAdminNav, adminCityScope, rolesReady, hasLiveOpsAccess, hasLiveEvent, user, hasSalesAccess, isVenueOwner, canOpenFloorPlans]);
     const navEntries = useMemo(() => {
         if (isAdminNav || sidebarCollapsed) {
             return navItems.map((item) => ({ type: 'item', key: item.key, item }));
