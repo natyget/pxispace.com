@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import VenueWizard from '@/components/dashboard/floorplan/VenueWizard';
 import { listFloorPlans, deleteFloorPlan, attachFloorPlan } from '@/services/floorPlans';
@@ -39,15 +39,23 @@ function FloorPlansPageContent() {
 
     // Deep links: ?planId= opens that venue for edit; ?eventId= with no venues (or a
     // seeded lat/lng from "turn this into a venue") jumps straight to "new".
+    // A link opens the form once. It stays in the address after the form is saved or cancelled, and opening
+    // the form again each time would leave no way out of it.
+    const linkKey = [openPlanId, attachEventId, seedLatParam, seedLngParam].join('|');
+    const spentLink = useRef(null);
     useEffect(() => {
-        if (!plans || editing) return;
+        if (!plans || editing || spentLink.current === linkKey) return;
         if (openPlanId) {
             const plan = plans.find((item) => item.id === openPlanId);
-            if (plan) setEditing(plan);
+            if (plan) {
+                spentLink.current = linkKey;
+                setEditing(plan);
+            }
         } else if (canCreate && (hasSeed || (attachEventId && plans.length === 0))) {
+            spentLink.current = linkKey;
             setEditing('new');
         }
-    }, [plans, canCreate, openPlanId, attachEventId, hasSeed, editing]);
+    }, [plans, canCreate, openPlanId, attachEventId, hasSeed, editing, linkKey]);
 
     const handleSaved = async (plan) => {
         setEditing(null);
