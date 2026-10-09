@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PauseIcon, PlayIcon } from '@hugeicons/core-free-icons';
 import { authStorage } from '@/services/auth';
-import { getEventHeatmap, listFloorPlans, attachFloorPlan, detachFloorPlan } from '@/services/floorPlans';
+import { getEventHeatmap, getEventFloorPlan, listFloorPlans, attachFloorPlan, detachFloorPlan } from '@/services/floorPlans';
 import { NO_FLOOR_PLAN_ACCESS, floorPlanAccess } from '@/lib/floorPlanAccess';
 import { latLngToPlanPx, mapMetersPerPixel, staticMapUrl, METERS_PER_DEG } from './geo';
 
@@ -99,6 +99,24 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
     const bucketCount = payload?.window.bucketCount ?? 0;
     const plan = payload?.floorPlan || null;
     const bbox = payload?.media?.bbox || null;
+
+    // A venue can be attached with no calibrated plan, and the heat map only carries a calibrated one. So
+    // when it carries none, ask what the event has attached: an event that already has a venue must not be
+    // offered another, and its venue needs a way to be detached or given a plan.
+    const [attachedVenue, setAttachedVenue] = useState(null); // { eventId, venue }
+    const [attachedCheck, setAttachedCheck] = useState(0);
+    const planKey = payload ? (plan?.id || 'none') : 'loading';
+    useEffect(() => {
+        if (sample || readOnly || !eventId || planKey !== 'none') return undefined;
+        let alive = true;
+        getEventFloorPlan(eventId)
+            .then((res) => { if (alive) setAttachedVenue({ eventId, venue: res?.floorPlan || null }); })
+            .catch(() => { if (alive) setAttachedVenue({ eventId, venue: null }); });
+        return () => { alive = false; };
+    }, [sample, readOnly, eventId, planKey, attachedCheck]);
+    const venueWithoutPlan = planKey === 'none' && attachedVenue?.eventId === eventId ? attachedVenue.venue : null;
+    // Only its owner can give it a plan: the Venues page lists a person's own venues.
+    const ownsAttachedVenue = Boolean(venueWithoutPlan && venueAccess.plans.some((item) => item.id === venueWithoutPlan.id));
 
     // Auto-computed centroid of the event's own photo GPS — shared by the map
     // view (below) and the "turn this into a venue" deep-link, which seeds
@@ -301,6 +319,7 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
             setMyPlans(null);
             setLoading(true);
             await load();
+            setAttachedCheck((n) => n + 1);
         } catch (err) {
             setError(err?.data?.error || err?.message || 'Could not attach the floor plan');
         } finally {
@@ -309,11 +328,15 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
     };
 
     const detach = async () => {
-        if (!window.confirm('Detach this floor plan from the event? The heat map falls back to the area map.')) return;
+        const question = plan
+            ? 'Detach this floor plan from the event? The heat map falls back to the area map.'
+            : 'Detach this venue from the event?';
+        if (!window.confirm(question)) return;
         try {
             await detachFloorPlan(eventId);
             setLoading(true);
             await load();
+            setAttachedCheck((n) => n + 1);
         } catch (err) {
             setError(err?.data?.error || err?.message || 'Could not detach the floor plan');
         }
@@ -335,9 +358,20 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                 <p className="text-sm font-bold text-white">The heat map fills in as the night happens</p>
                 <p className="mt-1 max-w-xl text-sm leading-6 text-zinc-500">
                     No geotagged photos yet — as guests shoot, activity heats a map of the venue automatically.
-                    {venueAccess.canOpen ? ' Attaching a calibrated floor plan upgrades it to room-level.' : null}
+                    {venueWithoutPlan
+                        ? ` ${venueWithoutPlan.name} is attached, with no floor plan yet.${ownsAttachedVenue ? ' Adding one upgrades the map to room-level.' : ''}`
+                        : venueAccess.canOpen ? ' Attaching a calibrated floor plan upgrades it to room-level.' : null}
                 </p>
-                {venueAccess.canOpen ? (
+                {venueWithoutPlan ? (
+                <div className="mt-4 flex flex-wrap items-center gap-2" data-heatmap-venue="attached-no-plan">
+                    {ownsAttachedVenue ? (
+                    <Link href={`/dashboard/floor-plans?planId=${venueWithoutPlan.id}`} className="pill-solid px-4 py-2 text-xs">
+                        Add a floor plan
+                    </Link>
+                    ) : null}
+                    <button type="button" onClick={detach} className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em]">Detach</button>
+                </div>
+                ) : venueAccess.canOpen ? (
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                     <button type="button" onClick={openAttachPicker} className="pill-solid px-4 py-2 text-xs">Attach a saved venue</button>
                     {venueAccess.canCreate ? (
@@ -437,6 +471,24 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                                 Detach
                             </button>
                         </>
+                    ) : venueWithoutPlan ? (
+                        <>
+                            {ownsAttachedVenue ? (
+                            <Link
+                                href={`/dashboard/floor-plans?planId=${venueWithoutPlan.id}`}
+                                className="rounded-full bg-white/[0.07] px-3.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-white/[0.12] hover:text-white"
+                            >
+                                Add a floor plan
+                            </Link>
+                            ) : null}
+                            <button
+                                type="button"
+                                onClick={detach}
+                                className="rounded-full bg-white/[0.07] px-3.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-red-500/15 hover:text-red-200"
+                            >
+                                Detach
+                            </button>
+                        </>
                     ) : (
                         <>
                             {venueAccess.canOpen ? (
@@ -462,7 +514,7 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                 )}
             </div>
 
-            {myPlans && !plan ? (
+            {myPlans && !plan && !venueWithoutPlan ? (
                 <div className="space-y-2 rounded-2xl bg-pxi-field p-3">
                     {myPlans.length === 0 ? (
                         <p className="text-xs text-zinc-500">
