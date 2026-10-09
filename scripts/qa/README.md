@@ -109,6 +109,34 @@ staff sign-ins. Restart the local API before each run: the run changes its accou
 
 The choices and the wording have their own tests, no browser needed: `npm run test:staff-setup`.
 
+## `staffLive.cjs`: the same two screens on the deployed API, with real staff sign-ins
+
+The run that `staffSetup.cjs` cannot be. Nothing is intercepted and no account is made up: each
+person signs in through the login form, each request goes from the browser to the deployed API, and
+what the backend stored is read back through the API as that person.
+
+```bash
+MANAGER_EMAIL=... MANAGER_PASSWORD=... MANAGER2_EMAIL=... MANAGER2_PASSWORD=... \
+AMBASSADOR_EMAIL=... AMBASSADOR_PASSWORD=... CITYADMIN_EMAIL=... CITYADMIN_PASSWORD=... \
+MEMBER_EMAIL=... MEMBER_PASSWORD=... node scripts/qa/staffLive.cjs
+```
+
+Give it any of the sign-ins and it runs the parts it can and says which it skipped:
+
+- **A regional manager** (`@qa_rm_nyc`): their team, add, add again, each refusal, remove.
+- **A second manager** (`@qa_rm_bos`): holds one account on their own team for the length of the run,
+  so the first manager can be refused "another manager's ambassador", add and remove.
+- **An ambassador, a city admin, an account with no staff role**: what each is shown, and that the
+  API refuses them the rest.
+- **A super admin** (`SUPER_EMAIL`, `SUPER_PASSWORD`): the one-Save setup on Accounts, the refusal, a
+  role switched on, Advanced. On dev the super admins are real people's sign-ins, so this part has
+  only been written, not run: see `PART7_DECISIONS.md`.
+
+**It writes to the deployed database**, through the screens: it adds and removes `@qa_fan3` and
+`@qa_fan5` on the managers' teams (and, with a super admin, sets `@qa_fan4` to `@qa_fan6` up and
+back). It checks those accounts have no staff access before it starts, and sets every one back even
+when a step fails. Each change leaves an audit row.
+
 ## `webLive.cjs` / `webLiveDown.cjs` — the earlier pass
 
 Kept because they cover the first HTML response directly and are proxy-based, so they still
