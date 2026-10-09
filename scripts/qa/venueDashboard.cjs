@@ -100,6 +100,8 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
 
     const text = async (sel) => ((await page.locator(sel).count()) ? (await page.locator(sel).first().innerText()).replace(/\s+/g, ' ').trim() : '');
     const card = (name) => `[data-venue-card="${name}"]`;
+    // Card titles and night names are drawn in capitals by the stylesheet, and innerText follows it.
+    const has = (shown, wanted) => shown.toLowerCase().includes(String(wanted).toLowerCase());
     const settle = (ms = 1800) => page.waitForTimeout(ms);
     const open = async (query, wait = 4000) => {
         await page.goto(`${SITE}/dashboard/venue${query}`, { waitUntil: 'domcontentloaded', timeout: 120000 });
@@ -118,6 +120,9 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
         await page.screenshot({ path: path.join(OUT, `venue-${name}.png`), fullPage: true });
         if (tall > 0) { await page.setViewportSize(size); await page.waitForTimeout(300); }
     };
+    // Saved Segments is a dropdown: nothing is offered until the bar is opened.
+    const segmentsBar = () => page.locator(`${card('audience')} [data-audience-segments] > button`);
+    const segmentOptions = () => page.locator(`${card('audience')} [data-audience-segments] ul button[aria-pressed]`).allInnerTexts();
     const sideways = () => page.evaluate(() => {
         const main = document.querySelector('main');
         return document.documentElement.scrollWidth > window.innerWidth + 1 || (main && main.scrollWidth > main.clientWidth + 1);
@@ -160,7 +165,7 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
         note(`[${venue.name}] history ${level}: ${home.history.measuredNights} measured nights, ${home.history.people} people · tonight ${home.tonight.length}, upcoming ${home.upcoming.length}, albums ${home.albums.length}`);
 
         const head = await text('header:has(h1)');
-        check(`[${venue.name}] header: Venue Dashboard, the venue and its place`, /Venue Dashboard/.test(head) && head.includes(venue.name) && head.includes(lib.venuePlace(home.venue)), head);
+        check(`[${venue.name}] header: Venue Dashboard, the venue and its place`, /Venue Dashboard/i.test(head) && head.includes(venue.name) && head.includes(lib.venuePlace(home.venue)), head);
         check(`[${venue.name}] the page states its history level`, (await page.locator('[data-venue-level]').getAttribute('data-venue-level')) === level);
         const wantTabs = ['Home', 'Overview', ...(features.crm ? ['Audience'] : []), ...(features.forecast ? ['Plan a night'] : []), 'Guarantees'].join('|');
         const tabs = (await page.getByRole('tab').allInnerTexts()).join('|');
@@ -190,9 +195,9 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
 
         // Tonight and upcoming
         const nights = await text(card('nights'));
-        check(`[${venue.name}] tonight: ${home.tonight.length ? home.tonight[0].name : '"No Events Tonight"'}`, home.tonight.length ? nights.includes(home.tonight[0].name) && /TONIGHT/.test(nights) && nights.includes(lib.formatTimeRange(home.tonight[0].startDate, home.tonight[0].endDate, home.tonight[0].timeZone)) : /No Events Tonight/.test(nights), nights);
+        check(`[${venue.name}] tonight: ${home.tonight.length ? home.tonight[0].name : '"No Events Tonight"'}`, home.tonight.length ? has(nights, home.tonight[0].name) && /TONIGHT/.test(nights) && nights.includes(lib.formatTimeRange(home.tonight[0].startDate, home.tonight[0].endDate, home.tonight[0].timeZone)) : /No Events Tonight/.test(nights), nights);
         const later = [...home.tonight.slice(1), ...home.upcoming];
-        check(`[${venue.name}] upcoming: ${later.length ? `${later.length} night(s)` : 'the empty line'}`, later.length ? later.every((n) => nights.includes(n.name)) : /No Upcoming Events/.test(nights), nights);
+        check(`[${venue.name}] upcoming: ${later.length ? `${later.length} night(s)` : 'the empty line'}`, later.length ? later.every((n) => has(nights, n.name)) : /No Upcoming Events/.test(nights), nights);
         const ownNights = [...home.tonight, ...home.upcoming].filter((n) => n.hostedByVenue).length;
         check(`[${venue.name}] a host is named only on the venue's own nights (${ownNights})`, (nights.match(/Host:/g) || []).length === ownNights && (nights.match(/Host: You/g) || []).length === ownNights);
 
@@ -208,7 +213,7 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
 
         // Net payout: the signed-in account's own, or nothing
         const payout = await text(card('payout'));
-        check(`[${venue.name}] net payout: a week, Monday to Sunday, and the Stripe line`, /Net Payout/.test(payout) && /\$[\d,]+/.test(payout) && /MON TUE WED THU FRI SAT SUN/.test(payout) && /Paid directly to you via Stripe/.test(payout), payout);
+        check(`[${venue.name}] net payout: a week, Monday to Sunday, and the Stripe line`, /Net Payout/i.test(payout) && /\$[\d,]+/.test(payout) && /MON TUE WED THU FRI SAT SUN/.test(payout) && /Paid directly to you via Stripe/.test(payout), payout);
 
         // Forecast
         const forecast = await text(card('forecast'));
@@ -220,10 +225,22 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
             const audience = await text(card('audience'));
             const all = [...seen.entries()].find(([k]) => k.startsWith(`${id}/audience?`) && !/[?&](q|minEvents|maxEvents|eventId|weekday|ticketTier|minEngagementTier)=/.test(k))?.[1];
             check(`[${venue.name}] audience: the count`, Boolean(all) && audience.includes(`Attendance Count: ${lib.formatInteger(all.total)}`), audience);
+            const own = (seen.get(`${id}/segments`)?.segments || []).map((s) => s.name);
+            const offered = [...lib.AUDIENCE_PRESETS.map((x) => x.label), ...own];
+            check(`[${venue.name}] saved segments: a closed dropdown on the home card`, (await text(`${card('audience')} [data-audience-segments] > button`)) === 'Saved Segments' && (await segmentOptions()).length === 0);
             if (all && all.total < lib.AUDIENCE_MIN_PEOPLE) {
                 check(`[${venue.name}] audience: under ${lib.AUDIENCE_MIN_PEOPLE} people, nobody is listed on the home card`, /Not enough people to show audience details\./.test(audience) && (await page.locator(`${card('audience')} [data-audience-rows]`).count()) === 0);
+                check(`[${venue.name}] saved segments: switched off on the home card with the rest, under ${lib.AUDIENCE_MIN_PEOPLE} people`, await segmentsBar().isDisabled());
             } else if (all) {
                 check(`[${venue.name}] audience: people are listed by handle`, (await page.locator(`${card('audience')} [data-audience-rows] li`).count()) === Math.min(all.rows.length, 6));
+                await segmentsBar().click();
+                await settle(400);
+                const options = await segmentOptions();
+                check(`[${venue.name}] saved segments: the home dropdown opens with ${offered.length} option(s), and nothing to make or delete`, options.join('|') === offered.join('|') && (await page.locator(`${card('audience')} [data-audience-segments] :is(button:has-text("New segment"), button[aria-label^="Delete"])`).count()) === 0, options.join('|'));
+                await shot(`${tag}-home-segments-open`);
+                await page.keyboard.press('Escape');
+                await settle(300);
+                check(`[${venue.name}] saved segments: Escape closes it`, (await segmentOptions()).length === 0);
             }
         }
 
@@ -272,12 +289,24 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
                 const keys = new Set(listed.rows.flatMap((r) => Object.keys(r)));
                 const approved = ['id', 'name', 'username', 'avatarUrl', 'eventsAttended', 'lastCheckInAt', 'ticketTier', 'engagementTier'];
                 check(`[${venue.name}] audience rows carry only the approved fields`, [...keys].every((k) => approved.includes(k)), [...keys].join(','));
+                const own = (seen.get(`${id}/segments`)?.segments || []).map((s) => s.name);
+                const offered = [...lib.AUDIENCE_PRESETS.map((x) => x.label), ...own];
+                check(`[${venue.name}] saved segments: a closed dropdown on the audience screen`, (await text(`${card('audience')} [data-audience-segments] > button`)) === 'Saved Segments' && (await segmentOptions()).length === 0);
+                await segmentsBar().click();
+                await settle(400);
+                const options = await segmentOptions();
+                check(`[${venue.name}] saved segments: opens with ${offered.length} option(s) and "New segment"`, options.join('|') === offered.join('|') && (await page.locator(`${card('audience')} [data-audience-segments] button:has-text("New segment")`).count()) === 1, options.join('|'));
+                await shot(`${tag}-audience-segments-open`);
                 await page.getByRole('button', { name: 'Friday Crowd', exact: true }).click();
                 await settle(2500);
                 const friday = await text(card('audience'));
                 check(`[${venue.name}] a night or weekday filter gives a count and no names`, /(people match|person matches) this audience/.test(friday) && /Names are hidden while targeting filters are active\./.test(friday) && (await page.locator(`${card('audience')} tbody tr`).count()) === 0, friday.slice(-200));
+                check(`[${venue.name}] saved segments: picking one closes the dropdown and the bar names it`, (await segmentOptions()).length === 0 && (await text(`${card('audience')} [data-audience-segments] > button`)) === 'Friday Crowd');
+                await segmentsBar().click();
+                await settle(400);
                 await page.getByRole('button', { name: 'Friday Crowd', exact: true }).click();
                 await settle(1500);
+                check(`[${venue.name}] saved segments: picking it again clears it`, (await text(`${card('audience')} [data-audience-segments] > button`)) === 'Saved Segments' && (await page.locator(`${card('audience')} tbody tr`).count()) === listed.rows.length);
             } else {
                 check(`[${venue.name}] audience screen: "No Attendance History"`, /No Attendance History/.test(aud), aud);
             }
@@ -288,7 +317,7 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
         await tab('Guarantees');
         const g = await text(card('guarantees'));
         const promised = seen.get(`${id}/guarantees`)?.guarantees || [];
-        check(`[${venue.name}] guarantees: the five sections`, ['What is Guaranteed', 'How it Works', 'What counts', 'What guarantee applies', "What happens if a guarantee isn't met"].every((s) => g.includes(s)));
+        check(`[${venue.name}] guarantees: the five sections`, ['What is Guaranteed', 'How it Works', 'What counts', 'What guarantee applies', "What happens if a guarantee isn't met"].every((s) => has(g, s)));
         check(`[${venue.name}] guarantees: ${promised.length ? `${promised.length} on this venue` : 'none, said plainly'}`, promised.length ? promised.every((x) => g.includes(x.event?.name || 'A night here')) : /No guarantee on this venue yet/.test(g));
         await shot(`${tag}-guarantees`);
 
