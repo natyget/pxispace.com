@@ -123,6 +123,11 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
     // Saved Segments is a dropdown: nothing is offered until the bar is opened.
     const segmentsBar = () => page.locator(`${card('audience')} [data-audience-segments] > button`);
     const segmentOptions = () => page.locator(`${card('audience')} [data-audience-segments] ul button[aria-pressed]`).allInnerTexts();
+    // A heading wider than the box it sits in. The dashboard draws headings in capitals, which run wide, and a
+    // title that spills out of its card is the kind of thing nobody sees until a designer does.
+    const spillingTitles = () => page.evaluate(() => [...document.querySelectorAll('[data-venue-card] h2')]
+        .filter((h) => h.getClientRects().length && h.scrollWidth > h.clientWidth + 1)
+        .map((h) => `${h.closest('[data-venue-card]').dataset.venueCard}: ${h.textContent}`));
     const sideways = () => page.evaluate(() => {
         const main = document.querySelector('main');
         return document.documentElement.scrollWidth > window.innerWidth + 1 || (main && main.scrollWidth > main.clientWidth + 1);
@@ -250,6 +255,8 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
         check(`[${venue.name}] spatial intel: ${emptyRoom ? '"Host an event for spatial intel"' : `${heatmap.nights} night(s) combined`}`, emptyRoom ? /Host an event for spatial intel/.test(spatial) : spatial.includes(`${heatmap.nights} ${heatmap.nights === 1 ? 'night' : 'nights'} combined`) && spatial.includes(lib.formatInteger(heatmap.media.geotagged)), spatial);
 
         check(`[${venue.name}] no email address or phone number anywhere on the page`, !/[\w.+-]+@[\w-]+\.[a-z]{2,}|\+\d{10,}/i.test((await page.locator('main').innerText()).replace(EMAIL, '')));
+        const spillHome = await spillingTitles();
+        check(`[${venue.name}] home: no card title runs past its box`, spillHome.length === 0, spillHome.join(' | '));
         await shot(`${tag}-home`);
 
         // ── Overview ─────────────────────────────────────────────────────────────────────────────────────
@@ -274,6 +281,8 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
             check(`[${venue.name}] the chart's filter lists the ${home.nights.length} measured night(s)`, options.length === home.nights.length, options.join(' | '));
             check(`[${venue.name}] one night is drawn when picked`, (await page.locator(`${card('activity')} svg path.recharts-curve`).count()) >= 1);
         }
+        const spillOverview = await spillingTitles();
+        check(`[${venue.name}] overview: no card title runs past its box`, spillOverview.length === 0, spillOverview.join(' | '));
         await shot(`${tag}-overview`);
 
         // ── Audience ─────────────────────────────────────────────────────────────────────────────────────
@@ -320,6 +329,16 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
         check(`[${venue.name}] guarantees: the five sections`, ['What is Guaranteed', 'How it Works', 'What counts', 'What guarantee applies', "What happens if a guarantee isn't met"].every((s) => has(g, s)));
         check(`[${venue.name}] guarantees: ${promised.length ? `${promised.length} on this venue` : 'none, said plainly'}`, promised.length ? promised.every((x) => g.includes(x.event?.name || 'A night here')) : /No guarantee on this venue yet/.test(g));
         await shot(`${tag}-guarantees`);
+
+        // ── four cards to a row at its narrowest: the cards are at their smallest here ───────────────────
+        await page.setViewportSize({ width: 1280, height: 1000 });
+        for (const screen of ['', 'overview']) {
+            await page.goto(`${SITE}/dashboard/venue?venueId=${id}${screen ? `&tab=${screen}` : ''}`, { waitUntil: 'domcontentloaded' });
+            await settle(3500);
+            const spill = await spillingTitles();
+            check(`[${venue.name}] 1280 wide, ${screen || 'home'}: no card title runs past its box`, spill.length === 0, spill.join(' | '));
+            await shot(`${tag}-1280${screen ? `-${screen}` : ''}`);
+        }
 
         // ── phone width ──────────────────────────────────────────────────────────────────────────────────
         await page.setViewportSize({ width: 390, height: 844 });
