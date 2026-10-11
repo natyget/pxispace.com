@@ -4,17 +4,22 @@
 // An ambassador or manager raises a claim on a venue in their territory for a vendor account. It waits for the
 // regional manager of that city, who approves or rejects it. Nobody approves their own claim. Every rule is
 // enforced by the backend; this page shows its refusals as they come.
+// PART-7: a regional manager also keeps their own team here, adding and removing their ambassadors.
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+    addSalesAmbassador,
     approveSalesClaim,
     fetchSalesClaims,
     fetchSalesMe,
+    fetchSalesTeam,
     fetchSalesVenues,
     raiseSalesClaim,
     rejectSalesClaim,
+    removeSalesAmbassador,
 } from '@/services/sales';
+import { claimSummary, cleanUsername } from '@/lib/staffSetup';
 import { cityLabel } from '@/lib/dashboardNavConfig';
 
 const STATUS_STYLES = {
@@ -98,6 +103,143 @@ function QueueActions({ claim, onDone }) {
             </button>
             {error ? <span className="text-[12px] text-red-300">{error}</span> : null}
         </div>
+    );
+}
+
+/**
+ * PART-7, regional managers: their own ambassadors. An account is added by its exact username, as a claim's
+ * vendor account is, so this is not a way to browse accounts. The backend refuses an account that already
+ * has a staff or sales role, and its message is shown as it comes.
+ */
+function TeamPanel({ city }) {
+    const [team, setTeam] = useState(null);
+    const [available, setAvailable] = useState(true);
+    const [username, setUsername] = useState('');
+    const [busy, setBusy] = useState(null);
+    const [error, setError] = useState(null);
+    const [done, setDone] = useState(null);
+    const [confirming, setConfirming] = useState(null);
+
+    const load = useCallback(async () => {
+        try {
+            const data = await fetchSalesTeam();
+            setTeam(data.ambassadors || []);
+        } catch (err) {
+            // A backend from before this feature has no such route. Show nothing rather than an error.
+            if (err.status === 404) setAvailable(false);
+            else setError(err.message || 'Failed to load your team');
+        }
+    }, []);
+
+    useEffect(() => {
+        const timer = setTimeout(load, 0);
+        return () => clearTimeout(timer);
+    }, [load]);
+
+    const run = async (kind, fn) => {
+        setBusy(kind);
+        setError(null);
+        setDone(null);
+        try {
+            setDone(await fn());
+            setConfirming(null);
+            await load();
+        } catch (err) {
+            setError(err.message || 'That did not work. Try again.');
+        } finally {
+            setBusy(null);
+        }
+    };
+    const add = () => {
+        const name = cleanUsername(username);
+        if (!name) return;
+        run('add', async () => {
+            const res = await addSalesAmbassador(name);
+            const who = res.ambassador?.name || `@${res.ambassador?.username || name}`;
+            setUsername('');
+            return res.changed === false ? `${who} is already on your team.` : `${who} is on your team now and can raise claims on ${city} venues.`;
+        });
+    };
+    const ask = (member) => {
+        setError(null);
+        setDone(null);
+        setConfirming(member.username);
+    };
+    const remove = (member) =>
+        run('remove', async () => {
+            await removeSalesAmbassador(member.username);
+            return `@${member.username} is off your team. The claims they raised stay as they are.`;
+        });
+
+    if (!available) return null;
+
+    return (
+        <Panel title="Your ambassadors" hint={`Ambassadors raise claims on ${city} venues and you approve them. Add someone by their exact PXI username.`}>
+            <div data-sales-team className="space-y-3">
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        add();
+                    }}
+                    className="flex flex-wrap gap-2"
+                >
+                    <input
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="PXI username (exact)"
+                        aria-label="Ambassador username"
+                        autoComplete="off"
+                        className={`${inputCls} min-w-[220px] flex-1`}
+                    />
+                    <button type="submit" disabled={Boolean(busy) || !cleanUsername(username)} className="rounded-full bg-pxi-purple px-5 py-2 text-[13px] font-bold text-white disabled:opacity-40 uppercase tracking-[0.08em]">
+                        {busy === 'add' ? 'Adding...' : 'Add ambassador'}
+                    </button>
+                </form>
+                {error ? <p data-sales-team-error className="text-[13px] text-red-300">{error}</p> : null}
+                {done ? <p data-sales-team-done className="text-[13px] text-emerald-300">{done}</p> : null}
+                {team === null ? (
+                    error ? null : <p className="text-sm text-white/45">Loading your team...</p>
+                ) : team.length === 0 ? (
+                    <p data-sales-team-empty className="text-sm text-white/45">No ambassadors yet.</p>
+                ) : (
+                    <ul className="space-y-2">
+                        {team.map((member) => (
+                            <li key={member.username || member.name} data-sales-team-member={member.username || ''} className="flex flex-col gap-3 rounded-2xl bg-pxi-field px-4 py-3 md:flex-row md:items-center md:justify-between">
+                                <div className="min-w-0">
+                                    <p className="truncate text-[14px] font-semibold text-white">
+                                        {member.name || `@${member.username}`}
+                                        {member.name && member.username ? <span className="ml-2 font-normal text-white/45">@{member.username}</span> : null}
+                                    </p>
+                                    <p className="mt-0.5 text-[12px] text-white/45">
+                                        {claimSummary(member.claims)}
+                                        {member.suspended ? '. This account is suspended.' : ''}
+                                    </p>
+                                </div>
+                                {member.username ? (
+                                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                                        {confirming === member.username ? (
+                                            <>
+                                                <span className="text-[12px] text-white/55">Take @{member.username} off your team?</span>
+                                                <button type="button" disabled={Boolean(busy)} onClick={() => remove(member)} className="rounded-full bg-red-500/10 px-4 py-1.5 text-[12px] text-red-300 hover:bg-red-500/20 disabled:opacity-40">
+                                                    {busy === 'remove' ? 'Removing...' : 'Yes, remove'}
+                                                </button>
+                                                <button type="button" disabled={Boolean(busy)} onClick={() => setConfirming(null)} className={pillBtn}>
+                                                    Keep
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button type="button" disabled={Boolean(busy)} onClick={() => ask(member)} className={pillBtn}>
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                ) : null}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+        </Panel>
     );
 }
 
@@ -199,7 +341,7 @@ export default function SalesClaimsPage() {
                 <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[28px]">Venue claims</h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-300">
                     {isManager
-                        ? `You approve claims on ${city} venues. You can also raise claims; someone else approves yours.`
+                        ? `You approve claims on ${city} venues and keep your own team of ambassadors. You can also raise claims; someone else approves yours.`
                         : `Raise a claim on a ${city} venue for the venue's vendor account.${me.manager ? ` ${me.manager.name || `@${me.manager.username}`} approves it.` : ''}`}{' '}
                     Approving a claim gives that account the venue&apos;s analytics, so check the account is really the venue.
                 </p>
@@ -222,6 +364,8 @@ export default function SalesClaimsPage() {
                     )}
                 </Panel>
             )}
+
+            {isManager && <TeamPanel city={city} />}
 
             <Panel title="Raise a claim" hint={`Only ${city} venues are listed. A venue that is claimed, or already has a claim waiting, cannot be picked.`}>
                 <div className="space-y-3">

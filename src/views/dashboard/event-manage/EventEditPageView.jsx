@@ -18,6 +18,7 @@ import { useEventManage } from './EventManageContext';
 import { PxiSpinner } from '@/components/loading/PxiLoading';
 import { assignRosterToEvent, listTeamRosters, updateTeamRoster } from '@/services/teamRosters';
 import { attachFloorPlan, detachFloorPlan, getEventFloorPlan, listFloorPlans } from '@/services/floorPlans';
+import { floorPlanAccess } from '@/lib/floorPlanAccess';
 import { listGates, updateGate } from '@/services/gates';
 import {
   buildTicketPricingPayload,
@@ -109,6 +110,9 @@ export default function EventEditPageView() {
   const [teamRostersLoading, setTeamRostersLoading] = useState(true);
   const [venues, setVenues] = useState([]);
   const [venuesLoading, setVenuesLoading] = useState(true);
+  // PART-3: saved venues are for venue accounts. The picker shows once the API says this account has one to
+  // pick or may add one, or when the event already has a venue attached (a venue co-host may have attached it).
+  const [savedVenuesOffered, setSavedVenuesOffered] = useState(false);
   const [attachedVenue, setAttachedVenue] = useState(null);
   const [venueLoading, setVenueLoading] = useState(true);
   const [venueSaving, setVenueSaving] = useState(false);
@@ -214,7 +218,10 @@ export default function EventEditPageView() {
     let alive = true;
     listFloorPlans()
       .then((res) => {
-        if (alive) setVenues(res.floorPlans || []);
+        if (!alive) return;
+        const access = floorPlanAccess(res);
+        setVenues(access.plans);
+        setSavedVenuesOffered(access.canOpen);
       })
       .catch(() => {
         if (alive) setVenues([]);
@@ -637,6 +644,7 @@ export default function EventEditPageView() {
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
+          {savedVenuesOffered || attachedVenue ? (
           <div className="space-y-2">
             <label className={labelClass}>Use a saved venue</label>
             {venueLoading || venuesLoading ? (
@@ -681,12 +689,13 @@ export default function EventEditPageView() {
                       );
                     })}
                   </div>
-                ) : (
+                ) : savedVenuesOffered ? (
                   <p className="text-xs text-zinc-500">No saved venues yet — add one from Floor Plans.</p>
-                )}
+                ) : null}
               </>
             )}
           </div>
+          ) : null}
           <div className="space-y-2">
             <label className={labelClass}>Venue / location *</label>
             <div

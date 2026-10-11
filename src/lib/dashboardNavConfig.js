@@ -70,6 +70,7 @@ export function isGlobalOnlyAdminPath(pathname) {
  * @property {boolean} [liveOnly]
  * @property {boolean} [salesOnly] ambassadors and regional managers (PART-4)
  * @property {boolean} [venueOwnerOnly] accounts that own a claimed venue (VEN-8)
+ * @property {boolean} [floorPlansOnly] venue accounts, and accounts that already hold a saved venue (PART-3)
  * @property {'notifications'} [badge]
  */
 
@@ -92,7 +93,7 @@ export const dashboardNavConfig = [
   { key: 'campaigns', label: 'Email Campaigns', path: '/dashboard/campaigns', icon: Mail01Icon, section: 'People', end: true, vendorOnly: true },
   { key: 'analytics', label: 'Analytics', path: '/dashboard/analytics', icon: Activity01Icon, section: 'Intelligence', end: true, vendorOnly: true },
   { key: 'operations', label: 'Live Operations', path: '/dashboard/analytics?view=live-ops', icon: QrCodeIcon, section: 'Intelligence', end: true, bouncerOnly: true },
-  { key: 'floor-plans', label: 'Venues', path: '/dashboard/floor-plans', icon: FloorPlanIcon, section: 'Intelligence', end: true, vendorOnly: true },
+  { key: 'floor-plans', label: 'Venues', path: '/dashboard/floor-plans', icon: FloorPlanIcon, section: 'Intelligence', end: true, vendorOnly: true, floorPlansOnly: true },
 ];
 
 /**
@@ -124,17 +125,18 @@ export function isVendorOnlyRoute(pathname) {
  * @param {boolean} ctx.mounted
  * @param {boolean} [ctx.hasSalesAccess]
  * @param {boolean} [ctx.isVenueOwner]
+ * @param {boolean} [ctx.canOpenFloorPlans]
  * @param {{ isVendor?: boolean }} [ctx.user]
  * @returns {DashboardNavItem[]}
  */
-export function buildMemberNavItems({ hasLiveOpsAccess, isLiveEvent, mounted, user, hasSalesAccess = false, isVenueOwner = false }) {
+export function buildMemberNavItems({ hasLiveOpsAccess, isLiveEvent, mounted, user, hasSalesAccess = false, isVenueOwner = false, canOpenFloorPlans = false }) {
   const items = [...dashboardNavConfig];
   const hasResolvedUser = mounted && !!user;
   const hasResolvedVendorStatus = typeof user?.isVendor === 'boolean';
   const vendor = isVendorUser(user);
 
   return items.filter((item) => {
-    const isRoleSensitive = item.vendorOnly || item.nonVendorOnly || item.bouncerOnly || item.liveOnly || item.salesOnly || item.venueOwnerOnly;
+    const isRoleSensitive = item.vendorOnly || item.nonVendorOnly || item.bouncerOnly || item.liveOnly || item.salesOnly || item.venueOwnerOnly || item.floorPlansOnly;
     if (!hasResolvedUser && isRoleSensitive) return false;
     if (item.vendorOnly && !vendor) return false;
     if (item.nonVendorOnly && (!hasResolvedVendorStatus || vendor)) return false;
@@ -142,6 +144,7 @@ export function buildMemberNavItems({ hasLiveOpsAccess, isLiveEvent, mounted, us
     if (item.liveOnly && !isLiveEvent) return false;
     if (item.salesOnly && !hasSalesAccess) return false;
     if (item.venueOwnerOnly && !isVenueOwner) return false;
+    if (item.floorPlansOnly && !canOpenFloorPlans) return false;
     return true;
   });
 }

@@ -17,6 +17,8 @@ import { useNotifications } from '@/lib/dashboardStore';
 import { buildCommandCenterReminders } from '@/services/commandCenter';
 import { helpRequestsService } from '@/services/helpRequests';
 import { organizerAnalyticsService } from '@/services/organizerAnalytics';
+import { listFloorPlans } from '@/services/floorPlans';
+import { floorPlanAccess } from '@/lib/floorPlanAccess';
 import { api } from '../../services/api';
 
 const DASHBOARD_RENDER_NOW = Date.now();
@@ -465,14 +467,27 @@ function VendorCommandCenter() {
  * live number attached. See docs/DASHBOARD_POSITIONING.md.
  */
 function MoatBand({ summary, loading }) {
+    // PART-3: the Venues page is for venue accounts. Everyone else is sent to the heat map itself, which
+    // draws on a map of the area when an event has no floor plan.
+    const [venuesOffered, setVenuesOffered] = useState(false);
+    useEffect(() => {
+        let alive = true;
+        listFloorPlans()
+            .then((res) => { if (alive) setVenuesOffered(floorPlanAccess(res).canOpen); })
+            .catch(() => {});
+        return () => { alive = false; };
+    }, []);
+
     const items = [
         {
             icon: FloorPlanIcon,
             title: 'Where the room was alive',
             stat: loading ? '-' : summary.turnout == null ? 'Awaiting first scan' : `${summary.turnout}% turnout verified`,
-            body: 'Photo capture points across the night, projected onto your floor plan. No other ticketing platform can draw this.',
-            href: '/dashboard/floor-plans',
-            action: 'Open venues',
+            body: venuesOffered
+                ? 'Photo capture points across the night, projected onto your floor plan. No other ticketing platform can draw this.'
+                : 'Photo capture points across the night, drawn on a map of the venue. No other ticketing platform can draw this.',
+            href: venuesOffered ? '/dashboard/floor-plans' : '/dashboard/analytics',
+            action: venuesOffered ? 'Open venues' : 'See the heat map',
         },
         {
             icon: Image01Icon,

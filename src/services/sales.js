@@ -32,3 +32,20 @@ export function approveSalesClaim(claimId, note) {
 export function rejectSalesClaim(claimId, note) {
     return api.post(`/api/sales/claims/${claimId}/reject`, { note });
 }
+
+// PART-7: a regional manager's own team.
+
+/** Regional manager: { cityCode, ambassadors: [{ username, name, suspended, claims: { waiting, approved, rejected, revoked } }] } */
+export function fetchSalesTeam() {
+    return api.get('/api/sales/team');
+}
+
+/** Regional manager: put the account with this exact username on their own team, as an ambassador. */
+export function addSalesAmbassador(username) {
+    return api.post('/api/sales/team', { username });
+}
+
+/** Regional manager: take an ambassador off their own team. The claims that person raised stay. */
+export function removeSalesAmbassador(username) {
+    return api.delete(`/api/sales/team/${encodeURIComponent(username)}`);
+}
