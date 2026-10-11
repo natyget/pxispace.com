@@ -163,6 +163,25 @@ AMBASSADOR_EMAIL=... AMBASSADOR_PASSWORD=... FFMPEG=/path/to/ffmpeg node scripts
 
 When the look of these pages changes, run it again. The captions are in the script.
 
+## `guideDoc.cjs`: the written guide's screenshots, and its PDF
+
+The guide itself is an HTML file kept with its pictures in `pxi-docs/part7-staff-setup/guide`. This
+script makes the two things that need a browser:
+
+```bash
+# the 15 pictures, from the real pages on the deployed API (same sign-ins, same writes and undo as the videos)
+GUIDE_DIR=../pxi-docs/part7-staff-setup/guide/img SUPER_EMAIL=... MANAGER_EMAIL=... AMBASSADOR_EMAIL=... \
+CITYADMIN_EMAIL=... node scripts/qa/guideDoc.cjs shots        # with each _PASSWORD as well
+
+# the PDF, from the HTML (headless; stops if a picture is missing)
+node scripts/qa/guideDoc.cjs pdf ../pxi-docs/part7-staff-setup/guide/guide.html ../pxi-docs/part7-staff-setup/PXI-staff-guide.pdf
+```
+
+Pictures are taken at twice the screen size so they print sharp, with a ring round the control the
+text points at. On Accounts none is taken until the search shows one account. After changing the
+guide's text, only the `pdf` step is needed; read the PDF afterwards, because the contents table on
+page 1 carries page numbers by hand.
+
 ## `webLive.cjs` / `webLiveDown.cjs` — the earlier pass
 
 Kept because they cover the first HTML response directly and are proxy-based, so they still
