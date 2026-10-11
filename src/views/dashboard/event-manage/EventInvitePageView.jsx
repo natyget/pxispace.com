@@ -39,7 +39,7 @@ function resolveInviteRsvpState(userId, memberIds, inviteByUserId) {
 }
 
 function formatStoredInviteRole(inviteRole, lineupSubrole) {
-  if (inviteRole === 'LINEUP') return `Line-up · ${lineupSubrole?.trim() || 'Line up'}`;
+  if (inviteRole === 'LINEUP') return `Line-up: ${lineupSubrole?.trim() || 'Line up'}`;
   if (inviteRole === 'COHOST') return 'Co-host';
   if (inviteRole === 'BOUNCER') return 'Bouncer';
   return 'Member';
@@ -273,7 +273,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
   const roleLabel = (kind, sub) => {
     if (kind === 'cohost') return 'Co-host';
     if (kind === 'bouncer') return 'Bouncer';
-    if (kind === 'lineup') return `Line-up · ${sub || 'Line up'}`;
+    if (kind === 'lineup') return `Line-up: ${sub || 'Line up'}`;
     return 'Member';
   };
 
@@ -447,7 +447,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
 
       {isFinalized ? (
         <p className="rounded-2xl bg-pxi-field px-4 py-3 text-[11px] font-bold tracking-[0.02em] text-zinc-500">
-          Scrapbook — finalized · this event has ended, invites are closed
+          Scrapbook — finalized, this event has ended, invites are closed
         </p>
       ) : null}
 
@@ -659,7 +659,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                                 : 'bg-white/[0.08] text-zinc-200'
                           } disabled:opacity-50`}
                         >
-                          {busy ? '...' : `${tagLabel} · ${actionLabel}`}
+                          {busy ? '...' : `${tagLabel}, ${actionLabel}`}
                         </button>
                       </div>
                     );
@@ -705,7 +705,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
               >
                 {sending
                   ? <><HugeiconsIcon icon={Loading02Icon} size={16} className="animate-spin" /> Sending...</>
-                  : `Send Invite${selectedIds.size > 1 ? 's' : ''} · ${selectedIds.size}`
+                  : `Send Invite${selectedIds.size > 1 ? 's' : ''} (${selectedIds.size})`
                 }
               </button>
             </div>
@@ -771,7 +771,7 @@ export default function EventInvitePageView({ initialTab = 'send', showTabs = tr
                         <div className="min-w-0">
                           <p className="text-sm text-white font-medium truncate">
                             {handle ? `@${handle}` : inv.user?.id}
-                            {inv.user?.name && <span className="text-zinc-500 font-normal"> · {inv.user.name}</span>}
+                            {inv.user?.name && <span className="ml-1.5 text-zinc-500 font-normal">{inv.user.name}</span>}
                           </p>
                           <p className="mt-0.5 text-xs text-zinc-400">
                             {formatStoredInviteRole(inv.inviteRole, inv.lineupSubrole)}

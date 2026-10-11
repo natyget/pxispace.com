@@ -11,9 +11,9 @@ export const INVITE_FALLBACK_TIMEZONE = 'America/New_York';
 
 /** The venue's own name when there is one, else the first piece of "venue, street, city". '' when there is nothing to say. */
 export function formatInviteVenue(location, venueName) {
-  const venue = String(venueName ?? '').trim().split(/\n|,|•/)[0]?.trim() ?? '';
+  const venue = String(venueName ?? '').trim().split(/\n|,|\u2022/)[0]?.trim() ?? ''; // allow-dot: bullet in old strings
   if (venue) return venue;
-  return String(location ?? '').split(/\n|,|•/)[0]?.trim() ?? '';
+  return String(location ?? '').split(/\n|,|\u2022/)[0]?.trim() ?? ''; // allow-dot
 }
 
 /** { day: 'SAT, OCT 4', hours: '9 PM – 2 AM' } in the event's own time zone, or null without a usable start. */

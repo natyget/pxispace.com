@@ -1,33 +1,14 @@
 import { api } from './api';
 
-// Written out in full on purpose. Next inlines `process.env.NEXT_PUBLIC_*` by literal
-// text substitution, so reading through an intermediate `env` object — or through
-// `globalThis.process?.env?.X` — is never substituted and yields undefined in the browser.
-const SPOTIFY_CLIENT_ID = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || '';
-const SPOTIFY_REDIRECT_URI = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || '';
-
-function spotifyConnectPayload(platform = 'web') {
-  const payload = { platform };
-  if (SPOTIFY_CLIENT_ID) payload.clientId = SPOTIFY_CLIENT_ID;
-  if (SPOTIFY_REDIRECT_URI) payload.redirectUri = SPOTIFY_REDIRECT_URI;
-  return payload;
-}
-
 /**
- * Music taste / Spotify profile helpers (used for "match" sort on the events discover page).
+ * Music taste helpers (used for the "match" sort on the events discover page). Apple Music is the connect option
+ * (src/lib/appleMusicConnect.js); Spotify connect was retired on 2026-10-06 and its endpoints answer 410.
  */
 export const musicService = {
-  /** Start the Spotify connect flow — POST returns { authorizeUrl } to redirect the user to. */
-  startSpotifyConnect: () => api.post('/api/music/spotify/session', spotifyConnectPayload('web')),
-
   /** GET /api/music/profile — { connected, topGenres, ... } */
   getProfile: () => api.get('/api/music/profile'),
 
   disconnect: () => api.delete('/api/music/profile'),
-
-  // Apple Music connect (developer-token + connect) was removed from the
-  // product; those backend endpoints now return 410 Gone. Historical
-  // 'APPLE_MUSIC' profiles are still readable via getProfile()/disconnect().
 
   /** GET /api/music/events/:eventId/match (auth) — { connected, score, matchedArtists, sharedGenres } */
   getEventMatch: (eventId) => api.get(`/api/music/events/${eventId}/match`),

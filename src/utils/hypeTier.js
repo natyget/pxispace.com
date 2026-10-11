@@ -1,7 +1,7 @@
 /**
  * Hype SCORE tiers — MUST match PXIStudio-App/src/utils/hype-tier.ts
  *
- * Quiet 0–19 · Warm 20–49 · Buzzing 50–89 · Electric 90–149 · Wildfire 150+
+ * Quiet 0–19, Warm 20–49, Buzzing 50–89, Electric 90–149, Wildfire 150+
  *
  * Deliberately uncapped — unlike the old /100 hype index, a legendary event
  * can score far above a merely good one instead of both clamping near the

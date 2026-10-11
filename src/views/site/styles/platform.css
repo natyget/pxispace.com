@@ -5,19 +5,23 @@
 /* ─────────────────────────────────────────────────────────────
    PXI — Platform. The host's side of one night.
    Shares tokens, nav, buttons, the phone frame and the footer with
-   the landing (styles.css). Dashboard surfaces use the real web
-   dashboard's tokens: #08080b page, #0e0e13 cards, 20px radii,
-   Inter only on headings (-.01em), Cabin for everything else
-   (labels, numbers, chips, buttons, chart ticks).
+   the landing (styles.css). Dashboard surfaces are drawn in the web
+   dashboard's own look (src/components/dashboard, globals.css): page
+   #000, cards #1c1c1c, fields #2e2e2e, one purple #a523ef, no borders,
+   shadows or gradients; Inter 900 in caps for titles and Cabin for
+   everything else (heavy purple caps for labels, tabular figures).
    Desktop stages (.stage.d) are scaled to fit, so their source
-   sizes run ~1.2x the product tokens; mobile stages (.stage.m)
+   sizes run up to ~1.2x the product tokens; mobile stages (.stage.m)
    render 1:1 at the product tokens.
    ───────────────────────────────────────────────────────────── */
 div.pxr.platform {
-  --d-bg: #08080b;
-  --d-card: #0e0e13;
-  --d-line: rgba(255, 255, 255, .07);
-  --d-brand: #d84aff;
+  --d-bg: #000;
+  --d-card: #1c1c1c;
+  --d-field: #2e2e2e;
+  --d-field-hi: #3a3a3a;
+  --d-line: rgba(255, 255, 255, .08);
+  --d-brand: #a523ef;
+  --d-sec: #9a9a9a;
   --z2: #d4d4d8; --z3: #9f9fa9; --z4: #71717b; --z6: #52525c;
   --em3: #5ee9b5; --em4: #00d492; --am3: #ffd230; --am4: #ffb900; --rd3: #ffa2a2; --rd4: #ff6467;
   --f-ui: "Cabin", "Inter", system-ui, sans-serif;
@@ -71,96 +75,108 @@ div.pxr.platform {
 .pxr:where(.platform) .cc-stage { position: absolute; left: 50%; top: 50%; width: 1200px; height: 740px; transform-origin: 50% 50%; }
 .pxr:where(.platform) .mcc-box { display: none; }
 
-/* ───────── dashboard primitives (real web dashboard tokens) ───────── */
-.pxr:where(.platform) .dash { font-family: var(--f-ui); color: #f2f2f4; }
+/* ───────── dashboard primitives (the web dashboard's own tokens, flat) ───────── */
+.pxr:where(.platform) .dash { font-family: var(--f-ui); color: #fff; }
 .pxr:where(.platform) .dash * { box-sizing: border-box; }
 .pxr:where(.platform) .stage.d,
-.pxr:where(.platform) .cc { --t-eb: 14px; --t-h: 18px; --t-sub: 15px; --t-chip: 14px; --t-pill: 15px; --t-seg: 14px; --t-lab: 14px; --t-val: 26px; --t-body: 14px; --pad: 24px; }
+.pxr:where(.platform) .cc { --t-eb: 11px; --t-h: 19px; --t-sub: 14px; --t-chip: 12px; --t-pill: 13px; --t-seg: 13.5px; --t-lab: 12px; --t-val: 26px; --t-body: 14px; --pad: 24px; }
 .pxr:where(.platform) .stage.m,
-.pxr:where(.platform) .mcc { --t-eb: 11px; --t-h: 15px; --t-sub: 13px; --t-chip: 11px; --t-pill: 13px; --t-seg: 12.8px; --t-lab: 11px; --t-val: 22px; --t-body: 13px; --pad: 16px; }
-.pxr:where(.platform) .dcard { position: absolute; padding: var(--pad); border-radius: 20px; background: linear-gradient(180deg, rgba(255, 255, 255, .022), rgba(255, 255, 255, 0) 42%), var(--d-card); border: 1px solid var(--d-line); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045), 0 12px 32px rgba(0, 0, 0, .32); }
-.pxr:where(.platform) .d-eb { font: 500 var(--t-eb)/1.45 var(--f-ui); color: var(--z4); }
-.pxr:where(.platform) .d-h { margin-top: 4px; font: 600 var(--t-h)/1.42 var(--f-head); letter-spacing: -.01em; color: #fff; }
-.pxr:where(.platform) .d-sub { margin-top: 4px; font: 400 var(--t-sub)/1.45 var(--f-ui); color: var(--z3); }
+.pxr:where(.platform) .mcc { --t-eb: 11px; --t-h: 17px; --t-sub: 13px; --t-chip: 11px; --t-pill: 12px; --t-seg: 12.8px; --t-lab: 11px; --t-val: 22px; --t-body: 13px; --pad: 16px; }
+.pxr:where(.platform) .dcard { position: absolute; padding: var(--pad); border-radius: 20px; background: var(--d-card); }
+/* the label over a card title (SurfaceHeader): heavy purple caps. .q is the quiet one the analytics sections use. */
+.pxr:where(.platform) .d-eb { font: 800 var(--t-eb)/1.5 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--d-brand); }
+.pxr:where(.platform) .d-eb.q { font: 700 var(--t-lab)/1.4 var(--f-ui); letter-spacing: .02em; text-transform: none; color: rgba(255, 255, 255, .4); }
+.pxr:where(.platform) .d-h { margin-top: 4px; font: 900 var(--t-h)/1.35 var(--f-head); letter-spacing: -.01em; text-transform: uppercase; color: #fff; }
+.pxr:where(.platform) .d-sub { margin-top: 4px; font: 400 var(--t-sub)/1.5 var(--f-ui); color: var(--d-sec); }
 .pxr:where(.platform) .d-sub b { color: #fff; font-weight: 700; }
 .pxr:where(.platform) .d-headrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .pxr:where(.platform) .d-headrow > div { min-width: 0; }
-.pxr:where(.platform) .d-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; white-space: nowrap; font: 500 var(--t-chip)/1.4 var(--f-ui); letter-spacing: .02em; background: rgba(255, 255, 255, .05); color: var(--z3); }
-.pxr:where(.platform) .d-chip.ok { background: rgba(0, 188, 125, .10); color: var(--em3); }
-.pxr:where(.platform) .d-chip.warn { background: rgba(254, 154, 0, .10); color: var(--am3); }
+/* chips: rounded-full px-2.5 py-1, 11px medium (the product's own status and count chips) */
+.pxr:where(.platform) .d-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; white-space: nowrap; font: 500 var(--t-chip)/1.5 var(--f-ui); letter-spacing: .02em; background: rgba(255, 255, 255, .07); color: var(--z2); }
+.pxr:where(.platform) .d-chip.ok { background: rgba(0, 212, 146, .10); color: var(--em3); }
+.pxr:where(.platform) .d-chip.warn { background: rgba(254, 154, 0, .10); color: #fee685; }
 .pxr:where(.platform) .d-chip.bad { background: rgba(251, 44, 54, .10); color: var(--rd3); }
-.pxr:where(.platform) .d-chip.info { background: rgba(0, 166, 244, .10); color: #74d4ff; }
 .pxr:where(.platform) .d-chip.change { background: rgba(255, 255, 255, .07); color: var(--z2); }
-.pxr:where(.platform) .d-chip.brand { padding: 5px 13px; font-weight: 600; letter-spacing: 0; background: rgba(216, 74, 255, .10); color: #e9a1ff; }
+.pxr:where(.platform) .d-chip.brand { padding: 5px 13px; font-weight: 600; letter-spacing: 0; background: rgba(165, 35, 239, .10); color: #fff; }
 .pxr:where(.platform) .d-chip svg { flex: none; }
-.pxr:where(.platform) .d-pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: 999px; white-space: nowrap; font: 700 var(--t-pill)/20px var(--f-ui); letter-spacing: .01em; transition: background .2s, color .2s, box-shadow .2s; }
-.pxr:where(.platform) .d-pill.sm { padding: 7px 15px; font-size: calc(var(--t-pill) - 1px); line-height: 16px; letter-spacing: .02em; }
-.pxr:where(.platform) .d-pill.solid { background: #fff; color: #08080b; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .24), 0 8px 24px rgba(255, 255, 255, .07); }
-.pxr:where(.platform) .d-pill.ghost { background: rgba(255, 255, 255, .065); color: rgba(255, 255, 255, .88); }
-.pxr:where(.platform) .d-pill.pressed { box-shadow: 0 0 0 4px rgba(255, 255, 255, .16); }
-.pxr:where(.platform) .seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, .045); }
+/* buttons: pill-solid and pill-ghost, heavy caps (globals.css) */
+.pxr:where(.platform) .d-pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: 999px; white-space: nowrap; font: 900 var(--t-pill)/18px var(--f-ui); letter-spacing: .08em; text-transform: uppercase; color: #fff; transition: background .2s, color .2s; }
+.pxr:where(.platform) .d-pill.sm { min-height: 0; padding: 8px 16px; font-size: calc(var(--t-pill) - 1px); line-height: 16px; }
+.pxr:where(.platform) .d-pill.solid { background: var(--d-brand); }
+.pxr:where(.platform) .d-pill.ghost { background: var(--d-field); font-weight: 700; letter-spacing: .02em; text-transform: none; }
+.pxr:where(.platform) .cc-head .d-pill.ghost { font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.pxr:where(.platform) .d-pill.solid.pressed { background: #b43df5; }
+.pxr:where(.platform) .d-pill.ghost.pressed { background: var(--d-field-hi); }
+/* dashboard-segmented-toggle: a #2e2e2e capsule, the chosen item in purple */
+.pxr:where(.platform) .d-btn { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 999px; background: rgba(255, 255, 255, .07); font: 500 var(--t-chip)/1.4 var(--f-ui); color: var(--z2); white-space: nowrap; }
+.pxr:where(.platform) .seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--d-field); }
 .pxr:where(.platform) .seg span { display: inline-flex; align-items: center; min-height: 34px; padding: 0 15px; border-radius: 999px; font: 600 var(--t-seg)/1 var(--f-ui); letter-spacing: .01em; color: rgba(255, 255, 255, .55); white-space: nowrap; transition: background .25s, color .25s; }
-.pxr:where(.platform) .seg span.on { background: #fff; color: #050506; }
-.pxr:where(.platform) .d-strip { display: grid; gap: 1px; background: rgba(255, 255, 255, .06); border-radius: 16px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, .07); }
+.pxr:where(.platform) .seg span.on { background: var(--d-brand); color: #fff; }
+/* stat strips: cells on the card's own #1c1c1c with 1px #2e2e2e rules between (MarketingPanel, Audience, Hype) */
+.pxr:where(.platform) .d-strip { display: grid; gap: 1px; background: var(--d-field); border-radius: 16px; overflow: hidden; }
 .pxr:where(.platform) .d-strip.s4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .pxr:where(.platform) .d-strip.s3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .pxr:where(.platform) .d-strip.s2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.pxr:where(.platform) .d-strip > div { background: var(--d-card); padding: 14px 16px; min-width: 0; }
+.pxr:where(.platform) .d-strip > div { background: var(--d-card); padding: 12px 16px; min-width: 0; }
 .pxr:where(.platform) .d-strip small { display: block; font: 500 var(--t-lab)/1.45 var(--f-ui); color: var(--z4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pxr:where(.platform) .d-strip b { display: block; margin-top: 6px; font: 600 var(--t-val)/1 var(--f-ui); letter-spacing: -.025em; color: #fff; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pxr:where(.platform) .d-strip b { display: block; margin-top: 4px; font: 600 var(--t-val)/1.1 var(--f-ui); letter-spacing: -.02em; color: #fff; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pxr:where(.platform) .dot { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--z4); }
-.pxr:where(.platform) .dot.good { background: var(--em3); } .pxr:where(.platform) .dot.warn { background: var(--am3); } .pxr:where(.platform) .dot.bad { background: var(--rd4); } .pxr:where(.platform) .dot.live { background: var(--em4); } .pxr:where(.platform) .dot.up { background: var(--am4); }
+.pxr:where(.platform) .dot.good { background: var(--em3); } .pxr:where(.platform) .dot.warn { background: var(--am3); } .pxr:where(.platform) .dot.bad { background: var(--rd4); } .pxr:where(.platform) .dot.live { background: #ff5a1f; } .pxr:where(.platform) .dot.up { background: var(--d-brand); }
 .pxr:where(.platform) .hg { display: inline-block; flex: none; }
 .pxr:where(.platform) svg.chart { display: block; overflow: visible; }
 .pxr:where(.platform) svg.chart text { font-family: var(--f-ui); font-weight: 400; fill: rgba(255, 255, 255, .46); }
-.pxr:where(.platform) .mtile { border-radius: 16px; background: rgba(255, 255, 255, .035); padding: 14px 16px; }
-.pxr:where(.platform) .mtile small { display: block; font: 700 var(--t-lab)/1.45 var(--f-ui); letter-spacing: .02em; color: rgba(255, 255, 255, .4); white-space: nowrap; }
-.pxr:where(.platform) .mtile b { display: block; margin-top: 6px; font: 700 var(--t-val)/1 var(--f-ui); color: #fff; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pxr:where(.platform) .mtile { border-radius: 16px; background: var(--d-card); padding: 12px 16px; }
+.pxr:where(.platform) .mtile small { display: block; font: 500 var(--t-lab)/1.45 var(--f-ui); color: var(--z4); white-space: nowrap; }
+.pxr:where(.platform) .mtile b { display: block; margin-top: 4px; font: 600 var(--t-val)/1.1 var(--f-ui); letter-spacing: -.02em; color: #fff; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
-/* ───────── command center (desktop hero) ───────── */
-.pxr:where(.platform) .cc { position: absolute; inset: 0; display: grid; grid-template-columns: 240px minmax(0, 1fr); background: radial-gradient(900px 420px at 12% -6%, rgba(216, 74, 255, .05), transparent 62%), radial-gradient(720px 380px at 96% 4%, rgba(99, 102, 241, .035), transparent 60%), var(--d-bg); border-radius: 22px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, .09), 0 60px 140px -30px rgba(0, 0, 0, .95), 0 0 140px rgba(216, 74, 255, .12); }
-.pxr:where(.platform) .cc-side { display: flex; flex-direction: column; background: #0b0b0f; border-right: 1px solid rgba(255, 255, 255, .06); }
+/* ───────── command center (desktop hero): DashboardLayout + DashboardHome ───────── */
+.pxr:where(.platform) .cc { position: absolute; inset: 0; display: grid; grid-template-columns: 240px minmax(0, 1fr); background: var(--d-bg); border-radius: 24px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, .1), 0 60px 140px -30px rgba(0, 0, 0, .95); }
+.pxr:where(.platform) .cc-side { display: flex; flex-direction: column; background: var(--d-card); }
 .pxr:where(.platform) .cc-logo { display: flex; align-items: center; justify-content: space-between; padding: 16px; }
 .pxr:where(.platform) .cc-logo img { width: 44px; height: 44px; object-fit: contain; }
-.pxr:where(.platform) .cc-logo span { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .04); color: rgba(255, 255, 255, .7); }
+.pxr:where(.platform) .cc-logo span { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--d-field); color: rgba(255, 255, 255, .7); }
 .pxr:where(.platform) .cc-nav { display: flex; flex-direction: column; gap: 4px; padding: 0 16px; }
-.pxr:where(.platform) .cc-sec { padding: 14px 16px 4px; font: 500 14px/1.4 var(--f-ui); letter-spacing: .02em; color: rgba(255, 255, 255, .3); }
+.pxr:where(.platform) .cc-sec { padding: 12px 16px 2px; font: 800 11px/1.5 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--d-brand); }
 .pxr:where(.platform) .cc-sec:first-child { padding-top: 2px; }
-.pxr:where(.platform) .cc-item { position: relative; display: flex; align-items: center; gap: 10px; padding: 9px 16px; border-radius: 12px; font: 600 14px/1.5 var(--f-ui); letter-spacing: .025em; color: rgba(255, 255, 255, .5); white-space: nowrap; }
-.pxr:where(.platform) .cc-item svg { opacity: .45; color: #fff; }
-.pxr:where(.platform) .cc-item.on { background: rgba(255, 255, 255, .055); color: #fff; }
-.pxr:where(.platform) .cc-item.on svg { opacity: .9; }
-.pxr:where(.platform) .cc-item.on::before { content: ''; position: absolute; left: 0; top: 50%; width: 3px; height: 16px; margin-top: -8px; border-radius: 3px; background: var(--d-brand); }
-.pxr:where(.platform) .cc-item.cc-ops { color: rgba(94, 233, 181, .7); }
-.pxr:where(.platform) .cc-item.cc-ops svg { color: var(--em3); opacity: .7; }
-.pxr:where(.platform) .cc-acct { margin: auto 16px 16px; display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 16px; background: rgba(255, 255, 255, .045); }
+.pxr:where(.platform) .cc-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; border-radius: 999px; font: 700 13.5px/1.5 var(--f-ui); letter-spacing: .025em; color: var(--d-sec); white-space: nowrap; }
+.pxr:where(.platform) .cc-item svg { color: #fff; opacity: .5; }
+.pxr:where(.platform) .cc-item.on { background: var(--d-brand); color: #fff; }
+.pxr:where(.platform) .cc-item.on svg { opacity: 1; }
+.pxr:where(.platform) .cc-item.cc-ops { color: rgba(255, 90, 31, .8); }
+.pxr:where(.platform) .cc-item.cc-ops svg { color: #ff5a1f; opacity: .8; }
+.pxr:where(.platform) .cc-acct { margin: auto 16px 16px; display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 16px; background: var(--d-field); }
 .pxr:where(.platform) .cc-acct img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
 .pxr:where(.platform) .cc-acct div { flex: 1; min-width: 0; }
 .pxr:where(.platform) .cc-acct b { display: block; font: 600 14px/1.3 var(--f-ui); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pxr:where(.platform) .cc-acct small { display: block; font: 400 14px/1.3 var(--f-ui); color: rgba(255, 255, 255, .5); }
+.pxr:where(.platform) .cc-acct small { display: block; font: 400 12px/1.3 var(--f-ui); color: rgba(255, 255, 255, .45); }
 .pxr:where(.platform) .cc-acct > svg { color: #fff; opacity: .45; }
-.pxr:where(.platform) .cc-main { display: flex; flex-direction: column; gap: 24px; padding: 32px; min-width: 0; }
+.pxr:where(.platform) .cc-main { display: flex; flex-direction: column; gap: 22px; padding: 28px 32px 32px; min-width: 0; }
 .pxr:where(.platform) .cc-head { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; align-items: end; }
-.pxr:where(.platform) .cc-head .eb { font: 500 14px/1.5 var(--f-ui); color: var(--z4); }
-.pxr:where(.platform) .cc-head h3 { margin-top: 6px; font: 600 30px/1.3 var(--f-head); letter-spacing: -.01em; color: #fff; }
-.pxr:where(.platform) .cc-head .desc { margin-top: 6px; font: 400 15px/1.6 var(--f-ui); color: var(--z4); }
-.pxr:where(.platform) .cc-head .acts { display: flex; gap: 10px; margin-top: 16px; }
+.pxr:where(.platform) .cc-head .eb { font: 800 11px/1.5 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--d-brand); }
+.pxr:where(.platform) .cc-head h3 { margin-top: 4px; font: 900 32px/1.25 var(--f-head); letter-spacing: -.01em; text-transform: uppercase; color: #fff; }
+.pxr:where(.platform) .cc-head .desc { margin-top: 4px; font: 400 14.5px/1.6 var(--f-ui); color: var(--d-sec); }
+.pxr:where(.platform) .cc-head .acts { display: flex; gap: 10px; margin-top: 14px; }
+.pxr:where(.platform) .cc-head .d-strip { border-radius: 24px; background: var(--d-line); }
 .pxr:where(.platform) .cc-head .d-strip > div { padding: 14px 18px; }
+.pxr:where(.platform) .cc-head .d-strip small { font: 800 11px/1.5 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--d-brand); }
+.pxr:where(.platform) .cc-head .d-strip b { margin-top: 6px; font: 900 25px/1 var(--f-ui); letter-spacing: -.025em; }
 .pxr:where(.platform) .cc-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-.pxr:where(.platform) .cc .dcard { position: relative; }
-.pxr:where(.platform) .cc-chart .chart { margin-top: 16px; }
-.pxr:where(.platform) .cc-next .d-headrow .va { padding-top: 4px; font: 700 14px/1 var(--f-ui); letter-spacing: .025em; color: rgba(255, 255, 255, .55); }
-.pxr:where(.platform) .nx-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-.pxr:where(.platform) .nx { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 16px; background: rgba(255, 255, 255, .035); }
+.pxr:where(.platform) .cc .dcard { position: relative; border-radius: 24px; }
+.pxr:where(.platform) .cc-chart .chart { margin-top: 10px; }
+.pxr:where(.platform) .cc-next .d-headrow .va { padding-top: 3px; font: 700 12.5px/1 var(--f-ui); letter-spacing: .025em; color: rgba(255, 255, 255, .55); }
+.pxr:where(.platform) .nx-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.pxr:where(.platform) .nx { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 20px; background: var(--d-field); }
 .pxr:where(.platform) .nx > div { flex: 1; min-width: 0; }
-.pxr:where(.platform) .nx b { display: block; font: 700 15px/1.35 var(--f-head); letter-spacing: -.01em; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pxr:where(.platform) .nx small { display: block; font: 600 14px/1.4 var(--f-ui); letter-spacing: .02em; color: rgba(255, 255, 255, .4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pxr:where(.platform) .cc-band .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
-.pxr:where(.platform) .cc-band .cc-tile { padding: 16px; border-radius: 20px; background: rgba(255, 255, 255, .035); }
-.pxr:where(.platform) .cc-band .cc-tile .stat { margin: 0; font: 600 14px/1.3 var(--f-ui); color: #e08bff; }
-.pxr:where(.platform) .cc-band .stat b { font: 700 24px/1 var(--f-ui); color: #fff; margin-right: 6px; }
-.pxr:where(.platform) .cc-band h5 { margin-top: 10px; font: 700 15px/1.35 var(--f-ui); color: #fff; }
-.pxr:where(.platform) .cc-band .cc-tile p { margin-top: 4px; font: 400 14px/1.45 var(--f-ui); color: var(--z4); }
+.pxr:where(.platform) .nx b { display: block; font: 900 15px/1.35 var(--f-head); letter-spacing: -.01em; text-transform: uppercase; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pxr:where(.platform) .nx small { display: block; font: 600 12.5px/1.4 var(--f-ui); letter-spacing: .02em; color: rgba(255, 255, 255, .35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pxr:where(.platform) .cc-band .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.pxr:where(.platform) .cc-band .cc-tile { padding: 14px; border-radius: 24px; background: var(--d-field); }
+.pxr:where(.platform) .cc-tile .ico { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--d-field-hi); color: #fff; }
+.pxr:where(.platform) .cc-tile .ico svg { opacity: .6; }
+.pxr:where(.platform) .cc-band h5 { margin-top: 10px; font: 700 14px/1.35 var(--f-ui); color: #fff; }
+.pxr:where(.platform) .cc-band .cc-tile .stat { margin: 4px 0 0; font: 700 13px/1.3 var(--f-ui); font-variant-numeric: tabular-nums; color: #fff; }
+.pxr:where(.platform) .cc-band .stat b { margin-right: 4px; font: inherit; }
+.pxr:where(.platform) .cc-band .cc-tile p:not(.stat) { margin-top: 4px; font: 400 12px/1.5 var(--f-ui); color: var(--d-sec); }
 
 /* ───────── in-app sheets (mobile host tools) ───────── */
 /* Create Event (CreateEventSheet.tsx): the app's flat sheet. #1C1C1C sheet, #2E2E2E fields, heavy purple caps, one purple (#A523EF),
@@ -339,34 +355,37 @@ div.pxr.platform {
 .pxr:where(.platform) .scr { transition: none; }
 
 /* ───────── shared scene surfaces ───────── */
-/* sell */
-.pxr:where(.platform) .sell-value { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; }
-.pxr:where(.platform) .sell-value b { font: 700 var(--t-big, 34px)/1.15 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
+/* sell: the analytics page. Ticket sales is a TimeSeriesChartShell (16px radius, a grey cumulative run beneath it);
+   insights and marketing are #2e2e2e panels (InsightsPanel, MarketingPanel). */
+.pxr:where(.platform) .sell-card { border-radius: 16px; }
+.pxr:where(.platform) .sell-value { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
+.pxr:where(.platform) .sell-value b { font: 700 var(--t-big, 30px)/1.15 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
 .pxr:where(.platform) .sell-value > span:not(.d-chip) { font: 700 var(--t-body)/1 var(--f-ui); color: var(--z3); }
-.pxr:where(.platform) .sell-cum { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; background: rgba(0, 0, 0, .18); font: 500 var(--t-lab)/1 var(--f-ui); letter-spacing: .02em; color: rgba(255, 255, 255, .4); white-space: nowrap; }
-.pxr:where(.platform) .cum-bar { position: relative; flex: 1; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, .08); overflow: hidden; }
-.pxr:where(.platform) .cum-bar i { position: absolute; inset: 0; border-radius: 999px; background: #8b8d98; transform-origin: 0 50%; transform: scaleX(0); }
-.pxr:where(.platform) .sell-cum .cum-n { color: var(--z2); font-weight: 700; font-variant-numeric: tabular-nums; }
-.pxr:where(.platform) .insight { display: flex; gap: 10px; padding: 16px; border-radius: 16px; background: rgba(255, 255, 255, .035); opacity: 0; }
-.pxr:where(.platform) .insight .dot { width: 8px; height: 8px; margin-top: 7px; }
-.pxr:where(.platform) .insight b { display: block; font: 700 var(--t-ins, 16px)/1.35 var(--f-head); letter-spacing: -.01em; color: #fff; }
-.pxr:where(.platform) .insight p { margin-top: 6px; font: 400 var(--t-body)/1.45 var(--f-ui); color: var(--z3); }
+.pxr:where(.platform) .sell-cum { position: relative; padding: 8px 10px 6px; border-radius: 16px; background: rgba(0, 0, 0, .15); }
+.pxr:where(.platform) .sell-cum .cum-l { display: block; font: 500 var(--t-lab)/1.4 var(--f-ui); letter-spacing: .02em; color: rgba(255, 255, 255, .35); }
+.pxr:where(.platform) .sell-cum .cum-n { position: absolute; right: 12px; top: 8px; font: 700 var(--t-lab)/1.4 var(--f-ui); color: var(--z2); font-variant-numeric: tabular-nums; }
+.pxr:where(.platform) .sell-cum svg { margin-top: 2px; }
+.pxr:where(.platform) .insight { display: flex; gap: 10px; padding: 12px 0; opacity: 0; }
+.pxr:where(.platform) .insight .dot { width: 8px; height: 8px; margin-top: 6px; }
+.pxr:where(.platform) .insight b { display: block; font: 900 var(--t-ins, 14px)/1.35 var(--f-head); letter-spacing: -.01em; text-transform: uppercase; color: #fff; }
+.pxr:where(.platform) .insight p { margin-top: 6px; font: 400 var(--t-lab)/1.55 var(--f-ui); color: var(--z3); }
 .pxr:where(.platform) .ins-cta { display: inline-flex; margin-top: 10px; padding: 5px 13px; border-radius: 999px; background: rgba(255, 255, 255, .07); font: 500 var(--t-chip)/1.4 var(--f-ui); letter-spacing: .02em; color: #e4e4e7; }
-.pxr:where(.platform) .soldout { position: absolute; z-index: 6; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 22px 11px; border: 4px solid var(--orange); border-radius: 16px; outline: 1.5px solid rgba(255, 90, 31, .6); outline-offset: 4px; opacity: 0; background: rgba(20, 8, 4, .82); box-shadow: 0 0 36px rgba(255, 90, 31, .3); pointer-events: none; }
-.pxr:where(.platform) .soldout span { font: 700 52px/.9 var(--f-display); letter-spacing: -.02em; text-transform: uppercase; color: var(--orange); text-shadow: 0 0 22px rgba(255, 90, 31, .55); white-space: nowrap; }
-.pxr:where(.platform) .soldout small { font: 800 13px/1 var(--f-body); letter-spacing: .2em; text-transform: uppercase; color: #ffb08f; white-space: nowrap; }
-/* doors */
+/* the stamp is a printed object, so it stays; flat ink on the card, no glow */
+.pxr:where(.platform) .soldout { position: absolute; z-index: 6; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 22px 11px; border: 4px solid var(--orange); border-radius: 16px; outline: 1.5px solid rgba(255, 90, 31, .6); outline-offset: 4px; opacity: 0; background: var(--d-card); pointer-events: none; }
+.pxr:where(.platform) .soldout span { font: 700 52px/.9 var(--f-display); letter-spacing: -.02em; text-transform: uppercase; color: var(--orange); white-space: nowrap; }
+.pxr:where(.platform) .soldout small { font: 800 13px/1 var(--f-body); letter-spacing: .2em; text-transform: uppercase; color: #ff9a70; white-space: nowrap; }
+/* doors: LiveScanDashboard. #2e2e2e tiles and boxes on the #1c1c1c card; emerald for capacity and flow, red for a flag. */
 .pxr:where(.platform) .ops-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.pxr:where(.platform) .ops-tiles > div { padding: 14px 16px; border-radius: 16px; background: rgba(255, 255, 255, .045); transition: background .3s, box-shadow .3s; }
+.pxr:where(.platform) .ops-tiles > div { padding: 12px 16px; border-radius: 16px; background: var(--d-field); transition: background .3s; }
 .pxr:where(.platform) .ops-tiles small { display: block; font: 500 var(--t-lab)/1.4 var(--f-ui); letter-spacing: .02em; color: var(--z4); }
-.pxr:where(.platform) .ops-tiles b { display: block; margin-top: 6px; font: 700 var(--t-val)/1.2 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
-.pxr:where(.platform) .ops-tiles .t-flags.hit { background: rgba(251, 44, 54, .10); box-shadow: inset 0 0 0 1px rgba(255, 100, 103, .35); }
+.pxr:where(.platform) .ops-tiles b { display: block; margin-top: 4px; font: 700 var(--t-val)/1.2 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
+.pxr:where(.platform) .ops-tiles .t-flags.hit { background: rgba(251, 44, 54, .10); }
 .pxr:where(.platform) .ops-tiles .t-flags.hit b { color: var(--rd3); }
-.pxr:where(.platform) .ops-box { padding: 20px; border-radius: 20px; background: rgba(255, 255, 255, .035); }
+.pxr:where(.platform) .ops-box { padding: 20px; border-radius: 20px; background: var(--d-field); }
 .pxr:where(.platform) .ops-box .t { font: 700 var(--t-lab)/1.3 var(--f-ui); letter-spacing: .02em; color: var(--z4); }
 .pxr:where(.platform) .cap-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 12px; }
 .pxr:where(.platform) .cap-n,
-.pxr:where(.platform) .vel-n { font: 700 var(--t-big, 34px)/1.1 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
+.pxr:where(.platform) .vel-n { font: 700 var(--t-big, 30px)/1.1 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
 .pxr:where(.platform) .cap-n small,
 .pxr:where(.platform) .vel-n small { font: 500 calc(var(--t-body) + 2px)/1 var(--f-ui); color: var(--z4); margin-left: 4px; }
 .pxr:where(.platform) .cap-pct { font: 700 var(--t-body)/1 var(--f-ui); color: var(--z3); white-space: nowrap; }
@@ -377,16 +396,26 @@ div.pxr.platform {
 .pxr:where(.platform) .vel-n { margin-top: 12px; }
 .pxr:where(.platform) .vel-bars { display: flex; align-items: flex-end; gap: 2px; height: 56px; margin-top: 14px; }
 .pxr:where(.platform) .vel-bars i { flex: 1; border-radius: 2px 2px 0 0; background: rgba(94, 233, 181, .7); height: 2px; }
-.pxr:where(.platform) .gate { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 20px; background: rgba(255, 255, 255, .035); }
+.pxr:where(.platform) .gate { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 20px; background: var(--d-field); }
 .pxr:where(.platform) .gate .gdot { width: 12px; height: 12px; border-radius: 50%; background: var(--em3); flex: none; transition: background .3s; }
 .pxr:where(.platform) .gate.warn .gdot { background: var(--am3); }
 .pxr:where(.platform) .gate div { flex: 1; min-width: 0; }
-.pxr:where(.platform) .gate b { display: block; font: 700 calc(var(--t-h) - 1px)/1.3 var(--f-head); letter-spacing: -.01em; color: #fff; }
+.pxr:where(.platform) .gate b { display: block; font: 900 calc(var(--t-h) - 2px)/1.3 var(--f-head); letter-spacing: -.01em; text-transform: uppercase; color: #fff; }
 .pxr:where(.platform) .gate small { display: block; margin-top: 2px; font: 700 var(--t-lab)/1.3 var(--f-ui); letter-spacing: .02em; color: var(--z4); white-space: nowrap; }
 .pxr:where(.platform) .gate.warn small { color: var(--am3); }
 .pxr:where(.platform) .gate .n { font: 700 var(--t-val)/1 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
-/* room */
-.pxr:where(.platform) .heat-map { position: relative; border-radius: 20px; background: #0b0b0f; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07); }
+/* room: VenueHeatMap (the plan under purple heat, the scrubber and its ribbon) and the Hype panel */
+.pxr:where(.platform) .hype .d-h,
+.pxr:where(.platform) .funnel .d-h,
+.pxr:where(.platform) .album .d-h,
+.pxr:where(.platform) .send .d-h { font-size: calc(var(--t-h) - 2px); }
+/* the card's own title is the SectionCard caps; the plan's name sits under it in bold */
+.pxr:where(.platform) .heat .d-eb { font: 900 calc(var(--t-h) - 2px)/1.35 var(--f-head); letter-spacing: -.01em; color: #fff; }
+.pxr:where(.platform) .heat .d-h { margin-top: 10px; font: 700 var(--t-body)/1.4 var(--f-ui); letter-spacing: 0; text-transform: none; }
+.pxr:where(.platform) .heat-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.pxr:where(.platform) .heat-row .pn { font: 700 var(--t-body)/1.4 var(--f-ui); color: #fff; }
+.pxr:where(.platform) .heat-row .d-btn { margin-left: auto; }
+.pxr:where(.platform) .heat-map { position: relative; border-radius: 20px; background: #0b0b0b; overflow: hidden; }
 .pxr:where(.platform) .heat-map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .pxr:where(.platform) .plan path,
 .pxr:where(.platform) .plan rect,
@@ -394,92 +423,99 @@ div.pxr.platform {
 .pxr:where(.platform) .plan .wall { stroke: rgba(255, 255, 255, .32); stroke-width: 2.5; }
 .pxr:where(.platform) .plan .dash { stroke-dasharray: 5 5; stroke: rgba(255, 255, 255, .2); }
 .pxr:where(.platform) .plan text { font-family: var(--f-ui); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; fill: rgba(255, 255, 255, .5); }
-.pxr:where(.platform) .rings circle { fill: none; stroke: rgba(216, 74, 255, .45); stroke-width: 1.5; stroke-dasharray: 6 5; }
-.pxr:where(.platform) .pin rect { fill: rgba(0, 0, 0, .75); stroke: rgba(255, 255, 255, .2); stroke-width: 1; transition: fill .3s; }
+.pxr:where(.platform) .rings circle { fill: none; stroke: rgba(165, 35, 239, .35); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.pxr:where(.platform) .pin rect { fill: rgba(0, 0, 0, .7); transition: fill .3s; }
 .pxr:where(.platform) .pin text { font-family: var(--f-ui); font-weight: 700; fill: #fff; text-anchor: middle; }
-.pxr:where(.platform) .pin.act rect { fill: var(--em4); stroke: none; }
+.pxr:where(.platform) .pin.act rect { fill: var(--em4); }
 .pxr:where(.platform) .pin.act text { fill: #000; }
 .pxr:where(.platform) .pin circle { fill: var(--em4); }
-.pxr:where(.platform) .heat-time { position: absolute; right: 12px; top: 12px; padding: 6px 12px; border-radius: 999px; background: rgba(0, 0, 0, .72); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); font: 700 var(--t-chip)/1.3 var(--f-ui); color: var(--z2); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.pxr:where(.platform) .heat-peak { position: absolute; left: 0; top: 0; padding: 5px 12px; border-radius: 999px; background: rgba(0, 0, 0, .78); box-shadow: inset 0 0 0 1px rgba(216, 74, 255, .55); font: 700 var(--t-chip)/1.3 var(--f-ui); color: #f0c2ff; white-space: nowrap; opacity: 0; }
+.pxr:where(.platform) .heat-time { position: absolute; right: 12px; top: 12px; padding: 6px 12px; border-radius: 999px; background: var(--d-field); font: 700 var(--t-chip)/1.3 var(--f-ui); color: var(--z2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pxr:where(.platform) .heat-peak { position: absolute; left: 0; top: 0; padding: 5px 12px; border-radius: 999px; background: var(--d-field); font: 700 var(--t-chip)/1.3 var(--f-ui); color: #fff; white-space: nowrap; opacity: 0; }
 .pxr:where(.platform) .hype-score .lab { font: 700 var(--t-lab)/1.4 var(--f-ui); letter-spacing: .02em; color: rgba(255, 255, 255, .4); }
 .pxr:where(.platform) .hype-score .v { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
 .pxr:where(.platform) .hype-score .v b { font: 700 var(--t-hype, 44px)/1 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
-.pxr:where(.platform) .tier { display: inline-flex; align-items: center; padding: 4px 11px; border-radius: 999px; font: 600 var(--t-chip)/1.4 var(--f-ui); letter-spacing: .02em; white-space: nowrap; transition: background .3s, color .3s; }
-.pxr:where(.platform) .tier[data-t="Quiet"] { background: rgba(255, 255, 255, .06); color: var(--z3); }
-.pxr:where(.platform) .tier[data-t="Warm"] { background: rgba(254, 154, 0, .10); color: var(--am3); }
-.pxr:where(.platform) .tier[data-t="Buzzing"] { background: rgba(255, 90, 31, .12); color: #ff9a70; }
-.pxr:where(.platform) .tier[data-t="Electric"] { background: rgba(216, 74, 255, .14); color: #e9a1ff; }
-.pxr:where(.platform) .tier[data-t="Wildfire"] { background: rgba(251, 44, 54, .12); color: var(--rd3); }
+.pxr:where(.platform) .tier { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, .07); color: #fff; font: 600 var(--t-chip)/1.5 var(--f-ui); letter-spacing: .02em; white-space: nowrap; }
+.pxr:where(.platform) .hype-strip { margin-top: 12px; border-radius: 16px; }
+.pxr:where(.platform) .hype-strip > div { padding: 10px 14px; }
+.pxr:where(.platform) .hype-strip small { display: flex; align-items: center; gap: 6px; }
+.pxr:where(.platform) .hype-strip > div:nth-child(n+2) small::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--d-brand); }
+.pxr:where(.platform) .hype-strip > div:nth-child(3) small::before { background: #ff5a1f; }
+.pxr:where(.platform) .hype-strip > div:nth-child(4) small::before { background: #0d9488; }
+.pxr:where(.platform) .hype-strip b { margin-top: 2px; font: 600 calc(var(--t-body) + 4px)/1.3 var(--f-ui); letter-spacing: 0; }
+.pxr:where(.platform) .hype-strip .tier { margin-left: 10px; padding: 0; background: none; font: 600 calc(var(--t-body) + 4px)/1.3 var(--f-ui); letter-spacing: 0; }
 .pxr:where(.platform) .hype-mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.pxr:where(.platform) .hype-mini small { display: block; font: 500 var(--t-lab)/1.4 var(--f-ui); color: var(--z4); }
+.pxr:where(.platform) .hype-mini small { display: flex; align-items: center; gap: 5px; font: 500 var(--t-lab)/1.4 var(--f-ui); color: var(--z4); }
+/* the chart's legend: each count wears its series colour (messages purple, reactions orange, captures teal) */
+.pxr:where(.platform) .hype-mini small::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--d-brand); }
+.pxr:where(.platform) .hype-mini > div:nth-child(2) small::before { background: #ff5a1f; }
+.pxr:where(.platform) .hype-mini > div:nth-child(3) small::before { background: #0d9488; }
 .pxr:where(.platform) .hype-mini b { display: block; margin-top: 2px; font: 600 calc(var(--t-body) + 3px)/1.3 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
 .pxr:where(.platform) .hist { position: relative; display: flex; align-items: flex-end; gap: 1px; height: 36px; flex: 1; }
 .pxr:where(.platform) .hist i { flex: 1; border-radius: 2px 2px 0 0; background: rgba(255, 255, 255, .06); }
-.pxr:where(.platform) .hist i.on { background: rgba(216, 74, 255, .35); }
+.pxr:where(.platform) .hist i.on { background: rgba(165, 35, 239, .35); }
 .pxr:where(.platform) .hist i.cur { background: var(--d-brand); }
-/* recap */
-.pxr:where(.platform) .tile16 { position: absolute; left: 0; top: 0; border-radius: 16px; overflow: hidden; background: rgba(255, 255, 255, .035); will-change: transform; }
+/* recap: the album (Top moments) and the Marketing kit dialog (Modal: #1c1c1c, 28px radius, white caps title) */
+.pxr:where(.platform) .tile16 { position: absolute; left: 0; top: 0; border-radius: 16px; overflow: hidden; background: var(--d-field); will-change: transform; }
 .pxr:where(.platform) .tile16 img { width: 100%; height: 100%; object-fit: cover; }
 .pxr:where(.platform) .tile16 .rx { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 5px; padding: 26px 10px 9px; background: linear-gradient(transparent, rgba(0, 0, 0, .85)); font: 700 var(--t-chip)/1 var(--f-ui); color: #fff; }
-.pxr:where(.platform) .tile16 .rx svg { color: #ff8ad8; }
+.pxr:where(.platform) .tile16 .rx svg { color: #fff; }
 .pxr:where(.platform) .tile16 .rk { position: absolute; right: 8px; top: 8px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--d-brand); font: 700 var(--t-chip)/1 var(--f-ui); color: #fff; opacity: 0; }
 .pxr:where(.platform) .tile16 .ring { position: absolute; inset: 0; border-radius: 16px; box-shadow: inset 0 0 0 2px var(--d-brand); opacity: 0; }
-.pxr:where(.platform) .tile16 .dim { position: absolute; inset: 0; background: rgba(8, 8, 11, .7); opacity: 0; }
-.pxr:where(.platform) .kit-btn.pressed { box-shadow: 0 0 0 4px rgba(255, 255, 255, .2); }
-.pxr:where(.platform) .scrim { position: absolute; z-index: 4; border-radius: 20px; background: rgba(8, 8, 11, .62); opacity: 0; pointer-events: none; }
-.pxr:where(.platform) .kit { z-index: 5; opacity: 0; background: linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, 0) 48%), #111117; border: 1px solid rgba(255, 255, 255, .085); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 16px 40px rgba(0, 0, 0, .36), 0 40px 90px -20px rgba(0, 0, 0, .8); }
-.pxr:where(.platform) .kit h6 { font: 900 calc(var(--t-h) + 2px)/1.35 var(--f-head); letter-spacing: -.01em; color: #fff; }
-.pxr:where(.platform) .kit .kit-d { margin-top: 6px; font: 400 var(--t-body)/1.45 var(--f-ui); color: var(--z3); }
-.pxr:where(.platform) .kit-x { width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, .06); display: grid; place-items: center; color: var(--z3); flex: none; }
+.pxr:where(.platform) .tile16 .dim { position: absolute; inset: 0; background: rgba(0, 0, 0, .62); opacity: 0; }
+.pxr:where(.platform) .scrim { position: absolute; z-index: 4; border-radius: 20px; background: rgba(0, 0, 0, .72); opacity: 0; pointer-events: none; }
+.pxr:where(.platform) .kit { z-index: 5; opacity: 0; border-radius: 28px; background: var(--d-card); }
+.pxr:where(.platform) .kit h6 { font: 900 calc(var(--t-eb) + 2px)/1.35 var(--f-head); letter-spacing: .12em; text-transform: uppercase; color: #fff; }
+.pxr:where(.platform) .kit .kit-d { margin-top: 6px; font: 400 var(--t-body)/1.45 var(--f-ui); color: var(--d-sec); }
+.pxr:where(.platform) .kit-x { width: 34px; height: 34px; border-radius: 50%; background: var(--d-field); display: grid; place-items: center; color: rgba(255, 255, 255, .7); flex: none; }
 .pxr:where(.platform) .kit-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
-.pxr:where(.platform) .kit-grid div { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #111; }
+.pxr:where(.platform) .kit-grid div { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--d-field); box-shadow: 0 0 0 2px var(--d-brand); }
 .pxr:where(.platform) .kit-grid img { width: 100%; height: 100%; object-fit: cover; }
 .pxr:where(.platform) .kit-grid div::after { content: ''; position: absolute; right: 5px; top: 5px; width: 18px; height: 18px; border-radius: 50%; background: var(--d-brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/11px no-repeat; }
-.pxr:where(.platform) .kit-cap { margin-top: 14px; padding: 12px 14px; border-radius: 16px; background: rgba(255, 255, 255, .035); }
+.pxr:where(.platform) .kit-cap { margin-top: 14px; padding: 12px 14px; border-radius: 16px; background: var(--d-field); }
 .pxr:where(.platform) .kit-cap small { font: 500 var(--t-lab)/1.3 var(--f-ui); letter-spacing: .02em; color: var(--z4); }
 .pxr:where(.platform) .kit-cap p { margin-top: 4px; font: 500 var(--t-body)/1.45 var(--f-ui); color: #e4e4e7; }
 .pxr:where(.platform) .kit-actions { display: flex; gap: 8px; margin-top: 14px; }
-.pxr:where(.platform) .kit-actions .solid.done { background: rgba(0, 188, 125, .14); color: #a4f4cf; box-shadow: none; }
-/* crowd */
-.pxr:where(.platform) .fun { margin-top: 16px; display: flex; flex-direction: column; }
-.pxr:where(.platform) .fun-r { display: grid; align-items: center; }
-.pxr:where(.platform) .fun-l b { display: flex; align-items: center; gap: 8px; font: 600 var(--t-fl, 15px)/1.3 var(--f-ui); color: var(--z2); }
-.pxr:where(.platform) .fun-l b i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-.pxr:where(.platform) .fun-l small { display: block; margin-top: 2px; font: 500 var(--t-lab)/1.35 var(--f-ui); color: var(--z4); white-space: nowrap; }
-.pxr:where(.platform) .fun-t { border-radius: 10px; background: rgba(255, 255, 255, .04); overflow: hidden; }
-.pxr:where(.platform) .fun-t .bar { height: 100%; border-radius: 10px; display: flex; align-items: center; justify-content: flex-end; padding-right: 12px; transform-origin: 0 50%; transform: scaleX(0); }
-.pxr:where(.platform) .fun-t .bar b { font: 700 var(--t-fv, 16px)/1 var(--f-ui); color: #1a0a22; font-variant-numeric: tabular-nums; }
-.pxr:where(.platform) .fun-chip { align-self: flex-start; padding: 3px 11px; border-radius: 999px; background: rgba(14, 14, 19, .9); box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); font: 600 var(--t-chip)/1.4 var(--f-ui); color: var(--z2); white-space: nowrap; opacity: 0; }
-.pxr:where(.platform) .fun-chip em { font-style: normal; color: var(--z4); }
+.pxr:where(.platform) .kit-actions .solid.done { background: rgba(0, 212, 146, .12); color: var(--em3); }
+/* crowd: FunnelChart (the rail's figures left, the straight-edged silhouette right, one purple ramp), the audience CRM, the send */
+.pxr:where(.platform) .fun { display: grid; grid-template-columns: var(--fun-rail, 132px) minmax(0, 1fr); gap: 10px; margin-top: 12px; padding: 12px; border-radius: 20px; background: var(--d-field); }
+.pxr:where(.platform) .fun-rail > div { display: flex; flex-direction: column; justify-content: center; height: var(--fun-h, 60px); padding: 0 6px; }
+.pxr:where(.platform) .fun-rail b { display: flex; align-items: center; gap: 8px; font: 600 13px/1.3 var(--f-ui); color: var(--z3); }
+.pxr:where(.platform) .fun-rail b i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.pxr:where(.platform) .fun-n { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; white-space: nowrap; }
+.pxr:where(.platform) .fun-n .fv { font: 600 24px/1 var(--f-ui); font-style: normal; color: #fff; font-variant-numeric: tabular-nums; }
+.pxr:where(.platform) .fun-n small { font: 500 11px/1 var(--f-ui); color: var(--z4); }
+.pxr:where(.platform) .fun-shape { position: relative; }
+.pxr:where(.platform) .fun-shape svg { display: block; width: 100%; height: 100%; }
+.pxr:where(.platform) .fun-chip { position: absolute; left: 50%; transform: translate(-50%, -50%); padding: 4px 12px; border-radius: 999px; background: var(--d-card); font: 600 11px/1.4 var(--f-ui); color: var(--z2); white-space: nowrap; opacity: 0; pointer-events: none; }
+.pxr:where(.platform) .fun-chip em { margin-left: 6px; font-style: normal; color: var(--z4); }
 .pxr:where(.platform) .filters { display: flex; flex-wrap: wrap; gap: 8px; }
-.pxr:where(.platform) .flt { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 999px; background: rgba(255, 255, 255, .035); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06); font: 700 var(--t-chip)/1.4 var(--f-ui); letter-spacing: .02em; color: var(--z2); white-space: nowrap; transition: background .25s, color .25s, box-shadow .25s; }
-.pxr:where(.platform) .flt.on { background: rgba(216, 74, 255, .15); color: #fff; box-shadow: inset 0 0 0 1px rgba(216, 74, 255, .4); }
+.pxr:where(.platform) .flt { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 999px; background: var(--d-field); font: 700 var(--t-chip)/1.4 var(--f-ui); letter-spacing: .02em; color: var(--z2); white-space: nowrap; transition: background .25s, color .25s, box-shadow .25s; }
+.pxr:where(.platform) .flt.on { background: rgba(165, 35, 239, .15); color: #fff; box-shadow: inset 0 0 0 1px rgba(165, 35, 239, .4); }
 .pxr:where(.platform) .seg-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .pxr:where(.platform) .match-l { font: 500 var(--t-body)/1.2 var(--f-ui); color: var(--z4); }
 .pxr:where(.platform) .match-l b { font: 700 var(--t-match, 22px)/1 var(--f-ui); color: #fff; margin-right: 6px; font-variant-numeric: tabular-nums; }
 .pxr:where(.platform) .seg-save { transition: background .25s, color .25s, opacity .25s; }
-.pxr:where(.platform) .seg-saved { display: inline-flex; align-items: center; gap: 10px; padding: 5px 5px 5px 14px; border-radius: 999px; background: rgba(255, 255, 255, .06); font: 700 var(--t-chip)/1.4 var(--f-ui); letter-spacing: .02em; color: var(--z2); white-space: nowrap; opacity: 0; }
+.pxr:where(.platform) .seg-saved { display: inline-flex; align-items: center; gap: 10px; padding: 5px 14px; border-radius: 999px; background: var(--d-field); font: 700 var(--t-chip)/1.4 var(--f-ui); letter-spacing: .02em; color: var(--z2); white-space: nowrap; opacity: 0; }
 .pxr:where(.platform) .seg-saved em { font-style: normal; color: #fff; }
-.pxr:where(.platform) .seg-saved span { padding: 5px 12px; border-radius: 999px; background: #fff; color: #08080b; }
-.pxr:where(.platform) .composer { border-radius: 20px; background: rgba(255, 255, 255, .03); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06); overflow: hidden; }
+.pxr:where(.platform) .seg-saved span { font-weight: 600; color: var(--z4); }
+.pxr:where(.platform) .composer { border-radius: 20px; background: var(--d-field); overflow: hidden; }
 .pxr:where(.platform) .snd-f { display: flex; align-items: center; gap: 12px; padding: 13px 20px; font: 700 var(--t-body)/1.3 var(--f-ui); color: #fff; white-space: nowrap; overflow: hidden; }
-.pxr:where(.platform) .snd-f + .snd-f { border-top: 1px solid rgba(255, 255, 255, .06); }
+.pxr:where(.platform) .snd-f + .snd-f { border-top: 1px solid rgba(255, 255, 255, .08); }
 .pxr:where(.platform) .snd-f small { width: 64px; flex: none; font: 500 var(--t-lab)/1 var(--f-ui); letter-spacing: .02em; color: var(--z4); }
 .pxr:where(.platform) .snd-f .caret { display: inline-block; width: 2px; height: 1.1em; background: var(--d-brand); vertical-align: -2px; }
 .pxr:where(.platform) .snd-f .ph { color: var(--z6); font-weight: 500; }
 .pxr:where(.platform) .quote { display: flex; flex-direction: column; gap: 10px; }
 .pxr:where(.platform) .q2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.pxr:where(.platform) .q2 > div { padding: 12px 14px; border-radius: 16px; background: rgba(255, 255, 255, .04); }
+.pxr:where(.platform) .q2 > div { padding: 12px 14px; border-radius: 16px; background: var(--d-field); }
 .pxr:where(.platform) .q2 small { display: block; font: 500 var(--t-lab)/1.3 var(--f-ui); letter-spacing: .02em; color: var(--z4); }
 .pxr:where(.platform) .q2 b { display: block; margin-top: 4px; font: 700 var(--t-body)/1.3 var(--f-ui); color: #fff; }
-.pxr:where(.platform) .sendbtn { width: 100%; min-height: 48px; }
-.pxr:where(.platform) .sendbtn.sent { background: rgba(0, 188, 125, .12); color: #a4f4cf; box-shadow: none; }
-/* next */
+.pxr:where(.platform) .sendbtn { width: 100%; }
+.pxr:where(.platform) .sendbtn.sent { background: rgba(0, 212, 146, .12); color: var(--em3); }
+/* next: the sequel panel (a #2e2e2e block with its figures in a strip) and the mobile draft pill */
 .pxr:where(.platform) .sq-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
-.pxr:where(.platform) .sq-pill { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px; background: var(--d-card); box-shadow: 0 0 0 1px var(--d-line), 0 12px 32px rgba(0, 0, 0, .32); font: 700 13px/1.2 var(--f-ui); color: #fff; white-space: nowrap; opacity: 0; }
+.pxr:where(.platform) .sq-pill { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px; background: var(--d-field); font: 700 13px/1.2 var(--f-ui); color: #fff; white-space: nowrap; opacity: 0; }
 .pxr:where(.platform) .sq-pill small { font: 500 13px/1.2 var(--f-ui); color: var(--z3); overflow: hidden; text-overflow: ellipsis; }
-.pxr:where(.platform) .sq-pill .d-chip { margin-left: auto; }
+.pxr:where(.platform) .sq-pill .d-chip { margin-left: auto; background: rgba(255, 255, 255, .07); }
 
 /* ───────── the whole night (lifecycle) ───────── */
 .pxr:where(.platform) .stack { position: relative; padding: 22vh var(--gutter) 12vh; }
@@ -530,26 +566,27 @@ div.pxr.platform {
 .pxr:where(.platform) .stage.d .made-stamp .made-cap { margin: 0; opacity: 0; }
 .pxr:where(.platform) .stage.d .series-stamp { width: 150px; height: 150px; }
 .pxr:where(.platform) .stage.d .ink { width: 160px; height: 160px; margin: -80px 0 0 -80px; left: 75px; }
-/* sell 820×620 */
+/* sell 820×660 */
 .pxr:where(.platform) .stage.d .sell-card { left: 0; top: 0; width: 540px; height: 452px; }
-.pxr:where(.platform) .stage.d .sell-value { margin-top: 14px; }
-.pxr:where(.platform) .stage.d .sell-chart { margin-top: 16px; height: 196px; }
-.pxr:where(.platform) .stage.d .sell-cum { margin-top: 14px; }
-.pxr:where(.platform) .stage.d .ins-panel { position: absolute; left: 556px; top: 0; width: 264px; height: 452px; padding: 20px; border-radius: 20px; background: rgba(255, 255, 255, .035); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05); }
+.pxr:where(.platform) .stage.d .sell-value { margin-top: 12px; }
+.pxr:where(.platform) .stage.d .sell-chart { margin-top: 14px; height: 180px; }
+.pxr:where(.platform) .stage.d .sell-cum { margin-top: 12px; }
+.pxr:where(.platform) .stage.d .ins-panel { position: absolute; left: 556px; top: 0; width: 264px; height: 452px; padding: 20px; border-radius: 20px; background: var(--d-field); }
 .pxr:where(.platform) .ins-eb { font: 700 var(--t-lab)/1.4 var(--f-ui); letter-spacing: .02em; color: rgba(255, 255, 255, .4); }
-.pxr:where(.platform) .ins-empty { margin-top: 14px; font: 400 var(--t-body)/1.45 var(--f-ui); color: var(--z6); }
-.pxr:where(.platform) .stage.d .ins-list { position: relative; display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.pxr:where(.platform) .ins-empty { margin-top: 14px; font: 400 var(--t-body)/1.45 var(--f-ui); color: var(--z4); }
+.pxr:where(.platform) .stage.d .ins-list { position: relative; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
 .pxr:where(.platform) .stage.d .ins-empty { position: absolute; left: 20px; right: 20px; top: 42px; }
-.pxr:where(.platform) .stage.d .mkt { left: 0; top: 468px; width: 820px; opacity: 0; }
-.pxr:where(.platform) .stage.d .mkt .d-strip { margin-top: 16px; }
+.pxr:where(.platform) .stage.d .mkt { left: 0; top: 468px; width: 820px; background: var(--d-field); opacity: 0; }
+.pxr:where(.platform) .stage.d .mkt .d-strip { margin-top: 14px; }
 .pxr:where(.platform) .stage.d .mkt-r { display: flex; gap: 8px; align-items: center; }
+.pxr:where(.platform) .stage.d .mkt-r .d-chip { padding: 6px 14px; font-size: var(--t-chip); }
 .pxr:where(.platform) .stage.d .soldout { left: 246px; top: 20px; }
 .pxr:where(.platform) .stage.d .soldout span { font-size: 46px; }
 /* doors 880×690 */
 .pxr:where(.platform) .stage.d .scan-phone { left: 0; top: 46px; z-index: 3; }
 .pxr:where(.platform) .stage.d .ops { left: 302px; top: 0; width: 578px; height: 690px; }
-.pxr:where(.platform) .ops-head h4 { margin-top: 4px; font: 600 26px/1.35 var(--f-head); letter-spacing: -.01em; color: #fff; }
-.pxr:where(.platform) .ops-head p { margin-top: 4px; font: 400 var(--t-sub)/1.45 var(--f-ui); color: var(--z3); }
+.pxr:where(.platform) .ops-head h4 { margin-top: 4px; font: 900 26px/1.3 var(--f-head); letter-spacing: -.01em; text-transform: uppercase; color: #fff; }
+.pxr:where(.platform) .ops-head > p:not(.d-eb) { margin-top: 4px; font: 400 var(--t-sub)/1.45 var(--f-ui); color: var(--z3); }
 .pxr:where(.platform) .stage.d .ops-tiles { margin-top: 18px; }
 .pxr:where(.platform) .stage.d .ops-2 { display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; margin-top: 16px; }
 .pxr:where(.platform) .stage.d .ops-box { padding: 16px 18px; }
@@ -560,29 +597,26 @@ div.pxr.platform {
 .pxr:where(.platform) .stage.d .gate { padding: 12px 18px; }
 .pxr:where(.platform) .stage.d .gates { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
 .pxr:where(.platform) .scans-h { display: flex; justify-content: space-between; align-items: baseline; }
-.pxr:where(.platform) .scans-h .t { font: 700 calc(var(--t-h) - 1px)/1.3 var(--f-head); letter-spacing: -.01em; color: #fff; }
+.pxr:where(.platform) .scans-h .t { font: 900 calc(var(--t-h) - 2px)/1.3 var(--f-head); letter-spacing: -.01em; text-transform: uppercase; color: #fff; }
 .pxr:where(.platform) .scans-h small { font: 400 var(--t-lab)/1 var(--f-ui); color: var(--z4); }
 .pxr:where(.platform) .stage.d .scans-h { margin-top: 16px; }
 .pxr:where(.platform) .stage.d .scans { position: relative; height: 154px; margin-top: 10px; overflow: hidden; }
-.pxr:where(.platform) .scan-row { position: absolute; left: 0; right: 0; height: 46px; display: grid; grid-template-columns: minmax(0, 1fr) 88px 104px 72px; align-items: center; gap: 10px; padding: 0 16px; border-radius: 16px; background: rgba(255, 255, 255, .035); }
+.pxr:where(.platform) .scan-row { position: absolute; left: 0; right: 0; height: 46px; display: grid; grid-template-columns: minmax(0, 1fr) 88px 104px 72px; align-items: center; gap: 10px; padding: 0 16px; border-radius: 16px; background: var(--d-field); }
 .pxr:where(.platform) .scan-row b { display: block; font: 700 var(--t-body)/1.25 var(--f-ui); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pxr:where(.platform) .scan-row small { display: block; font: 400 var(--t-lab)/1.25 var(--f-ui); color: var(--z4); white-space: nowrap; }
 .pxr:where(.platform) .scan-row .sr-g { font: 600 var(--t-body)/1 var(--f-ui); color: var(--z2); white-space: nowrap; }
 .pxr:where(.platform) .scan-row .d-chip { justify-self: start; }
 .pxr:where(.platform) .scan-row .sr-t { font: 400 var(--t-lab)/1 var(--f-ui); color: var(--z4); text-align: right; white-space: nowrap; }
 /* room 880×676 */
-.pxr:where(.platform) .stage.d .heat { left: 0; top: 0; width: 880px; height: 420px; }
-.pxr:where(.platform) .stage.d .heat .d-h .d-chip { margin-left: 10px; vertical-align: 2px; }
-.pxr:where(.platform) .stage.d .heat-map { margin-top: 16px; height: 256px; }
-.pxr:where(.platform) .stage.d .play { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
-.pxr:where(.platform) .play .pb { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #08080b; flex: none; }
+.pxr:where(.platform) .stage.d .heat { left: 0; top: 0; width: 880px; height: 388px; }
+.pxr:where(.platform) .stage.d .heat-map { margin-top: 12px; height: 196px; }
+.pxr:where(.platform) .stage.d .play { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 10px 14px; border-radius: 16px; background: var(--d-field); }
+.pxr:where(.platform) .play .pb { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--d-brand); color: #fff; flex: none; }
 .pxr:where(.platform) .play .lbl { font: 600 var(--t-body)/1 var(--f-ui); color: #fff; white-space: nowrap; }
 .pxr:where(.platform) .play .pfoot { font: 500 var(--t-lab)/1 var(--f-ui); color: var(--z4); white-space: nowrap; }
 .pxr:where(.platform) .play .pfoot b { color: var(--z2); font-weight: 700; font-variant-numeric: tabular-nums; }
-.pxr:where(.platform) .stage.d .hype { left: 0; top: 436px; width: 880px; height: auto; }
-.pxr:where(.platform) .stage.d .hype-body { display: grid; grid-template-columns: minmax(0, 1fr) 244px; gap: 24px; margin-top: 12px; }
-.pxr:where(.platform) .stage.d .hype-score { padding: 16px 18px; border-radius: 16px; background: rgba(255, 255, 255, .035); }
-.pxr:where(.platform) .stage.d .hype-mini { margin-top: 14px; }
+.pxr:where(.platform) .stage.d .hype { left: 0; top: 404px; width: 880px; height: auto; }
+.pxr:where(.platform) .stage.d .hype-chart { margin-top: 10px; }
 /* recap 600×670 */
 .pxr:where(.platform) .stage.d .album { left: 20px; top: 0; width: 560px; height: 670px; }
 .pxr:where(.platform) .stage.d .album .seg { margin-top: 14px; }
@@ -591,19 +625,18 @@ div.pxr.platform {
 .pxr:where(.platform) .stage.d .scrim { left: 20px; top: 0; width: 560px; height: 670px; }
 .pxr:where(.platform) .stage.d .kit { left: 30px; top: 96px; width: 540px; }
 /* crowd 880×540 */
-.pxr:where(.platform) .stage.d .funnel { left: 0; top: 0; width: 420px; height: 318px; --t-fl: 15px; --t-fv: 16px; }
-.pxr:where(.platform) .stage.d .fun-r { grid-template-columns: 148px minmax(0, 1fr); gap: 14px; height: 48px; }
-.pxr:where(.platform) .stage.d .fun-t { height: 34px; }
-.pxr:where(.platform) .stage.d .fun-chip { margin: 5px 0 5px 162px; }
+.pxr:where(.platform) .stage.d .funnel { left: 0; top: 0; width: 420px; height: 318px; }
+.pxr:where(.platform) .stage.d .fun { --fun-rail: 128px; }
 .pxr:where(.platform) .stage.d .crm { left: 436px; top: 0; width: 444px; height: 318px; }
+.pxr:where(.platform) .stage.d .crm .d-h { font-size: 17px; }
 .pxr:where(.platform) .stage.d .crm .d-strip { margin-top: 14px; }
-.pxr:where(.platform) .stage.d .crm .d-strip > div { padding: 12px 14px; }
+.pxr:where(.platform) .stage.d .crm .d-strip > div { padding: 10px 14px; }
 .pxr:where(.platform) .stage.d .crm .filters { margin-top: 14px; flex-wrap: nowrap; }
 .pxr:where(.platform) .stage.d .crm .seg-row { margin-top: 18px; }
 .pxr:where(.platform) .stage.d .send { left: 0; top: 334px; width: 880px; height: 222px; opacity: 0; }
 .pxr:where(.platform) .stage.d .send-body { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; margin-top: 16px; }
 /* next 760×680 */
-.pxr:where(.platform) .stage.d .sequel { left: 0; top: 186px; width: 428px; }
+.pxr:where(.platform) .stage.d .sequel { left: 0; top: 186px; width: 428px; background: var(--d-field); }
 .pxr:where(.platform) .stage.d .sequel .d-h { font-size: 22px; }
 .pxr:where(.platform) .stage.d .sequel .d-strip { margin-top: 18px; }
 .pxr:where(.platform) .stage.d .invite-phone { left: 460px; top: 26px; }
@@ -638,16 +671,19 @@ div.pxr.platform .scene-grid.flip { display: block; padding: 0; }
   .pxr:where(.platform) .mcc { position: relative; display: flex; flex-direction: column; gap: 10px; }
   .pxr:where(.platform) .mcc .dcard { position: relative; }
   .pxr:where(.platform) .mcc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .pxr:where(.platform) .mc { display: flex; flex-direction: column; justify-content: space-between; height: 88px; padding: 14px; border-radius: 20px; background: linear-gradient(180deg, rgba(255, 255, 255, .022), rgba(255, 255, 255, 0) 42%), var(--d-card); border: 1px solid var(--d-line); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045), 0 12px 32px rgba(0, 0, 0, .32); }
-  .pxr:where(.platform) .mc .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .pxr:where(.platform) .mc small { font: 700 11px/1.4 var(--f-ui); letter-spacing: .02em; color: rgba(255, 255, 255, .45); white-space: nowrap; }
-  .pxr:where(.platform) .mc .ic { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .05); color: #fff; opacity: .75; }
-  .pxr:where(.platform) .mc b { font: 700 24px/1 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
-  .pxr:where(.platform) .mcc-chart .chart { margin-top: 12px; }
+  /* MetricCard: a #1c1c1c rounded-3xl card, heavy purple caps title, a #2e2e2e icon dot, a 900 figure */
+  .pxr:where(.platform) .mc { display: flex; flex-direction: column; justify-content: space-between; height: 88px; padding: 14px 16px; border-radius: 24px; background: var(--d-card); }
+  .pxr:where(.platform) .mc .top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .pxr:where(.platform) .mc small { font: 800 11px/1.4 var(--f-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--d-brand); white-space: nowrap; }
+  .pxr:where(.platform) .mc .ic { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--d-field); color: #fff; }
+  .pxr:where(.platform) .mc .ic svg { opacity: .75; }
+  .pxr:where(.platform) .mc b { font: 900 24px/1 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
+  .pxr:where(.platform) .mcc .dcard { border-radius: 24px; }
+  .pxr:where(.platform) .mcc-chart .chart { margin-top: 10px; }
   .pxr:where(.platform) .mcc-only .mo3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-  .pxr:where(.platform) .mcc-only .mo3 > div { padding: 10px 10px 11px; border-radius: 14px; background: rgba(255, 255, 255, .035); }
-  .pxr:where(.platform) .mcc-only .mo3 b { display: block; font: 700 20px/1 var(--f-ui); color: #fff; }
-  .pxr:where(.platform) .mcc-only .mo3 small { display: block; margin-top: 5px; font: 600 11px/1.35 var(--f-ui); color: #e08bff; }
+  .pxr:where(.platform) .mcc-only .mo3 > div { padding: 10px 10px 11px; border-radius: 16px; background: var(--d-field); }
+  .pxr:where(.platform) .mcc-only .mo3 b { display: block; font: 900 20px/1 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
+  .pxr:where(.platform) .mcc-only .mo3 small { display: block; margin-top: 5px; font: 600 11px/1.35 var(--f-ui); color: var(--d-sec); }
   /* status pill */
   .pxr:where(.platform) .st-text { min-width: 0; max-width: calc(100vw - 222px); }
   .pxr:where(.platform) .st-text b { font-size: 13px; }
@@ -663,16 +699,16 @@ div.pxr.platform .scene-grid.flip { display: block; padding: 0; }
   .pxr:where(.platform) .stage.m .ink { width: 130px; height: 130px; margin: -65px 0 0 -65px; left: 68px; }
   .pxr:where(.platform) .stage.m .made-cap { font-size: 13px; }
   /* sell */
-  .pxr:where(.platform) .stage.m { --t-big: 36px; --t-ins: 14px; }
+  .pxr:where(.platform) .stage.m { --t-big: 24px; --t-ins: 13px; }
   .pxr:where(.platform) .stage.m .toast { top: 0; }
   .pxr:where(.platform) .stage.m .sell-card { top: 0; height: 372px; }
-  .pxr:where(.platform) .stage.m .sell-value { margin-top: 10px; }
+  .pxr:where(.platform) .stage.m .sell-value { margin-top: 8px; }
   .pxr:where(.platform) .stage.m .sell-chart { margin-top: 12px; }
-  .pxr:where(.platform) .stage.m .sell-cum { margin-top: 12px; padding: 9px 12px; }
-  .pxr:where(.platform) .stage.m .insight { padding: 12px 14px; background: #15151b; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 12px 32px rgba(0, 0, 0, .4); }
+  .pxr:where(.platform) .stage.m .sell-cum { margin-top: 12px; padding: 8px 10px 4px; }
+  .pxr:where(.platform) .stage.m .insight { padding: 12px 14px; border-radius: 16px; background: var(--d-field); }
   .pxr:where(.platform) .stage.m .insight p { margin-top: 3px; }
   .pxr:where(.platform) .stage.m .mkt-m { top: 384px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; opacity: 0; }
-  .pxr:where(.platform) .stage.m .mkt-m .mtile { height: 68px; padding: 12px 14px; background: var(--d-card); box-shadow: 0 0 0 1px var(--d-line); }
+  .pxr:where(.platform) .stage.m .mkt-m .mtile { height: 68px; padding: 12px 14px; }
   .pxr:where(.platform) .stage.m .mkt-m .mtile b { font-size: 22px; }
   .pxr:where(.platform) .stage.m .soldout { left: auto; right: 8px; top: -6px; padding: 7px 11px 6px; border-width: 3px; gap: 4px; outline-offset: 3px; }
   .pxr:where(.platform) .stage.m .soldout span { font-size: 25px; }
@@ -680,7 +716,7 @@ div.pxr.platform .scene-grid.flip { display: block; padding: 0; }
   /* doors */
   .pxr:where(.platform) .stage.m .door-strip > div { padding: 10px 10px 11px; }
   .pxr:where(.platform) .stage.m .door-strip b { font-size: 20px; margin-top: 4px; }
-  .pxr:where(.platform) .stage.m .door-strip .t-flags.hit { background: #1d0f11; }
+  .pxr:where(.platform) .stage.m .door-strip .t-flags.hit { background: #2f1d1e; }
   .pxr:where(.platform) .stage.m .door-strip .t-flags.hit b { color: var(--rd3); }
   .pxr:where(.platform) .stage.m .cap-card { top: 76px; opacity: 0; }
   .pxr:where(.platform) .stage.m .sc-guest { top: 188px; }
@@ -688,7 +724,7 @@ div.pxr.platform .scene-grid.flip { display: block; padding: 0; }
   .pxr:where(.platform) .stage.m .sc-hint { top: 508px; }
   .pxr:where(.platform) .stage.m .sc-card { top: 500px; bottom: auto; }
   .pxr:where(.platform) .stage.m .cap-card .ops-box { padding: 0; background: none; }
-  .pxr:where(.platform) .stage.m .cap-card .vel { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, .06); }
+  .pxr:where(.platform) .stage.m .cap-card .vel { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, .08); }
   .pxr:where(.platform) .stage.m .cap-card .gates { display: grid; gap: 8px; margin-top: 16px; }
   .pxr:where(.platform) .stage.m .cap-card .gate { padding: 12px 14px; border-radius: 16px; }
   .pxr:where(.platform) .stage.m { --t-hype: 48px; }
@@ -701,7 +737,8 @@ div.pxr.platform .scene-grid.flip { display: block; padding: 0; }
   .pxr:where(.platform) .stage.m .hype-m { opacity: 0; }
   .pxr:where(.platform) .stage.m .hype-m .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
   .pxr:where(.platform) .stage.m .hype-m .spark { margin-top: 12px; }
-  .pxr:where(.platform) .stage.m .hype-m .hype-mini { flex: none; width: 52%; gap: 6px; }
+  .pxr:where(.platform) .stage.m .hype-m .hype-mini { flex: none; width: 60%; gap: 4px; }
+  .pxr:where(.platform) .stage.m .hype-m .hype-mini small { gap: 4px; font-size: 10.5px; }
   .pxr:where(.platform) .stage.m .hype-m .hype-mini b { font-size: 15px; }
   /* recap */
   .pxr:where(.platform) .stage.m .album { top: 0; }
@@ -716,17 +753,12 @@ div.pxr.platform .scene-grid.flip { display: block; padding: 0; }
   .pxr:where(.platform) .stage.m .kit-actions .d-pill { flex: 1; min-height: 44px; }
   .pxr:where(.platform) .stage.m .scrim { left: 0; right: 0; top: 0; }
   /* crowd */
-  .pxr:where(.platform) .stage.m .funnel { --t-fl: 14px; --t-fv: 15px; }
-  .pxr:where(.platform) .stage.m .fun-r { grid-template-columns: 1fr; gap: 6px; }
-  .pxr:where(.platform) .stage.m .fun-l { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-  .pxr:where(.platform) .stage.m .fun-l small { margin-top: 0; }
-  .pxr:where(.platform) .stage.m .fun-t { height: 28px; }
-  .pxr:where(.platform) .stage.m .fun-chip { margin: 8px 0; }
+  .pxr:where(.platform) .stage.m .fun { --fun-rail: 118px; }
   .pxr:where(.platform) .stage.m .crm .d-strip { margin-top: 12px; }
   .pxr:where(.platform) .stage.m .crm .d-strip > div { padding: 10px; }
   .pxr:where(.platform) .stage.m .crm .d-strip b { font-size: 20px; margin-top: 4px; }
   .pxr:where(.platform) .stage.m .crm .filters { margin-top: 14px; }
-  .pxr:where(.platform) .stage.m .crm .match-m { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; padding: 14px 16px; border-radius: 16px; background: rgba(255, 255, 255, .035); }
+  .pxr:where(.platform) .stage.m .crm .match-m { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; padding: 14px 16px; border-radius: 16px; background: var(--d-field); }
   .pxr:where(.platform) .stage.m { --t-match: 40px; }
   .pxr:where(.platform) .stage.m .crm .seg-act { position: relative; margin-top: 12px; min-height: 44px; }
   .pxr:where(.platform) .stage.m .crm .seg-act > * { position: absolute; left: 0; top: 0; }
@@ -738,7 +770,7 @@ div.pxr.platform .scene-grid.flip { display: block; padding: 0; }
   .pxr:where(.platform) .stage.m .send .quote { margin-top: 12px; }
   .pxr:where(.platform) .stage.m .crowd-b { opacity: 0; }
   /* next */
-  .pxr:where(.platform) .stage.m .sequel { top: 0; }
+  .pxr:where(.platform) .stage.m .sequel { top: 0; background: var(--d-field); }
   .pxr:where(.platform) .stage.m .sequel .d-strip { margin-top: 14px; }
   .pxr:where(.platform) .stage.m .sequel .d-strip > div { padding: 10px 12px; }
   .pxr:where(.platform) .stage.m .sequel .d-strip b { font-size: 20px; margin-top: 4px; }
@@ -757,6 +789,16 @@ div.pxr.platform .scene-grid.flip { display: block; padding: 0; }
   .pxr:where(.platform) .p-final { padding-top: 12vh; }
   .pxr:where(.platform) .stack { padding-top: 16vh; padding-bottom: 56px; }
   .pxr:where(.platform) .terms { padding-top: 0; }
+}
+
+/* the narrowest phones (320px): caps labels are wider than the sentence-case ones were, so the cards tighten */
+@media (max-width: 359px) {
+  .pxr:where(.platform) .mc { padding: 12px; }
+  .pxr:where(.platform) .mc small { font-size: 10px; letter-spacing: .05em; }
+  .pxr:where(.platform) .mc .ic { width: 22px; height: 22px; }
+  .pxr:where(.platform) .mc .ic svg { width: 12px; height: 12px; }
+  .pxr:where(.platform) .stage.m .hype-m .top { flex-direction: column; align-items: stretch; gap: 8px; }
+  .pxr:where(.platform) .stage.m .hype-m .hype-mini { width: 100%; }
 }
 
 /* ───────── reduced motion: no pin, no scrub, end states ───────── */

@@ -185,7 +185,7 @@ function MatchCard({ locked, onLock }) {
       <div className="flex flex-col gap-1 p-3 sm:p-4 sm:pb-5">
         <MotionDiv initial={{ filter: 'blur(7px)' }} animate={locked ? { filter: 'blur(0px)' } : { filter: 'blur(7px)' }} transition={{ duration: 0.5, ease: EASE }}>
           <h4 className="text-[15px] sm:text-base font-black text-white leading-tight uppercase tracking-tight">Afrobeats &amp; Amapiano</h4>
-          <p className="text-[10px] sm:text-[11px] text-zinc-400 mb-2 sm:mb-3">Old Port · Friday</p>
+          <p className="text-[10px] sm:text-[11px] text-zinc-400 mb-2 sm:mb-3">Old Port, Friday</p>
         </MotionDiv>
 
         <div className="flex items-center justify-center gap-3 bg-white/5 rounded-xl p-2">

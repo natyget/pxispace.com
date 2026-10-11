@@ -138,10 +138,10 @@ export function doorPercent(door) {
 export function doorCaption(door) {
     if (!door) return '';
     if (door.state === 'LIVE') return door.name;
-    if (door.state === 'TONIGHT') return `${door.name} · doors ${formatClock(door.startDate, door.timeZone)}`;
+    if (door.state === 'TONIGHT') return `${door.name}, doors ${formatClock(door.startDate, door.timeZone)}`;
     // The API passes over a past night whose door never scanned, so a scanned night here may not be the latest
     // one in the room. It is called what it is. A night with no scan is only shown when no night has one.
-    return `${door.scanned > 0 ? 'Last scanned night' : 'Last night here'} · ${formatNightDate(door.startDate, door.timeZone)}`;
+    return `${door.scanned > 0 ? 'Last scanned night' : 'Last night here'}: ${formatNightDate(door.startDate, door.timeZone)}`;
 }
 
 // ————— When the room fills —————

@@ -67,7 +67,7 @@ export default function SpatialCard({ heatmap, venueName = '', loading = false, 
                         <div className="flex min-w-0 items-center gap-2">
                             <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: DASHBOARD_LIVE_COLOR }} />
                             <span className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400">
-                                Room density · {venueName}
+                                Room density, {venueName}
                             </span>
                         </div>
                         <span className="shrink-0 text-[10px] text-zinc-600">
@@ -106,7 +106,7 @@ export default function SpatialCard({ heatmap, venueName = '', loading = false, 
                     ) : null}
 
                     <p className="mb-1.5 mt-2.5 text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-500">
-                        Through the night · average per 15 minutes
+                        Through the night, average per 15 minutes
                     </p>
                     {hasTimeline ? <Timeline timeline={heatmap.timeline} /> : (
                         <p className="text-[11px] text-white/45">Appears after the first night with scans or photos.</p>

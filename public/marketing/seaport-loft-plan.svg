@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" width="960" height="520">
+  <rect width="960" height="520" fill="#101014"/>
+  <g fill="none" stroke="#e8e8ee" stroke-width="3" stroke-linejoin="round">
+    <rect x="40" y="30" width="700" height="460" rx="6"/>
+    <path d="M440 30V490M440 230H740M600 230V490M600 360H740"/>
+    <rect x="70" y="215" width="60" height="110" rx="6"/>
+    <rect x="480" y="60" width="240" height="26" rx="4"/>
+  </g>
+  <path d="M740 70H900V460H740" fill="none" stroke="#9a9a9a" stroke-width="2.5" stroke-dasharray="9 9"/>
+  <g fill="#e8e8ee" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="2">
+    <text x="190" y="92">MAIN ROOM</text>
+    <text x="80" y="200">DJ</text>
+    <text x="480" y="126">BAR</text>
+    <text x="458" y="468">LOUNGE</text>
+    <text x="612" y="300">COAT CHECK</text>
+    <text x="632" y="468">ENTRY</text>
+  </g>
+  <text x="768" y="106" fill="#9a9a9a" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="2">TERRACE</text>
+</svg>

@@ -37,7 +37,7 @@ export default function StatLine({ items = [], accent = 'none', className = '' }
         <span key={i}>
           <span className={valueColor}>{item.value}</span>{' '}
           <span className="text-zinc-500">{item.label}</span>
-          {i < items.length - 1 ? <span className="text-zinc-700">{'  ·  '}</span> : null}
+          {i < items.length - 1 ? <span className="inline-block w-[0.6em]" aria-hidden="true" /> : null}
         </span>
       ))}
     </motion.p>

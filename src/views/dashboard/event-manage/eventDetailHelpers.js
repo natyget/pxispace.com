@@ -29,7 +29,7 @@ export function scheduleDisplay(ev) {
 
   const monthDay = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
   const timeFmt = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
-  let secondary = `${monthDay.format(start).toUpperCase()} · ${timeFmt.format(start).toUpperCase()}`;
+  let secondary = `${monthDay.format(start).toUpperCase()}, ${timeFmt.format(start).toUpperCase()}`;
 
   if (ev.endDate) {
     const end = new Date(ev.endDate);
@@ -47,7 +47,7 @@ export function scheduleDisplay(ev) {
           hour: 'numeric',
           minute: '2-digit',
         }).format(end);
-        secondary += ` · ENDS ${endBit.toUpperCase()}`;
+        secondary += `, ENDS ${endBit.toUpperCase()}`;
       }
     }
   }
@@ -59,11 +59,11 @@ export function locationDisplay(ev) {
   const raw = String(ev?.location || ev?.venue || '').trim();
   if (raw) {
     const split = raw
-      .split(/\n|,|•/)
+      .split(/\n|,|\u2022/) // allow-dot: older addresses use a bullet
       .map((s) => s.trim())
       .filter(Boolean);
     if (split.length >= 2) {
-      return { primary: split[0], secondary: split.slice(1).join(' · ') };
+      return { primary: split[0], secondary: split.slice(1).join(', ') };
     }
     return { primary: raw, secondary: '' };
   }

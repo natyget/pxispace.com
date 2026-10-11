@@ -104,13 +104,13 @@ export default function LineupPlaylistView({ token }) {
         <div className="space-y-4">
           <div>
             <p className="text-[10px] font-black tracking-[0.2em] text-zinc-500 uppercase">
-              {playlist.ownerLabel ? `${playlist.ownerLabel} · Playlist` : 'Lineup Playlist'}
+              {playlist.ownerLabel ? `${playlist.ownerLabel}, Playlist` : 'Lineup Playlist'}
             </p>
             <h1 className="text-white text-2xl font-black mt-1 leading-tight">
               {playlist.title || 'Untitled playlist'}
             </h1>
             <p className="text-zinc-400 text-sm mt-1">
-              {providerLabel} · {playlist.trackCount} track{playlist.trackCount === 1 ? '' : 's'}
+              {providerLabel}, {playlist.trackCount} track{playlist.trackCount === 1 ? '' : 's'}
             </p>
           </div>
 

@@ -141,7 +141,7 @@ function ActivityFilter({ nights, timeZone, selection, onChange }) {
                                 aria-label="Night"
                                 className="mt-2 w-full rounded-lg bg-white/[0.06] px-2.5 py-1.5 text-[12px] text-white outline-none"
                             >
-                                {nights.map((n) => <option key={n.eventId} value={n.eventId}>{formatNightDate(n.startDate, n.timeZone || timeZone)} · {n.name}</option>)}
+                                {nights.map((n) => <option key={n.eventId} value={n.eventId}>{formatNightDate(n.startDate, n.timeZone || timeZone)}, {n.name}</option>)}
                             </select>
                         ) : <p className="mt-2 px-1 text-[11px] text-white/45">No night with door scans yet.</p>
                     ) : null}
@@ -357,7 +357,7 @@ export default function VenueDashboardPage() {
                     <p className="mt-0.5 truncate text-[14px] text-white/45">
                         {adminView ? <span className="mr-2 rounded-full bg-sky-500/10 px-2 py-0.5 text-[11px] font-medium text-sky-300">Admin view</span> : null}
                         <span className="text-white/70">{venue.name}</span>
-                        {place ? <span> · {place}</span> : null}
+                        {place ? <span className="ml-1.5 text-white/45">{place}</span> : null}
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">

@@ -79,7 +79,7 @@ const normalizeApiEvent = (e) => {
   const vs = e.vendorStats;
   const vendorHint =
     vs && typeof vs.hostEventsCreated === 'number'
-      ? `Host · ${vs.hostEventsCreated} events · ${vs.hostTicketsSold ?? 0} tickets sold`
+      ? `Host, ${vs.hostEventsCreated} events, ${vs.hostTicketsSold ?? 0} tickets sold`
       : null;
 
   return {
@@ -264,15 +264,6 @@ const Events = ({ detailBasePath = '/events' }) => {
     return () => clearTimeout(timer);
   }, [loadDiscoverEvents]);
 
-  const handleConnectSpotify = useCallback(() => {
-    musicService
-      .startSpotifyConnect()
-      .then((res) => {
-        if (res?.authorizeUrl) window.location.assign(res.authorizeUrl);
-      })
-      .catch(() => toast.error('Could not start the Spotify connect flow. Try again.'));
-  }, []);
-
   const filteredEvents = useMemo(() => {
     return apiEvents.filter((event) => {
       const matchesFilter = filter === 'All' || event.type === filter;
@@ -340,7 +331,7 @@ const Events = ({ detailBasePath = '/events' }) => {
 
         {sortMode === 'match' && !isLoggedIn ? (
           <div className="flex flex-wrap items-center justify-between gap-4 mb-10 rounded-2xl bg-pxi-field px-5 py-4 text-sm text-zinc-400">
-            <p>Log in and connect Spotify to rank events by your taste.</p>
+            <p>Log in and connect Apple Music to rank events by your taste.</p>
             <Link href="/login" className="text-pxi-purple hover:text-white font-bold uppercase text-xs tracking-widest shrink-0">
               Log in →
             </Link>
@@ -349,14 +340,13 @@ const Events = ({ detailBasePath = '/events' }) => {
 
         {sortMode === 'match' && isLoggedIn && musicConnected === false ? (
           <div className="flex flex-wrap items-center justify-between gap-4 mb-10 rounded-2xl bg-pxi-field px-5 py-4 text-sm text-zinc-400">
-            <p>Connect Spotify to rank events by your taste.</p>
-            <button
-              type="button"
-              onClick={handleConnectSpotify}
-              className="shrink-0 rounded-full bg-[#1DB954] px-5 py-2 text-xs font-black uppercase tracking-widest text-black"
+            <p>Connect Apple Music to rank events by your taste.</p>
+            <Link
+              href="/dashboard/account"
+              className="shrink-0 rounded-full bg-pxi-purple px-5 py-2 text-xs font-black uppercase tracking-widest text-white"
             >
-              Connect Spotify
-            </button>
+              Connect Apple Music
+            </Link>
           </div>
         ) : null}
 

@@ -144,7 +144,7 @@ export default function AdminAdsPage() {
             copy="Every paid campaign on the platform: revenue, delivery, and kill switches. Staff pauses lock the campaign until staff resume it."
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
-                { label: 'Revenue', value: overview ? formatUsd(overview.revenue.totalPaidCents) : '—', hint: overview ? `${formatUsd(overview.revenue.creditPaidCents)} credits · ${formatUsd(overview.revenue.stripePaidCents)} card` : 'Paid campaigns' },
+                { label: 'Revenue', value: overview ? formatUsd(overview.revenue.totalPaidCents) : '—', hint: overview ? `${formatUsd(overview.revenue.creditPaidCents)} credits, ${formatUsd(overview.revenue.stripePaidCents)} card` : 'Paid campaigns' },
                 { label: 'Active', value: overview ? overview.activeCampaigns.toLocaleString() : '—', hint: 'Serving now' },
                 { label: 'Impressions today', value: overview ? overview.impressionsToday.toLocaleString() : '—', hint: `${overview ? overview.clicksToday.toLocaleString() : '—'} clicks today` },
             ]}
@@ -200,7 +200,7 @@ export default function AdminAdsPage() {
                                         <span className="text-[13px] font-bold text-white/90">{c.name}</span>
                                         <p className="mt-0.5 text-[11px] text-white/40">
                                             {(c.events || []).map((e) => e.event?.name).filter(Boolean).join(', ') || '—'}
-                                            {c.emailEnabled ? ' · Email' : ''}
+                                            {c.emailEnabled ? ', email' : ''}
                                         </p>
                                     </td>
                                     <td data-label="Organizer" className={`${adminTdClass} text-[12px]`}>
@@ -216,7 +216,7 @@ export default function AdminAdsPage() {
                                     </td>
                                     <td data-label="Paid" className={`${adminTdClass} tabular-nums text-white/80`}>{formatUsd(paidCents)}</td>
                                     <td data-label="Delivery" className={`${adminTdClass} tabular-nums text-[12px] text-white/70`}>
-                                        {stats.impressions.toLocaleString()} impr · {stats.clicks.toLocaleString()} clk
+                                        {stats.impressions.toLocaleString()} impr, {stats.clicks.toLocaleString()} clk
                                     </td>
                                     <td data-label="Status" className="px-6 py-4">
                                         <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${statusPill[c.status] || statusPill.DRAFT}`}>
@@ -280,9 +280,9 @@ export default function AdminAdsPage() {
                                 <div className="min-w-0">
                                     <p className="truncate text-[13px] font-bold text-white">{p.campaignName}</p>
                                     <p className="text-[11px] text-white/40">
-                                        {p.organizer?.username ? `@${p.organizer.username}` : p.organizer?.email || '—'} · {p.intensity.toLowerCase()} intensity ·{' '}
+                                        {p.organizer?.username ? `@${p.organizer.username}` : p.organizer?.email || '—'}, {p.intensity.toLowerCase()} intensity,{' '}
                                         {p.campaignStatus.toLowerCase()}
-                                        {p.disabledByAdminAt ? ' · disabled by staff' : ''}
+                                        {p.disabledByAdminAt ? ', disabled by staff' : ''}
                                     </p>
                                 </div>
                                 <button

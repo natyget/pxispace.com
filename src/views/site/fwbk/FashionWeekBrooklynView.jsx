@@ -77,7 +77,7 @@ export default function FashionWeekBrooklynView() {
                     <i data-t="Thu"></i>
                     <i className="fp-plus" data-t="+ Fri"></i>
                   </span>{' '}
-                  <span className="fp-city" data-t="Brooklyn, NY · Season 2"></span>
+                  <span className="fp-city" data-t="Season 2 in Brooklyn, NY"></span>
                 </div>
               </div>
             </div>

@@ -50,7 +50,7 @@ const EventCard = ({
 
   const when = event.startDate ? formatWhen(event.startDate) : event.date || 'Date TBA';
   const place = splitLocation({ ...event, location: event.location || event.venue }).venue;
-  const km = event.distanceKm != null ? ` · ${Math.round(event.distanceKm * 10) / 10} km` : '';
+  const km = event.distanceKm != null ? `${Math.round(event.distanceKm * 10) / 10} km` : '';
   const hasPrice = event.price != null && String(event.price).trim() !== '';
 
   const score = Number(event.musicMatchScore);
@@ -99,7 +99,7 @@ const EventCard = ({
         <div className="dsc-card-row">
           <span className="dsc-card-where">
             {place}
-            {km}
+            {km ? <span className="ml-2 opacity-60">{km}</span> : null}
           </span>
           {hasPrice ? <span className="dsc-card-price">{priceLabel(event)}</span> : null}
         </div>

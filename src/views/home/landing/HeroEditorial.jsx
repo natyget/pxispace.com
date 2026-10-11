@@ -81,8 +81,8 @@ export default function HeroEditorial() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="text-[11px] font-bold uppercase tracking-[0.3em] text-zinc-500"
         >
-          The ticket <span className="text-white">·</span> the camera{' '}
-          <span className="text-pxi-orange">·</span> the morning after
+          The ticket <span className="ml-3 text-white">the camera</span>{' '}
+          <span className="ml-3 text-pxi-orange">the morning after</span>
         </motion.p>
 
         <motion.h1

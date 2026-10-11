@@ -24,7 +24,7 @@ const DEFAULT_IMG =
 // different surface from newest-first browse), so it changes the id; the time /
 // city / text filters keep the id and just re-fire with a new item set.
 const LIST_BROWSE = { id: 'events_browse', name: 'Browse events' };
-const LIST_TASTE_MATCH = { id: 'events_taste_match', name: 'Browse events · music match' };
+const LIST_TASTE_MATCH = { id: 'events_taste_match', name: 'Browse events, music match' };
 const LIST_WISHLIST = { id: 'wishlist', name: 'Wishlist' };
 const LIST_FEATURED = { id: 'events_featured', name: 'Featured events' };
 // GA4 accepts at most 200 items per hit; the grid only ever fetches 48, so this is
@@ -42,7 +42,7 @@ function normalizeApiEvent(e) {
   const vs = e.vendorStats;
   const vendorHint =
     vs && typeof vs.hostEventsCreated === 'number'
-      ? `Host · ${vs.hostEventsCreated} events · ${vs.hostTicketsSold ?? 0} tickets sold`
+      ? `Host, ${vs.hostEventsCreated} events, ${vs.hostTicketsSold ?? 0} tickets sold`
       : null;
 
   return {

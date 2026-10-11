@@ -162,13 +162,13 @@ function Proposals({ venueId, onChanged }) {
                                     <div className="min-w-0">
                                         <p className="truncate text-[14px] font-semibold text-white">{p.event?.name}</p>
                                         <p className="text-[12px] text-white/45">
-                                            {formatDate(p.event?.startDate)} · {p.event?.venueName || p.event?.location || 'No venue text'}
+                                            {formatDate(p.event?.startDate)}, {p.event?.venueName || p.event?.location || 'No venue text'}
                                         </p>
                                         <p className="mt-1 text-[12px] text-white/55">
-                                            Match {percent(p.confidence)} · name {percent(s.nameScore)}
-                                            {s.distanceKm !== null && s.distanceKm !== undefined ? ` · ${s.distanceKm.toFixed(2)} km away` : ''}
-                                            {s.cityAgrees === false ? ' · city disagrees' : ''}
-                                            {s.cappedByNameOnly ? ' · name only, capped' : ''}
+                                            Match {percent(p.confidence)}, name {percent(s.nameScore)}
+                                            {s.distanceKm !== null && s.distanceKm !== undefined ? `, ${s.distanceKm.toFixed(2)} km away` : ''}
+                                            {s.cityAgrees === false ? ', city disagrees' : ''}
+                                            {s.cappedByNameOnly ? ', name only, capped' : ''}
                                         </p>
                                     </div>
                                     <div className="flex shrink-0 gap-2">
@@ -302,7 +302,7 @@ function Claims({ venue, onChanged }) {
                     {claims.map((c) => (
                         <li key={c.id} className="flex flex-col gap-2 rounded-xl bg-pxi-field px-4 py-3 text-[12px] text-white/60 md:flex-row md:items-center md:justify-between">
                             <span>
-                                <span className="font-semibold text-white">{c.status}</span> · raised {formatDate(c.raisedAt)} by {c.raisedByRole.toLowerCase().replaceAll('_', ' ')} ·
+                                <span className="font-semibold text-white">{c.status}</span>, raised {formatDate(c.raisedAt)} by {c.raisedByRole.toLowerCase().replaceAll('_', ' ')},
                                 {' '}{c.exposedEventCount} events, {c.exposedAttendeeCount} people
                             </span>
                             <span className="flex gap-2">
@@ -427,7 +427,7 @@ export default function AdminVenuesPage() {
                                             <span className="min-w-0">
                                                 <span className="block truncate text-[14px] font-semibold text-white">{v.name}</span>
                                                 <span className="block truncate text-[12px] text-white/45">
-                                                    {v.cityCode ? cityLabel(v.cityCode) : 'No city'} · {v._count?.events ?? 0} events · {v._count?.proposals ?? 0} matches
+                                                    {v.cityCode ? cityLabel(v.cityCode) : 'No city'}, {v._count?.events ?? 0} events, {v._count?.proposals ?? 0} matches
                                                 </span>
                                             </span>
                                             <span className="shrink-0 text-[11px] text-white/45">{v.ownerId ? 'Claimed' : ''}</span>
@@ -443,7 +443,7 @@ export default function AdminVenuesPage() {
                             <AdminPanel className="flex flex-wrap items-center justify-between gap-3">
                                 <div className="min-w-0">
                                     <p className="truncate text-[16px] font-semibold text-white">{selected.name}</p>
-                                    <p className="text-[12px] text-white/45">{selected.address || 'No address'} · {selected.cityCode ? cityLabel(selected.cityCode) : 'No city'}</p>
+                                    <p className="text-[12px] text-white/45">{selected.address || 'No address'}, {selected.cityCode ? cityLabel(selected.cityCode) : 'No city'}</p>
                                 </div>
                                 <Link href={`/dashboard/venue?venueId=${selected.id}`} className={pill}>Open venue dashboard</Link>
                             </AdminPanel>

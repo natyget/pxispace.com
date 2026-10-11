@@ -152,7 +152,7 @@ export default function FunnelChart({ data = [] }) {
                     >
                         <span className="whitespace-nowrap rounded-full bg-pxi-surface px-3 py-1 text-[11px] font-semibold text-zinc-300">
                             {Math.round(stage.conversion * 100)}% advance
-                            {stage.dropoff > 0 ? <span className="text-zinc-500"> · {formatNumber(stage.dropoff)} drop</span> : null}
+                            {stage.dropoff > 0 ? <span className="ml-1.5 text-zinc-500">{formatNumber(stage.dropoff)} drop</span> : null}
                         </span>
                     </div>
                 ))}

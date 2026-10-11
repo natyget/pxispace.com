@@ -14,7 +14,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import Sleeve from './Sleeve';
 import EventStamp from './EventStamp';
-import { ctaFor, formatShortDate, formatTime, formatWhen, priceLabel, splitLocation } from './discoverEvent';
+import { ctaFor, formatShortDate, formatTime, formatWhenParts, priceLabel, splitLocation } from './discoverEvent';
 import { useSongPreview } from '@/lib/songPreview';
 
 /**
@@ -113,7 +113,7 @@ function TasteMatch({ event, isLoggedIn, musicConnected }) {
   } else if (musicConnected === false) {
     body = (
       <Link href="/dashboard/account" className="dsc-fact-link">
-        Connect Spotify
+        Connect Apple Music
       </Link>
     );
   }
@@ -303,7 +303,7 @@ export default function DiscoverStage({
   const isPopped = popped === activeKey;
   const cta = ctaFor(active);
   const loc = splitLocation(active);
-  const [whenDay, whenTime] = formatWhen(active.startDate).split(' · ');
+  const { day: whenDay, time: whenTime } = formatWhenParts(active.startDate);
   const favorited = Boolean(favoriteIds && favoriteIds.has(String(active.id)));
 
   return (

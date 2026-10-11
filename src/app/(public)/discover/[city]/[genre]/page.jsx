@@ -91,7 +91,7 @@ export default async function CityGenrePage({ params }) {
     <>
       <HubPage
         breadcrumbs={breadcrumbs}
-        eyebrow={`${city.name} · ${genre.name}`}
+        eyebrow={`${city.name}, ${genre.name}`}
         title={`${genre.name} events in ${city.name}`}
         intro={genre.blurb}
         events={events}

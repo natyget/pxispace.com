@@ -92,7 +92,7 @@ function StageSpot() {
 
       {/* Bottom overlay: time / title / location */}
       <div className="absolute bottom-0 left-0 right-0 p-6">
-        <p className="mb-1 text-[11px] font-bold uppercase tracking-widest text-zinc-300">Fri · 10 PM</p>
+        <p className="mb-1 text-[11px] font-bold uppercase tracking-widest text-zinc-300">Fri 10 PM</p>
         <h3 className="mb-1 text-2xl font-black uppercase leading-none tracking-tighter text-white">
           NUIT TROPICALE
         </h3>
@@ -123,7 +123,7 @@ function StageJoin() {
           <div className="mt-3 flex flex-row flex-wrap items-center gap-4 text-[13px] text-zinc-400">
             <span className="flex items-center gap-2">
               <HugeiconsIcon icon={Calendar01Icon} size={16} className="shrink-0 text-pxi-purple" />
-              Fri · 10 PM
+              Fri 10 PM
             </span>
             <span className="flex items-center gap-2">
               <HugeiconsIcon icon={Location01Icon} size={16} className="shrink-0 text-pxi-purple" />
@@ -152,7 +152,7 @@ function StageJoin() {
           </span>
         </div>
 
-        <p className="text-xs leading-relaxed text-zinc-500">{LINEUP.join(' · ')}</p>
+        <p className="text-xs leading-relaxed text-zinc-500">{LINEUP.join(', ')}</p>
 
         <div className="mt-auto pt-2 flex flex-col gap-2">
           <div className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--pxi-orange)] px-4 py-3 text-sm font-black uppercase tracking-widest text-white shadow-[0_0_15px_var(--pxi-orange)]">

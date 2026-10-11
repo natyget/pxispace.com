@@ -52,7 +52,7 @@ export function HubEventCard({ event }) {
         <h3 className="text-base font-semibold leading-snug text-white">{event.name || 'Event'}</h3>
         <p className="mt-2 text-sm text-zinc-500">
           {formatDate(event.startDate)}
-          {city ? ` · ${city.name}` : event.location ? ` · ${event.location}` : ''}
+          {city ? `, ${city.name}` : event.location ? `, ${event.location}` : ''}
         </p>
         {price ? <p className="mt-1 text-sm font-semibold text-pxi-purple">{price}</p> : null}
       </div>

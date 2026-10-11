@@ -833,7 +833,7 @@ export default function AdsPage() {
                                                     <span className="font-bold text-white">
                                                         {SURFACE_LABELS[li.surface] || li.surface}
                                                         <span className="ml-2 text-xs font-semibold text-zinc-500">
-                                                            {li.intensity.toLowerCase()} · {li.days}d
+                                                            {li.intensity.toLowerCase()}, {li.days}d
                                                         </span>
                                                     </span>
                                                     <span className="font-bold tabular-nums text-white">{formatUsd(li.priceCents)}</span>
@@ -866,7 +866,7 @@ export default function AdsPage() {
                                     />
                                     <div className="rounded-2xl bg-pxi-field px-4 py-4 text-sm leading-6 text-zinc-400">
                                         <p>
-                                            <span className="font-bold text-white">{draft.name || 'Untitled campaign'}</span> ·{' '}
+                                            <span className="font-bold text-white">{draft.name || 'Untitled campaign'}</span>,{' '}
                                             {formatDay(draft.startAt)} → {formatDay(draft.endAt)}
                                         </p>
                                         <p className="mt-1">
@@ -889,7 +889,7 @@ export default function AdsPage() {
                                                 Credits cover <span className="font-bold text-white">{formatUsd(quote.creditAppliedCents)}</span>
                                                 {quote.stripeRemainderCents > 0 ? (
                                                     <>
-                                                        {' '}· card pays{' '}
+                                                        {', '}card pays{' '}
                                                         <span className="font-bold text-white">{formatUsd(quote.stripeRemainderCents)}</span>
                                                     </>
                                                 ) : (
@@ -952,7 +952,7 @@ export default function AdsPage() {
                                 </p>
                                 {quote ? (
                                     <p className="mt-1 text-xs text-zinc-500">
-                                        {formatUsd(quote.creditAppliedCents)} credits · {formatUsd(quote.stripeRemainderCents)} card
+                                        {formatUsd(quote.creditAppliedCents)} credits, {formatUsd(quote.stripeRemainderCents)} card
                                     </p>
                                 ) : (
                                     <p className="mt-1 text-xs text-zinc-500">Enable a surface to price the run.</p>
@@ -997,10 +997,10 @@ export default function AdsPage() {
                                             ) : null}
                                         </div>
                                         <p className="mt-1 truncate text-xs text-zinc-500">
-                                            {formatDay(c.startAt)} → {formatDay(c.endAt)} · {formatUsd(c.priceCents)} ·{' '}
+                                            {formatDay(c.startAt)} → {formatDay(c.endAt)}, {formatUsd(c.priceCents)},{' '}
                                             {(c.placements || []).map((p) => SURFACE_LABELS[p.surface] || p.surface).join(', ') || 'No surfaces'}
-                                            {c.emailEnabled ? ' · Email' : ''} · {stats.impressions.toLocaleString()} impr ·{' '}
-                                            {stats.clicks.toLocaleString()} clicks · {formatCtr(stats.impressions, stats.clicks)} CTR
+                                            {c.emailEnabled ? ', Email' : ''}, {stats.impressions.toLocaleString()} impr,{' '}
+                                            {stats.clicks.toLocaleString()} clicks, {formatCtr(stats.impressions, stats.clicks)} CTR
                                         </p>
                                     </div>
                                     <div className="flex shrink-0 items-center gap-2">
@@ -1129,7 +1129,7 @@ export default function AdsPage() {
                                         <div key={row.surface} className="flex items-center justify-between rounded-2xl bg-pxi-field px-4 py-3 text-sm">
                                             <span className="font-bold text-white">{SURFACE_LABELS[row.surface] || row.surface}</span>
                                             <span className="text-xs font-semibold text-zinc-400">
-                                                {row.impressions.toLocaleString()} impr · {row.clicks.toLocaleString()} clicks ·{' '}
+                                                {row.impressions.toLocaleString()} impr, {row.clicks.toLocaleString()} clicks,{' '}
                                                 {formatCtr(row.impressions, row.clicks)}
                                             </span>
                                         </div>

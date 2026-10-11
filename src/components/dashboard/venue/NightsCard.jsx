@@ -41,13 +41,21 @@ function NightTile({ night }) {
     );
 }
 
-function Column({ heading, children, className = '' }) {
-    return (
-        <div className={`flex min-w-0 flex-col ${className}`.trim()}>
-            <h2 className="whitespace-nowrap text-[14px] font-semibold tracking-tight text-white">{heading}</h2>
-            <div className="mt-1.5 flex min-h-[184px] flex-1">{children}</div>
-        </div>
-    );
+// The two headings share a row, the first column is as wide as a night tile, and the dashboard draws headings
+// in capitals in the display font. "Upcoming Events." is then wider than what is left for it in a narrow card,
+// and used to run past the card's edge. Two things keep it inside, at any width:
+//   - the card is a size container, and both headings take the largest size, between 12px and 14px, at which
+//     that one fits on a line beside the Tonight column;
+//   - where even 12px is too wide (four cards to a row on a small laptop), it wraps onto a second line. The
+//     headings are a row of their own, set on its bottom edge, so the tiles under them still line up.
+const TONIGHT_COLUMN_PX = 118;
+const COLUMN_GAP_PX = 12;
+/** How wide "UPCOMING EVENTS." is, in ems, in the dashboard's heading face, with a little room. */
+const HEADING_EMS = 10.6;
+const HEADING_SIZE = `clamp(12px, calc((100cqw - ${TONIGHT_COLUMN_PX + COLUMN_GAP_PX}px) / ${HEADING_EMS}), 14px)`;
+
+function Heading({ id, children }) {
+    return <h2 id={id} className="min-w-0 self-end font-semibold leading-[1.15] tracking-tight text-white" style={{ fontSize: HEADING_SIZE }}>{children}</h2>;
 }
 
 function Nothing({ children }) {
@@ -59,13 +67,15 @@ export default function NightsCard({ tonight = [], upcoming = [], hasHistory = f
     const [lead, ...alsoTonight] = tonight;
     const later = [...alsoTonight, ...upcoming];
     return (
-        <section className={`glass-panel flex min-w-0 rounded-[1.25rem] p-4 ${className}`.trim()} data-venue-card="nights">
+        <section className={`glass-panel flex min-w-0 rounded-[1.25rem] p-4 [container-type:inline-size] ${className}`.trim()} data-venue-card="nights">
             {loading ? <CardSkeleton className="h-52" /> : (
-                <div className="flex min-w-0 flex-1 gap-3">
-                    <Column heading="Tonight." className="w-[118px] shrink-0">
+                <div className="grid min-w-0 flex-1 grid-cols-[118px_minmax(0,1fr)] grid-rows-[auto_1fr] gap-x-3 gap-y-1.5">
+                    <Heading id="venue-nights-tonight">Tonight.</Heading>
+                    <Heading id="venue-nights-upcoming">Upcoming Events.</Heading>
+                    <div className="flex min-h-[184px]" role="group" aria-labelledby="venue-nights-tonight">
                         {lead ? <NightTile night={lead} /> : <Nothing>No Events Tonight</Nothing>}
-                    </Column>
-                    <Column heading="Upcoming Events." className="flex-1">
+                    </div>
+                    <div className="flex min-h-[184px] min-w-0" role="group" aria-labelledby="venue-nights-upcoming">
                         {later.length ? (
                             <div className="dashboard-scrollbar-none flex w-full gap-3 overflow-x-auto" aria-label="Upcoming nights">
                                 {later.map((night) => <NightTile key={night.eventId} night={night} />)}
@@ -73,7 +83,7 @@ export default function NightsCard({ tonight = [], upcoming = [], hasHistory = f
                         ) : (
                             <Nothing>{hasHistory || lead ? 'No Upcoming Events' : 'No Upcoming Events Happening'}</Nothing>
                         )}
-                    </Column>
+                    </div>
                 </div>
             )}
         </section>

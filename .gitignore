@@ -5,7 +5,8 @@ node_modules/
 
 # Next.js
 .next/
-out/
+# Only the export folder at the repo root. Unanchored, "out/" also hid the ticket redirect route, src/app/(public)/go/[id]/out.
+/out/
 
 # Production
 build/

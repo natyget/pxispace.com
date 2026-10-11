@@ -677,7 +677,7 @@ export function stampRoleY(shape) {
 export function buildStampBannerFields(date, name, city, role) {
     return {
         arcText: name,
-        bannerLine: [city, date].filter(Boolean).join('   •   '),
+        bannerLine: [city, date].filter(Boolean).join(', '),
         roleText: role,
     };
 }

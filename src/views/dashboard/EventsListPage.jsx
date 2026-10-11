@@ -414,7 +414,7 @@ function ParticipantEventModal({ event, requests, onClose, onSubmitHelp }) {
                 {requests.map((request) => (
                   <div key={request.id} className="glass-field rounded-2xl p-4">
                     <div className="flex items-start justify-between gap-3">
-                      <div><p className="text-sm font-bold text-white">{request.subject}</p><p className="mt-1 text-xs text-[#9a9a9a]">{TYPE_LABELS[request.type] || request.type} • {formatDateTime(request.createdAt)}</p></div>
+                      <div><p className="text-sm font-bold text-white">{request.subject}</p><p className="mt-1 text-xs text-[#9a9a9a]">{TYPE_LABELS[request.type] || request.type}, {formatDateTime(request.createdAt)}</p></div>
                       <span className="rounded-full glow-chip px-2.5 py-1 text-[10px] font-bold tracking-[0.02em] text-white/70">{STATUS_LABELS[request.status] || request.status}</span>
                     </div>
                     {request.message ? <p className="mt-3 text-sm leading-relaxed text-[#9a9a9a]">{request.message}</p> : null}

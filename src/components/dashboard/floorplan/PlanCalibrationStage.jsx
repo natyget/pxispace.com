@@ -422,7 +422,7 @@ export default function PlanCalibrationStage({
                     </div>
                     {imageDims ? (
                         <p className="mt-2 text-xs text-zinc-500">
-                            {imageDims.w}×{imageDims.h}px · spans ~{Math.round(planWidthMeters)} m wide
+                            {imageDims.w}×{imageDims.h}px, spans ~{Math.round(planWidthMeters)} m wide
                         </p>
                     ) : (
                         <p className="mt-2 text-[10px] leading-4 text-zinc-600">

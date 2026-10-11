@@ -49,7 +49,7 @@ export function buildCommandCenterReminders({ events = [], unreadCount = 0, vend
     reminders.push({
       id: 'next-event',
       title: 'Next event',
-      detail: `${nextEvent.name || 'Hosted event'} · ${eventTimeLabel(nextEvent)}`,
+      detail: `${nextEvent.name || 'Hosted event'}, ${eventTimeLabel(nextEvent)}`,
       href: nextEvent.id ? `/dashboard/events/${nextEvent.id}` : '/dashboard/events',
       action: 'Open',
     });

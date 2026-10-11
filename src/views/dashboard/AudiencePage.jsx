@@ -792,7 +792,7 @@ export default function AudiencePage() {
                         {totalPages > 1 ? (
                             <div className="flex items-center justify-between gap-4 px-2">
                                 <p className="text-xs font-semibold text-zinc-500">
-                                    Page {page} of {totalPages} · {identifiedTotal.toLocaleString()} shown of {total.toLocaleString()}
+                                    Page {page} of {totalPages}, {identifiedTotal.toLocaleString()} shown of {total.toLocaleString()}
                                 </p>
                                 <div className="flex gap-2">
                                     <button

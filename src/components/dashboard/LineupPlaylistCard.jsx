@@ -213,7 +213,7 @@ export default function LineupPlaylistCard({ eventId }) {
                   )}
                 </button>
               </div>
-              <p className="text-[11px] text-zinc-600">Valid for 30 days · up to 5 submissions</p>
+              <p className="text-[11px] text-zinc-600">Valid for 30 days, up to 5 submissions</p>
             </div>
           )}
           {linkError && <p className="text-xs text-red-400">{linkError}</p>}

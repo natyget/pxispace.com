@@ -114,7 +114,7 @@ export default function VenueRoomHeatMap({ data, className = '' }) {
                 return (
                     <span key={pin.gate} className="absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left: `${(pin.xPx / plan.imageWidthPx) * 100}%`, top: `${(pin.yPx / plan.imageHeightPx) * 100}%` }}>
                         <span className="block rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-white/20">
-                            {pin.gate} · {total.toLocaleString()}
+                            {pin.gate}, {total.toLocaleString()}
                         </span>
                     </span>
                 );

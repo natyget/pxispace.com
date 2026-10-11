@@ -39,9 +39,7 @@ export default function EventTimelinePicker({ events, selectedIds = [], onToggle
             {months.map((month) => (
                 <div key={month.key} className="min-w-[230px] shrink-0">
                     <p className="flex items-center gap-2 px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">
-                        <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
                         {month.label}
-                        <span className="text-zinc-600">·</span>
                         <span className="text-zinc-600">{month.events.length}</span>
                     </p>
                     <div className="mt-2.5 space-y-2 border-l border-white/[0.07] pl-3">
@@ -78,7 +76,7 @@ export default function EventTimelinePicker({ events, selectedIds = [], onToggle
                                         <span className={`block truncate text-xs font-bold ${selected ? 'text-white' : ''}`}>{event.name}</span>
                                         <span className="mt-0.5 block truncate text-[10px] tracking-[0.02em] text-zinc-500">
                                             {day != null ? `${event.dateLabel}` : 'Date TBD'}
-                                            {event.venueName ? ` · ${event.venueName}` : ''}
+                                            {event.venueName ? <span className="ml-1.5 text-zinc-600">{event.venueName}</span> : null}
                                         </span>
                                     </span>
                                 </button>

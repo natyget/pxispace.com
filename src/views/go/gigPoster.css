@@ -1,0 +1,67 @@
+/* The typographic gig poster: a flat ink colour, the title huge in the display face, the venue and the night small.
+   One drawing for the /go page and for the flyers in the home page's map scene (GigPoster.jsx). Sizes are in
+   container units, so it prints the same at 90px and at 440px. */
+
+.gig-poster {
+  container-type: inline-size;
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--ar, 4 / 5);
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--on);
+}
+.gig-poster .gig-poster-title {
+  position: absolute;
+  top: 7cqw;
+  right: 7cqw;
+  left: 7cqw;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+  overflow: hidden;
+  margin: 0;
+  padding: 0 0 0.06em;
+  font-family: var(--font-heading, 'Stack Sans Notch'), 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: max(10px, calc(var(--fs) * 1cqw));
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  text-align: left;
+  text-transform: uppercase;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.gig-poster .gig-poster-foot {
+  position: absolute;
+  right: 7cqw;
+  bottom: 7cqw;
+  left: 7cqw;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+.gig-poster .gig-poster-venue,
+.gig-poster .gig-poster-night {
+  display: block;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: max(3.9cqw, 6px);
+  line-height: 1.25;
+}
+.gig-poster .gig-poster-venue {
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.gig-poster .gig-poster-night {
+  margin-top: 1cqw;
+  font-weight: 600;
+  opacity: 0.8;
+}
+/* A cover thumbnail has no room for fine print. */
+@container (max-width: 110px) {
+  .gig-poster .gig-poster-foot {
+    display: none;
+  }
+}

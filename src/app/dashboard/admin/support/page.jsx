@@ -118,7 +118,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                     <p className="text-white/50 text-[13px] mt-1">
                         {ticket ? (
                             <>
-                                {ticket.user?.email} · {ticket.category} · opened {formatDate(ticket.createdAt)}
+                                {ticket.user?.email}, {ticket.category}, opened {formatDate(ticket.createdAt)}
                             </>
                         ) : 'Loading...'}
                     </p>
@@ -175,7 +175,7 @@ function TicketDetail({ ticketId, onClose, onChanged }) {
                             >
                                 <div className="flex items-center justify-between gap-3 mb-1.5">
                                     <span className="text-[11px] font-bold tracking-[0.02em] text-white/45">
-                                        {m.isStaff ? `PXI Staff${m.author?.username ? ` · ${m.author.username}` : ''}` : (m.author?.username || 'User')}
+                                        {m.isStaff ? `PXI Staff${m.author?.username ? `, ${m.author.username}` : ''}` : (m.author?.username || 'User')}
                                     </span>
                                     <span className="text-[11px] text-white/35">{formatDate(m.createdAt)}</span>
                                 </div>
