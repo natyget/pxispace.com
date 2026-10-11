@@ -27,6 +27,14 @@ export function updateAdminUser(userId, body) {
     return api.patch(`/api/admin/users/${userId}`, body);
 }
 
+/**
+ * SUPER_ADMIN: a person's whole staff setup in one step. Body: { adminRole, adminCityCode, salesRole,
+ * salesManagerId } (lib/staffSetup.js builds it). The backend moves the account tier with the role.
+ */
+export function saveStaffAccess(userId, body) {
+    return api.post(`/api/admin/users/${userId}/staff-access`, body);
+}
+
 /** SUPER_ADMIN: set a sales role. Body: { salesRole, salesManagerId?, cityCode? } */
 export function updateSalesRole(userId, body) {
     return api.post(`/api/admin/users/${userId}/sales-role`, body);
