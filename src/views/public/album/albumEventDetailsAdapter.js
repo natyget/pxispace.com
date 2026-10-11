@@ -84,8 +84,9 @@ export function buildAlbumEventDetails(album, albumId) {
     location: formatLocation(event),
     shareUrl: albumId ? `/album/${albumId}` : undefined,
     description: event?.description,
+    // The id as well as the username: the host's name and picture lead to their organizer page.
     host: album.host
-      ? { name: album.host.name, username: album.host.username, avatarUrl: album.host.avatarUrl }
+      ? { id: album.host.id, name: album.host.name, username: album.host.username, avatarUrl: album.host.avatarUrl }
       : null,
     ticketTiers,
     lineup,
