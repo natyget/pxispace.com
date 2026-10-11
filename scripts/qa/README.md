@@ -129,13 +129,39 @@ Give it any of the sign-ins and it runs the parts it can and says which it skipp
 - **An ambassador, a city admin, an account with no staff role**: what each is shown, and that the
   API refuses them the rest.
 - **A super admin** (`SUPER_EMAIL`, `SUPER_PASSWORD`): the one-Save setup on Accounts, the refusal, a
-  role switched on, Advanced. On dev the super admins are real people's sign-ins, so this part has
-  only been written, not run: see `PART7_DECISIONS.md`.
+  role switched on, Advanced. On dev the super admins are real people's sign-ins (`@qa_super_admin`
+  is the CTO's), so ask for one rather than setting a password on it.
 
 **It writes to the deployed database**, through the screens: it adds and removes `@qa_fan3` and
 `@qa_fan5` on the managers' teams (and, with a super admin, sets `@qa_fan4` to `@qa_fan6` up and
 back). It checks those accounts have no staff access before it starts, and sets every one back even
 when a step fails. Each change leaves an audit row.
+
+## `guideVideos.cjs`: short guide videos of the staff screens
+
+Records three clips from the real pages on the deployed API, about a minute each, 1280x720, no sound:
+a caption bar says what is happening and a dot shows the pointer. One for a super admin (set someone
+up on Accounts), one for an ambassador (raise a claim), one for a regional manager (the team, and
+deciding a claim). Each person signs in off camera and the clip opens on a title card.
+
+```bash
+SUPER_EMAIL=... SUPER_PASSWORD=... MANAGER_EMAIL=... MANAGER_PASSWORD=... \
+AMBASSADOR_EMAIL=... AMBASSADOR_PASSWORD=... FFMPEG=/path/to/ffmpeg node scripts/qa/guideVideos.cjs
+```
+
+- `FFMPEG` is any ffmpeg binary (it is not a dependency of this repo). With it the clips are trimmed and
+  written as `.mp4`; without it the recorder's `.webm` is kept, which does not play on a phone.
+- `ONLY=3-manager` records one clip again. The manager's clip decides the claim the ambassador's clip
+  raised in the same run, so on its own it has no deciding part.
+- **It writes to the deployed database**, like `staffLive.cjs`, and undoes it: two accounts set up and
+  set back, one account added to a team and removed, and one claim raised and then **rejected**, never
+  approved. The rejected claim stays in the ambassador's "Claims you raised", so each run adds a row
+  that the next recording will show.
+- On Accounts the table is blurred until the search has narrowed it to the one account being set up.
+  Look at the frames before sending a clip outside the team: the blur and the title card are drawn by
+  the script, and a page change can break either.
+
+When the look of these pages changes, run it again. The captions are in the script.
 
 ## `webLive.cjs` / `webLiveDown.cjs` — the earlier pass
 
