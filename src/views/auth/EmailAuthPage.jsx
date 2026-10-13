@@ -3,20 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
-import FloatingAuthElements from '../../components/auth/FloatingAuthElements';
-import {
-    ArrowLeft01Icon,
-    ViewIcon,
-    ViewOffIcon,
-    CheckmarkCircle02Icon,
-    CancelCircleIcon,
-    Loading02Icon,
-    Shield01Icon,
-    Ticket01Icon,
-} from '@hugeicons/core-free-icons';
-import { FaApple, FaGoogle } from 'react-icons/fa';
+import { ArrowLeft01Icon, ViewIcon, ViewOffIcon } from '@hugeicons/core-free-icons';
+import AuthField from '../../components/auth/AuthField';
+import AuthPrints from '../../components/auth/AuthPrints';
+import SocialAuthButtons from '../../components/auth/SocialAuthButtons';
 import { useGoogleLogin } from '@react-oauth/google';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
@@ -76,12 +67,14 @@ function shouldClearAuth(error) {
     return status === 401 || status === 403 || status === 404 || code === 'ACCOUNT_DELETED' || code === 'INVALID_TOKEN';
 }
 
-const PASSWORD_RULES = [
-    { id: 'length', label: 'At least 8 characters', test: (p) => p.length >= 8 },
-    { id: 'upper', label: 'One uppercase letter', test: (p) => /[A-Z]/.test(p) },
-    { id: 'lower', label: 'One lowercase letter', test: (p) => /[a-z]/.test(p) },
-    { id: 'number', label: 'One number', test: (p) => /[0-9]/.test(p) },
-];
+// The app's words, one message at a time.
+function validateSignupPassword(password) {
+    if (password.length < 8) return 'Password must be at least 8 characters';
+    if (!/[A-Z]/.test(password)) return 'Password must contain at least 1 uppercase letter';
+    if (!/[a-z]/.test(password)) return 'Password must contain at least 1 lowercase letter';
+    if (!/[0-9]/.test(password)) return 'Password must contain at least 1 number';
+    return null;
+}
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -103,7 +96,7 @@ export default function EmailAuthPage() {
     const showVerifiedMessage = searchParams.get('verified') === '1';
     // Prefer `redirect` (middleware contract). Fall back to path-shaped `from` for older links.
     // Do not treat from=mobile as a return path — that flag is for DashboardLayout chrome.
-    const redirectPath = searchParams.get('redirect');
+    const redirectPath = searchParams.get('redirect') || searchParams.get('next');
     const fromPath = searchParams.get('from');
     const safeRedirect = safeReturnPath(redirectPath) || safeReturnPath(fromPath);
 
@@ -116,6 +109,8 @@ export default function EmailAuthPage() {
     const [error, setError] = useState(searchParams.get('error') || '');
     const [usernameStatus, setUsernameStatus] = useState('idle');
     const [emailStatus, setEmailStatus] = useState('idle');
+    // Validation messages, shown under the field they belong to, one at a time like the app.
+    const [fieldErrors, setFieldErrors] = useState({});
 
     const debouncedUsername = useDebounce(username, 500);
     const debouncedEmail = useDebounce(email, 500);
@@ -314,27 +309,33 @@ export default function EmailAuthPage() {
         setConfirmPassword('');
         setUsernameStatus('idle');
         setEmailStatus('idle');
+        setFieldErrors({});
+        setShowPassword(false);
     };
 
-    const passwordRules = PASSWORD_RULES.map((r) => ({ ...r, passed: r.test(password) }));
-    const passwordValid = passwordRules.every((r) => r.passed);
-    const passwordsMatch = password === confirmPassword && confirmPassword !== '';
-
-    const canSubmit = mode === 'login'
-        ? email && password && !loading
-        : email &&
-          EMAIL_REGEX.test(email.trim().toLowerCase()) &&
-          emailStatus === 'available' &&
-          isValidUsername(username) &&
-          usernameStatus === 'available' &&
-          passwordValid &&
-          passwordsMatch &&
-          !loading;
+    /** Typing in a field clears its message, and the one above the button. */
+    const clearField = (field) => {
+        setFieldErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+        setError('');
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!canSubmit) return;
+        if (loading) return;
         setError('');
+        setFieldErrors({});
+        const normalizedEmail = email.trim().toLowerCase();
+        const fail = (field, message) => setFieldErrors({ [field]: message });
+        if (!email) return fail('email', 'Please enter your email');
+        if (mode === 'signup' && !username) return fail('username', 'Please enter a username');
+        if (!password) return fail('password', 'Please enter your password');
+        if (mode === 'signup') {
+            if (password !== confirmPassword) return fail('confirm', 'Passwords do not match');
+            if (!EMAIL_REGEX.test(normalizedEmail)) return fail('email', 'Please enter a valid email address');
+            const passwordError = validateSignupPassword(password);
+            if (passwordError) return fail('password', passwordError);
+            if (!isValidUsername(username)) return fail('username', USERNAME_RULES_HINT);
+        }
         setLoading(true);
         try {
             if (mode === 'login') {
@@ -343,28 +344,25 @@ export default function EmailAuthPage() {
                 toast.success('Welcome back!');
                 handleAuthSuccess(result);
             } else {
-                const normalizedEmail = email.trim().toLowerCase();
-                const emailCheck = await authService.checkEmail(normalizedEmail);
+                const [emailCheck, usernameCheck] = await Promise.all([
+                    authService.checkEmail(normalizedEmail),
+                    authService.checkUsername(username).catch(() => null),
+                ]);
                 if (emailCheck === 'taken') {
                     setEmailStatus('taken');
-                    const msg = 'An account with this email already exists. Try logging in instead.';
-                    setError(msg);
-                    toast.error(msg);
-                    return;
+                    return fail('email', 'An account with this email already exists. Try logging in instead.');
                 }
                 if (emailCheck === 'invalid') {
                     setEmailStatus('invalid');
-                    const msg = 'Please enter a valid email address.';
-                    setError(msg);
-                    toast.error(msg);
-                    return;
+                    return fail('email', 'Please enter a valid email address');
                 }
                 if (emailCheck !== 'available') {
                     setEmailStatus('error');
-                    const msg = 'Could not verify email availability. Please check your connection and try again.';
-                    setError(msg);
-                    toast.error(msg);
-                    return;
+                    return fail('email', 'Could not verify email availability. Please check your connection and try again.');
+                }
+                if (usernameCheck && usernameCheck.available === false) {
+                    setUsernameStatus('taken');
+                    return fail('username', 'That username is taken. Please choose another.');
                 }
 
                 if (!phoneVerificationRequired) {
@@ -390,411 +388,213 @@ export default function EmailAuthPage() {
                 router.replace('/verify-phone');
             }
         } catch (err) {
-            let msg;
-            if (err.code === 'NO_PASSWORD') {
-                msg = 'This account uses social login. Go back and use Google or Apple.';
-            } else if (err.code === 'EMAIL_EXISTS') {
-                msg = 'An account with this email already exists.';
-            } else if (err.code === 'USERNAME_EXISTS') {
-                msg = 'That username is already taken.';
-                setUsernameStatus('taken');
-            } else {
-                msg = err.data?.error || err.message || 'Something went wrong. Please try again.';
+            if (err.code === 'EMAIL_EXISTS') {
+                setFieldErrors({ email: 'An account with this email already exists. Try logging in instead.' });
+                return;
             }
-            setError(msg);
-            toast.error(msg);
+            if (err.code === 'USERNAME_EXISTS') {
+                setUsernameStatus('taken');
+                setFieldErrors({ username: 'That username is taken. Please choose another.' });
+                return;
+            }
+            setError(
+                err.code === 'NO_PASSWORD'
+                    ? 'This account uses social login. Go back and use Google or Apple.'
+                    : err.data?.error || err.message || 'Something went wrong. Please try again.',
+            );
         } finally {
             setLoading(false);
         }
     };
 
     const isLogin = mode === 'login';
+    // A live "taken" reading shows under the field before submit, in the same place the submit message goes.
+    const emailMessage = fieldErrors.email || (!isLogin && email && emailStatus === 'taken' ? 'An account with this email already exists. Try logging in instead.' : null);
+    const usernameMessage = fieldErrors.username || (!isLogin && username && usernameStatus === 'taken' ? 'That username is taken. Please choose another.' : null);
 
     return (
-        <div className="relative flex min-h-screen flex-1 flex-col overflow-hidden bg-black">
-            <FloatingAuthElements />
-            {showVerifiedMessage && (
-                <div
-                    className="relative z-20 mx-4 mt-6 rounded-2xl px-4 py-3 text-center text-sm font-semibold"
-                    style={{
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        color: 'rgba(165,35,239,0.95)',
-                    }}
-                >
-                    Please log in again to complete your profile.
-                </div>
-            )}
-
-            {/* Back button — the only top chrome on this page */}
+        <div className="relative flex min-h-screen flex-1 flex-col bg-black">
+            {/* Back button, the only top chrome on this page */}
             <button
                 onClick={() => router.push('/')}
-                className="absolute left-5 top-5 z-20 flex items-center justify-center rounded-full bg-pxi-field p-2.5 text-white/60 transition hover:bg-white/10 hover:text-white md:left-8 md:top-8"
+                className="absolute left-5 top-5 z-20 flex size-11 items-center justify-center rounded-full bg-pxi-field text-white/70 transition hover:bg-white/10 hover:text-white md:left-8 md:top-8"
                 aria-label="Back to home"
             >
                 <HugeiconsIcon icon={ArrowLeft01Icon} size={22} />
             </button>
 
-            {/* Scrollable content */}
-            <div className="relative z-10 flex flex-1 items-center justify-center overflow-y-auto px-4 py-20 md:px-6 md:py-16">
+            <div className="relative z-10 flex flex-1 items-center justify-center px-5 pb-10 pt-20 md:py-12">
+                <div className="mx-auto flex w-full max-w-[420px] flex-col">
+                    {showVerifiedMessage ? (
+                        <p className="mb-4 text-center text-[15px] font-semibold text-white/70">
+                            Please log in again to complete your profile.
+                        </p>
+                    ) : null}
 
-                    <motion.div 
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                        className="mx-auto flex w-full max-w-[430px] flex-col"
-                    >
-                        <div className="mb-6 text-center lg:text-left">
-                            <p className="mt-3 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">
-                                {isLogin ? 'Welcome back' : 'Create your PXI'}
-                            </p>
-                            <h1 className="mt-1 text-3xl font-black leading-none tracking-normal text-white">
-                                {isLogin ? 'Log in to continue.' : 'Start with your account.'}
-                            </h1>
-                        </div>
+                    <AuthPrints />
 
-                    {/* Auth card — panel chrome on md+ only (mobile matches app: no card wrapper) */}
-                    <div
-                        className="flex flex-col rounded-[2rem] bg-black/40 p-5 md:p-7"
-                    >
-                    {/* Mode toggle — glass segmented control, matches mobile */}
-                    <div className="relative mb-6 grid grid-cols-2 gap-0 overflow-hidden rounded-full bg-pxi-field p-1">
+                    <h1 style={{ fontFamily: 'var(--font-heading)' }} className="mb-3.5 mt-2.5 text-center text-[32px] font-bold uppercase leading-[34px] tracking-[-0.4px] text-white">
+                        {isLogin ? 'Welcome back' : 'Join PXI'}
+                    </h1>
+
+                    {/* LOG IN / SIGN UP: a dark track with a flat purple pill */}
+                    <div role="tablist" aria-label="Log in or sign up" className="relative grid h-[52px] grid-cols-2 rounded-full bg-pxi-field p-[5px]">
                         <div
-                            className="absolute inset-y-1 w-[calc(50%-4px)] rounded-full bg-white transition-transform duration-300 ease-out"
-                            style={{ transform: mode === 'signup' ? 'translateX(calc(100% + 8px))' : 'translateX(0)' }}
+                            aria-hidden="true"
+                            className="absolute inset-y-[5px] left-[5px] w-[calc(50%-5px)] rounded-full bg-pxi-purple transition-transform duration-300 ease-out motion-reduce:transition-none"
+                            style={{ transform: isLogin ? 'translateX(0)' : 'translateX(100%)' }}
                         />
-                        {['login', 'signup'].map((m) => (
+                        {[
+                            ['login', 'LOG IN'],
+                            ['signup', 'SIGN UP'],
+                        ].map(([m, label]) => (
                             <button
                                 key={m}
                                 type="button"
+                                role="tab"
+                                aria-selected={mode === m}
                                 onClick={() => switchMode(m)}
-                                className={`relative z-[1] rounded-xl py-3 text-xs font-black uppercase tracking-[0.15em] transition-colors ${
-                                    mode === m ? 'text-black' : 'text-white/45 hover:text-white'
-                                }`}
-                                style={{ border: 0 }}
+                                className={`relative z-[1] rounded-full text-[12.5px] font-extrabold tracking-[0.11em] text-white transition-opacity ${mode === m ? '' : 'opacity-60 hover:opacity-100'}`}
                             >
-                                {m === 'login' ? 'LOG IN' : 'SIGN UP'}
+                                {label}
                             </button>
                         ))}
                     </div>
 
-                    {/* Error */}
-                    {error && (
-                        <div
-                            className="mb-6 px-4 py-3 text-sm"
-                            style={{
-                                background: 'rgba(255,50,50,0.08)',
-                                border: '1px solid rgba(255,50,50,0.2)',
-                                borderRadius: 14,
-                                color: '#ff6b6b',
-                                letterSpacing: '0.02em',
+                    <div className="mt-4">
+                        <SocialAuthButtons onApple={handleApple} onGoogle={() => loginWithGoogle()} disabled={loading} />
+                    </div>
+
+                    <div className="my-4 flex items-center gap-3.5" aria-hidden="true">
+                        <div className="h-px flex-1 bg-white/[0.18]" />
+                        <span className="text-[11px] font-extrabold tracking-[0.14em] text-[#8A8A8A]">OR</span>
+                        <div className="h-px flex-1 bg-white/[0.18]" />
+                    </div>
+
+                    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3.5">
+                        <AuthField
+                            id="auth-email"
+                            type="email"
+                            name="email"
+                            placeholder="Email address"
+                            aria-label="Email address"
+                            autoComplete="email"
+                            autoCapitalize="none"
+                            value={email}
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                                clearField('email');
                             }}
-                        >
-                            {error}
-                        </div>
-                    )}
+                            disabled={loading}
+                            error={emailMessage}
+                        />
 
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="flex flex-col" style={{ gap: 0 }}>
+                        {!isLogin ? (
+                            <AuthField
+                                id="auth-username"
+                                type="text"
+                                name="username"
+                                placeholder="Username"
+                                aria-label="Username"
+                                autoComplete="username"
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                maxLength={PROFILE_USERNAME_MAX_LENGTH}
+                                value={username}
+                                onChange={(e) => {
+                                    setUsername(sanitizeUsernameInput(e.target.value));
+                                    clearField('username');
+                                }}
+                                disabled={loading}
+                                error={usernameMessage}
+                            />
+                        ) : null}
 
-                        {/* Email */}
-                        <AuthField>
-                            <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2 pl-4">Email Address</label>
-                            <div className="relative">
-                                <AuthInput
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="e.g. hello@example.com"
-                                    required
-                                    style={!isLogin ? { paddingRight: 48 } : undefined}
-                                />
-                                {!isLogin && (
-                                    <div className="absolute right-6 top-1/2 -translate-y-1/2">
-                                        {emailStatus === 'checking' && <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" style={{ color: 'rgba(255,255,255,0.4)' }} />}
-                                        {emailStatus === 'available' && <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} style={{ color: '#4ade80' }} />}
-                                        {(emailStatus === 'taken' || emailStatus === 'invalid' || emailStatus === 'error') && (
-                                            <HugeiconsIcon icon={CancelCircleIcon} size={14} style={{ color: '#f87171' }} />
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                            {!isLogin && email && emailStatus === 'taken' && (
-                                <FieldHint color="#f87171">This email is already used. Try logging in instead.</FieldHint>
-                            )}
-                            {!isLogin && email && emailStatus === 'available' && (
-                                <FieldHint color="#4ade80">Email is available</FieldHint>
-                            )}
-                            {!isLogin && email && emailStatus === 'invalid' && (
-                                <FieldHint color="rgba(255,255,255,0.3)">Please enter a valid email address</FieldHint>
-                            )}
-                            {!isLogin && email && emailStatus === 'error' && (
-                                <FieldHint color="#f87171">Could not verify email availability</FieldHint>
-                            )}
-                        </AuthField>
-
-                        {/* Username (signup only) */}
-                        {!isLogin && (
-                            <AuthField>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2 pl-4">Username</label>
-                                <div className="relative">
-                                    <AuthInput
-                                        type="text"
-                                        value={username}
-                                        onChange={(e) =>
-                                            setUsername(sanitizeUsernameInput(e.target.value))
-                                        }
-                                        placeholder="e.g. nightowl99"
-                                        maxLength={PROFILE_USERNAME_MAX_LENGTH}
-                                    />
-                                    <div className="absolute right-6 top-1/2 -translate-y-1/2">
-                                        {usernameStatus === 'checking' && <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" style={{ color: 'rgba(255,255,255,0.4)' }} />}
-                                        {usernameStatus === 'available' && <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} style={{ color: '#4ade80' }} />}
-                                        {(usernameStatus === 'taken' || usernameStatus === 'invalid') && <HugeiconsIcon icon={CancelCircleIcon} size={14} style={{ color: '#f87171' }} />}
-                                    </div>
-                                </div>
-                                {username && usernameStatus === 'taken' && <FieldHint color="#f87171">@{username} is already taken</FieldHint>}
-                                {username && usernameStatus === 'available' && <FieldHint color="#4ade80">@{username} is available</FieldHint>}
-                                {username && usernameStatus === 'invalid' && <FieldHint color="rgba(255,255,255,0.3)">{USERNAME_RULES_HINT}</FieldHint>}
-                            </AuthField>
-                        )}
-
-                        {/* Password */}
-                        <AuthField>
-                            <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2 pl-4">Password</label>
-                            <div className="relative">
-                                <AuthInput
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Your password"
-                                    required
-                                    style={{ paddingRight: 48 }}
-                                />
+                        <AuthField
+                            id="auth-password"
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            placeholder="Password"
+                            aria-label="Password"
+                            autoComplete={isLogin ? 'current-password' : 'new-password'}
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            value={password}
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                clearField('password');
+                            }}
+                            disabled={loading}
+                            error={fieldErrors.password}
+                            right={
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((v) => !v)}
-                                    className="absolute right-6 top-1/2 -translate-y-1/2"
-                                    style={{ color: 'rgba(255,255,255,0.35)' }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
+                                    className="flex h-14 w-12 items-center justify-center text-[#8A8A8A] hover:text-white"
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
-                                    {showPassword ? <HugeiconsIcon icon={ViewOffIcon} size={16} /> : <HugeiconsIcon icon={ViewIcon} size={16} />}
+                                    <HugeiconsIcon icon={showPassword ? ViewOffIcon : ViewIcon} size={20} />
                                 </button>
-                            </div>
-                            {/* Password rules — signup only */}
-                            {!isLogin && password.length > 0 && (
-                                <div className="grid grid-cols-2 mt-3" style={{ gap: '6px 12px' }}>
-                                    {passwordRules.map((r) => (
-                                        <div
-                                            key={r.id}
-                                            className="flex items-center gap-1.5"
-                                            style={{
-                                                fontSize: 10,
-                                                letterSpacing: '0.05em',
-                                                color: r.passed ? '#4ade80' : 'rgba(255,255,255,0.25)',
-                                            }}
-                                        >
-                                            {r.passed ? <HugeiconsIcon icon={CheckmarkCircle02Icon} size={11} /> : <HugeiconsIcon icon={CancelCircleIcon} size={11} />}
-                                            {r.label}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </AuthField>
+                            }
+                        />
 
-                        {/* Confirm password — signup only */}
-                        {!isLogin && (
-                            <AuthField>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2 pl-4">Confirm Password</label>
-                                <AuthInput
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Your password"
-                                    required
-                                    focusColor={
-                                        confirmPassword
-                                            ? passwordsMatch
-                                                ? 'rgba(74,222,128,0.5)'
-                                                : 'rgba(248,113,113,0.5)'
-                                            : undefined
-                                    }
-                                />
-                                {confirmPassword && !passwordsMatch && (
-                                    <FieldHint color="#f87171">Passwords do not match</FieldHint>
-                                )}
-                            </AuthField>
-                        )}
+                        {!isLogin ? (
+                            <AuthField
+                                id="auth-confirm"
+                                type={showPassword ? 'text' : 'password'}
+                                name="confirm-password"
+                                placeholder="Confirm password"
+                                aria-label="Confirm password"
+                                autoComplete="new-password"
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                value={confirmPassword}
+                                onChange={(e) => {
+                                    setConfirmPassword(e.target.value);
+                                    clearField('confirm');
+                                }}
+                                disabled={loading}
+                                error={fieldErrors.confirm}
+                            />
+                        ) : null}
 
-                        {/* Submit button — matches mobile PillButton primary */}
-                        <div className="relative mt-2 mb-2">
-                            <button
-                                type="submit"
-                                disabled={!canSubmit}
-                                className={`relative z-[2] h-14 w-full rounded-full border-0 font-black uppercase text-[13px] tracking-[0.15em] transition-all ${
-                                    canSubmit
-                                        ? 'cursor-pointer text-white bg-pxi-purple shadow-xl'
-                                        : 'cursor-not-allowed bg-white/10 text-white/30'
-                                }`}
-                            >
-                                {loading ? (
-                                    <span className="flex items-center justify-center gap-2">
-                                        <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
-                                        {isLogin ? 'LOGGING IN…' : 'CREATING ACCOUNT…'}
-                                    </span>
-                                ) : isLogin ? (
-                                    'LOG IN'
-                                ) : (
-                                    'CREATE ACCOUNT'
-                                )}
-                            </button>
-                        </div>
+                        {error ? (
+                            <p role="alert" className="ml-1 text-[13px] font-semibold leading-[18px] text-[#FF5B5B]">
+                                {error}
+                            </p>
+                        ) : null}
 
-                        <p
-                            className="text-center"
-                            style={{
-                                marginTop: 4,
-                                marginBottom: 8,
-                                color: 'rgba(255,255,255,0.35)',
-                                fontSize: 11,
-                                letterSpacing: '0.02em',
-                                lineHeight: 1.55,
-                            }}
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            aria-label={loading ? (isLogin ? 'LOGGING IN…' : 'CREATING ACCOUNT…') : undefined}
+                            className="mt-1 flex h-14 w-full items-center justify-center rounded-full bg-pxi-purple text-[13px] font-extrabold tracking-[0.15em] text-white transition-opacity active:opacity-80 disabled:opacity-60"
                         >
-                            {isLogin ? 'By signing in, you agree to our ' : 'By signing up, you agree to our '}
-                            <Link href="/legal#terms" className="text-white underline decoration-white/30 underline-offset-4">
-                                Terms of Service
-                            </Link>
-                            {', '}
-                            <Link href="/legal#privacy" className="text-white underline decoration-white/30 underline-offset-4">
-                                Privacy Policy
-                            </Link>
-                            {', and '}
-                            <Link href="/legal#cookie" className="text-white underline decoration-white/30 underline-offset-4">
-                                Cookie Policy
-                            </Link>
-                            .
-                        </p>
+                            {loading ? <span className="size-5 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : isLogin ? 'LOG IN' : 'CREATE ACCOUNT'}
+                        </button>
                     </form>
 
-                    {/* Social login */}
-                    <div className="flex items-center gap-3 mt-2">
-                        <div className="flex-1 h-px bg-white/15" />
-                        <p
-                            className="shrink-0 font-bold uppercase"
-                            style={{
-                                fontSize: 10,
-                                letterSpacing: '0.2em',
-                                color: 'rgba(255,255,255,0.35)',
-                            }}
-                        >
-                            OR CONTINUE WITH
-                        </p>
-                        <div className="flex-1 h-px bg-white/15" />
-                    </div>
-                    <div className="flex gap-[12px] mt-3">
-                        <FooterPill
-                            onClick={() => loginWithGoogle()}
-                            icon={<FaGoogle size={14} className="text-white/50" />}
-                        >
-                            GOOGLE
-                        </FooterPill>
-                        <FooterPill
-                            onClick={handleApple}
-                            icon={<FaApple size={14} className="text-white/50" />}
-                        >
-                            APPLE
-                        </FooterPill>
-                    </div>
-                    </div>
-                    </motion.div>
+                    <p className="mt-4 px-1 text-center text-xs leading-4 text-[#6E6E6E]">
+                        {isLogin ? 'By signing in, you agree to our ' : 'By signing up, you agree to our '}
+                        <Link href="/legal#terms" className="text-white underline">
+                            Terms of Service (EULA)
+                        </Link>
+                        {', '}
+                        <Link href="/legal#privacy" className="text-white underline">
+                            Privacy Policy
+                        </Link>
+                        {', '}
+                        <Link href="/legal#cookie" className="text-white underline">
+                            Cookie Policy
+                        </Link>
+                        {', and '}
+                        <Link href="/legal#community" className="text-white underline">
+                            Community Standards
+                        </Link>
+                        . PXI has zero tolerance for objectionable content or abusive behavior.
+                    </p>
+                </div>
             </div>
         </div>
-    );
-}
-
-// ─── Sub-components ────────────────────────────────────────────────────────────
-
-/** Matches mobile `GlassInput` + auth pill radius (56px tall, 24px horizontal padding). */
-const AUTH_INPUT_HEIGHT_PX = 56;
-const AUTH_INPUT_PADDING_X_PX = 24;
-
-function AuthField({ children }) {
-    return <div className="auth-field-gap">{children}</div>;
-}
-
-function AuthInput({ focusColor, style = {}, ...props }) {
-    const [focused, setFocused] = useState(false);
-    const defaultFocus = 'rgba(165,35,239,0.55)';
-    const activeFocus = focusColor || defaultFocus;
-
-    return (
-        <input
-            {...props}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            className="auth-glass-input w-full text-sm font-semibold text-white outline-none transition-all placeholder:text-sm placeholder:font-semibold placeholder:text-white/30 placeholder:uppercase placeholder:tracking-[0.5px] bg-pxi-field"
-            style={{
-                height: AUTH_INPUT_HEIGHT_PX,
-                borderRadius: 16,
-                background: 'rgba(26,26,26,0.6)',
-                border: 0,
-                boxShadow: focused ? `0 0 0 1.5px ${activeFocus}, 0 0 16px ${activeFocus}` : 'none',
-                fontSize: 14,
-                fontWeight: 600,
-                letterSpacing: '0.5px',
-                paddingLeft: AUTH_INPUT_PADDING_X_PX,
-                paddingRight: AUTH_INPUT_PADDING_X_PX,
-                color: '#fff',
-                ...style,
-            }}
-        />
-    );
-}
-
-function FieldHint({ color, children }) {
-    return (
-        <p
-            className="font-bold"
-            style={{
-                fontSize: 10,
-                letterSpacing: '0.05em',
-                color,
-                marginTop: 6,
-                paddingLeft: 4,
-            }}
-        >
-            {children}
-        </p>
-    );
-}
-
-function AuthFeature({ icon, title, body }) {
-    return (
-        <div className="flex items-start gap-3 rounded-[1.5rem] bg-pxi-field p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/35 text-white">
-                <HugeiconsIcon icon={icon} size={18} />
-            </div>
-            <div>
-                <p className="text-sm font-black text-white">{title}</p>
-                <p className="mt-1 text-xs leading-5 text-zinc-500">{body}</p>
-            </div>
-        </div>
-    );
-}
-
-function FooterPill({ onClick, icon, children }) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-white/10 font-bold uppercase tracking-widest text-white transition-all hover:bg-white/15 active:scale-95"
-            style={{ fontSize: 11 }}
-        ><span className="flex items-center justify-center gap-2">
-                {icon}
-                {children}
-            </span>
-        </button>
     );
 }
