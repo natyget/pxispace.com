@@ -1233,16 +1233,20 @@ html, body {
   background: #050505;
 }
 
-/* Desktop: X-style full-width split — edge-to-edge thread on the left, a fixed
-   ~530px pane on the right rendering the album details modal card inline. */
+/* Desktop: a two-column page, centred up to 1440px under the site header. The left column is the
+   event's details and scrolls; the right column is the album (or the ticket), fixed to the viewport.
+   .event-split is the same page for /events/:id. */
 @media (min-width: 1024px) {
-  .public-album-page {
+  .public-album-page,
+  .event-split {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 414px;
+    grid-template-columns: minmax(0, 1fr) clamp(440px, 36vw, 540px);
     align-items: stretch;
-    height: calc(100dvh - 80px);
-    max-height: calc(100dvh - 80px);
-    margin-top: 80px;
+    width: 100%;
+    max-width: 1440px;
+    margin: var(--public-navbar-height) auto 0;
+    height: calc(100dvh - var(--public-navbar-height));
+    max-height: calc(100dvh - var(--public-navbar-height));
     overflow: hidden;
   }
 
@@ -1252,15 +1256,30 @@ html, body {
     min-width: 0;
     height: 100%;
     overflow: hidden;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .album-details-pane {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  .event-split__right {
+    min-width: 0;
     min-height: 0;
+    height: 100%;
     overflow: hidden;
     border-left: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .event-split__right .public-album-left-slot {
+    border-left: none;
+  }
+
+  .album-details-pane,
+  .event-split__left {
+    display: block;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: #000;
   }
 
   .iphone-pane {
