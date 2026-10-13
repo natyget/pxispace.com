@@ -352,6 +352,14 @@ html, body {
     font-weight: 700;
   }
 
+  /* The brand display face is for page titles. Card and section titles read in Inter, sentence case. */
+  .dashboard-page-surface :is(h2, h3, h4, h5, h6) {
+    font-family: var(--font-inter);
+    letter-spacing: normal;
+    text-transform: none;
+    font-weight: 600;
+  }
+
   .surface-b,
   .dashboard-surface-b,
   .dashboard-glass-surface,
