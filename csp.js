@@ -130,8 +130,8 @@ export function buildCsp({ dev = false } = {}) {
 
     'style-src': [SELF, "'unsafe-inline'", 'https://fonts.googleapis.com'],
     'font-src': [SELF, 'data:', 'https://fonts.gstatic.com'],
-    'img-src': [SELF, 'data:', 'blob:', 'https:'],
-    'media-src': [SELF, 'blob:', 'https:'],
+    'img-src': [SELF, 'data:', 'blob:', 'https:', ...(dev ? ['http://localhost:*', 'http://127.0.0.1:*'] : [])],
+    'media-src': [SELF, 'blob:', 'https:', ...(dev ? ['http://localhost:*', 'http://127.0.0.1:*'] : [])],
 
     'connect-src': [
       SELF,
@@ -148,6 +148,8 @@ export function buildCsp({ dev = false } = {}) {
       'https://cdn.jsdelivr.net',
       // Next dev server HMR runs over a websocket on the dev origin.
       ...(dev ? ['ws:', 'wss:'] : []),
+      // Local API and local image server for demos; dev builds only.
+      ...(dev ? ['http://localhost:*', 'http://127.0.0.1:*'] : []),
       ...ANALYTICS_CONNECT,
     ],
 
