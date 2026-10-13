@@ -11,6 +11,7 @@ import { StatRow } from '@/components/dashboard/MetricCard';
 import { RechartsChart, ChartSkeleton } from '@/components/dashboard/ChartFrame';
 import { DASHBOARD_BRAND_COLOR, DASHBOARD_MUTED_COLOR, DASHBOARD_TOOLTIP_PROPS } from '@/components/dashboard/chartStyles';
 import SurfaceHeader from '@/components/dashboard/SurfaceHeader';
+import { usePageAction } from '@/components/dashboard/shell/usePageAction';
 import MemberCommandCenter from './MemberCommandCenter';
 import { isVendorUser } from '@/lib/accountTier';
 import { useNotifications } from '@/lib/dashboardStore';
@@ -104,6 +105,16 @@ function VendorCommandCenter() {
     const [overviewLoading, setOverviewLoading] = useState(false);
     const [announcements, setAnnouncements] = useState([]);
     const { unreadCount: notificationCount } = useNotifications(50);
+    const createAction = useMemo(
+        () => (
+            <Link href="/dashboard/events/new" className="pill-ghost inline-flex min-h-[42px] items-center gap-2 px-5 text-sm font-bold">
+                <HugeiconsIcon icon={PlusSignIcon} size={15} />
+                Create event
+            </Link>
+        ),
+        []
+    );
+    usePageAction(createAction);
 
     useEffect(() => {
         const frame = requestAnimationFrame(() => setMounted(true));
@@ -337,20 +348,7 @@ function VendorCommandCenter() {
             <section className="px-1">
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,480px)] xl:items-end">
                     <div className="min-w-0">
-                        <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Command center</p>
-                        <h1 className="mt-1.5 text-2xl font-black uppercase tracking-[-0.01em] text-white md:text-[30px]">Run the room</h1>
-                        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-[#9a9a9a]">
-                            Live work, the next events, and the money — one read, no repeats.
-                        </p>
-                        <div className="mt-4 flex flex-wrap items-center gap-2.5">
-                            <Link href="/dashboard/events/new" className="pill-solid inline-flex items-center gap-2 px-5 py-2.5 text-[12px]">
-                                <HugeiconsIcon icon={PlusSignIcon} size={15} />
-                                Create event
-                            </Link>
-                            <Link href="/dashboard/analytics" className="pill-ghost inline-flex items-center px-5 py-2.5 text-[12px] font-black uppercase tracking-[0.08em]">
-                                See what moved the room
-                            </Link>
-                        </div>
+                        <h1 className="text-2xl font-semibold text-white md:text-[28px]">Command Center</h1>
                     </div>
                     <div className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl bg-white/[0.08] sm:grid-cols-4">
                         {commandMetrics.map((metric) => (
