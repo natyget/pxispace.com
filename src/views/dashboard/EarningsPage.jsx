@@ -92,24 +92,16 @@ function buildMonthlySeries(payments) {
         }));
 }
 
-function EarningsHero({ heroValue, heroLabel, gross, retainedPct, retainedLabel, sseStatus, loading, onRefresh, includeCosts, onToggleCosts }) {
+function EarningsHero({ heroValue, heroLabel, gross, retainedPct, retainedLabel, loading, onRefresh, includeCosts, onToggleCosts }) {
     const heroMoney = splitMoney(heroValue);
-    const statusLabel = sseStatus === 'connected' ? 'Connected' : sseStatus === 'connecting' ? 'Connecting' : 'Offline';
 
     return (
         <section className="px-1">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                 <div className="max-w-2xl">
-                    <p className="flex items-center gap-2.5 text-[13px] font-medium text-zinc-500">
-                        Business
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-pxi-field px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">
-                            <span className={`h-1.5 w-1.5 rounded-full ${sseStatus === 'connected' ? 'bg-emerald-400' : sseStatus === 'connecting' ? 'bg-amber-400' : 'bg-zinc-600'}`} />
-                            {statusLabel}
-                        </span>
-                    </p>
-                    <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Earnings</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[28px]">Earnings</h1>
                     <p className="mt-1.5 max-w-xl text-sm leading-6 text-zinc-500">
-                        Ticket face value, the $0.99 platform fee, event costs, marketing spend, payouts, and profit — all real numbers.
+                        Ticket face value, the $0.99 platform fee, event costs, marketing spend, payouts, and profit. All real numbers.
                     </p>
                     <div className="mt-4 flex flex-wrap items-center gap-3">
                         <button
@@ -159,7 +151,7 @@ export default function EarningsPage() {
     const [data, setData] = useState(null); // { aggregates, payments, payouts, costs, marketing }
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [sseStatus, setSseStatus] = useState('disconnected');
+    const [, setSseStatus] = useState('disconnected');
     const [budgetEventId, setBudgetEventId] = useState('');
     const [budgetSummary, setBudgetSummary] = useState(null);
     // Toggles whether logged event costs + cash marketing spend deduct from the headline figure.
@@ -359,8 +351,7 @@ export default function EarningsPage() {
                         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-pxi-field">
                             <HugeiconsIcon icon={HelpCircleIcon} size={28} className="text-white opacity-75" />
                         </div>
-                        <p className="text-[13px] font-medium text-zinc-500">Business</p>
-                        <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Earnings</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[28px]">Earnings</h1>
                         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500">
                             Your finance dashboard appears here once hosting and payouts are enabled.
                         </p>
@@ -387,7 +378,6 @@ export default function EarningsPage() {
                 gross={gross}
                 retainedPct={retainedPct}
                 retainedLabel={retainedLabel}
-                sseStatus={sseStatus}
                 loading={loading}
                 onRefresh={load}
                 includeCosts={includeCosts}
@@ -403,34 +393,34 @@ export default function EarningsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 space-y-6">
-                    <SectionCard title="Key Metrics">
+                    <SectionCard title="Key metrics">
                         <div className="px-5 py-2">
                             <RevenueTableRow
-                                title="Gross Revenue" value={fmtCompact(gross)} unit="USD"
-                                subheading="Ticket face value sold — your listed prices"
+                                title="Gross revenue" value={fmtCompact(gross)} unit="USD"
+                                subheading="Ticket face value sold at your listed prices"
                             />
                             <RevenueTableRow
-                                title="Platform Fee" value={fmtCompact(platformFee)} unit="USD"
-                                subheading="$0.99 per ticket — the only fee off your payout"
+                                title="Platform fee" value={fmtCompact(platformFee)} unit="USD"
+                                subheading="$0.99 per ticket, the only fee off your payout"
                             />
                             <RevenueTableRow
-                                title="Net Payout" value={fmtCompact(netPayout)} unit="USD"
+                                title="Net payout" value={fmtCompact(netPayout)} unit="USD"
                                 subheading="Transferred to you by Stripe"
                             />
                             {includeCosts ? (
                                 <>
                                     <RevenueTableRow
-                                        title="Event Costs" value={fmtCompact(eventCostCents)} unit="USD"
+                                        title="Event costs" value={fmtCompact(eventCostCents)} unit="USD"
                                         subheading="Expenses you logged per event"
                                     />
                                     <RevenueTableRow
-                                        title="Marketing Spend" value={fmtCompact(marketingCashCents)} unit="USD"
+                                        title="Marketing spend" value={fmtCompact(marketingCashCents)} unit="USD"
                                         subheading={marketingCreditCents > 0
-                                            ? `Card only — ${fmtCompact(marketingCreditCents)} more covered by credits, no cash spent`
+                                            ? `Card only. ${fmtCompact(marketingCreditCents)} more covered by credits, no cash spent`
                                             : 'Ad boosts + email/SMS campaigns (card)'}
                                     />
                                     <RevenueTableRow
-                                        title="Net Profit" value={fmtCompact(netProfit)} unit="USD"
+                                        title="Net profit" value={fmtCompact(netProfit)} unit="USD"
                                         subheading="Payout minus costs and cash marketing" emphasize
                                     />
                                 </>
@@ -441,22 +431,22 @@ export default function EarningsPage() {
                     <SectionCard title="What buyers paid">
                         <div className="px-5 py-2">
                             <RevenueTableRow
-                                title="Service Fee" value={fmtCompact(buyerServiceFee)} unit="USD"
-                                subheading="5.49%, added at checkout — kept by PXI"
+                                title="Service fee" value={fmtCompact(buyerServiceFee)} unit="USD"
+                                subheading="5.49%, added at checkout, kept by PXI"
                             />
                             <RevenueTableRow
-                                title="Card Processing" value={fmtCompact(buyerProcessingFee)} unit="USD"
+                                title="Card processing" value={fmtCompact(buyerProcessingFee)} unit="USD"
                                 subheading="Stripe's cost, passed through at checkout"
                             />
                             <RevenueTableRow
-                                title="Buyer Total" value={fmtCompact(buyerPaidTotal)} unit="USD"
+                                title="Buyer total" value={fmtCompact(buyerPaidTotal)} unit="USD"
                                 subheading="Charged to cards across all your tickets"
                             />
                         </div>
                         <p className="px-5 pb-4 pt-1 text-xs leading-5 text-zinc-500">
                             These sit on top of your ticket price and come out of the buyer&apos;s
                             card, not your payout. They&apos;re here so you can see the price
-                            attendees actually saw — they never reduce your revenue or margin.
+                            attendees actually saw. They never reduce your revenue or margin.
                         </p>
                     </SectionCard>
 
@@ -625,6 +615,9 @@ export default function EarningsPage() {
                         </div>
                     ) : (
                         <div className="space-y-2">
+                            {payouts.some((payout) => ['failed', 'canceled'].includes(payout.status)) ? (
+                                <p className="px-1 pb-2 text-sm text-zinc-400">A recent payout failed. Check your payout details in Settings.</p>
+                            ) : null}
                             {payouts.map((payout) => (
                                 <div key={payout.id} className="grid gap-3 rounded-2xl bg-pxi-field p-4 md:grid-cols-[1fr_140px_170px_auto] md:items-center">
                                     <div className="flex min-w-0 items-center gap-3">
