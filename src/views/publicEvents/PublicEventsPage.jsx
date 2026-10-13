@@ -16,7 +16,7 @@ import '@/components/discover/discover.css';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 import { resolveEventCity } from '@/lib/seo/cities';
-import { eventInWhen, tonightIn, whenKey, whenLabel, whenParams } from '@/lib/when';
+import { WHEN_WEEK, eventInWhen, tonightIn, whenKey, whenLabel, whenParams } from '@/lib/when';
 import { trackSearchDebounced, trackSelectItem, trackViewItemList, trackViewSearchResults } from '@/lib/analytics';
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
@@ -415,8 +415,9 @@ export default function PublicEventsPage() {
   const [heroIndex, setHeroIndex] = useState(0);
 
   const [trending, setTrending] = useState(TRENDING_OPTIONS[0].id); // All | Nearest | Largest
-  // null = no time filter (the page's wider default); otherwise a When from src/lib/when.js.
-  const [when, setWhen] = useState(null);
+  // Opens on This week, as the app's Discover does, so the two pills read the same. null = no time filter (the
+  // reader clears it by tapping the chosen row again); otherwise a When from src/lib/when.js.
+  const [when, setWhen] = useState(WHEN_WEEK);
   const [tonight, setTonight] = useState(() => tonightIn(NIGHT_TZ));
   useEffect(() => {
     const t = setInterval(() => setTonight(tonightIn(NIGHT_TZ)), 60_000);
