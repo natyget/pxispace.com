@@ -33,7 +33,7 @@ export default function MemberShell({ data, children }) {
                 handleAccountNavigate={handleAccountNavigate}
                 accountPopoverOpen={accountPopoverOpen}
             />
-            <div className="mx-auto flex w-full max-w-[1320px] min-w-0 flex-1 flex-col gap-5 px-4 pt-5 md:px-8">
+            <div className="mx-auto flex w-full max-w-[1320px] min-w-0 flex-col gap-5 px-4 pt-5 md:px-8">
                 <PassportHeader user={user} rolesReady={rolesReady} />
                 <DashboardTabs
                     tabs={memberTabs}
