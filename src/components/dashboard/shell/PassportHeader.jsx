@@ -151,13 +151,15 @@ function PassportDataPage({ user }) {
     const f = getPassportDisplayFields(user);
     const tier = f.passportType;
     const photo = user?.avatarUrl || user?.profilePicture || null;
+    const fullName = user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ') || f.fullName;
+    // Empty fields are left out rather than shown as placeholders.
     const fields = [
-        ['Full name', f.fullName],
+        ['Full name', fullName],
         ['Username', `@${f.username}`],
         ['City', f.city],
         ['Age', f.age],
         ['Insta', f.instagram],
-    ];
+    ].filter(([, value]) => value !== '—' && value !== '' && value != null);
 
     return (
         <div className="relative h-full overflow-hidden rounded-[1rem] bg-pxi-field p-4 md:p-5">

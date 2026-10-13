@@ -505,8 +505,8 @@ function MoatBand({ summary, loading }) {
             title: 'Where the room was alive',
             stat: loading ? '-' : summary.turnout == null ? 'Awaiting first scan' : `${summary.turnout}% turnout verified`,
             body: venuesOffered
-                ? 'Photo capture points across the night, projected onto your floor plan. No other ticketing platform can draw this.'
-                : 'Photo capture points across the night, drawn on a map of the venue. No other ticketing platform can draw this.',
+                ? 'Where photos were taken, on your floor plan.'
+                : 'Where photos were taken, on a map of the venue.',
             href: venuesOffered ? '/dashboard/floor-plans' : '/dashboard/analytics',
             action: venuesOffered ? 'Open venues' : 'See the heat map',
         },
@@ -514,7 +514,7 @@ function MoatBand({ summary, loading }) {
             icon: Image01Icon,
             title: 'Your crowd shot your marketing',
             stat: loading ? '-' : `${summary.mediaCount.toLocaleString()} moments captured`,
-            body: 'Every album photo ranked by reaction. Pull a marketing kit instead of booking a photographer.',
+            body: 'Album photos ranked by reaction, ready to post.',
             href: '/dashboard/analytics',
             action: 'See top moments',
         },
@@ -522,7 +522,7 @@ function MoatBand({ summary, loading }) {
             icon: UserGroupIcon,
             title: 'Guests you can prove came',
             stat: loading ? '-' : `${summary.attendees.toLocaleString()} verified attendees`,
-            body: 'Scanned at the door, not self-reported. Segment by city, taste, and attendance history, then send.',
+            body: 'Scanned at the door, ready to segment and invite back.',
             href: '/dashboard/audience',
             action: 'Open CRM',
         },
