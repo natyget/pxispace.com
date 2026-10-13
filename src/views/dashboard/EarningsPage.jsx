@@ -556,7 +556,7 @@ export default function EarningsPage() {
                                 </div>
                                 {marketingCreditCents > 0 ? (
                                     <p className="px-5 pb-4 text-xs leading-5 text-zinc-500">
-                                        Cash costs only — {fmtCompact(marketingCreditCents)} more marketing was covered by credits and isn&apos;t counted here or deducted from profit.
+                                        Cash costs only. {fmtCompact(marketingCreditCents)} more marketing was covered by credits and isn&apos;t counted here or deducted from profit.
                                     </p>
                                 ) : null}
                             </>
