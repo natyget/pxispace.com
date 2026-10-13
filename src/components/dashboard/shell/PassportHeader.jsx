@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Add01Icon, Cancel01Icon, LockIcon } from '@hugeicons/core-free-icons';
-import { PxiPassportSection } from '@/components/passport/PxiPassportSection';
+import { Add01Icon, Cancel01Icon, LockIcon, UserIcon } from '@hugeicons/core-free-icons';
+import { getPassportDisplayFields } from '@/components/passport/pxiPassportDisplay';
 import { HeaderPolygonBadge, getLevelProgress } from '@/components/passport/passportVisualParts';
 import { getNextOdysseyTier, getPassportLevelBadgeTheme } from '@/utils/odysseyTier';
 import { isPartialUser } from '@/lib/accountTier';
@@ -89,38 +89,25 @@ export default function PassportHeader({ user, rolesReady }) {
                     transition={transition}
                     className="overflow-hidden"
                 >
-                    <div className="dashboard-surface rounded-[1.25rem] p-4 md:p-5">
-                        <div className="mb-3 flex items-center justify-between md:mb-4">
-                            <span className="text-sm font-semibold text-white">Passport</span>
-                            <button
-                                type="button"
-                                onClick={() => setAndRemember(true)}
-                                aria-label="Hide passport"
-                                aria-expanded={true}
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-pxi-field text-white/70 transition hover:text-white"
-                            >
-                                <HugeiconsIcon icon={Cancel01Icon} size={16} />
-                            </button>
-                        </div>
+                    <div className="dashboard-surface relative rounded-[1.25rem] p-3 md:p-4">
+                        <button
+                            type="button"
+                            onClick={() => setAndRemember(true)}
+                            aria-label="Hide passport"
+                            aria-expanded={true}
+                            className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white/70 transition hover:text-white md:right-4 md:top-4"
+                        >
+                            <HugeiconsIcon icon={Cancel01Icon} size={14} />
+                        </button>
 
-                        <div className="flex flex-col gap-5 md:flex-row md:items-stretch">
-                            <div className="w-full md:w-[260px] md:shrink-0">
-                                {partial ? (
-                                    <PassportLocked />
-                                ) : (
-                                    <PxiPassportSection user={user} showHeader={false} eventsMode="self" cardClassName="w-full" />
-                                )}
+                        <div className="flex flex-col gap-3 md:flex-row md:items-stretch">
+                            <div className="min-w-0 md:flex-[1.35]">
+                                {partial ? <PassportLocked /> : <PassportDataPage user={user} />}
                             </div>
-
-                            {partial ? null : (
-                                <>
-                                    <div className="hidden min-h-[180px] min-w-0 flex-1 overflow-hidden rounded-[1rem] bg-pxi-field md:block">
-                                        <img src="/passport-map.svg" alt="" className="h-full w-full object-cover" />
-                                    </div>
-                                    <OdysseyBadge user={user} className="hidden md:flex" />
-                                    <OdysseyBadge user={user} className="flex md:hidden" />
-                                </>
-                            )}
+                            <div className="relative hidden min-w-0 overflow-hidden rounded-[1rem] bg-pxi-field lg:block lg:flex-1">
+                                <img src="/passport-map.svg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+                            </div>
+                            <OdysseyBadge user={user} />
                         </div>
                     </div>
                 </MotionSection>
@@ -129,29 +116,77 @@ export default function PassportHeader({ user, rolesReady }) {
     );
 }
 
-function OdysseyBadge({ user, className }) {
+function OdysseyBadge({ user }) {
     const xp = Math.max(0, Math.floor(Number(user?.odysseyXp) || 0));
     const { current, next, ceilingXp } = getNextOdysseyTier(xp);
     const theme = getPassportLevelBadgeTheme(current.id);
+    const pct = ceilingXp ? Math.min(100, Math.round((xp / ceilingXp) * 100)) : 100;
 
     return (
-        <div className={`w-full flex-col gap-3 rounded-[1rem] bg-pxi-field p-4 md:w-[220px] md:shrink-0 ${className}`}>
-            <div className="flex items-center gap-3">
-                <HeaderPolygonBadge
-                    letter={current.badgeLetter}
-                    progress={getLevelProgress(xp)}
-                    hexFill={theme.fill}
-                    hexStroke={theme.stroke}
-                    ringMuted={theme.progressTrack}
-                    ringBright={theme.progressFill}
-                />
-                <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white">{current.label}</p>
-                    <p className="text-xs text-zinc-400">{next ? `Next: ${next.label}` : 'Highest level'}</p>
+        <div className="flex items-center gap-4 rounded-[1rem] bg-pxi-field p-4 md:w-[200px] md:shrink-0 md:flex-col md:justify-center md:gap-3 md:text-center">
+            <HeaderPolygonBadge
+                letter={current.badgeLetter}
+                progress={getLevelProgress(xp)}
+                hexFill={theme.fill}
+                hexStroke={theme.stroke}
+                ringMuted={theme.progressTrack}
+                ringBright={theme.progressFill}
+            />
+            <div className="min-w-0 flex-1 md:w-full md:flex-none">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white">{current.label}</p>
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full rounded-full bg-pxi-purple" style={{ width: `${pct}%` }} />
+                </div>
+                <div className="mt-1.5 flex justify-between text-[11px] tabular-nums text-zinc-400">
+                    <span>{next ? `Next: ${next.label}` : 'Highest level'}</span>
+                    <span>{ceilingXp ? `${xp.toLocaleString('en-US')} / ${ceilingXp.toLocaleString('en-US')}` : `${xp.toLocaleString('en-US')} XP`}</span>
                 </div>
             </div>
-            <p className="text-xs tabular-nums text-zinc-400">
-                {ceilingXp ? `${xp.toLocaleString('en-US')} / ${ceilingXp.toLocaleString('en-US')}` : `${xp.toLocaleString('en-US')} XP`}
+        </div>
+    );
+}
+
+/** Landscape passport data page: photo, identity fields, and the tier letter set large like the Figma. */
+function PassportDataPage({ user }) {
+    const f = getPassportDisplayFields(user);
+    const tier = f.passportType;
+    const photo = user?.avatarUrl || user?.profilePicture || null;
+    const fields = [
+        ['Full name', f.fullName],
+        ['Username', `@${f.username}`],
+        ['City', f.city],
+        ['Age', f.age],
+        ['Insta', f.instagram],
+    ];
+
+    return (
+        <div className="relative h-full overflow-hidden rounded-[1rem] bg-pxi-field p-4 md:p-5">
+            <div className="flex items-baseline justify-between gap-3 pr-10">
+                <p className="border-b-2 border-white pb-1 text-[12px] font-bold uppercase tracking-[0.28em] text-white">PXI Passport</p>
+                <p className="text-right text-[10px] uppercase tracking-[0.12em] text-zinc-400">
+                    No. <span className="font-semibold text-white">{f.passportNumber}</span>
+                </p>
+            </div>
+            <div className="mt-4 flex gap-4">
+                <div className="flex h-[104px] w-[88px] shrink-0 items-center justify-center overflow-hidden rounded-[0.75rem] bg-black/40">
+                    {photo ? (
+                        <img src={photo} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                        <HugeiconsIcon icon={UserIcon} size={36} className="text-white/30" />
+                    )}
+                </div>
+                <dl className="grid min-w-0 flex-1 grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+                    {fields.map(([label, value]) => (
+                        <div key={label} className="min-w-0">
+                            <dt className="text-[10px] uppercase tracking-[0.12em] text-zinc-500">{label}</dt>
+                            <dd className="truncate text-[13px] font-semibold text-white">{value}</dd>
+                        </div>
+                    ))}
+                </dl>
+            </div>
+            <p className="pointer-events-none absolute bottom-2 right-4 select-none leading-none text-white" aria-label={`${tier} tier`}>
+                <span className="font-[family-name:var(--font-heading)] text-[56px] text-pxi-purple md:text-[72px]">{tier.charAt(0)}</span>
+                <span className="text-xl font-bold md:text-2xl">{tier.slice(1)}</span>
             </p>
         </div>
     );
