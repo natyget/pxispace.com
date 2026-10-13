@@ -13,6 +13,7 @@ import {
     ADMIN_SIDEBAR_MODE_KEY,
     buildAdminNavItems,
     buildMemberNavItems,
+    buildMemberTabs,
     isNavItemActive,
     isVendorOnlyRoute,
     dashboardNavConfig,
@@ -309,6 +310,16 @@ export function useDashboardShellData() {
         });
     }, [isAdminNav, adminCityScope, rolesReady, hasLiveOpsAccess, hasLiveEvent, user, hasSalesAccess, isVenueOwner, canOpenFloorPlans]);
 
+    const memberTabs = useMemo(() => buildMemberTabs({
+        hasLiveOpsAccess,
+        isLiveEvent: hasLiveEvent,
+        mounted: rolesReady,
+        user,
+        hasSalesAccess,
+        isVenueOwner,
+        canOpenFloorPlans,
+    }), [hasLiveOpsAccess, hasLiveEvent, rolesReady, user, hasSalesAccess, isVenueOwner, canOpenFloorPlans]);
+
     const closeMobileMenu = useCallback(() => setMenuOpen(false), []);
     // The phone menu is the shared one: the sidebar's pages on top, then Dashboard / Wishlist and the account row.
     const menuLinks = useMemo(
@@ -354,6 +365,7 @@ export function useDashboardShellData() {
         adminSidebarMode,
         setAdminSidebarModeAndNavigate,
         navItems,
+        memberTabs,
         menuLinks,
         activeMenuPage,
         menuOpen,
