@@ -1,5 +1,10 @@
 import {
   Activity01Icon,
+  Briefcase01Icon,
+  IdentityCardIcon,
+  InboxIcon,
+  GlobalIcon,
+  ChartIncreaseIcon,
   Calendar01Icon,
   ChartLineData01Icon,
   DashboardSquare01Icon,
@@ -19,23 +24,39 @@ import {
   UserMultiple02Icon,
   Wallet01Icon,
 } from '@hugeicons/core-free-icons';
-import { isVendorUser } from '@/lib/accountTier';
+import { canHostEvents, isVendorUser } from '@/lib/accountTier';
 
 export const ADMIN_SIDEBAR_MODE_KEY = 'pxi_dashboard_admin_ui_mode';
 
+/**
+ * Dashboard 2: the control room's top tabs, in order of what needs a person first. Today is the inbox; Growth is
+ * the organizer side of the business (who brought whom in, who is selling, what the team earns); Platform is the
+ * marketplace; Trust is support and safety. `globalOnly` sections are hidden from a city-scoped admin (the backend
+ * refuses them with CITY_SCOPE_NOT_PERMITTED).
+ */
+export const ADMIN_TABS = [
+  { key: 'Today', label: 'Today', icon: InboxIcon },
+  { key: 'Growth', label: 'Growth', icon: ChartIncreaseIcon },
+  { key: 'Platform', label: 'Platform', icon: GlobalIcon },
+  { key: 'Trust', label: 'Trust', icon: Shield01Icon },
+];
+
 export const adminNavItems = [
-  { key: 'admin-overview', label: 'Overview', path: '/dashboard/admin', icon: DashboardSquare01Icon, end: true },
-  { key: 'admin-analytics', label: 'Analytics', path: '/dashboard/admin/analytics', icon: Activity01Icon, end: true },
-  { key: 'admin-support', label: 'Support', path: '/dashboard/admin/support', icon: Shield01Icon, end: true, globalOnly: true },
-  { key: 'admin-users', label: 'Accounts', path: '/dashboard/admin/users', icon: UserGroupIcon, end: true },
-  { key: 'admin-events', label: 'Events', path: '/dashboard/admin/events', icon: Calendar01Icon, end: true },
-  { key: 'admin-reports', label: 'Reports', path: '/dashboard/admin/reports', icon: FlagIcon, end: true, globalOnly: true },
-  { key: 'admin-ugc', label: 'Content', path: '/dashboard/admin/ugc', icon: Notification03Icon, end: true, globalOnly: true },
-  { key: 'admin-organizers', label: 'Organizers', path: '/dashboard/admin/organizers', icon: FireIcon, end: true },
-  { key: 'admin-venues', label: 'Venues', path: '/dashboard/admin/venues', icon: FloorPlanIcon, end: true },
-  { key: 'admin-promos', label: 'Promos & Credits', path: '/dashboard/admin/promos', icon: StarIcon, end: true, globalOnly: true },
-  { key: 'admin-ads', label: 'Ads', path: '/dashboard/admin/ads', icon: Megaphone01Icon, end: true, globalOnly: true },
-  { key: 'admin-announcements', label: 'Announcements', path: '/dashboard/admin/announcements', icon: Megaphone01Icon, end: true, globalOnly: true },
+  { key: 'admin-inbox', label: 'Inbox', path: '/dashboard/admin', icon: InboxIcon, tab: 'Today', end: true },
+  { key: 'admin-alerts', label: 'Email alerts', path: '/dashboard/admin/alerts', icon: Mail01Icon, tab: 'Today', end: true },
+  { key: 'admin-organizers', label: 'Organizers', path: '/dashboard/admin/organizers', icon: FireIcon, tab: 'Growth', end: true },
+  { key: 'admin-claims', label: 'Claims', path: '/dashboard/admin/claims', icon: Briefcase01Icon, tab: 'Growth', end: true },
+  { key: 'admin-commissions', label: 'Commissions', path: '/dashboard/admin/commissions', icon: Wallet01Icon, tab: 'Growth', end: true },
+  { key: 'admin-venues', label: 'Venues', path: '/dashboard/admin/venues', icon: FloorPlanIcon, tab: 'Growth', end: true },
+  { key: 'admin-promos', label: 'Promos & credits', path: '/dashboard/admin/promos', icon: StarIcon, tab: 'Growth', end: true, globalOnly: true },
+  { key: 'admin-analytics', label: 'Analytics', path: '/dashboard/admin/analytics', icon: Activity01Icon, tab: 'Platform', end: true },
+  { key: 'admin-events', label: 'Events', path: '/dashboard/admin/events', icon: Calendar01Icon, tab: 'Platform', end: true },
+  { key: 'admin-users', label: 'Accounts', path: '/dashboard/admin/users', icon: UserGroupIcon, tab: 'Platform', end: true },
+  { key: 'admin-ads', label: 'Ads', path: '/dashboard/admin/ads', icon: Megaphone01Icon, tab: 'Platform', end: true, globalOnly: true },
+  { key: 'admin-announcements', label: 'Announcements', path: '/dashboard/admin/announcements', icon: Megaphone01Icon, tab: 'Platform', end: true, globalOnly: true },
+  { key: 'admin-support', label: 'Support', path: '/dashboard/admin/support', icon: Shield01Icon, tab: 'Trust', end: true, globalOnly: true },
+  { key: 'admin-reports', label: 'Reports', path: '/dashboard/admin/reports', icon: FlagIcon, tab: 'Trust', end: true, globalOnly: true },
+  { key: 'admin-ugc', label: 'Content', path: '/dashboard/admin/ugc', icon: Notification03Icon, tab: 'Trust', end: true, globalOnly: true },
 ];
 
 const CITY_LABELS = { NYC: 'New York', BOS: 'Boston' };
@@ -54,6 +75,20 @@ export function buildAdminNavItems({ cityScope } = {}) {
   return cityScope ? adminNavItems.filter((item) => !item.globalOnly) : adminNavItems;
 }
 
+/**
+ * The control room's top tabs for this admin, each with the sub-items it shows. Tabs left with nothing (Trust for a
+ * city admin) are dropped. Same shape as buildMemberTabs, so DashboardTabs renders both.
+ * @param {{ cityScope?: string|null }} ctx
+ */
+export function buildAdminTabs({ cityScope } = {}) {
+  const items = buildAdminNavItems({ cityScope });
+  return ADMIN_TABS.map((tab) => ({
+    ...tab,
+    locked: false,
+    items: items.filter((item) => item.tab === tab.key).map((item) => ({ ...item, locked: false })),
+  })).filter((tab) => tab.items.length > 0);
+}
+
 /** @param {string} pathname */
 export function isGlobalOnlyAdminPath(pathname) {
   return adminNavItems.some((item) => item.globalOnly && (pathname === item.path || pathname?.startsWith(`${item.path}/`)));
@@ -67,13 +102,15 @@ export function isGlobalOnlyAdminPath(pathname) {
  * @property {string} path
  * @property {import('@hugeicons/core-free-icons').IconSvgObject} icon
  * @property {'Hub'|'Business'|'People'|'Intelligence'} [section] sidebar group label (admin and legacy sidebars)
- * @property {'Hub'|'Insights'|'Operations'|'Engagement'} [tab] member top-bar tab (buildMemberTabs)
+ * @property {'Hub'|'Insights'|'Operations'|'Engagement'|'Sales'|'Today'|'Growth'|'Platform'|'Trust'} [tab] top-bar tab
  * @property {boolean} [end]
  * @property {boolean} [vendorOnly]
  * @property {boolean} [nonVendorOnly]
  * @property {boolean} [bouncerOnly]
  * @property {boolean} [liveOnly]
  * @property {boolean} [salesOnly] ambassadors and regional managers (PART-4)
+ * @property {boolean} [managerOnly] regional managers only (GROWTH: their team and its splits)
+ * @property {boolean} [hostOnly] accounts that can host events (Citizen and Diplomat; GROWTH: the organizer page)
  * @property {boolean} [venueOwnerOnly] accounts that own a claimed venue (VEN-8)
  * @property {boolean} [floorPlansOnly] venue accounts, and accounts that already hold a saved venue (PART-3)
  * @property {'notifications'} [badge]
@@ -89,27 +126,34 @@ export function isGlobalOnlyAdminPath(pathname) {
 export const dashboardNavConfig = [
   { key: 'command', label: 'Command Center', path: '/dashboard', icon: DashboardSquare01Icon, section: 'Hub', tab: 'Hub', end: true },
   { key: 'events', label: 'Events', path: '/dashboard/events', icon: Calendar01Icon, section: 'Hub', tab: 'Hub', end: true },
+  { key: 'organizer-page', label: 'Organizer page', path: '/dashboard/organizer-page', icon: IdentityCardIcon, section: 'Hub', tab: 'Hub', end: true, hostOnly: true },
   { key: 'analytics', label: 'Analytics', path: '/dashboard/analytics', icon: Activity01Icon, section: 'Intelligence', tab: 'Insights', end: true, vendorOnly: true },
   { key: 'earnings', label: 'Earnings', path: '/dashboard/earnings', icon: Wallet01Icon, section: 'Business', tab: 'Insights', end: true, vendorOnly: true },
   { key: 'operations', label: 'Live Operations', path: '/dashboard/analytics?view=live-ops', icon: QrCodeIcon, section: 'Intelligence', tab: 'Operations', end: true, bouncerOnly: true },
   { key: 'team', label: 'Teams', path: '/dashboard/team', icon: Shield01Icon, section: 'Business', tab: 'Operations', end: true, vendorOnly: true },
   { key: 'floor-plans', label: 'Floor plans', path: '/dashboard/floor-plans', icon: FloorPlanIcon, section: 'Intelligence', tab: 'Operations', end: true, vendorOnly: true, floorPlansOnly: true },
   { key: 'venue', label: 'My Venue', path: '/dashboard/venue', icon: FloorPlanIcon, section: 'Hub', tab: 'Operations', end: true, venueOwnerOnly: true },
-  { key: 'sales', label: 'Venue Claims', path: '/dashboard/sales', icon: FloorPlanIcon, section: 'Hub', tab: 'Operations', end: true, salesOnly: true },
   { key: 'audience', label: 'Audience', path: '/dashboard/audience', icon: UserGroupIcon, section: 'People', tab: 'Engagement', end: true, vendorOnly: true },
   { key: 'campaigns', label: 'Campaigns', path: '/dashboard/campaigns', icon: Mail01Icon, section: 'People', tab: 'Engagement', end: true, vendorOnly: true },
   { key: 'ads', label: 'Ads', path: '/dashboard/ads', icon: Megaphone01Icon, section: 'People', tab: 'Engagement', end: true, vendorOnly: true },
+  // GROWTH: the sales team's own tab (ambassadors and regional managers). The backend scopes every number.
+  { key: 'sales-today', label: 'Today', path: '/dashboard/sales', icon: InboxIcon, section: 'Hub', tab: 'Sales', end: true, salesOnly: true },
+  { key: 'sales-accounts', label: 'Accounts', path: '/dashboard/sales/accounts', icon: UserGroupIcon, section: 'Hub', tab: 'Sales', end: true, salesOnly: true },
+  { key: 'sales-claims', label: 'Claims', path: '/dashboard/sales/claims', icon: Briefcase01Icon, section: 'Hub', tab: 'Sales', end: true, salesOnly: true },
+  { key: 'sales-earnings', label: 'Earnings', path: '/dashboard/sales/earnings', icon: Wallet01Icon, section: 'Hub', tab: 'Sales', end: true, salesOnly: true },
+  { key: 'sales-team', label: 'Team', path: '/dashboard/sales/team', icon: UserMultiple02Icon, section: 'Hub', tab: 'Sales', end: true, salesOnly: true, managerOnly: true },
 ];
 
 /**
  * The member top-bar tabs, in order. Each sub-item sits under one of these via `tab`.
- * @type {{ key: 'Hub'|'Insights'|'Operations'|'Engagement', label: string, icon: import('@hugeicons/core-free-icons').IconSvgObject }[]}
+ * @type {{ key: 'Hub'|'Insights'|'Operations'|'Engagement'|'Sales', label: string, icon: import('@hugeicons/core-free-icons').IconSvgObject }[]}
  */
 export const DASHBOARD_TABS = [
   { key: 'Hub', label: 'Hub', icon: Home01Icon },
   { key: 'Insights', label: 'Insights', icon: ChartLineData01Icon },
   { key: 'Operations', label: 'Operations', icon: Layers01Icon },
   { key: 'Engagement', label: 'Engagement', icon: UserMultiple02Icon },
+  { key: 'Sales', label: 'Sales', icon: Briefcase01Icon },
 ];
 
 /**
@@ -144,6 +188,7 @@ const MEMBER_ITEM_OPEN = 'open';
  * @param {boolean} ctx.isLiveEvent
  * @param {boolean} ctx.mounted
  * @param {boolean} [ctx.hasSalesAccess]
+ * @param {'AMBASSADOR'|'REGIONAL_MANAGER'|null} [ctx.salesRole]
  * @param {boolean} [ctx.isVenueOwner]
  * @param {boolean} [ctx.canOpenFloorPlans]
  * @param {{ isVendor?: boolean }} [ctx.user]
@@ -158,17 +203,19 @@ export function buildMemberNavItems(ctx) {
  * Locked: a vendor-only page a non-vendor still sees, with a lock in the tab bar.
  * @returns {'hidden'|'locked'|'open'}
  */
-function memberItemState(item, { hasLiveOpsAccess, isLiveEvent, mounted, user, hasSalesAccess = false, isVenueOwner = false, canOpenFloorPlans = false }) {
+function memberItemState(item, { hasLiveOpsAccess, isLiveEvent, mounted, user, hasSalesAccess = false, salesRole = null, isVenueOwner = false, canOpenFloorPlans = false }) {
   const hasResolvedUser = mounted && !!user;
   const hasResolvedVendorStatus = typeof user?.isVendor === 'boolean';
   const vendor = isVendorUser(user);
-  const isRoleSensitive = item.vendorOnly || item.nonVendorOnly || item.bouncerOnly || item.liveOnly || item.salesOnly || item.venueOwnerOnly || item.floorPlansOnly;
+  const isRoleSensitive = item.vendorOnly || item.nonVendorOnly || item.bouncerOnly || item.liveOnly || item.salesOnly || item.managerOnly || item.hostOnly || item.venueOwnerOnly || item.floorPlansOnly;
 
   if (!hasResolvedUser && isRoleSensitive) return MEMBER_ITEM_HIDDEN;
   if (item.nonVendorOnly && (!hasResolvedVendorStatus || vendor)) return MEMBER_ITEM_HIDDEN;
   if (item.bouncerOnly && !hasLiveOpsAccess) return MEMBER_ITEM_HIDDEN;
   if (item.liveOnly && !isLiveEvent) return MEMBER_ITEM_HIDDEN;
   if (item.salesOnly && !hasSalesAccess) return MEMBER_ITEM_HIDDEN;
+  if (item.managerOnly && salesRole !== 'REGIONAL_MANAGER') return MEMBER_ITEM_HIDDEN;
+  if (item.hostOnly && !canHostEvents(user)) return MEMBER_ITEM_HIDDEN;
   if (item.venueOwnerOnly && !isVenueOwner) return MEMBER_ITEM_HIDDEN;
   if (item.floorPlansOnly && !canOpenFloorPlans) return MEMBER_ITEM_HIDDEN;
   if (item.vendorOnly && !vendor) return MEMBER_ITEM_LOCKED;
