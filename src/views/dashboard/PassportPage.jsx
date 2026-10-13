@@ -98,21 +98,14 @@ function PassportIssued({ user, rolesReady }) {
             .catch(() => {});
     }, [user?.id]);
 
-    const headerRight = rolesReady
-        ? user?.isVendor ? (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-bold tracking-[0.02em] text-emerald-400 sm:gap-1.5 sm:px-2.5 sm:text-[10px] md:px-3 md:text-[11px]">
-                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} className="shrink-0" />
-                Organizer
-            </span>
-        ) : (
-            <Link
-                href="/dashboard/vendor-upgrade"
-                className="inline-flex items-center rounded-full bg-pxi-purple px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white hover:brightness-110"
-            >
-                Start hosting
-            </Link>
-        )
-        : null;
+    const headerRight = rolesReady && !user?.isVendor ? (
+        <Link
+            href="/dashboard/vendor-upgrade"
+            className="inline-flex items-center rounded-full bg-pxi-purple px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white hover:brightness-110"
+        >
+            Start hosting
+        </Link>
+    ) : null;
 
     return (
         <PxiPassportSection

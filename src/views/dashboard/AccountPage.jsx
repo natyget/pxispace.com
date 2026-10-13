@@ -78,16 +78,12 @@ function DonutPanel({ title, data, centerLabel, centerValue }) {
 const profileInputCls =
     'mt-2 w-full rounded-[1rem] bg-white/[0.04] px-3 py-2.5 text-sm font-semibold text-white placeholder:text-zinc-600 outline-none transition focus:bg-white/[0.065] focus:ring-1 focus:ring-white/12';
 
-function SettingsHero({ user, activeTab }) {
+function SettingsHero({ activeTab }) {
     const activeLabel = TABS.find((tab) => tab.id === activeTab)?.label || 'Profile';
     return (
         <section className="flex flex-col gap-4 px-1 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
-                <p className="flex items-center gap-2.5 text-[13px] font-medium text-zinc-500">
-                    Account
-                    <span className="rounded-full bg-pxi-field px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">@{user?.username || 'account'}</span>
-                </p>
-                <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Settings</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[28px]">Settings</h1>
                 <p className="mt-1.5 max-w-xl text-sm leading-6 text-zinc-500">
                     Your identity, music, billing rails, and account controls.
                 </p>
@@ -244,7 +240,7 @@ function ProfileEditor({ user, updateUser }) {
         : null;
 
     return (
-        <SettingsSurface eyebrow="Identity" title="Profile">
+        <SettingsSurface title="Profile">
             <div className="mb-5 flex items-center gap-4">
                 <div className="relative">
                     {avatarUrl ? (
@@ -438,7 +434,7 @@ function MusicConnectionsCard() {
                 : 'Connect to get events matched to your music taste.';
 
     return (
-        <SettingsSurface eyebrow="Personalization" title="Music">
+        <SettingsSurface title="Music">
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-[1.25rem] bg-pxi-field px-4 py-4">
                 <div className="flex min-w-0 items-start gap-3">
                     <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#A523EF]/15 text-[#A523EF]">
@@ -489,8 +485,8 @@ function SettingsSurface({ eyebrow, title, children, action = null }) {
         <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
             <div className="mb-5 flex items-start justify-between gap-4">
                 <div>
-                    {eyebrow ? <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">{eyebrow}</p> : null}
-                    <h2 className="mt-1 text-xl font-bold text-white">{title}</h2>
+                    {eyebrow ? <p className="text-xs font-medium text-zinc-500">{eyebrow}</p> : null}
+                    <h2 className={`${eyebrow ? 'mt-1' : ''} text-xl font-bold text-white`}>{title}</h2>
                 </div>
                 {action}
             </div>
@@ -590,7 +586,7 @@ function AccountPageContent() {
 
     return (
         <div className="mx-auto max-w-6xl space-y-5 md:space-y-6">
-            <SettingsHero user={user} activeTab={activeTab} />
+            <SettingsHero activeTab={activeTab} />
 
             <div className="grid w-full grid-cols-2 gap-1 rounded-[1rem] bg-pxi-field p-1 sm:flex sm:w-fit sm:rounded-full" role="tablist" aria-label="Account settings sections">
                 {TABS.map((tab) => (
@@ -607,7 +603,7 @@ function AccountPageContent() {
                 ))}
             </div>
 
-            <div className={`grid grid-cols-1 gap-5 ${showSettingsAside ? 'lg:grid-cols-[1fr_320px]' : ''}`}>
+            <div className={`grid grid-cols-1 gap-5 ${showSettingsAside ? 'lg:grid-cols-[minmax(0,1fr)_320px]' : ''}`}>
                 <div className="space-y-5">
                     {activeTab === 'profile' && (
                         <>
@@ -617,7 +613,7 @@ function AccountPageContent() {
                     )}
 
                     {activeTab === 'billing' && (
-                        <SettingsSurface eyebrow="Money movement" title="Billing & payouts">
+                        <SettingsSurface title="Payouts">
                             {!billing ? (
                                 <p className="text-sm text-zinc-500">Loading real payout data...</p>
                             ) : (
@@ -644,7 +640,7 @@ function AccountPageContent() {
                     )}
 
                     {activeTab === 'usage' && (
-                        <SettingsSurface eyebrow="All-time" title="Usage & costs">
+                        <SettingsSurface title="Usage and costs">
                             {!usageBreakdown.length ? (
                                 <p className="text-sm text-zinc-500">No paid marketing or ad spend yet.</p>
                             ) : (
@@ -665,11 +661,11 @@ function AccountPageContent() {
                         </SettingsSurface>
                     )}
 
-                    <SettingsSurface eyebrow="Security" title="Account controls">
+                    <SettingsSurface title="Danger zone">
                         {!showConfirm ? (
                             <>
                                 <p className="text-sm leading-relaxed text-zinc-400">
-                                    Permanently delete your PXI account and all associated data. This cannot be undone.
+                                    Delete your PXI account and all associated data. This cannot be undone.
                                 </p>
                                 <button
                                     type="button"
@@ -677,7 +673,7 @@ function AccountPageContent() {
                                     className="mt-4 inline-flex items-center gap-2 rounded-xl bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-400 transition hover:bg-red-500/15"
                                 >
                                     <HugeiconsIcon icon={Delete02Icon} size={14} />
-                                    Delete My Account
+                                    Delete account
                                 </button>
                             </>
                         ) : (
@@ -706,7 +702,7 @@ function AccountPageContent() {
                                                 Deleting...
                                             </>
                                         ) : (
-                                            'Yes, Permanently Delete'
+                                            'Yes, delete account'
                                         )}
                                     </button>
                                     <button
@@ -735,12 +731,13 @@ function AccountPageContent() {
                         )}
                         {activeTab === 'billing' && (
                             <div className="dashboard-surface rounded-[1.25rem] p-5">
-                                <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Payout rail</p>
-                                <div className="mt-3 flex items-center gap-3">
-                                    <HugeiconsIcon icon={Wallet01Icon} size={20} className="text-emerald-400" />
-                                    <div>
+                                <div className="flex items-start gap-3">
+                                    <HugeiconsIcon icon={Wallet01Icon} size={20} className="mt-0.5 shrink-0 text-zinc-400" />
+                                    <div className="min-w-0">
                                         <p className="text-sm font-semibold text-white">Stripe Connect</p>
-                                        <p className="text-xs text-zinc-500">{user?.isVendor ? 'Connected' : 'Complete hosting setup'}</p>
+                                        <p className="mt-1 text-xs leading-5 text-zinc-500">
+                                            {user?.isVendor ? 'Payouts go to your bank through Stripe.' : 'Finish hosting setup to receive payouts.'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>

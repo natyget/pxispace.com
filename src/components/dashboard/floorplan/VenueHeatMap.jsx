@@ -357,7 +357,7 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
             <div className="rounded-2xl bg-pxi-field p-6">
                 <p className="text-sm font-bold text-white">The heat map fills in as the night happens</p>
                 <p className="mt-1 max-w-xl text-sm leading-6 text-zinc-500">
-                    No geotagged photos yet — as guests shoot, activity heats a map of the venue automatically.
+                    No geotagged photos yet. As guests shoot, activity heats a map of the venue automatically.
                     {venueWithoutPlan
                         ? ` ${venueWithoutPlan.name} is attached, with no floor plan yet.${ownsAttachedVenue ? ' Adding one upgrades the map to room-level.' : ''}`
                         : venueAccess.canOpen ? ' Attaching a calibrated floor plan upgrades it to room-level.' : null}
@@ -384,7 +384,7 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                 {myPlans ? (
                     <div className="mt-4 space-y-2">
                         {myPlans.length === 0 ? (
-                            <p className="text-xs text-zinc-500">No saved plans on this account yet — calibrate one first.</p>
+                            <p className="text-xs text-zinc-500">No saved plans on this account yet. Calibrate one first.</p>
                         ) : (
                             myPlans.map((item) => (
                                 <button
@@ -435,7 +435,7 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                     {projected.offPlan > 0 ? (
                         <span
                             className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-200"
-                            title="Geotagged photos that land outside this frame — GPS drift or calibration worth checking"
+                            title="Geotagged photos outside this frame. GPS drift or calibration may need a check."
                         >
                             {projected.offPlan} off-frame
                         </span>
@@ -448,10 +448,9 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                             type="button"
                             onClick={() => setLive((v) => !v)}
                             className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                                live ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/[0.07] text-zinc-300 hover:bg-white/[0.12]'
+                                live ? 'bg-white/[0.14] font-semibold text-white' : 'bg-white/[0.07] text-zinc-300 hover:bg-white/[0.12]'
                             }`}
                         >
-                            <span className={`h-1.5 w-1.5 rounded-full ${live ? 'animate-pulse bg-emerald-300' : 'bg-zinc-500'}`} />
                             Live
                         </button>
                     ) : null}
@@ -519,7 +518,7 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                     {myPlans.length === 0 ? (
                         <p className="text-xs text-zinc-500">
                             {venueAccess.canCreate ? (
-                                <>No saved plans yet — <Link href={`/dashboard/floor-plans?eventId=${eventId}`} className="text-zinc-300 underline">calibrate one</Link>.</>
+                                <>No saved plans yet. <Link href={`/dashboard/floor-plans?eventId=${eventId}`} className="text-zinc-300 underline">calibrate one</Link>.</>
                             ) : 'No saved plans on this account.'}
                         </p>
                     ) : (
@@ -601,7 +600,7 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                 {!hasAnyData ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                         <p className="max-w-sm px-6 text-center text-sm leading-6 text-zinc-300">
-                            No geotagged photos or scans in this event&apos;s window yet — the heat map fills in as the night happens.
+                            No geotagged photos or scans in this event&apos;s window yet. The heat map fills in as the night happens.
                         </p>
                     </div>
                 ) : null}
@@ -655,7 +654,7 @@ export default function VenueHeatMap({ eventId, sample = null, readOnly = false,
                         {payload.media.truncated ? ', capped at 3,000 photos' : ''}
                         {payload.media.outsideWindow > 0 ? `, ${payload.media.outsideWindow} outside the window` : ''}
                     </span>
-                    <span>Heat reads as ~8 m areas — GPS is approximate by nature.</span>
+                    <span>Heat reads as ~8 m areas. GPS is approximate by nature.</span>
                 </div>
             </div>
         </div>

@@ -123,7 +123,7 @@ export default function PlanANight({ venueId, adminView, forecastVisible }) {
                         <Tile label="Nearby fans" value={formatInteger(suggestion.audienceSize)} hint="Like this genre" />
                         <Tile label="Reachable" value={formatInteger(suggestion.reachable)} hint="Agreed to hear about events" />
                         <Tile label="Already your regulars" value={formatInteger(suggestion.regulars)} hint="Came to your venue before" />
-                        <Tile label="Friends of regulars" value={formatInteger(suggestion.connectedToRegulars)} hint="Connected on PXI" />
+                        <Tile label="Friends of regulars" value={formatInteger(suggestion.connectedToRegulars)} />
                     </div>
                     {suggestion.composition.withheld ? (
                         <p className="mt-4 text-[13px] text-white/45">{suggestion.composition.reason}</p>

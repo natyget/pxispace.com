@@ -58,7 +58,7 @@ export default function SpatialCard({ heatmap, venueName = '', loading = false, 
     const hasTimeline = (heatmap?.timeline || []).some((t) => t.captures + t.scans > 0);
 
     return (
-        <VenueCard title="Spatial Intel" className={className} data-venue-card="spatial">
+        <VenueCard title="Spatial intel" className={className} data-venue-card="spatial">
             {loading ? <CardSkeleton className="h-56" /> : error ? <CardError>{error}</CardError> : empty ? (
                 <EmptyNote>Host an event for spatial intel</EmptyNote>
             ) : (

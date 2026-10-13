@@ -85,7 +85,7 @@ function TopMomentsPanel({ moments, onRemoved, onPromote }) {
     if (!moments?.length) {
         return (
             <SectionCard title="Top moments">
-                <p className="text-sm text-zinc-500">No reacted media yet — top moments appear as guests react.</p>
+                <p className="text-sm text-zinc-500">No reacted media yet. Top moments appear as guests react.</p>
             </SectionCard>
         );
     }
@@ -118,7 +118,7 @@ function TopMomentsPanel({ moments, onRemoved, onPromote }) {
             ) : null}
         >
             <p className="mb-4 text-xs text-zinc-500">
-                The most-reacted media at this event — your best marketing content, and your moderation queue.
+                The most-reacted media at this event: your best marketing content and your moderation queue.
             </p>
             {error ? <p className="mb-3 text-xs text-red-400">{error}</p> : null}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -201,13 +201,13 @@ function SalesVelocityChart({ byDay, velocityPerDay7d, totalSold, grossCents, ne
         if (!start || Number.isNaN(start.getTime())) return null;
         const daysToDoors = Math.ceil((start.getTime() - Date.now()) / 86400000);
         if (daysToDoors <= 0) {
-            return `Doors have opened — final count ${formatNumber(totalSold)} tickets.`;
+            return `Doors have opened. Final count: ${formatNumber(totalSold)} tickets.`;
         }
         if (pace <= 0) {
-            return `No sales this week — ${daysToDoors} day${daysToDoors === 1 ? '' : 's'} to doors. A campaign or ad boost can restart momentum.`;
+            return `No sales this week. ${daysToDoors} day${daysToDoors === 1 ? '' : 's'} to doors. A campaign or ad boost can restart momentum.`;
         }
         const projected = Math.round(totalSold + pace * daysToDoors);
-        return `Selling ${formatNumber(round1(pace))}/day — at this pace, about ${formatNumber(projected)} sold by doors (${daysToDoors} day${daysToDoors === 1 ? '' : 's'} away).`;
+        return `Selling ${formatNumber(round1(pace))}/day. At this pace, about ${formatNumber(projected)} sold by doors (${daysToDoors} day${daysToDoors === 1 ? '' : 's'} away).`;
     }, [velocityPerDay7d, totalSold, eventStartDate]);
 
     return (
@@ -298,7 +298,7 @@ function EventPickerCard({ event, selected, order, onToggle }) {
             type="button"
             onClick={() => onToggle(event.id)}
             aria-pressed={selected}
-            className={`group relative aspect-[3/4] w-[168px] shrink-0 overflow-hidden rounded-2xl bg-pxi-field text-left transition ${
+            className={`group relative aspect-[3/4] w-[150px] shrink-0 sm:w-[168px] overflow-hidden rounded-2xl bg-pxi-field text-left transition ${
                 selected ? 'ring-2 ring-inset ring-pxi-purple' : 'opacity-80 hover:opacity-100'
             }`}
         >
@@ -526,11 +526,10 @@ function AudienceLeaderboardsPanel({ media, behavior }) {
     );
 }
 
-function AnalyticsSectionLabel({ eyebrow, title, copy }) {
+function AnalyticsSectionLabel({ title, copy }) {
     return (
         <div className="px-1">
-            <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">{eyebrow}</p>
-            <h2 className="mt-2 text-xl font-bold tracking-normal text-white normal-case md:text-2xl">{title}</h2>
+            <h2 className="text-xl font-bold tracking-normal text-white md:text-2xl">{title}</h2>
             {copy ? <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-500">{copy}</p> : null}
         </div>
     );
@@ -541,6 +540,7 @@ function AnalyticsPageContent() {
     const searchParams = useSearchParams();
     const viewMode = searchParams.get('view') === 'live-ops' ? 'live-ops' : 'analytics';
     const isLiveEvent = useDashboardShellStore((store) => store.isLiveEvent);
+    const [mountedAtMs] = useState(() => Date.now());
 
     const [events, setEvents] = useState([]);
     const [eventsLoading, setEventsLoading] = useState(true);
@@ -694,22 +694,52 @@ function AnalyticsPageContent() {
 
     const isComparing = selectedIds.length > 1;
 
+    // Door (scan rate, gates, hype) leads once the event has started; sales lead before that.
+    const eventStartMs = eventDetail?.event?.startDate ? new Date(eventDetail.event.startDate).getTime() : NaN;
+    const doorFirst = eventStartMs <= mountedAtMs;
+
+    const renderSales = () => (
+        <>
+            <AnalyticsSectionLabel
+                title="Sales"
+                copy="Pace toward the date and where buyers stall on the way in."
+            />
+
+            <SalesVelocityChart
+                byDay={eventDetail.sales.byDay}
+                velocityPerDay7d={eventDetail.sales.velocityPerDay7d}
+                totalSold={eventDetail.sales.total}
+                grossCents={eventDetail.sales.revenue.grossCents}
+                netCents={eventDetail.sales.revenue.netCents}
+                eventStartDate={eventDetail.event?.startDate}
+                isMobile={isMobile}
+            />
+
+            <SectionCard title="Attendance path" className="!rounded-[1.25rem]">
+                <FunnelChart data={funnelData} />
+            </SectionCard>
+        </>
+    );
+
+    const renderDoor = () => (
+        <>
+            <AnalyticsSectionLabel
+                title="Door"
+                copy="Energy through the hours and where it happened on the floor."
+            />
+
+            <HypePanel behavior={eventDetail.behavior} capture={eventDetail.media?.capture} isMobile={isMobile} />
+
+            <SectionCard title="Spatial intelligence" className="!rounded-[1.25rem]">
+                <VenueHeatMap eventId={selectedEventId} />
+            </SectionCard>
+        </>
+    );
+
     return (
         <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
             <div className="px-1">
-                <p className="flex items-center gap-2.5 text-[13px] font-medium text-zinc-500">
-                    Analytics
-                    {isLiveEvent ? (
-                        <Link
-                            href="/dashboard/analytics?view=live-ops"
-                            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-200 transition hover:bg-emerald-400/15"
-                        >
-                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300" />
-                            Live now
-                        </Link>
-                    ) : null}
-                </p>
-                <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">See what moved the room</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[28px]">See what moved the room</h1>
             </div>
 
             <EventPicker events={eventOptions} selectedIds={selectedIds} onToggle={handleToggleEvent} loading={eventsLoading} />
@@ -738,42 +768,21 @@ function AnalyticsPageContent() {
                         onCta={() => document.getElementById('top-moments-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                     />
 
-                    <AnalyticsSectionLabel
-                        eyebrow="Before doors"
-                        title="Sell the room"
-                        copy="Pace toward the date and where buyers stall on the way in."
-                    />
-
-                    <SalesVelocityChart
-                        byDay={eventDetail.sales.byDay}
-                        velocityPerDay7d={eventDetail.sales.velocityPerDay7d}
-                        totalSold={eventDetail.sales.total}
-                        grossCents={eventDetail.sales.revenue.grossCents}
-                        netCents={eventDetail.sales.revenue.netCents}
-                        eventStartDate={eventDetail.event?.startDate}
-                        isMobile={isMobile}
-                    />
-
-                    <SectionCard title="Attendance path" className="!rounded-[1.25rem]">
-                        <FunnelChart data={funnelData} />
-                    </SectionCard>
+                    {doorFirst ? (
+                        <>
+                            {renderDoor()}
+                            {renderSales()}
+                        </>
+                    ) : (
+                        <>
+                            {renderSales()}
+                            {renderDoor()}
+                        </>
+                    )}
 
                     <AnalyticsSectionLabel
-                        eyebrow="Doors open"
-                        title="Run the night"
-                        copy="Energy through the hours and where it happened on the floor."
-                    />
-
-                    <HypePanel behavior={eventDetail.behavior} capture={eventDetail.media?.capture} isMobile={isMobile} />
-
-                    <SectionCard title="Spatial intelligence" className="!rounded-[1.25rem]">
-                        <VenueHeatMap eventId={selectedEventId} />
-                    </SectionCard>
-
-                    <AnalyticsSectionLabel
-                        eyebrow="Afterglow"
-                        title="Turn the night into the next one"
-                        copy="The scrapbook era: crowd content and moments that market whatever you run next."
+                        title="After the night"
+                        copy="Crowd content and the moments to market whatever you run next."
                     />
 
                     <div id="top-moments-panel" className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
@@ -799,17 +808,9 @@ function AnalyticsPageContent() {
 
                     <MarketingPanel selectedEventId={selectedEventId} />
 
-                    <div className="flex flex-wrap items-center justify-between gap-4 rounded-[1.25rem] bg-pxi-field p-5">
-                        <div>
-                            <p className="text-sm font-bold text-white">Ready for the sequel?</p>
-                            <p className="mt-1 max-w-xl text-sm leading-6 text-zinc-500">
-                                This event&apos;s audience, content, and timings feed the next one — spin it up and push a send to the people who were here.
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Link href="/dashboard/events" className="pill-solid px-4 py-2 text-xs">Plan the next event</Link>
-                            <Link href="/dashboard/campaigns" className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em]">Message past attendees</Link>
-                        </div>
+                    <div className="flex flex-wrap items-center justify-end gap-2 rounded-[1.25rem] bg-pxi-field p-5">
+                        <Link href="/dashboard/events" className="pill-solid px-4 py-2 text-xs">Plan the next event</Link>
+                        <Link href="/dashboard/campaigns" className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em]">Message past attendees</Link>
                     </div>
 
                     <MarketingKitModal

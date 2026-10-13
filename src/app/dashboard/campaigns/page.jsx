@@ -184,10 +184,9 @@ function CampaignsPageContent() {
         <div className="mx-auto max-w-7xl space-y-6">
             <section className="flex flex-col gap-5 px-1 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-2xl">
-                    <p className="text-[13px] font-medium text-zinc-500">Campaigns</p>
-                    <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Reach your attendees</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[28px]">Campaigns</h1>
                     <p className="mt-1.5 text-sm leading-6 text-zinc-500">
-                        Email and SMS to opted-in attendees — pricing, consent, and unsubscribe handled by PXI.
+                        Email and SMS to opted-in attendees. PXI handles pricing, consent, and unsubscribe.
                         Want sponsored placements?{' '}
                         <a href="/dashboard/ads" className="font-medium text-zinc-300 underline decoration-white/25 underline-offset-2 transition hover:text-white">
                             Promote with Ads →
@@ -213,7 +212,7 @@ function CampaignsPageContent() {
             )}
             {sentWithCredits && (
                 <div className="rounded-2xl bg-emerald-500/10 px-4 py-3 text-sm font-semibold leading-6 text-emerald-200">
-                    Sent with credits — no card needed. Delivery is underway; watch the status in History below.
+                    Sent with credits, no card needed. Delivery is underway. Watch the status in History below.
                 </div>
             )}
 
@@ -244,6 +243,7 @@ function CampaignsPageContent() {
                             />
                         </div>
 
+                        {isSms ? <p className="text-xs text-zinc-500">Texts go only to guests who opted in at checkout.</p> : null}
                         {/* The message itself, framed like the email/SMS the attendee receives. */}
                         <div className="overflow-hidden rounded-[1.25rem] bg-pxi-field">
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.06] px-4 py-3 sm:px-5">
@@ -351,7 +351,7 @@ function CampaignsPageContent() {
 
                         {smsNotReady ? (
                             <div className="rounded-2xl bg-amber-500/10 px-4 py-3 text-xs font-semibold leading-5 text-amber-200">
-                                SMS is pending carrier registration — this channel isn&apos;t sendable yet. Draft here; it&apos;ll unlock once a live number is configured.
+                                SMS is pending carrier registration. This channel isn&apos;t sendable yet. Draft here; it&apos;ll unlock once a live number is configured.
                             </div>
                         ) : null}
                     </div>
@@ -373,7 +373,7 @@ function CampaignsPageContent() {
                             {quote && creditApplied > 0 ? (
                                 <p className="mt-3 rounded-xl bg-pxi-purple/10 px-3 py-2 text-xs font-semibold leading-5 text-white">
                                     {fullyCredits
-                                        ? `Credits cover the full ${formatUsd(quote.priceCents)} — no card needed.`
+                                        ? `Credits cover the full ${formatUsd(quote.priceCents)}, no card needed.`
                                         : `Credits cover ${formatUsd(creditApplied)}, ${formatUsd(cardRemainder)} on card.`}
                                 </p>
                             ) : null}
@@ -418,7 +418,7 @@ function CampaignsPageContent() {
                             : quote
                             ? quote.recipientCount > 0
                                 ? <>Reaches <span className="font-bold text-white">{quote.recipientCount}</span> opted-in {quote.recipientCount === 1 ? 'person' : 'people'}, <span className="font-bold text-white">{formatUsd(quote.priceCents)}</span></>
-                                : 'No opted-in recipients yet — attendees enable event updates in their PXI settings.'
+                                : 'No opted-in recipients yet. Attendees enable event updates in their PXI settings.'
                             : audience === 'ATTENDEES' && !eventId
                                 ? 'Pick an event to see the audience.'
                                 : 'Calculating audience...'}
