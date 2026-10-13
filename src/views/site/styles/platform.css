@@ -86,7 +86,7 @@ div.pxr.platform {
 /* the label over a card title (SurfaceHeader): heavy purple caps. .q is the quiet one the analytics sections use. */
 .pxr:where(.platform) .d-eb { font: 800 var(--t-eb)/1.5 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--d-brand); }
 .pxr:where(.platform) .d-eb.q { font: 700 var(--t-lab)/1.4 var(--f-ui); letter-spacing: .02em; text-transform: none; color: rgba(255, 255, 255, .4); }
-.pxr:where(.platform) .d-h { margin-top: 4px; font: 900 var(--t-h)/1.35 var(--f-head); letter-spacing: -.01em; text-transform: uppercase; color: #fff; }
+.pxr:where(.platform) .d-h { margin-top: 0; font: 600 var(--t-h)/1.35 var(--f-ui); letter-spacing: 0; text-transform: none; color: #fff; }
 .pxr:where(.platform) .d-sub { margin-top: 4px; font: 400 var(--t-sub)/1.5 var(--f-ui); color: var(--d-sec); }
 .pxr:where(.platform) .d-sub b { color: #fff; font-weight: 700; }
 .pxr:where(.platform) .d-headrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
@@ -129,54 +129,88 @@ div.pxr.platform {
 .pxr:where(.platform) .mtile small { display: block; font: 500 var(--t-lab)/1.45 var(--f-ui); color: var(--z4); white-space: nowrap; }
 .pxr:where(.platform) .mtile b { display: block; margin-top: 4px; font: 600 var(--t-val)/1.1 var(--f-ui); letter-spacing: -.02em; color: #fff; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
-/* ───────── command center (desktop hero): DashboardLayout + DashboardHome ───────── */
-.pxr:where(.platform) .cc { position: absolute; inset: 0; display: grid; grid-template-columns: 240px minmax(0, 1fr); background: var(--d-bg); border-radius: 24px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, .1), 0 60px 140px -30px rgba(0, 0, 0, .95); }
-.pxr:where(.platform) .cc-side { display: flex; flex-direction: column; background: var(--d-card); }
-.pxr:where(.platform) .cc-logo { display: flex; align-items: center; justify-content: space-between; padding: 16px; }
-.pxr:where(.platform) .cc-logo img { width: 44px; height: 44px; object-fit: contain; }
-.pxr:where(.platform) .cc-logo span { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--d-field); color: rgba(255, 255, 255, .7); }
-.pxr:where(.platform) .cc-nav { display: flex; flex-direction: column; gap: 4px; padding: 0 16px; }
-.pxr:where(.platform) .cc-sec { padding: 12px 16px 2px; font: 800 11px/1.5 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--d-brand); }
-.pxr:where(.platform) .cc-sec:first-child { padding-top: 2px; }
-.pxr:where(.platform) .cc-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; border-radius: 999px; font: 700 13.5px/1.5 var(--f-ui); letter-spacing: .025em; color: var(--d-sec); white-space: nowrap; }
-.pxr:where(.platform) .cc-item svg { color: #fff; opacity: .5; }
-.pxr:where(.platform) .cc-item.on { background: var(--d-brand); color: #fff; }
-.pxr:where(.platform) .cc-item.on svg { opacity: 1; }
-.pxr:where(.platform) .cc-item.cc-ops { color: rgba(255, 90, 31, .8); }
-.pxr:where(.platform) .cc-item.cc-ops svg { color: #ff5a1f; opacity: .8; }
-.pxr:where(.platform) .cc-acct { margin: auto 16px 16px; display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 16px; background: var(--d-field); }
-.pxr:where(.platform) .cc-acct img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
-.pxr:where(.platform) .cc-acct div { flex: 1; min-width: 0; }
-.pxr:where(.platform) .cc-acct b { display: block; font: 600 14px/1.3 var(--f-ui); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pxr:where(.platform) .cc-acct small { display: block; font: 400 12px/1.3 var(--f-ui); color: rgba(255, 255, 255, .45); }
-.pxr:where(.platform) .cc-acct > svg { color: #fff; opacity: .45; }
-.pxr:where(.platform) .cc-main { display: flex; flex-direction: column; gap: 22px; padding: 28px 32px 32px; min-width: 0; }
-.pxr:where(.platform) .cc-head { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; align-items: end; }
-.pxr:where(.platform) .cc-head .eb { font: 800 11px/1.5 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--d-brand); }
-.pxr:where(.platform) .cc-head h3 { margin-top: 4px; font: 900 32px/1.25 var(--f-head); letter-spacing: -.01em; text-transform: uppercase; color: #fff; }
-.pxr:where(.platform) .cc-head .desc { margin-top: 4px; font: 400 14.5px/1.6 var(--f-ui); color: var(--d-sec); }
-.pxr:where(.platform) .cc-head .acts { display: flex; gap: 10px; margin-top: 14px; }
-.pxr:where(.platform) .cc-head .d-strip { border-radius: 24px; background: var(--d-line); }
-.pxr:where(.platform) .cc-head .d-strip > div { padding: 14px 18px; }
-.pxr:where(.platform) .cc-head .d-strip small { font: 800 11px/1.5 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--d-brand); }
-.pxr:where(.platform) .cc-head .d-strip b { margin-top: 6px; font: 900 25px/1 var(--f-ui); letter-spacing: -.025em; }
-.pxr:where(.platform) .cc-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-.pxr:where(.platform) .cc .dcard { position: relative; border-radius: 24px; }
-.pxr:where(.platform) .cc-chart .chart { margin-top: 10px; }
-.pxr:where(.platform) .cc-next .d-headrow .va { padding-top: 3px; font: 700 12.5px/1 var(--f-ui); letter-spacing: .025em; color: rgba(255, 255, 255, .55); }
-.pxr:where(.platform) .nx-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
-.pxr:where(.platform) .nx { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 20px; background: var(--d-field); }
-.pxr:where(.platform) .nx > div { flex: 1; min-width: 0; }
-.pxr:where(.platform) .nx b { display: block; font: 900 15px/1.35 var(--f-head); letter-spacing: -.01em; text-transform: uppercase; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pxr:where(.platform) .nx small { display: block; font: 600 12.5px/1.4 var(--f-ui); letter-spacing: .02em; color: rgba(255, 255, 255, .35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pxr:where(.platform) .cc-band .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
-.pxr:where(.platform) .cc-band .cc-tile { padding: 14px; border-radius: 24px; background: var(--d-field); }
+/* ───────── the member dashboard's shell (MemberShell): top bar, passport band, tabs, sub-tabs ───────── */
+.pxr:where(.platform) .ds-top { position: relative; z-index: 2; background: var(--d-bg); display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 28px; flex: none; }
+.pxr:where(.platform) .ds-top > img { width: 34px; height: 34px; object-fit: contain; }
+.pxr:where(.platform) .ds-tools { display: flex; align-items: center; gap: 10px; }
+.pxr:where(.platform) .ds-round { position: relative; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--d-field); color: rgba(255, 255, 255, .8); font-style: normal; }
+.pxr:where(.platform) .ds-round.sm { width: 30px; height: 30px; background: var(--d-field); }
+.pxr:where(.platform) .ds-round em { position: absolute; right: -3px; top: -3px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--d-brand); font: 700 10px/16px var(--f-ui); text-align: center; color: #fff; }
+.pxr:where(.platform) .ds-av { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+.pxr:where(.platform) .ds-pass { display: flex; gap: 10px; padding: 12px; border-radius: 20px; background: var(--d-card); }
+.pxr:where(.platform) .ds-pass.slim { align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 20px; }
+.pxr:where(.platform) .ds-pass.slim b { font: 600 14px/1 var(--f-ui); }
+.pxr:where(.platform) .ds-pc { position: relative; flex: 1.35; min-width: 0; padding: 14px 16px; border-radius: 14px; background: var(--d-field); overflow: hidden; }
+.pxr:where(.platform) .ds-ph { display: flex; align-items: baseline; justify-content: space-between; }
+.pxr:where(.platform) .ds-ph span { padding-bottom: 3px; border-bottom: 2px solid #fff; font: 700 11px/1.2 var(--f-ui); letter-spacing: .28em; text-transform: uppercase; }
+.pxr:where(.platform) .ds-ph small { font: 400 9px/1 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; color: #a1a1aa; }
+.pxr:where(.platform) .ds-ph small b { font-weight: 600; color: #fff; }
+.pxr:where(.platform) .ds-pb { display: flex; gap: 14px; margin-top: 12px; }
+.pxr:where(.platform) .ds-pb img { flex: none; width: 72px; height: 86px; border-radius: 10px; object-fit: cover; }
+.pxr:where(.platform) .ds-pb dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 14px; align-content: start; min-width: 0; flex: 1; }
+.pxr:where(.platform) .ds-pb dt { font: 400 9px/1.3 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; color: #71717b; }
+.pxr:where(.platform) .ds-pb dd { font: 600 12px/1.4 var(--f-ui); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pxr:where(.platform) .ds-tier { position: absolute; right: 16px; bottom: 6px; font: 700 20px/1 var(--f-ui); color: #fff; }
+.pxr:where(.platform) .ds-tier span { font: 400 58px/1 var(--font-heading, var(--f-ui)); color: var(--d-brand); }
+.pxr:where(.platform) .ds-map { flex: 1; min-width: 0; border-radius: 14px; background: var(--d-field); overflow: hidden; }
+.pxr:where(.platform) .ds-map img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: .8; }
+.pxr:where(.platform) .ds-lvl { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: 168px; padding: 14px; border-radius: 14px; background: var(--d-field); text-align: center; }
+.pxr:where(.platform) .ds-lvl p { font: 600 12px/1 var(--f-ui); letter-spacing: .18em; text-transform: uppercase; }
+.pxr:where(.platform) .ds-lvl i { display: block; width: 100%; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.pxr:where(.platform) .ds-lvl u { display: block; width: 40%; height: 100%; background: var(--d-brand); }
+.pxr:where(.platform) .ds-lvl span { display: flex; justify-content: space-between; width: 100%; }
+.pxr:where(.platform) .ds-lvl small { font: 400 10px/1 var(--f-ui); color: #a1a1aa; font-variant-numeric: tabular-nums; }
+.pxr:where(.platform) .ds-bar { display: flex; flex-direction: column; gap: 10px; }
+.pxr:where(.platform) .ds-tabs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--d-field); }
+.pxr:where(.platform) .ds-tabs span { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 14px; border-radius: 999px; font: 600 14px/1.2 var(--f-ui); color: #a1a1aa; white-space: nowrap; }
+.pxr:where(.platform) .ds-tabs span.on { background: var(--d-brand); color: #fff; }
+.pxr:where(.platform) .ds-subs { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid rgba(255, 255, 255, .08); }
+.pxr:where(.platform) .ds-subs > div { display: flex; gap: 28px; min-width: 0; }
+.pxr:where(.platform) .ds-subs > div > span { margin-bottom: -1px; padding: 4px 0 11px; border-bottom: 3px solid transparent; font: 800 17px/1.3 var(--f-ui); letter-spacing: -.01em; color: rgba(255, 255, 255, .55); white-space: nowrap; }
+.pxr:where(.platform) .ds-subs > div > span.on { border-bottom-color: var(--d-brand); color: #fff; }
+.pxr:where(.platform) .ds-act { flex: none; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 9px 18px; border-radius: 999px; background: var(--d-field); font: 700 13px/1.3 var(--f-ui); white-space: nowrap; }
+
+/* ───────── command center (desktop hero): MemberShell + DashboardHome ───────── */
+.pxr:where(.platform) .cc { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--d-bg); border-radius: 24px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, .1), 0 60px 140px -30px rgba(0, 0, 0, .95); }
+.pxr:where(.platform) .cc-scroll { flex: none; }
+.pxr:where(.platform) .cc-pad { display: flex; flex-direction: column; gap: 14px; padding: 0 28px 28px; }
+.pxr:where(.platform) .cc-head { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-top: 8px; }
+.pxr:where(.platform) .cc-head h3 { font: 700 30px/1.2 var(--font-heading, var(--f-ui)); letter-spacing: .04em; color: #fff; }
+.pxr:where(.platform) .cc-head .d-strip { width: 520px; border-radius: 16px; }
+.pxr:where(.platform) .cc-head .d-strip > div { padding: 12px 16px; }
+.pxr:where(.platform) .cc-head .d-strip small { font-size: 12px; }
+.pxr:where(.platform) .cc-head .d-strip b { margin-top: 6px; font-size: 24px; }
+.pxr:where(.platform) .cc-cols { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 18px; align-items: start; }
+.pxr:where(.platform) .cc-left, .pxr:where(.platform) .cc-right { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.pxr:where(.platform) .cc-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.pxr:where(.platform) .cc .dcard { position: relative; padding: 22px; border-radius: 24px; }
+.pxr:where(.platform) .cc .d-h { font-size: 17px; }
+.pxr:where(.platform) .cc .d-sub { margin-top: 2px; font-size: 12.5px; color: rgba(255, 255, 255, .4); }
+.pxr:where(.platform) .cc-chart .chart { margin-top: 12px; width: 100%; height: auto; }
+.pxr:where(.platform) .cc-next .d-headrow { align-items: center; }
+.pxr:where(.platform) .cc-next .d-headrow .va { font: 700 12px/1 var(--f-ui); color: rgba(255, 255, 255, .55); }
+.pxr:where(.platform) .nx-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+.pxr:where(.platform) .nx { overflow: hidden; border-radius: 16px; background: var(--d-field); }
+.pxr:where(.platform) .nx img { display: block; width: 100%; height: 124px; object-fit: cover; object-position: top; }
+.pxr:where(.platform) .nx > div { padding: 12px 14px 14px; }
+.pxr:where(.platform) .nx b { display: block; font: 600 14px/1.35 var(--f-ui); color: #fff; }
+.pxr:where(.platform) .nx small { display: block; margin-top: 2px; font: 400 11px/1.4 var(--f-ui); color: rgba(255, 255, 255, .4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pxr:where(.platform) .cc-band .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+.pxr:where(.platform) .cc-band .cc-tile { padding: 16px; border-radius: 16px; background: var(--d-field); }
 .pxr:where(.platform) .cc-tile .ico { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--d-field-hi); color: #fff; }
 .pxr:where(.platform) .cc-tile .ico svg { opacity: .6; }
-.pxr:where(.platform) .cc-band h5 { margin-top: 10px; font: 700 14px/1.35 var(--f-ui); color: #fff; }
-.pxr:where(.platform) .cc-band .cc-tile .stat { margin: 4px 0 0; font: 700 13px/1.3 var(--f-ui); font-variant-numeric: tabular-nums; color: #fff; }
-.pxr:where(.platform) .cc-band .stat b { margin-right: 4px; font: inherit; }
-.pxr:where(.platform) .cc-band .cc-tile p:not(.stat) { margin-top: 4px; font: 400 12px/1.5 var(--f-ui); color: var(--d-sec); }
+.pxr:where(.platform) .cc-band h5 { margin-top: 12px; font: 700 13.5px/1.35 var(--f-ui); color: #fff; }
+.pxr:where(.platform) .cc-band .cc-tile .stat { margin: 6px 0 0; font: 700 13px/1.3 var(--f-ui); font-variant-numeric: tabular-nums; color: #fff; }
+.pxr:where(.platform) .cc-band .cc-tile p:not(.stat) { margin-top: 6px; font: 400 12px/1.5 var(--f-ui); color: var(--d-sec); }
+.pxr:where(.platform) .cc-band .cc-tile p.lk { margin-top: 10px; font-weight: 700; font-size: 11px; color: rgba(255, 255, 255, .45); }
+.pxr:where(.platform) .cc-key .kr { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid rgba(255, 255, 255, .08); }
+.pxr:where(.platform) .cc-key .kr:first-of-type { margin-top: 10px; border-top: 0; }
+.pxr:where(.platform) .cc-key .kr b { display: block; font: 600 13.5px/1.35 var(--f-ui); color: #fff; }
+.pxr:where(.platform) .cc-key .kr small { display: block; margin-top: 2px; font: 400 11.5px/1.35 var(--f-ui); color: rgba(255, 255, 255, .4); }
+.pxr:where(.platform) .cc-key .kr span { font: 600 13.5px/1.35 var(--f-ui); font-variant-numeric: tabular-nums; color: #fff; }
+.pxr:where(.platform) .cc-notice .nt { margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: var(--d-field); }
+.pxr:where(.platform) .cc-notice .nt b { display: block; font: 600 13px/1.35 var(--f-ui); }
+.pxr:where(.platform) .cc-notice .nt small { display: block; margin-top: 2px; font: 400 11.5px/1.35 var(--f-ui); color: rgba(255, 255, 255, .4); }
 
 /* ───────── in-app sheets (mobile host tools) ───────── */
 /* Create Event (CreateEventSheet.tsx): the app's flat sheet. #1C1C1C sheet, #2E2E2E fields, heavy purple caps, one purple (#A523EF),
@@ -669,15 +703,20 @@ div.pxr.platform .scene-grid.flip { display: block; padding: 0; }
   .pxr:where(.platform) .cc-box { display: none; }
   .pxr:where(.platform) .mcc-box { display: block; position: absolute; left: 16px; right: 16px; top: 0; z-index: 2; pointer-events: none; }
   .pxr:where(.platform) .mcc { position: relative; display: flex; flex-direction: column; gap: 10px; }
+  .pxr:where(.platform) .mcc .ds-tabs { overflow: hidden; }
+  .pxr:where(.platform) .mcc .ds-tabs span { flex: 1; gap: 5px; padding: 8px 4px; font-size: 12.5px; }
+  .pxr:where(.platform) .mcc .ds-subs > div > span { font-size: 16px; padding-bottom: 9px; }
+  .pxr:where(.platform) .mcc .ds-subs > div { gap: 22px; }
+  .pxr:where(.platform) .mcc .d-sub { margin-top: 2px; font-size: 12px; color: rgba(255, 255, 255, .4); }
   .pxr:where(.platform) .mcc .dcard { position: relative; }
   .pxr:where(.platform) .mcc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   /* MetricCard: a #1c1c1c rounded-3xl card, heavy purple caps title, a #2e2e2e icon dot, a 900 figure */
-  .pxr:where(.platform) .mc { display: flex; flex-direction: column; justify-content: space-between; height: 88px; padding: 14px 16px; border-radius: 24px; background: var(--d-card); }
+  .pxr:where(.platform) .mc { display: flex; flex-direction: column; justify-content: space-between; height: 72px; padding: 12px 16px; border-radius: 20px; background: var(--d-card); }
   .pxr:where(.platform) .mc .top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-  .pxr:where(.platform) .mc small { font: 800 11px/1.4 var(--f-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--d-brand); white-space: nowrap; }
+  .pxr:where(.platform) .mc small { font: 500 12px/1.4 var(--f-ui); color: var(--z4); white-space: nowrap; }
   .pxr:where(.platform) .mc .ic { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--d-field); color: #fff; }
   .pxr:where(.platform) .mc .ic svg { opacity: .75; }
-  .pxr:where(.platform) .mc b { font: 900 24px/1 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
+  .pxr:where(.platform) .mc b { font: 600 24px/1 var(--f-ui); color: #fff; font-variant-numeric: tabular-nums; }
   .pxr:where(.platform) .mcc .dcard { border-radius: 24px; }
   .pxr:where(.platform) .mcc-chart .chart { margin-top: 10px; }
   .pxr:where(.platform) .mcc-only .mo3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
