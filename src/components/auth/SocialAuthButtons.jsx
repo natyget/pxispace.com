@@ -2,11 +2,11 @@
 
 import { FaApple } from 'react-icons/fa';
 
-// Brand rules. Google: white button, the four-colour G, "Continue with Google", dark grey text (#1F1F1F), Roboto
-// medium. Apple: on our black page a white button with the black Apple logo, "Continue with Apple". Both are
-// 48px tall pills the full width of the form column.
+// Brand rules, as in the app. Apple: on our black page a white button with the black Apple logo. Google: its own
+// dark-theme button (#131314 fill, #8E918F outline, #E3E3E3 text, the four-colour G), so the two never read as the
+// same white pill. Both 46px tall, the full width of the form column.
 const BUTTON =
-  'flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-white px-5 text-[16px] transition-opacity hover:opacity-90 active:opacity-75 disabled:opacity-45 outline-offset-4 focus-visible:outline-2 focus-visible:outline-white';
+  'flex h-[46px] w-full items-center justify-center gap-2.5 rounded-full px-5 text-[16px] transition-opacity hover:opacity-90 active:opacity-75 disabled:opacity-45 outline-offset-4 focus-visible:outline-2 focus-visible:outline-white';
 
 function GoogleG({ size = 20 }) {
   return (
@@ -29,7 +29,7 @@ export default function SocialAuthButtons({ onApple, onGoogle, disabled = false 
         type="button"
         onClick={onApple}
         disabled={disabled}
-        className={`${BUTTON} text-black`}
+        className={`${BUTTON} bg-white text-black`}
         style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", fontWeight: 600 }}
       >
         <FaApple size={21} aria-hidden="true" className="-mt-0.5 text-black" />
@@ -39,10 +39,10 @@ export default function SocialAuthButtons({ onApple, onGoogle, disabled = false 
         type="button"
         onClick={onGoogle}
         disabled={disabled}
-        className={`${BUTTON} text-[#1F1F1F]`}
+        className={`${BUTTON} border border-[#8E918F] bg-[#131314] text-[#E3E3E3]`}
         style={{ fontFamily: "Roboto, 'Helvetica Neue', Arial, sans-serif", fontWeight: 500 }}
       >
-        <GoogleG />
+        <GoogleG size={18} />
         <span>Continue with Google</span>
       </button>
     </div>
