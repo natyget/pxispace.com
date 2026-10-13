@@ -17,6 +17,9 @@ export const VENDOR_PREFETCH_ROUTES = [
   '/dashboard/ads',
   '/dashboard/team',
   '/dashboard/earnings',
+  '/dashboard/campaigns',
+  '/dashboard/floor-plans',
+  '/dashboard/sales',
 ];
 
 /** @param {{ isVendor?: boolean }} ctx */
