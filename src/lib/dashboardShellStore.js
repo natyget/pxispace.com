@@ -8,6 +8,8 @@ const initialState = {
   activeEventId: null,
   isLiveEvent: false,
   modalStack: [],
+  /** The current page's one action, rendered at the right of the sub-tab row (see shell/usePageAction). */
+  pageAction: null,
 };
 
 let state = { ...initialState };
@@ -54,6 +56,9 @@ export const dashboardShellActions = {
   },
   setIsLiveEvent(value) {
     setState({ isLiveEvent: !!value });
+  },
+  setPageAction(node) {
+    setState({ pageAction: node ?? null });
   },
   openModal(key, payload = {}) {
     setState({
