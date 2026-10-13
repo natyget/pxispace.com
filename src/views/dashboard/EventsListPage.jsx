@@ -31,7 +31,9 @@ import CreateEventSlideOver from '@/components/dashboard/CreateEventSlideOver';
 import GlowCard from '@/components/dashboard/GlowCard';
 import { PxiSpinner } from '@/components/loading/PxiLoading';
 import SegmentedToggle from '@/components/dashboard/SegmentedToggle';
+import { usePageAction } from '@/components/dashboard/shell/usePageAction';
 import Modal from '@/components/ui/Modal';
+import { canHostEvents } from '@/lib/accountTier';
 import { useAttendedEvents, useEvents } from '@/lib/dashboardStore';
 import { eventsService } from '@/services/events';
 import { HELP_REQUEST_STATUSES, HELP_REQUEST_TYPES, helpRequestsService } from '@/services/helpRequests';
@@ -47,15 +49,15 @@ const STATUS_FILTERS = [
 ];
 
 function formatDate(value, options = { dateStyle: 'medium' }) {
-  if (!value) return '—';
+  if (!value) return '-';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-US', options);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString('en-US', options);
 }
 
 function formatDateTime(value) {
-  if (!value) return '—';
+  if (!value) return '-';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 function classifyEvent(event, now) {
@@ -143,33 +145,21 @@ function EmptyState({ icon, title, body, action }) {
   );
 }
 
-function EventsHero({ mode, onModeChange, hostedCount, attendedCount, liveCount, onCreate }) {
+function EventsHero({ mode, onModeChange, hostedCount, attendedCount, liveCount }) {
   return (
     <section className="dashboard-surface-b rounded-3xl px-5 py-6 md:px-7">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
-        <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Events</p>
-          <h1 className="mt-3 text-4xl font-black uppercase leading-[0.95] tracking-[-0.01em] text-white md:text-6xl">
-            Your nights.
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-[#9a9a9a] md:text-base">
-            Host, attend, manage, and revisit every event tied to your PXI account.
-          </p>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <SegmentedToggle
-              value={mode}
-              onChange={onModeChange}
-              ariaLabel="Switch event list"
-              items={[
-                { value: 'hosted', label: 'Hosted' },
-                { value: 'attended', label: 'Attended' },
-              ]}
-            />
-            <button type="button" onClick={onCreate} className="pill-solid inline-flex w-fit items-center gap-2 px-5 py-2.5 text-[12px]">
-              <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2.5} />
-              Create
-            </button>
-          </div>
+        <div className="space-y-5">
+          <h1 className="text-2xl font-semibold text-white md:text-[28px]">Events</h1>
+          <SegmentedToggle
+            value={mode}
+            onChange={onModeChange}
+            ariaLabel="Switch event list"
+            items={[
+              { value: 'hosted', label: 'Hosted' },
+              { value: 'attended', label: 'Attended' },
+            ]}
+          />
         </div>
         <div className="grid grid-cols-3 gap-2">
           {[
@@ -178,8 +168,8 @@ function EventsHero({ mode, onModeChange, hostedCount, attendedCount, liveCount,
             ['Live', liveCount],
           ].map(([label, value]) => (
             <div key={label} className="rounded-2xl bg-pxi-field p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">{label}</p>
-              <p className="mt-2 text-2xl font-black text-white tabular-nums">{value}</p>
+              <p className="text-xs text-zinc-500">{label}</p>
+              <p className="mt-2 text-[22px] font-semibold text-white tabular-nums">{value}</p>
             </div>
           ))}
         </div>
@@ -275,7 +265,7 @@ function HostedEventModal({ event, now, pinned, onClose, onNavigate, onTogglePin
 
   return (
     <Modal open={!!event} onClose={onClose} title={event.name || 'Hosted event'} description="Organizer detail view" maxWidth="max-w-2xl">
-      <div className="grid gap-5 md:grid-cols-[180px_1fr]">
+      <div className="grid gap-5 md:grid-cols-[180px_minmax(0,1fr)]">
         <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-pxi-field">
           {cover ? (
             <Image src={cover} alt={event.name || 'Event cover'} fill unoptimized className="object-cover" />
@@ -451,6 +441,17 @@ export default function EventsListPage() {
   const [myHelpRequests, setMyHelpRequests] = useState([]);
   const now = useMemo(() => Math.floor(new Date().getTime() / 60_000) * 60_000, []);
   const hostedEvents = useMemo(() => cachedEvents.filter((event) => !deletedEventIds.includes(String(event.id))), [cachedEvents, deletedEventIds]);
+  const canHost = canHostEvents(user);
+  const createAction = useMemo(
+    () => (canHost ? (
+      <button type="button" onClick={() => setCreateOpen(true)} className="pill-ghost inline-flex min-h-[42px] items-center gap-2 px-5 text-sm font-bold">
+        <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2.5} />
+        Create event
+      </button>
+    ) : null),
+    [canHost]
+  );
+  usePageAction(createAction);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -558,25 +559,25 @@ export default function EventsListPage() {
             hostedCount={0}
             attendedCount={attendedEvents.length}
             liveCount={0}
-            onCreate={() => setCreateOpen(true)}
           />
           <div className="dashboard-surface-b rounded-3xl p-6 md:p-8">
             <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
               <div className="max-w-xl">
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Events</p>
-                <h2 className="mt-3 text-2xl font-black tracking-normal text-white">Event data is temporarily unavailable.</h2>
-                <p className="mt-3 text-sm leading-6 text-[#9a9a9a]">
-                  We could not reach your hosted event list. You can try again, or keep building a new event while the connection settles.
+                <h2 className="text-lg font-semibold text-white">Event data is temporarily unavailable.</h2>
+                <p className="mt-2 text-sm leading-6 text-[#9a9a9a]">
+                  We could not reach your hosted event list. Try again in a moment.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <button type="button" onClick={() => refreshHostedEvents({ force: true })} className="pill-ghost inline-flex min-h-[42px] items-center justify-center px-5 text-sm font-bold">
                   Refresh
                 </button>
-                <button type="button" onClick={() => setCreateOpen(true)} className="pill-solid inline-flex min-h-[42px] items-center justify-center gap-2 px-5 text-sm">
-                  <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2.5} />
-                  Create
-                </button>
+                {canHost ? (
+                  <button type="button" onClick={() => setCreateOpen(true)} className="pill-solid inline-flex min-h-[42px] items-center justify-center gap-2 px-5 text-sm">
+                    <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2.5} />
+                    Create
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
@@ -610,14 +611,18 @@ export default function EventsListPage() {
           hostedCount={hostedEvents.length}
           attendedCount={attendedEvents.length}
           liveCount={liveEventCount}
-          onCreate={() => setCreateOpen(true)}
         />
 
         {mode === 'hosted' ? (
           <div className="space-y-8">
             <EventControls query={hostedQuery} onQueryChange={setHostedQuery} status={hostedFilter} onStatusChange={setHostedFilter} />
             {hostedEvents.length === 0 ? (
-              <EmptyState icon={Calendar01Icon} title="No hosted events yet" body="Create your first event." action={<button type="button" onClick={() => setCreateOpen(true)} className="mt-6 inline-flex h-11 w-11 items-center justify-center rounded-full glow-chip text-white transition-colors hover:bg-white/[0.12]" aria-label="Create event"><HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={2.5} /></button>} />
+              <EmptyState
+                icon={Calendar01Icon}
+                title="No hosted events yet"
+                body={canHost ? 'Create your first event.' : 'Hosting needs a passport.'}
+                action={canHost ? <button type="button" onClick={() => setCreateOpen(true)} className="mt-6 inline-flex h-11 w-11 items-center justify-center rounded-full glow-chip text-white transition-colors hover:bg-white/[0.12]" aria-label="Create event"><HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={2.5} /></button> : null}
+              />
             ) : filteredHostedEvents.length === 0 ? (
               <EmptyState icon={Search01Icon} title="No hosted events match your filters" body="Try clearing the search or changing the event status filter." />
             ) : (
