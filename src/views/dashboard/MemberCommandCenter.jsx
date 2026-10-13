@@ -45,7 +45,8 @@ export default function MemberCommandCenter({ user }) {
     usePageAction(createAction);
 
     useEffect(() => {
-        if (!user?.id) return undefined;
+        // Partials cannot start vendor setup (the API answers 403 PARTIAL_ACCOUNT), so there is nothing to ask.
+        if (!user?.id || isPartial) return undefined;
         let cancelled = false;
         const timer = setTimeout(() => {
             authService.checkVendorStatus()
@@ -61,7 +62,7 @@ export default function MemberCommandCenter({ user }) {
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [user?.id]);
+    }, [user?.id, isPartial]);
 
     useEffect(() => {
         if (!user?.id || isPartial) return undefined;

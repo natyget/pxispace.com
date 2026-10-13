@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService, authStorage } from '@/services/auth';
 import { canAccessAdminDashboard } from '@/lib/adminAccess';
-import { isVendorUser } from '@/lib/accountTier';
+import { isPartialUser, isVendorUser } from '@/lib/accountTier';
 import { dashboardShellActions, useDashboardShellStore } from '@/lib/dashboardShellStore';
 import { dashboardPrefetchRoutes, prefetchDashboardRoutes } from '@/lib/dashboardPerformance';
 import { useCapabilities, useEvents } from '@/lib/dashboardStore';
@@ -140,7 +140,7 @@ export function useDashboardShellData() {
     }, [mounted, authReady, user?.id, user?.phoneNumber, fromMobile, phoneCheckDone, phoneVerificationRequired, router, updateUser, logout]);
 
     useEffect(() => {
-        if (!rolesReady || !user?.id || isVendorUser(user) || vendorStatusCheckedUserRef.current === user.id) return;
+        if (!rolesReady || !user?.id || isVendorUser(user) || isPartialUser(user) || vendorStatusCheckedUserRef.current === user.id) return;
         vendorStatusCheckedUserRef.current = user.id;
         authService.checkVendorStatus()
             .then(async (result) => {
