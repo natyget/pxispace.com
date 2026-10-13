@@ -18,6 +18,8 @@ import {
     parseOrganizer,
     parseScrapbook,
     parseScrapbooks,
+    parseHostScenes,
+    parsePatch,
     scrapbookCaption,
     statWord,
     zoneOf,
@@ -354,4 +356,29 @@ test('the preview description is their bio, cut to fit, else one line about the 
     assert.ok(long.endsWith('…'));
     assert.equal(organizerDescription({ name: 'Pix 2 Party', bio: null }), 'Nights and scrapbooks from Pix 2 Party, on PXI.');
     assert.equal(organizerDescription({ bio: '  ' }), 'Nights and scrapbooks from this organizer, on PXI.');
+});
+
+const PATCH = {
+    shape: 'circle', twill: 'pxi-purple', border: 'white', emblem: 'star', emblemColor: 'gold',
+    textTop: 'AFRO SUNDAY', textBottom: '', textColor: 'white', font: 'varsity',
+};
+
+test('host scenes count only when the API echoes the host', () => {
+    const rows = [{ id: 's1', slug: 'afro', name: 'Afro Sunday', patch: PATCH, joined: true }, { id: 's2', name: ' ' }, { id: 's1', name: 'dup' }, null];
+    const own = parseHostScenes({ scenes: rows, host: 'U1' }, 'u1');
+    assert.equal(own.length, 1);
+    assert.equal(own[0].joined, true);
+    assert.equal(own[0].patch.shape, 'circle');
+    // an old backend ignores ?host= and sends every scene with no echo: that is "none"
+    assert.deepEqual(parseHostScenes({ scenes: rows }, 'u1'), []);
+    assert.deepEqual(parseHostScenes({ scenes: rows, host: 'someone-else' }, 'u1'), []);
+    assert.deepEqual(parseHostScenes(null, 'u1'), []);
+});
+
+test('a patch with an unknown part is not drawn', () => {
+    assert.ok(parsePatch(PATCH));
+    assert.equal(parsePatch({ ...PATCH, shape: 'blob' }), null);
+    assert.equal(parsePatch({ ...PATCH, twill: '#ff0000' }), null);
+    assert.equal(parsePatch(null), null);
+    assert.equal(parsePatch({ ...PATCH, textTop: 'X'.repeat(40) }).textTop.length, 18);
 });

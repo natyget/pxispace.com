@@ -2,7 +2,7 @@
 import PublicProfileClient from '@/views/public/PublicProfileClient';
 import OrganizerPage from '@/views/public/organizer/OrganizerPage';
 import { getPublicProfile } from '@/lib/publicProfile';
-import { getOrganizer, getOrganizerCatalogue, getOrganizerScrapbooks } from '@/lib/organizer';
+import { getOrganizer, getOrganizerCatalogue, getOrganizerScenes, getOrganizerScrapbooks } from '@/lib/organizer';
 import { organizerDescription, organizerHref, organizerTitle } from '@/lib/organizerPage';
 import { canonicalUrl, getSiteUrl } from '@/lib/siteUrl';
 import { resolveDisplayImageUrl } from '@/lib/mediaUrl';
@@ -132,16 +132,23 @@ export default async function PublicUserProfilePage({ params }) {
     // A Diplomat's address is their organizer page. Anyone else's is the read-only passport preview, as it was.
     const organizer = await getOrganizer(id);
     if (organizer) {
-        const [catalogue, scrapbooks] = await Promise.all([
+        const [catalogue, scrapbooks, scenes, profile] = await Promise.all([
             getOrganizerCatalogue(organizer.id),
             getOrganizerScrapbooks(organizer.id),
+            getOrganizerScenes(organizer.id),
+            loadProfile(organizer.id),
         ]);
+        // The owner's passport closes the page, drawn the way a member's own address draws it. Only when it is
+        // published and the account is not private.
+        const passport = profile && !profile.isPrivateAccount && profile.isPassportIssued ? profile : null;
         return (
             <OrganizerPage
                 organizer={organizer}
                 upcoming={catalogue.upcoming}
                 past={catalogue.past}
                 scrapbooks={scrapbooks}
+                scenes={scenes}
+                passport={passport}
             />
         );
     }

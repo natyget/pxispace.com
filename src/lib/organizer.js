@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import { getServerApiBaseUrl } from '@/lib/apiBase';
 import { ssrFetchJson } from '@/lib/ssrFetch';
-import { organizerKey, parseNights, parseOrganizer, parseScrapbooks } from '@/lib/organizerPage';
+import { organizerKey, parseHostScenes, parseNights, parseOrganizer, parseScrapbooks } from '@/lib/organizerPage';
 
 // Server-side reads for the organizer page (contract: BRIEF-N1-ORG-contract.md). The base is the same one every other
 // server call uses (API_BASE_URL), and nothing here forwards the visitor's cookies: the page is public, so the API
@@ -61,4 +61,16 @@ export async function getOrganizerScrapbooks(organizerId) {
   );
   if (status !== 200 || !data) return [];
   return parseScrapbooks(data.scrapbooks);
+}
+
+/** The public scenes the organizer hosts, newest first. Empty when the API did not answer or has no `host` filter yet. */
+export async function getOrganizerScenes(organizerId) {
+  const key = organizerKey(organizerId);
+  if (!key) return [];
+  const base = getServerApiBaseUrl();
+  const { status, data } = await ssrFetchJson(`${base}/api/scenes?host=${encodeURIComponent(key)}&limit=20`, {
+    logTag: 'organizerScenes',
+  });
+  if (status !== 200 || !data) return [];
+  return parseHostScenes(data, key);
 }

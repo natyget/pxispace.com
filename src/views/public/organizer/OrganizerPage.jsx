@@ -3,9 +3,11 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { CheckmarkBadge01Icon, InstagramIcon } from '@hugeicons/core-free-icons';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { displayImageSrc } from '@/lib/mediaUrl';
-import { countLabel, instagramUrl, nightWhen, scrapbookCaption, statWord } from '@/lib/organizerPage';
+import { countLabel, instagramUrl, nightWhen, organizerHref, scrapbookCaption, statWord } from '@/lib/organizerPage';
 import { getHypeTierBadgeTheme } from '@/utils/hypeTier';
 import OrganizerFollow from './OrganizerFollow';
+import OrganizerScenes from './OrganizerScenes';
+import OrganizerPassport from './OrganizerPassport';
 import ShowMore from './ShowMore';
 
 // Flat, on the site's black: the surfaces are the event view's #1C1C1C and #2E2E2E (bg-pxi-surface, bg-pxi-field), the
@@ -187,10 +189,12 @@ function PastNights({ nights, now }) {
  *   upcoming: object[],
  *   past: object[],
  *   scrapbooks: object[],
+ *   scenes?: object[],     the scenes they host (empty when the API does not filter by host yet)
+ *   passport?: object|null,  their public profile when the passport is published, else null
  *   now?: Date,
  * }} props see src/lib/organizerPage.js for the shapes
  */
-export default function OrganizerPage({ organizer, upcoming = [], past = [], scrapbooks = [], now = new Date() }) {
+export default function OrganizerPage({ organizer, upcoming = [], past = [], scrapbooks = [], scenes = [], passport = null, now = new Date() }) {
   const instagram = instagramUrl(organizer.instagramHandle);
   return (
     <div className="min-h-screen overflow-x-clip bg-black pt-[calc(var(--public-navbar-height)+2rem)] pb-28 font-inter text-white">
@@ -231,6 +235,10 @@ export default function OrganizerPage({ organizer, upcoming = [], past = [], scr
           </div>
         </header>
 
+        {scenes.length ? (
+          <OrganizerScenes organizerId={organizer.id} returnPath={organizerHref(organizer) ?? `/u/${organizer.id}`} scenes={scenes} />
+        ) : null}
+
         {upcoming.length ? (
           <section aria-labelledby="organizer-next" className="mt-16">
             <h2 id="organizer-next" className={SECTION_TITLE}>
@@ -260,6 +268,15 @@ export default function OrganizerPage({ organizer, upcoming = [], past = [], scr
                 </li>
               ))}
             </ul>
+          </section>
+        ) : null}
+
+        {passport ? (
+          <section aria-labelledby="organizer-passport" className="mt-16">
+            <h2 id="organizer-passport" className={`${SECTION_TITLE} mb-6`}>
+              Passport
+            </h2>
+            <OrganizerPassport user={passport} />
           </section>
         ) : null}
       </div>
