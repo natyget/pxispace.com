@@ -11,6 +11,7 @@ import { RechartsChart, ChartSkeleton } from '@/components/dashboard/ChartFrame'
 import { DASHBOARD_BRAND_COLOR, DASHBOARD_MUTED_COLOR, DASHBOARD_TOOLTIP_PROPS } from '@/components/dashboard/chartStyles';
 import { usePageAction } from '@/components/dashboard/shell/usePageAction';
 import EventCard from '@/components/dashboard/hub/EventCard';
+import { coverImageUrl } from '@/components/dashboard/hub/eventCards';
 import MemberCommandCenter from './MemberCommandCenter';
 import { isVendorUser } from '@/lib/accountTier';
 import { useNotifications } from '@/lib/dashboardStore';
@@ -47,11 +48,6 @@ function formatMoney(cents = 0) {
 function formatCents(cents = 0) {
     const dollars = Math.round(Math.abs(cents) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 });
     return `${cents < 0 ? '-' : ''}$${dollars}`;
-}
-
-function coverImageUrl(value) {
-    const raw = typeof value === 'string' ? value.trim() : '';
-    return raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('data:image/') ? raw : null;
 }
 
 function formatEventDate(value) {
