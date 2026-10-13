@@ -9,7 +9,7 @@ export default function InsightsCard({ home, analytics, heatmap, loading = false
     const lines = buildInsights({ home, analytics, heatmap });
     const basis = insightsBasis(home);
     return (
-        <VenueCard title="Short Insights" className={className} data-venue-card="insights">
+        <VenueCard title="Short insights" className={className} data-venue-card="insights">
             {loading ? <CardSkeleton className="h-28" /> : lines.length ? (
                 <>
                     {basis ? <p className="text-[11px] font-medium text-white/80">{basis}</p> : null}
@@ -20,7 +20,7 @@ export default function InsightsCard({ home, analytics, heatmap, loading = false
                     </ul>
                 </>
             ) : (
-                <EmptyNote>No Current Venue Insights</EmptyNote>
+                <EmptyNote>No current venue insights</EmptyNote>
             )}
         </VenueCard>
     );

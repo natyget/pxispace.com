@@ -73,7 +73,7 @@ export default function NightsCard({ tonight = [], upcoming = [], hasHistory = f
                     <Heading id="venue-nights-tonight">Tonight.</Heading>
                     <Heading id="venue-nights-upcoming">Upcoming Events.</Heading>
                     <div className="flex min-h-[184px]" role="group" aria-labelledby="venue-nights-tonight">
-                        {lead ? <NightTile night={lead} /> : <Nothing>No Events Tonight</Nothing>}
+                        {lead ? <NightTile night={lead} /> : <Nothing>No events tonight</Nothing>}
                     </div>
                     <div className="flex min-h-[184px] min-w-0" role="group" aria-labelledby="venue-nights-upcoming">
                         {later.length ? (
@@ -81,7 +81,7 @@ export default function NightsCard({ tonight = [], upcoming = [], hasHistory = f
                                 {later.map((night) => <NightTile key={night.eventId} night={night} />)}
                             </div>
                         ) : (
-                            <Nothing>{hasHistory || lead ? 'No Upcoming Events' : 'No Upcoming Events Happening'}</Nothing>
+                            <Nothing>{hasHistory || lead ? 'No upcoming events' : 'No upcoming events happening'}</Nothing>
                         )}
                     </div>
                 </div>

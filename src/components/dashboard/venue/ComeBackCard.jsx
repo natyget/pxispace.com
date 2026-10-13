@@ -10,7 +10,7 @@ export default function ComeBackCard({ analytics, level = 'NONE', loading = fals
     const measured = Boolean(analytics && analytics.totalAttendance > 0 && repeat?.repeatRate !== null);
     const percent = measured ? toPercent(repeat.repeatRate) : 0;
     return (
-        <VenueCard title="Come Back Pct" className={className} data-venue-card="come-back">
+        <VenueCard title="Come back %" className={className} data-venue-card="come-back">
             {loading ? <CardSkeleton className="h-28" /> : (
                 <>
                     {measured && level === 'LIMITED' ? <HistoryTag className="-mt-2 block" /> : null}

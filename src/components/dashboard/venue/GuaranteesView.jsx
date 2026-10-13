@@ -115,7 +115,7 @@ export default function GuaranteesView({ venueId, timeZone = null }) {
             ) : null}
 
             <div className="mt-4 space-y-4">
-                <Block title="What is Guaranteed">
+                <Block title="What is guaranteed">
                     <div className="grid gap-3 md:grid-cols-3">
                         {selected ? (
                             <>
@@ -133,7 +133,7 @@ export default function GuaranteesView({ venueId, timeZone = null }) {
                     </div>
                 </Block>
 
-                <Block title="How it Works">
+                <Block title="How it works">
                     <div className="grid gap-3 md:grid-cols-3">
                         <Tile lead="1" title="PXI makes the offer" body="For one night, in writing: how many people, the credit per person short, and the cap." />
                         <Tile lead="2" title="Your door does the counting" body="Each ticket scanned at your door on the night is one person. A ticket can only be scanned once." />

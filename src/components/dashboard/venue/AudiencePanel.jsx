@@ -457,7 +457,7 @@ export default function AudiencePanel({
                             </div>
                         ) : data.total === 0 ? (
                             <EmptyNote detail={filtered ? 'Nobody matches these filters.' : 'People appear here after they hold a ticket to a night at your venue.'}>
-                                {filtered ? 'No one matches' : 'No Attendance History'}
+                                {filtered ? 'No one matches' : 'No attendance history'}
                             </EmptyNote>
                         ) : (
                             <>

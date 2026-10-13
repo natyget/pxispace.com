@@ -11,7 +11,7 @@ export default function NightByNightCard({ comparison, level = 'NONE', loading =
     const night = comparison?.night || null;
     const limited = Boolean(night) && !comparison?.average;
     return (
-        <VenueCard title="Night by Night" className={className} data-venue-card="night-by-night">
+        <VenueCard title="Night by night" className={className} data-venue-card="night-by-night">
             {loading ? <CardSkeleton className="h-44" /> : (
                 <div className="flex-1 overflow-x-auto rounded-xl ring-1 ring-white/[0.08]">
                     <table className="h-full w-full min-w-[520px] text-left">
