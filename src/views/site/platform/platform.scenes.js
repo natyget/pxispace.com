@@ -301,6 +301,14 @@ export default async function initPlatform(PXR, L) {
   const dTabs = (tab) => `<div class="ds-tabs">${TABS.map(([ic, l]) => `<span class="${l === tab ? 'on' : ''}">${hi(ic, 16)}${l}</span>`).join('')}</div>`;
   const dSubs = (tab, sub, action = '') => `<div class="ds-subs"><div>${SUBS[tab].map((l) => `<span class="${l === sub ? 'on' : ''}">${l}</span>`).join('')}</div>${action}</div>`;
   const dBar = (tab, sub, action) => `<div class="ds-bar">${dTabs(tab)}${dSubs(tab, sub, action)}</div>`;
+  // desktop stages: the dashboard's tab row and bold sub-tabs on top, the page's cards in .ds-body below them
+  function dFrame(stage, tab, sub, { left = 0, action = '' } = {}) {
+    const body = document.createElement('div');
+    body.className = 'ds-body';
+    while (stage.firstChild) body.appendChild(stage.firstChild);
+    stage.append(body);
+    stage.insertAdjacentHTML('afterbegin', `<div class="ds-head" style="left:${left}px">${dBar(tab, sub, action)}</div>`);
+  }
   const dCreate = `<span class="ds-act">${hi('Add01Icon', 16)}Create event</span>`;
 
   // the demo organizer (Alex Rivera): last 30 days to Oct 12, rescaled so the days add up to the Key metrics
@@ -344,7 +352,7 @@ export default async function initPlatform(PXR, L) {
     const rm = niceMax(Math.max(...R30));
     const rev = flatChart({ w: W - 32, h: Math.round(clamp(window.innerHeight - 690, 96, 150)), series: [{ values: R30, color: BRAND }], max: rm, ticks: tickSet(rm), xl: [X30[0], X30[2], X30[4]], padL: 40, fs: 11, yfmt: (v) => '$' + Math.round(v).toLocaleString('en-US') });
     el.innerHTML = `${dPassport(false)}${dBar('Hub', 'Command Center')}
-      <div class="mcc-grid">${METRICS.map(([l, i, v, f]) => `<div class="mc"><div class="top"><small>${l}</small></div><b data-to="${v}" data-f="${f}">0</b></div>`).join('')}</div>
+      <div class="mcc-grid">${METRICS.map(([l, , v, f]) => `<div class="mc"><div class="top"><small>${l}</small></div><b data-to="${v}" data-f="${f}">0</b></div>`).join('')}</div>
       <div class="dcard mcc-chart"><p class="d-h">Revenue</p><p class="d-sub">Ticket sales per day, last 30 days</p>${rev.svg}</div>`;
   }
   function initHero(mode, rm, first) {
@@ -522,7 +530,7 @@ export default async function initPlatform(PXR, L) {
     const sec = $('#sell'), stage = prep(sec, mode), M = mode === 'm', q = (s) => $(s, stage);
     const L = M ? mLayout(sec, rm) : null;
     const card = `<div class="dcard sell-card">
-        <p class="d-eb q">Before doors</p><p class="d-h">Sell the room</p><p class="d-sub pace"></p>
+        <p class="d-h">Ticket sales</p><p class="d-sub pace"></p>
         <div class="sell-value"><b class="n-gross">$0</b><span>ticket sales</span><span class="d-chip change"><span class="n-sold">0</span>&nbsp;sold</span></div>
         <div class="sell-chart"></div>
         <div class="sell-cum"><span class="cum-l">Cumulative</span><span class="cum-n">0 / 180</span><div class="cum-chart"></div></div>
@@ -531,8 +539,9 @@ export default async function initPlatform(PXR, L) {
     const sold = `<div class="soldout"><span>Sold out</span><small>${M ? '180 / 180 sold' : '180 / 180, 4 days early'}</small></div>`;
     if (!M) {
       stage.innerHTML = card + `<div class="ins-panel"><p class="ins-eb">What we noticed at this event</p><p class="ins-empty">Insights appear here as sales come in.</p><div class="ins-list">${INS.map((x) => insHTML(x)).join('')}</div></div>
-        <div class="dcard mkt"><div class="d-headrow"><div><p class="d-eb q">Marketing</p><p class="d-h">Spend → tickets, attributed</p></div><div class="mkt-r"><span class="d-chip brand">7-day attribution</span><span class="d-chip">Campaigns</span><span class="d-chip">Ads</span></div></div>
+        <div class="dcard mkt"><div class="d-headrow"><div><p class="d-eb q">Marketing</p><p class="d-h">Spend on this event</p></div></div>
           <div class="d-strip s4">${MK.map(([l, v, c]) => `<div><small>${l}</small><b class="${c}">${v}</b></div>`).join('')}</div></div>` + sold;
+      dFrame(stage, 'Insights', 'Analytics');
     } else {
       stage.innerHTML = INS.slice(0, 2).map((x) => insHTML(x, 'toast')).join('') + card +
         `<div class="mkt-m">${MK.map(([l, v, c]) => `<div class="mtile"><small>${l}</small><b class="${c}">${v}</b></div>`).join('')}</div>` + sold;
@@ -629,12 +638,13 @@ export default async function initPlatform(PXR, L) {
     const gates = `<div class="gates"><div class="gate g1"><i class="gdot"></i><div><b>Main door</b><small class="gm">0 issues flagged</small></div><span class="n o-g1">0</span></div><div class="gate g2"><i class="gdot"></i><div><b>Door 2</b><small class="gm">0 issues flagged</small></div><span class="n o-g2">0</span></div></div>`;
     if (!M) {
       stage.innerHTML = `<div class="dcard ops">
-        <div class="ops-head"><p class="d-eb q">Live Operations</p><h4>Live control room</h4><p>Gate flow, entry pace and incidents, updated from every scan.</p></div>
+        <div class="ops-head"><p class="d-eb q">Live Operations</p><h4>Live control room</h4><p>Gate flow, entry velocity, and incident response, live from real scans.</p></div>
         <div class="ops-tiles"><div><small>Mode</small><b>Live</b></div><div><small>Gates</small><b>2</b></div><div class="t-flags"><small>Flags</small><b class="o-flags">0</b></div><div><small>Staff</small><b>6</b></div></div>
         <div class="ops-2">${capBox}${velBox(60)}</div>
         ${gates}
         <div class="scans-h"><p class="t">Recent scans</p><small>Newest first</small></div>
         <div class="scans"></div></div>`;
+      dFrame(stage, 'Operations', 'Live Operations', { left: 302 });
     } else {
       stage.innerHTML = `<div class="d-strip s4 door-strip"><div><small>Inside</small><b class="o-in">0</b></div><div><small>Full</small><b><span class="o-pct">0</span>%</b></div><div><small>Per 5 min</small><b class="o-vel">0</b></div><div class="t-flags"><small>Flags</small><b class="o-flags">0</b></div></div>
         <div class="dcard cap-card">${capBox}${velBox(40)}${gates}</div>`;
@@ -765,23 +775,24 @@ export default async function initPlatform(PXR, L) {
     if (!M) {
       const ch = areaChart({ w: 832, h: 124, series: [{ values: H_CHAT, color: BRAND }, { values: H_RX, color: ORANGE }, { values: H_CAP, color: TEAL }], max: 380, ticks: [0, 95, 190, 285, 380], xl: HOURS.map((h, i) => [i, h]), padL: 38, fs: 13, stacked: true, fill: [0.18, 0.02] });
       stage.innerHTML = `<div class="dcard heat">
-          <p class="d-eb">Spatial intelligence</p>
+          <p class="d-h">Spatial intelligence</p>
           <div class="heat-row"><span class="pn">Seaport Loft</span><span class="d-chip">Auto-mapped from photo GPS</span><span class="d-btn">Recalibrate</span></div>
           <div class="heat-map">${heatSVG(plan, cl)}<span class="heat-time">9:30 PM</span><span class="heat-peak">Peak 11:42 PM, Main room</span></div>
           <div class="play"><span class="pb">${hi('PlayIcon', 15)}</span><span class="lbl">Play the night back</span><div class="hist">${'<i></i>'.repeat(48)}</div><span class="pfoot"><b class="h-geo">0</b> geotagged photos, <b class="h-sc">0</b> scans</span></div>
         </div>
         <div class="dcard hype">
-          <div class="d-headrow"><div><p class="d-eb q">Run the night</p><p class="d-h">Hype through the night</p></div><div class="seg"><span class="on">All activity</span><span>Chat</span><span>Reactions</span><span>Captures</span></div></div>
+          <div class="d-headrow"><div><p class="d-h">Hype through the night</p></div><div class="seg"><span class="on">All activity</span><span>Chat</span><span>Reactions</span><span>Captures</span></div></div>
           <div class="hype-chart">${ch.svg}</div>
           <div class="d-strip s4 hype-strip"><div class="hs-score"><small>Hype score</small><b><span class="h-score">0</span><span class="tier" data-t="Quiet">Quiet</span></b></div><div><small>Chat</small><b class="h-chat">0</b></div><div><small>Reactions</small><b class="h-rx">0</b></div><div><small>Captures</small><b class="h-cap">0</b></div></div>
         </div>`;
+      dFrame(stage, 'Insights', 'Analytics');
       const hsvg = $('.hype-chart svg', stage);
       hsvg.insertAdjacentHTML('beforeend', `<line class="hc" y1="6" y2="${ch.base}" stroke="rgba(255,255,255,.14)"/><circle class="spike" cx="${ch.X(3)}" cy="${ch.Y(H_CAP[3] + H_CHAT[3] + H_RX[3])}" r="5" fill="${BRAND}" stroke="#0e0e13" stroke-width="2" opacity="0"/>`);
       stage._ch = ch;
     } else {
       const sp = areaChart({ w: L.W - 32, h: 44, series: [{ values: rib, color: BRAND }], max: Math.max(...rib) * 1.05, noAxis: true, fill: [0.3, 0.02] });
       stage.innerHTML = `<div class="dcard heat">
-          <div class="d-headrow"><div><p class="d-eb">Spatial intelligence</p><p class="d-h">Seaport Loft</p></div><span class="d-chip">From photo GPS</span></div>
+          <div class="d-headrow"><div><p class="d-eb q">Spatial intelligence</p><p class="d-h">Seaport Loft</p></div><span class="d-chip">From photo GPS</span></div>
           <div class="heat-map" style="height:${Math.round((L.W - 32) * 0.8)}px">${heatSVG(plan, cl)}<span class="heat-time">9:30 PM</span></div>
           <div class="heat-foot"><span><b class="h-geo">0</b> geotagged photos</span><span><b class="h-sc">0</b> scans</span></div>
         </div>
@@ -864,6 +875,7 @@ export default async function initPlatform(PXR, L) {
         <div class="kit-cap"><small>Caption</small><p>Late Checkout, Oct 2. 214 photos from 38 phones. Thank you, Boston. Vol. II soon.</p></div>
         <div class="kit-actions"><span class="d-pill solid">Download 8 photos</span><span class="d-pill ghost">Copy caption</span></div>
       </div>`;
+    if (!M) dFrame(stage, 'Insights', 'Analytics');
     const tiles = $$('.tile16', stage);
     rank.forEach((ti, k) => { $('.rk', tiles[ti]).textContent = k + 1; });
     if (M) {
@@ -908,7 +920,7 @@ export default async function initPlatform(PXR, L) {
     const edge = [...F.map((_, i) => [50 - halves[i], i * BH]), [50 - halves[F.length - 1], HH]];
     const outline = [...edge, ...edge.map(([x, y]) => [100 - x, y]).reverse()].map(([x, y]) => `${+x.toFixed(2)},${y}`).join(' ');
     const rid = 'fun' + (++gid);
-    const funnel = `<div class="dcard funnel${M ? ' crowd-b' : ''}"><p class="d-eb q">Audience</p><p class="d-h">Attendance path</p>
+    const funnel = `<div class="dcard funnel${M ? ' crowd-b' : ''}"><p class="d-h">Attendance path</p>
       <div class="fun" style="--fun-h:${BH}px">
         <div class="fun-rail">${F.map(([n, v, c]) => `<div><b><i style="background:${c}"></i>${n}</b><span class="fun-n"><em class="fv" data-v="${v}">0</em><small>${Math.round((v / F[0][1]) * 100)}% of sold</small></span></div>`).join('')}</div>
         <div class="fun-shape" style="height:${HH}px"><svg viewBox="0 0 100 ${HH}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${rid}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${F[0][2]}"/><stop offset="1" stop-color="${F[F.length - 1][2]}"/></linearGradient><clipPath id="${rid}c"><rect class="fun-clip" x="0" y="0" width="100" height="0"/></clipPath></defs>
@@ -918,15 +930,16 @@ export default async function initPlatform(PXR, L) {
     const strip = `<div class="d-strip s4"><div><small>Attendees</small><b class="cv" data-v="164">0</b></div><div><small>Passports</small><b class="cv" data-v="131">0</b></div><div><small>Emailable</small><b class="cv" data-v="118">0</b></div><div><small>Repeat</small><b class="cv" data-v="31" data-f="pct">0%</b></div></div>`;
     const filters = '<div class="filters"><span class="flt">Email opt-in</span><span class="flt">City, Boston</span><span class="flt">Passport holder</span></div>';
     const saved = '<span class="seg-saved">Boston regulars <em>86</em><span>Send →</span></span>';
-    const crm = M ? `<div class="dcard crm crowd-b"><div class="d-headrow"><div><p class="d-eb q">CRM</p><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 12)}Scanned</span></div>${strip}${filters}
+    const crm = M ? `<div class="dcard crm crowd-b"><div class="d-headrow"><div><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 12)}Scanned</span></div>${strip}${filters}
         <div class="match-m"><span class="match-l"><b class="match">164</b>attendees match</span></div>
         <div class="seg-act"><span class="d-pill ghost seg-save">Save as segment</span>${saved}</div></div>`
-      : `<div class="dcard crm"><div class="d-headrow"><div><p class="d-eb q">CRM</p><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 14)}Scanned, not self-reported</span></div>${strip}${filters}
+      : `<div class="dcard crm"><div class="d-headrow"><div><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 14)}Scanned, not self-reported</span></div>${strip}${filters}
         <div class="seg-row"><span class="match-l"><b class="match">164</b>attendees match</span><span class="seg-act" style="position:relative;display:inline-grid"><span class="d-pill ghost sm seg-save" style="grid-area:1/1">Save as segment</span><span style="grid-area:1/1;justify-self:end">${saved}</span></span></div></div>`;
-    const send = `<div class="dcard send${M ? ' crowd-b' : ''}"><div class="d-headrow"><div><p class="d-eb q">Campaigns</p><p class="d-h">Compose send</p></div><div class="seg"><span class="on">Email</span><span>SMS</span></div></div>
+    const send = `<div class="dcard send${M ? ' crowd-b' : ''}"><div class="d-headrow"><div><p class="d-h">Compose send</p></div><div class="seg"><span class="on">Email</span><span>SMS</span></div></div>
       <div class="send-body"><div class="composer"><div class="snd-f"><small>To</small>Boston regulars (86)</div><div class="snd-f"><small>Subject</small><span class="subj"></span></div></div>
         <div class="quote"><div class="q2"><div><small>Consent</small><b>Enforced</b></div><div><small>Unsubscribe</small><b>Automatic</b></div></div><span class="d-pill solid sendbtn">Send campaign</span></div></div></div>`;
     stage.innerHTML = funnel + crm + send;
+    if (!M) dFrame(stage, 'Engagement', 'Audience');
     if (M) {
       const lay = (l) => {
         const cards = $$('.crowd-b', stage);

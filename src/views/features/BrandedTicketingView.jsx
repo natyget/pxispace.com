@@ -19,11 +19,11 @@ const CREATE_HREF = '/login?redirect=/dashboard/events/new';
 // The skeletons are the loaded panels' heights at phone, tablet and desktop widths, so nothing jumps when the charts arrive.
 const EarningsMock = dynamic(() => import('@/components/marketing/DashboardMockup/EarningsMock'), {
   ssr: false,
-  loading: () => <MockSkeleton className="h-[681px] md:h-[649px]" />,
+  loading: () => <MockSkeleton className="h-[808px] md:h-[779px]" />,
 });
 const LiveScanMock = dynamic(() => import('@/components/marketing/DashboardMockup/LiveScanMock'), {
   ssr: false,
-  loading: () => <MockSkeleton className="h-[791px] md:h-[429px]" />,
+  loading: () => <MockSkeleton className="h-[912px] md:h-[553px]" />,
 });
 
 export default function BrandedTicketingView() {

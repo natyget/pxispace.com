@@ -15,15 +15,15 @@ import { MockSkeleton } from '@/components/marketing/DashboardMockup/DashboardMo
 // The skeletons are the loaded panels' heights at phone, tablet and desktop widths, so nothing jumps when the charts arrive.
 const AnalyticsMock = dynamic(() => import('@/components/marketing/DashboardMockup/AnalyticsMock'), {
   ssr: false,
-  loading: () => <MockSkeleton className="h-[541px] md:h-[507px]" />,
+  loading: () => <MockSkeleton className="h-[665px] md:h-[638px]" />,
 });
 const LiveScanMock = dynamic(() => import('@/components/marketing/DashboardMockup/LiveScanMock'), {
   ssr: false,
-  loading: () => <MockSkeleton className="h-[791px] md:h-[429px]" />,
+  loading: () => <MockSkeleton className="h-[912px] md:h-[553px]" />,
 });
 const VenueMapMock = dynamic(() => import('@/components/marketing/DashboardMockup/VenueMapMock'), {
   ssr: false,
-  loading: () => <MockSkeleton className="h-[455px] sm:h-[544px] md:h-[592px] xl:h-[544px]" />,
+  loading: () => <MockSkeleton className="h-[578px] sm:h-[668px] md:h-[716px] xl:h-[671px]" />,
 });
 
 const CREATE_HREF = '/login?redirect=/dashboard/events/new';

@@ -12,7 +12,7 @@ import { HEATMAP_SAMPLE, HEATMAP_START } from './sampleData';
  */
 export default function VenueMapMock() {
   return (
-    <DashboardMock>
+    <DashboardMock section="analytics">
       <SectionCard title="Spatial intelligence" className="!rounded-[1.25rem]">
         <VenueHeatMap sample={HEATMAP_SAMPLE} startAt={HEATMAP_START} readOnly />
       </SectionCard>
