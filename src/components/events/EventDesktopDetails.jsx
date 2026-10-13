@@ -139,7 +139,7 @@ export default function EventDesktopDetails({ event, primaryAction, secondaryAct
   if (!event) return null;
 
   return (
-    <article className="mx-auto w-full max-w-[760px] px-8 pb-16 pt-10 text-white xl:px-10" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+    <article className="w-full max-w-[760px] pb-16 pt-10 text-white" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
       <header className="flex items-start gap-8">
         <div className="relative aspect-[3/4] w-[min(42%,300px)] shrink-0 overflow-hidden rounded-[28px] bg-[#2A2A2C]">
           {cover ? <Image src={cover} alt={`${event.title || 'Event'} cover`} fill priority unoptimized sizes="300px" className="object-cover" /> : null}

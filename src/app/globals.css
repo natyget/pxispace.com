@@ -1240,10 +1240,14 @@ html, body {
   .public-album-page,
   .event-split {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) clamp(440px, 36vw, 540px);
+    grid-template-columns: minmax(0, 1fr) clamp(400px, 34vw, 480px);
+    column-gap: 48px;
     align-items: stretch;
+    /* The site header's own container (Tailwind .container, px-6): same edges as its logo and buttons. */
+    box-sizing: border-box;
     width: 100%;
-    max-width: 1440px;
+    max-width: 1024px;
+    padding-inline: 24px;
     margin: var(--public-navbar-height) auto 0;
     height: calc(100dvh - var(--public-navbar-height));
     max-height: calc(100dvh - var(--public-navbar-height));
@@ -1256,7 +1260,27 @@ html, body {
     min-width: 0;
     height: 100%;
     overflow: hidden;
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Tailwind's .container steps its max-width at the breakpoints; so does this. */
+  @media (min-width: 1280px) {
+    .public-album-page,
+    .event-split {
+      max-width: 1280px;
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .public-album-page,
+    .event-split {
+      max-width: 1536px;
+    }
+  }
+
+  /* The Thread / Gallery switch runs the column's full width, to the header's right edge. */
+  .album-thread-chrome > div:last-child {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 
   .event-split__right {
@@ -1264,11 +1288,6 @@ html, body {
     min-height: 0;
     height: 100%;
     overflow: hidden;
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  .event-split__right .public-album-left-slot {
-    border-left: none;
   }
 
   .album-details-pane,
