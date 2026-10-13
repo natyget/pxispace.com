@@ -500,10 +500,9 @@ export default function AdsPage() {
             <section className="dashboard-surface-b rounded-[1.25rem] px-5 py-6 md:px-7">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl">
-                        <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Growth</p>
-                        <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Ads Manager</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[28px]">Ads</h1>
                         <p className="mt-2 text-sm leading-6 text-zinc-400">
-                            Promote your events across the PXI mobile feed, discovery, the web featured hero, and email —
+                            Promote your events across the PXI mobile feed, discovery, the web featured hero, and email,
                             targeted by city, age, music taste, and attendance. Credits apply first; cards cover the rest.
                         </p>
                     </div>
@@ -538,7 +537,7 @@ export default function AdsPage() {
 
             {wizardOpen ? (
                 <SectionCard
-                    title={`New campaign — ${WIZARD_STEPS[step]}`}
+                    title={`New campaign: ${WIZARD_STEPS[step]}`}
                     dense
                     className="dashboard-surface-b !shadow-[0_22px_70px_rgba(0,0,0,0.28)]"
                     actions={
@@ -576,7 +575,7 @@ export default function AdsPage() {
                                         </span>
                                         {upcomingEvents.length === 0 ? (
                                             <p className="rounded-2xl bg-pxi-field px-4 py-4 text-sm text-zinc-500">
-                                                No upcoming events to promote — create a future event first, or wait
+                                                No upcoming events to promote. Create a future event first, or wait
                                                 until one is scheduled.
                                             </p>
                                         ) : (
@@ -594,7 +593,7 @@ export default function AdsPage() {
                                 <>
                                     {audienceIntel ? (
                                         <div className="rounded-2xl bg-pxi-purple/[0.07] p-4 ring-1 ring-pxi-purple/15">
-                                            <p className="text-[11px] font-medium tracking-[0.02em] text-white">Smart targeting — built from your real attendees</p>
+                                            <p className="text-[11px] font-medium tracking-[0.02em] text-white">Smart targeting, built from your real attendees</p>
                                             <p className="mt-1 text-xs leading-5 text-zinc-400">
                                                 Your money works hardest on people like the ones who already show up. One tap applies the profile.
                                             </p>
@@ -616,7 +615,7 @@ export default function AdsPage() {
                                                 <span>
                                                     <span className="block text-[13px] font-bold">Target people like my crowd</span>
                                                     <span className={`block text-xs ${draft.lookalikeOfOwnAttendees ? 'text-white/80' : 'text-zinc-400'}`}>
-                                                        Cities, ages, and genres auto-derived from your real attendees — no manual picking
+                                                        Cities, ages, and genres auto-derived from your real attendees, no manual picking
                                                     </span>
                                                 </span>
                                                 <span className="shrink-0 text-[11px] font-bold tracking-[0.02em]">
@@ -636,7 +635,7 @@ export default function AdsPage() {
                                                                 onClick={() => patchDraft({ ageBrackets: [...new Set([...draft.ageBrackets, topBracket.label])] })}
                                                                 className="rounded-full bg-white/[0.07] px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-white/[0.14]"
                                                             >
-                                                                Ages {topBracket.label} — your biggest group ({topBracket.count})
+                                                                Ages {topBracket.label}, your biggest group ({topBracket.count})
                                                             </button>
                                                         );
                                                     }
@@ -648,7 +647,7 @@ export default function AdsPage() {
                                                                 onClick={() => patchDraft({ cities: [...new Set([...draft.cities, city.city])] })}
                                                                 className="rounded-full bg-white/[0.07] px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-white/[0.14]"
                                                             >
-                                                                {city.city} — {city.count} of your attendees
+                                                                {city.city}: {city.count} of your attendees
                                                             </button>
                                                         );
                                                     });
@@ -685,7 +684,7 @@ export default function AdsPage() {
                                                 <TagInput
                                                     tags={draft.genres}
                                                     onChange={(genres) => patchDraft({ genres })}
-                                                    placeholder="e.g. house, afrobeats — matches listeners' taste profiles"
+                                                    placeholder="e.g. house, afrobeats. Matches listeners' taste profiles"
                                                 />
                                             </div>
                                         </>
@@ -893,7 +892,7 @@ export default function AdsPage() {
                                                         <span className="font-bold text-white">{formatUsd(quote.stripeRemainderCents)}</span>
                                                     </>
                                                 ) : (
-                                                    ' — no card needed'
+                                                    ', no card needed'
                                                 )}
                                             </p>
                                         ) : null}
@@ -1078,7 +1077,7 @@ export default function AdsPage() {
             {perfCampaign && performance ? (
                 <>
                     <TimeSeriesChartShell
-                        title={`${perfCampaign.name} — delivery`}
+                        title={`${perfCampaign.name}: delivery`}
                         subheading="Impressions and clicks per day"
                         liveValue={performance.totals.impressions.toLocaleString()}
                         unit="impressions"
