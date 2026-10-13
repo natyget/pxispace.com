@@ -358,6 +358,7 @@ html, body {
   /* Page titles stay bold; every other heading takes its weight and case from its own classes. */
   .dashboard-page-surface h1 {
     font-weight: 700;
+    text-transform: none;
   }
 
 
