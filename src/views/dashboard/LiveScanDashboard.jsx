@@ -277,18 +277,24 @@ export default function LiveScanDashboard({ isLiveEvent }) {
         ticket: scan.ticketId.slice(0, 8).toUpperCase(),
         name: scan.attendee?.name ? `@${scan.attendee.name}` : 'Guest',
         state: 'Accepted',
-        gate: scan.gate || 'Unassigned',
+        // The API names the door each scan came through and, from Oct 13, its id. A scan with no door says so.
+        gate: scan.gate || 'No door',
+        gateId: scan.gateId || null,
         at: formatClockTime(scan.scannedAt),
     })), [snapshot]);
 
+    // A scan belongs to a door by its id when the API sends one, else by the door's name (trimmed, any case).
+    const sameDoor = (scan, gate) =>
+        scan.gateId ? scan.gateId === gate.id : scan.gate.trim().toLowerCase() === gate.name.trim().toLowerCase();
+
     const gatesWithRealScans = useMemo(() => gates.map((gate) => ({
         ...gate,
-        scans: realRecentScans.filter((scan) => scan.gate.toLowerCase() === gate.name.toLowerCase()),
+        scans: realRecentScans.filter((scan) => sameDoor(scan, gate)),
     })), [gates, realRecentScans]);
 
     const scansWithGateIds = useMemo(() => realRecentScans.map((scan) => ({
         ...scan,
-        gateId: gates.find((gate) => gate.name.toLowerCase() === scan.gate.toLowerCase())?.id || null,
+        gateId: scan.gateId || gates.find((gate) => sameDoor(scan, gate))?.id || null,
     })), [realRecentScans, gates]);
 
     const selectedGate = gatesWithRealScans.find((gate) => gate.id === selectedGateId);
