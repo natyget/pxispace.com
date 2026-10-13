@@ -33,6 +33,8 @@ import {
   validatePaidPricing,
 } from '@/lib/ticketTiers';
 import { trackEventCreatePublish, trackEventCreateStart } from '@/lib/analytics';
+import { canHostEvents } from '@/lib/accountTier';
+import TierLock from '@/components/dashboard/shell/TierLock';
 
 async function getCroppedBlob(imageSrc, croppedAreaPixels) {
   const image = await new Promise((resolve, reject) => {
@@ -1515,7 +1517,7 @@ function CreateEventForm({ embedded = false, onCancel, onCreated }) {
    the browser has lost (cleared storage, expired token) while the cookie lingers. */
 export default function CreateEventPage(props) {
   const router = useRouter();
-  const { isAuthenticated, authReady } = useAuth();
+  const { user, isAuthenticated, authReady } = useAuth();
   const signedOut = authReady && !isAuthenticated;
 
   useEffect(() => {
@@ -1528,6 +1530,14 @@ export default function CreateEventPage(props) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center" aria-busy="true">
         <PxiSpinner />
+      </div>
+    );
+  }
+  // Partial (web-only) accounts cannot host: hosting needs a passport.
+  if (!canHostEvents(user)) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center py-6">
+        <TierLock requirement="passport" />
       </div>
     );
   }
