@@ -2,23 +2,24 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Alert02Icon, CheckmarkCircle02Icon, Delete02Icon } from '@hugeicons/core-free-icons';
+import { CheckmarkCircle02Icon, Delete02Icon } from '@hugeicons/core-free-icons';
 import { useAdminMode } from '@/contexts/AdminModeContext';
 import { fetchAdminUgcReports, resolveAdminReport } from '@/services/admin';
 import { adminMockUgcReports } from '@/lib/adminMockData';
 import {
     AdminError,
     AdminPageShell,
-    AdminPanel,
     AdminTableShell,
     adminTableClass,
     adminTdClass,
     adminThClass,
 } from '@/components/admin/AdminPageShell';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
+import { WordTabs } from '@/components/dashboard/ui/kit';
+import { count } from '@/lib/dashFormat';
 
 function formatDate(iso) {
-    if (!iso) return '—';
+    if (!iso) return '-';
     try {
         return new Date(iso).toLocaleString(undefined, {
             month: 'short',
@@ -28,9 +29,16 @@ function formatDate(iso) {
             minute: '2-digit',
         });
     } catch {
-        return '—';
+        return '-';
     }
 }
+
+const STATUS_TABS = [
+    { key: 'PENDING', label: 'Pending' },
+    { key: 'RESOLVED', label: 'Resolved' },
+    { key: 'CANCELLED', label: 'Cancelled' },
+    { key: 'ALL', label: 'All' },
+];
 
 const statusStyle = {
     PENDING: 'bg-amber-500/10 text-amber-300',
@@ -99,38 +107,13 @@ export default function AdminUgcModerationPage() {
 
     return (
         <AdminPageShell
-            title="UGC moderation"
-            copy="Media and post reports, with takedown and dismissal actions tied to the moderation audit log."
+            title="Content"
+            copy="Reported photos and posts, with take down and dismiss."
             source={isLiveAdmin ? 'Live' : 'Mock'}
-            metrics={[
-                { label: 'Queue', value: rows.length.toLocaleString(), hint: statusFilter },
-                { label: 'Mode', value: isLiveAdmin ? 'Live' : 'Mock', hint: 'Data source' },
-            ]}
+            metrics={[{ label: 'In this view', value: count(rows.length), hint: STATUS_TABS.find((tab) => tab.key === statusFilter)?.label }]}
         >
 
-            <AdminPanel className="bg-red-500/[0.055]">
-                <p className="text-sm text-red-200 flex items-center gap-2">
-                    <HugeiconsIcon icon={Alert02Icon} size={16} />
-                    High-priority moderation queue. Review critical reports first; every action is written to the audit log.
-                </p>
-            </AdminPanel>
-
-            <AdminPanel className="flex gap-2 flex-wrap">
-                {['PENDING', 'RESOLVED', 'CANCELLED', 'ALL'].map((status) => (
-                    <button
-                        key={status}
-                        type="button"
-                        onClick={() => setStatusFilter(status)}
-                        className={`rounded-full px-4 py-2 text-xs font-bold tracking-[0.02em] ${
-                            statusFilter === status
-                                ? 'bg-pxi-purple text-white'
-                                : 'bg-pxi-field text-zinc-400 hover:bg-white/[0.075] hover:text-white'
-                        }`}
-                    >
-                        {status}
-                    </button>
-                ))}
-            </AdminPanel>
+            <WordTabs items={STATUS_TABS} value={statusFilter} onChange={setStatusFilter} />
 
             <AdminError>{error}</AdminError>
 
@@ -159,13 +142,13 @@ export default function AdminUgcModerationPage() {
                                     </td>
                                     <td data-label="Target" className="admin-table-primary px-6 py-4 text-[13px] text-white/70">
                                         <div className="font-mono text-[12px] text-white/50">{row.targetType || 'MEDIA'}</div>
-                                        <div className="font-mono text-[11px] break-all max-w-[180px] mt-0.5">{row.targetId || '—'}</div>
+                                        <div className="font-mono text-[11px] break-all max-w-[180px] mt-0.5">{row.targetId || '-'}</div>
                                     </td>
                                     <td data-label="Reason" className={`${adminTdClass} max-w-[260px] text-white/75`}>
                                         <p className="line-clamp-3">{row.reason}</p>
                                     </td>
                                     <td data-label="Reporter" className={`${adminTdClass} break-all max-w-[160px]`}>
-                                        {row.reporter?.email || row.reporterId || row.author || '—'}
+                                        {row.reporter?.email || row.reporterId || row.author || '-'}
                                     </td>
                                     <td data-label="Created" className={`${adminTdClass} whitespace-nowrap`}>{formatDate(row.createdAt)}</td>
                                     <td data-label="Actions" className="px-6 py-4">
