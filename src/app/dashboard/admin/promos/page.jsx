@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
     fetchAdminPromos,
@@ -13,29 +15,26 @@ import { useAdminMode } from '@/contexts/AdminModeContext';
 import {
     AdminError,
     AdminPageShell,
-    AdminPanel,
     AdminTableShell,
     adminTableClass,
     adminTdClass,
     adminThClass,
 } from '@/components/admin/AdminPageShell';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
+import { Button, Panel } from '@/components/dashboard/ui/kit';
+import { count, money } from '@/lib/dashFormat';
 
 function formatDate(iso) {
-    if (!iso) return '—';
+    if (!iso) return '-';
     try {
         return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
     } catch {
-        return '—';
+        return '-';
     }
 }
 
-function formatUsd(cents) {
-    return `$${(Number(cents || 0) / 100).toFixed(2)}`;
-}
-
 const inputCls =
-    'w-full rounded-xl bg-white/[0.055] px-4 py-2.5 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]';
+    'h-11 w-full rounded-2xl bg-pxi-field px-4 text-[14px] text-white placeholder:text-white/35 outline-none transition focus:shadow-[0_0_0_1.5px_#a523ef]';
 
 /** Username-first user picker: debounced lookup with an inline preview dropdown. */
 function UsernameInput({ value, onChange, placeholder }) {
@@ -162,40 +161,36 @@ function CreatePromoCard({ onCreated }) {
     };
 
     return (
-        <AdminPanel className="space-y-4">
-            <h2 className="text-[11px] font-bold tracking-[0.02em] text-white/40">Create code</h2>
+        <Panel title="Create code">
             <div className="grid gap-3 sm:grid-cols-2">
                 <select value={kind} onChange={(e) => setKind(e.target.value)} className={inputCls}>
-                    <option value="CREDIT">Credit — grants credits to redeemers</option>
-                    <option value="AMBASSADOR">Ambassador — attribution + commission</option>
+                    <option value="CREDIT">Credit: gives credits to whoever redeems it</option>
+                    <option value="AMBASSADOR">Ambassador: tracks sales and pays commission</option>
                 </select>
-                <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Code (blank = auto e.g. PXI-XXXXXXXX)" className={inputCls} />
-                <input value={creditUsd} onChange={(e) => setCreditUsd(e.target.value)} type="number" min="0" step="0.01" placeholder="Credit per redemption (USD)" className={inputCls} />
+                <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Code (blank makes one)" className={inputCls} />
+                <input value={creditUsd} onChange={(e) => setCreditUsd(e.target.value)} type="number" min="0" step="0.01" placeholder="Credit per redemption, in dollars" className={inputCls} />
                 {kind === 'AMBASSADOR' && (
                     <>
-                        <input value={commissionPct} onChange={(e) => setCommissionPct(e.target.value)} type="number" min="0" max="50" step="0.1" placeholder="Commission % of attributed sales" className={inputCls} />
+                        <input value={commissionPct} onChange={(e) => setCommissionPct(e.target.value)} type="number" min="0" max="50" step="0.1" placeholder="Commission, % of sales" className={inputCls} />
                         <UsernameInput value={ownerUsername} onChange={setOwnerUsername} placeholder="Ambassador username (required)" />
                     </>
                 )}
-                <input value={maxRedemptions} onChange={(e) => setMaxRedemptions(e.target.value)} type="number" min="1" placeholder="Max redemptions (blank = unlimited)" className={inputCls} />
+                <input value={maxRedemptions} onChange={(e) => setMaxRedemptions(e.target.value)} type="number" min="1" placeholder="Max redemptions (blank for no limit)" className={inputCls} />
                 <input value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} type="date" className={inputCls} />
                 <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Internal note" className={`${inputCls} sm:col-span-2`} />
             </div>
-            {error && <p className="text-red-300 text-[13px]">{error}</p>}
+            {error && <p className="mt-3 text-[13px] text-red-300">{error}</p>}
             {created && (
-                <p className="text-emerald-400 text-[13px]">
-                    Created <span className="font-mono font-bold">{created.code}</span>
+                <p className="mt-3 text-[13px] text-emerald-300">
+                    Created <span className="font-mono font-semibold">{created.code}</span>
                 </p>
             )}
-            <button
-                type="button"
-                onClick={submit}
-                disabled={busy}
-                className="rounded-full bg-pxi-purple text-white px-5 py-2 text-[13px] font-bold disabled:opacity-40 uppercase tracking-[0.08em]"
-            >
-                {busy ? 'Creating...' : 'Create code'}
-            </button>
-        </AdminPanel>
+            <div className="mt-4">
+                <Button variant="primary" onClick={submit} disabled={busy}>
+                    {busy ? 'Creating...' : 'Create code'}
+                </Button>
+            </div>
+        </Panel>
     );
 }
 
@@ -229,24 +224,20 @@ function GrantCreditsCard() {
     };
 
     return (
-        <AdminPanel className="space-y-4">
-            <h2 className="text-[11px] font-bold tracking-[0.02em] text-white/40">Grant credits directly</h2>
+        <Panel title="Give credits">
             <div className="grid gap-3 sm:grid-cols-3">
-                <UsernameInput value={username} onChange={setUsername} placeholder="Username (e.g. @dj-nova)" />
-                <input value={amountUsd} onChange={(e) => setAmountUsd(e.target.value)} type="number" step="0.01" placeholder="Amount USD (negative = adjust down)" className={inputCls} />
-                <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason (required, audited)" className={inputCls} />
+                <UsernameInput value={username} onChange={setUsername} placeholder="Username, like @dj-nova" />
+                <input value={amountUsd} onChange={(e) => setAmountUsd(e.target.value)} type="number" step="0.01" placeholder="Dollars (negative takes credit away)" className={inputCls} />
+                <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason (required, recorded)" className={inputCls} />
             </div>
-            {error && <p className="text-red-300 text-[13px]">{error}</p>}
-            {done != null && <p className="text-emerald-400 text-[13px]">Done. New balance {formatUsd(done)}</p>}
-            <button
-                type="button"
-                onClick={submit}
-                disabled={busy || !username.trim() || !amountUsd || !note.trim()}
-                className="rounded-full bg-pxi-purple text-white px-5 py-2 text-[13px] font-bold disabled:opacity-40 uppercase tracking-[0.08em]"
-            >
-                {busy ? 'Granting...' : 'Grant'}
-            </button>
-        </AdminPanel>
+            {error && <p className="mt-3 text-[13px] text-red-300">{error}</p>}
+            {done != null && <p className="mt-3 text-[13px] text-emerald-300">Done. New balance {money(done)}</p>}
+            <div className="mt-4">
+                <Button variant="primary" onClick={submit} disabled={busy || !username.trim() || !amountUsd || !note.trim()}>
+                    {busy ? 'Granting...' : 'Give credits'}
+                </Button>
+            </div>
+        </Panel>
     );
 }
 
@@ -295,11 +286,10 @@ export default function AdminPromosPage() {
     return (
         <AdminPageShell
             title="Promos & credits"
-            copy="Credit drops, ambassador codes with commission, and direct account credits. Every grant is audit-ready."
+            copy="Credit codes, ambassador codes and direct credits."
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
-                { label: 'Codes', value: rows.length.toLocaleString(), hint: 'Loaded rows' },
-                { label: 'Mode', value: isLiveAdmin ? 'Live' : 'Mock', hint: 'Data source' },
+                { label: 'Codes', value: count(rows.length), hint: 'On this page' },
             ]}
         >
 
@@ -335,8 +325,8 @@ export default function AdminPromosPage() {
                                         ) : null}
                                     </td>
                                     <td data-label="Kind" className={`${adminTdClass} text-[12px]`}>{p.kind}</td>
-                                    <td data-label="Credit" className={`${adminTdClass} text-white/80 tabular-nums`}>{p.creditCents ? formatUsd(p.creditCents) : '—'}</td>
-                                    <td data-label="Commission" className={`${adminTdClass} text-white/80 tabular-nums`}>{p.commissionBps ? `${(p.commissionBps / 100).toFixed(1)}%` : '—'}</td>
+                                    <td data-label="Credit" className={`${adminTdClass} text-white/80 tabular-nums`}>{p.creditCents ? money(p.creditCents) : '-'}</td>
+                                    <td data-label="Commission" className={`${adminTdClass} text-white/80 tabular-nums`}>{p.commissionBps ? `${(p.commissionBps / 100).toFixed(1)}%` : '-'}</td>
                                     <td data-label="Redemptions" className={`${adminTdClass} text-white/70 tabular-nums`}>
                                         {p.redemptionCount}{p.maxRedemptions ? ` / ${p.maxRedemptions}` : ''}
                                     </td>
