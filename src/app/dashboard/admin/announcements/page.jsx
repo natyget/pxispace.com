@@ -11,24 +11,25 @@ import { useAdminMode } from '@/contexts/AdminModeContext';
 import {
     AdminError,
     AdminPageShell,
-    AdminPanel,
     AdminTableShell,
     adminTableClass,
     adminTdClass,
     adminThClass,
 } from '@/components/admin/AdminPageShell';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
+import { Button, Field, Panel, TextArea } from '@/components/dashboard/ui/kit';
+import { count } from '@/lib/dashFormat';
 
 const TITLE_MAX = 120;
 const BODY_MAX = 600;
 const MAX_ACTIVE = 5;
 
 function formatDate(iso) {
-    if (!iso) return '—';
+    if (!iso) return '-';
     try {
         return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
     } catch {
-        return '—';
+        return '-';
     }
 }
 
@@ -47,13 +48,10 @@ const statusChipClass = {
 
 function limitMessage(err, fallback) {
     if (err?.code === 'ANNOUNCEMENT_LIMIT') {
-        return `Max ${MAX_ACTIVE} active announcements — deactivate one first.`;
+        return `Max ${MAX_ACTIVE} active announcements. Deactivate one first.`;
     }
     return err?.message || fallback;
 }
-
-const inputCls =
-    'w-full rounded-xl bg-white/[0.055] px-4 py-2.5 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]';
 
 function ComposeAnnouncementCard({ onCreated }) {
     const [title, setTitle] = useState('');
@@ -94,60 +92,46 @@ function ComposeAnnouncementCard({ onCreated }) {
     };
 
     return (
-        <AdminPanel className="space-y-4">
-            <h2 className="text-[11px] font-bold tracking-[0.02em] text-white/40">Publish announcement</h2>
+        <Panel title="Publish announcement">
             <div className="grid gap-3">
-                <input
+                <Field
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     maxLength={TITLE_MAX}
-                    placeholder='Title (e.g. "Floor plans are live — go map your venue")'
-                    className={inputCls}
+                    placeholder="Title"
+                    aria-label="Title"
                 />
-                <textarea
+                <TextArea
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                     maxLength={BODY_MAX}
                     rows={3}
-                    placeholder="Body — what organizers should know"
-                    className={`${inputCls} resize-y`}
+                    placeholder="What organizers should know"
+                    aria-label="Body"
                 />
                 <div className="grid gap-3 sm:grid-cols-3">
-                    <input
-                        value={ctaLabel}
-                        onChange={(e) => setCtaLabel(e.target.value)}
-                        placeholder="CTA label (optional)"
-                        className={inputCls}
-                    />
-                    <input
-                        value={ctaHref}
-                        onChange={(e) => setCtaHref(e.target.value)}
-                        placeholder="CTA path (e.g. /dashboard/floor-plans)"
-                        className={inputCls}
-                    />
-                    <input
+                    <Field value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} placeholder="Button label (optional)" aria-label="Button label" />
+                    <Field value={ctaHref} onChange={(e) => setCtaHref(e.target.value)} placeholder="Button path, like /dashboard/floor-plans" aria-label="Button path" />
+                    <Field
                         value={durationDays}
                         onChange={(e) => setDurationDays(e.target.value)}
                         type="number"
                         min="1"
                         max="90"
-                        placeholder="Days on screen (1–90)"
-                        className={inputCls}
+                        placeholder="Days on screen (1 to 90)"
+                        aria-label="Days on screen"
                     />
                 </div>
             </div>
-            {badCta && <p className="text-amber-300 text-[13px]">CTA path must be an internal path starting with a single &lsquo;/&rsquo;.</p>}
-            {error && <p className="text-red-300 text-[13px]">{error}</p>}
-            {created && <p className="text-emerald-400 text-[13px]">Published — live in the Command Center footer until {formatDate(created.expiresAt)}.</p>}
-            <button
-                type="button"
-                onClick={submit}
-                disabled={busy || !title.trim() || !body.trim() || badCta}
-                className="rounded-full bg-pxi-purple text-white px-5 py-2 text-[13px] font-bold disabled:opacity-40 uppercase tracking-[0.08em]"
-            >
-                {busy ? 'Publishing...' : 'Publish'}
-            </button>
-        </AdminPanel>
+            {badCta && <p className="mt-3 text-[13px] text-amber-300">The path must start with a single /.</p>}
+            {error && <p className="mt-3 text-[13px] text-red-300">{error}</p>}
+            {created && <p className="mt-3 text-[13px] text-emerald-300">Published. Live in the Command Center footer until {formatDate(created.expiresAt)}.</p>}
+            <div className="mt-4">
+                <Button variant="primary" onClick={submit} disabled={busy || !title.trim() || !body.trim() || badCta}>
+                    {busy ? 'Publishing...' : 'Publish'}
+                </Button>
+            </div>
+        </Panel>
     );
 }
 
@@ -204,12 +188,11 @@ export default function AdminAnnouncementsPage() {
     return (
         <AdminPageShell
             title="Announcements"
-            copy="Broadcast product news to every organizer's Command Center footer. Optional CTA routes to a dashboard screen; each banner auto-expires."
+            copy="News for every organizer's Command Center, with an optional button."
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
                 { label: 'Active', value: `${activeCount} / ${MAX_ACTIVE}`, hint: 'Live in the footer' },
-                { label: 'Total', value: rows.length.toLocaleString(), hint: 'Including expired' },
-                { label: 'Mode', value: isLiveAdmin ? 'Live' : 'Mock', hint: 'Data source' },
+                { label: 'Total', value: count(rows.length), hint: 'Including expired' },
             ]}
         >
 
@@ -247,7 +230,7 @@ export default function AdminAnnouncementsPage() {
                                                 <p className="font-mono text-[11px] text-white/40 mt-0.5">{a.ctaHref}</p>
                                             </>
                                         ) : (
-                                            '—'
+                                            '-'
                                         )}
                                     </td>
                                     <td data-label="Expires" className={adminTdClass}>{formatDate(a.expiresAt)}</td>
