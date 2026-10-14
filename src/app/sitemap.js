@@ -3,6 +3,7 @@ import { allCities } from '@/lib/seo/cities';
 import { allGenres, eventMatchesGenre } from '@/lib/seo/genres';
 import { buildArtistIndex, indexableArtists } from '@/lib/seo/artists';
 import { getAllPublicEvents, eventsInCity, eventGenres } from '@/lib/publicEvents';
+import { fetchCityListings } from '@/lib/seo/listings';
 import { CANONICAL_ORIGIN } from '@/lib/siteUrl';
 
 /**
@@ -79,8 +80,14 @@ export default async function sitemap() {
     events = [];
   }
 
+  // Outside nights count toward a hub the same way PXI events do. Their genre is only in the city feed.
+  const outside = (await Promise.all(
+    allCities().map((c) => fetchCityListings({ cityCode: c.cityCode, limit: 300 })),
+  )).flat();
+
   const cities = allCities().map((city) => {
     const cityEvents = eventsInCity(events, city);
+    const cityOutside = outside.filter((l) => l.cityCode === city.cityCode);
     const newest = cityEvents.reduce((acc, e) => {
       const t = e.updatedAt ? new Date(e.updatedAt) : null;
       return t && (!acc || t > acc) ? t : acc;
@@ -88,7 +95,7 @@ export default async function sitemap() {
     return {
       url: `${base}/discover/${city.slug}`,
       changeFrequency: 'daily',
-      priority: cityEvents.length ? 0.8 : 0.5,
+      priority: cityEvents.length || cityOutside.length ? 0.8 : 0.5,
       lastModified: newest ?? now,
     };
   });
@@ -107,7 +114,7 @@ export default async function sitemap() {
   // advertised. Listing the full cities × genres matrix regardless would be a doorway-page
   // pattern and would put dozens of empty URLs in front of a crawler.
   const genresWithEvents = allGenres().filter((genre) =>
-    events.some((e) => eventMatchesGenre(eventGenres(e), genre)),
+    events.some((e) => eventMatchesGenre(eventGenres(e), genre)) || outside.some((l) => l.genre === genre.slug),
   );
 
   const genrePages = genresWithEvents.map((genre) => ({
@@ -120,7 +127,8 @@ export default async function sitemap() {
   const cityGenrePages = allCities().flatMap((city) => {
     const cityEvents = eventsInCity(events, city);
     return allGenres()
-      .filter((genre) => cityEvents.some((e) => eventMatchesGenre(eventGenres(e), genre)))
+      .filter((genre) => cityEvents.some((e) => eventMatchesGenre(eventGenres(e), genre))
+        || outside.some((l) => l.cityCode === city.cityCode && l.genre === genre.slug))
       .map((genre) => ({
         url: `${base}/discover/${city.slug}/${genre.slug}`,
         changeFrequency: 'daily',
