@@ -55,11 +55,11 @@ const SURFACE_SHORT = {
 };
 
 function formatDay(iso) {
-    if (!iso) return '—';
+    if (!iso) return '-';
     try {
         return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     } catch {
-        return '—';
+        return '-';
     }
 }
 
@@ -192,17 +192,17 @@ export default function AdminAdsPage() {
                                     <td data-label="Campaign" className="admin-table-primary px-6 py-4">
                                         <span className="text-[13px] font-bold text-white/90">{c.name}</span>
                                         <p className="mt-0.5 text-[11px] text-white/40">
-                                            {(c.events || []).map((e) => e.event?.name).filter(Boolean).join(', ') || '—'}
+                                            {(c.events || []).map((e) => e.event?.name).filter(Boolean).join(', ') || '-'}
                                             {c.emailEnabled ? ', email' : ''}
                                         </p>
                                     </td>
                                     <td data-label="Organizer" className={`${adminTdClass} text-[12px]`}>
-                                        {c.organizer?.username ? `@${c.organizer.username}` : c.organizer?.email || '—'}
+                                        {c.organizer?.username ? `@${c.organizer.username}` : c.organizer?.email || '-'}
                                     </td>
                                     <td data-label="Surfaces" className={`${adminTdClass} text-[12px] text-white/70`}>
                                         {(c.placements || [])
                                             .map((p) => `${SURFACE_SHORT[p.surface] || p.surface}${p.disabledByAdminAt ? ' (off)' : ''}`)
-                                            .join(', ') || '—'}
+                                            .join(', ') || '-'}
                                     </td>
                                     <td data-label="Schedule" className={`${adminTdClass} text-[12px] text-white/70`}>
                                         {formatDay(c.startAt)} → {formatDay(c.endAt)}

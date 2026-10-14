@@ -46,7 +46,7 @@ const priorityStyle = {
 };
 
 function formatDate(iso) {
-    if (!iso) return '—';
+    if (!iso) return '-';
     try {
         return new Date(iso).toLocaleString(undefined, {
             month: 'short',
@@ -55,7 +55,7 @@ function formatDate(iso) {
             minute: '2-digit',
         });
     } catch {
-        return '—';
+        return '-';
     }
 }
 
