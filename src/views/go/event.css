@@ -14,6 +14,8 @@
 .go-more-title {
   margin: 0;
   font: 700 1.25rem / 1.2 'Inter', system-ui, sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .go-more-list {
   margin: 20px 0 0;
@@ -26,7 +28,7 @@
 }
 .go-more-link {
   display: grid;
-  grid-template-columns: 9rem 6.5rem minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: 11rem 11rem minmax(0, 1fr) minmax(0, 1fr);
   gap: 4px 20px;
   align-items: baseline;
   padding: 16px 0;
@@ -40,6 +42,10 @@
 .go-more-time,
 .go-more-where {
   color: #a1a1aa;
+}
+.go-more-time,
+.go-more-when {
+  white-space: nowrap;
 }
 .go-more-what {
   font-weight: 700;
