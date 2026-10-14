@@ -17,7 +17,7 @@ import { CANONICAL_ORIGIN } from '@/lib/siteUrl';
  * INVARIANTS (enforced in CI by scripts/check-sitemap.mjs):
  *   - Every URL returns 200. No 404s, no redirects — a sitemap listing a 301 is telling
  *     Google we do not know our own canonical URLs.
- *   - Retired cities (montreal, toronto) are absent; they 301 to /discover/new-york.
+ *   - Retired cities (toronto) are absent; it 301s to /discover/new-york.
  *   - Hubs with no events are omitted. An empty hub is a thin page, and thin templated
  *     pages drag down the quality signal for the whole domain.
  *   - Only PUBLIC, published, upcoming events appear (see src/lib/publicEvents.js).

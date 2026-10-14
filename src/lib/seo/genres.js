@@ -85,6 +85,18 @@ export const GENRES = {
     blurb: 'Live jazz, jam sessions, and listening rooms.',
     aliases: ['jazz', 'nu jazz', 'jazz fusion', 'bebop', 'afro jazz'],
   },
+  pop: {
+    slug: 'pop',
+    name: 'Pop',
+    blurb: 'Pop nights, sing-alongs, and the big chorus on the floor.',
+    aliases: ['pop', 'dance pop', 'electropop', 'electro pop', 'synth pop', 'synthpop', 'teen pop', 'k-pop', 'kpop'],
+  },
+  'indie-dance': {
+    slug: 'indie-dance',
+    name: 'Indie Dance',
+    blurb: 'Indie dance, nu rave, and guitars that want to move.',
+    aliases: ['indie dance', 'indie-dance', 'indiedance', 'indie disco', 'dance punk', 'nu rave', 'indie electronic'],
+  },
 };
 
 /** Longest aliases first, so "afro house" wins over "house" on the same string. */
