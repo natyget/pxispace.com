@@ -19,10 +19,10 @@ const LOG_KINDS = [
 ];
 
 const LOG_HINTS = {
-    CALL: 'How did the call go?',
-    MEETING: 'What was agreed?',
+    CALL: 'How did the call go? (optional)',
+    MEETING: 'What was agreed? (optional)',
     NOTE: 'Write a note for the team',
-    INCENTIVE: 'What did you offer?',
+    INCENTIVE: 'What did you offer? (optional)',
     OPT_OUT: 'Anything the team should know (optional)',
 };
 
@@ -33,8 +33,8 @@ export function LogForm({ organizer, onSaved, onCancel }) {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState(null);
 
-    const needsText = kind !== 'OPT_OUT';
-    const ready = (!needsText || body.trim()) && (kind !== 'MEETING' || meetingAt);
+    // Only a note needs words; a call, a meeting, an offer or "asked to stop" can be saved as they are.
+    const ready = kind !== 'NOTE' || Boolean(body.trim());
 
     const save = async () => {
         setBusy(true);

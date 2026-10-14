@@ -171,7 +171,7 @@ export function AccountsList({ accounts, onOpen }) {
                         <PersonLine person={accountPerson(a)} size={32} meta={accountMeta(a) || `Since ${shortDate(a.since)}`} />
                         <div className="shrink-0 text-right">
                             <p className="text-[14px]">
-                                <Money cents={a.earnedCents} strong />
+                                <Money cents={a.earnedCents} strong /> <span className="text-[12px] text-white/45">earned</span>
                             </p>
                             <p className="text-[12px] text-white/45">{money(a.pendingCents || 0)} on the way</p>
                         </div>
@@ -188,12 +188,12 @@ export function PayoutsList({ payouts, renderAction = null }) {
     return (
         <ul className="space-y-1.5">
             {sorted.map((p) => (
-                <li key={p.id} className="flex items-center justify-between gap-3 rounded-2xl bg-pxi-field px-3.5 py-3">
-                    <div className="min-w-0">
-                        <p className={`text-[14px] font-semibold ${p.voidedAt ? 'text-white/35 line-through' : 'text-white'}`}>{money(p.amountCents)}</p>
-                        <p className="text-[12px] text-white/45">{p.voidedAt ? `Voided ${shortDate(p.voidedAt)}` : shortDate(p.paidAt)}</p>
+                <li key={p.id} className="flex items-center gap-3 rounded-2xl bg-pxi-field px-3.5 py-3">
+                    <div className="min-w-0 shrink-0">
+                        <p className="text-[14px] font-semibold text-white">{money(p.amountCents)}</p>
+                        <p className="text-[12px] text-white/45">{shortDate(p.paidAt)}</p>
                     </div>
-                    <div className="min-w-0 text-right">
+                    <div className="min-w-0 flex-1 text-right">
                         {p.method ? <p className="truncate text-[13px] text-white/70">{p.method}</p> : null}
                         {p.reference ? <p className="truncate text-[12px] text-white/45">{p.reference}</p> : null}
                     </div>

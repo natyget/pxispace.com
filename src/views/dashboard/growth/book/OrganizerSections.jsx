@@ -221,8 +221,10 @@ export function PastNights({ nights }) {
                             <p className="text-right text-[13px] text-white">{count(night.sold)}</p>
                             <p className="text-right text-[13px] text-white/70">{scanned}</p>
                             <div className="text-right">
-                                <p className="text-[13px] text-white">{money(night.pxiRevenueCents || 0)}</p>
-                                {showGross && night.grossCents != null ? <p className="text-[12px] text-white/45">{money(night.grossCents)} sales</p> : null}
+                                <p className={`text-[13px] ${night.pxiRevenueCents ? 'text-white' : 'text-white/35'}`}>{money(night.pxiRevenueCents || 0)}</p>
+                                {showGross && night.grossCents != null ? (
+                                    <p className={`text-[12px] ${night.grossCents ? 'text-white/45' : 'text-white/30'}`}>{money(night.grossCents)} sales</p>
+                                ) : null}
                             </div>
                         </li>
                     );

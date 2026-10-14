@@ -4,13 +4,16 @@
 // {sender_name} and {booking_link} left in; the preview fills them for display only, and what is sent is the raw
 // text (the server fills the placeholders and adds PXI's legal footer).
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button, Field, Notice, TextArea, WordTabs } from '@/components/dashboard/ui/kit';
 import { useAuth } from '@/contexts/AuthContext';
 import { emailOrganizer, fetchAlertPrefs, fetchEmailTemplates } from '@/services/growth';
 import { errorLine } from './useGrowthAccess';
 import { firstNameOf } from './bookFormat';
+
+// The Offer template leaves this for what is on offer, and the server will not send an email that still has it.
+const OFFER_MARKER = '[your offer]';
 
 const SEND_ERRORS = {
     OPTED_OUT: 'They asked the team to stop emailing.',
@@ -31,6 +34,7 @@ export default function OrganizerComposer({ organizer, surface, onSent, onCancel
     const [body, setBody] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState(null);
+    const bodyRef = useRef(null);
 
     // Templates and the sender's booking link, once. A failure leaves the blank page, which still works.
     useEffect(() => {
@@ -67,6 +71,16 @@ export default function OrganizerComposer({ organizer, surface, onSent, onCancel
         const template = (templates || []).find((t) => t.key === key);
         setSubject(template?.subject || '');
         setBody(template?.body || '');
+        // Put the cursor on the offer marker, so typing replaces it.
+        const at = (template?.body || '').indexOf(OFFER_MARKER);
+        if (at >= 0) {
+            requestAnimationFrame(() => {
+                const box = bodyRef.current;
+                if (!box) return;
+                box.focus();
+                box.setSelectionRange(at, at + OFFER_MARKER.length);
+            });
+        }
     };
 
     const fill = (text) =>
@@ -78,6 +92,7 @@ export default function OrganizerComposer({ organizer, surface, onSent, onCancel
     const optedOut = Boolean(organizer.emailOptedOut);
     const noEmail = !organizer.email;
     const missingLink = body.includes('{booking_link}') && !bookingUrl;
+    const offerOpen = body.includes(OFFER_MARKER) || subject.includes(OFFER_MARKER);
     const alertsHref = surface === 'sales' ? '/dashboard/sales/alerts' : '/dashboard/admin/alerts';
 
     const send = async () => {
@@ -107,8 +122,10 @@ export default function OrganizerComposer({ organizer, surface, onSent, onCancel
         <div className="space-y-4">
             <WordTabs items={tabs} value={tab} onChange={pick} />
             <p className="text-[12px] text-white/45">To {organizer.email}</p>
-            <Field label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={200} />
-            <TextArea label="Message" rows={8} value={body} onChange={(e) => setBody(e.target.value)} />
+            <Field label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={150} />
+            <TextArea ref={bodyRef} label="Message" rows={8} value={body} onChange={(e) => setBody(e.target.value)} maxLength={4000} />
+
+            {offerOpen ? <p className="text-[13px] text-amber-300">Replace {OFFER_MARKER} with what you are offering.</p> : null}
 
             {missingLink ? (
                 <p className="text-[13px] text-amber-300">
@@ -131,7 +148,7 @@ export default function OrganizerComposer({ organizer, surface, onSent, onCancel
             {error ? <Notice tone="error">{error}</Notice> : null}
 
             <div className="flex gap-2">
-                <Button variant="primary" disabled={busy || !subject.trim() || !body.trim()} onClick={send}>
+                <Button variant="primary" disabled={busy || offerOpen || !subject.trim() || !body.trim()} onClick={send}>
                     {busy ? 'Sending' : 'Send'}
                 </Button>
                 <Button variant="quiet" disabled={busy} onClick={onCancel}>
