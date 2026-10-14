@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService, authStorage } from '@/services/auth';
-import { canAccessAdminDashboard } from '@/lib/adminAccess';
+import { adminRoleOf, canAccessAdminDashboard } from '@/lib/adminAccess';
 import { isPartialUser, isVendorUser } from '@/lib/accountTier';
 import { dashboardShellActions, useDashboardShellStore } from '@/lib/dashboardShellStore';
 import { dashboardPrefetchRoutes, prefetchDashboardRoutes } from '@/lib/dashboardPerformance';
@@ -307,7 +307,7 @@ export function useDashboardShellData() {
             ));
         }
         if (isAdminNav) {
-            return buildAdminNavItems({ cityScope: adminCityScope });
+            return buildAdminNavItems({ cityScope: adminCityScope, adminRole: adminRoleOf(user) });
         }
         return buildMemberNavItems({
             hasLiveOpsAccess,
@@ -333,7 +333,8 @@ export function useDashboardShellData() {
     }), [hasLiveOpsAccess, hasLiveEvent, rolesReady, user, hasSalesAccess, salesRole, isVenueOwner, canOpenFloorPlans]);
 
     // Dashboard 2: the control room uses top tabs like the member dashboard, filtered for a city-scoped admin.
-    const adminTabs = useMemo(() => buildAdminTabs({ cityScope: adminCityScope }), [adminCityScope]);
+    const adminRole = rolesReady ? adminRoleOf(user) : null;
+    const adminTabs = useMemo(() => buildAdminTabs({ cityScope: adminCityScope, adminRole }), [adminCityScope, adminRole]);
 
     const closeMobileMenu = useCallback(() => setMenuOpen(false), []);
     // The phone menu is the shared one: the sidebar's pages on top, then Dashboard / Wishlist and the account row.

@@ -42,21 +42,21 @@ export const ADMIN_TABS = [
 ];
 
 export const adminNavItems = [
-  { key: 'admin-inbox', label: 'Inbox', path: '/dashboard/admin', icon: InboxIcon, tab: 'Today', end: true },
-  { key: 'admin-alerts', label: 'Email alerts', path: '/dashboard/admin/alerts', icon: Mail01Icon, tab: 'Today', end: true },
-  { key: 'admin-organizers', label: 'Organizers', path: '/dashboard/admin/organizers', icon: FireIcon, tab: 'Growth', end: true },
-  { key: 'admin-claims', label: 'Claims', path: '/dashboard/admin/claims', icon: Briefcase01Icon, tab: 'Growth', end: true },
-  { key: 'admin-commissions', label: 'Commissions', path: '/dashboard/admin/commissions', icon: Wallet01Icon, tab: 'Growth', end: true },
-  { key: 'admin-venues', label: 'Venues', path: '/dashboard/admin/venues', icon: FloorPlanIcon, tab: 'Growth', end: true },
-  { key: 'admin-promos', label: 'Promos & credits', path: '/dashboard/admin/promos', icon: StarIcon, tab: 'Growth', end: true, globalOnly: true },
-  { key: 'admin-analytics', label: 'Analytics', path: '/dashboard/admin/analytics', icon: Activity01Icon, tab: 'Platform', end: true },
+  { key: 'admin-inbox', label: 'Inbox', path: '/dashboard/admin', icon: InboxIcon, tab: 'Today', end: true, minRole: 'SUPPORT' },
+  { key: 'admin-alerts', label: 'Email alerts', path: '/dashboard/admin/alerts', icon: Mail01Icon, tab: 'Today', end: true, minRole: 'SUPPORT' },
+  { key: 'admin-organizers', label: 'Organizers', path: '/dashboard/admin/organizers', icon: FireIcon, tab: 'Growth', end: true, minRole: 'ADMIN' },
+  { key: 'admin-claims', label: 'Claims', path: '/dashboard/admin/claims', icon: Briefcase01Icon, tab: 'Growth', end: true, minRole: 'ADMIN' },
+  { key: 'admin-commissions', label: 'Commissions', path: '/dashboard/admin/commissions', icon: Wallet01Icon, tab: 'Growth', end: true, minRole: 'ADMIN' },
+  { key: 'admin-venues', label: 'Venues', path: '/dashboard/admin/venues', icon: FloorPlanIcon, tab: 'Growth', end: true, minRole: 'ADMIN' },
+  { key: 'admin-promos', label: 'Promos & credits', path: '/dashboard/admin/promos', icon: StarIcon, tab: 'Growth', end: true, globalOnly: true, minRole: 'ADMIN' },
+  { key: 'admin-analytics', label: 'Analytics', path: '/dashboard/admin/analytics', icon: Activity01Icon, tab: 'Platform', end: true, minRole: 'ADMIN' },
   { key: 'admin-events', label: 'Events', path: '/dashboard/admin/events', icon: Calendar01Icon, tab: 'Platform', end: true },
   { key: 'admin-users', label: 'Accounts', path: '/dashboard/admin/users', icon: UserGroupIcon, tab: 'Platform', end: true },
-  { key: 'admin-ads', label: 'Ads', path: '/dashboard/admin/ads', icon: Megaphone01Icon, tab: 'Platform', end: true, globalOnly: true },
-  { key: 'admin-announcements', label: 'Announcements', path: '/dashboard/admin/announcements', icon: Megaphone01Icon, tab: 'Platform', end: true, globalOnly: true },
-  { key: 'admin-support', label: 'Support', path: '/dashboard/admin/support', icon: Shield01Icon, tab: 'Trust', end: true, globalOnly: true },
-  { key: 'admin-reports', label: 'Reports', path: '/dashboard/admin/reports', icon: FlagIcon, tab: 'Trust', end: true, globalOnly: true },
-  { key: 'admin-ugc', label: 'Content', path: '/dashboard/admin/ugc', icon: Notification03Icon, tab: 'Trust', end: true, globalOnly: true },
+  { key: 'admin-ads', label: 'Ads', path: '/dashboard/admin/ads', icon: Megaphone01Icon, tab: 'Platform', end: true, globalOnly: true, minRole: 'ADMIN' },
+  { key: 'admin-announcements', label: 'Announcements', path: '/dashboard/admin/announcements', icon: Megaphone01Icon, tab: 'Platform', end: true, globalOnly: true, minRole: 'ADMIN' },
+  { key: 'admin-support', label: 'Support', path: '/dashboard/admin/support', icon: Shield01Icon, tab: 'Trust', end: true, globalOnly: true, minRole: 'SUPPORT' },
+  { key: 'admin-reports', label: 'Reports', path: '/dashboard/admin/reports', icon: FlagIcon, tab: 'Trust', end: true, globalOnly: true, minRole: 'MODERATOR' },
+  { key: 'admin-ugc', label: 'Content', path: '/dashboard/admin/ugc', icon: Notification03Icon, tab: 'Trust', end: true, globalOnly: true, minRole: 'MODERATOR' },
 ];
 
 const CITY_LABELS = { NYC: 'New York', BOS: 'Boston' };
@@ -71,17 +71,25 @@ export function cityLabel(code) {
  * sidebar hides them so the admin does not meet a page of errors.
  * @param {{ cityScope?: string|null }} ctx
  */
-export function buildAdminNavItems({ cityScope } = {}) {
-  return cityScope ? adminNavItems.filter((item) => !item.globalOnly) : adminNavItems;
+export function buildAdminNavItems({ cityScope, adminRole } = {}) {
+  return adminNavItems.filter((item) => (!cityScope || !item.globalOnly) && adminRoleMeets(adminRole, item.minRole));
+}
+
+const ADMIN_ROLE_RANK = { NONE: 0, SUPPORT: 1, MODERATOR: 2, ADMIN: 3, SUPER_ADMIN: 4 };
+
+/** Dashboard 2: a section's minimum control-room role (the backend's own gate; hidden so nobody meets a 403 page). */
+function adminRoleMeets(role, min) {
+  if (!min || !role) return true;
+  return (ADMIN_ROLE_RANK[role] ?? 0) >= (ADMIN_ROLE_RANK[min] ?? 0);
 }
 
 /**
  * The control room's top tabs for this admin, each with the sub-items it shows. Tabs left with nothing (Trust for a
  * city admin) are dropped. Same shape as buildMemberTabs, so DashboardTabs renders both.
- * @param {{ cityScope?: string|null }} ctx
+ * @param {{ cityScope?: string|null, adminRole?: string|null }} ctx
  */
-export function buildAdminTabs({ cityScope } = {}) {
-  const items = buildAdminNavItems({ cityScope });
+export function buildAdminTabs({ cityScope, adminRole } = {}) {
+  const items = buildAdminNavItems({ cityScope, adminRole });
   return ADMIN_TABS.map((tab) => ({
     ...tab,
     locked: false,
