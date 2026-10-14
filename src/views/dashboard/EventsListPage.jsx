@@ -74,6 +74,11 @@ function classifyEvent(event, now) {
   const start = event?.startDate ? new Date(event.startDate).getTime() : null;
   const end = event?.endDate ? new Date(event.endDate).getTime() : null;
   const status = String(event?.status || '').toLowerCase();
+  // The API reads the clock too: a night left on LIVE after its end time comes back ARCHIVED, so it is not "Live now".
+  const effective = String(event?.effectiveStatus || '').toLowerCase();
+  if (effective === 'live') return 'live';
+  if (effective === 'grace' || effective === 'archived') return 'past';
+  if (effective === 'dormant') return 'upcoming';
   if (status === 'live') return 'live';
   if (['ended', 'past', 'completed'].includes(status)) return 'past';
   if (['upcoming', 'scheduled', 'draft'].includes(status)) return 'upcoming';
