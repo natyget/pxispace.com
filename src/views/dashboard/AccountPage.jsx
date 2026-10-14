@@ -25,6 +25,9 @@ import AppleMusicConnectPanel from '@/components/music/AppleMusicConnectPanel';
 import { Button, PageHeader, Panel, Skeleton, WordTabs } from '@/components/dashboard/ui/kit';
 import { money, shortDate } from '@/lib/dashFormat';
 
+// What the API accepts (backend src/utils/profileDisplay.ts: PROFILE_BIO_MAX_LENGTH, the passport bio the app shows).
+const BIO_MAX = 50;
+
 const DELETION_ITEMS = [
     'Your profile, name, username, and avatar',
     'All uploaded photos and videos',
@@ -274,11 +277,11 @@ function ProfileEditor({ user, updateUser }) {
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
                         rows={3}
-                        maxLength={280}
+                        maxLength={BIO_MAX}
                         placeholder="Tell people what you're about..."
                         className={`${profileInputCls} resize-y`}
                     />
-                    <span className="mt-1 block text-right text-[10px] text-zinc-600">{bio.length}/280</span>
+                    <span className="mt-1 block text-right text-[10px] text-zinc-600">{bio.length}/{BIO_MAX}</span>
                 </label>
                 <div className="relative rounded-[1.25rem] bg-pxi-field px-4 py-3">
                     <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">City</span>
