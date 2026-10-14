@@ -104,15 +104,38 @@ export default function MarketingSection({ selectedEventId = null }) {
         { label: 'Return', value: totals.roi != null ? `${totals.roi.toFixed(1)}x` : '-' },
     ];
 
+    // On phones a row is two lines (name and spend, then channel and results); the columns appear from md up.
     const columns = [
-        { key: 'channel', label: 'Channel', width: '90px', render: (row) => <span className="text-[13px] text-white/60">{row.channel}</span> },
-        { key: 'name', label: 'Name', render: (row) => <p className="truncate text-[14px] font-semibold text-white">{row.name}</p> },
-        { key: 'spend', label: 'Spent', width: '110px', align: 'right', render: (row) => <span className="text-[14px] tabular-nums text-white">{money(row.spendCents)}</span> },
+        {
+            key: 'channel',
+            label: 'Channel',
+            width: '90px',
+            hideOnMobile: true,
+            render: (row) => <span className="text-[13px] text-white/60">{row.channel}</span>,
+        },
+        {
+            key: 'name',
+            label: 'Name',
+            render: (row) => (
+                <div className="min-w-0">
+                    <div className="flex items-baseline justify-between gap-3">
+                        <p className="truncate text-[14px] font-semibold text-white">{row.name}</p>
+                        <span className="text-[14px] tabular-nums text-white md:hidden">{money(row.spendCents)}</span>
+                    </div>
+                    <p className="mt-0.5 text-[12px] text-white/45 md:hidden">
+                        {row.channel}
+                        {row.attributionReady ? `, ${count(row.conversions)} tickets, ${money(row.revenueCents)} revenue` : ''}
+                    </p>
+                </div>
+            ),
+        },
+        { key: 'spend', label: 'Spent', width: '110px', align: 'right', hideOnMobile: true, render: (row) => <span className="text-[14px] tabular-nums text-white">{money(row.spendCents)}</span> },
         {
             key: 'tickets',
             label: 'Tickets',
             width: '100px',
             align: 'right',
+            hideOnMobile: true,
             render: (row) => <span className="text-[14px] tabular-nums text-white">{row.attributionReady ? count(row.conversions) : '-'}</span>,
         },
         {
@@ -120,6 +143,7 @@ export default function MarketingSection({ selectedEventId = null }) {
             label: 'Revenue',
             width: '120px',
             align: 'right',
+            hideOnMobile: true,
             render: (row) => (
                 <span className={`text-[14px] tabular-nums ${row.revenueCents > 0 ? 'text-emerald-300' : 'text-white'}`}>{row.attributionReady ? money(row.revenueCents) : '-'}</span>
             ),

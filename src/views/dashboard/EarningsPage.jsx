@@ -74,16 +74,6 @@ function payoutState(status) {
     return { tone: 'muted', label: 'On the way' };
 }
 
-/** On phones every table cell sits on its own line, so each number carries its label there. */
-function Labeled({ label, tone = 'text-white', children }) {
-    return (
-        <div className="flex items-baseline justify-between gap-3 md:block">
-            <span className="text-[12px] text-white/40 md:hidden">{label}</span>
-            <span className={`text-[14px] tabular-nums ${tone}`}>{children}</span>
-        </div>
-    );
-}
-
 function profitTone(cents) {
     if (cents > 0) return 'text-emerald-300';
     if (cents < 0) return 'text-red-300';
@@ -324,28 +314,38 @@ export default function EarningsPage() {
                 { label: 'Platform fee', value: money(platformFee) },
             ];
 
+    // On phones a night is two lines (name and profit, then the date and the other numbers); the columns appear from md up.
     const nightColumns = [
         {
             key: 'name',
             label: 'Night',
-            render: (row) => (
-                <div className="min-w-0">
-                    <p className="truncate text-[14px] font-semibold text-white">{row.name}</p>
-                    <p className="mt-0.5 text-[12px] text-white/45 md:hidden">{shortDate(row.startDate)}</p>
-                </div>
-            ),
+            render: (row) => {
+                const profit = row.netCents - row.costCents;
+                return (
+                    <div className="min-w-0">
+                        <div className="flex items-baseline justify-between gap-3">
+                            <p className="truncate text-[14px] font-semibold text-white">{row.name}</p>
+                            <span className={`text-[14px] font-semibold tabular-nums md:hidden ${profitTone(profit)}`}>{money(profit)}</span>
+                        </div>
+                        <p className="mt-0.5 text-[12px] text-white/45 md:hidden">
+                            {shortDate(row.startDate)}, {money(row.grossCents)} sales, {money(row.costCents)} costs
+                        </p>
+                    </div>
+                );
+            },
         },
         { key: 'date', label: 'Date', width: '90px', hideOnMobile: true, render: (row) => <span className="text-[14px] text-white/60">{shortDate(row.startDate)}</span> },
-        { key: 'sales', label: 'Ticket sales', width: '110px', align: 'right', render: (row) => <Labeled label="Ticket sales">{money(row.grossCents)}</Labeled> },
-        { key: 'costs', label: 'Costs', width: '100px', align: 'right', render: (row) => <Labeled label="Costs">{money(row.costCents)}</Labeled> },
+        { key: 'sales', label: 'Ticket sales', width: '110px', align: 'right', hideOnMobile: true, render: (row) => <span className="text-[14px] tabular-nums text-white">{money(row.grossCents)}</span> },
+        { key: 'costs', label: 'Costs', width: '100px', align: 'right', hideOnMobile: true, render: (row) => <span className="text-[14px] tabular-nums text-white">{money(row.costCents)}</span> },
         {
             key: 'profit',
             label: 'Profit',
             width: '100px',
             align: 'right',
+            hideOnMobile: true,
             render: (row) => {
                 const profit = row.netCents - row.costCents;
-                return <Labeled label="Profit" tone={`font-semibold ${profitTone(profit)}`}>{money(profit)}</Labeled>;
+                return <span className={`text-[14px] font-semibold tabular-nums ${profitTone(profit)}`}>{money(profit)}</span>;
             },
         },
     ];
@@ -354,19 +354,29 @@ export default function EarningsPage() {
         {
             key: 'date',
             label: 'Date',
-            render: (row) => (
-                <div className="min-w-0">
-                    <p className="text-[14px] font-semibold text-white">{shortDate(row.arrivalDate ?? row.createdAt)}</p>
-                    <p className="mt-0.5 truncate text-[12px] text-white/45">{row.stripePayoutId ? `Stripe ${String(row.stripePayoutId).slice(-6)}` : 'Stripe payout'}</p>
-                </div>
-            ),
+            render: (row) => {
+                const state = payoutState(row.status);
+                return (
+                    <div className="min-w-0">
+                        <div className="flex items-baseline justify-between gap-3">
+                            <p className="text-[14px] font-semibold text-white">{shortDate(row.arrivalDate ?? row.createdAt)}</p>
+                            <span className="text-[14px] tabular-nums text-white md:hidden">{money(row.amount)}</span>
+                        </div>
+                        <div className="mt-0.5 flex items-baseline justify-between gap-3">
+                            <p className="truncate text-[12px] text-white/45">{row.stripePayoutId ? `Stripe ${String(row.stripePayoutId).slice(-6)}` : 'Stripe payout'}</p>
+                            <span className="md:hidden"><StateText tone={state.tone}>{state.label}</StateText></span>
+                        </div>
+                    </div>
+                );
+            },
         },
-        { key: 'amount', label: 'Amount', width: '120px', align: 'right', render: (row) => <Labeled label="Amount">{money(row.amount)}</Labeled> },
+        { key: 'amount', label: 'Amount', width: '120px', align: 'right', hideOnMobile: true, render: (row) => <span className="text-[14px] tabular-nums text-white">{money(row.amount)}</span> },
         {
             key: 'status',
             label: 'Status',
             width: '110px',
             align: 'right',
+            hideOnMobile: true,
             render: (row) => {
                 const state = payoutState(row.status);
                 return <StateText tone={state.tone}>{state.label}</StateText>;

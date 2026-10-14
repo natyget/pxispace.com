@@ -72,20 +72,29 @@ export function ComparisonPanel({ details = [], loading }) {
         return point;
     });
 
+    // On phones a night is two lines (name and tickets, then sales and turnout); the columns appear from md up.
     const columns = [
         {
             key: 'name',
             label: 'Night',
             render: (row) => (
-                <span className="flex min-w-0 items-center gap-2.5">
-                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: row.color }} aria-hidden="true" />
-                    <span className="truncate text-[14px] font-semibold text-white">{row.name}</span>
-                </span>
+                <div className="min-w-0">
+                    <div className="flex items-baseline justify-between gap-3">
+                        <span className="flex min-w-0 items-center gap-2.5">
+                            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: row.color }} aria-hidden="true" />
+                            <span className="truncate text-[14px] font-semibold text-white">{row.name}</span>
+                        </span>
+                        <span className="text-[14px] tabular-nums text-white md:hidden">{count(row.tickets)} sold</span>
+                    </div>
+                    <p className="mt-0.5 pl-5 text-[12px] text-white/45 md:hidden">
+                        {money(row.gross)} sales, {Math.round(row.scanRate * 100)}% turnout
+                    </p>
+                </div>
             ),
         },
-        { key: 'tickets', label: 'Sold', width: '90px', align: 'right', render: (row) => <span className="text-[14px] tabular-nums text-white">{count(row.tickets)}</span> },
-        { key: 'gross', label: 'Ticket sales', width: '120px', align: 'right', render: (row) => <span className="text-[14px] tabular-nums text-white">{money(row.gross)}</span> },
-        { key: 'scan', label: 'Turnout', width: '90px', align: 'right', render: (row) => <span className="text-[14px] tabular-nums text-white">{Math.round(row.scanRate * 100)}%</span> },
+        { key: 'tickets', label: 'Sold', width: '90px', align: 'right', hideOnMobile: true, render: (row) => <span className="text-[14px] tabular-nums text-white">{count(row.tickets)}</span> },
+        { key: 'gross', label: 'Ticket sales', width: '120px', align: 'right', hideOnMobile: true, render: (row) => <span className="text-[14px] tabular-nums text-white">{money(row.gross)}</span> },
+        { key: 'scan', label: 'Turnout', width: '90px', align: 'right', hideOnMobile: true, render: (row) => <span className="text-[14px] tabular-nums text-white">{Math.round(row.scanRate * 100)}%</span> },
     ];
 
     return (
