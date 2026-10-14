@@ -37,7 +37,7 @@ export default function BookingLink({ initial }) {
     };
 
     return (
-        <Panel title="Booking link" subtitle="Used in your Book a meeting emails to organizers.">
+        <Panel title="Booking link" subtitle="Organizers book a time with you through it when you email them about a meeting.">
             <form
                 className="space-y-4"
                 onSubmit={(e) => {
