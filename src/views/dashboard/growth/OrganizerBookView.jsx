@@ -149,13 +149,12 @@ function OrganizerBook({ surface, access }) {
     const columns = useMemo(() => bookColumns(params.view === 'signals'), [params.view]);
     const selectedRow = result.rows.find((r) => r.id === organizerId) || null;
 
-    const onTouch = useCallback((id, touch) => {
-        if (!touch) return;
-        setResult((prev) => ({
-            ...prev,
-            rows: prev.rows.map((r) => (r.id === id ? { ...r, lastTouch: { kind: touch.kind, at: touch.at, actor: touch.actor } } : r)),
-        }));
+    // The quick view changed something about an organizer: show it in the row without asking the list again.
+    const onChanged = useCallback((record) => {
+        if (!record?.id) return;
+        setResult((prev) => ({ ...prev, rows: prev.rows.map((r) => (r.id === record.id ? { ...r, ...record } : r)) }));
     }, []);
+    const closeDrawer = useCallback(() => setOrganizerId(null), [setOrganizerId]);
 
     const empty = emptyFor(params.view, { searching: Boolean(params.q), ownsOnly: scope === 'OWN', claimAction: canClaim ? <LinkButton href={CLAIM_HREF} variant="primary">Claim an organizer</LinkButton> : null });
     const hasMore = result.rows.length < result.total;
@@ -224,7 +223,7 @@ function OrganizerBook({ surface, access }) {
                 )}
             </Panel>
 
-            <OrganizerDrawer organizerId={organizerId} row={selectedRow} surface={surface} onClose={() => setOrganizerId(null)} onTouch={onTouch} />
+            <OrganizerDrawer organizerId={organizerId} row={selectedRow} surface={surface} onClose={closeDrawer} onChanged={onChanged} />
         </div>
     );
 }
