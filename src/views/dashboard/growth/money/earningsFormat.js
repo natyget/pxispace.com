@@ -3,11 +3,19 @@
 import { displayName, money, percentFromBps } from '@/lib/dashFormat';
 import { cityLabel } from '@/lib/dashboardNavConfig';
 
-/** The four numbers a seller reads first, on their own Earnings page. */
+/**
+ * The four numbers a seller reads first, on their own Earnings page. The month figure counts sales made this month,
+ * including nights that are not over yet, so it is "added" this month rather than "earned" (it can be more than Earned).
+ */
 export function myEarningsKpis(totals = {}) {
     return [
-        { label: 'Owed to you', value: money(totals.owedCents || 0), tone: 'purple' },
-        { label: 'Earned', value: money(totals.earnedCents || 0), hint: `${money(totals.monthCents || 0)} this month` },
+        {
+            label: 'Owed to you',
+            value: money(totals.owedCents || 0),
+            tone: 'purple',
+            hint: totals.paidCents > 0 ? `after ${money(totals.paidCents)} paid` : undefined,
+        },
+        { label: 'Earned', value: money(totals.earnedCents || 0), hint: `${money(totals.monthCents || 0)} added this month` },
         { label: 'On the way', value: money(totals.pendingCents || 0), hint: 'nights not over yet' },
         { label: 'Projected', value: money(totals.projectedCents || 0), hint: 'at the current pace' },
     ];
