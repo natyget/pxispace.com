@@ -84,12 +84,13 @@ const COLUMNS = [
 function CountLine({ night, nightName, nightCount, list, loading }) {
     const strong = 'font-semibold text-white';
     if (night) {
+        if (nightCount === null) return <p className="text-[14px] text-white/60">Names are not listed for one night.</p>;
         return (
             <p className="text-[14px] text-white/60">
                 <span className={strong}>
                     {count(nightCount)} {peopleWord(nightCount)}
                 </span>{' '}
-                {Number(nightCount) === 1 ? 'has' : 'have'} a ticket to {nightName}. Names are not listed for one night.
+                {nightCount === 1 ? 'has' : 'have'} a ticket to {nightName}. Names are not listed for one night.
             </p>
         );
     }
@@ -131,7 +132,7 @@ function CountLine({ night, nightName, nightCount, list, loading }) {
 }
 
 /** The bar at the bottom of the panel: how many, and what to do with them. Sticks to the bottom of the screen while the list is long. */
-function ActionBar({ total, sticky, canSave, naming, nameDraft, onNameChange, busy, saved, canMessage, onSave, onMessage, onSubmitName, onCancelName }) {
+function ActionBar({ summary, sticky, canSave, naming, nameDraft, onNameChange, busy, saved, canMessage, onSave, onMessage, onSubmitName, onCancelName }) {
     return (
         <div
             className={`${sticky ? 'sticky bottom-0 z-10 ' : ''}-mx-5 -mb-5 mt-5 rounded-b-3xl border-t border-white/[0.08] bg-pxi-surface px-5 pb-5 pt-4 md:-mx-6 md:-mb-6 md:px-6 md:pb-6`}
@@ -151,27 +152,27 @@ function ActionBar({ total, sticky, canSave, naming, nameDraft, onNameChange, bu
                         className="min-w-0 flex-1"
                     />
                     <div className="flex items-center gap-2">
-                        <Button type="submit" variant="primary" size="lg" disabled={busy || !nameDraft.trim()} className="flex-1 md:flex-none">
+                        <Button type="submit" variant="primary" disabled={busy || !nameDraft.trim()} className="flex-1 md:flex-none">
                             {busy ? 'Saving...' : naming === 'message' ? 'Save and message' : 'Save list'}
                         </Button>
-                        <Button variant="quiet" size="lg" onClick={onCancelName} disabled={busy}>
+                        <Button variant="quiet" onClick={onCancelName} disabled={busy}>
                             Cancel
                         </Button>
                     </div>
                 </form>
             ) : (
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <p className="text-[15px] font-semibold text-white">
-                        {count(total)} {peopleWord(total)}
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+                    <p className="min-w-0 truncate text-[15px] font-semibold text-white">
+                        {summary}
                         {saved ? <span className="ml-3 text-[13px] font-semibold text-emerald-300">Saved</span> : null}
                     </p>
-                    <div className="grid grid-cols-2 gap-2 md:flex md:items-center">
+                    <div className="ml-auto flex items-center gap-2">
                         {canSave ? (
-                            <Button variant="secondary" size="lg" onClick={onSave}>
+                            <Button variant="secondary" onClick={onSave}>
                                 Save as list
                             </Button>
                         ) : null}
-                        <Button variant="primary" size="lg" onClick={onMessage} disabled={!canMessage} className={canSave ? '' : 'col-span-2'}>
+                        <Button variant="primary" onClick={onMessage} disabled={!canMessage}>
                             Message them
                         </Button>
                     </div>
@@ -211,8 +212,9 @@ export default function AudiencePage() {
         [night, filtersOn, segments, filters]
     );
     const nightEvent = night ? events.find((e) => e.id === night) || null : null;
-    const nightCount = Number(nightEvent?.attendeeCount) || 0;
-    const total = night ? nightCount : list?.total || 0;
+    const nightCount = nightEvent && Number.isFinite(Number(nightEvent.attendeeCount)) ? Number(nightEvent.attendeeCount) : null;
+    const total = night ? nightCount ?? 0 : list?.total || 0;
+    const summary = night && nightCount === null ? nightEvent?.name || 'This night' : `${count(total)} ${peopleWord(total)}`;
 
     const rows = useMemo(() => (night ? [] : list?.rows || []), [night, list]);
     const identifiedTotal = list?.identifiedTotal ?? list?.total ?? 0;
@@ -237,7 +239,9 @@ export default function AudiencePage() {
     }
 
     function changeFilter(patch) {
-        setFilters((current) => ({ ...current, ...patch }));
+        // Account tier and passport points are not in the row; only a list saved earlier carries them. Changing a
+        // filter by hand starts a new set, so nothing is applied that the row does not show.
+        setFilters((current) => ({ ...current, accountTier: '', minOdysseyXp: '', ...patch }));
         setPage(1);
         settle();
     }
@@ -330,10 +334,10 @@ export default function AudiencePage() {
     const reach = reachValue(filters);
     const reachOptions = reach === 'both' ? [...REACH_OPTIONS, { value: 'both', label: 'Reach by email and text' }] : REACH_OPTIONS;
     const canSave = filtersOn && !activeSegment && !night;
-    const canMessage = total > 0 && !(listLoading && !list);
+    const canMessage = night ? Boolean(nightEvent) : total > 0 && !(listLoading && !list);
     const clearButton =
         filtersOn || night ? (
-            <Button variant="quiet" size="sm" onClick={clearAll}>
+            <Button variant="quiet" size="sm" onClick={clearAll} className="!px-0 md:!px-3.5">
                 Clear
             </Button>
         ) : null;
@@ -414,7 +418,7 @@ export default function AudiencePage() {
                                                 </Button>
                                             </>
                                         ) : (
-                                            <Button variant="quiet" size="sm" onClick={() => setConfirmDelete(true)}>
+                                            <Button variant="quiet" size="sm" onClick={() => setConfirmDelete(true)} className="!px-0 md:!px-3.5">
                                                 Delete list
                                             </Button>
                                         )
@@ -471,7 +475,7 @@ export default function AudiencePage() {
                             ) : null}
 
                             <ActionBar
-                                total={total}
+                                summary={summary}
                                 sticky={rows.length > 8}
                                 canSave={canSave}
                                 naming={naming}
