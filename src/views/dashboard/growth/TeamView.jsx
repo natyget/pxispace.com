@@ -4,7 +4,7 @@
 // and are owed. A row opens a quick view to set the split or take them off the team; "Add ambassador" puts an
 // account on the team by its exact username.
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Button, DataTable, EmptyState, Notice, PageHeader, Panel, PersonLine, Skeleton } from '@/components/dashboard/ui/kit';
 import { usePageAction } from '@/components/dashboard/shell/usePageAction';
 import { cityLabel } from '@/lib/dashboardNavConfig';
@@ -58,6 +58,10 @@ export default function TeamView({ surface = 'sales' }) {
         [failed],
     );
     usePageAction(pageAction);
+
+    // Stable handlers: the drawers re-focus themselves whenever their close handler changes.
+    const closeAdd = useCallback(() => setAdding(false), []);
+    const closeMember = useCallback(() => setSelected(null), []);
 
     const city = d ? cityLabel(d.city) : '';
     const rows = d?.rows || [];
@@ -153,8 +157,8 @@ export default function TeamView({ surface = 'sales' }) {
                 </Panel>
             ) : null}
 
-            <AddDrawer open={adding} onClose={() => setAdding(false)} onAdded={onAdded} cityName={city} />
-            <MemberDrawer member={member} shareBps={d?.shareBps ?? null} onClose={() => setSelected(null)} onSaved={team.reload} onRemoved={onRemoved} />
+            <AddDrawer open={adding} onClose={closeAdd} onAdded={onAdded} cityName={city} />
+            <MemberDrawer member={member} shareBps={d?.shareBps ?? null} onClose={closeMember} onSaved={team.reload} onRemoved={onRemoved} />
         </div>
     );
 }
