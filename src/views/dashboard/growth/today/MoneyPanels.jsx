@@ -1,7 +1,7 @@
 'use client';
 
 import { Panel } from '@/components/dashboard/ui/kit';
-import { money } from '@/lib/dashFormat';
+import { exactMoney } from '@/lib/dashFormat';
 import LinkButton from './LinkButton';
 
 const BIG = 'text-[32px] font-semibold leading-none tracking-tight text-white';
@@ -32,10 +32,10 @@ export default function MoneyPanels({ mine, all, earningsHref }) {
                     }
                 >
                     <p className="text-[12px] text-white/45">Owed to you</p>
-                    <p className={`mt-1.5 ${BIG}`}>{money(mine.totals?.owedCents)}</p>
+                    <p className={`mt-1.5 ${BIG}`}>{exactMoney(mine.totals?.owedCents)}</p>
                     <dl className="mt-5 space-y-2">
-                        <Line label="On the way" value={money(mine.totals?.pendingCents)} />
-                        <Line label="Projected" value={money(mine.totals?.projectedCents)} />
+                        <Line label="On the way" value={exactMoney(mine.totals?.pendingCents)} />
+                        <Line label="Projected" value={exactMoney(mine.totals?.projectedCents)} />
                     </dl>
                 </Panel>
             ) : null}
@@ -48,7 +48,7 @@ export default function MoneyPanels({ mine, all, earningsHref }) {
                         </LinkButton>
                     }
                 >
-                    <p className={BIG}>{money(all.totals?.owedCents)}</p>
+                    <p className={BIG}>{exactMoney(all.totals?.owedCents)}</p>
                 </Panel>
             ) : null}
         </>

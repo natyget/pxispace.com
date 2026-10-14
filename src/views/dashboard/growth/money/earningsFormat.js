@@ -1,6 +1,6 @@
 // What a seller earns, in words and numbers. Pure functions, shared by the Earnings page and the Commissions quick view.
 
-import { displayName, money, percentFromBps } from '@/lib/dashFormat';
+import { displayName, exactMoney, percentFromBps } from '@/lib/dashFormat';
 import { cityLabel } from '@/lib/dashboardNavConfig';
 
 /**
@@ -11,23 +11,23 @@ export function myEarningsKpis(totals = {}) {
     return [
         {
             label: 'Owed to you',
-            value: money(totals.owedCents || 0),
+            value: exactMoney(totals.owedCents || 0),
             tone: 'purple',
-            hint: totals.paidCents > 0 ? `after ${money(totals.paidCents)} paid` : undefined,
+            hint: totals.paidCents > 0 ? `after ${exactMoney(totals.paidCents)} paid` : undefined,
         },
-        { label: 'Earned', value: money(totals.earnedCents || 0), hint: `${money(totals.monthCents || 0)} added this month` },
-        { label: 'On the way', value: money(totals.pendingCents || 0), hint: 'nights not over yet' },
-        { label: 'Projected', value: money(totals.projectedCents || 0), hint: 'at the current pace' },
+        { label: 'Earned', value: exactMoney(totals.earnedCents || 0), hint: `${exactMoney(totals.monthCents || 0)} added this month` },
+        { label: 'On the way', value: exactMoney(totals.pendingCents || 0), hint: 'nights not over yet' },
+        { label: 'Projected', value: exactMoney(totals.projectedCents || 0), hint: 'at the current pace' },
     ];
 }
 
 /** The same, for an admin looking at one seller. */
 export function sellerEarningsKpis(totals = {}) {
     return [
-        { label: 'Owed now', value: money(totals.owedCents || 0), tone: totals.owedCents > 0 ? 'purple' : undefined },
-        { label: 'Earned', value: money(totals.earnedCents || 0) },
-        { label: 'On the way', value: money(totals.pendingCents || 0) },
-        { label: 'Paid', value: money(totals.paidCents || 0) },
+        { label: 'Owed now', value: exactMoney(totals.owedCents || 0), tone: totals.owedCents > 0 ? 'purple' : undefined },
+        { label: 'Earned', value: exactMoney(totals.earnedCents || 0) },
+        { label: 'On the way', value: exactMoney(totals.pendingCents || 0) },
+        { label: 'Paid', value: exactMoney(totals.paidCents || 0) },
     ];
 }
 

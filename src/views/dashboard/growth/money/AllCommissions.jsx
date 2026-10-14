@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { DataTable, EmptyState, Notice, PageHeader, Panel, PersonLine, Skeleton } from '@/components/dashboard/ui/kit';
 import { fetchAllEarnings } from '@/services/growth';
-import { money } from '@/lib/dashFormat';
+import { exactMoney } from '@/lib/dashFormat';
 import { cityLabel } from '@/lib/dashboardNavConfig';
 import { NEEDS_LATEST_API, errorLine, isOlderApi } from '../book/useGrowthAccess';
 import SellerDrawer, { ShareText } from './SellerDrawer';
@@ -15,15 +15,15 @@ const ROLE_WORDS = { AMBASSADOR: 'Ambassador', REGIONAL_MANAGER: 'Regional manag
 
 function Amount({ cents, purple = false }) {
     const zero = !cents;
-    return <span className={zero ? 'text-white/35' : purple ? 'font-semibold text-[#c77dff]' : 'text-white/80'}>{money(cents || 0)}</span>;
+    return <span className={zero ? 'text-white/35' : purple ? 'font-semibold text-[#c77dff]' : 'text-white/80'}>{exactMoney(cents || 0)}</span>;
 }
 
 function kpisOf(totals = {}) {
     return [
-        { label: 'Owed now', value: money(totals.owedCents || 0), tone: totals.owedCents > 0 ? 'purple' : undefined },
-        { label: 'Earned', value: money(totals.earnedCents || 0) },
-        { label: 'On the way', value: money(totals.pendingCents || 0) },
-        { label: 'Paid', value: money(totals.paidCents || 0) },
+        { label: 'Owed now', value: exactMoney(totals.owedCents || 0), tone: totals.owedCents > 0 ? 'purple' : undefined },
+        { label: 'Earned', value: exactMoney(totals.earnedCents || 0) },
+        { label: 'On the way', value: exactMoney(totals.pendingCents || 0) },
+        { label: 'Paid', value: exactMoney(totals.paidCents || 0) },
     ];
 }
 

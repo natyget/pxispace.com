@@ -12,6 +12,13 @@ export function money(cents) {
     return Math.abs(dollars) < 100 ? usd2.format(dollars) : usd0.format(dollars);
 }
 
+/** "$136.48" from cents, always to the cent: for commissions and payouts, where the rows must add up to the total. */
+export function exactMoney(cents) {
+    if (cents === null || cents === undefined || Number.isNaN(Number(cents))) return '-';
+    const dollars = Number(cents) / 100;
+    return dollars === 0 ? '$0' : usd2.format(dollars);
+}
+
 /** "1,234". */
 export function count(n) {
     if (n === null || n === undefined || Number.isNaN(Number(n))) return '-';

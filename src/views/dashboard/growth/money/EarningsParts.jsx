@@ -4,7 +4,7 @@
 // page and the Commissions quick view both use them, so a seller's numbers read the same wherever they show up.
 
 import { DataTable, EmptyState, Notice, PersonLine } from '@/components/dashboard/ui/kit';
-import { handle, money, shortDate } from '@/lib/dashFormat';
+import { handle, exactMoney, shortDate } from '@/lib/dashFormat';
 import { nextNightLine } from '../book/bookFormat';
 
 const SETUP_SELF = {
@@ -34,7 +34,7 @@ export function SetupNotices({ setup, viewer = 'self' }) {
 
 function Money({ cents, strong = false }) {
     const zero = !cents;
-    return <span className={zero ? 'text-white/35' : strong ? 'font-semibold text-white' : 'text-white/80'}>{money(cents || 0)}</span>;
+    return <span className={zero ? 'text-white/35' : strong ? 'font-semibold text-white' : 'text-white/80'}>{exactMoney(cents || 0)}</span>;
 }
 
 function accountPerson(account) {
@@ -173,7 +173,7 @@ export function AccountsList({ accounts, onOpen }) {
                             <p className="text-[14px]">
                                 <Money cents={a.earnedCents} strong /> <span className="text-[12px] text-white/45">earned</span>
                             </p>
-                            <p className="text-[12px] text-white/45">{money(a.pendingCents || 0)} on the way</p>
+                            <p className="text-[12px] text-white/45">{exactMoney(a.pendingCents || 0)} on the way</p>
                         </div>
                     </div>
                 </li>
@@ -190,7 +190,7 @@ export function PayoutsList({ payouts, renderAction = null }) {
             {sorted.map((p) => (
                 <li key={p.id} className="flex items-center gap-3 rounded-2xl bg-pxi-field px-3.5 py-3">
                     <div className="min-w-0 shrink-0">
-                        <p className="text-[14px] font-semibold text-white">{money(p.amountCents)}</p>
+                        <p className="text-[14px] font-semibold text-white">{exactMoney(p.amountCents)}</p>
                         <p className="text-[12px] text-white/45">{shortDate(p.paidAt)}</p>
                     </div>
                     <div className="min-w-0 flex-1 text-right">
