@@ -17,7 +17,7 @@ import { useLoad } from './today/useLoad';
 
 const GROUPS = [
     { key: 'now', title: 'Needs you now' },
-    { key: 'today', title: 'Today' },
+    { key: 'today', title: 'Worth doing today' },
     { key: 'later', title: 'When you have a minute' },
 ];
 
@@ -70,7 +70,10 @@ export default function InboxView({ surface = 'admin' }) {
     };
 
     let subtitle = null;
-    if (inbox.data) subtitle = needNow > 0 ? `${needNow} ${needNow === 1 ? 'thing needs' : 'things need'} you now.` : 'Nothing needs you right now.';
+    if (inbox.data) {
+        if (needNow > 0) subtitle = `${needNow} ${needNow === 1 ? 'thing needs' : 'things need'} you now.`;
+        else subtitle = items.length > 0 ? 'Nothing urgent right now.' : 'Nothing needs you right now.';
+    }
 
     const hasMoney = Boolean(cash.data?.mine || cash.data?.all);
     const rightColumn = cash.loading || hasMoney;

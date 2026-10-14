@@ -6,6 +6,13 @@ import { LockIcon } from '@hugeicons/core-free-icons';
 import { activeTabFor, isNavItemActive } from '@/lib/dashboardNavConfig';
 import { usePageActionSlot } from './usePageAction';
 
+/** On a phone the tab rows scroll sideways: bring the active tab into view. Only its row scrolls, never the page. */
+function centerInRow(el) {
+    const row = el?.parentElement;
+    if (!row || row.scrollWidth <= row.clientWidth) return;
+    row.scrollLeft += el.getBoundingClientRect().left - row.getBoundingClientRect().left - (row.clientWidth - el.offsetWidth) / 2;
+}
+
 /**
  * Top tabs (Hub, Insights, Operations, Engagement), the sub-tab row for the active tab, and the page's one action
  * at the right of the sub-tab row. Pages outside the nav get the tabs with none active and no sub-row.
@@ -30,6 +37,7 @@ export default function DashboardTabs({ tabs = [], rolesReady, pathname, searchP
                         <Link
                             key={tab.key}
                             href={firstItem.path}
+                            ref={active ? centerInRow : undefined}
                             aria-current={active ? 'page' : undefined}
                             className={`inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-semibold transition-colors md:flex-1 md:text-[15px] ${
                                 active ? 'bg-pxi-purple text-white' : 'text-zinc-400 hover:text-white'
@@ -52,6 +60,7 @@ export default function DashboardTabs({ tabs = [], rolesReady, pathname, searchP
                                 <Link
                                     key={item.key}
                                     href={item.path}
+                                    ref={active ? centerInRow : undefined}
                                     aria-current={active ? 'page' : undefined}
                                     // The sub-sections are the page's real navigation, so they read as headings: big, heavy,
                                     // the active one white over a thick purple bar, the others still clearly there.
