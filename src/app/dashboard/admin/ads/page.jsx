@@ -18,15 +18,24 @@ import { useAdminMode } from '@/contexts/AdminModeContext';
 import {
     AdminError,
     AdminPageShell,
-    AdminPanel,
     AdminTableShell,
     adminTableClass,
     adminTdClass,
     adminThClass,
 } from '@/components/admin/AdminPageShell';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
+import { Button, Panel, WordTabs } from '@/components/dashboard/ui/kit';
+import { count, money } from '@/lib/dashFormat';
 
-const STATUS_FILTERS = ['ALL', 'ACTIVE', 'SCHEDULED', 'PAUSED', 'PENDING_PAYMENT', 'COMPLETED', 'CANCELLED'];
+const STATUS_FILTERS = [
+    { key: 'ALL', label: 'All' },
+    { key: 'ACTIVE', label: 'Active' },
+    { key: 'SCHEDULED', label: 'Scheduled' },
+    { key: 'PAUSED', label: 'Paused' },
+    { key: 'PENDING_PAYMENT', label: 'Pending payment' },
+    { key: 'COMPLETED', label: 'Completed' },
+    { key: 'CANCELLED', label: 'Cancelled' },
+];
 
 const statusPill = {
     DRAFT: 'bg-white/[0.055] text-white/55',
@@ -44,10 +53,6 @@ const SURFACE_SHORT = {
     WEB_DISCOVERY: 'Web grid',
     WEB_FEATURED: 'Featured',
 };
-
-function formatUsd(cents) {
-    return `$${(Number(cents || 0) / 100).toFixed(2)}`;
-}
 
 function formatDay(iso) {
     if (!iso) return '—';
@@ -141,34 +146,22 @@ export default function AdminAdsPage() {
     return (
         <AdminPageShell
             title="Ads"
-            copy="Every paid campaign on the platform: revenue, delivery, and kill switches. Staff pauses lock the campaign until staff resume it."
+            copy="Every paid campaign, with revenue, delivery and kill switches."
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
-                { label: 'Revenue', value: overview ? formatUsd(overview.revenue.totalPaidCents) : '—', hint: overview ? `${formatUsd(overview.revenue.creditPaidCents)} credits, ${formatUsd(overview.revenue.stripePaidCents)} card` : 'Paid campaigns' },
-                { label: 'Active', value: overview ? overview.activeCampaigns.toLocaleString() : '—', hint: 'Serving now' },
-                { label: 'Impressions today', value: overview ? overview.impressionsToday.toLocaleString() : '—', hint: `${overview ? overview.clicksToday.toLocaleString() : '—'} clicks today` },
+                { label: 'Revenue', value: overview ? money(overview.revenue.totalPaidCents) : '-', hint: overview ? `${money(overview.revenue.creditPaidCents)} credits, ${money(overview.revenue.stripePaidCents)} card` : 'Paid campaigns' },
+                { label: 'Active', value: overview ? count(overview.activeCampaigns) : '-', hint: 'Serving now' },
+                { label: 'Impressions today', value: overview ? count(overview.impressionsToday) : '-', hint: `${overview ? count(overview.clicksToday) : '-'} clicks today` },
             ]}
         >
-            <AdminPanel className="space-y-3">
-                <h2 className="text-[11px] font-bold tracking-[0.02em] text-white/40">Filter by status</h2>
-                <div className="flex flex-wrap gap-2">
-                    {STATUS_FILTERS.map((s) => (
-                        <button
-                            key={s}
-                            type="button"
-                            onClick={() => {
-                                setStatus(s);
-                                setPage(1);
-                            }}
-                            className={`rounded-full px-3.5 py-1.5 text-[12px] font-bold transition ${
-                                status === s ? 'bg-pxi-purple text-white' : 'bg-pxi-field text-white/60 hover:bg-white/[0.1]'
-                            }`}
-                        >
-                            {s.replaceAll('_', ' ')}
-                        </button>
-                    ))}
-                </div>
-            </AdminPanel>
+            <WordTabs
+                items={STATUS_FILTERS}
+                value={status}
+                onChange={(key) => {
+                    setStatus(key);
+                    setPage(1);
+                }}
+            />
 
             <AdminError>{error}</AdminError>
 
@@ -214,7 +207,7 @@ export default function AdminAdsPage() {
                                     <td data-label="Schedule" className={`${adminTdClass} text-[12px] text-white/70`}>
                                         {formatDay(c.startAt)} → {formatDay(c.endAt)}
                                     </td>
-                                    <td data-label="Paid" className={`${adminTdClass} tabular-nums text-white/80`}>{formatUsd(paidCents)}</td>
+                                    <td data-label="Paid" className={`${adminTdClass} tabular-nums text-white/80`}>{money(paidCents)}</td>
                                     <td data-label="Delivery" className={`${adminTdClass} tabular-nums text-[12px] text-white/70`}>
                                         {stats.impressions.toLocaleString()} impr, {stats.clicks.toLocaleString()} clk
                                     </td>
@@ -269,39 +262,27 @@ export default function AdminAdsPage() {
 
             <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} disabled={loading} />
 
-            <AdminPanel className="space-y-3">
-                <h2 className="text-[11px] font-bold tracking-[0.02em] text-white/40">Featured hero placements</h2>
-                {featuredPlacements.length === 0 ? (
-                    <p className="text-[13px] text-white/45">No featured placements in the loaded campaigns.</p>
-                ) : (
-                    <div className="space-y-2">
+            {featuredPlacements.length ? (
+                <Panel title="Featured hero placements">
+                    <div className="space-y-1.5">
                         {featuredPlacements.map((p) => (
-                            <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-pxi-field px-4 py-3">
+                            <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-pxi-field px-4 py-3">
                                 <div className="min-w-0">
-                                    <p className="truncate text-[13px] font-bold text-white">{p.campaignName}</p>
-                                    <p className="text-[11px] text-white/40">
-                                        {p.organizer?.username ? `@${p.organizer.username}` : p.organizer?.email || '—'}, {p.intensity.toLowerCase()} intensity,{' '}
+                                    <p className="truncate text-[14px] font-semibold text-white">{p.campaignName}</p>
+                                    <p className="text-[12px] text-white/45">
+                                        {p.organizer?.username ? `@${p.organizer.username}` : p.organizer?.email || '-'}, {p.intensity.toLowerCase()} intensity,{' '}
                                         {p.campaignStatus.toLowerCase()}
                                         {p.disabledByAdminAt ? ', disabled by staff' : ''}
                                     </p>
                                 </div>
-                                <button
-                                    type="button"
-                                    disabled={busyId === p.id}
-                                    onClick={() => togglePlacement(p)}
-                                    className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold disabled:opacity-40 ${
-                                        p.disabledByAdminAt
-                                            ? 'bg-pxi-purple text-white'
-                                            : 'bg-red-500/10 text-red-300 hover:bg-red-500/20'
-                                    }`}
-                                >
+                                <Button variant={p.disabledByAdminAt ? 'primary' : 'danger'} size="sm" disabled={busyId === p.id} onClick={() => togglePlacement(p)}>
                                     {p.disabledByAdminAt ? 'Re-enable' : 'Disable slot'}
-                                </button>
+                                </Button>
                             </div>
                         ))}
                     </div>
-                )}
-            </AdminPanel>
+                </Panel>
+            ) : null}
         </AdminPageShell>
     );
 }
