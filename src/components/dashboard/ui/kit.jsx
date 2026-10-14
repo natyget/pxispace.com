@@ -36,8 +36,11 @@ export function KpiStrip({ items, className = '' }) {
     const width = items.length >= 4 ? 'xl:w-[620px]' : items.length === 3 ? 'xl:w-[480px]' : 'xl:w-[340px]';
     return (
         <div className={`grid grid-cols-2 gap-px overflow-hidden rounded-3xl bg-white/[0.08] ${cols} ${width} ${className}`}>
-            {items.map((item) => (
-                <div key={item.label} className="min-w-0 bg-pxi-surface px-4 py-3.5">
+            {items.map((item, i) => (
+                <div
+                    key={item.label}
+                    className={`min-w-0 bg-pxi-surface px-4 py-3.5 ${items.length % 2 === 1 && i === items.length - 1 ? 'col-span-2 sm:col-span-1' : ''}`}
+                >
                     <p className="truncate text-xs text-zinc-500">{item.label}</p>
                     <p className={`mt-1.5 truncate text-[22px] font-semibold leading-none tracking-tight ${toneText(item.tone)}`}>{item.value}</p>
                     {item.hint ? <p className="mt-1.5 truncate text-[11px] text-white/40">{item.hint}</p> : null}
