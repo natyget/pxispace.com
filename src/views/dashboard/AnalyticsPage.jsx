@@ -2,541 +2,64 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import {
-    Area,
-    AreaChart,
-    CartesianGrid,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from 'recharts';
-import SectionCard from '@/components/dashboard/SectionCard';
-import { TimeSeriesChartShell, ChartSkeleton } from '@/components/dashboard/ChartFrame';
-import { MicroChart, StatRow } from '@/components/dashboard/MetricCard';
-import FunnelChart from '@/components/dashboard/FunnelChart';
-import HypePanel from '@/components/dashboard/HypePanel';
-import EventTimelinePicker from '@/components/dashboard/EventTimelinePicker';
-import InsightsPanel from '@/components/dashboard/InsightsPanel';
-import MarketingPanel from '@/components/dashboard/MarketingPanel';
+import { useRouter, useSearchParams } from 'next/navigation';
 import MarketingKitModal from '@/components/dashboard/MarketingKitModal';
-import VenueHeatMap from '@/components/dashboard/floorplan/VenueHeatMap';
-import {
-    DASHBOARD_BRAND_COLOR,
-    DASHBOARD_GRID_STROKE,
-    DASHBOARD_MUTED_COLOR,
-    DASHBOARD_TOOLTIP_PROPS,
-    getDashboardChartShade,
-} from '@/components/dashboard/chartStyles';
+import { usePageAction } from '@/components/dashboard/shell/usePageAction';
+import { Button, EmptyState, Notice, PageHeader, Panel, Skeleton, StateText } from '@/components/dashboard/ui/kit';
+import { count, dayDate, money, shortDate, until } from '@/lib/dashFormat';
 import { eventsService } from '@/services/events';
 import { organizerAnalyticsService } from '@/services/organizerAnalytics';
-import { deleteFeedItem } from '@/services/feed';
 import { useDashboardShellStore } from '@/lib/dashboardShellStore';
 import LiveScanDashboard from '@/views/dashboard/LiveScanDashboard';
+import AfterPanel from '@/views/dashboard/insights/AfterPanel';
+import { ComparisonPanel, NightPicker } from '@/views/dashboard/insights/ComparePanels';
+import ChevronSelect from '@/views/dashboard/insights/ChevronSelect';
+import DoorPanel from '@/views/dashboard/insights/DoorPanel';
+import MarketingSection from '@/views/dashboard/insights/MarketingSection';
+import SalesPanel from '@/views/dashboard/insights/SalesPanel';
+import { nightLabel, nightState, pickRelevantNight, projectSales, sortNights } from '@/views/dashboard/insights/nights';
 
-function formatNumber(value) {
-    return Number(value || 0).toLocaleString('en-US');
-}
+const SEVERITY_TONE = { good: 'good', info: 'muted', warning: 'warn' };
 
-function formatMoney(cents = 0) {
-    return `$${(Math.max(0, Number(cents) || 0) / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-}
-
-function formatEventDate(value) {
-    if (!value) return 'Date TBD';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return 'Date TBD';
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-/** 'YYYY-MM-DD' -> 'Jun 7' (parsed as UTC so day boundaries match the backend's UTC buckets). */
-function formatDayTick(value) {
-    if (!value) return '';
-    const [y, m, d] = String(value).split('-').map(Number);
-    if (!y || !m || !d) return '';
-    const date = new Date(Date.UTC(y, m - 1, d));
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-}
-
-function tickInterval(length, maxTicks = 8) {
-    if (length <= maxTicks) return 0;
-    return Math.ceil(length / maxTicks) - 1;
-}
-
-function round1(value) {
-    return Math.round((Number(value) || 0) * 10) / 10;
-}
-
-function percent(value) {
-    return `${Math.round((Number(value) || 0) * 100)}%`;
-}
-
-function clampPercent(value, max) {
-    if (!max) return 0;
-    return Math.max(2, Math.min(100, (Number(value) / max) * 100));
-}
-
-/** Most-reacted media with host moderation (remove = backend Bouncer endpooint permissions). */
-function TopMomentsPanel({ moments, onRemoved, onPromote }) {
-    const [busyId, setBusyId] = useState(null);
-    const [error, setError] = useState(null);
-
-    if (!moments?.length) {
-        return (
-            <SectionCard title="Top moments">
-                <p className="text-sm text-zinc-500">No reacted media yet. Top moments appear as guests react.</p>
-            </SectionCard>
-        );
-    }
-
-    const remove = async (mediaId) => {
-        if (!window.confirm('Remove this media from the event for everyone? This cannot be undone.')) return;
-        setBusyId(mediaId);
-        setError(null);
-        try {
-            await deleteFeedItem(mediaId);
-            onRemoved?.(mediaId);
-        } catch (err) {
-            setError(err.message || 'Failed to remove media');
-        } finally {
-            setBusyId(null);
-        }
-    };
-
+/** The backend's observations about this night: a real number and the lever that acts on it. Nothing to say, nothing shown. */
+function NoticedPanel({ insights = [], onCta }) {
+    if (!insights.length) return null;
     return (
-        <SectionCard
-            title="Top moments"
-            actions={onPromote ? (
-                <button
-                    type="button"
-                    onClick={onPromote}
-                    className="rounded-full bg-pxi-purple px-4 py-1.5 text-xs font-bold text-white transition hover:brightness-110 uppercase tracking-[0.08em]"
-                >
-                    Marketing kit
-                </button>
-            ) : null}
-        >
-            <p className="mb-4 text-xs text-zinc-500">
-                The most-reacted media at this event: your best marketing content and your moderation queue.
-            </p>
-            {error ? <p className="mb-3 text-xs text-red-400">{error}</p> : null}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {moments.map((m) => (
-                    <div key={m.mediaId} className="group relative overflow-hidden rounded-2xl bg-pxi-field">
-                        <img
-                            src={m.thumbnailUrl || m.r2Url}
-                            alt=""
-                            className="aspect-[3/4] w-full object-cover"
-                            loading="lazy"
-                        />
-                        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/85 to-transparent p-3 pt-8">
-                            <div className="min-w-0">
-                                <p className="truncate text-[11px] font-bold text-white">
-                                    {m.author?.username ? `@${m.author.username}` : m.author?.name || 'Guest'}
-                                </p>
-                                <p className="text-[11px] text-zinc-400">{formatNumber(m.reactions)} reactions</p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => remove(m.mediaId)}
-                                disabled={busyId === m.mediaId}
-                                className="shrink-0 rounded-full bg-red-500/15 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-red-300 opacity-0 transition group-hover:opacity-100 disabled:opacity-60"
-                            >
-                                {busyId === m.mediaId ? '...' : 'Remove'}
-                            </button>
+        <Panel title="What we noticed">
+            <ul className="space-y-1.5">
+                {insights.map((insight) => (
+                    <li key={insight.id} className="flex flex-col gap-2 rounded-2xl bg-pxi-field px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-4">
+                        <div className="min-w-0">
+                            <StateText tone={SEVERITY_TONE[insight.severity] || 'muted'}>{insight.title}</StateText>
+                            <p className="mt-1 text-[14px] text-white/70">{insight.body}</p>
                         </div>
-                    </div>
-                ))}
-            </div>
-        </SectionCard>
-    );
-}
-
-function avgLast7(series = [], key = 'count') {
-    const last7 = series.slice(-7);
-    if (!last7.length) return 0;
-    return last7.reduce((sum, point) => sum + (Number(point[key]) || 0), 0) / last7.length;
-}
-
-function SalesTooltip({ active, payload, label }) {
-    if (!active || !payload?.length) return null;
-    const point = payload[0]?.payload || {};
-    return (
-        <div className="dashboard-glow-popover min-w-[180px] rounded-2xl bg-pxi-field p-3.5 shadow-2xl">
-            <p className="text-[11px] font-semibold tracking-wide text-zinc-300">{formatDayTick(label)}</p>
-            <p className="mt-1 text-base font-bold text-white">{formatNumber(point.count)} tickets</p>
-            {point.cumulative != null ? (
-                <p className="mt-1 text-xs font-semibold text-zinc-400">{formatNumber(point.cumulative)} cumulative</p>
-            ) : null}
-        </div>
-    );
-}
-
-/**
- * Sales velocity: daily tickets sold (hero area chart, its own axis) with a compact
- * cumulative-total strip beneath (its own axis) — two single-axis charts sharing an
- * x-domain rather than one dual-axis chart, since cumulative and daily magnitudes
- * differ by orders of magnitude.
- */
-const SALES_RANGES = ['1D', '1W', '1M', 'ALL'];
-const SALES_RANGE_DAYS = { '1D': 1, '1W': 7, '1M': 30, ALL: Infinity };
-
-/** Ticket sales, full window: event creation → doors (or today). Range toggle windows the daily chart; cumulative always shows the whole run. */
-function SalesVelocityChart({ byDay, velocityPerDay7d, totalSold, grossCents, netCents, eventStartDate, isMobile }) {
-    const [range, setRange] = useState('ALL');
-    const heroShade = DASHBOARD_BRAND_COLOR;
-    const cumulativeShade = DASHBOARD_MUTED_COLOR;
-
-    const windowedByDay = useMemo(() => {
-        const days = SALES_RANGE_DAYS[range];
-        return Number.isFinite(days) ? byDay.slice(-days) : byDay;
-    }, [byDay, range]);
-    const interval = tickInterval(windowedByDay.length, isMobile ? 5 : 9);
-
-    // Plain-language pace read: what this pace means for the door.
-    const paceNote = useMemo(() => {
-        const pace = Number(velocityPerDay7d) || 0;
-        const start = eventStartDate ? new Date(eventStartDate) : null;
-        if (!start || Number.isNaN(start.getTime())) return null;
-        const daysToDoors = Math.ceil((start.getTime() - Date.now()) / 86400000);
-        if (daysToDoors <= 0) {
-            return `Doors have opened. Final count: ${formatNumber(totalSold)} tickets.`;
-        }
-        if (pace <= 0) {
-            return `No sales this week. ${daysToDoors} day${daysToDoors === 1 ? '' : 's'} to doors. A campaign or ad boost can restart momentum.`;
-        }
-        const projected = Math.round(totalSold + pace * daysToDoors);
-        return `Selling ${formatNumber(round1(pace))}/day. At this pace, about ${formatNumber(projected)} sold by doors (${daysToDoors} day${daysToDoors === 1 ? '' : 's'} away).`;
-    }, [velocityPerDay7d, totalSold, eventStartDate]);
-
-    return (
-        <TimeSeriesChartShell
-            title="Ticket sales"
-            subheading={paceNote || 'Tickets sold per day, with the running total tracked beneath.'}
-            liveValue={formatMoney(grossCents)}
-            unit={`ticket sales, ${formatMoney(netCents)} to you`}
-            change={{ label: `${formatNumber(totalSold)} sold total`, tone: 'neutral' }}
-            timeframes={null}
-            chartClassName="relative h-[300px] md:h-[360px]"
-        >
-            <div className="flex h-full flex-col gap-2">
-                <div className="min-h-0 flex-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={windowedByDay} margin={{ top: 14, right: 12, left: isMobile ? -18 : 0, bottom: 0 }}>
-                            <defs>
-                                <linearGradient id="salesVelocityGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor={heroShade} stopOpacity={0.34} />
-                                    <stop offset="100%" stopColor={heroShade} stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid stroke={DASHBOARD_GRID_STROKE} vertical={false} />
-                            <XAxis
-                                dataKey="date"
-                                tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: isMobile ? 9 : 10 }}
-                                tickFormatter={formatDayTick}
-                                interval={interval}
-                                axisLine={false}
-                                tickLine={false}
-                            />
-                            <YAxis
-                                tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 10 }}
-                                width={isMobile ? 28 : 36}
-                                allowDecimals={false}
-                                axisLine={false}
-                                tickLine={false}
-                            />
-                            <Tooltip content={<SalesTooltip />} />
-                            <Area
-                                type="monotone"
-                                dataKey="count"
-                                name="Tickets/day"
-                                stroke={heroShade}
-                                fill="url(#salesVelocityGradient)"
-                                strokeWidth={2.2}
-                                dot={false}
-                                activeDot={{ r: 4, fill: '#ffffff', stroke: '#09090b' }}
-                                isAnimationActive={false}
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-                <div className="flex h-20 shrink-0 flex-col gap-1 rounded-2xl bg-black/15 px-2 py-2">
-                    <p className="shrink-0 text-[11px] font-medium tracking-[0.02em] text-white/35">Cumulative (full run)</p>
-                    {/* The label above sits in normal flow, so the chart needs its own
-                        flex-1/min-h-0 box — a bare height:100% ResponsiveContainer here
-                        would size itself off the parent's full height and get clipped
-                        by the label instead of only using the space left beneath it. */}
-                    <div className="min-h-0 flex-1">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={byDay} margin={{ top: 0, right: 12, left: isMobile ? -18 : 0, bottom: 0 }}>
-                                <Tooltip content={<SalesTooltip />} />
-                                <Area
-                                    type="monotone"
-                                    dataKey="cumulative"
-                                    name="Cumulative tickets"
-                                    stroke={cumulativeShade}
-                                    fill={cumulativeShade}
-                                    fillOpacity={0.14}
-                                    strokeWidth={1.6}
-                                    dot={false}
-                                    isAnimationActive={false}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            </div>
-        </TimeSeriesChartShell>
-    );
-}
-
-/** Event-page card language: the cover IS the card, bottom gradient carries the text. */
-function EventPickerCard({ event, selected, order, onToggle }) {
-    return (
-        <button
-            type="button"
-            onClick={() => onToggle(event.id)}
-            aria-pressed={selected}
-            className={`group relative aspect-[3/4] w-[150px] shrink-0 sm:w-[168px] overflow-hidden rounded-2xl bg-pxi-field text-left transition ${
-                selected ? 'ring-2 ring-inset ring-pxi-purple' : 'opacity-80 hover:opacity-100'
-            }`}
-        >
-            {event.coverImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={event.coverImage} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-            ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/[0.05]">
-                    <span className="text-2xl font-bold text-white/30">{(event.name || '?').slice(0, 1).toUpperCase()}</span>
-                </div>
-            )}
-            <div
-                className="absolute inset-x-0 bottom-0 h-[72%]"
-                style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0) 100%)' }}
-            />
-            <span className="absolute left-3 top-3 flex items-center gap-1.5">
-                <span className={`h-2 w-2 rounded-full ring-2 ring-black/40 ${event.status === 'LIVE' || event.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-white/40'}`} aria-hidden="true" />
-            </span>
-            {selected ? (
-                <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-pxi-purple text-[11px] font-bold text-white">
-                    {order}
-                </span>
-            ) : null}
-            <div className="absolute inset-x-0 bottom-0 p-3">
-                <p className="truncate text-sm font-bold text-white">{event.name}</p>
-                <p className="mt-0.5 truncate text-[11px] text-white/60">
-                    {event.dateLabel}{event.venueName ? `, ${event.venueName}` : ''}
-                </p>
-            </div>
-        </button>
-    );
-}
-
-function EventPicker({ events, selectedIds, onToggle, loading }) {
-    const [view, setView] = useState('cards');
-    return (
-        <div className="rounded-[1.25rem] bg-pxi-field p-4">
-            <div className="flex flex-col gap-3 pb-4 md:flex-row md:items-end md:justify-between">
-                <div>
-                    <p className="text-xs font-bold tracking-[0.02em] text-white/40">Choose events</p>
-                    <p className="mt-1 text-sm text-zinc-500">Click to open one, or click several to compare (up to 4). Click again to deselect.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    {loading ? <span className="text-xs font-semibold text-zinc-500">Syncing events</span> : null}
-                    <div className="dashboard-segmented-toggle" role="tablist" aria-label="Event picker view">
-                        {[{ id: 'cards', label: 'Cards' }, { id: 'timeline', label: 'Timeline' }].map((item) => (
-                            <button
-                                key={item.id}
-                                type="button"
-                                className="dashboard-segmented-toggle__item"
-                                data-active={view === item.id}
-                                aria-pressed={view === item.id}
-                                onClick={() => setView(item.id)}
-                            >
-                                {item.label}
+                        {insight.ctaLabel && insight.ctaHref ? (
+                            <Link href={insight.ctaHref} className="shrink-0 text-[13px] font-semibold text-[#c77dff] transition hover:text-white">
+                                {insight.ctaLabel}
+                            </Link>
+                        ) : insight.ctaLabel && onCta ? (
+                            <button type="button" onClick={() => onCta(insight)} className="shrink-0 text-left text-[13px] font-semibold text-[#c77dff] transition hover:text-white">
+                                {insight.ctaLabel}
                             </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-            {events.length === 0 && !loading ? (
-                <p className="text-sm text-zinc-400">Create an event to see its analytics here.</p>
-            ) : view === 'timeline' ? (
-                <EventTimelinePicker events={events} selectedIds={selectedIds} onToggle={onToggle} />
-            ) : (
-                <div className="dashboard-scrollbar-none -m-1.5 flex gap-3 overflow-x-auto p-1.5">
-                    {events.map((event) => (
-                        <EventPickerCard
-                            key={event.id}
-                            event={event}
-                            selected={selectedIds.includes(event.id)}
-                            order={selectedIds.indexOf(event.id) + 1}
-                            onToggle={onToggle}
-                        />
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-}
-
-const COMPARISON_COLORS = [DASHBOARD_BRAND_COLOR, getDashboardChartShade(1), getDashboardChartShade(2), getDashboardChartShade(3)];
-
-/**
- * Overlaid comparison: one multi-series "tickets sold" chart (aligned by days
- * since each event's creation, so different calendar dates overlay meaningfully),
- * end-labeled per series, with a compact numbers row underneath — no cards.
- */
-function EventComparisonChart({ details = [], loading }) {
-    if (loading) {
-        return (
-            <div className="rounded-[1.25rem] bg-pxi-field p-5">
-                <p className="text-xs font-bold tracking-[0.02em] text-white/35">Comparing</p>
-                <div className="mt-4 h-[280px] animate-pulse rounded-2xl bg-pxi-field" />
-            </div>
-        );
-    }
-    if (!details.length) return null;
-
-    const rows = details.map((detail, index) => ({
-        id: detail.event?.id,
-        name: detail.event?.name || 'Event',
-        color: COMPARISON_COLORS[index % COMPARISON_COLORS.length],
-        tickets: Number(detail.sales?.total || detail.funnel?.sold || 0),
-        gross: Number(detail.sales?.revenue?.grossCents || 0),
-        scanRate: Number(detail.attendance?.scanRate || 0),
-        hype: Number(detail.behavior?.hypeScore || 0),
-        byDay: detail.sales?.byDay || [],
-    }));
-
-    // Align by day-index-since-start rather than calendar date.
-    const maxDays = Math.max(1, ...rows.map((row) => row.byDay.length));
-    const series = Array.from({ length: maxDays }, (_, dayIndex) => {
-        const point = { dayIndex };
-        rows.forEach((row) => {
-            point[row.id] = row.byDay[dayIndex]?.cumulative ?? null;
-        });
-        return point;
-    });
-
-    return (
-        <section className="rounded-[1.25rem] bg-pxi-field p-5">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                    <p className="text-xs font-bold tracking-[0.02em] text-white/35">Comparing {rows.length} events</p>
-                    <h2 className="mt-2 text-xl font-bold tracking-normal text-white">Cumulative tickets sold</h2>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                    {rows.map((row) => (
-                        <span key={row.id} className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400">
-                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: row.color }} />
-                            {row.name}
-                        </span>
-                    ))}
-                </div>
-            </div>
-            <div className="mt-4 h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={series} margin={{ top: 12, right: 12, left: -8, bottom: 0 }}>
-                        <CartesianGrid stroke={DASHBOARD_GRID_STROKE} vertical={false} />
-                        <XAxis
-                            dataKey="dayIndex"
-                            tickFormatter={(v) => `Day ${v + 1}`}
-                            tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 10 }}
-                            axisLine={false}
-                            tickLine={false}
-                        />
-                        <YAxis allowDecimals={false} tick={{ fill: 'rgba(255,255,255,0.46)', fontSize: 10 }} width={36} axisLine={false} tickLine={false} />
-                        <Tooltip {...DASHBOARD_TOOLTIP_PROPS} labelFormatter={(v) => `Day ${v + 1}`} />
-                        {rows.map((row) => (
-                            <Area
-                                key={row.id}
-                                type="monotone"
-                                dataKey={row.id}
-                                name={row.name}
-                                stroke={row.color}
-                                fill="none"
-                                strokeWidth={2.2}
-                                dot={false}
-                                connectNulls
-                                isAnimationActive={false}
-                            />
-                        ))}
-                    </AreaChart>
-                </ResponsiveContainer>
-            </div>
-            <div className="mt-4 space-y-1.5">
-                {rows.map((row) => (
-                    <div key={row.id} className="grid grid-cols-[16px_1.4fr_repeat(3,80px)] items-center gap-3 rounded-xl bg-pxi-field px-3 py-2 text-sm">
-                        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: row.color }} />
-                        <span className="truncate font-semibold text-white">{row.name}</span>
-                        <span className="text-right tabular-nums text-zinc-300">{formatNumber(row.tickets)}<span className="ml-1 text-[10px] text-zinc-600">sold</span></span>
-                        <span className="text-right tabular-nums text-zinc-300">{formatMoney(row.gross)}<span className="ml-1 text-[10px] text-zinc-600">sold</span></span>
-                        <span className="text-right tabular-nums text-zinc-300">{percent(row.scanRate)}<span className="ml-1 text-[10px] text-zinc-600">scan</span></span>
-                    </div>
+                        ) : null}
+                    </li>
                 ))}
-            </div>
-        </section>
+            </ul>
+        </Panel>
     );
 }
 
-/** Content engine, chart-first: uploads over the night + who fed the feed. */
-/** Compact top-5 leaderboard — shared row style for uploaders/chatters/engagers. */
-function Leaderboard({ title, people = [], emptyLabel }) {
+function PanelsSkeleton() {
     return (
-        <div>
-            <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-white/35">{title}</p>
-            {people.length ? (
-                <div className="mt-2 space-y-1.5">
-                    {people.map((person, index) => (
-                        <div key={person.userId} className="glass-field flex items-center gap-3 rounded-2xl p-2.5">
-                            <span className="w-4 shrink-0 text-center text-[11px] font-bold text-zinc-600">{index + 1}</span>
-                            {person.avatarUrl ? (
-                                <img src={person.avatarUrl} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
-                            ) : (
-                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-xs font-bold text-white">
-                                    {(person.name || person.username || '?').slice(0, 1).toUpperCase()}
-                                </span>
-                            )}
-                            <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-bold text-white">{person.name || person.username || 'Guest'}</p>
-                                {person.username ? <p className="truncate text-xs text-zinc-500">@{person.username}</p> : null}
-                            </div>
-                            <span className="shrink-0 text-xs font-bold text-zinc-300">{formatNumber(person.count)}</span>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div className="mt-2 rounded-2xl bg-pxi-field p-4 text-sm text-zinc-400">{emptyLabel}</div>
-            )}
+        <div className="space-y-5 md:space-y-6">
+            <Skeleton className="h-[420px]" />
+            <Skeleton className="h-[320px]" />
         </div>
     );
 }
-
-/** "The people who made it": top uploaders, chatters, and engagers — replaces the old repeat-y content-engine card. */
-function AudienceLeaderboardsPanel({ media, behavior }) {
-    return (
-        <SectionCard title="The people who made it" className="h-full !rounded-[1.25rem]">
-            <div className="grid gap-4 sm:grid-cols-3">
-                <Leaderboard title="Top uploaders" people={media.topUploaders} emptyLabel="No uploads yet." />
-                <Leaderboard title="Top chatters" people={behavior?.topChatters} emptyLabel="No chat activity yet." />
-                <Leaderboard title="Top engagers" people={behavior?.topEngagers} emptyLabel="No comments or reactions yet." />
-            </div>
-        </SectionCard>
-    );
-}
-
-function AnalyticsSectionLabel({ title, copy }) {
-    return (
-        <div className="px-1">
-            <h2 className="text-xl font-bold tracking-normal text-white md:text-2xl">{title}</h2>
-            {copy ? <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-500">{copy}</p> : null}
-        </div>
-    );
-}
-
 
 function AnalyticsPageContent() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const viewMode = searchParams.get('view') === 'live-ops' ? 'live-ops' : 'analytics';
     const isLiveEvent = useDashboardShellStore((store) => store.isLiveEvent);
@@ -546,17 +69,16 @@ function AnalyticsPageContent() {
     const [eventsLoading, setEventsLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
 
-    const [overview, setOverview] = useState(null);
-    const [overviewLoading, setOverviewLoading] = useState(true);
-
-    // Click-to-select picker: one id = full storyline, several = overlay comparison.
+    // One id = the full story of a night, several = the comparison.
     const [selectedIds, setSelectedIds] = useState([]);
+    const [compareOpen, setCompareOpen] = useState(false);
     const [comparisonDetails, setComparisonDetails] = useState([]);
     const [comparisonLoading, setComparisonLoading] = useState(false);
     const [eventDetail, setEventDetail] = useState(null);
     const [eventDetailLoading, setEventDetailLoading] = useState(false);
     const [marketingKitOpen, setMarketingKitOpen] = useState(false);
     const selectedEventId = selectedIds.length === 1 ? selectedIds[0] : null;
+    const isComparing = selectedIds.length > 1;
 
     useEffect(() => {
         let cancelled = false;
@@ -584,42 +106,27 @@ function AnalyticsPageContent() {
         return () => mq.removeEventListener('change', onChange);
     }, []);
 
-    useEffect(() => {
-        let cancelled = false;
-        const timer = setTimeout(() => {
-            setOverviewLoading(true);
-            organizerAnalyticsService
-                .getOverview()
-                .then((res) => { if (!cancelled) setOverview(res); })
-                .catch(() => { if (!cancelled) setOverview(null); })
-                .finally(() => { if (!cancelled) setOverviewLoading(false); });
-        }, 0);
-        return () => {
-            cancelled = true;
-            clearTimeout(timer);
-        };
-    }, []);
-
-    const eventOptions = useMemo(
-        () => events.map((event) => ({
+    // Live nights first, then the next one, then the past ones, newest first.
+    const nights = useMemo(
+        () => sortNights(events, mountedAtMs).map((event) => ({
             id: event.id,
             name: event.name || 'Untitled event',
-            dateLabel: formatEventDate(event.startDate),
-            startDate: event.startDate || null,
-            coverImage: event.coverImage || null,
-            venueName: event.venueName || null,
-            status: event.effectiveStatus || event.status || null,
+            dateLabel: shortDate(event.startDate) || 'Date to be set',
+            label: nightLabel(event, mountedAtMs),
         })),
-        [events]
+        [events, mountedAtMs]
     );
 
+    // Open on the night that matters most: the one happening now, else the next one, else the last one.
     useEffect(() => {
-        if (eventsLoading || selectedIds.length || !eventOptions.length) return;
-        const timer = setTimeout(() => setSelectedIds([eventOptions[0].id]), 0);
+        if (eventsLoading || selectedIds.length || !events.length) return undefined;
+        const first = pickRelevantNight(events, mountedAtMs);
+        if (!first) return undefined;
+        const timer = setTimeout(() => setSelectedIds([first.id]), 0);
         return () => clearTimeout(timer);
-    }, [eventOptions, eventsLoading, selectedIds.length]);
+    }, [events, eventsLoading, mountedAtMs, selectedIds.length]);
 
-    // Click selects; clicking again deselects (at least one stays selected). Max 4 for readable overlays.
+    // Click adds a night, clicking again takes it out (at least one stays). Four at most, so the overlay stays readable.
     const handleToggleEvent = (eventId) => {
         setSelectedIds((current) => {
             if (current.includes(eventId)) {
@@ -650,7 +157,7 @@ function AnalyticsPageContent() {
         };
     }, [selectedEventId]);
 
-    // Only fetches when actually comparing (2+ selected) — single-select reuses eventDetail above.
+    // Only fetches when actually comparing (2+ selected); a single night reuses eventDetail above.
     useEffect(() => {
         const ids = selectedIds.length > 1 ? selectedIds.slice(0, 4) : [];
         if (!ids.length) {
@@ -675,162 +182,136 @@ function AnalyticsPageContent() {
         };
     }, [selectedIds]);
 
-    const totals = overview?.totals;
-    const last30d = overview?.last30d;
-    const overviewVelocity7d = useMemo(() => avgLast7(last30d?.ticketsByDay || [], 'count'), [last30d]);
+    // The night picker and the quiet "Compare nights" control sit at the right of the sub-tab row.
+    const pageAction = useMemo(() => {
+        if (viewMode === 'live-ops' || !nights.length) return null;
+        const nightOptions = nights.map((night) => ({ value: night.id, label: night.label }));
+        const options = isComparing ? [{ value: '', label: `Comparing ${selectedIds.length} nights` }, ...nightOptions] : nightOptions;
+        return (
+            <div className="flex items-center gap-2">
+                <ChevronSelect
+                    aria-label="Night"
+                    value={isComparing ? '' : selectedIds[0] || ''}
+                    onChange={(event) => {
+                        if (!event.target.value) return;
+                        setSelectedIds([event.target.value]);
+                        setCompareOpen(false);
+                    }}
+                    options={options}
+                    className="w-[200px] md:w-[280px]"
+                />
+                <Button variant="quiet" onClick={() => setCompareOpen((open) => !open)}>Compare nights</Button>
+            </div>
+        );
+    }, [isComparing, nights, selectedIds, viewMode]);
+    usePageAction(pageAction);
 
-    const funnelData = useMemo(() => {
-        if (!eventDetail) return [];
-        return [
-            { stage: 'Sold', value: eventDetail.funnel.sold },
-            { stage: 'Scanned', value: eventDetail.funnel.scanned },
-            { stage: 'Posted media', value: eventDetail.funnel.postedMedia },
+    const selectedEvent = useMemo(() => events.find((event) => event.id === selectedEventId) || null, [events, selectedEventId]);
+
+    // The numbers for this night, most important first.
+    const kpis = useMemo(() => {
+        if (!eventDetail || isComparing) return null;
+        const sales = eventDetail.sales || {};
+        const funnel = eventDetail.funnel || {};
+        const attendance = eventDetail.attendance || {};
+        const upcoming = nightState({ ...eventDetail.event, ...(selectedEvent || {}) }, mountedAtMs) === 'upcoming';
+        const capacity = Number(selectedEvent?.capacity) > 0 ? Number(selectedEvent.capacity) : null;
+        const items = [
+            { label: 'Sold', value: count(sales.total ?? funnel.sold), hint: capacity ? `of ${count(capacity)}` : undefined },
+            { label: 'Ticket sales', value: money(sales.revenue?.grossCents), hint: `${money(sales.revenue?.netCents)} to you` },
         ];
-    }, [eventDetail]);
+        if (upcoming) {
+            const plan = projectSales({ velocityPerDay7d: sales.velocityPerDay7d, totalSold: sales.total, startDate: eventDetail.event?.startDate }, mountedAtMs);
+            items.push({
+                label: 'At this pace',
+                value: plan?.projected != null ? count(plan.projected) : '-',
+                hint: plan && plan.pace <= 0 ? 'no sales this week' : 'by doors',
+                tone: 'purple',
+            });
+            items.push({ label: 'Doors', value: until(eventDetail.event?.startDate), hint: dayDate(eventDetail.event?.startDate) });
+        } else {
+            items.push({
+                label: 'Turnout',
+                value: `${Math.round((Number(attendance.scanRate) || 0) * 100)}%`,
+                hint: `${count(attendance.scanned)} of ${count(attendance.sold)} came`,
+                tone: 'purple',
+            });
+        }
+        return items;
+    }, [eventDetail, isComparing, mountedAtMs, selectedEvent]);
 
     if (viewMode === 'live-ops') {
         return <LiveScanDashboard isLiveEvent={isLiveEvent} />;
     }
 
-    const isComparing = selectedIds.length > 1;
-
-    // Door (scan rate, gates, hype) leads once the event has started; sales lead before that.
-    const eventStartMs = eventDetail?.event?.startDate ? new Date(eventDetail.event.startDate).getTime() : NaN;
-    const doorFirst = eventStartMs <= mountedAtMs;
-
-    const renderSales = () => (
-        <>
-            <AnalyticsSectionLabel
-                title="Sales"
-                copy="Pace toward the date and where buyers stall on the way in."
-            />
-
-            <SalesVelocityChart
-                byDay={eventDetail.sales.byDay}
-                velocityPerDay7d={eventDetail.sales.velocityPerDay7d}
-                totalSold={eventDetail.sales.total}
-                grossCents={eventDetail.sales.revenue.grossCents}
-                netCents={eventDetail.sales.revenue.netCents}
-                eventStartDate={eventDetail.event?.startDate}
-                isMobile={isMobile}
-            />
-
-            <SectionCard title="Attendance path" className="!rounded-[1.25rem]">
-                <FunnelChart data={funnelData} />
-            </SectionCard>
-        </>
-    );
-
-    const renderDoor = () => (
-        <>
-            <AnalyticsSectionLabel
-                title="Door"
-                copy="Energy through the hours and where it happened on the floor."
-            />
-
-            <HypePanel behavior={eventDetail.behavior} capture={eventDetail.media?.capture} isMobile={isMobile} />
-
-            <SectionCard title="Spatial intelligence" className="!rounded-[1.25rem]">
-                <VenueHeatMap eventId={selectedEventId} />
-            </SectionCard>
-        </>
-    );
+    let body;
+    if (eventsLoading) {
+        body = <PanelsSkeleton />;
+    } else if (!events.length) {
+        body = <EmptyState title="No nights yet" line="Create an event to see its numbers here." action={<Button variant="primary" onClick={() => router.push('/dashboard/events')}>Go to events</Button>} />;
+    } else if (isComparing) {
+        body = (
+            <>
+                <ComparisonPanel details={comparisonDetails} loading={comparisonLoading} />
+                <MarketingSection />
+            </>
+        );
+    } else if (!selectedEventId || eventDetailLoading) {
+        body = <PanelsSkeleton />;
+    } else if (!eventDetail) {
+        body = <Notice tone="error">We could not load this night. Try another one.</Notice>;
+    } else {
+        body = (
+            <>
+                <NoticedPanel
+                    insights={eventDetail.insights}
+                    onCta={() => document.getElementById('top-moments-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                />
+                <SalesPanel detail={eventDetail} isMobile={isMobile} />
+                <DoorPanel detail={eventDetail} eventId={selectedEventId} isMobile={isMobile} />
+                <AfterPanel
+                    detail={eventDetail}
+                    onPromote={() => setMarketingKitOpen(true)}
+                    onRemoved={(mediaId) =>
+                        setEventDetail((prev) =>
+                            prev
+                                ? {
+                                      ...prev,
+                                      behavior: {
+                                          ...prev.behavior,
+                                          topMoments: (prev.behavior?.topMoments || []).filter((m) => m.mediaId !== mediaId),
+                                      },
+                                  }
+                                : prev
+                        )
+                    }
+                />
+                <MarketingSection selectedEventId={selectedEventId} />
+                <MarketingKitModal
+                    open={marketingKitOpen}
+                    onClose={() => setMarketingKitOpen(false)}
+                    moments={eventDetail.behavior?.topMoments || []}
+                    event={{
+                        ...eventDetail.event,
+                        venueName: events.find((event) => event.id === eventDetail.event?.id)?.venueName || '',
+                    }}
+                />
+            </>
+        );
+    }
 
     return (
-        <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
-            <div className="px-1">
-                <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[28px]">See what moved the room</h1>
-            </div>
-
-            <EventPicker events={eventOptions} selectedIds={selectedIds} onToggle={handleToggleEvent} loading={eventsLoading} />
-
-            {isComparing ? (
-                <>
-                    <EventComparisonChart details={comparisonDetails} loading={comparisonLoading} />
-                    <MarketingPanel />
-                </>
-            ) : !selectedEventId ? (
-                <div className="rounded-2xl bg-pxi-field p-6 text-sm text-zinc-400">Select an event above to see its full analytics.</div>
-            ) : eventDetailLoading || !eventDetail ? (
-                <div className="space-y-4">
-                    <ChartSkeleton className="h-[300px] md:h-[360px]" />
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        {[0, 1, 2].map((item) => (
-                            <div key={item} className="h-28 rounded-2xl bg-pxi-field animate-pulse" />
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <>
-                    <InsightsPanel
-                        insights={eventDetail.insights}
-                        eyebrow="What we noticed at this event"
-                        onCta={() => document.getElementById('top-moments-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                    />
-
-                    {doorFirst ? (
-                        <>
-                            {renderDoor()}
-                            {renderSales()}
-                        </>
-                    ) : (
-                        <>
-                            {renderSales()}
-                            {renderDoor()}
-                        </>
-                    )}
-
-                    <AnalyticsSectionLabel
-                        title="After the night"
-                        copy="Crowd content and the moments to market whatever you run next."
-                    />
-
-                    <div id="top-moments-panel" className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-                        <AudienceLeaderboardsPanel media={eventDetail.media} behavior={eventDetail.behavior} />
-                        <TopMomentsPanel
-                            moments={eventDetail.behavior?.topMoments}
-                            onPromote={() => setMarketingKitOpen(true)}
-                            onRemoved={(mediaId) =>
-                                setEventDetail((prev) =>
-                                    prev
-                                        ? {
-                                              ...prev,
-                                              behavior: {
-                                                  ...prev.behavior,
-                                                  topMoments: (prev.behavior?.topMoments || []).filter((m) => m.mediaId !== mediaId),
-                                              },
-                                          }
-                                        : prev
-                                )
-                            }
-                        />
-                    </div>
-
-                    <MarketingPanel selectedEventId={selectedEventId} />
-
-                    <div className="flex flex-wrap items-center justify-end gap-2 rounded-[1.25rem] bg-pxi-field p-5">
-                        <Link href="/dashboard/events" className="pill-solid px-4 py-2 text-xs">Plan the next event</Link>
-                        <Link href="/dashboard/campaigns" className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em]">Message past attendees</Link>
-                    </div>
-
-                    <MarketingKitModal
-                        open={marketingKitOpen}
-                        onClose={() => setMarketingKitOpen(false)}
-                        moments={eventDetail.behavior?.topMoments || []}
-                        event={{
-                            ...eventDetail.event,
-                            venueName: eventOptions.find((option) => option.id === eventDetail.event?.id)?.venueName || '',
-                        }}
-                    />
-                </>
-            )}
+        <div className="space-y-5 md:space-y-6">
+            <PageHeader title="Analytics" kpis={kpis} />
+            {compareOpen ? <NightPicker nights={nights} selectedIds={selectedIds} onToggle={handleToggleEvent} onClose={() => setCompareOpen(false)} /> : null}
+            {body}
         </div>
     );
 }
 
 export default function AnalyticsPage() {
     return (
-        <Suspense fallback={<div className="mx-auto max-w-6xl p-8 text-zinc-500">Loading analytics...</div>}>
+        <Suspense fallback={<Skeleton className="h-40" />}>
             <AnalyticsPageContent />
         </Suspense>
     );
