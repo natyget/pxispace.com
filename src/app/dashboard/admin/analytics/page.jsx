@@ -5,7 +5,7 @@ import { fetchAdminStats, fetchPlatformAnalytics } from '@/services/admin';
 import { useAdminMode } from '@/contexts/AdminModeContext';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
 import { cityLabel } from '@/lib/dashboardNavConfig';
-import { DataTable, EmptyState, Notice, PageHeader, Panel, Skeleton, WordTabs } from '@/components/dashboard/ui/kit';
+import { EmptyState, Notice, PageHeader, Panel, Skeleton, WordTabs } from '@/components/dashboard/ui/kit';
 import { count, money } from '@/lib/dashFormat';
 
 import { getDashboardChartShade } from '@/components/dashboard/chartStyles';
@@ -208,20 +208,27 @@ function RevenueLines({ data, rangeTabs }) {
     );
 }
 
-/** The money, this range and for all time, side by side. On phones each number carries its label. */
+/** The money, this range and for all time, side by side. Three columns on every screen so a phone reads it in one glance. */
 function MoneyTable({ rows, rangeLabel }) {
-    const cell = (label, value) => (
-        <div className="flex items-baseline justify-between gap-3 md:block">
-            <span className="text-[12px] text-white/40 md:hidden">{label}</span>
-            <span className="text-[14px] tabular-nums text-white">{value}</span>
+    const grid = 'grid grid-cols-[minmax(0,1fr)_84px_84px] items-center gap-3 md:grid-cols-[minmax(0,1fr)_130px_130px] md:gap-4';
+    return (
+        <div>
+            <div className={`${grid} px-4 pb-2 text-[11px] font-medium text-white/40`}>
+                <span>Money</span>
+                <span className="text-right">{rangeLabel}</span>
+                <span className="text-right">All time</span>
+            </div>
+            <ul className="space-y-1.5">
+                {rows.map((row) => (
+                    <li key={row.label} className={`${grid} rounded-2xl bg-pxi-field px-4 py-3`}>
+                        <span className="min-w-0 text-[14px] font-semibold text-white">{row.label}</span>
+                        <span className="text-right text-[14px] tabular-nums text-white">{row.range}</span>
+                        <span className="text-right text-[14px] tabular-nums text-white">{row.lifetime}</span>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
-    const columns = [
-        { key: 'label', label: 'Money', render: (row) => <span className="text-[14px] font-semibold text-white">{row.label}</span> },
-        { key: 'range', label: rangeLabel, width: '130px', align: 'right', render: (row) => cell(rangeLabel, row.range) },
-        { key: 'lifetime', label: 'All time', width: '130px', align: 'right', render: (row) => cell('All time', row.lifetime) },
-    ];
-    return <DataTable columns={columns} rows={rows} rowKey="label" />;
 }
 
 export default function AdminAnalyticsPage() {
