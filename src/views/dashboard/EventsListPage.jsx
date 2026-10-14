@@ -19,8 +19,6 @@ import {
   PencilIcon,
   Search01Icon,
   Ticket01Icon,
-  UserAdd01Icon,
-  UserCircleIcon,
 } from '@hugeicons/core-free-icons';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +26,7 @@ import ActionMenu from '@/components/dashboard/ActionMenu';
 import CreateEventSlideOver from '@/components/dashboard/CreateEventSlideOver';
 import { PxiSpinner } from '@/components/loading/PxiLoading';
 import { usePageAction } from '@/components/dashboard/shell/usePageAction';
-import { Button, EmptyState, Notice, PageHeader, Skeleton, StateText, WordTabs } from '@/components/dashboard/ui/kit';
+import { Button, Drawer, EmptyState, Notice, PageHeader, Skeleton, StateText, WordTabs } from '@/components/dashboard/ui/kit';
 import Modal from '@/components/ui/Modal';
 import { canHostEvents } from '@/lib/accountTier';
 import { useAttendedEvents, useEvents } from '@/lib/dashboardStore';
@@ -283,66 +281,54 @@ function EventSections({ events, now, relation, pinnedIds = [], requestCounts = 
   );
 }
 
-function HostedEventModal({ event, now, pinned, onClose, onNavigate, onTogglePin }) {
+/** The quick view of one hosted night, from the right: the cover, the facts, and where to go next. */
+function HostedEventDrawer({ event, now, pinned, onClose, onNavigate, onTogglePin }) {
   if (!event) return null;
   const cover = coverImage(event);
   const section = classifyEvent(event, now);
   const isLive = section === 'live';
   const isPast = section === 'past';
-  const attendees = event._count?.tickets != null ? `${event._count.tickets} attendees` : 'Attendee data pending';
+  const figures = soldFigures(event, section);
   const go = (href) => {
     onClose();
     onNavigate(href);
   };
+  const facts = [
+    { label: 'Status', value: isLive ? 'Live now' : isPast ? 'Past' : pinned ? 'Coming up, pinned' : 'Coming up' },
+    { label: 'When', value: whenLabel(event, section) },
+    { label: 'Where', value: event.location || event.venue || 'Not set' },
+    {
+      label: figures?.verb === 'going' ? 'Going' : 'Sold',
+      value: figures ? `${count(figures.sold)}${figures.capacity ? ` of ${count(figures.capacity)}` : ''}` : 'Not loaded yet',
+    },
+  ];
 
   return (
-    <Modal open={!!event} onClose={onClose} title={event.name || 'Hosted event'} maxWidth="max-w-2xl">
-      <div className="grid gap-5 md:grid-cols-[180px_minmax(0,1fr)]">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-pxi-field">
-          {cover ? (
-            <Image src={cover} alt={event.name || 'Event cover'} fill unoptimized className="object-cover" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <HugeiconsIcon icon={Calendar01Icon} className="text-zinc-600" size={38} />
-            </div>
-          )}
-          <div
-            className="absolute inset-x-0 bottom-0 h-1/2"
-            style={{
-              background: 'linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.42) 52%, rgba(0,0,0,0) 100%)',
-            }}
-          />
+    <Drawer
+      open={!!event}
+      onClose={onClose}
+      title={event.name || 'Event'}
+      footer={
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="primary" onClick={() => go(`/dashboard/events/${event.id}`)}>Manage event</Button>
+          {!isPast ? <Button onClick={() => go(`/dashboard/events/${event.id}/invite#event-invite`)}>Invite</Button> : null}
+          <Button onClick={() => go(`/dashboard/events/${event.id}/members`)}>Members</Button>
+          {!isLive ? <Button variant="quiet" onClick={() => onTogglePin(event.id)}>{pinned ? 'Unpin' : 'Pin'}</Button> : null}
         </div>
-        <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="glass-field rounded-2xl p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Status</p>
-              <p className="mt-1 text-sm font-semibold capitalize text-white">{isLive ? 'Live' : isPast ? 'Past' : pinned ? 'Pinned' : 'Upcoming'}</p>
+      }
+    >
+      <div className="space-y-5">
+        <Cover key={cover || 'none'} src={cover} alt={event.name || 'Event cover'} hosted />
+        <dl className="divide-y divide-white/[0.08]">
+          {facts.map((fact) => (
+            <div key={fact.label} className="flex items-baseline justify-between gap-4 py-3 first:pt-0">
+              <dt className="text-[13px] text-white/45">{fact.label}</dt>
+              <dd className="min-w-0 truncate text-right text-[14px] font-semibold text-white">{fact.value}</dd>
             </div>
-            <div className="glass-field rounded-2xl p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Date</p>
-              <p className="mt-1 text-sm font-semibold text-white">{formatDate(event.startDate)}</p>
-            </div>
-            <div className="glass-field rounded-2xl p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Location</p>
-              <p className="mt-1 truncate text-sm font-semibold text-white">{event.location || event.venue || 'Location TBD'}</p>
-            </div>
-            <div className="glass-field rounded-2xl p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Attendance</p>
-              <p className="mt-1 text-sm font-semibold text-white">{attendees}</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => go(`/dashboard/events/${event.id}`)} className="pill-solid inline-flex min-h-[42px] items-center justify-center gap-2 px-4 text-sm">
-              Manage event <HugeiconsIcon icon={ArrowRight02Icon} size={15} />
-            </button>
-            {!isPast ? <button type="button" onClick={() => go(`/dashboard/events/${event.id}/invite#event-invite`)} className="pill-ghost inline-flex min-h-[42px] items-center justify-center gap-2 px-4 text-sm font-bold"><HugeiconsIcon icon={UserAdd01Icon} size={16} />Invite</button> : null}
-            <button type="button" onClick={() => go(`/dashboard/events/${event.id}/members`)} className="pill-ghost inline-flex min-h-[42px] items-center justify-center gap-2 px-4 text-sm font-bold"><HugeiconsIcon icon={UserCircleIcon} size={16} />Members</button>
-            {!isLive ? <button type="button" onClick={() => onTogglePin(event.id)} className="pill-ghost inline-flex min-h-[42px] items-center justify-center gap-2 px-4 text-sm font-bold"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />{pinned ? 'Unpin' : 'Pin'}</button> : null}
-          </div>
-        </div>
+          ))}
+        </dl>
       </div>
-    </Modal>
+    </Drawer>
   );
 }
 
@@ -699,7 +685,7 @@ export default function EventsListPage() {
       </div>
 
       <CreateEventSlideOver open={createOpen} onClose={() => setCreateOpen(false)} />
-      <HostedEventModal event={selectedHostedEvent} now={now} pinned={selectedHostedEvent ? pinnedLiveIds.includes(String(selectedHostedEvent.id)) : false} onClose={() => setSelectedHostedEvent(null)} onNavigate={(href) => router.push(href)} onTogglePin={togglePinnedLiveEvent} />
+      <HostedEventDrawer event={selectedHostedEvent} now={now} pinned={selectedHostedEvent ? pinnedLiveIds.includes(String(selectedHostedEvent.id)) : false} onClose={() => setSelectedHostedEvent(null)} onNavigate={(href) => router.push(href)} onTogglePin={togglePinnedLiveEvent} />
       <ParticipantEventModal event={selectedAttendedEvent} requests={selectedEventRequests} onClose={() => setSelectedAttendedEvent(null)} onSubmitHelp={submitHelpRequest} />
     </>
   );
