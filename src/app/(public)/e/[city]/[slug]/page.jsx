@@ -3,7 +3,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getPublicListing } from '@/lib/publicListing';
 import { toOpenGraphImageUrl } from '@/lib/ogImageUrl';
-import { appStoreHref, metaDescription, venueLabel } from '@/lib/goListing';
+import { metaDescription, venueLabel } from '@/lib/goListing';
 import { getCityByCode } from '@/lib/seo/cities';
 import {
   buildListingEventJsonLd,
