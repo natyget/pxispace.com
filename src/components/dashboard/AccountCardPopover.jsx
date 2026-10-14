@@ -3,16 +3,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   AccountSetting01Icon,
+  IdentityCardIcon,
   Logout01Icon,
 } from '@hugeicons/core-free-icons';
+import { canHostEvents } from '@/lib/accountTier';
 
 const defaultItems = [
   { id: 'settings', label: 'Settings', icon: AccountSetting01Icon },
   { id: 'signout', label: 'Sign Out', icon: Logout01Icon, tone: 'danger' },
 ];
+
+// Accounts that can host get their organizer page here, above Settings. It opens the page itself (href), so the
+// shell's own navigation map does not need to know about it.
+const organizerPageItem = { id: 'organizer-page', label: 'Organizer page', icon: IdentityCardIcon, href: '/dashboard/organizer-page' };
 
 const POPOVER_BASE_STYLE = {
   position: 'fixed',
@@ -41,11 +48,14 @@ export default function AccountCardPopover({
   isOpen = false,
   onOpenChange,
 }) {
+  const router = useRouter();
   const rootRef = useRef(null);
   const popoverRef = useRef(null);
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState(null);
   const sideOffset = 24;
+
+  const menuItems = useMemo(() => (canHostEvents(user) ? [organizerPageItem, ...items] : items), [items, user]);
 
   const avatarFallback = useMemo(
     () => user?.name?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'P',
@@ -145,7 +155,7 @@ export default function AccountCardPopover({
                 ? 'dashboard-popover-surface w-full rounded-t-3xl px-2 pb-8 pt-3'
                 : 'dashboard-popover-surface w-56 rounded-2xl p-1.5'}
             >
-              {items.map((item) => {
+              {menuItems.map((item) => {
                 const toneClass =
                   item.tone === 'danger'
                     ? 'text-red-300 hover:bg-red-500/10'
@@ -156,7 +166,8 @@ export default function AccountCardPopover({
                     type="button"
                     onClick={() => {
                       onOpenChange?.(false);
-                      if (item.id === 'signout') onSignOut?.();
+                      if (item.href) router.push(item.href);
+                      else if (item.id === 'signout') onSignOut?.();
                       else onNavigate?.(item.id);
                     }}
                     className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm transition ${toneClass}`}
