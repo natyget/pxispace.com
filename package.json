@@ -14,7 +14,8 @@
     "test:floor-plans": "node --test src/lib/floorPlanAccess.test.mjs",
     "test:staff-setup": "node --test src/lib/staffSetup.test.mjs",
     "test:go": "node --test src/lib/goListing.test.mjs src/lib/goPoster.test.mjs",
-    "test:organizer": "node --test src/lib/organizerPage.test.mjs"
+    "test:organizer": "node --test src/lib/organizerPage.test.mjs",
+    "demo": "node scripts/demo/start.mjs"
   },
   "dependencies": {
     "@geoapify/geocoder-autocomplete": "^3.0.1",
