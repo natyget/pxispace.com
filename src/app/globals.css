@@ -1061,6 +1061,15 @@ html, body {
 }
 
 /* Public album: stacked on mobile (details → thread), split on desktop */
+/* The public route transition (app/(public)/template.jsx) wraps every page in a plain div. The album fills the viewport
+   and scrolls its thread and gallery inside it, so that wrapper has to pass the height down or nothing scrolls. */
+div:has(> .public-album-page) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .public-album-page {
   flex: 1;
   min-height: 0;
