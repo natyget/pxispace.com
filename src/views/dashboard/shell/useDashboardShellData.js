@@ -307,7 +307,7 @@ export function useDashboardShellData() {
             ));
         }
         if (isAdminNav) {
-            return buildAdminNavItems({ cityScope: adminCityScope, adminRole: adminRoleOf(user) });
+            return buildAdminNavItems({ cityScope: adminCityScope, adminRole: adminRoleOf(user), salesRole });
         }
         return buildMemberNavItems({
             hasLiveOpsAccess,
@@ -334,7 +334,7 @@ export function useDashboardShellData() {
 
     // Dashboard 2: the control room uses top tabs like the member dashboard, filtered for a city-scoped admin.
     const adminRole = rolesReady ? adminRoleOf(user) : null;
-    const adminTabs = useMemo(() => buildAdminTabs({ cityScope: adminCityScope, adminRole }), [adminCityScope, adminRole]);
+    const adminTabs = useMemo(() => buildAdminTabs({ cityScope: adminCityScope, adminRole, salesRole }), [adminCityScope, adminRole, salesRole]);
 
     const closeMobileMenu = useCallback(() => setMenuOpen(false), []);
     // The phone menu is the shared one: the sidebar's pages on top, then Dashboard / Wishlist and the account row.

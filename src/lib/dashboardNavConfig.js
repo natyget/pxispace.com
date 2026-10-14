@@ -46,7 +46,7 @@ export const adminNavItems = [
   { key: 'admin-alerts', label: 'Email alerts', path: '/dashboard/admin/alerts', icon: Mail01Icon, tab: 'Today', end: true, minRole: 'SUPPORT' },
   { key: 'admin-organizers', label: 'Organizers', path: '/dashboard/admin/organizers', icon: FireIcon, tab: 'Growth', end: true, minRole: 'ADMIN' },
   { key: 'admin-claims', label: 'Claims', path: '/dashboard/admin/claims', icon: Briefcase01Icon, tab: 'Growth', end: true, minRole: 'ADMIN' },
-  { key: 'admin-commissions', label: 'Commissions', path: '/dashboard/admin/commissions', icon: Wallet01Icon, tab: 'Growth', end: true, minRole: 'ADMIN' },
+  { key: 'admin-commissions', label: 'Commissions', path: '/dashboard/admin/commissions', icon: Wallet01Icon, tab: 'Growth', end: true, minRole: 'ADMIN', cityNeedsManager: true },
   { key: 'admin-venues', label: 'Venues', path: '/dashboard/admin/venues', icon: FloorPlanIcon, tab: 'Growth', end: true, minRole: 'ADMIN' },
   { key: 'admin-promos', label: 'Promos & credits', path: '/dashboard/admin/promos', icon: StarIcon, tab: 'Growth', end: true, globalOnly: true, minRole: 'ADMIN' },
   { key: 'admin-analytics', label: 'Analytics', path: '/dashboard/admin/analytics', icon: Activity01Icon, tab: 'Platform', end: true, minRole: 'ADMIN' },
@@ -71,8 +71,14 @@ export function cityLabel(code) {
  * sidebar hides them so the admin does not meet a page of errors.
  * @param {{ cityScope?: string|null }} ctx
  */
-export function buildAdminNavItems({ cityScope, adminRole } = {}) {
-  return adminNavItems.filter((item) => (!cityScope || !item.globalOnly) && adminRoleMeets(adminRole, item.minRole));
+export function buildAdminNavItems({ cityScope, adminRole, salesRole } = {}) {
+  return adminNavItems.filter(
+    (item) =>
+      (!cityScope || !item.globalOnly) &&
+      // A city admin sees Commissions when they are also the city's regional manager (it shows their own earnings).
+      (!cityScope || !item.cityNeedsManager || salesRole === 'REGIONAL_MANAGER') &&
+      adminRoleMeets(adminRole, item.minRole),
+  );
 }
 
 const ADMIN_ROLE_RANK = { NONE: 0, SUPPORT: 1, MODERATOR: 2, ADMIN: 3, SUPER_ADMIN: 4 };
@@ -86,10 +92,10 @@ function adminRoleMeets(role, min) {
 /**
  * The control room's top tabs for this admin, each with the sub-items it shows. Tabs left with nothing (Trust for a
  * city admin) are dropped. Same shape as buildMemberTabs, so DashboardTabs renders both.
- * @param {{ cityScope?: string|null, adminRole?: string|null }} ctx
+ * @param {{ cityScope?: string|null, adminRole?: string|null, salesRole?: string|null }} ctx
  */
-export function buildAdminTabs({ cityScope, adminRole } = {}) {
-  const items = buildAdminNavItems({ cityScope, adminRole });
+export function buildAdminTabs({ cityScope, adminRole, salesRole } = {}) {
+  const items = buildAdminNavItems({ cityScope, adminRole, salesRole });
   return ADMIN_TABS.map((tab) => ({
     ...tab,
     locked: false,
