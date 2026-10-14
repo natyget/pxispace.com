@@ -208,10 +208,10 @@ export default function CampaignComposer({ initial, events, segments, onBack, on
                             {!isSms ? (
                                 <Field label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={200} placeholder="Tonight's details are live" className="mb-4" />
                             ) : null}
-                            <div className="mb-3 flex flex-wrap items-center gap-x-1 gap-y-1">
-                                <span className="mr-1 text-[12px] text-white/45">Start from</span>
+                            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+                                <span className="text-[12px] text-white/45">Start from</span>
                                 {startButtons.map((b) => (
-                                    <Button key={b.key} variant="quiet" size="sm" onClick={() => fill(b.key)} disabled={!b.ok} className="!px-2.5 text-left underline-offset-4 hover:underline">
+                                    <Button key={b.key} variant="quiet" size="sm" onClick={() => fill(b.key)} disabled={!b.ok} className="!px-0 text-left underline-offset-4 hover:underline">
                                         {b.label}
                                     </Button>
                                 ))}

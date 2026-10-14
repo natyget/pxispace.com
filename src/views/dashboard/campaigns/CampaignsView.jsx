@@ -124,7 +124,8 @@ function CampaignsHome() {
     usePageAction(newCampaign);
 
     const delivered = campaigns.filter((c) => c.status === 'SENT' || c.status === 'SENDING');
-    const sentIds = campaigns.filter((c) => c.status === 'SENT').slice(0, 20).map((c) => c.id);
+    const allSent = campaigns.filter((c) => c.status === 'SENT');
+    const sentIds = allSent.slice(0, 20).map((c) => c.id);
     const perfReq = useRequest(sentIds.length ? JSON.stringify(sentIds) : null, () =>
         Promise.all(sentIds.map((id) => api.get(`/api/campaigns/${id}/performance`).then((r) => r.performance || null).catch(() => null)))
     );
@@ -163,7 +164,7 @@ function CampaignsHome() {
     const kpis = [
         { label: 'Sent', value: unknown ? '-' : count(delivered.length) },
         { label: 'People reached', value: unknown ? '-' : count(sum(delivered, 'recipientCount')) },
-        ...(tracked.length ? [{ label: 'Tickets after', value: count(sum(tracked, 'conversions')), hint: 'Within 7 days of a send' }] : []),
+        ...(tracked.length ? [{ label: 'Tickets after', value: count(sum(tracked, 'conversions')), hint: allSent.length > sentIds.length ? 'Latest 20 sends' : 'Within 7 days of a send' }] : []),
         { label: 'Spent', value: unknown ? '-' : money(sum(delivered, 'priceCents')) },
     ];
 

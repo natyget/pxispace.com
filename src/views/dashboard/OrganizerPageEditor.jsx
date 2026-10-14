@@ -167,7 +167,8 @@ function Editor({ user, updateUser }) {
             setAvatarUrl(publicUrl);
             setJustSaved(false);
         } catch (err) {
-            setError(err?.message || 'Could not upload the photo.');
+            // The browser's own wording for a failed upload ("Failed to fetch") is not for people.
+            setError(err?.data?.error || 'Could not upload the photo. Try again.');
         } finally {
             setUploading(false);
         }

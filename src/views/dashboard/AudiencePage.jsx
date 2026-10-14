@@ -214,7 +214,15 @@ export default function AudiencePage() {
     const nightEvent = night ? events.find((e) => e.id === night) || null : null;
     const nightCount = nightEvent && Number.isFinite(Number(nightEvent.attendeeCount)) ? Number(nightEvent.attendeeCount) : null;
     const total = night ? nightCount ?? 0 : list?.total || 0;
-    const summary = night && nightCount === null ? nightEvent?.name || 'This night' : `${count(total)} ${peopleWord(total)}`;
+    const summary = night
+        ? nightCount === null
+            ? nightEvent?.name || 'This night'
+            : `${count(total)} ${peopleWord(total)}`
+        : !list
+          ? listReq.error
+              ? ''
+              : 'Counting people...'
+          : `${count(total)} ${peopleWord(total)}`;
 
     const rows = useMemo(() => (night ? [] : list?.rows || []), [night, list]);
     const identifiedTotal = list?.identifiedTotal ?? list?.total ?? 0;
@@ -507,7 +515,7 @@ export default function AudiencePage() {
                         </ul>
                     ) : (
                         <p className="text-[13px] text-white/50">
-                            {overview?.demographicsWithheld ? 'Cities show once 10 or more people have come.' : 'No cities yet.'}
+                            {overview?.demographicsWithheld && overview.totalAttendees > 0 ? 'Cities show once 10 or more people have come.' : 'No cities yet.'}
                         </p>
                     )}
                 </Panel>
