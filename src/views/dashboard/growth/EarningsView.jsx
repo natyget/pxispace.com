@@ -70,7 +70,7 @@ export default function EarningsView({ surface = 'sales' }) {
             <PageHeader title="Earnings" subtitle={rateSentence(data)} kpis={myEarningsKpis(data.totals)} />
             <SetupNotices setup={data.setup} />
 
-            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <Panel title="Accounts">
                     <AccountsTable
                         accounts={accounts}
