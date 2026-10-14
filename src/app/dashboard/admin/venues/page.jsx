@@ -5,7 +5,7 @@
 // city only; the backend enforces that on every call.
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchAdminUsers } from '@/services/admin';
 import {
     confirmVenueProposal,
@@ -23,9 +23,12 @@ import {
 import { useAdminMode } from '@/contexts/AdminModeContext';
 import { cityLabel } from '@/lib/dashboardNavConfig';
 import { AdminError, AdminPageShell, AdminPanel } from '@/components/admin/AdminPageShell';
+import { usePageAction } from '@/components/dashboard/shell/usePageAction';
+import { Button, Field, Panel } from '@/components/dashboard/ui/kit';
+import { count } from '@/lib/dashFormat';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
 
-const inputCls = 'w-full rounded-full bg-white/[0.055] px-4 py-2 text-[13px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]';
+const inputCls = 'h-11 w-full rounded-2xl bg-pxi-field px-4 text-[14px] text-white placeholder:text-white/35 outline-none transition focus:shadow-[0_0_0_1.5px_#a523ef]';
 const pill = 'rounded-full bg-white/[0.065] px-4 py-1.5 text-[12px] font-semibold text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-40';
 
 function formatDate(iso) {
@@ -70,30 +73,31 @@ function CreateVenue({ cityScope, onCreated }) {
     };
 
     return (
-        <AdminPanel className="space-y-3">
-            <p className="text-[13px] font-semibold text-white">Add a venue</p>
-            <div className="grid gap-2 md:grid-cols-2">
+        <Panel title="Add a venue">
+            <div className="grid gap-3 md:grid-cols-2">
                 <input value={form.name} onChange={set('name')} placeholder="Name" className={inputCls} />
                 <input value={form.address} onChange={set('address')} placeholder="Address" className={inputCls} />
                 {cityScope ? (
-                    <p className="px-2 text-[12px] text-white/45">City: {cityLabel(cityScope)}</p>
+                    <p className="px-2 text-[13px] text-white/45">City: {cityLabel(cityScope)}</p>
                 ) : (
                     <select value={form.cityCode} onChange={set('cityCode')} className={inputCls} aria-label="City">
-                        <option value="">City: work it out from the location</option>
+                        <option value="">City: worked out from the location</option>
                         <option value="NYC">New York</option>
                         <option value="BOS">Boston</option>
                     </select>
                 )}
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                     <input value={form.lat} onChange={set('lat')} placeholder="Latitude" className={inputCls} />
                     <input value={form.lng} onChange={set('lng')} placeholder="Longitude" className={inputCls} />
                 </div>
             </div>
-            {error ? <p className="text-[12px] text-red-300">{error}</p> : null}
-            <button type="button" disabled={busy || !form.name.trim()} onClick={submit} className="rounded-full bg-pxi-purple px-5 py-2 text-[13px] font-bold text-white disabled:opacity-40 uppercase tracking-[0.08em]">
-                {busy ? 'Adding...' : 'Add venue'}
-            </button>
-        </AdminPanel>
+            {error ? <p className="mt-3 text-[13px] text-red-300">{error}</p> : null}
+            <div className="mt-4">
+                <Button variant="primary" disabled={busy || !form.name.trim()} onClick={submit}>
+                    {busy ? 'Adding...' : 'Add venue'}
+                </Button>
+            </div>
+        </Panel>
     );
 }
 
@@ -349,15 +353,14 @@ function ForecastStatus() {
     if (hidden || !data) return null;
     const { gate, calibration, backtest } = data;
     return (
-        <AdminPanel className="space-y-2">
-            <p className="text-[13px] font-semibold text-white">Forecasts: {gate.visible ? 'visible to venues' : 'shadow mode'}</p>
-            <p className="text-[13px] leading-6 text-white/55">{gate.reason}.</p>
-            <p className="text-[12px] leading-5 text-white/45">
+        <Panel title="Forecasts" subtitle={gate.visible ? 'Visible to venues' : 'Not shown to venues yet'}>
+            <p className="text-[14px] text-white/60">{gate.reason}.</p>
+            <p className="mt-2 text-[12px] leading-5 text-white/40">
                 Measured forecasts: {gate.measured}. Median error, model {percent(gate.mdapeModel)} vs same as last time {percent(gate.mdapeNaive)}.
                 {' '}Backtest on history: {backtest.events} events at {backtest.venues} venues, model {percent(backtest.mdapeModel)} vs naive {percent(backtest.mdapeNaive)}.
                 {' '}Band: {calibration.calibrated ? `${calibration.lowRatio.toFixed(2)}x to ${calibration.highRatio.toFixed(2)}x from ${calibration.sample} ${calibration.source.toLowerCase()} pairs` : `uncalibrated (${calibration.sample} of 20 pairs)`}.
             </p>
-        </AdminPanel>
+        </Panel>
     );
 }
 
@@ -368,6 +371,7 @@ export default function AdminVenuesPage() {
     const [error, setError] = useState(null);
     const [selectedId, setSelectedId] = useState(null);
     const [filter, setFilter] = useState('');
+    const [addOpen, setAddOpen] = useState(false);
 
     const load = useCallback(async () => {
         if (!isLive) {
@@ -390,6 +394,13 @@ export default function AdminVenuesPage() {
         return () => clearTimeout(t);
     }, [load]);
 
+    // Adding a venue is the page's one action: it sits in the tab row and opens the form on demand.
+    const addAction = useMemo(
+        () => (isLive ? <Button variant="primary" onClick={() => setAddOpen((open) => !open)}>{addOpen ? 'Close' : 'Add venue'}</Button> : null),
+        [isLive, addOpen]
+    );
+    usePageAction(addAction);
+
     const selected = venues.find((v) => v.id === selectedId) || null;
     const shown = venues.filter((v) => !filter.trim() || v.name.toLowerCase().includes(filter.trim().toLowerCase()));
     const claimedCount = venues.filter((v) => v.ownerId).length;
@@ -397,24 +408,23 @@ export default function AdminVenuesPage() {
     return (
         <AdminPageShell
             title="Venues"
-            copy={`${cityScope ? `${cityLabel(cityScope)} venues. ` : ''}The venue catalogue, events matched to each room, and who owns a venue's data. Nothing attaches or grants access without a person confirming it here.`}
+            copy={cityScope ? `${cityLabel(cityScope)} venues, their matches and owners.` : 'Venues, the events matched to each room, and who owns them.'}
             source={isLive ? 'Live' : 'Mock'}
             metrics={[
-                { label: 'Venues', value: venues.length.toLocaleString(), hint: cityScope ? cityLabel(cityScope) : 'All cities' },
-                { label: 'Claimed', value: claimedCount.toLocaleString(), hint: 'Owned by a venue account' },
+                { label: 'Venues', value: count(venues.length), hint: cityScope ? cityLabel(cityScope) : 'All cities' },
+                { label: 'Claimed', value: count(claimedCount), hint: 'Owned by a venue account' },
             ]}
         >
             {!isLive ? <AdminPanel><p className="text-sm text-white/55">Live venue data requires a backend admin account.</p></AdminPanel> : null}
             <AdminError>{error}</AdminError>
-            {isLive && !cityScope ? <ForecastStatus /> : null}
-            {isLive ? <CreateVenue cityScope={cityScope} onCreated={(v) => { setSelectedId(v.id); load(); }} /> : null}
+            {isLive && addOpen ? <CreateVenue cityScope={cityScope} onCreated={(v) => { setSelectedId(v.id); setAddOpen(false); load(); }} /> : null}
 
             {isLive ? (
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
                     <AdminPanel className="space-y-3">
-                        <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter venues" className={inputCls} />
+                        <Field type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter venues" aria-label="Filter venues" />
                         {loading ? <p className="text-[13px] text-white/45">Loading...</p> : shown.length === 0 ? (
-                            <p className="text-[13px] text-white/45">No venues yet. Add the first one above.</p>
+                            <p className="text-[13px] text-white/45">No venues yet.</p>
                         ) : (
                             <ul className="max-h-[640px] space-y-1 overflow-y-auto">
                                 {shown.map((v) => (
@@ -455,6 +465,7 @@ export default function AdminVenuesPage() {
                     )}
                 </div>
             ) : null}
+            {isLive && !cityScope ? <ForecastStatus /> : null}
         </AdminPageShell>
     );
 }

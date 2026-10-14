@@ -12,13 +12,14 @@ import { useAdminMode } from '@/contexts/AdminModeContext';
 import {
     AdminError,
     AdminPageShell,
-    AdminPanel,
     AdminTableShell,
     adminTableClass,
     adminTdClass,
     adminThClass,
 } from '@/components/admin/AdminPageShell';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
+import { WordTabs } from '@/components/dashboard/ui/kit';
+import { count } from '@/lib/dashFormat';
 
 const STATUS_FILTERS = [
     { value: '', label: 'All' },
@@ -45,7 +46,7 @@ const priorityStyle = {
 };
 
 function formatDate(iso) {
-    if (!iso) return '—';
+    if (!iso) return '-';
     try {
         return new Date(iso).toLocaleString(undefined, {
             month: 'short',
@@ -54,7 +55,7 @@ function formatDate(iso) {
             minute: '2-digit',
         });
     } catch {
-        return '—';
+        return '-';
     }
 }
 
@@ -256,29 +257,14 @@ export default function AdminSupportPage() {
     return (
         <AdminPageShell
             title="Support"
-            copy="Tickets from the app and web, with priority, status, replies, and ownership in one queue."
+            copy="Every ticket from the app and web in one queue."
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
-                { label: 'Matches', value: total.toLocaleString(), hint: status || 'All statuses' },
-                { label: 'Rows', value: rows.length.toLocaleString(), hint: `Page ${page}` },
+                { label: 'Matches', value: count(total), hint: STATUS_FILTERS.find((f) => f.value === status)?.label || 'All statuses' },
+                { label: 'On this page', value: count(rows.length), hint: `Page ${page}` },
             ]}
         >
-            <AdminPanel className="flex flex-wrap items-center gap-2">
-                {STATUS_FILTERS.map((f) => (
-                    <button
-                        key={f.value || 'all'}
-                        type="button"
-                        onClick={() => setStatus(f.value)}
-                        className={`rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
-                            status === f.value
-                                ? 'bg-pxi-purple text-white'
-                                : 'bg-pxi-field text-white/60 hover:bg-white/[0.075] hover:text-white'
-                        }`}
-                    >
-                        {f.label}
-                    </button>
-                ))}
-            </AdminPanel>
+            <WordTabs items={STATUS_FILTERS.map((f) => ({ key: f.value, label: f.label }))} value={status} onChange={setStatus} />
 
             <AdminError>{error}</AdminError>
 

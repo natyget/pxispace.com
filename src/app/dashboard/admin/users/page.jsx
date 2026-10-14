@@ -23,16 +23,17 @@ import {
 import {
     AdminError,
     AdminPageShell,
-    AdminPanel,
     AdminTableShell,
     adminTableClass,
     adminTdClass,
     adminThClass,
 } from '@/components/admin/AdminPageShell';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
+import { Field } from '@/components/dashboard/ui/kit';
+import { count } from '@/lib/dashFormat';
 
 function formatDate(iso) {
-    if (!iso) return '—';
+    if (!iso) return '-';
     try {
         return new Date(iso).toLocaleString(undefined, {
             month: 'short',
@@ -42,7 +43,7 @@ function formatDate(iso) {
             minute: '2-digit',
         });
     } catch {
-        return '—';
+        return '-';
     }
 }
 
@@ -418,25 +419,21 @@ export default function AdminUsersPage() {
     return (
         <AdminPageShell
             title="Accounts"
-            copy={`${cityScope ? `People in ${cityLabel(cityScope)}: they chose the city, hold a ticket there, or host there. ` : ''}Search by email, username, or ID. Open a live account to adjust organizer access${cityScope ? ' and verification' : ', verification, and suspension state'}.${canManageRoles ? ' Super-admin controls are enabled.' : ''}`}
+            copy={`${cityScope ? `People in ${cityLabel(cityScope)}. ` : ''}Search by email, username or ID.`}
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
-                { label: 'Matches', value: total.toLocaleString(), hint: q || 'All users' },
-                { label: 'Rows', value: rows.length.toLocaleString(), hint: `Page ${page}` },
+                { label: 'Matches', value: count(total), hint: q || 'All users' },
+                { label: 'On this page', value: count(rows.length), hint: `Page ${page}` },
             ]}
         >
-            <AdminPanel className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-                <input
-                    type="search"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Search accounts..."
-                    className="w-full rounded-full bg-pxi-field px-5 py-3 text-[14px] text-white placeholder:text-white/35 outline-none focus:bg-white/[0.075]"
-                />
-                <p className="w-fit rounded-full bg-pxi-field px-3 py-1.5 text-xs font-semibold text-zinc-400">
-                    {isLiveAdmin ? 'Live management enabled' : 'Previewing mock users'}
-                </p>
-            </AdminPanel>
+            <Field
+                type="search"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Search accounts"
+                aria-label="Search accounts"
+                inputClassName="h-10"
+            />
 
             <AdminError>{error}</AdminError>
             {notice ? <p data-admin-notice className="rounded-2xl bg-emerald-500/10 px-5 py-3 text-sm text-emerald-200">{notice}</p> : null}
@@ -468,7 +465,7 @@ export default function AdminUsersPage() {
                                             <div className="font-semibold">{u.email}</div>
                                             <div className="mt-1 text-[12px] font-normal text-white/40 md:hidden">@{u.username || 'account'}</div>
                                         </td>
-                                        <td data-label="Username" className={`${adminTdClass} text-[14px]`}>{u.username || '—'}</td>
+                                        <td data-label="Username" className={`${adminTdClass} text-[14px]`}>{u.username || '-'}</td>
                                         <td data-label="Tier / role" className="px-6 py-4">
                                             <span className="inline-flex rounded-full bg-pxi-field px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-white/70">
                                                 {u.accountTier}
