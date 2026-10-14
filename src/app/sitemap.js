@@ -3,7 +3,7 @@ import { allCities } from '@/lib/seo/cities';
 import { allGenres, eventMatchesGenre } from '@/lib/seo/genres';
 import { buildArtistIndex, indexableArtists } from '@/lib/seo/artists';
 import { getAllPublicEvents, eventsInCity, eventGenres } from '@/lib/publicEvents';
-import { fetchCityListings } from '@/lib/seo/listings';
+import { fetchCityListings, fetchListingsSitemap } from '@/lib/seo/listings';
 import { CANONICAL_ORIGIN } from '@/lib/siteUrl';
 
 /**
@@ -26,7 +26,7 @@ import { CANONICAL_ORIGIN } from '@/lib/siteUrl';
 // Events change constantly; regenerate hourly rather than baking the list at build time.
 export const revalidate = 3600;
 
-export default async function sitemap() {
+async function allEntries() {
   const base = CANONICAL_ORIGIN;
   const now = new Date();
 
@@ -138,6 +138,14 @@ export default async function sitemap() {
       }));
   });
 
+  // Outside nights: every /e/ page in the sitemap feed, its own last change.
+  const listingPages = (await fetchListingsSitemap()).map((row) => ({
+    url: `${base}${row.path}`,
+    changeFrequency: 'daily',
+    priority: 0.7,
+    lastModified: row.updatedAt ? new Date(row.updatedAt) : now,
+  }));
+
   const artists = indexableArtists(buildArtistIndex(events));
   const artistPages = artists.map((artist) => ({
     url: `${base}/artists/${artist.slug}`,
@@ -163,5 +171,19 @@ export default async function sitemap() {
     ...artistPages,
     ...editorial,
     ...eventPages,
+    ...listingPages,
   ].map((e) => ({ lastModified: now, ...e }));
+}
+
+// The sitemap is split past this many URLs (each file stays well under Google's 50,000 limit, and quick to fetch).
+const CHUNK = 1000;
+
+export async function generateSitemaps() {
+  const count = (await allEntries()).length;
+  return Array.from({ length: Math.max(1, Math.ceil(count / CHUNK)) }, (_, id) => ({ id }));
+}
+
+export default async function sitemap({ id }) {
+  const index = Number(await id);
+  return (await allEntries()).slice(index * CHUNK, (index + 1) * CHUNK);
 }

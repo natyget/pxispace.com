@@ -2,7 +2,9 @@
 /**
  * Sitemap integrity check.
  *
- * Fetches every <loc> in the sitemap and fails if any of them is not a 200.
+ * Fetches every <loc> in the sitemap and fails if any of them is not a 200. The sitemap is split (app/sitemap.js):
+ * /sitemap.xml is an index, so every file it lists is read too. The /e/ night pages can run to thousands, so only a
+ * spread of E_SAMPLE of them is fetched; every other URL is checked.
  *
  * This exists because the hand-maintained sitemap drifted badly: it advertised four
  * /editorial URLs that 404'd, two cities we do not operate in, and omitted a live city hub.
@@ -13,12 +15,13 @@
  *   node scripts/check-sitemap.mjs                      # against http://localhost:5173
  *   node scripts/check-sitemap.mjs https://pxispace.com # against a deployed origin
  *
- * Exit codes: 0 = every URL is 200. 1 = at least one is not (or the sitemap is unreachable).
+ * Exit codes: 0 = every URL checked is 200. 1 = at least one is not (or the sitemap is unreachable).
  */
 
 const origin = (process.argv[2] || process.env.SITEMAP_ORIGIN || 'http://localhost:5173').replace(/\/$/, '');
 const CONCURRENCY = 8;
 const TIMEOUT_MS = 20000;
+const E_SAMPLE = 40;
 
 /** Redirects are a failure here, not a success: a sitemap must list final URLs only. */
 async function probe(url) {
@@ -51,6 +54,32 @@ async function mapLimit(items, limit, fn) {
   return out;
 }
 
+/** The <loc> values of one sitemap file, or null when it cannot be read. */
+async function readLocs(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const xml = await res.text();
+    return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
+  } catch {
+    return null;
+  }
+}
+
+/** A few picks spread evenly through the list, so a sample covers the whole range of dates. */
+function sampleEvenly(items, count) {
+  if (items.length <= count) return items;
+  return Array.from({ length: count }, (_, i) => items[Math.floor((i * items.length) / count)]);
+}
+
+function pathOf(url) {
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return url;
+  }
+}
+
 async function main() {
   const sitemapUrl = `${origin}/sitemap.xml`;
   process.stdout.write(`Checking ${sitemapUrl}\n`);
@@ -68,26 +97,40 @@ async function main() {
     process.exit(1);
   }
 
-  const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
+  // When checking a non-production origin, rewrite the production host in each <loc> so we
+  // are actually testing the build in front of us rather than what is already deployed.
+  const onOrigin = (loc) => {
+    try {
+      const u = new URL(loc);
+      const o = new URL(origin);
+      return u.origin === o.origin ? loc : `${o.origin}${u.pathname}${u.search}`;
+    } catch {
+      return loc;
+    }
+  };
+
+  let locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
+  if (/<sitemapindex[\s>]/.test(xml)) {
+    // The index lists the files; each file lists the URLs.
+    const files = await mapLimit(locs.map(onOrigin), CONCURRENCY, readLocs);
+    if (files.some((f) => f === null)) {
+      console.error('FAIL  a sitemap file listed by the index could not be read');
+      process.exit(1);
+    }
+    locs = files.flat();
+  }
   if (locs.length === 0) {
     console.error('FAIL  sitemap contains no <loc> entries');
     process.exit(1);
   }
 
-  // When checking a non-production origin, rewrite the production host in each <loc> so we
-  // are actually testing the build in front of us rather than what is already deployed.
-  const targets = locs.map((loc) => {
-    try {
-      const u = new URL(loc);
-      const o = new URL(origin);
-      if (u.origin !== o.origin) return `${o.origin}${u.pathname}${u.search}`;
-      return loc;
-    } catch {
-      return loc;
-    }
-  });
+  const targets = locs.map(onOrigin);
 
-  const results = await mapLimit(targets, CONCURRENCY, probe);
+  const nights = targets.filter((t) => pathOf(t).startsWith('/e/'));
+  const others = targets.filter((t) => !pathOf(t).startsWith('/e/'));
+  const sampled = sampleEvenly(nights, E_SAMPLE);
+
+  const results = await mapLimit([...others, ...sampled], CONCURRENCY, probe);
 
   const bad = results.filter((r) => r.status !== 200);
   const dupes = targets.filter((t, i) => targets.indexOf(t) !== i);
@@ -102,7 +145,10 @@ async function main() {
     console.error(`FAIL  duplicate <loc> entries: ${[...new Set(dupes)].join(', ')}`);
   }
 
-  process.stdout.write(`\n${results.length - bad.length}/${results.length} URLs returned 200\n`);
+  process.stdout.write(
+    `\n${results.length - bad.length}/${results.length} URLs returned 200 `
+    + `(${nights.length} /e/ night pages listed, ${sampled.length} of them sampled)\n`,
+  );
 
   if (bad.length || dupes.length) {
     console.error(`\n${bad.length} bad URL(s), ${new Set(dupes).size} duplicate(s). Sitemap must contain only live, canonical, non-redirecting URLs.`);

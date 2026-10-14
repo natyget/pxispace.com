@@ -22,6 +22,13 @@ const nextConfig = {
   },
 
 
+  // /sitemap.xml is the index of the split sitemap (app/sitemap-index/route.js); see that file.
+  async rewrites() {
+    return {
+      beforeFiles: [{ source: '/sitemap.xml', destination: '/sitemap-index' }],
+    };
+  },
+
   async redirects() {
     return [
       // One canonical host. Everything else 301s to it so link equity and cookies do not
