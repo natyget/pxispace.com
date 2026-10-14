@@ -1,11 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchPlatformAnalytics } from '@/services/admin';
+import { fetchAdminStats, fetchPlatformAnalytics } from '@/services/admin';
 import { useAdminMode } from '@/contexts/AdminModeContext';
-import DataSourceBadge from '@/components/dashboard/DataSourceBadge';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
 import { cityLabel } from '@/lib/dashboardNavConfig';
+import { DataTable, EmptyState, Notice, PageHeader, Panel, Skeleton, WordTabs } from '@/components/dashboard/ui/kit';
+import { count, money } from '@/lib/dashFormat';
 
 import { getDashboardChartShade } from '@/components/dashboard/chartStyles';
 
@@ -13,28 +14,22 @@ const CHART_PRIMARY = getDashboardChartShade(0);
 const CHART_ACCENT = getDashboardChartShade(1);
 
 const RANGES = [
-    { days: 7, label: '7d' },
-    { days: 30, label: '30d' },
-    { days: 90, label: '90d' },
+    { days: 7, label: '7 days' },
+    { days: 30, label: '30 days' },
+    { days: 90, label: '90 days' },
 ];
-
-function formatUsd(cents) {
-    const v = Number(cents || 0) / 100;
-    if (v >= 1000) return `$${(v / 1000).toFixed(1)}k`;
-    return `$${v.toFixed(2)}`;
-}
 
 function dayKey(d) {
     return new Date(d).toISOString().slice(0, 10);
 }
 
-function shortDate(key) {
+function shortDay(key) {
     const d = new Date(`${key}T00:00:00Z`);
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
-function formatInteger(value) {
-    return Number(value || 0).toLocaleString();
+function percentOf(part, whole) {
+    return whole > 0 ? `${(Math.round((part / whole) * 1000) / 10).toFixed(1)}%` : '-';
 }
 
 function sumValues(rows = [], key = 'value') {
@@ -58,80 +53,6 @@ function fillDays(days, rows, pick) {
     return out;
 }
 
-function StatTile({ label, value, hint }) {
-    return (
-        <div className="rounded-2xl bg-pxi-field p-5">
-            <p className="text-[11px] font-medium tracking-[0.02em] text-white/40">{label}</p>
-            <p className="mt-3 text-[28px] font-bold leading-none tracking-normal text-white tabular-nums">{value}</p>
-            {hint ? <p className="mt-2 text-[12px] font-semibold leading-5 text-white/45">{hint}</p> : null}
-        </div>
-    );
-}
-
-function AdminAnalyticsHero({ days, setDays, isLiveAdmin, loading, signups, tickets, revenue, revenueWithheld = false, cityScope = null }) {
-    const rangeGross = sumValues(revenue, 'gross');
-    const rangeTake = sumValues(revenue, 'take');
-    const rangeSignups = sumValues(signups);
-    const rangeTickets = sumValues(tickets);
-    const takeRate = rangeGross > 0 ? `${(Math.round((rangeTake / rangeGross) * 1000) / 10).toFixed(1)}% take rate` : 'No sales yet';
-    const metrics = [
-        ...(revenueWithheld
-            ? []
-            : [
-                  { label: 'Ticket sales (GMV)', value: formatUsd(rangeGross), detail: `Face value, ${days}-day window` },
-                  { label: 'PXI revenue', value: formatUsd(rangeTake), detail: `$0.99 + 5.49% − credits, ${takeRate}` },
-              ]),
-        { label: 'New users', value: formatInteger(rangeSignups), detail: `${activeDays(signups)} active signup days` },
-        { label: 'Tickets issued', value: formatInteger(rangeTickets), detail: `${activeDays(tickets)} active ticket days` },
-    ];
-
-    return (
-        <section className="dashboard-surface-b relative overflow-hidden rounded-[1.25rem] px-5 py-7 md:px-8 md:py-8">
-            <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-                <div className="max-w-2xl">
-                    <div className="mb-3 flex flex-wrap items-center gap-2">
-                        <span className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">PXI Admin</span>
-                        <span className="text-zinc-700">/</span>
-                        <DataSourceBadge source={isLiveAdmin ? 'Live' : 'Mock'} />
-                    </div>
-                    <h1 className="max-w-xl text-2xl font-semibold tracking-tight text-white md:text-[28px]">
-                        {cityScope ? `${cityLabel(cityScope)} analytics` : 'Platform analytics'}
-                    </h1>
-                    <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-300 md:text-base">
-                        {cityScope
-                            ? `Growth and ticketing in ${cityLabel(cityScope)}: people who chose the city, hold a ticket there or host there, and events placed there.`
-                            : 'Growth, ticketing, ticket sales volume, and what PXI actually keeps across the whole platform.'}
-                    </p>
-                    <div className="dashboard-segmented-toggle mt-5 w-full sm:w-auto" role="tablist" aria-label="Analytics range">
-                        {RANGES.map((range) => (
-                            <button
-                                key={range.days}
-                                type="button"
-                                onClick={() => setDays(range.days)}
-                                className="dashboard-segmented-toggle__item flex-1 sm:flex-none"
-                                data-active={days === range.days}
-                                aria-pressed={days === range.days}
-                            >
-                                {range.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 xl:w-[520px]">
-                    {metrics.map((metric) => (
-                        <StatTile
-                            key={metric.label}
-                            label={metric.label}
-                            value={loading ? '...' : metric.value}
-                            hint={metric.detail}
-                        />
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
 /**
  * Minimal daily bar chart: thin rounded bars anchored to the baseline,
  * 2px gaps, recessive grid, per-bar hover tooltip.
@@ -152,21 +73,15 @@ function DailyBars({ title, data, color, format = (v) => String(v) }) {
     const daysWithActivity = activeDays(data);
 
     return (
-        <div className="glass-panel overflow-hidden rounded-[1.25rem] p-5">
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Daily flow</p>
-                    <h2 className="mt-2 text-lg font-bold tracking-normal text-white">{title}</h2>
-                    <p className="mt-1 text-xs font-semibold text-white/40">
-                        {daysWithActivity} active days, {format(total)} total
-                    </p>
-                </div>
-                <span className="w-fit rounded-full bg-pxi-field px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/55 tabular-nums">
-                    {hover != null
-                        ? `${shortDate(data[hover].key)}, ${format(data[hover].value)}`
-                        : `Peak ${format(max)}`}
+        <Panel
+            title={title}
+            subtitle={`${daysWithActivity} active days, ${format(total)} total`}
+            action={
+                <span className="text-[13px] tabular-nums text-white/55">
+                    {hover != null ? `${shortDay(data[hover].key)}, ${format(data[hover].value)}` : `Peak ${format(max)}`}
                 </span>
-            </div>
+            }
+        >
             <div className="rounded-2xl bg-pxi-field p-3">
                 <svg
                     viewBox={`0 0 ${W} ${H}`}
@@ -208,23 +123,23 @@ function DailyBars({ title, data, color, format = (v) => String(v) }) {
                             </g>
                         );
                     })}
-                    <text x={PAD.left} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10">{shortDate(data[0]?.key)}</text>
-                    <text x={W - PAD.right} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10" textAnchor="end">{shortDate(data[data.length - 1]?.key)}</text>
+                    <text x={PAD.left} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10">{shortDay(data[0]?.key)}</text>
+                    <text x={W - PAD.right} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10" textAnchor="end">{shortDay(data[data.length - 1]?.key)}</text>
                 </svg>
             </div>
-        </div>
+        </Panel>
     );
 }
 
 /**
  * Two-line revenue chart with crosshair hover + legend.
  *
- * Gross is ticket FACE VALUE (GMV) — what organizers priced tickets at. PXI revenue
+ * Gross is ticket FACE VALUE (GMV), what organizers priced tickets at. PXI revenue
  * is what the company actually keeps: the $0.99 flat fee off each payout plus the
  * 5.49% buyer service fee, minus credits burned. The buyer's card charge and Stripe's
- * cut are shown as money-movement context beneath, never as revenue.
+ * cut are shown as money movement beneath, never as revenue.
  */
-function RevenueLines({ data }) {
+function RevenueLines({ data, rangeTabs }) {
     const [hover, setHover] = useState(null);
     const W = 640;
     const H = 190;
@@ -236,12 +151,6 @@ function RevenueLines({ data }) {
     const y = (v) => PAD.top + innerH * (1 - v / max);
 
     const path = (pick) => data.map((d, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(pick(d)).toFixed(1)}`).join(' ');
-    const grossTotal = sumValues(data, 'gross');
-    const takeTotal = sumValues(data, 'take');
-    const buyerPaidTotal = sumValues(data, 'buyerPaid');
-    const processingTotal = sumValues(data, 'processing');
-    const payoutTotal = sumValues(data, 'payout');
-    const takeRate = grossTotal > 0 ? `${Math.round((takeTotal / grossTotal) * 1000) / 10}%` : '0%';
 
     const onMove = (e) => {
         const svg = e.currentTarget;
@@ -252,42 +161,20 @@ function RevenueLines({ data }) {
     };
 
     return (
-        <div className="glass-panel overflow-hidden rounded-[1.25rem] p-5">
-            <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Revenue</p>
-                    <h2 className="mt-2 text-xl font-bold tracking-normal text-white">Ticket sales vs PXI revenue</h2>
-                    <p className="mt-1 text-sm leading-6 text-white/45">
-                        Face value of tickets sold, against what PXI actually keeps.
-                    </p>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-left">
-                    <div className="rounded-2xl bg-pxi-field px-3 py-2">
-                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">GMV</p>
-                        <p className="mt-1 text-sm font-bold text-white">{formatUsd(grossTotal)}</p>
-                    </div>
-                    <div className="rounded-2xl bg-pxi-field px-3 py-2">
-                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">PXI revenue</p>
-                        <p className="mt-1 text-sm font-bold text-white">{formatUsd(takeTotal)}</p>
-                    </div>
-                    <div className="rounded-2xl bg-pxi-field px-3 py-2">
-                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Take rate</p>
-                        <p className="mt-1 text-sm font-bold text-white">{takeRate}</p>
-                    </div>
-                </div>
-            </div>
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-[12px] text-white/60">
+        <Panel title="Revenue" subtitle="Ticket sales against what PXI keeps.">
+            {rangeTabs}
+            <div className="mb-3 mt-4 flex flex-wrap items-center justify-between gap-3 text-[12px] text-white/60">
                 <div className="flex items-center gap-4">
                     <span className="inline-flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: CHART_PRIMARY }} /> Ticket sales
+                        <span className="h-2 w-2 rounded-full" style={{ background: CHART_PRIMARY }} /> Ticket sales
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: CHART_ACCENT }} /> PXI revenue
+                        <span className="h-2 w-2 rounded-full" style={{ background: CHART_ACCENT }} /> PXI revenue
                     </span>
                 </div>
                 {hover != null ? (
-                    <span className="rounded-full bg-pxi-field px-3 py-1 text-[11px] font-bold tracking-[0.02em] text-white/70 tabular-nums">
-                        {shortDate(data[hover].key)}, sales {formatUsd(data[hover].gross)}, PXI {formatUsd(data[hover].take)}
+                    <span className="text-[13px] tabular-nums text-white/70">
+                        {shortDay(data[hover].key)}, sales {money(data[hover].gross)}, PXI {money(data[hover].take)}
                     </span>
                 ) : null}
             </div>
@@ -309,42 +196,38 @@ function RevenueLines({ data }) {
                     {hover != null && (
                         <g pointerEvents="none">
                             <line x1={x(hover)} x2={x(hover)} y1={PAD.top} y2={PAD.top + innerH} stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
-                            <circle cx={x(hover)} cy={y(data[hover].gross)} r="4" fill={CHART_PRIMARY} stroke="#18181b" strokeWidth="2" />
-                            <circle cx={x(hover)} cy={y(data[hover].take)} r="4" fill={CHART_ACCENT} stroke="#18181b" strokeWidth="2" />
+                            <circle cx={x(hover)} cy={y(data[hover].gross)} r="4" fill={CHART_PRIMARY} stroke="#2e2e2e" strokeWidth="2" />
+                            <circle cx={x(hover)} cy={y(data[hover].take)} r="4" fill={CHART_ACCENT} stroke="#2e2e2e" strokeWidth="2" />
                         </g>
                     )}
-                    <text x={PAD.left} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10">{shortDate(data[0]?.key)}</text>
-                    <text x={W - PAD.right} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10" textAnchor="end">{shortDate(data[data.length - 1]?.key)}</text>
+                    <text x={PAD.left} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10">{shortDay(data[0]?.key)}</text>
+                    <text x={W - PAD.right} y={H - 6} fill="rgba(255,255,255,0.4)" fontSize="10" textAnchor="end">{shortDay(data[data.length - 1]?.key)}</text>
                 </svg>
             </div>
-            <div className="mt-4 border-t border-white/[0.06] pt-4">
-                <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">Money movement — not revenue</p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                    <div className="rounded-2xl bg-pxi-field px-3 py-2">
-                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Charged to buyers</p>
-                        <p className="mt-1 text-sm font-bold text-white/80">{formatUsd(buyerPaidTotal)}</p>
-                    </div>
-                    <div className="rounded-2xl bg-pxi-field px-3 py-2">
-                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Stripe processing</p>
-                        <p className="mt-1 text-sm font-bold text-white/80">{formatUsd(processingTotal)}</p>
-                    </div>
-                    <div className="rounded-2xl bg-pxi-field px-3 py-2">
-                        <p className="text-[9px] font-bold tracking-[0.02em] text-white/35">Paid to organizers</p>
-                        <p className="mt-1 text-sm font-bold text-white/80">{formatUsd(payoutTotal)}</p>
-                    </div>
-                </div>
-                <p className="mt-3 text-[12px] leading-5 text-white/40">
-                    Buyers pay the ticket price plus a 5.49% service fee and Stripe&apos;s cost.
-                    Processing is passed straight through to Stripe; PXI keeps none of it.
-                </p>
-            </div>
+        </Panel>
+    );
+}
+
+/** The money, this range and for all time, side by side. On phones each number carries its label. */
+function MoneyTable({ rows, rangeLabel }) {
+    const cell = (label, value) => (
+        <div className="flex items-baseline justify-between gap-3 md:block">
+            <span className="text-[12px] text-white/40 md:hidden">{label}</span>
+            <span className="text-[14px] tabular-nums text-white">{value}</span>
         </div>
     );
+    const columns = [
+        { key: 'label', label: 'Money', render: (row) => <span className="text-[14px] font-semibold text-white">{row.label}</span> },
+        { key: 'range', label: rangeLabel, width: '130px', align: 'right', render: (row) => cell(rangeLabel, row.range) },
+        { key: 'lifetime', label: 'All time', width: '130px', align: 'right', render: (row) => cell('All time', row.lifetime) },
+    ];
+    return <DataTable columns={columns} rows={rows} rowKey="label" />;
 }
 
 export default function AdminAnalyticsPage() {
     const [days, setDays] = useState(30);
     const [data, setData] = useState(null);
+    const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { isLive: isLiveAdmin, cityScope } = useAdminMode();
@@ -357,8 +240,10 @@ export default function AdminAnalyticsPage() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetchPlatformAnalytics(days);
+            // The organizer and upcoming-event counts come from the platform stats; a miss there only costs two hints.
+            const [res, platform] = await Promise.all([fetchPlatformAnalytics(days), fetchAdminStats().catch(() => null)]);
             setData(res);
+            setStats(platform);
         } catch (err) {
             setError(adminErrorMessage(err, 'Failed to load analytics'));
         } finally {
@@ -398,101 +283,94 @@ export default function AdminAnalyticsPage() {
     // PART-4: a city-scoped admin gets users, tickets and events for their city; money is withheld.
     const revenueWithheld = Boolean(data?.withheld?.includes('revenue'));
 
-    const lifetimeTakeRate = useMemo(() => {
-        const gmv = Number(data?.totals?.lifetimeGrossCents || 0);
-        const take = Number(data?.totals?.lifetimePxiCents || 0);
-        if (gmv <= 0) return '$0.99 per ticket + 5.49% of face value';
-        return `${(Math.round((take / gmv) * 1000) / 10).toFixed(1)}% of ticket face value`;
-    }, [data]);
+    // The platform numbers, most important first: people, events, tickets and what PXI keeps.
+    const kpis = useMemo(() => {
+        if (!data) return null;
+        const items = [
+            {
+                label: data.cityScope ? `Users in ${cityLabel(data.cityScope)}` : 'Users',
+                value: count(data.totals.users),
+                hint: stats?.users ? `${count(stats.users.vendor)} organizers` : undefined,
+            },
+            { label: 'Events', value: count(data.totals.events), hint: stats?.events ? `${count(stats.events.upcoming)} upcoming` : undefined },
+            { label: 'Tickets', value: count(data.totals.tickets), hint: 'Issued' },
+        ];
+        if (!revenueWithheld) {
+            items.push({
+                label: 'PXI revenue',
+                value: money(data.totals.lifetimePxiCents),
+                tone: 'purple',
+                hint: Number(data.totals.lifetimeGrossCents || 0) > 0
+                    ? `${percentOf(Number(data.totals.lifetimePxiCents || 0), Number(data.totals.lifetimeGrossCents || 0))} of sales`
+                    : undefined,
+            });
+        }
+        return items;
+    }, [data, stats, revenueWithheld]);
+
+    const rangeLabel = `${days} days`;
+    const rangeGross = sumValues(revenue, 'gross');
+    const rangeTake = sumValues(revenue, 'take');
+    const moneyRows = data && !revenueWithheld
+        ? [
+              { label: 'Ticket sales', range: money(rangeGross), lifetime: money(data.totals.lifetimeGrossCents) },
+              { label: 'PXI revenue', range: money(rangeTake), lifetime: money(data.totals.lifetimePxiCents) },
+              {
+                  label: 'Share kept by PXI',
+                  range: percentOf(rangeTake, rangeGross),
+                  lifetime: percentOf(Number(data.totals.lifetimePxiCents || 0), Number(data.totals.lifetimeGrossCents || 0)),
+              },
+              { label: 'Charged to buyers', range: money(sumValues(revenue, 'buyerPaid')), lifetime: money(data.totals.lifetimeBuyerPaidCents) },
+              { label: 'Stripe processing', range: money(sumValues(revenue, 'processing')), lifetime: money(data.totals.lifetimeProcessingCents) },
+              { label: 'Paid to organizers', range: money(sumValues(revenue, 'payout')), lifetime: money(data.totals.lifetimePayoutCents) },
+          ]
+        : [];
+
+    const rangeTabs = (
+        <WordTabs
+            items={RANGES.map((range) => ({ key: String(range.days), label: range.label }))}
+            value={String(days)}
+            onChange={(key) => setDays(Number(key))}
+        />
+    );
 
     return (
-        <div className="max-w-7xl space-y-6 md:space-y-8">
-            <AdminAnalyticsHero
-                days={days}
-                setDays={setDays}
-                isLiveAdmin={isLiveAdmin}
-                loading={loading}
-                signups={signups}
-                tickets={tickets}
-                revenue={revenue}
-                revenueWithheld={revenueWithheld}
-                cityScope={isLiveAdmin ? cityScope : null}
+        <div className="space-y-5 md:space-y-6">
+            <PageHeader
+                title={cityScope && isLiveAdmin ? `${cityLabel(cityScope)} analytics` : 'Analytics'}
+                kpis={isLiveAdmin ? kpis : null}
             />
 
-            {!isLiveAdmin && (
-                <div className="rounded-2xl bg-pxi-field px-6 py-12 text-center text-sm text-white/50">
-                    Live platform analytics requires a backend ADMIN account.
+            {!isLiveAdmin ? <EmptyState title="Live analytics needs a PXI admin account" /> : null}
+            {error ? <Notice tone="error">{error}</Notice> : null}
+            {isLiveAdmin && loading && !data ? (
+                <div className="space-y-5 md:space-y-6">
+                    <Skeleton className="h-[360px]" />
+                    <Skeleton className="h-[260px]" />
                 </div>
-            )}
-            {error && (
-                <div className="rounded-2xl bg-red-500/5 px-6 py-4 text-sm text-red-300">{error}</div>
-            )}
-            {isLiveAdmin && loading && (
-                <div className="rounded-2xl bg-pxi-field px-6 py-12 text-center text-sm text-white/45">Loading...</div>
-            )}
+            ) : null}
 
-            {isLiveAdmin && !loading && data && (
+            {isLiveAdmin && data ? (
                 <>
-                    <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Lifetime totals">
-                        <StatTile
-                            label={data.cityScope ? `Users in ${cityLabel(data.cityScope)}` : 'Total users'}
-                            value={formatInteger(data.totals.users)}
-                            hint={
-                                data.cityScope
-                                    ? 'Chose the city, holds a ticket there, or hosts there'
-                                    : `${data.totals.openSupportTickets} open tickets, ${data.totals.pendingReports} pending reports`
-                            }
-                        />
-                        <StatTile label="Tickets issued" value={formatInteger(data.totals.tickets)} hint={`${formatInteger(data.totals.events)} events`} />
-                        {!revenueWithheld && (
-                        <>
-                        <StatTile
-                            label="Lifetime ticket sales"
-                            value={formatUsd(data.totals.lifetimeGrossCents)}
-                            hint={`Face value, ${formatInteger(data.totals.lifetimePayments)} payments`}
-                        />
-                        <StatTile
-                            label="Lifetime PXI revenue"
-                            value={formatUsd(data.totals.lifetimePxiCents)}
-                            hint={lifetimeTakeRate}
-                        />
-                        </>
-                        )}
-                    </section>
-
                     {revenueWithheld ? (
-                        <div className="rounded-2xl bg-pxi-field px-6 py-4 text-sm text-white/55">
-                            Revenue, support and report figures are not shown to city admins.
-                        </div>
+                        <>
+                            {rangeTabs}
+                            <Notice>Revenue, support and report figures are not shown to city admins.</Notice>
+                        </>
                     ) : (
-                    <>
-                    <section className="grid gap-4 sm:grid-cols-3" aria-label="Lifetime money movement">
-                        <StatTile
-                            label="Charged to buyers"
-                            value={formatUsd(data.totals.lifetimeBuyerPaidCents)}
-                            hint="Ticket price + service fee + processing"
-                        />
-                        <StatTile
-                            label="Stripe processing"
-                            value={formatUsd(data.totals.lifetimeProcessingCents)}
-                            hint="Passed through — PXI keeps none of it"
-                        />
-                        <StatTile
-                            label="Paid to organizers"
-                            value={formatUsd(data.totals.lifetimePayoutCents)}
-                            hint="Face value minus $0.99 per ticket"
-                        />
-                    </section>
-
-                    <RevenueLines data={revenue} />
-                    </>
+                        <>
+                            <RevenueLines data={revenue} rangeTabs={rangeTabs} />
+                            <Panel title="Money movement" subtitle="Stripe processing passes straight through. PXI keeps none of it.">
+                                <MoneyTable rows={moneyRows} rangeLabel={rangeLabel} />
+                            </Panel>
+                        </>
                     )}
-                    <div className="grid gap-6 lg:grid-cols-2">
+                    <div className="grid gap-5 lg:grid-cols-2">
                         <DailyBars title="Signups per day" data={signups} color={CHART_PRIMARY} />
-                        <DailyBars title="Event tickets issued per day" data={tickets} color={CHART_ACCENT} />
+                        <DailyBars title="Tickets issued per day" data={tickets} color={CHART_ACCENT} />
                     </div>
                 </>
-            )}
+            ) : null}
         </div>
     );
 }
