@@ -8,6 +8,7 @@ const int = new Intl.NumberFormat('en-US');
 export function money(cents) {
     if (cents === null || cents === undefined || Number.isNaN(Number(cents))) return '-';
     const dollars = Number(cents) / 100;
+    if (dollars === 0) return '$0';
     return Math.abs(dollars) < 100 ? usd2.format(dollars) : usd0.format(dollars);
 }
 
