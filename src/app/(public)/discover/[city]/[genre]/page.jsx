@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- a Next page exports its metadata next to the page, like every page here */
 import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/seo/JsonLd';
 import HubPage from '@/views/hubs/HubPage';
@@ -5,6 +6,9 @@ import { getAllPublicEvents, eventGenres, eventUrl } from '@/lib/publicEvents';
 import { getCity, allCities, eventMatchesCity } from '@/lib/seo/cities';
 import { getGenre, allGenres, allGenreSlugs, eventMatchesGenre } from '@/lib/seo/genres';
 import { canonicalUrl } from '@/lib/siteUrl';
+import { fetchCityListings, listingPath } from '@/lib/seo/listings';
+import GoMoreNights from '@/views/go/GoMoreNights';
+import '@/views/go/event.css';
 import { buildCollectionJsonLd, buildBreadcrumbJsonLd, buildCityPlaceJsonLd } from '@/lib/seo/schemas';
 
 /**
@@ -19,6 +23,9 @@ import { buildCollectionJsonLd, buildBreadcrumbJsonLd, buildCityPlaceJsonLd } fr
 
 export const revalidate = 3600;
 
+// Outside nights listed on a genre hub (the rest are one click away on the /e/ pages).
+const OUTSIDE_LIMIT = 60;
+
 export function generateStaticParams() {
   return allCities().flatMap((city) => allGenreSlugs().map((genre) => ({ city: city.slug, genre })));
 }
@@ -26,7 +33,7 @@ export function generateStaticParams() {
 async function load(citySlug, genreSlug) {
   const city = getCity(citySlug);
   const genre = getGenre(genreSlug);
-  if (!city || !genre) return { city, genre, events: [] };
+  if (!city || !genre) return { city, genre, events: [], outside: [] };
   let all = [];
   try {
     all = await getAllPublicEvents();
@@ -34,17 +41,19 @@ async function load(citySlug, genreSlug) {
     all = [];
   }
   const events = all.filter((e) => eventMatchesCity(e, city) && eventMatchesGenre(eventGenres(e), genre));
-  return { city, genre, events };
+  const outside = await fetchCityListings({ cityCode: city.cityCode, limit: 300 });
+  return { city, genre, events, outside: outside.filter((l) => l.genre === genre.slug) };
 }
 
 export async function generateMetadata({ params }) {
   const { city: citySlug, genre: genreSlug } = await params;
-  const { city, genre, events } = await load(citySlug, genreSlug);
+  const { city, genre, events, outside } = await load(citySlug, genreSlug);
   if (!city || !genre) return {};
+  const total = events.length + outside.length;
 
   const title = `${genre.name} Events in ${city.name} — Tickets`;
-  const description = events.length
-    ? `${events.length} upcoming ${genre.name} ${events.length === 1 ? 'event' : 'events'} in ${city.name}. ${genre.blurb}`
+  const description = total
+    ? `${total} upcoming ${genre.name} ${total === 1 ? 'event' : 'events'} in ${city.name}. ${genre.blurb}`
     : `${genre.name} nights in ${city.name} on PXI. ${genre.blurb}`;
   const url = canonicalUrl(`/discover/${citySlug}/${genreSlug}`);
 
@@ -52,7 +61,7 @@ export async function generateMetadata({ params }) {
     title,
     description,
     alternates: { canonical: url },
-    robots: events.length === 0 ? { index: false, follow: true } : undefined,
+    robots: total === 0 ? { index: false, follow: true } : undefined,
     openGraph: { title, description, url, images: [{ url: '/og-hero.png', width: 1200, height: 630, alt: title }] },
     twitter: { card: 'summary_large_image', title, description, images: ['/og-hero.png'] },
   };
@@ -60,7 +69,7 @@ export async function generateMetadata({ params }) {
 
 export default async function CityGenrePage({ params }) {
   const { city: citySlug, genre: genreSlug } = await params;
-  const { city, genre, events } = await load(citySlug, genreSlug);
+  const { city, genre, events, outside } = await load(citySlug, genreSlug);
   if (!city || !genre) notFound();
 
   const breadcrumbs = [
@@ -78,9 +87,10 @@ export default async function CityGenrePage({ params }) {
     all = [];
   }
   const inCity = all.filter((e) => eventMatchesCity(e, city));
+  const cityOutside = await fetchCityListings({ cityCode: city.cityCode, limit: 300 });
   const siblingGenres = allGenres()
     .filter((g) => g.slug !== genre.slug)
-    .filter((g) => inCity.some((e) => eventMatchesGenre(eventGenres(e), g)))
+    .filter((g) => inCity.some((e) => eventMatchesGenre(eventGenres(e), g)) || cityOutside.some((l) => l.genre === g.slug))
     .map((g) => ({ href: `/discover/${city.slug}/${g.slug}`, label: `${g.name} in ${city.name}` }));
 
   const otherCities = allCities()
@@ -95,8 +105,8 @@ export default async function CityGenrePage({ params }) {
         title={`${genre.name} events in ${city.name}`}
         intro={genre.blurb}
         events={events}
-        emptyMessage={`Nothing ${genre.name.toLowerCase()} on the calendar in ${city.name} right now. If you are putting one on, this is where people will look for it.`}
-        emptyCta={{ title: `No ${genre.name} events in ${city.name} yet.` }}
+        emptyMessage={outside.length ? '' : `Nothing ${genre.name.toLowerCase()} on the calendar in ${city.name} right now. If you are putting one on, this is where people will look for it.`}
+        emptyCta={outside.length ? null : { title: `No ${genre.name} events in ${city.name} yet.` }}
         rails={[
           ...(siblingGenres.length ? [{ title: `More in ${city.name}`, links: siblingGenres }] : []),
           ...(otherCities.length ? [{ title: `${genre.name} elsewhere`, links: otherCities }] : []),
@@ -108,7 +118,9 @@ export default async function CityGenrePage({ params }) {
             ],
           },
         ]}
-      />
+      >
+        {outside.length ? <GoMoreNights city={city} nights={outside.slice(0, OUTSIDE_LIMIT)} hub={false} /> : null}
+      </HubPage>
 
       <JsonLd
         data={buildCollectionJsonLd(
@@ -117,7 +129,10 @@ export default async function CityGenrePage({ params }) {
             path: `/discover/${city.slug}/${genre.slug}`,
             description: genre.blurb,
           },
-          events.map((e) => ({ name: e.name || 'Event', url: eventUrl(e) })),
+          [
+            ...events.map((e) => ({ name: e.name || 'Event', url: eventUrl(e) })),
+            ...outside.slice(0, OUTSIDE_LIMIT).map((l) => ({ name: l.title, url: listingPath(l) })),
+          ],
         )}
       />
       <JsonLd data={buildCityPlaceJsonLd(city)} />

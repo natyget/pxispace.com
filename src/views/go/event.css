@@ -1,0 +1,92 @@
+/* /e/[city]/[slug]: what the outside-night page adds to GoListingView. Namespaced go-more* and go-qr*, the same
+   flat surfaces and one purple as the rest of the /go look. */
+
+.go-more {
+  box-sizing: border-box;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 56px 20px calc(72px + env(safe-area-inset-bottom, 0px));
+  background: #050505;
+  color: #fff;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.go-more-title {
+  margin: 0;
+  font: 700 1.25rem / 1.2 'Inter', system-ui, sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.go-more-list {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid #1c1c1c;
+}
+.go-more-list li {
+  border-top: 1px solid #1c1c1c;
+}
+.go-more-link {
+  display: grid;
+  grid-template-columns: 11rem 11rem minmax(0, 1fr) minmax(0, 1fr);
+  gap: 4px 20px;
+  align-items: baseline;
+  padding: 16px 0;
+  color: #fff;
+  text-decoration: none;
+}
+.go-more-when {
+  font-weight: 600;
+  color: #fff;
+}
+.go-more-time,
+.go-more-where {
+  color: #a1a1aa;
+}
+.go-more-time,
+.go-more-when {
+  white-space: nowrap;
+}
+.go-more-what {
+  font-weight: 700;
+}
+.go-more-link:hover .go-more-what {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.go-more-hub {
+  display: inline-block;
+  margin-top: 24px;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.go-more a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+@media (max-width: 720px) {
+  .go-more-link {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+
+.go-qr {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+}
+.go-qr-code {
+  display: inline-flex;
+  padding: 8px;
+  border-radius: 10px;
+  background: #fff;
+}
+.go-qr-cap {
+  max-width: 14rem;
+  font: 600 0.95rem / 1.35 'Inter', system-ui, -apple-system, sans-serif;
+  color: #fff;
+}

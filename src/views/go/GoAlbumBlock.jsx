@@ -14,9 +14,10 @@ const PHOTOS = ['/site/img/lib/k00.jpg', '/site/img/lib/h03.jpg', '/site/img/lib
  * The photos are in their fanned places in the server HTML. When the block is still below the fold on a screen
  * that allows motion, they are gathered into one pile and dealt out when it scrolls into view (about 350 ms).
  *
- * @param {{ storeHref: string, openHref: string, platform: 'ios' | 'android' | 'desktop', caption?: string }} props
+ * @param {{ storeHref: string, openHref: string, platform: 'ios' | 'android' | 'desktop', caption?: string, aside?: import('react').ReactNode }} props
+ * `aside` sits next to the store button (the outside-night page puts its QR code there).
  */
-export default function GoAlbumBlock({ storeHref, openHref, platform, caption = '' }) {
+export default function GoAlbumBlock({ storeHref, openHref, platform, caption = '', aside = null }) {
   const root = useRef(null);
   const [phase, setPhase] = useState('rest');
 
@@ -84,6 +85,7 @@ export default function GoAlbumBlock({ storeHref, openHref, platform, caption = 
           {canOpenApp ? (
             <a className="go-open" href={openHref} onClick={openApp}>Open in PXI</a>
           ) : null}
+          {aside}
         </div>
       </div>
     </section>

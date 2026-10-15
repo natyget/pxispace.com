@@ -22,6 +22,13 @@ const nextConfig = {
   },
 
 
+  // /sitemap.xml is the index of the split sitemap (app/sitemap-index/route.js); see that file.
+  async rewrites() {
+    return {
+      beforeFiles: [{ source: '/sitemap.xml', destination: '/sitemap-index' }],
+    };
+  },
+
   async redirects() {
     return [
       // One canonical host. Everything else 301s to it so link equity and cookies do not
@@ -76,13 +83,8 @@ const nextConfig = {
         permanent: true,
       },
 
-      // Operational cities are New York and Boston only. Montréal and Toronto hubs
-      // are retired — 301 rather than 404 so their link equity flows somewhere real.
-      {
-        source: '/discover/montreal',
-        destination: '/discover/new-york',
-        permanent: true,
-      },
+      // Toronto is not an operational city, so its hub is retired: 301 rather than 404 so its link equity flows
+      // somewhere real. (Montréal is operational again.)
       {
         source: '/discover/toronto',
         destination: '/discover/new-york',
