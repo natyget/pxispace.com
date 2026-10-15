@@ -4,7 +4,8 @@
 // node scripts/dev/mockDiplomatApi.mjs            port 3197 (PORT= to change)
 // MOCK_ROLE=citizen                               the signed-in user is a Citizen (default: diplomat)
 // MOCK_DEMAND=none                                GET /api/demand/mine answers 404
-// Event ids starting with "soldout" are sold out (every paid tier has soldOut: true).
+// Event ids starting with "soldout" are sold out (every paid tier has soldOut: true); ids containing
+// "noalbum" have no album.
 import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
 
@@ -31,7 +32,7 @@ function eventFor(id) {
     startDate: '2026-10-24T02:00:00.000Z',
     endDate: '2026-10-24T07:00:00.000Z',
     location: 'Brooklyn, NY',
-    albumId: `album-${id}`,
+    albumId: id.includes('noalbum') ? null : `album-${id}`,
     canManage: true,
     host: { id: ME.id, name: ME.name, username: ME.username, avatarUrl: null },
     ticketTiersJson: [

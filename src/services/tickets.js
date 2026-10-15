@@ -2,6 +2,7 @@ import { api } from './api';
 import { getGaIds } from '@/lib/analytics';
 import { getAttribution } from '@/lib/attribution';
 import { isTrackingAllowed } from '@/lib/consent';
+import { readEventRef } from '@/lib/diplomatNight';
 
 /** GA client/session ids rider — lets the backend fire the server-side GA4
  *  `purchase` from the Stripe webhook, attributed to this browser session.
@@ -114,6 +115,12 @@ export async function getTicketQuote(eventId, albumId, tierId) {
   return api.get(`/api/tickets/quote?${q}`);
 }
 
+/** `ref`: the referral code this session arrived with for the night, sent only when there is one. */
+function refField(eventId) {
+  const ref = readEventRef(eventId);
+  return ref ? { ref } : {};
+}
+
 /**
  * Create a PaymentIntent for a paid ticket. Returns clientSecret for Stripe.
  * POST /api/tickets/purchase (auth required)
@@ -121,6 +128,7 @@ export async function getTicketQuote(eventId, albumId, tierId) {
 export async function purchaseTicket(eventId, tierId, opts = {}) {
   return api.post('/api/tickets/purchase', {
     eventId,
+    ...refField(eventId),
     ...(tierId ? { tierId } : {}),
     ...(opts.applyCredits ? { applyCredits: true } : {}),
     ...(opts.promoCode ? { promoCode: opts.promoCode } : {}),
@@ -142,6 +150,7 @@ export async function purchaseTicket(eventId, tierId, opts = {}) {
 export async function createCheckoutSession(eventId, successUrl, cancelUrl, tierId, opts = {}) {
   return api.post('/api/tickets/checkout-session', {
     eventId,
+    ...refField(eventId),
     successUrl,
     cancelUrl,
     ...(tierId ? { tierId } : {}),
