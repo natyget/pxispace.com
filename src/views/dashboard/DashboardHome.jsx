@@ -19,8 +19,9 @@ import { organizerAnalyticsService } from '@/services/organizerAnalytics';
 import { listFloorPlans } from '@/services/floorPlans';
 import { floorPlanAccess } from '@/lib/floorPlanAccess';
 import { api } from '../../services/api';
-import { getDemandMine } from '../../services/diplomatTools';
+import { getDemandMine, getReferralCredit } from '../../services/diplomatTools';
 import { getGenre } from '@/lib/seo/genres';
+import { shortDate } from '@/lib/dashFormat';
 
 const DASHBOARD_RENDER_NOW = Date.now();
 
@@ -457,6 +458,8 @@ function VendorCommandCenter() {
                         </div>
                     </section>
 
+                    <ReferralCreditCard />
+
                     <CityDemandCard />
 
                     <section className="dashboard-surface rounded-3xl p-5 md:p-6">
@@ -696,6 +699,47 @@ function NoticeRow({ notice }) {
             <p className="mt-0.5 text-xs text-zinc-500">{notice.detail}</p>
         </Link>
     );
+}
+
+/** Diplomats: the referral credit their links earned in the last 30 days. Hidden when there is none or the route fails. */
+function ReferralCreditCard() {
+    const [credit, setCredit] = useState(null);
+
+    useEffect(() => {
+        let alive = true;
+        getReferralCredit()
+            .then((res) => alive && setCredit(res))
+            .catch(() => alive && setCredit(null));
+        return () => {
+            alive = false;
+        };
+    }, []);
+
+    if (!(credit?.earnedCents > 0)) return null;
+
+    const until = credit.availableCents > 0 ? shortDate(credit.expiresAt) : '';
+
+    return (
+        <section className="dashboard-surface rounded-3xl p-5 md:p-6">
+            <CardHeader
+                title={
+                    <>
+                        You earned <span className="text-pxi-purple">{formatCreditDollars(credit.earnedCents)}</span> credit
+                    </>
+                }
+                subtitle={until ? `For PXI fees until ${until}` : undefined}
+            />
+        </section>
+    );
+}
+
+/** "$5", "$12", "$12.50": whole dollars lose the cents. */
+function formatCreditDollars(cents) {
+    const dollars = Number(cents) / 100;
+    return `$${dollars.toLocaleString('en-US', {
+        minimumFractionDigits: Number.isInteger(dollars) ? 0 : 2,
+        maximumFractionDigits: 2,
+    })}`;
 }
 
 /** Diplomats: the five nights the city asks for most. Hidden while empty and when the route is not there. */

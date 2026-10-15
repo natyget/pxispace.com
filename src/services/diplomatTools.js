@@ -24,6 +24,9 @@ export const recordRefClick = (eventId, code) =>
 /** GET /api/demand/mine (Diplomat) → { city, top: [{ area, genre, count }] }. 404 when there is nothing. */
 export const getDemandMine = () => api.get('/api/demand/mine');
 
+/** GET /api/referrals/credit (signed in) → { earnedCents, availableCents, expiresAt }: referral credit from the last 30 days. */
+export const getReferralCredit = () => api.get('/api/referrals/credit');
+
 /** Save a CSV the API serves behind the bearer token. A plain link would not carry the token. */
 export async function downloadCsv(path, filename) {
   const token = authStorage.getToken();

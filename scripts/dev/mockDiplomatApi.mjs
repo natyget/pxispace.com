@@ -1,9 +1,10 @@
 // Dev-only API stub for the Diplomat tools: event reads, waitlist, referral links, guest CSV,
-// city demand and the two purchase calls (logged, so `ref` can be seen reaching them).
+// city demand, referral credit and the two purchase calls (logged, so `ref` can be seen reaching them).
 //
 // node scripts/dev/mockDiplomatApi.mjs            port 3197 (PORT= to change)
 // MOCK_ROLE=citizen                               the signed-in user is a Citizen (default: diplomat)
 // MOCK_DEMAND=none                                GET /api/demand/mine answers 404
+// MOCK_CREDIT=none                                GET /api/referrals/credit answers 404
 // Event ids starting with "soldout" are sold out (every paid tier has soldOut: true); ids containing
 // "noalbum" have no album.
 import { createServer } from 'node:http';
@@ -12,6 +13,7 @@ import { randomBytes } from 'node:crypto';
 const PORT = Number(process.env.PORT || 3197);
 const ROLE = process.env.MOCK_ROLE === 'citizen' ? 'citizen' : 'diplomat';
 const DEMAND_OFF = process.env.MOCK_DEMAND === 'none';
+const CREDIT_OFF = process.env.MOCK_CREDIT === 'none';
 const ME = { id: 'mock-user-1', username: 'mockhost', name: 'Mock Host', email: 'host@example.com' };
 
 const waitlists = new Map(); // eventId -> [{ name, username, email, createdAt }]
@@ -168,6 +170,15 @@ async function handle(req, res) {
         { area: 'Bronx', genre: 'hip-hop', count: 9 },
         { area: 'Manhattan', genre: 'pop', count: 6 },
       ],
+    });
+  }
+
+  if (method === 'GET' && path === '/api/referrals/credit') {
+    if (CREDIT_OFF) return json(res, 404, { error: 'Not found' });
+    return json(res, 200, {
+      earnedCents: 500,
+      availableCents: 500,
+      expiresAt: new Date(Date.now() + 30 * 86400000).toISOString(),
     });
   }
 
