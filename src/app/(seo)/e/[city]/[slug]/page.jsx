@@ -14,7 +14,7 @@ import {
 } from '@/lib/seo/listings';
 import { buildBreadcrumbJsonLd } from '@/lib/seo/schemas';
 import { canonicalUrl, getSiteUrl } from '@/lib/siteUrl';
-import GoEventQr from '@/views/go/GoEventQr';
+import GoEventQrGate from '@/views/go/GoEventQrGate';
 import GoGone from '@/views/go/GoGone';
 import GoListingView from '@/views/go/GoListingView';
 import GoMoreNights from '@/views/go/GoMoreNights';
@@ -107,7 +107,7 @@ export default async function EventNightPage({ params }) {
         id={listing.id}
         userAgent=""
         platform="desktop"
-        aside={<GoEventQr url={canonicalUrl(listingPath(listing))} />}
+        aside={<GoEventQrGate url={canonicalUrl(listingPath(listing))} />}
       />
 
       {cityRecord && more.length ? <GoMoreNights city={cityRecord} nights={more} /> : null}
