@@ -9,7 +9,8 @@ import NotificationPopover from './NotificationPopover';
 import { dashboardShellActions } from '@/lib/dashboardShellStore';
 
 /**
- * Member top bar: PXI mark, the admin/workspace switch for admins, then bell, settings gear and avatar.
+ * Top bar for both dashboards: PXI mark, the admin/workspace switch for admins (and a city-scoped admin's city),
+ * then bell, settings gear and avatar.
  */
 export default function DashboardTopBar({
     user,
@@ -19,6 +20,7 @@ export default function DashboardTopBar({
     setAdminSidebarModeAndNavigate,
     handleAccountNavigate,
     accountPopoverOpen,
+    context = null,
 }) {
     const [unreadCount, setUnreadCount] = useState(0);
 
@@ -48,6 +50,9 @@ export default function DashboardTopBar({
                     ))}
                 </div>
             )}
+
+            {/* A city-scoped admin's city, so it is always clear whose numbers these are. */}
+            {context ? <span className="ml-1 hidden truncate text-[13px] font-semibold text-white/55 sm:inline">{context}</span> : null}
 
             <div className="ml-auto flex shrink-0 items-center gap-2">
                 <NotificationPopover

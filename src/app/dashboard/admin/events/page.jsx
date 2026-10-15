@@ -14,9 +14,10 @@ import {
     adminThClass,
 } from '@/components/admin/AdminPageShell';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
+import { count } from '@/lib/dashFormat';
 
 function formatDate(iso) {
-    if (!iso) return '—';
+    if (!iso) return '-';
     try {
         return new Date(iso).toLocaleString(undefined, {
             month: 'short',
@@ -26,7 +27,7 @@ function formatDate(iso) {
             minute: '2-digit',
         });
     } catch {
-        return '—';
+        return '-';
     }
 }
 
@@ -71,11 +72,11 @@ export default function AdminEventsPage() {
     return (
         <AdminPageShell
             title="Events"
-            copy="A platform-wide view of hosted events, organizers, visibility state, and schedule."
+            copy="Every hosted event on the platform."
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
-                { label: 'Total', value: total.toLocaleString(), hint: 'Events tracked' },
-                { label: 'Rows', value: rows.length.toLocaleString(), hint: `Page ${page}` },
+                { label: 'Events', value: count(total), hint: 'All hosted' },
+                { label: 'On this page', value: count(rows.length), hint: `Page ${page}` },
             ]}
         >
             <AdminError>{error}</AdminError>
@@ -110,7 +111,7 @@ export default function AdminEventsPage() {
                                     </td>
                                     <td data-label="Visibility" className={adminTdClass}>{ev.visibility}</td>
                                     <td data-label="Organizer" className="px-6 py-4 text-[13px] text-white/55 break-all max-w-[180px]">
-                                        {ev.creator?.email || '—'}
+                                        {ev.creator?.email || '-'}
                                     </td>
                                 </tr>
                             ))}

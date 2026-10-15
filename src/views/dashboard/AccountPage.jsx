@@ -1,18 +1,17 @@
 'use client';
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
     Camera01Icon,
-    Delete02Icon,
     InstagramIcon,
     Loading02Icon,
     Mail01Icon,
     MusicNote01Icon,
-    SecurityCheckIcon,
     UserIcon,
-    Wallet01Icon,
 } from '@hugeicons/core-free-icons';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
@@ -23,6 +22,11 @@ import { listAdCampaigns } from '@/services/ads';
 import { uploadImageToR2 } from '@/services/media';
 import { getSingleShadeDonutCellProps } from '@/components/dashboard/chartStyles';
 import AppleMusicConnectPanel from '@/components/music/AppleMusicConnectPanel';
+import { Button, PageHeader, Panel, Skeleton, WordTabs } from '@/components/dashboard/ui/kit';
+import { money, shortDate } from '@/lib/dashFormat';
+
+// What the API accepts (backend src/utils/profileDisplay.ts: PROFILE_BIO_MAX_LENGTH, the passport bio the app shows).
+const BIO_MAX = 50;
 
 const DELETION_ITEMS = [
     'Your profile, name, username, and avatar',
@@ -35,30 +39,29 @@ const DELETION_ITEMS = [
 ];
 
 const TABS = [
-    { id: 'profile', label: 'Profile', icon: UserIcon },
-    { id: 'billing', label: 'Payouts', icon: Wallet01Icon },
-    { id: 'usage', label: 'Usage', icon: SecurityCheckIcon },
+    { id: 'profile', label: 'Profile' },
+    { id: 'billing', label: 'Payouts' },
+    { id: 'usage', label: 'Usage' },
 ];
 
 function UsageTooltip({ active, payload }) {
     if (!active || !payload?.length) return null;
     const item = payload[0];
     return (
-        <div className="rounded-xl bg-black/90 px-3 py-2 text-xs shadow-2xl">
-            <p className="font-bold text-white">{item.name}</p>
-            <p className="mt-1 font-mono font-bold text-zinc-200">${item.value}</p>
+        <div className="rounded-2xl bg-pxi-field px-3.5 py-2.5 text-[13px]">
+            <p className="font-semibold text-white">{item.name}</p>
+            <p className="mt-1 tabular-nums text-white/70">{money(Math.round(item.value * 100))}</p>
         </div>
     );
 }
 
 function DonutPanel({ title, data, centerLabel, centerValue }) {
     return (
-        <div className="dashboard-surface rounded-[1.25rem] p-5">
-            <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">{title}</p>
-            <div className="relative mt-4 h-[180px]">
+        <Panel title={title}>
+            <div className="relative h-[180px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                        <Pie data={data} dataKey="value" nameKey="name" innerRadius={52} outerRadius={72} paddingAngle={3} cornerRadius={8}>
+                        <Pie data={data} dataKey="value" nameKey="name" innerRadius={52} outerRadius={72} paddingAngle={3} cornerRadius={8} isAnimationActive={false}>
                             {data.map((entry, index) => (
                                 <Cell key={entry.name} {...getSingleShadeDonutCellProps(index)} />
                             ))}
@@ -67,33 +70,16 @@ function DonutPanel({ title, data, centerLabel, centerValue }) {
                     </PieChart>
                 </ResponsiveContainer>
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">{centerLabel}</span>
-                    <span className="text-xl font-bold text-white">{centerValue}</span>
+                    <span className="text-[12px] text-white/45">{centerLabel}</span>
+                    <span className="text-xl font-semibold text-white">{centerValue}</span>
                 </div>
             </div>
-        </div>
+        </Panel>
     );
 }
 
 const profileInputCls =
     'mt-2 w-full rounded-[1rem] bg-white/[0.04] px-3 py-2.5 text-sm font-semibold text-white placeholder:text-zinc-600 outline-none transition focus:bg-white/[0.065] focus:ring-1 focus:ring-white/12';
-
-function SettingsHero({ activeTab }) {
-    const activeLabel = TABS.find((tab) => tab.id === activeTab)?.label || 'Profile';
-    return (
-        <section className="flex flex-col gap-4 px-1 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
-                <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[28px]">Settings</h1>
-                <p className="mt-1.5 max-w-xl text-sm leading-6 text-zinc-500">
-                    Your identity, music, billing rails, and account controls.
-                </p>
-            </div>
-            <p className="shrink-0 text-sm text-zinc-500 lg:pb-1">
-                Viewing <span className="font-semibold text-zinc-300">{activeLabel}</span>
-            </p>
-        </section>
-    );
-}
 
 /** Editable profile fields (avatar, username, bio etc.) + save via PUT /api/auth/user/:id. */
 function ProfileEditor({ user, updateUser }) {
@@ -240,11 +226,10 @@ function ProfileEditor({ user, updateUser }) {
         : null;
 
     return (
-        <SettingsSurface title="Profile">
+        <SettingsSurface>
             <div className="mb-5 flex items-center gap-4">
                 <div className="relative">
                     {avatarUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={avatarUrl} alt="Profile" className="h-[72px] w-[72px] rounded-full object-cover" />
                     ) : (
                         <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-pxi-field">
@@ -292,11 +277,11 @@ function ProfileEditor({ user, updateUser }) {
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
                         rows={3}
-                        maxLength={280}
+                        maxLength={BIO_MAX}
                         placeholder="Tell people what you're about..."
                         className={`${profileInputCls} resize-y`}
                     />
-                    <span className="mt-1 block text-right text-[10px] text-zinc-600">{bio.length}/280</span>
+                    <span className="mt-1 block text-right text-[10px] text-zinc-600">{bio.length}/{BIO_MAX}</span>
                 </label>
                 <div className="relative rounded-[1.25rem] bg-pxi-field px-4 py-3">
                     <span className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">City</span>
@@ -480,23 +465,18 @@ function MusicConnectionsCard() {
     );
 }
 
-function SettingsSurface({ eyebrow, title, children, action = null }) {
+/** A settings card: the kit Panel, so it matches every other dashboard page. */
+function SettingsSurface({ title = null, children, action = null }) {
     return (
-        <section className="dashboard-surface rounded-[1.25rem] p-5 md:p-6">
-            <div className="mb-5 flex items-start justify-between gap-4">
-                <div>
-                    {eyebrow ? <p className="text-xs font-medium text-zinc-500">{eyebrow}</p> : null}
-                    <h2 className={`${eyebrow ? 'mt-1' : ''} text-xl font-bold text-white`}>{title}</h2>
-                </div>
-                {action}
-            </div>
+        <Panel title={title} action={action}>
             {children}
-        </section>
+        </Panel>
     );
 }
 
 function AccountPageContent() {
     const { user, logout, updateUser } = useAuth();
+    const router = useRouter();
     const searchParams = useSearchParams();
     const activeTab = TABS.some((tab) => tab.id === searchParams.get('tab'))
         ? searchParams.get('tab')
@@ -581,30 +561,21 @@ function AccountPageContent() {
     };
 
     if (!mounted) {
-        return <div className="mx-auto max-w-6xl space-y-6 md:space-y-8" />;
+        return <div />;
     }
 
     return (
-        <div className="mx-auto max-w-6xl space-y-5 md:space-y-6">
-            <SettingsHero activeTab={activeTab} />
+        <div className="space-y-5 md:space-y-6">
+            <PageHeader title="Settings" />
 
-            <div className="grid w-full grid-cols-2 gap-1 rounded-[1rem] bg-pxi-field p-1 sm:flex sm:w-fit sm:rounded-full" role="tablist" aria-label="Account settings sections">
-                {TABS.map((tab) => (
-                    <a
-                        key={tab.id}
-                        href={`/dashboard/account?tab=${tab.id}`}
-                        className="dashboard-segmented-toggle__item flex items-center justify-center gap-2 px-3 sm:flex-none"
-                        data-active={activeTab === tab.id}
-                        aria-current={activeTab === tab.id ? 'page' : undefined}
-                    >
-                        <HugeiconsIcon icon={tab.icon} size={14} />
-                        {tab.label}
-                    </a>
-                ))}
-            </div>
+            <WordTabs
+                items={TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
+                value={activeTab}
+                onChange={(key) => router.replace(`/dashboard/account?tab=${key}`, { scroll: false })}
+            />
 
-            <div className={`grid grid-cols-1 gap-5 ${showSettingsAside ? 'lg:grid-cols-[minmax(0,1fr)_320px]' : ''}`}>
-                <div className="space-y-5">
+            <div className={`grid items-start gap-5 ${showSettingsAside ? 'xl:grid-cols-[minmax(0,1fr)_360px]' : ''}`}>
+                <div className="min-w-0 space-y-5 md:space-y-6">
                     {activeTab === 'profile' && (
                         <>
                             <ProfileEditor user={user} updateUser={updateUser} />
@@ -613,24 +584,24 @@ function AccountPageContent() {
                     )}
 
                     {activeTab === 'billing' && (
-                        <SettingsSurface title="Payouts">
+                        <SettingsSurface>
                             {!billing ? (
-                                <p className="text-sm text-zinc-500">Loading real payout data...</p>
+                                <Skeleton className="h-28" />
                             ) : (
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="rounded-[1.25rem] bg-pxi-field px-4 py-4">
-                                        <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Available balance</p>
-                                        <p className="mt-2 text-2xl font-bold text-white">${(availableBalanceCents / 100).toFixed(2)}</p>
-                                        <p className="mt-1 text-xs text-zinc-500">Net of PXI fees, not yet paid out by Stripe</p>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="rounded-2xl bg-pxi-field px-4 py-4">
+                                        <p className="text-[12px] text-white/45">Available balance</p>
+                                        <p className="mt-2 text-[22px] font-semibold leading-none text-white">{money(availableBalanceCents)}</p>
+                                        <p className="mt-2 text-[12px] text-white/40">After PXI fees, not yet paid out</p>
                                     </div>
-                                    <div className="rounded-[1.25rem] bg-pxi-field px-4 py-4">
-                                        <p className="text-[11px] font-bold tracking-[0.02em] text-zinc-500">Most recent payout</p>
-                                        <p className="mt-2 text-2xl font-bold text-white">
-                                            {lastPayout ? `$${(lastPayout.amount / 100).toFixed(2)}` : '—'}
+                                    <div className="rounded-2xl bg-pxi-field px-4 py-4">
+                                        <p className="text-[12px] text-white/45">Most recent payout</p>
+                                        <p className="mt-2 text-[22px] font-semibold leading-none text-white">
+                                            {lastPayout ? money(lastPayout.amount) : '-'}
                                         </p>
-                                        <p className="mt-1 text-xs text-zinc-500">
+                                        <p className="mt-2 text-[12px] text-white/40">
                                             {lastPayout
-                                                ? `${lastPayout.status === 'paid' ? 'Paid' : 'Failed'}${lastPayout.arrivalDate ? ', ' + new Date(lastPayout.arrivalDate).toLocaleDateString() : ''}`
+                                                ? `${lastPayout.status === 'paid' ? 'Paid' : 'Failed'}${lastPayout.arrivalDate ? ', ' + shortDate(lastPayout.arrivalDate) : ''}`
                                                 : 'No payouts yet'}
                                         </p>
                                     </div>
@@ -640,118 +611,98 @@ function AccountPageContent() {
                     )}
 
                     {activeTab === 'usage' && (
-                        <SettingsSurface title="Usage and costs">
+                        <SettingsSurface>
                             {!usageBreakdown.length ? (
-                                <p className="text-sm text-zinc-500">No paid marketing or ad spend yet.</p>
+                                <p className="text-[14px] text-white/50">No paid marketing or ad spend yet.</p>
                             ) : (
                                 <>
                                     <div className="grid gap-3 sm:grid-cols-2">
                                         {usageBreakdown.map((item) => (
-                                            <div key={item.name} className="rounded-[1.25rem] bg-pxi-field p-4">
-                                                <p className="text-[11px] font-medium tracking-[0.02em] text-white/35">{item.name}</p>
-                                                <p className="mt-2 text-2xl font-bold text-white">${item.value.toFixed(2)}</p>
+                                            <div key={item.name} className="rounded-2xl bg-pxi-field px-4 py-4">
+                                                <p className="text-[12px] text-white/45">{item.name}</p>
+                                                <p className="mt-2 text-[22px] font-semibold leading-none text-white">{money(Math.round(item.value * 100))}</p>
                                             </div>
                                         ))}
                                     </div>
-                                    <p className="mt-4 text-sm text-zinc-400">
-                                        Total spend <span className="font-bold text-white">${usageTotal.toFixed(2)}</span> all-time (email campaigns + ad boosts).
+                                    <p className="mt-4 text-[14px] text-white/60">
+                                        All-time total <span className="font-semibold text-white">{money(Math.round(usageTotal * 100))}</span>
                                     </p>
                                 </>
                             )}
                         </SettingsSurface>
                     )}
 
-                    <SettingsSurface title="Danger zone">
-                        {!showConfirm ? (
-                            <>
-                                <p className="text-sm leading-relaxed text-zinc-400">
-                                    Delete your PXI account and all associated data. This cannot be undone.
-                                </p>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirm(true)}
-                                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-400 transition hover:bg-red-500/15"
-                                >
-                                    <HugeiconsIcon icon={Delete02Icon} size={14} />
-                                    Delete account
-                                </button>
-                            </>
-                        ) : (
-                            <div className="space-y-4">
-                                <ul className="space-y-2">
-                                    {DELETION_ITEMS.map((item) => (
-                                        <li key={item} className="flex items-start gap-2 text-sm text-zinc-400">
-                                            <span className="mt-0.5 flex-shrink-0 text-red-500">×</span>
-                                            {item}
-                                        </li>
-                                    ))}
-                                </ul>
-                                {error ? (
-                                    <p className="rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>
-                                ) : null}
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={handleDelete}
-                                        disabled={deleting}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        {deleting ? (
-                                            <>
-                                                <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
-                                                Deleting...
-                                            </>
-                                        ) : (
-                                            'Yes, delete account'
-                                        )}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => { setShowConfirm(false); setError(''); }}
-                                        disabled={deleting}
-                                        className="pill-cancel px-4 py-2.5 text-sm font-medium"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </SettingsSurface>
                 </div>
 
                 {showSettingsAside && (
-                    <aside className="space-y-4">
+                    <aside className="min-w-0 space-y-5 md:space-y-6">
                         {activeTab === 'usage' && usageBreakdown.length > 0 && (
                             <DonutPanel
                                 title="Cost breakdown"
                                 data={usageBreakdown}
                                 centerLabel="All-time"
-                                centerValue={`$${usageTotal.toFixed(2)}`}
+                                centerValue={money(Math.round(usageTotal * 100))}
                             />
                         )}
                         {activeTab === 'billing' && (
-                            <div className="dashboard-surface rounded-[1.25rem] p-5">
-                                <div className="flex items-start gap-3">
-                                    <HugeiconsIcon icon={Wallet01Icon} size={20} className="mt-0.5 shrink-0 text-zinc-400" />
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-semibold text-white">Stripe Connect</p>
-                                        <p className="mt-1 text-xs leading-5 text-zinc-500">
-                                            {user?.isVendor ? 'Payouts go to your bank through Stripe.' : 'Finish hosting setup to receive payouts.'}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                            <Panel title="Stripe">
+                                <p className="text-[14px] text-white/60">
+                                    {user?.isVendor ? 'Payouts go to your bank through Stripe.' : 'Finish hosting setup to receive payouts.'}
+                                </p>
+                            </Panel>
                         )}
                     </aside>
                 )}
             </div>
+
+            <SettingsSurface title="Delete account">
+                {!showConfirm ? (
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-[14px] text-white/60">
+                            Deletes your PXI account and everything on it. This cannot be undone.
+                        </p>
+                        <Button variant="danger" onClick={() => setShowConfirm(true)}>
+                            Delete
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        <ul className="space-y-2">
+                            {DELETION_ITEMS.map((item) => (
+                                <li key={item} className="flex items-start gap-2 text-[14px] text-white/60">
+                                    <span className="mt-0.5 flex-shrink-0 text-red-400">×</span>
+                                    {item}
+                                </li>
+                            ))}
+                        </ul>
+                        {error ? (
+                            <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-[13px] text-red-200">{error}</p>
+                        ) : null}
+                        <div className="flex items-center gap-3">
+                            <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+                                {deleting ? (
+                                    <>
+                                        <HugeiconsIcon icon={Loading02Icon} size={14} className="animate-spin" />
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    'Yes, delete account'
+                                )}
+                            </Button>
+                            <Button onClick={() => { setShowConfirm(false); setError(''); }} disabled={deleting}>
+                                Cancel
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </SettingsSurface>
         </div>
     );
 }
 
 export default function AccountPage() {
     return (
-        <Suspense fallback={<div className="mx-auto max-w-5xl p-8 text-zinc-500">Loading account...</div>}>
+        <Suspense fallback={<Skeleton className="h-40" />}>
             <AccountPageContent />
         </Suspense>
     );

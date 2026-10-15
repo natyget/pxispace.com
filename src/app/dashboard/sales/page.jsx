@@ -1,5 +1,5 @@
-import SalesClaimsPage from '@/views/dashboard/SalesClaimsPage';
+import InboxView from '@/views/dashboard/growth/InboxView';
 
 export default function Page() {
-    return <SalesClaimsPage />;
+    return <InboxView surface="sales" />;
 }

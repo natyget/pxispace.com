@@ -14,9 +14,10 @@ import {
     adminThClass,
 } from '@/components/admin/AdminPageShell';
 import { adminErrorMessage } from '@/components/admin/adminFormat';
+import { count } from '@/lib/dashFormat';
 
 function formatDate(iso) {
-    if (!iso) return '—';
+    if (!iso) return '-';
     try {
         return new Date(iso).toLocaleString(undefined, {
             month: 'short',
@@ -26,7 +27,7 @@ function formatDate(iso) {
             minute: '2-digit',
         });
     } catch {
-        return '—';
+        return '-';
     }
 }
 
@@ -153,11 +154,11 @@ export default function AdminReportsPage() {
     return (
         <AdminPageShell
             title="Reports"
-            copy="Trust and safety reports with target context, reporter details, enforcement actions, and audit-ready resolutions."
+            copy="Reports from people on the app, with who reported what."
             source={isLiveAdmin ? 'Live' : 'Mock'}
             metrics={[
-                { label: 'Total', value: total.toLocaleString(), hint: 'Reports' },
-                { label: 'Rows', value: rows.length.toLocaleString(), hint: `Page ${page}` },
+                { label: 'Reports', value: count(total), hint: 'All time' },
+                { label: 'On this page', value: count(rows.length), hint: `Page ${page}` },
             ]}
         >
             <AdminError>{error}</AdminError>

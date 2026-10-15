@@ -8,33 +8,29 @@ import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Add01Icon,
+  ArrowDown01Icon,
   ArrowRight02Icon,
   Calendar01Icon,
   CheckmarkCircle02Icon,
-  ClockIcon,
   Delete02Icon,
   HelpCircleIcon,
-  ImageAdd02Icon,
   Location01Icon,
   Message01Icon,
   PencilIcon,
   Search01Icon,
   Ticket01Icon,
-  UserAdd01Icon,
-  UserCircleIcon,
-  UserGroupIcon,
 } from '@hugeicons/core-free-icons';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import ActionMenu from '@/components/dashboard/ActionMenu';
 import CreateEventSlideOver from '@/components/dashboard/CreateEventSlideOver';
-import GlowCard from '@/components/dashboard/GlowCard';
 import { PxiSpinner } from '@/components/loading/PxiLoading';
-import SegmentedToggle from '@/components/dashboard/SegmentedToggle';
 import { usePageAction } from '@/components/dashboard/shell/usePageAction';
+import { Button, Drawer, EmptyState, Notice, PageHeader, Skeleton, StateText, WordTabs } from '@/components/dashboard/ui/kit';
 import Modal from '@/components/ui/Modal';
 import { canHostEvents } from '@/lib/accountTier';
 import { useAttendedEvents, useEvents } from '@/lib/dashboardStore';
+import { count, dayDate, shortDate } from '@/lib/dashFormat';
 import { eventsService } from '@/services/events';
 import { HELP_REQUEST_STATUSES, HELP_REQUEST_TYPES, helpRequestsService } from '@/services/helpRequests';
 
@@ -43,10 +39,22 @@ const TYPE_LABELS = Object.fromEntries(HELP_REQUEST_TYPES.map((item) => [item.va
 const STATUS_LABELS = Object.fromEntries(HELP_REQUEST_STATUSES.map((item) => [item.value, item.label]));
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
-  { value: 'live', label: 'Live' },
-  { value: 'upcoming', label: 'Upcoming' },
+  { value: 'live', label: 'Live now' },
+  { value: 'upcoming', label: 'Coming up' },
   { value: 'past', label: 'Past' },
 ];
+const MODE_TABS = [
+  { key: 'hosted', label: 'Hosted' },
+  { key: 'attended', label: 'Attended' },
+];
+// The order a person acts in: what is happening now, what is next, then what is done.
+const SECTIONS = [
+  { key: 'live', title: 'Live now', tone: 'text-emerald-300' },
+  { key: 'upcoming', title: 'Coming up', tone: 'text-white' },
+  { key: 'past', title: 'Past', tone: 'text-white/60' },
+];
+const GRID = 'grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+const FIELD = 'h-9 w-full rounded-2xl bg-pxi-field text-[14px] text-white outline-none transition placeholder:text-white/35 focus:shadow-[0_0_0_1.5px_#a523ef]';
 
 function formatDate(value, options = { dateStyle: 'medium' }) {
   if (!value) return '-';
@@ -64,6 +72,11 @@ function classifyEvent(event, now) {
   const start = event?.startDate ? new Date(event.startDate).getTime() : null;
   const end = event?.endDate ? new Date(event.endDate).getTime() : null;
   const status = String(event?.status || '').toLowerCase();
+  // The API reads the clock too: a night left on LIVE after its end time comes back ARCHIVED, so it is not "Live now".
+  const effective = String(event?.effectiveStatus || '').toLowerCase();
+  if (effective === 'live') return 'live';
+  if (effective === 'grace' || effective === 'archived') return 'past';
+  if (effective === 'dormant') return 'upcoming';
   if (status === 'live') return 'live';
   if (['ended', 'past', 'completed'].includes(status)) return 'past';
   if (['upcoming', 'scheduled', 'draft'].includes(status)) return 'upcoming';
@@ -104,77 +117,50 @@ function sortEvents(items, pinnedLiveIds, now) {
   });
 }
 
-function SearchBox({ value, onChange, placeholder }) {
+function timeLabel(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+/** "Fri, Oct 16, 10:00 PM" for a night still to come, "Aug 28" for one that is done. */
+function whenLabel(event, section) {
+  if (!event?.startDate) return 'Date to be set';
+  if (section === 'past') return shortDate(event.startDate);
+  const time = timeLabel(event.startDate);
+  return time ? `${dayDate(event.startDate)}, ${time}` : dayDate(event.startDate);
+}
+
+/** What sold so far, from the numbers the list already loaded. The room size only matters before the night is over. */
+function soldFigures(event, section) {
+  const sold = event?._count?.tickets;
+  if (sold == null) return null;
+  const capacity = Number(event?.capacity) > 0 ? Number(event.capacity) : null;
+  const shown = section === 'past' ? null : capacity;
+  return {
+    sold: Number(sold),
+    capacity: shown,
+    pct: shown ? Math.min(100, Math.round((Number(sold) / shown) * 100)) : 0,
+    verb: String(event?.ticketType || '').toUpperCase() === 'FREE' ? 'going' : 'sold',
+  };
+}
+
+function SearchField({ value, onChange, placeholder, className = '' }) {
   return (
-    <label className="glass-field flex min-h-[42px] items-center gap-2 rounded-2xl px-3 text-sm text-white/50">
-      <HugeiconsIcon icon={Search01Icon} size={15} />
-      <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/30" />
+    <label className={`relative block min-w-0 ${className}`}>
+      <HugeiconsIcon icon={Search01Icon} size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+      <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} aria-label={placeholder} className={`${FIELD} pl-10 pr-4`} />
     </label>
   );
 }
 
-function SelectControl({ ariaLabel, value, onChange, options }) {
+function FilterSelect({ ariaLabel, value, onChange, options, className = '' }) {
   return (
-    <select aria-label={ariaLabel} value={value} onChange={(event) => onChange(event.target.value)} className="glass-field min-h-[42px] min-w-[132px] rounded-2xl px-3 text-sm font-semibold text-white outline-none">
-      {options.map((option) => <option key={option.value} value={option.value} className="bg-zinc-950 text-white">{option.label}</option>)}
-    </select>
-  );
-}
-
-function EventControls({ query, onQueryChange, status, onStatusChange }) {
-  return (
-    <div className="rounded-3xl bg-pxi-surface p-3">
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-        <SearchBox value={query} onChange={onQueryChange} placeholder="Search events" />
-        <div className="flex flex-nowrap gap-2 overflow-x-auto dashboard-scrollbar-none">
-          <SelectControl ariaLabel="Filter events" value={status} onChange={onStatusChange} options={STATUS_FILTERS} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EmptyState({ icon, title, body, action }) {
-  return (
-    <GlowCard className="p-12 text-center">
-      <HugeiconsIcon icon={icon} className="mx-auto mb-4 text-zinc-600" size={48} />
-      <p className="font-semibold text-zinc-300">{title}</p>
-      <p className="mx-auto mt-1 max-w-md text-sm text-[#9a9a9a]">{body}</p>
-      {action}
-    </GlowCard>
-  );
-}
-
-function EventsHero({ mode, onModeChange, hostedCount, attendedCount, liveCount }) {
-  return (
-    <section className="dashboard-surface-b rounded-3xl px-5 py-6 md:px-7">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
-        <div className="space-y-5">
-          <h1 className="text-2xl font-semibold text-white md:text-[28px]">Events</h1>
-          <SegmentedToggle
-            value={mode}
-            onChange={onModeChange}
-            ariaLabel="Switch event list"
-            items={[
-              { value: 'hosted', label: 'Hosted' },
-              { value: 'attended', label: 'Attended' },
-            ]}
-          />
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            ['Hosted', hostedCount],
-            ['Attended', attendedCount],
-            ['Live', liveCount],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-2xl bg-pxi-field p-4">
-              <p className="text-xs text-zinc-500">{label}</p>
-              <p className="mt-2 text-[22px] font-semibold text-white tabular-nums">{value}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
+    <label className={`relative block ${className}`}>
+      <select aria-label={ariaLabel} value={value} onChange={(event) => onChange(event.target.value)} className={`${FIELD} appearance-none pl-4 pr-9 font-semibold`}>
+        {options.map((option) => <option key={option.value} value={option.value} className="bg-[#1c1c1c]">{option.label}</option>)}
+      </select>
+      <HugeiconsIcon icon={ArrowDown01Icon} size={14} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-white/50" />
+    </label>
   );
 }
 
@@ -182,24 +168,33 @@ function menuIcon(icon) {
   return <HugeiconsIcon icon={icon} size={15} />;
 }
 
-function EventCard({ event, relation, now, pinned, requestCount = 0, onOpen, onNavigate, onDelete, onTogglePin }) {
-  const cover = coverImage(event);
-  const section = classifyEvent(event, now);
+function Cover({ src, alt, hosted }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <div className="relative aspect-[16/9] bg-pxi-surface sm:aspect-[4/3]">
+      {src && !failed ? (
+        <Image src={src} alt={alt} fill unoptimized sizes="(min-width: 1280px) 300px, (min-width: 640px) 33vw, 100vw" className="object-cover" onError={() => setFailed(true)} />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center">
+          <HugeiconsIcon icon={hosted ? Calendar01Icon : Ticket01Icon} size={28} className="text-zinc-600" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EventTile({ event, relation, section, pinned, requestCount = 0, onOpen, onNavigate, onDelete, onTogglePin }) {
   const isLive = section === 'live';
   const isPast = section === 'past';
-  const eventId = event.id;
-  const attendees = event._count?.tickets != null ? `${event._count.tickets} attendees` : null;
   const isHosted = relation === 'hosted';
-  const keyDetail = isHosted ? (attendees || event.location || event.venue || 'Organizer view') : (event.attendeeStatus || 'Ticketed');
-  const base = isLive
-    ? pinned
-      ? 'shadow-[0_24px_70px_rgba(0,0,0,0.65)]'
-      : 'shadow-[0_18px_54px_rgba(0,0,0,0.56)]'
-    : isPast
-      ? 'opacity-85 grayscale-[28%] shadow-[0_18px_54px_rgba(0,0,0,0.58)] transition-all duration-500 hover:opacity-100'
-      : pinned
-        ? 'shadow-[0_24px_70px_rgba(0,0,0,0.65)]'
-        : 'shadow-[0_14px_45px_rgba(0,0,0,0.52)] transition-all duration-500 hover:shadow-[0_18px_54px_rgba(0,0,0,0.6)]';
+  const eventId = event.id;
+  const cover = coverImage(event);
+  const place = event.location || event.venue || '';
+  const figures = isHosted ? soldFigures(event, section) : null;
+  const marks = [
+    !isLive && pinned ? <StateText key="pinned" tone="purple">Pinned</StateText> : null,
+    requestCount > 0 ? <StateText key="requests" tone="purple">{requestCount} {requestCount === 1 ? 'request' : 'requests'}</StateText> : null,
+  ].filter(Boolean);
   const menuItems = isHosted
     ? [
         !isLive && { id: 'pin', label: pinned ? 'Unpin' : 'Pin', onSelect: () => onTogglePin(eventId), icon: menuIcon(CheckmarkCircle02Icon) },
@@ -213,104 +208,127 @@ function EventCard({ event, relation, now, pinned, requestCount = 0, onOpen, onN
       ];
 
   return (
-    <article className={`group relative aspect-[3/4] overflow-hidden rounded-[24px] bg-[#1c1c1c] ${base}`}>
-      <button type="button" onClick={() => onOpen(event)} className="absolute inset-0 z-0 block w-full text-left" aria-label={`Open ${event.name || 'event'} details`}>
-        {cover ? (
-          <Image src={cover} alt={event.name || 'Event cover'} fill unoptimized className="object-cover" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-pxi-field">
-            <HugeiconsIcon icon={isHosted ? Calendar01Icon : Ticket01Icon} className="text-zinc-600" size={40} />
-          </div>
-        )}
-        <div className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/10" />
-        <div
-          className="absolute inset-x-0 bottom-0 h-[68%]"
-          style={{
-            background: 'linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.78) 36%, rgba(0,0,0,0.28) 68%, rgba(0,0,0,0) 100%)',
-          }}
-        />
-        <div className="absolute left-4 top-4 flex max-w-[calc(100%-5.5rem)] flex-wrap items-center gap-2">
-          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-black/40 ${isLive ? 'bg-pxi-orange' : isPast ? 'bg-zinc-400' : 'bg-pxi-purple'}`}>
-            <span className="sr-only">{isLive ? 'Live' : isPast ? 'Past' : 'Upcoming'}</span>
-          </span>
-          {!isLive && pinned ? <span className="rounded-full bg-white/[0.14] px-2.5 py-1 text-[10px] font-bold tracking-[0.02em] text-white">Pinned</span> : null}
-          {requestCount > 0 ? <span className="rounded-full bg-white/[0.14] px-2.5 py-1 text-[10px] font-bold tracking-[0.02em] text-white">{requestCount} request{requestCount === 1 ? '' : 's'}</span> : null}
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
-          <h3 className="mb-3 line-clamp-2 text-[26px] font-[900] leading-none tracking-normal text-white md:text-[28px]">{event.name || 'Untitled event'}</h3>
-          <div className="space-y-2 text-[13px] font-medium text-white/72">
-            <div className="flex min-w-0 items-center"><HugeiconsIcon icon={ClockIcon} className="mr-2.5 h-4 w-4 shrink-0 opacity-55" /> <span className="truncate">{formatDate(event.startDate)}</span></div>
-            <div className="flex min-w-0 items-center capitalize"><HugeiconsIcon icon={isHosted && attendees ? UserGroupIcon : Location01Icon} className="mr-2.5 h-4 w-4 shrink-0 opacity-55" /> <span className="truncate">{keyDetail}</span></div>
-          </div>
+    <article
+      className={`group relative overflow-hidden rounded-[1.25rem] bg-pxi-field transition hover:bg-[#3a3a3a] ${isLive ? 'ring-1 ring-emerald-400/40' : ''} ${
+        isPast ? 'opacity-70 hover:opacity-100' : ''
+      }`}
+    >
+      <button type="button" onClick={() => onOpen(event)} className="block w-full text-left" aria-label={`Open ${event.name || 'event'} details`}>
+        <Cover key={cover || 'none'} src={cover} alt={event.name || 'Event cover'} hosted={isHosted} />
+        <div className="p-4">
+          {marks.length ? <p className="mb-1.5 flex gap-3">{marks}</p> : null}
+          <h3 className="truncate text-[15px] font-semibold text-white">{event.name || 'Untitled event'}</h3>
+          <p className="mt-1 truncate text-[12px] text-white/45">{whenLabel(event, section)}</p>
+          {place ? (
+            <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] text-white/45">
+              <HugeiconsIcon icon={Location01Icon} size={12} className="shrink-0" />
+              <span className="truncate">{place}</span>
+            </p>
+          ) : null}
+          {figures ? (
+            <div className="mt-3">
+              <p className="text-[13px] font-semibold text-white">
+                {count(figures.sold)} {figures.verb}
+                {figures.capacity ? <span className="font-normal text-white/45"> of {count(figures.capacity)}</span> : null}
+              </p>
+              {figures.capacity ? (
+                <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-full rounded-full bg-[#A523EF]" style={{ width: `${figures.pct}%` }} />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          {!isHosted ? <p className="mt-3 text-[13px] font-semibold capitalize text-white/70">{event.attendeeStatus || 'Ticketed'}</p> : null}
         </div>
       </button>
-      <div className="absolute right-4 top-4 z-20" onClick={(clickEvent) => clickEvent.stopPropagation()}>
+      <div className="absolute right-3 top-3 z-20">
         <ActionMenu items={menuItems} ariaLabel={`${event.name || 'Event'} actions`} />
       </div>
     </article>
   );
 }
 
-function HostedEventModal({ event, now, pinned, onClose, onNavigate, onTogglePin }) {
+/** Live now, Coming up, Past: each its own grid under a small title. Sections with nothing in them stay out. */
+function EventSections({ events, now, relation, pinnedIds = [], requestCounts = {}, onOpen, onNavigate, onDelete, onTogglePin }) {
+  const groups = SECTIONS.map((section) => ({ ...section, items: events.filter((event) => classifyEvent(event, now) === section.key) })).filter((group) => group.items.length);
+  return (
+    <div className="space-y-5 md:space-y-6">
+      {groups.map((group) => (
+        <section key={group.key}>
+          <h2 className={`mb-3 text-[15px] font-semibold ${group.tone}`}>
+            {group.title}
+            <span className="ml-2 text-[12px] font-semibold text-white/35">{group.items.length}</span>
+          </h2>
+          <div className={GRID}>
+            {group.items.map((event) => (
+              <EventTile
+                key={relation === 'attended' ? `${event.id}-${event.ticketId || 'ticket'}` : event.id}
+                event={event}
+                relation={relation}
+                section={group.key}
+                pinned={pinnedIds.includes(String(event.id))}
+                requestCount={requestCounts[String(event.id)] || 0}
+                onOpen={onOpen}
+                onNavigate={onNavigate}
+                onDelete={onDelete}
+                onTogglePin={onTogglePin}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+/** The quick view of one hosted night, from the right: the cover, the facts, and where to go next. */
+function HostedEventDrawer({ event, now, pinned, onClose, onNavigate, onTogglePin }) {
   if (!event) return null;
   const cover = coverImage(event);
   const section = classifyEvent(event, now);
   const isLive = section === 'live';
   const isPast = section === 'past';
-  const attendees = event._count?.tickets != null ? `${event._count.tickets} attendees` : 'Attendee data pending';
+  const figures = soldFigures(event, section);
   const go = (href) => {
     onClose();
     onNavigate(href);
   };
+  const facts = [
+    { label: 'Status', value: isLive ? 'Live now' : isPast ? 'Past' : pinned ? 'Coming up, pinned' : 'Coming up' },
+    { label: 'When', value: whenLabel(event, section) },
+    { label: 'Where', value: event.location || event.venue || 'Not set' },
+    {
+      label: figures?.verb === 'going' ? 'Going' : 'Sold',
+      value: figures ? `${count(figures.sold)}${figures.capacity ? ` of ${count(figures.capacity)}` : ''}` : 'Not loaded yet',
+    },
+  ];
 
   return (
-    <Modal open={!!event} onClose={onClose} title={event.name || 'Hosted event'} description="Organizer detail view" maxWidth="max-w-2xl">
-      <div className="grid gap-5 md:grid-cols-[180px_minmax(0,1fr)]">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-pxi-field">
-          {cover ? (
-            <Image src={cover} alt={event.name || 'Event cover'} fill unoptimized className="object-cover" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <HugeiconsIcon icon={Calendar01Icon} className="text-zinc-600" size={38} />
-            </div>
-          )}
-          <div
-            className="absolute inset-x-0 bottom-0 h-1/2"
-            style={{
-              background: 'linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.42) 52%, rgba(0,0,0,0) 100%)',
-            }}
-          />
+    <Drawer
+      open={!!event}
+      onClose={onClose}
+      title={event.name || 'Event'}
+      footer={
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="primary" onClick={() => go(`/dashboard/events/${event.id}`)}>Manage event</Button>
+          {!isPast ? <Button onClick={() => go(`/dashboard/events/${event.id}/invite#event-invite`)}>Invite</Button> : null}
+          <Button onClick={() => go(`/dashboard/events/${event.id}/members`)}>Members</Button>
+          {!isLive ? <Button variant="quiet" onClick={() => onTogglePin(event.id)}>{pinned ? 'Unpin' : 'Pin'}</Button> : null}
         </div>
-        <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="glass-field rounded-2xl p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Status</p>
-              <p className="mt-1 text-sm font-semibold capitalize text-white">{isLive ? 'Live' : isPast ? 'Past' : pinned ? 'Pinned' : 'Upcoming'}</p>
+      }
+    >
+      <div className="space-y-5">
+        <Cover key={cover || 'none'} src={cover} alt={event.name || 'Event cover'} hosted />
+        <dl className="divide-y divide-white/[0.08]">
+          {facts.map((fact) => (
+            <div key={fact.label} className="flex items-baseline justify-between gap-4 py-3 first:pt-0">
+              <dt className="text-[13px] text-white/45">{fact.label}</dt>
+              <dd className="min-w-0 truncate text-right text-[14px] font-semibold text-white">{fact.value}</dd>
             </div>
-            <div className="glass-field rounded-2xl p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Date</p>
-              <p className="mt-1 text-sm font-semibold text-white">{formatDate(event.startDate)}</p>
-            </div>
-            <div className="glass-field rounded-2xl p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Location</p>
-              <p className="mt-1 truncate text-sm font-semibold text-white">{event.location || event.venue || 'Location TBD'}</p>
-            </div>
-            <div className="glass-field rounded-2xl p-4">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Attendance</p>
-              <p className="mt-1 text-sm font-semibold text-white">{attendees}</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => go(`/dashboard/events/${event.id}`)} className="pill-solid inline-flex min-h-[42px] items-center justify-center gap-2 px-4 text-sm">
-              Manage event <HugeiconsIcon icon={ArrowRight02Icon} size={15} />
-            </button>
-            {!isPast ? <button type="button" onClick={() => go(`/dashboard/events/${event.id}/invite#event-invite`)} className="pill-ghost inline-flex min-h-[42px] items-center justify-center gap-2 px-4 text-sm font-bold"><HugeiconsIcon icon={UserAdd01Icon} size={16} />Invite</button> : null}
-            <button type="button" onClick={() => go(`/dashboard/events/${event.id}/members`)} className="pill-ghost inline-flex min-h-[42px] items-center justify-center gap-2 px-4 text-sm font-bold"><HugeiconsIcon icon={UserCircleIcon} size={16} />Members</button>
-            {!isLive ? <button type="button" onClick={() => onTogglePin(event.id)} className="pill-ghost inline-flex min-h-[42px] items-center justify-center gap-2 px-4 text-sm font-bold"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />{pinned ? 'Unpin' : 'Pin'}</button> : null}
-          </div>
-        </div>
+          ))}
+        </dl>
       </div>
-    </Modal>
+    </Drawer>
   );
 }
 
@@ -417,6 +435,17 @@ function ParticipantEventModal({ event, requests, onClose, onSubmitHelp }) {
       </Modal>
       <SubmitHelpRequestModal open={!!helpDraft} event={event} initialType={helpDraft?.type} title={helpDraft?.title} onClose={() => setHelpDraft(null)} onSubmit={async (payload) => { await onSubmitHelp(payload); setHelpDraft(null); }} />
     </>
+  );
+}
+
+
+function GridSkeleton() {
+  return (
+    <div className={GRID}>
+      {[0, 1, 2, 3].map((item) => (
+        <Skeleton key={item} className="h-[300px]" />
+      ))}
+    </div>
   );
 }
 
@@ -529,10 +558,43 @@ export default function EventsListPage() {
     return acc;
   }, {}), [myHelpRequests]);
   const selectedEventRequests = useMemo(() => selectedAttendedEvent ? myHelpRequests.filter((request) => request.eventId === String(selectedAttendedEvent.id)) : [], [myHelpRequests, selectedAttendedEvent]);
-  const liveEventCount = useMemo(
-    () => hostedEvents.filter((event) => classifyEvent(event, now) === 'live').length,
-    [hostedEvents, now]
-  );
+
+  const hosted = mode === 'hosted';
+  const listForMode = hosted ? hostedEvents : attendedEvents;
+  const sectionCounts = useMemo(() => {
+    const totals = { live: 0, upcoming: 0, past: 0 };
+    listForMode.forEach((event) => {
+      totals[classifyEvent(event, now)] += 1;
+    });
+    return totals;
+  }, [listForMode, now]);
+  // What is sold for the nights still to come: paid nights count tickets sold, free nights count people going.
+  const comingUpSales = useMemo(() => {
+    const upcoming = hostedEvents.filter((event) => classifyEvent(event, now) === 'upcoming');
+    const isFree = (event) => String(event?.ticketType || '').toUpperCase() === 'FREE';
+    const paid = upcoming.filter((event) => !isFree(event));
+    const counted = paid.length ? paid : upcoming;
+    return {
+      label: paid.length || !upcoming.length ? 'Sold' : 'Going',
+      total: counted.reduce((sum, event) => sum + Number(event?._count?.tickets || 0), 0),
+    };
+  }, [hostedEvents, now]);
+  const showKpis = hosted ? !(loading && hostedEvents.length === 0) && !(loadError && hostedEvents.length === 0) : !attendedLoading && !attendedError;
+  const kpis = showKpis
+    ? [
+        { label: 'Live now', value: count(sectionCounts.live), tone: sectionCounts.live ? 'good' : undefined },
+        { label: 'Coming up', value: count(sectionCounts.upcoming) },
+        hosted
+          ? { label: comingUpSales.label, value: count(comingUpSales.total), hint: 'coming up' }
+          : { label: 'Past', value: count(sectionCounts.past) },
+        { label: hosted ? 'Hosted' : 'Attended', value: count(listForMode.length) },
+      ]
+    : null;
+
+  const query = hosted ? hostedQuery : attendedQuery;
+  const setQuery = hosted ? setHostedQuery : setAttendedQuery;
+  const status = hosted ? hostedFilter : attendedFilter;
+  const setStatus = hosted ? setHostedFilter : setAttendedFilter;
 
   const submitHelpRequest = async (payload) => {
     await helpRequestsService.createHelpRequest(payload);
@@ -540,123 +602,90 @@ export default function EventsListPage() {
     toast.success('Help request submitted.');
   };
 
-  if (loading && hostedEvents.length === 0) {
-    return (
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className="dashboard-surface-b rounded-3xl px-5 py-10 text-center">
-          <p className="text-sm font-semibold text-[#9a9a9a]">Loading events...</p>
+  const sectionProps = { now, onOpen: hosted ? setSelectedHostedEvent : setSelectedAttendedEvent, onNavigate: (href) => router.push(href) };
+  let body;
+  if (hosted) {
+    if (loading && hostedEvents.length === 0) {
+      body = <GridSkeleton />;
+    } else if (loadError && hostedEvents.length === 0) {
+      body = (
+        <div className="flex flex-wrap items-center gap-3">
+          <Notice tone="error" className="min-w-0 flex-1">We could not reach your events. Try again in a moment.</Notice>
+          <Button onClick={() => refreshHostedEvents({ force: true })}>Refresh</Button>
         </div>
-      </div>
-    );
-  }
-  if (loadError && hostedEvents.length === 0) {
-    return (
-      <>
-        <div className="mx-auto max-w-6xl space-y-8">
-          <EventsHero
-            mode={mode}
-            onModeChange={setMode}
-            hostedCount={0}
-            attendedCount={attendedEvents.length}
-            liveCount={0}
-          />
-          <div className="dashboard-surface-b rounded-3xl p-6 md:p-8">
-            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-              <div className="max-w-xl">
-                <h2 className="text-lg font-semibold text-white">Event data is temporarily unavailable.</h2>
-                <p className="mt-2 text-sm leading-6 text-[#9a9a9a]">
-                  We could not reach your hosted event list. Try again in a moment.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <button type="button" onClick={() => refreshHostedEvents({ force: true })} className="pill-ghost inline-flex min-h-[42px] items-center justify-center px-5 text-sm font-bold">
-                  Refresh
-                </button>
-                {canHost ? (
-                  <button type="button" onClick={() => setCreateOpen(true)} className="pill-solid inline-flex min-h-[42px] items-center justify-center gap-2 px-5 text-sm">
-                    <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2.5} />
-                    Create
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </div>
-        <CreateEventSlideOver open={createOpen} onClose={() => setCreateOpen(false)} />
-      </>
-    );
+      );
+    } else if (hostedEvents.length === 0) {
+      body = (
+        <EmptyState
+          title="No events yet"
+          line={canHost ? 'Create your first night.' : 'Hosting needs a passport.'}
+          action={canHost ? <Button variant="primary" onClick={() => setCreateOpen(true)}>Create event</Button> : null}
+        />
+      );
+    } else if (filteredHostedEvents.length === 0) {
+      body = <EmptyState title="Nothing matches" line="Try another search or filter." />;
+    } else {
+      body = (
+        <EventSections
+          {...sectionProps}
+          relation="hosted"
+          events={filteredHostedEvents}
+          pinnedIds={pinnedLiveIds}
+          onDelete={(id, name) => setDeleteTarget({ id, name })}
+          onTogglePin={togglePinnedLiveEvent}
+        />
+      );
+    }
+  } else if (attendedError) {
+    body = <Notice tone="error">{attendedError.message || 'Failed to load attended events'}</Notice>;
+  } else if (attendedLoading) {
+    body = <GridSkeleton />;
+  } else if (attendedEvents.length === 0) {
+    body = <EmptyState title="No tickets yet" line="Events you go to show up here." action={<Button onClick={() => invalidateAttended()}>Refresh</Button>} />;
+  } else if (filteredAttendedEvents.length === 0) {
+    body = <EmptyState title="Nothing matches" line="Try another search or filter." />;
+  } else {
+    body = <EventSections {...sectionProps} relation="attended" events={filteredAttendedEvents} requestCounts={myRequestCountByEventId} />;
   }
 
   return (
     <>
       {deleteTarget ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <GlowCard className="w-full max-w-sm overflow-hidden">
-            <div className="flex flex-col items-center gap-4 px-6 pb-4 pt-6 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#ff3b30]/15"><HugeiconsIcon icon={Delete02Icon} size={24} className="text-[#ff3b30]" /></div>
-              <div><h3 className="text-lg font-bold text-white">Delete event?</h3><p className="mt-1.5 text-sm leading-relaxed text-[#9a9a9a]"><span className="font-semibold text-white">"{deleteTarget.name || 'This event'}"</span> will be permanently deleted. This action cannot be undone.</p></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setDeleteTarget(null)}>
+          <div role="dialog" aria-modal="true" className="w-full max-w-sm rounded-3xl bg-pxi-surface p-6" onClick={(clickEvent) => clickEvent.stopPropagation()}>
+            <h3 className="text-[17px] font-semibold text-white">Delete event?</h3>
+            <p className="mt-2 text-[14px] text-white/60">
+              <span className="font-semibold text-white">{deleteTarget.name || 'This event'}</span> will be deleted for good.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <Button className="flex-1" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+              <Button variant="danger" className="flex-1" onClick={confirmDelete} disabled={!!deletingEventId}>
+                {deletingEventId ? <PxiSpinner size="sm" className="mx-auto" /> : null}
+                Delete
+              </Button>
             </div>
-            <div className="mt-2 flex gap-3 px-6 pb-6">
-              <button type="button" onClick={() => setDeleteTarget(null)} className="pill-cancel min-h-[44px] flex-1 text-[13px]">Cancel</button>
-              <button type="button" onClick={confirmDelete} disabled={!!deletingEventId} className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full bg-[#ff3b30] text-[13px] font-black uppercase tracking-[0.08em] text-white transition hover:brightness-110 disabled:opacity-50">{deletingEventId ? <PxiSpinner size="sm" className="mx-auto" /> : null}Delete</button>
-            </div>
-          </GlowCard>
+          </div>
         </div>
       ) : null}
 
-      <div className="mx-auto max-w-6xl space-y-8">
-        <EventsHero
-          mode={mode}
-          onModeChange={setMode}
-          hostedCount={hostedEvents.length}
-          attendedCount={attendedEvents.length}
-          liveCount={liveEventCount}
-        />
+      <div className="space-y-5 md:space-y-6">
+        <PageHeader title="Events" kpis={kpis} />
 
-        {mode === 'hosted' ? (
-          <div className="space-y-8">
-            <EventControls query={hostedQuery} onQueryChange={setHostedQuery} status={hostedFilter} onStatusChange={setHostedFilter} />
-            {hostedEvents.length === 0 ? (
-              <EmptyState
-                icon={Calendar01Icon}
-                title="No hosted events yet"
-                body={canHost ? 'Create your first event.' : 'Hosting needs a passport.'}
-                action={canHost ? <button type="button" onClick={() => setCreateOpen(true)} className="mt-6 inline-flex h-11 w-11 items-center justify-center rounded-full glow-chip text-white transition-colors hover:bg-white/[0.12]" aria-label="Create event"><HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={2.5} /></button> : null}
-              />
-            ) : filteredHostedEvents.length === 0 ? (
-              <EmptyState icon={Search01Icon} title="No hosted events match your filters" body="Try clearing the search or changing the event status filter." />
-            ) : (
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {filteredHostedEvents.map((event) => (
-                  <EventCard
-                    key={event.id}
-                    event={event}
-                    relation="hosted"
-                    now={now}
-                    pinned={pinnedLiveIds.includes(String(event.id))}
-                    onOpen={setSelectedHostedEvent}
-                    onNavigate={(href) => router.push(href)}
-                    onDelete={(id, name) => setDeleteTarget({ id, name })}
-                    onTogglePin={togglePinnedLiveEvent}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-8">
-            <EventControls query={attendedQuery} onQueryChange={setAttendedQuery} status={attendedFilter} onStatusChange={setAttendedFilter} />
-            {attendedError ? <div className="rounded-2xl bg-[#ff3b30]/15 p-6 text-[#ff3b30]">{attendedError.message || 'Failed to load attended events'}</div>
-              : attendedLoading ? <GlowCard className="p-10 text-center"><PxiSpinner size="md" className="mx-auto" /><p className="mt-4 text-sm text-[#9a9a9a]">Loading attended events...</p></GlowCard>
-                : attendedEvents.length === 0 ? <EmptyState icon={Ticket01Icon} title="No attended events yet" body="Your tickets will appear here." action={<button type="button" onClick={() => invalidateAttended()} className="mt-6 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl glow-chip px-5 py-2.5 text-xs font-bold tracking-[0.02em] text-white transition-colors hover:bg-white/[0.12]"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />Refresh</button>} />
-                  : filteredAttendedEvents.length === 0 ? <EmptyState icon={Search01Icon} title="No attended events match your filters" body="Try clearing the search or changing the event status filter." />
-                    : <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">{filteredAttendedEvents.map((event) => <EventCard key={`${event.id}-${event.ticketId || 'ticket'}`} event={event} relation="attended" now={now} requestCount={myRequestCountByEventId[String(event.id)] || 0} onOpen={setSelectedAttendedEvent} onNavigate={(href) => router.push(href)} />)}</div>}
-          </div>
-        )}
+        <div className="space-y-3 md:flex md:items-end md:justify-between md:gap-6 md:space-y-0 md:border-b md:border-white/[0.08]">
+          <WordTabs className="md:border-b-0!" items={MODE_TABS} value={mode} onChange={setMode} />
+          {listForMode.length > 0 ? (
+            <div className="flex items-center gap-2 md:pb-1.5">
+              <SearchField value={query} onChange={setQuery} placeholder="Search events" className="flex-1 md:w-[260px] md:flex-none" />
+              <FilterSelect ariaLabel="Filter events" value={status} onChange={setStatus} options={STATUS_FILTERS} className="w-[132px] shrink-0 md:w-[148px]" />
+            </div>
+          ) : null}
+        </div>
+
+        {body}
       </div>
 
       <CreateEventSlideOver open={createOpen} onClose={() => setCreateOpen(false)} />
-      <HostedEventModal event={selectedHostedEvent} now={now} pinned={selectedHostedEvent ? pinnedLiveIds.includes(String(selectedHostedEvent.id)) : false} onClose={() => setSelectedHostedEvent(null)} onNavigate={(href) => router.push(href)} onTogglePin={togglePinnedLiveEvent} />
+      <HostedEventDrawer event={selectedHostedEvent} now={now} pinned={selectedHostedEvent ? pinnedLiveIds.includes(String(selectedHostedEvent.id)) : false} onClose={() => setSelectedHostedEvent(null)} onNavigate={(href) => router.push(href)} onTogglePin={togglePinnedLiveEvent} />
       <ParticipantEventModal event={selectedAttendedEvent} requests={selectedEventRequests} onClose={() => setSelectedAttendedEvent(null)} onSubmitHelp={submitHelpRequest} />
     </>
   );

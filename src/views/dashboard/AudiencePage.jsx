@@ -1,820 +1,524 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import SectionCard from '@/components/dashboard/SectionCard';
-import { RechartsChart, SparkDonutChart } from '@/components/dashboard/ChartFrame';
-import { DASHBOARD_BRAND_COLOR, DASHBOARD_TOOLTIP_PROPS, getDashboardChartShade } from '@/components/dashboard/chartStyles';
-import FunnelChart from '@/components/dashboard/FunnelChart';
-import {
-    deleteAudienceSegment,
-    fetchAudienceAttendees,
-    listAudienceSegments,
-    saveAudienceSegment,
-} from '@/services/audienceSegments';
+// Audience: the CRM and the list builder in one place. Pick who (filters or a saved list), see how many, then
+// "Message them" goes to Campaigns with the audience already chosen. Privacy rules are the API's and are kept:
+// names only for people who allow it, a count and no names for targeting filters, no emails or phone numbers.
+
+import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button, DataTable, EmptyState, Field, Notice, PageHeader, Panel, PersonLine, Skeleton, StateText } from '@/components/dashboard/ui/kit';
 import { api } from '@/services/api';
+import { eventsService } from '@/services/events';
+import { deleteAudienceSegment, fetchAudienceAttendees, listAudienceSegments, saveAudienceSegment } from '@/services/audienceSegments';
+import { count, shortDate } from '@/lib/dashFormat';
+import { errorText, useRequest } from '@/views/dashboard/audience/useRequest';
+import FilterSelect from '@/views/dashboard/audience/FilterSelect';
+import {
+    ENGAGEMENT_OPTIONS,
+    FILTER_DEFAULTS,
+    REACH_OPTIONS,
+    TAKE,
+    TICKET_OPTIONS,
+    cityOptions,
+    composeHref,
+    filtersMatchSegment,
+    hasActiveFilters,
+    nightOptions,
+    normalizeFilters,
+    peopleWord,
+    reachFields,
+    reachValue,
+} from '@/views/dashboard/audience/audienceFilters';
 
-/** Real attendee demographics from GET /api/analytics/audience (not sample data). */
-function RealAudienceOverview() {
-    const [data, setData] = useState(null);
-    const [failed, setFailed] = useState(false);
-
-    useEffect(() => {
-        let cancelled = false;
-        api.get('/api/analytics/audience')
-            .then((res) => { if (!cancelled) setData(res); })
-            .catch(() => { if (!cancelled) setFailed(true); });
-        return () => { cancelled = true; };
-    }, []);
-
-    const retentionStages = useMemo(() => {
-        if (!data) return [];
-        const total = Number(data.totalAttendees) || 0;
-        const passport = Math.min(total, Number(data.tiers?.citizen) || 0);
-        const repeatGuests = Math.min(passport, Math.round((Number(data.repeat?.repeatRate) || 0) * total));
-        return [
-            { stage: 'All attendees', value: total },
-            { stage: 'Passport holders', value: passport },
-            { stage: 'Repeat guests', value: repeatGuests },
-        ];
-    }, [data]);
-
-    // Plain-language read of the numbers — the "so what" before the charts.
-    const story = useMemo(() => {
-        if (!data || !data.totalAttendees) return [];
-        const items = [];
-        // "other (...)" buckets hold groups too small to name, so they never headline the story.
-        const topBracket = [...(data.ageBrackets || [])]
-            .filter((b) => !String(b.label).startsWith('other'))
-            .sort((a, b) => b.count - a.count)[0];
-        if (topBracket?.count > 0) items.push(`Your crowd skews ${topBracket.label}.`);
-        const topCity = (data.topCities || []).find((c) => !String(c.city).startsWith('other'));
-        if (topCity) items.push(`${topCity.city} is your strongest city (${topCity.count} attendees).`);
-        const emailPct = Math.round(((data.marketing?.emailOptIn || 0) / data.totalAttendees) * 100);
-        items.push(`${(data.marketing?.emailOptIn || 0).toLocaleString('en-US')} people (${emailPct}%) opted into email. Reachable right now from Campaigns.`);
-        const repeatPct = Math.round((data.repeat?.repeatRate || 0) * 100);
-        items.push(`${repeatPct}% come back for another event${repeatPct >= 20 ? '. Strong loyalty.' : '. A win-back send usually lifts this.'}`);
-        return items;
-    }, [data]);
-
-    if (failed || (data && data.totalAttendees === 0)) return null;
-
+function PersonCell({ row }) {
+    const person = { ...row, name: row.name || (row.username ? null : 'Unnamed') };
+    const meta = [
+        `${count(row.eventsAttended)} ${Number(row.eventsAttended) === 1 ? 'night' : 'nights'}`,
+        row.lastCheckInAt ? `last came ${shortDate(row.lastCheckInAt)}` : null,
+        row.ticketTier === 'PAID' ? 'paid' : 'free',
+        row.engagementTier?.label || 'Wanderer',
+    ]
+        .filter(Boolean)
+        .join(', ');
     return (
-        <SectionCard title="Your real audience" dense>
-            {!data ? (
-                <p className="px-2 py-3 text-sm text-zinc-500">Loading live demographics...</p>
-            ) : (
-                <div className="space-y-4">
-                    {story.length ? (
-                        <div className="rounded-2xl bg-pxi-field px-4 py-3.5">
-                            <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">What this means</p>
-                            <ul className="mt-2 space-y-1.5">
-                                {story.map((line) => (
-                                    <li key={line} className="flex items-start gap-2 text-sm leading-6 text-zinc-300">
-                                        <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pxi-purple/70" aria-hidden="true" />
-                                        {line}
-                                    </li>
-                                ))}
-                            </ul>
-                            <p className="mt-2 text-xs leading-5 text-zinc-600">
-                                Includes attendees from events you host or co-host. Co-hosting grows the network you can see.
-                            </p>
-                        </div>
-                    ) : null}
-                    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-pxi-field sm:grid-cols-4">
-                        {[
-                            { label: 'Attendees', value: data.totalAttendees },
-                            { label: 'Passport holders', value: data.tiers.citizen },
-                            { label: 'Email reachable', value: data.marketing.emailOptIn },
-                            { label: 'Repeat guests', value: `${Math.round((data.repeat.repeatRate || 0) * 100)}%` },
-                        ].map((t) => (
-                            <div key={t.label} className="bg-pxi-surface px-4 py-3.5">
-                                <p className="text-[12px] font-medium text-zinc-500">{t.label}</p>
-                                <p className="mt-1.5 text-[22px] font-semibold leading-none tracking-tight tabular-nums text-white">{t.value}</p>
-                            </div>
-                        ))}
-                    </div>
-                    {data.demographicsWithheld ? (
-                        <p className="rounded-xl bg-pxi-field px-4 py-3 text-xs leading-5 text-zinc-500">
-                            City and age breakdowns appear once 10 or more people have attended your events. Until then they are hidden, so no small group can be identified.
-                        </p>
-                    ) : null}
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {data.topCities.length > 0 && (
-                            <div className="glow-surface-soft rounded-xl px-4 py-3">
-                                <p className="mb-3 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Top cities</p>
-                                <div className="flex items-center gap-4">
-                                    <SparkDonutChart
-                                        points={data.topCities.slice(0, 5).map((c) => c.count)}
-                                        labels={data.topCities.slice(0, 5).map((c) => c.city)}
-                                        size={104}
-                                        name="Attendees"
-                                        className="shrink-0"
-                                    />
-                                    <div className="min-w-0 flex-1 space-y-1.5">
-                                        {data.topCities.slice(0, 5).map((c, index) => (
-                                            <div key={c.city} className="flex items-center justify-between gap-2 py-0.5 text-sm">
-                                                <span className="flex min-w-0 items-center gap-2">
-                                                    <span
-                                                        className="h-2 w-2 shrink-0 rounded-full"
-                                                        style={{ backgroundColor: index === 0 ? DASHBOARD_BRAND_COLOR : getDashboardChartShade(index) }}
-                                                    />
-                                                    <span className="truncate text-zinc-300">{c.city}</span>
-                                                </span>
-                                                <span className="shrink-0 font-bold tabular-nums text-white">{c.count}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        {data.ageBrackets.some((b) => b.count > 0) && (
-                            <div className="glow-surface-soft rounded-xl px-4 py-3">
-                                <p className="mb-2 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Age brackets (opted-in ages)</p>
-                                <div className="h-[200px]">
-                                    <RechartsChart className="h-[200px]">
-                                        {({ ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip }) => (
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <BarChart data={data.ageBrackets} margin={{ top: 8, right: 8, left: -18, bottom: 0 }} barCategoryGap="28%">
-                                                    <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-                                                    <XAxis
-                                                        dataKey="label"
-                                                        tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }}
-                                                        axisLine={false}
-                                                        tickLine={false}
-                                                    />
-                                                    <YAxis
-                                                        allowDecimals={false}
-                                                        tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }}
-                                                        axisLine={false}
-                                                        tickLine={false}
-                                                        width={28}
-                                                    />
-                                                    <Tooltip
-                                                        {...DASHBOARD_TOOLTIP_PROPS}
-                                                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                                                        formatter={(value) => [Number(value).toLocaleString('en-US'), 'Attendees']}
-                                                    />
-                                                    <Bar dataKey="count" name="Attendees" fill={DASHBOARD_BRAND_COLOR} radius={[4, 4, 0, 0]} isAnimationActive={false} />
-                                                </BarChart>
-                                            </ResponsiveContainer>
-                                        )}
-                                    </RechartsChart>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    {retentionStages.some((stage) => stage.value > 0) ? (
-                        <div className="glow-surface-soft rounded-xl px-4 py-4">
-                            <p className="mb-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Retention funnel</p>
-                            <p className="mb-3 text-xs leading-5 text-zinc-500">
-                                Three real signals, top to bottom: reachable audience size, Passport depth, then repeat rate.
-                            </p>
-                            <FunnelChart data={retentionStages} />
-                        </div>
-                    ) : null}
-                </div>
-            )}
-        </SectionCard>
+        <div className="min-w-0">
+            <PersonLine person={person} />
+            <p className="mt-2 truncate text-[12px] text-white/45 md:hidden">{meta}</p>
+        </div>
     );
 }
 
-const TAKE = 50;
-
-const FILTER_DEFAULTS = {
-    // Visible filters: narrow the names list by columns the list already shows.
-    ticketTier: '', // '' | 'PAID' | 'FREE'
-    minEngagementTier: '',
-    // Targeting filters: valid for campaigns, but the server returns a count and no names
-    // (privacy policy §4.2). Filtering a names list by city would list "everyone from Boston".
-    emailOptIn: null, // null | true | false
-    smsOptIn: null,
-    city: '',
-    accountTier: '',
-    minOdysseyXp: '',
-};
-
-const TICKET_TIER_OPTIONS = [
-    { value: '', label: 'Any ticket' },
-    { value: 'PAID', label: 'Paid' },
-    { value: 'FREE', label: 'Free' },
+const COLUMNS = [
+    { key: 'person', label: 'Person', width: 'minmax(0,2fr)', render: (row) => <PersonCell row={row} /> },
+    {
+        key: 'nights',
+        label: 'Nights',
+        width: '72px',
+        hideOnMobile: true,
+        render: (row) => <span className="text-[14px] tabular-nums text-white">{count(row.eventsAttended)}</span>,
+    },
+    {
+        key: 'last',
+        label: 'Last came',
+        width: '112px',
+        hideOnMobile: true,
+        render: (row) => <span className="text-[14px] text-white/70">{row.lastCheckInAt ? shortDate(row.lastCheckInAt) : '-'}</span>,
+    },
+    {
+        key: 'ticket',
+        label: 'Ticket',
+        width: '84px',
+        hideOnMobile: true,
+        render: (row) => <StateText tone={row.ticketTier === 'PAID' ? 'good' : 'muted'}>{row.ticketTier === 'PAID' ? 'Paid' : 'Free'}</StateText>,
+    },
+    {
+        key: 'engagement',
+        label: 'Engagement',
+        width: '140px',
+        hideOnMobile: true,
+        render: (row) => <span className="text-[13px] text-white/70">{row.engagementTier?.label || 'Wanderer'}</span>,
+    },
 ];
 
-const ENGAGEMENT_TIER_OPTIONS = [
-    { value: '', label: 'Any tier' },
-    { value: 'SEEKER', label: 'Seeker and above' },
-    { value: 'VOYAGER', label: 'Voyager and above' },
-    { value: 'PATHFINDER', label: 'Pathfinder and above' },
-    { value: 'LUMINARY', label: 'Luminary and above' },
-    { value: 'ODYSSEY', label: 'Odyssey' },
-];
-
-const TRI_STATE_OPTIONS = [
-    { value: '', label: 'Any' },
-    { value: 'true', label: 'Yes' },
-    { value: 'false', label: 'No' },
-];
-
-// The KYC ladder, not the passport LEVEL (Wanderer→Odyssey) — that's the
-// separate `minOdysseyXp` filter below. Diplomat resolves server-side to
-// isVendor, since it's a derived rung rather than a stored tier value.
-const ACCOUNT_TIER_OPTIONS = [
-    { value: '', label: 'Any tier' },
-    { value: 'PARTIAL', label: 'Partial, web only' },
-    { value: 'CITIZEN', label: 'Citizen, has passport' },
-    { value: 'DIPLOMAT', label: 'Diplomat, verified seller' },
-];
-
-const AUDIENCE_SECTION_CLASS =
-    'dashboard-surface-b !border-0 shadow-[0_22px_80px_rgba(0,0,0,0.28)] [&>header]:!border-0 [&>header]:pb-3';
-const AUDIENCE_SECTION_BODY_CLASS = 'pt-4';
-const AUDIENCE_INPUT_CLASS =
-    'dashboard-input min-h-12 w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white placeholder:text-zinc-500';
-const AUDIENCE_SELECT_CLASS = `${AUDIENCE_INPUT_CLASS} appearance-none pr-10`;
-const AUDIENCE_SCROLLBAR_CLASS =
-    '[scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.18)_transparent] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-thumb:hover]:bg-white/25';
-
-function formatLastCheckIn(value) {
-    if (!value) return '—';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '—';
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-/** Deep-equal on the FILTER_DEFAULTS shape only — ignores unknown keys a segment might carry. */
-function filtersMatchSegment(filters, filterJson) {
-    const applied = { ...FILTER_DEFAULTS, ...(filterJson || {}) };
-    return Object.keys(FILTER_DEFAULTS).every((key) => filters[key] === applied[key]);
-}
-
-function parseTriState(value) {
-    if (value === 'true') return true;
-    if (value === 'false') return false;
-    return null;
-}
-
-function triStateValue(value) {
-    if (value === true) return 'true';
-    if (value === false) return 'false';
-    return '';
-}
-
-function TicketTierBadge({ tier }) {
-    const paid = tier === 'PAID';
-    return (
-        <span
-            className={`rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${
-                paid ? 'bg-amber-500/15 text-amber-300' : 'bg-pxi-field text-zinc-400'
-            }`}
-        >
-            {paid ? 'Paid' : 'Free'}
+/** The one count line under the filters, plain words. */
+function CountLine({ night, nightName, nightCount, list, loading }) {
+    const strong = 'font-semibold text-white';
+    if (night) {
+        if (nightCount === null) return <p className="text-[14px] text-white/60">Names are not listed for one night.</p>;
+        return (
+            <p className="text-[14px] text-white/60">
+                <span className={strong}>
+                    {count(nightCount)} {peopleWord(nightCount)}
+                </span>{' '}
+                {nightCount === 1 ? 'has' : 'have'} a ticket to {nightName}. Names are not listed for one night.
+            </p>
+        );
+    }
+    if (!list) return <p className="text-[14px] text-white/50">{loading ? 'Counting people...' : ' '}</p>;
+    const total = list.total || 0;
+    const shown = list.identifiedTotal ?? total;
+    if (total === 0) return <p className="text-[14px] text-white/60">No one matches these filters.</p>;
+    const lead = (
+        <span className={strong}>
+            {count(total)} {peopleWord(total)}
         </span>
     );
-}
-
-function EngagementBadge({ tier }) {
-    return (
-        <span className="rounded-full bg-pxi-purple/10 px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] text-white">
-            {tier?.label || 'Wanderer'}
-        </span>
-    );
-}
-
-function AudienceAvatar({ row }) {
-    const initial = (row.name || row.username || '?').trim().slice(0, 1).toUpperCase() || '?';
-    if (row.avatarUrl) {
-        return <img src={row.avatarUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />;
+    if (list.namesHidden) {
+        return (
+            <p className="text-[14px] text-white/60">
+                {lead} {total === 1 ? 'matches' : 'match'}. Names are not listed when you narrow by reach or city.
+            </p>
+        );
+    }
+    if (shown === 0) {
+        return (
+            <p className="text-[14px] text-white/60">
+                {lead} {total === 1 ? 'matches' : 'match'}. They keep their names private.
+            </p>
+        );
+    }
+    if (shown >= total) {
+        return (
+            <p className="text-[14px] text-white/60">
+                {lead} {total === 1 ? 'matches' : 'match'}. {total === 1 ? 'They show' : 'All show'} their name.
+            </p>
+        );
     }
     return (
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-zinc-300">
-            {initial}
-        </span>
+        <p className="text-[14px] text-white/60">
+            {lead} {total === 1 ? 'matches' : 'match'}. {count(shown)} {shown === 1 ? 'shows' : 'show'} their name; the rest keep it private.
+        </p>
+    );
+}
+
+/** The bar at the bottom of the panel: how many, and what to do with them. Sticks to the bottom of the screen while the list is long. */
+function ActionBar({ summary, sticky, canSave, naming, nameDraft, onNameChange, busy, saved, canMessage, onSave, onMessage, onSubmitName, onCancelName }) {
+    return (
+        <div
+            className={`${sticky ? 'sticky bottom-0 z-10 ' : ''}-mx-5 -mb-5 mt-5 rounded-b-3xl border-t border-white/[0.08] bg-pxi-surface px-5 pb-5 pt-4 md:-mx-6 md:-mb-6 md:px-6 md:pb-6`}
+        >
+            {naming ? (
+                <form onSubmit={onSubmitName} className="flex flex-col gap-3 md:flex-row md:items-center">
+                    <Field
+                        aria-label="Name for this list"
+                        value={nameDraft}
+                        onChange={(e) => onNameChange(e.target.value)}
+                        onFocus={(e) => e.target.select()}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') onCancelName();
+                        }}
+                        maxLength={200}
+                        autoFocus
+                        className="min-w-0 flex-1"
+                    />
+                    <div className="flex items-center gap-2">
+                        <Button type="submit" variant="primary" disabled={busy || !nameDraft.trim()} className="flex-1 md:flex-none">
+                            {busy ? 'Saving...' : naming === 'message' ? 'Save and message' : 'Save list'}
+                        </Button>
+                        <Button variant="quiet" onClick={onCancelName} disabled={busy}>
+                            Cancel
+                        </Button>
+                    </div>
+                </form>
+            ) : (
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+                    <p className="min-w-0 truncate text-[15px] font-semibold text-white">
+                        {summary}
+                        {saved ? <span className="ml-3 text-[13px] font-semibold text-emerald-300">Saved</span> : null}
+                    </p>
+                    <div className="ml-auto flex items-center gap-2">
+                        {canSave ? (
+                            <Button variant="secondary" onClick={onSave}>
+                                Save as list
+                            </Button>
+                        ) : null}
+                        <Button variant="primary" onClick={onMessage} disabled={!canMessage}>
+                            Message them
+                        </Button>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 
 export default function AudiencePage() {
-    const [filters, setFilters] = useState(FILTER_DEFAULTS);
-    const [rows, setRows] = useState([]);
-    const [total, setTotal] = useState(0);
-    // True when a targeting filter is active: the server returns the count without names.
-    const [namesHidden, setNamesHidden] = useState(false);
-    // Everyone counts in `total`. Only people whose consent allows it are rows (privacy policy §4.2),
-    // so the list and its pages follow `identifiedTotal`.
-    const [identifiedTotal, setIdentifiedTotal] = useState(0);
-    const [hiddenCount, setHiddenCount] = useState(0);
-    const [page, setPage] = useState(1);
-    const [loading, setLoading] = useState(true);
-    const [loadError, setLoadError] = useState('');
-    const [selectedRowIds, setSelectedRowIds] = useState([]);
+    const router = useRouter();
+    const overviewReq = useRequest('overview', () => api.get('/api/analytics/audience'));
+    const eventsReq = useRequest('events', () => eventsService.getMyEvents({ limit: 100, offset: 0 }));
+    const segmentsReq = useRequest('segments', () => listAudienceSegments());
 
-    const [segments, setSegments] = useState([]);
-    const [segmentsLoading, setSegmentsLoading] = useState(true);
-    const [savingSegment, setSavingSegment] = useState(false);
-    const [segmentNameDraft, setSegmentNameDraft] = useState('');
-    const [segmentActionBusy, setSegmentActionBusy] = useState(false);
-    const [statusMessage, setStatusMessage] = useState('');
+    const [filters, setFilters] = useState(FILTER_DEFAULTS);
+    const [night, setNight] = useState('');
+    const [page, setPage] = useState(1);
+    const [naming, setNaming] = useState(null); // null | 'save' | 'message'
+    const [nameDraft, setNameDraft] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [actionError, setActionError] = useState('');
+    const [saved, setSaved] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+
+    const listKey = night ? null : JSON.stringify([normalizeFilters(filters), page]);
+    const listReq = useRequest(listKey, () => fetchAudienceAttendees(filters, { skip: (page - 1) * TAKE, take: TAKE }));
+
+    const overview = overviewReq.data;
+    const events = useMemo(() => (Array.isArray(eventsReq.data?.events) ? eventsReq.data.events : []), [eventsReq.data]);
+    const segments = useMemo(() => (Array.isArray(segmentsReq.data?.segments) ? segmentsReq.data.segments : []), [segmentsReq.data]);
+    const list = listReq.data;
+    const filtersOn = hasActiveFilters(filters);
 
     const activeSegment = useMemo(
-        () => segments.find((seg) => filtersMatchSegment(filters, seg.filterJson)) || null,
-        [segments, filters]
+        () => (night || !filtersOn ? null : segments.find((s) => filtersMatchSegment(filters, s.filterJson)) || null),
+        [night, filtersOn, segments, filters]
     );
+    const nightEvent = night ? events.find((e) => e.id === night) || null : null;
+    const nightCount = nightEvent && Number.isFinite(Number(nightEvent.attendeeCount)) ? Number(nightEvent.attendeeCount) : null;
+    const total = night ? nightCount ?? 0 : list?.total || 0;
+    const summary = night
+        ? nightCount === null
+            ? nightEvent?.name || 'This night'
+            : `${count(total)} ${peopleWord(total)}`
+        : !list
+          ? listReq.error
+              ? ''
+              : 'Counting people...'
+          : `${count(total)} ${peopleWord(total)}`;
 
+    const rows = useMemo(() => (night ? [] : list?.rows || []), [night, list]);
+    const identifiedTotal = list?.identifiedTotal ?? list?.total ?? 0;
     const totalPages = Math.max(1, Math.ceil(identifiedTotal / TAKE));
 
-    useEffect(() => {
-        let cancelled = false;
-        setLoading(true);
-        setLoadError('');
-        fetchAudienceAttendees(filters, { skip: (page - 1) * TAKE, take: TAKE })
-            .then((res) => {
-                if (cancelled) return;
-                setRows(res.rows || []);
-                setTotal(res.total || 0);
-                setIdentifiedTotal(res.identifiedTotal ?? res.total ?? 0);
-                setHiddenCount(res.hiddenCount || 0);
-                setNamesHidden(Boolean(res.namesHidden));
-            })
-            .catch((error) => {
-                if (cancelled) return;
-                setLoadError(error?.data?.error || error?.message || 'Failed to load audience.');
-                setRows([]);
-                setTotal(0);
-                setIdentifiedTotal(0);
-                setHiddenCount(0);
-                setNamesHidden(false);
-            })
-            .finally(() => { if (!cancelled) setLoading(false); });
-        return () => { cancelled = true; };
-    }, [filters, page]);
+    const kpis = [
+        { label: 'People', value: overview ? count(overview.totalAttendees) : '-' },
+        { label: 'Reach by email', value: overview ? count(overview.marketing?.emailOptIn) : '-' },
+        { label: 'Reach by text', value: overview ? count(overview.marketing?.smsOptIn) : '-' },
+        {
+            label: 'Come back',
+            value: overview ? `${Math.round((overview.repeat?.repeatRate || 0) * 100)}%` : '-',
+            hint: 'More than one night',
+        },
+    ];
 
-    const loadSegments = useCallback(() => {
-        setSegmentsLoading(true);
-        return listAudienceSegments()
-            .then((res) => setSegments(res.segments || []))
-            .catch(() => setSegments([]))
-            .finally(() => setSegmentsLoading(false));
-    }, []);
-
-    useEffect(() => {
-        loadSegments();
-    }, [loadSegments]);
-
-    function updateFilter(key, value) {
-        setFilters((current) => ({ ...current, [key]: value }));
-        setPage(1);
-        setStatusMessage('');
+    function settle() {
+        setNaming(null);
+        setSaved(false);
+        setActionError('');
+        setConfirmDelete(false);
     }
 
-    function resetFilters() {
+    function changeFilter(patch) {
+        // Account tier and passport points are not in the row; only a list saved earlier carries them. Changing a
+        // filter by hand starts a new set, so nothing is applied that the row does not show.
+        setFilters((current) => ({ ...current, accountTier: '', minOdysseyXp: '', ...patch }));
+        setPage(1);
+        settle();
+    }
+
+    function pickNight(id) {
+        setNight(id);
         setFilters(FILTER_DEFAULTS);
         setPage(1);
-        setSelectedRowIds([]);
-        setSavingSegment(false);
-        setSegmentNameDraft('');
-        setStatusMessage('Filters reset.');
+        settle();
     }
 
-    function toggleRow(rowId) {
-        setSelectedRowIds((current) =>
-            current.includes(rowId) ? current.filter((id) => id !== rowId) : [...current, rowId]
-        );
-    }
-
-    function toggleVisibleRows() {
-        const visibleIds = rows.map((row) => row.id);
-        const allVisibleSelected = visibleIds.every((id) => selectedRowIds.includes(id));
-        setSelectedRowIds((current) =>
-            allVisibleSelected
-                ? current.filter((id) => !visibleIds.includes(id))
-                : [...new Set([...current, ...visibleIds])]
-        );
-    }
-
-    async function handleSaveSegment() {
-        if (!segmentNameDraft.trim()) return;
-        setSegmentActionBusy(true);
-        setStatusMessage('');
-        try {
-            await saveAudienceSegment({ name: segmentNameDraft.trim(), filterJson: filters });
-            setSegmentNameDraft('');
-            setSavingSegment(false);
-            await loadSegments();
-            setStatusMessage('Segment saved. Use it below or send a campaign to it.');
-        } catch (error) {
-            setStatusMessage(error?.data?.error || error?.message || 'Failed to save segment.');
-        } finally {
-            setSegmentActionBusy(false);
-        }
-    }
-
-    function handleToggleSegment(segment) {
-        // Click applies it; clicking the already-active segment clears back to no filters.
-        if (activeSegment?.id === segment.id) {
-            setFilters(FILTER_DEFAULTS);
-            setStatusMessage('');
-        } else {
-            setFilters({ ...FILTER_DEFAULTS, ...(segment.filterJson || {}) });
-            setStatusMessage(`Applied "${segment.name}".`);
-        }
+    function pickList(id) {
+        const segment = segments.find((s) => s.id === id);
+        setNight('');
+        setFilters(segment ? { ...FILTER_DEFAULTS, ...(segment.filterJson || {}) } : FILTER_DEFAULTS);
         setPage(1);
-        setSelectedRowIds([]);
+        settle();
     }
 
-    async function handleDeleteSegment(segmentId) {
-        setSegmentActionBusy(true);
-        setStatusMessage('');
+    function clearAll() {
+        setNight('');
+        setFilters(FILTER_DEFAULTS);
+        setPage(1);
+        settle();
+    }
+
+    function go(target) {
+        router.push(composeHref(target));
+    }
+
+    function startNaming(mode) {
+        setActionError('');
+        setSaved(false);
+        setNameDraft(`List from ${shortDate(new Date())}`);
+        setNaming(mode);
+    }
+
+    function messageThem() {
+        if (night) return go({ audience: 'ATTENDEES', eventId: night });
+        if (activeSegment) return go({ audience: 'SEGMENT', segmentId: activeSegment.id });
+        if (!filtersOn) return go({ audience: 'ALL_PAST' });
+        return startNaming('message');
+    }
+
+    async function submitName(event) {
+        event.preventDefault();
+        const name = nameDraft.trim();
+        if (!name) return;
+        setBusy(true);
+        setActionError('');
         try {
-            await deleteAudienceSegment(segmentId);
-            await loadSegments();
+            const res = await saveAudienceSegment({ name, filterJson: normalizeFilters(filters) });
+            const id = res?.segment?.id;
+            if (naming === 'message' && id) {
+                go({ audience: 'SEGMENT', segmentId: id });
+                return;
+            }
+            setNaming(null);
+            setSaved(true);
+            segmentsReq.reload();
         } catch (error) {
-            setStatusMessage(error?.data?.error || error?.message || 'Failed to delete segment.');
+            setActionError(errorText(error, 'Could not save the list.'));
         } finally {
-            setSegmentActionBusy(false);
+            setBusy(false);
         }
     }
+
+    async function deleteList() {
+        if (!activeSegment) return;
+        setBusy(true);
+        setActionError('');
+        try {
+            await deleteAudienceSegment(activeSegment.id);
+            segmentsReq.reload();
+            clearAll();
+        } catch (error) {
+            setActionError(errorText(error, 'Could not delete the list.'));
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    const noAudience = overview && overview.totalAttendees === 0;
+    const listLoading = !night && listReq.loading;
+    const cities = overview?.topCities || [];
+    const listOptions = [
+        { value: '', label: segments.length ? 'Saved lists' : 'No saved lists' },
+        ...segments.map((s) => ({ value: s.id, label: s.name })),
+    ];
+    const reach = reachValue(filters);
+    const reachOptions = reach === 'both' ? [...REACH_OPTIONS, { value: 'both', label: 'Reach by email and text' }] : REACH_OPTIONS;
+    const canSave = filtersOn && !activeSegment && !night;
+    const canMessage = night ? Boolean(nightEvent) : total > 0 && !(listLoading && !list);
+    const clearButton =
+        filtersOn || night ? (
+            <Button variant="quiet" size="sm" onClick={clearAll} className="!px-0 md:!px-3.5">
+                Clear
+            </Button>
+        ) : null;
 
     return (
-        <div className="mx-auto max-w-7xl space-y-6">
-            <div className="px-1">
-                <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[28px]">Audience</h1>
-                <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-500">
-                    Who comes to your events and how engaged they are. Email addresses and phone numbers are never shown.
-                </p>
-            </div>
+        <div className="space-y-5 md:space-y-6">
+            <PageHeader title="Audience" subtitle="Emails and phone numbers are never shown." kpis={kpis} />
 
-            <div className="space-y-6">
-                <RealAudienceOverview />
+            {overviewReq.error ? <Notice tone="error">{overviewReq.error}</Notice> : null}
 
-                <SectionCard
-                    title="Audience"
-                    className={AUDIENCE_SECTION_CLASS}
-                    bodyClassName={AUDIENCE_SECTION_BODY_CLASS}
-                >
-                    <div className="space-y-6">
-                        {loadError ? (
-                            <div className="rounded-2xl bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-200">{loadError}</div>
-                        ) : null}
-
-                        {segments.length || segmentsLoading ? (
-                            <div className="space-y-2.5">
-                                <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Saved segments</p>
-                                {segmentsLoading ? (
-                                    <p className="rounded-2xl glass-field px-4 py-3 text-sm leading-6 text-zinc-500">Loading segments...</p>
-                                ) : (
-                                    <div className="flex flex-wrap gap-2">
-                                        {segments.map((segment) => {
-                                            const active = activeSegment?.id === segment.id;
-                                            return (
-                                                <div
-                                                    key={segment.id}
-                                                    className={`flex items-center gap-1.5 rounded-full py-1 pl-1 pr-1.5 transition ${
-                                                        active ? 'bg-pxi-purple/15 ring-1 ring-pxi-purple/40' : 'glass-field'
-                                                    }`}
-                                                >
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleToggleSegment(segment)}
-                                                        aria-pressed={active}
-                                                        className={`rounded-full px-3 py-1.5 text-xs font-bold tracking-[0.02em] ${active ? 'text-white' : 'text-zinc-300'}`}
-                                                    >
-                                                        {segment.name}
-                                                    </button>
-                                                    <Link
-                                                        href={`/dashboard/campaigns?segmentId=${segment.id}`}
-                                                        title={`Send a campaign to "${segment.name}"`}
-                                                        className="rounded-full px-2 py-1.5 text-[11px] font-semibold text-zinc-500 transition hover:bg-white/[0.08] hover:text-white"
-                                                    >
-                                                        Send →
-                                                    </Link>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDeleteSegment(segment.id)}
-                                                        disabled={segmentActionBusy}
-                                                        aria-label={`Delete ${segment.name}`}
-                                                        className="rounded-full px-2 py-1.5 text-xs font-bold text-zinc-500 transition hover:bg-red-500/15 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <Panel title="People">
+                    {noAudience ? (
+                        <EmptyState
+                            title="No one yet."
+                            line="People show up here after they get a ticket to one of your nights."
+                            action={
+                                <Button variant="primary" onClick={() => router.push('/dashboard/events/new')}>
+                                    Create event
+                                </Button>
+                            }
+                        />
+                    ) : (
+                        <>
+                            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                                <FilterSelect
+                                    ariaLabel="Saved lists"
+                                    value={activeSegment?.id || ''}
+                                    onChange={(e) => pickList(e.target.value)}
+                                    options={listOptions}
+                                    disabled={!segments.length}
+                                />
+                                <FilterSelect ariaLabel="Night" value={night} onChange={(e) => pickNight(e.target.value)} options={nightOptions(events)} />
+                                <FilterSelect
+                                    ariaLabel="Ticket"
+                                    value={filters.ticketTier}
+                                    onChange={(e) => changeFilter({ ticketTier: e.target.value })}
+                                    options={TICKET_OPTIONS}
+                                    disabled={Boolean(night)}
+                                />
+                                <FilterSelect
+                                    ariaLabel="Engagement"
+                                    value={filters.minEngagementTier}
+                                    onChange={(e) => changeFilter({ minEngagementTier: e.target.value })}
+                                    options={ENGAGEMENT_OPTIONS}
+                                    disabled={Boolean(night)}
+                                />
+                                <FilterSelect
+                                    ariaLabel="Reach"
+                                    value={reach}
+                                    onChange={(e) => changeFilter(reachFields(e.target.value))}
+                                    options={reachOptions}
+                                    disabled={Boolean(night)}
+                                />
+                                <FilterSelect
+                                    ariaLabel="City"
+                                    value={filters.city}
+                                    onChange={(e) => changeFilter({ city: e.target.value })}
+                                    options={cityOptions(cities, filters.city)}
+                                    disabled={Boolean(night)}
+                                />
                             </div>
-                        ) : null}
 
-                        <div className="dashboard-surface-b rounded-[1.25rem] !border-0 p-4 sm:p-5">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                                <div>
-                                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Filter audience</p>
-                                    <p className="mt-1 text-sm leading-6 text-zinc-400">Ticket and engagement filters show names. Campaign targeting filters count people without listing them.</p>
+                            <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                                <div className={`min-w-0 transition-opacity ${listLoading && list ? 'opacity-60' : ''}`}>
+                                    <CountLine night={night} nightName={nightEvent?.name || 'this night'} nightCount={nightCount} list={list} loading={listLoading} />
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <p className="rounded-full bg-pxi-field px-3 py-1.5 text-xs font-bold tracking-[0.02em] text-zinc-300">
-                                        {total.toLocaleString()} {namesHidden ? 'match' : 'attendees'}
-                                    </p>
-                                    {!namesHidden && hiddenCount > 0 ? (
-                                        <p
-                                            className="rounded-full bg-pxi-field px-3 py-1.5 text-xs font-semibold tracking-[0.02em] text-zinc-500"
-                                            title="These people opted out of personalized sharing, or are in a region where they have not said yes. They are counted but not shown by name."
-                                        >
-                                            {hiddenCount.toLocaleString()} not shown by name
-                                        </p>
+                                <div className="flex items-center gap-1">
+                                    {activeSegment ? (
+                                        confirmDelete ? (
+                                            <>
+                                                <span className="text-[12px] text-white/50">Delete this list?</span>
+                                                <Button variant="danger" size="sm" onClick={deleteList} disabled={busy}>
+                                                    Delete
+                                                </Button>
+                                                <Button variant="quiet" size="sm" onClick={() => setConfirmDelete(false)}>
+                                                    Keep
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <Button variant="quiet" size="sm" onClick={() => setConfirmDelete(true)} className="!px-0 md:!px-3.5">
+                                                Delete list
+                                            </Button>
+                                        )
                                     ) : null}
-                                    {savingSegment ? (
-                                        <div className="flex items-center gap-1.5">
-                                            <input
-                                                type="text"
-                                                autoFocus
-                                                value={segmentNameDraft}
-                                                onChange={(event) => setSegmentNameDraft(event.target.value)}
-                                                onKeyDown={(event) => { if (event.key === 'Enter') handleSaveSegment(); if (event.key === 'Escape') setSavingSegment(false); }}
-                                                placeholder="Segment name"
-                                                className="dashboard-input min-h-9 w-40 rounded-full px-3.5 py-1.5 text-xs font-semibold text-white placeholder:text-zinc-500"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={handleSaveSegment}
-                                                disabled={!segmentNameDraft.trim() || segmentActionBusy}
-                                                className="pill-solid px-3.5 py-1.5 text-xs font-bold tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-40"
-                                            >
-                                                Save
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => { setSavingSegment(false); setSegmentNameDraft(''); }}
-                                                className="rounded-full px-2.5 py-1.5 text-xs font-bold text-zinc-500 hover:text-white"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => setSavingSegment(true)}
-                                            className="pill-ghost px-3.5 py-1.5 text-xs font-bold tracking-[0.02em]"
-                                        >
-                                            Save as segment
-                                        </button>
-                                    )}
-                                    <button
-                                        type="button"
-                                        onClick={resetFilters}
-                                        className="rounded-full px-3.5 py-1.5 text-xs font-bold tracking-[0.02em] text-zinc-500 hover:text-white"
-                                    >
-                                        Reset
-                                    </button>
-                                </div>
-                            </div>
-                            {statusMessage ? <p className="mt-2 text-xs font-semibold text-zinc-400">{statusMessage}</p> : null}
-
-                            <p className="mt-5 px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-400">Shows names</p>
-                            <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                                <div className="space-y-2 rounded-2xl glass-field p-3">
-                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Ticket</p>
-                                    <select
-                                        value={filters.ticketTier}
-                                        onChange={(event) => updateFilter('ticketTier', event.target.value)}
-                                        className={AUDIENCE_SELECT_CLASS}
-                                    >
-                                        {TICKET_TIER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                                    </select>
-                                </div>
-                                <div className="space-y-2 rounded-2xl glass-field p-3">
-                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Engagement</p>
-                                    <select
-                                        value={filters.minEngagementTier}
-                                        onChange={(event) => updateFilter('minEngagementTier', event.target.value)}
-                                        className={AUDIENCE_SELECT_CLASS}
-                                    >
-                                        {ENGAGEMENT_TIER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                                    </select>
+                                    {clearButton}
                                 </div>
                             </div>
 
-                            <p className="mt-5 px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-400">Campaign targeting (count only, names hidden)</p>
-                            <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                                <div className="space-y-2 rounded-2xl glass-field p-3">
-                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Email opt-in</p>
-                                    <select
-                                        value={triStateValue(filters.emailOptIn)}
-                                        onChange={(event) => updateFilter('emailOptIn', parseTriState(event.target.value))}
-                                        className={AUDIENCE_SELECT_CLASS}
-                                    >
-                                        {TRI_STATE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                                    </select>
-                                </div>
+                            {listReq.error && !night ? (
+                                <Notice tone="error" className="mt-4">
+                                    {listReq.error}
+                                </Notice>
+                            ) : null}
 
-                                <div className="space-y-2 rounded-2xl glass-field p-3">
-                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">SMS opt-in</p>
-                                    <select
-                                        value={triStateValue(filters.smsOptIn)}
-                                        onChange={(event) => updateFilter('smsOptIn', parseTriState(event.target.value))}
-                                        className={AUDIENCE_SELECT_CLASS}
-                                    >
-                                        {TRI_STATE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                                    </select>
-                                </div>
-
-                                <label className="space-y-2 rounded-2xl glass-field p-3">
-                                    <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">City</span>
-                                    <input
-                                        type="text"
-                                        value={filters.city}
-                                        onChange={(event) => updateFilter('city', event.target.value)}
-                                        placeholder="Any city"
-                                        className={AUDIENCE_INPUT_CLASS}
+                            {!night && !list?.namesHidden && (rows.length > 0 || listLoading || listReq.error || (list && list.total === 0)) ? (
+                                <div className={`mt-4 transition-opacity ${listLoading && list ? 'opacity-60' : ''}`}>
+                                    <DataTable
+                                        columns={COLUMNS}
+                                        rows={rows}
+                                        loading={listLoading && !list}
+                                        empty={
+                                            list && list.total === 0 && !listReq.error ? (
+                                                <EmptyState
+                                                    title="No one matches."
+                                                    line="Try fewer filters."
+                                                    action={filtersOn ? <Button variant="primary" onClick={clearAll}>Clear filters</Button> : null}
+                                                />
+                                            ) : null
+                                        }
                                     />
-                                </label>
-
-                                <div className="space-y-2 rounded-2xl glass-field p-3">
-                                    <p className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Account tier</p>
-                                    <select
-                                        value={filters.accountTier}
-                                        onChange={(event) => updateFilter('accountTier', event.target.value)}
-                                        className={AUDIENCE_SELECT_CLASS}
-                                    >
-                                        {ACCOUNT_TIER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                                    </select>
                                 </div>
-
-                                <label className="space-y-2 rounded-2xl glass-field p-3">
-                                    <span className="px-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Min Odyssey XP</span>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={filters.minOdysseyXp}
-                                        onChange={(event) => updateFilter('minOdysseyXp', event.target.value)}
-                                        placeholder="0"
-                                        className={AUDIENCE_INPUT_CLASS}
-                                    />
-                                </label>
-                            </div>
-                        </div>
-
-                        <div className="dashboard-surface-b overflow-hidden rounded-[1.25rem] !border-0 p-2">
-                            {loading ? (
-                                <p className="px-3 py-2 text-xs font-bold tracking-[0.02em] text-zinc-500">Loading audience...</p>
                             ) : null}
-                            {!loading && namesHidden ? (
-                                <div className="px-5 py-8 text-center">
-                                    <p className="text-2xl font-semibold tabular-nums text-white">{total.toLocaleString()}</p>
-                                    <p className="mt-1 text-sm font-semibold text-zinc-300">people match these filters</p>
-                                    <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-zinc-500">
-                                        Names are not listed when you filter by city, marketing opt-in, account tier or XP. Save this as a segment to send a campaign to these people. PXI delivers the message, so their contact details stay private.
+
+                            {!night && !list?.namesHidden && totalPages > 1 ? (
+                                <div className="mt-4 flex items-center justify-between gap-3">
+                                    <p className="text-[12px] text-white/45">
+                                        Page {page} of {totalPages}
                                     </p>
+                                    <div className="flex gap-2">
+                                        <Button variant="secondary" size="sm" disabled={listLoading || page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                                            Previous
+                                        </Button>
+                                        <Button variant="secondary" size="sm" disabled={listLoading || page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                                            Next
+                                        </Button>
+                                    </div>
                                 </div>
                             ) : null}
-                            <div className={`space-y-3 p-2 md:hidden ${namesHidden ? 'hidden' : ''}`}>
-                                <div className="flex items-center justify-between gap-3 px-1">
-                                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">
-                                        {rows.length} of {identifiedTotal.toLocaleString()} shown
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={toggleVisibleRows}
-                                        className="rounded-full bg-pxi-field px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-zinc-300"
-                                    >
-                                        Select all
-                                    </button>
-                                </div>
-                                {rows.map((row) => {
-                                    const selected = selectedRowIds.includes(row.id);
-                                    return (
-                                        <button
-                                            key={row.id}
-                                            type="button"
-                                            onClick={() => toggleRow(row.id)}
-                                            className={`w-full rounded-2xl px-4 py-4 text-left transition ${
-                                                selected ? 'bg-white/[0.09]' : 'bg-pxi-field'
-                                            }`}
-                                        >
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="flex min-w-0 items-center gap-3">
-                                                    <AudienceAvatar row={row} />
-                                                    <div className="min-w-0">
-                                                        <p className="truncate text-base font-bold leading-6 text-white">{row.name || row.username || 'Unnamed'}</p>
-                                                        {row.username ? (
-                                                            <p className="mt-1 truncate text-xs leading-5 text-zinc-500">@{row.username}</p>
-                                                        ) : null}
-                                                    </div>
-                                                </div>
-                                                <span className={`mt-1 h-4 w-4 shrink-0 rounded-md ${selected ? 'bg-white' : 'bg-white/12'}`} aria-hidden="true" />
-                                            </div>
-                                            <div className="mt-3 flex flex-wrap gap-1.5">
-                                                <TicketTierBadge tier={row.ticketTier} />
-                                                <EngagementBadge tier={row.engagementTier} />
-                                            </div>
-                                            <div className="mt-4 grid grid-cols-2 gap-2">
-                                                <div className="rounded-xl bg-pxi-field px-3 py-2">
-                                                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Events</p>
-                                                    <p className="mt-1 font-mono text-sm font-bold text-zinc-100">{row.eventsAttended}</p>
-                                                </div>
-                                                <div className="rounded-xl bg-pxi-field px-3 py-2">
-                                                    <p className="text-[11px] font-medium tracking-[0.02em] text-zinc-500">Last check-in</p>
-                                                    <p className="mt-1 text-sm font-bold text-zinc-100">{formatLastCheckIn(row.lastCheckInAt)}</p>
-                                                </div>
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            <div className={`hidden overflow-x-auto pb-1 ${namesHidden ? '' : 'md:block'} ${AUDIENCE_SCROLLBAR_CLASS}`}>
-                                <table className="w-full min-w-[760px] text-left">
-                                    <thead>
-                                        <tr className="text-[11px] font-medium text-zinc-500">
-                                            <th className="w-14 border-b border-white/[0.07] px-4 py-2.5">
-                                                <button
-                                                    type="button"
-                                                    onClick={toggleVisibleRows}
-                                                    className="rounded-full bg-pxi-field px-3 py-1 text-[11px] font-medium text-zinc-300 transition hover:bg-white/[0.1]"
-                                                >
-                                                    All
-                                                </button>
-                                            </th>
-                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Attendee</th>
-                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Ticket</th>
-                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Engagement</th>
-                                            <th className="border-b border-white/[0.07] px-4 py-2.5 text-right font-medium">Events</th>
-                                            <th className="border-b border-white/[0.07] px-4 py-2.5 font-medium">Last check-in</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {rows.map((row) => {
-                                            const selected = selectedRowIds.includes(row.id);
-                                            const rowSurface = selected ? 'bg-pxi-purple/[0.06]' : 'hover:bg-white/[0.03]';
-                                            return (
-                                                <tr key={row.id} className={`border-b border-white/[0.04] transition-colors ${rowSurface}`}>
-                                                    <td className="px-4 py-3.5 align-middle">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selected}
-                                                            onChange={() => toggleRow(row.id)}
-                                                            className="h-4 w-4 rounded-md bg-white/10 accent-pxi-purple [border:0] focus:outline-none"
-                                                            aria-label={`Select ${row.name || row.username || row.id}`}
-                                                        />
-                                                    </td>
-                                                    <td className="px-4 py-3.5 align-middle">
-                                                        <div className="flex items-center gap-3">
-                                                            <AudienceAvatar row={row} />
-                                                            <div className="min-w-0">
-                                                                <p className="truncate text-sm font-semibold text-white">{row.name || row.username || 'Unnamed'}</p>
-                                                                {row.username ? <p className="truncate text-xs text-zinc-500">@{row.username}</p> : null}
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-3.5 align-middle">
-                                                        <TicketTierBadge tier={row.ticketTier} />
-                                                    </td>
-                                                    <td className="px-4 py-3.5 align-middle">
-                                                        <EngagementBadge tier={row.engagementTier} />
-                                                    </td>
-                                                    <td className="px-4 py-3.5 text-right align-middle text-sm font-semibold tabular-nums text-zinc-100">
-                                                        {row.eventsAttended}
-                                                    </td>
-                                                    <td className="px-4 py-3.5 align-middle text-sm text-zinc-400">
-                                                        {formatLastCheckIn(row.lastCheckInAt)}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {!loading && !namesHidden && rows.length === 0 ? (
-                                <div className="px-5 py-8 text-center text-sm leading-6 text-zinc-500">
-                                    No attendees match the current filters.
-                                </div>
-                            ) : null}
-                        </div>
 
-                        {totalPages > 1 ? (
-                            <div className="flex items-center justify-between gap-4 px-2">
-                                <p className="text-xs font-semibold text-zinc-500">
-                                    Page {page} of {totalPages}, {identifiedTotal.toLocaleString()} shown of {total.toLocaleString()}
-                                </p>
-                                <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        disabled={loading || page <= 1}
-                                        onClick={() => setPage((current) => Math.max(1, current - 1))}
-                                        className="pill-ghost px-4 py-2 text-xs font-bold tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-40"
-                                    >
-                                        Previous
-                                    </button>
-                                    <button
-                                        type="button"
-                                        disabled={loading || page >= totalPages}
-                                        onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                                        className="pill-solid px-4 py-2 text-xs font-bold tracking-[0.02em] disabled:cursor-not-allowed disabled:opacity-40"
-                                    >
-                                        Next
-                                    </button>
-                                </div>
-                            </div>
-                        ) : null}
-                    </div>
-                </SectionCard>
+                            {actionError ? (
+                                <Notice tone="error" className="mt-4">
+                                    {actionError}
+                                </Notice>
+                            ) : null}
+
+                            <ActionBar
+                                summary={summary}
+                                sticky={rows.length > 8}
+                                canSave={canSave}
+                                naming={naming}
+                                nameDraft={nameDraft}
+                                onNameChange={setNameDraft}
+                                busy={busy}
+                                saved={saved}
+                                canMessage={canMessage}
+                                onSave={() => startNaming('save')}
+                                onMessage={messageThem}
+                                onSubmitName={submitName}
+                                onCancelName={() => setNaming(null)}
+                            />
+                        </>
+                    )}
+                </Panel>
+
+                <Panel title="Where they are from">
+                    {!overview && !overviewReq.error ? (
+                        <Skeleton className="h-40" />
+                    ) : cities.length ? (
+                        <ul className="divide-y divide-white/[0.08]">
+                            {cities.map((c) => (
+                                <li key={c.city} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                                    <span className="min-w-0 truncate text-[14px] text-white">{String(c.city).startsWith('other') ? 'Other cities' : c.city}</span>
+                                    <span className="shrink-0 text-[14px] font-semibold tabular-nums text-white">{count(c.count)}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-[13px] text-white/50">
+                            {overview?.demographicsWithheld && overview.totalAttendees > 0 ? 'Cities show once 10 or more people have come.' : 'No cities yet.'}
+                        </p>
+                    )}
+                </Panel>
             </div>
         </div>
     );

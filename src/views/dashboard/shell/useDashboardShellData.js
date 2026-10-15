@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService, authStorage } from '@/services/auth';
-import { canAccessAdminDashboard } from '@/lib/adminAccess';
+import { adminRoleOf, canAccessAdminDashboard } from '@/lib/adminAccess';
 import { isPartialUser, isVendorUser } from '@/lib/accountTier';
 import { dashboardShellActions, useDashboardShellStore } from '@/lib/dashboardShellStore';
 import { dashboardPrefetchRoutes, prefetchDashboardRoutes } from '@/lib/dashboardPerformance';
@@ -12,6 +12,7 @@ import { useCapabilities, useEvents } from '@/lib/dashboardStore';
 import {
     ADMIN_SIDEBAR_MODE_KEY,
     buildAdminNavItems,
+    buildAdminTabs,
     buildMemberNavItems,
     buildMemberTabs,
     isNavItemActive,
@@ -253,6 +254,7 @@ export function useDashboardShellData() {
     // Venue Claims. Both come from the backend, which re-checks on every request.
     const [adminCityScope, setAdminCityScope] = useState(null);
     const [hasSalesAccess, setHasSalesAccess] = useState(false);
+    const [salesRole, setSalesRole] = useState(null);
     // VEN-8: the venue section appears only while this account owns a venue; a revoked claim removes it.
     const [isVenueOwner, setIsVenueOwner] = useState(false);
     // PART-3: Venues (floor plans) is offered to venue accounts, and to an account that already holds one.
@@ -270,8 +272,16 @@ export function useDashboardShellData() {
         let cancelled = false;
         // /access answers 200 for everyone, so people without a sales role no longer log a 403 on every page.
         fetchSalesAccess()
-            .then((res) => { if (!cancelled) setHasSalesAccess(Boolean(res?.hasAccess)); })
-            .catch(() => { if (!cancelled) setHasSalesAccess(false); });
+            .then((res) => {
+                if (cancelled) return;
+                setHasSalesAccess(Boolean(res?.hasAccess));
+                setSalesRole(res?.hasAccess ? res.salesRole || null : null);
+            })
+            .catch(() => {
+                if (cancelled) return;
+                setHasSalesAccess(false);
+                setSalesRole(null);
+            });
         fetchMyVenues()
             .then((res) => { if (!cancelled) setIsVenueOwner((res?.venues?.length ?? 0) > 0); })
             .catch(() => { if (!cancelled) setIsVenueOwner(false); });
@@ -297,7 +307,7 @@ export function useDashboardShellData() {
             ));
         }
         if (isAdminNav) {
-            return buildAdminNavItems({ cityScope: adminCityScope });
+            return buildAdminNavItems({ cityScope: adminCityScope, adminRole: adminRoleOf(user), salesRole });
         }
         return buildMemberNavItems({
             hasLiveOpsAccess,
@@ -305,10 +315,11 @@ export function useDashboardShellData() {
             mounted: rolesReady,
             user,
             hasSalesAccess,
+            salesRole,
             isVenueOwner,
             canOpenFloorPlans,
         });
-    }, [isAdminNav, adminCityScope, rolesReady, hasLiveOpsAccess, hasLiveEvent, user, hasSalesAccess, isVenueOwner, canOpenFloorPlans]);
+    }, [isAdminNav, adminCityScope, rolesReady, hasLiveOpsAccess, hasLiveEvent, user, hasSalesAccess, salesRole, isVenueOwner, canOpenFloorPlans]);
 
     const memberTabs = useMemo(() => buildMemberTabs({
         hasLiveOpsAccess,
@@ -316,9 +327,14 @@ export function useDashboardShellData() {
         mounted: rolesReady,
         user,
         hasSalesAccess,
+        salesRole,
         isVenueOwner,
         canOpenFloorPlans,
-    }), [hasLiveOpsAccess, hasLiveEvent, rolesReady, user, hasSalesAccess, isVenueOwner, canOpenFloorPlans]);
+    }), [hasLiveOpsAccess, hasLiveEvent, rolesReady, user, hasSalesAccess, salesRole, isVenueOwner, canOpenFloorPlans]);
+
+    // Dashboard 2: the control room uses top tabs like the member dashboard, filtered for a city-scoped admin.
+    const adminRole = rolesReady ? adminRoleOf(user) : null;
+    const adminTabs = useMemo(() => buildAdminTabs({ cityScope: adminCityScope, adminRole, salesRole }), [adminCityScope, adminRole, salesRole]);
 
     const closeMobileMenu = useCallback(() => setMenuOpen(false), []);
     // The phone menu is the shared one: the sidebar's pages on top, then Dashboard / Wishlist and the account row.
@@ -366,6 +382,9 @@ export function useDashboardShellData() {
         setAdminSidebarModeAndNavigate,
         navItems,
         memberTabs,
+        adminTabs,
+        adminCityScope,
+        salesRole,
         menuLinks,
         activeMenuPage,
         menuOpen,
