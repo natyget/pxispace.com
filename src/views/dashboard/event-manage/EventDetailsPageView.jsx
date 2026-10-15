@@ -18,6 +18,7 @@ import {
 import { eventShareLead, shareMessageWithUrl } from '@/lib/shareCopy';
 import { formatTicketPrice, parseEventTicketTiers } from '@/lib/ticketTiers';
 import { trackShare } from '@/lib/analytics';
+import DiplomatToolsPanels from './DiplomatToolsPanels';
 
 export default function EventDetailsPageView() {
   const { event, eventId, albumId, participants, featuredPeople } = useEventManage();
@@ -257,6 +258,8 @@ export default function EventDetailsPageView() {
               </ul>
             )}
           </section>
+
+          <DiplomatToolsPanels eventId={eventId} />
 
           {albumId ? (
             <section id="event-going-preview" className="scroll-mt-6">
