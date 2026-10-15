@@ -1,4 +1,4 @@
-import { count, displayName, handle } from '@/lib/dashFormat';
+import { count, displayName, handle, shortDate } from '@/lib/dashFormat';
 
 // The words for a claim, shared by Today (inbox rows) and Claims.
 
@@ -32,4 +32,25 @@ export function exposureLine(exposure) {
     const nights = `${count(events)} ${events === 1 ? 'night' : 'nights'}`;
     const people = `${count(attendees)} ${attendees === 1 ? 'person' : 'people'}`;
     return `${nights} and ${people} become visible to them.`;
+}
+
+/** The calendar day of an ISO time ("2027-10-14"), read as the API stores it (UTC), or '' when there is none. */
+export function dayOf(iso) {
+    const day = typeof iso === 'string' ? iso.slice(0, 10) : '';
+    return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : '';
+}
+
+/** "Oct 14, 2027" for a stored end date. Noon keeps the day the same in every time zone. */
+export function endLabel(iso) {
+    const day = dayOf(iso);
+    return day ? shortDate(`${day}T12:00:00`) : '';
+}
+
+/** The first day a commission end may take: the day after approval, on the same UTC calendar as the API. */
+export function firstEndDay(approvedAt) {
+    const day = dayOf(approvedAt);
+    if (!day) return '';
+    const next = new Date(`${day}T00:00:00Z`);
+    next.setUTCDate(next.getUTCDate() + 1);
+    return next.toISOString().slice(0, 10);
 }

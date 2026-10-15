@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button, DataTable, Field, StateText } from '@/components/dashboard/ui/kit';
 import { handle, shortDate } from '@/lib/dashFormat';
 import { revokeOrganizerClaim } from '@/services/growth';
+import ClaimEnd from './ClaimEnd';
 import ClaimSubject from './ClaimSubject';
 import { claimSubject } from './claimText';
 
@@ -112,6 +113,7 @@ export default function ClaimTable({ claims, organizerHref, showRaiser = false, 
                 return (
                     <div className="min-w-0">
                         {claim.decidedNote ? <p className="text-[13px] text-white/60">{claim.decidedNote}</p> : null}
+                        {claim.type === 'ORGANIZER' ? <ClaimEnd claim={claim} /> : null}
                         {claim.canRevoke ? (
                             <Button
                                 size="sm"
