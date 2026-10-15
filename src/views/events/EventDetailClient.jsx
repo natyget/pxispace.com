@@ -14,6 +14,8 @@ import { buildAlbumEventDetails } from '@/views/public/album/albumEventDetailsAd
 import { parseEventTicketTiers } from '@/lib/ticketTiers';
 import { resolveEventCity } from '@/lib/seo/cities';
 import { track, trackViewItem } from '@/lib/analytics';
+import { isNightSoldOut, rememberEventRef } from '@/lib/diplomatNight';
+import { recordRefClick } from '@/services/diplomatTools';
 
 /** Google Ads destination for the §5.7 dynamic-remarketing hit. Unset = no-op. */
 const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
@@ -100,6 +102,13 @@ export default function EventDetailClient() {
     };
   }, [id]);
 
+  // ?ref=<code>: kept 30 days per night (the purchase calls send it), and its click counted once per code.
+  useEffect(() => {
+    if (!id) return;
+    const code = new URLSearchParams(window.location.search).get('ref');
+    if (code && rememberEventRef(id, code)) recordRefClick(id, code);
+  }, [id]);
+
   const loading = !!id && fetched.id !== id;
   const apiEvent = fetched.id === id ? fetched.event : null;
   const albumId = apiEvent?.albumId || apiEvent?.albums?.[0]?.id || null;
@@ -159,6 +168,11 @@ export default function EventDetailClient() {
     );
     return {
       ...built,
+      // A sold-out night puts the waitlist form where the buy action was.
+      primaryAction:
+        built.primaryAction?.href && isNightSoldOut(apiEvent)
+          ? { label: 'Sold out', waitlist: { eventId: apiEvent.id } }
+          : built.primaryAction,
       secondaryAction: albumId ? { label: 'Open Album', href: `/album/${albumId}` } : null,
     };
   }, [apiEvent, participantsFor, albumId]);

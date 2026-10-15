@@ -14,7 +14,7 @@ import { spotifyEmbedSrc } from '@/lib/spotify';
 import { musicService } from '@/services/music';
 import { useSongPreview } from '@/lib/songPreview';
 import { readTopSong, toCapsLine, toPlace, toWhen } from './eventFormat';
-
+import EventWaitlistForm from './EventWaitlistForm';
 /*
  * The app's event view (pxi-mobile-app/src/components/event), on the web: a flat #1C1C1C sheet with
  * 28px top corners; EVENT DETAILS + X; the name and the place in heavy purple display type; a tall
@@ -202,7 +202,9 @@ export function WhenColumn({ label, value, quiet, size }) {
 
 /** What a pill is made of: the caller's label (and optional icon) on a button, a link or a status. */
 export function ActionEl({ action, className, style, children }) {
-  const { href, onClick, disabled } = action;
+  const { href, onClick, disabled, waitlist } = action;
+  // A sold-out night: the waitlist form takes the buy action's place.
+  if (waitlist) return <EventWaitlistForm eventId={waitlist.eventId} />;
   if (disabled || (!href && !onClick)) {
     return (
       <div className={className} style={style} aria-disabled="true">

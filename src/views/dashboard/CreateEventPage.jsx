@@ -33,7 +33,7 @@ import {
   validatePaidPricing,
 } from '@/lib/ticketTiers';
 import { trackEventCreatePublish, trackEventCreateStart } from '@/lib/analytics';
-import { canHostEvents } from '@/lib/accountTier';
+import { canHostEvents, isVendorUser } from '@/lib/accountTier';
 import TierLock from '@/components/dashboard/shell/TierLock';
 
 async function getCroppedBlob(imageSrc, croppedAreaPixels) {
@@ -1433,6 +1433,29 @@ function CreateEventForm({ embedded = false, onCancel, onCreated }) {
             </div>
           </section>
         ) : null}
+
+        <section className={`${sectionClass} space-y-4`}>
+          <div>
+            <h2 className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Diplomat tools</h2>
+          </div>
+          {isVendorUser(user) ? (
+            <div className="space-y-2">
+              <p className="text-sm text-white">Waitlists, referral links and guest lists are on for your nights.</p>
+              <p className="text-xs text-zinc-500">Make referral links on the night&apos;s page after you publish.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-white">Waitlists, referral links and guest lists for your nights.</p>
+              <Link
+                href="/dashboard/vendor-upgrade"
+                className="pill-solid inline-flex min-h-[44px] items-center justify-center px-6 text-[13px]"
+              >
+                Connect Stripe
+              </Link>
+              <p className="text-xs text-zinc-500">Eventbrite rents you your own audience. PXI gives it to you.</p>
+            </div>
+          )}
+        </section>
 
         {paidGate && (
           <div className="rounded-2xl bg-pxi-field px-4 py-3 text-sm text-pxi-orange space-y-2">
