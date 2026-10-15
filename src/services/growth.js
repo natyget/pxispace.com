@@ -75,6 +75,11 @@ export function revokeOrganizerClaim(id, reason) {
     return api.post(`/api/growth/claims/organizer/${encodeURIComponent(id)}/revoke`, { reason });
 }
 
+/** Sets the day an approved organizer claim's commission ends (YYYY-MM-DD). Resolves to { id, commissionEndDate }. */
+export function setClaimEnd(claimId, commissionEndDate) {
+    return api.patch(`/api/growth/claims/organizer/${encodeURIComponent(claimId)}/end`, { commissionEndDate });
+}
+
 // ── Earnings, rates, payouts ────────────────────────────────────────────────────────────────────────────────
 
 export function fetchMyEarnings() {
