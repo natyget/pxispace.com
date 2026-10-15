@@ -42,12 +42,12 @@ export default function ForecastCard({ venueId, available = true, adminView = fa
     const nothingYet = status === 'ready' && !nights.length && !week?.typical;
 
     return (
-        <VenueCard title="Weekly Forecast" className={className} data-venue-card="forecast">
+        <VenueCard title="Weekly forecast" className={className} data-venue-card="forecast">
             {status === 'loading' ? <CardSkeleton className="h-40" /> : null}
             {status === 'unavailable' ? (
-                <EmptyNote detail="Forecasts open here once PXI has checked them against enough real nights.">No Current Suggestions</EmptyNote>
+                <EmptyNote detail="Forecasts open here once PXI has checked them against enough real nights.">No current suggestions</EmptyNote>
             ) : null}
-            {status === 'error' ? <EmptyNote detail={state.message}>No Current Suggestions</EmptyNote> : null}
+            {status === 'error' ? <EmptyNote detail={state.message}>No current suggestions</EmptyNote> : null}
             {status === 'ready' ? (
                 <div className="flex flex-1 flex-col">
                     {adminView && !week.visibleToVenue ? (
@@ -83,7 +83,7 @@ export default function ForecastCard({ venueId, available = true, adminView = fa
                         <EmptyNote
                             detail={`A range appears after ${week.minHistory} nights with scanned tickets (${formatInteger(week.historyEvents)} so far).`}
                         >
-                            No Current Suggestions
+                            No current suggestions
                         </EmptyNote>
                     ) : null}
                     {topGenre ? (

@@ -51,9 +51,9 @@ function RealAudienceOverview() {
         const topCity = (data.topCities || []).find((c) => !String(c.city).startsWith('other'));
         if (topCity) items.push(`${topCity.city} is your strongest city (${topCity.count} attendees).`);
         const emailPct = Math.round(((data.marketing?.emailOptIn || 0) / data.totalAttendees) * 100);
-        items.push(`${(data.marketing?.emailOptIn || 0).toLocaleString('en-US')} people (${emailPct}%) opted into email — reachable right now from Campaigns.`);
+        items.push(`${(data.marketing?.emailOptIn || 0).toLocaleString('en-US')} people (${emailPct}%) opted into email. Reachable right now from Campaigns.`);
         const repeatPct = Math.round((data.repeat?.repeatRate || 0) * 100);
-        items.push(`${repeatPct}% come back for another event${repeatPct >= 20 ? ' — strong loyalty.' : ' — a win-back send usually lifts this.'}`);
+        items.push(`${repeatPct}% come back for another event${repeatPct >= 20 ? '. Strong loyalty.' : '. A win-back send usually lifts this.'}`);
         return items;
     }, [data]);
 
@@ -77,7 +77,7 @@ function RealAudienceOverview() {
                                 ))}
                             </ul>
                             <p className="mt-2 text-xs leading-5 text-zinc-600">
-                                Includes attendees from events you host or co-host — co-hosting grows the network you can see.
+                                Includes attendees from events you host or co-host. Co-hosting grows the network you can see.
                             </p>
                         </div>
                     ) : null}
@@ -168,7 +168,7 @@ function RealAudienceOverview() {
                         <div className="glow-surface-soft rounded-xl px-4 py-4">
                             <p className="mb-1 text-[11px] font-medium tracking-[0.02em] text-zinc-500">Retention funnel</p>
                             <p className="mb-3 text-xs leading-5 text-zinc-500">
-                                Three real signals read top to bottom — reachable audience size, Passport depth, then repeat rate.
+                                Three real signals, top to bottom: reachable audience size, Passport depth, then repeat rate.
                             </p>
                             <FunnelChart data={retentionStages} />
                         </div>
@@ -220,9 +220,9 @@ const TRI_STATE_OPTIONS = [
 // isVendor, since it's a derived rung rather than a stored tier value.
 const ACCOUNT_TIER_OPTIONS = [
     { value: '', label: 'Any tier' },
-    { value: 'PARTIAL', label: 'Partial — web only' },
-    { value: 'CITIZEN', label: 'Citizen — has passport' },
-    { value: 'DIPLOMAT', label: 'Diplomat — verified seller' },
+    { value: 'PARTIAL', label: 'Partial, web only' },
+    { value: 'CITIZEN', label: 'Citizen, has passport' },
+    { value: 'DIPLOMAT', label: 'Diplomat, verified seller' },
 ];
 
 const AUDIENCE_SECTION_CLASS =
@@ -399,7 +399,7 @@ export default function AudiencePage() {
             setSegmentNameDraft('');
             setSavingSegment(false);
             await loadSegments();
-            setStatusMessage('Segment saved — use it below or send a campaign to it.');
+            setStatusMessage('Segment saved. Use it below or send a campaign to it.');
         } catch (error) {
             setStatusMessage(error?.data?.error || error?.message || 'Failed to save segment.');
         } finally {
@@ -436,8 +436,7 @@ export default function AudiencePage() {
     return (
         <div className="mx-auto max-w-7xl space-y-6">
             <div className="px-1">
-                <p className="text-[13px] font-medium text-zinc-500">Audience</p>
-                <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-white md:text-[28px]">Know your crowd</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-white md:text-[28px]">Audience</h1>
                 <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-500">
                     Who comes to your events and how engaged they are. Email addresses and phone numbers are never shown.
                 </p>

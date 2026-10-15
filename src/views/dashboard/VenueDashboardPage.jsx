@@ -54,10 +54,10 @@ const TABS = [
 ];
 
 // The design's column widths, row by row, so the right-hand cards line up down the page.
-const HOME_ROW_1 = 'grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,380fr)_minmax(0,588fr)_minmax(0,380fr)_minmax(0,481fr)]';
-const HOME_ROW_2 = 'grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,277fr)_minmax(0,277fr)_minmax(0,779fr)_minmax(0,481fr)]';
+const HOME_ROW_1 = 'grid gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(0,380fr)_minmax(0,588fr)_minmax(0,380fr)_minmax(0,481fr)]';
+const HOME_ROW_2 = 'grid gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(0,277fr)_minmax(0,277fr)_minmax(0,779fr)_minmax(0,481fr)]';
 const HOME_ROW_3 = 'grid gap-3 xl:grid-cols-[minmax(0,1057fr)_minmax(0,778fr)]';
-const OVERVIEW_ROW_1 = 'grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,352fr)_minmax(0,278fr)_minmax(0,202fr)_minmax(0,506fr)]';
+const OVERVIEW_ROW_1 = 'grid gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(0,352fr)_minmax(0,278fr)_minmax(0,202fr)_minmax(0,506fr)]';
 const OVERVIEW_ROW_2 = 'grid gap-3 xl:grid-cols-[minmax(0,648fr)_minmax(0,694fr)]';
 const OVERVIEW_ROW_3 = 'grid gap-3 xl:grid-cols-2';
 
@@ -117,7 +117,7 @@ function ActivityFilter({ nights, timeZone, selection, onChange }) {
                 </svg>
             </button>
             {open ? (
-                <div className="dashboard-popover-surface absolute bottom-full right-0 z-20 mb-1.5 w-[230px] rounded-xl p-2 text-[12px]">
+                <div className="dashboard-popover-surface absolute bottom-full right-0 z-20 mb-1.5 w-[230px] max-w-[calc(100vw-2rem)] rounded-xl p-2 text-[12px]">
                     {options.map((o) => (
                         <button
                             key={o.mode}
@@ -203,7 +203,7 @@ function RoomFills({ venueId, home, loading }) {
 
     return (
         <ActivityCard
-            title="When the Room Fills"
+            title="When the room fills"
             activity={activity}
             live={live}
             // A range the venue chose is averaged however few nights are in it, so it is not "limited".
@@ -226,7 +226,7 @@ function AllNightsCard({ analytics, loading }) {
         ['Nights', analytics.eventCount],
     ] : [];
     return (
-        <VenueCard title="All Nights" data-venue-card="all-nights">
+        <VenueCard title="All nights" data-venue-card="all-nights">
             {loading || !analytics ? <div className="h-40 w-full animate-pulse rounded-2xl bg-white/[0.035]" /> : (
                 <>
                     <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -386,7 +386,7 @@ export default function VenueDashboardPage() {
                 <div className="space-y-3" key={venueId}>
                     <div className={HOME_ROW_1}>
                         {cards.door}
-                        <ActivityCard title="Recent Night Activity" activity={home?.activity || null} live={live} level={level} loading={homeLoading} />
+                        <ActivityCard title="Recent night activity" activity={home?.activity || null} live={live} level={level} loading={homeLoading} />
                         <ForecastCard venueId={venueId} available={canPlan} adminView={adminView} onPlan={canPlan ? () => go({ tab: 'plan' }) : null} />
                         {cards.nights}
                     </div>

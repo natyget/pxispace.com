@@ -40,7 +40,7 @@ function Stack({ name, time, count = null, cover = null, href = null, muted = fa
 
 export default function AlbumsCard({ albums = [], loading = false, className = '' }) {
     return (
-        <VenueCard title="Photo Albums" className={className} data-venue-card="albums">
+        <VenueCard title="Photo albums" className={className} data-venue-card="albums">
             {loading ? <CardSkeleton className="h-36" /> : albums.length ? (
                 <div className="dashboard-scrollbar-none flex gap-4 overflow-x-auto pb-1" aria-label="Albums, newest first">
                     {albums.map((album) => (
@@ -57,7 +57,7 @@ export default function AlbumsCard({ albums = [], loading = false, className = '
             ) : (
                 <div className="flex flex-1 items-center gap-4">
                     <Stack name="Album" time="" muted />
-                    <p className="flex-1 text-center text-[11px] font-medium text-white/80">No Active Photo Albums</p>
+                    <p className="flex-1 text-center text-[11px] font-medium text-white/80">No active photo albums</p>
                 </div>
             )}
         </VenueCard>

@@ -32,8 +32,8 @@ const EMPTY_TWIML = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>
 // Twilio gives a webhook 15 seconds. Answer inside that even if the API hangs.
 const FORWARD_TIMEOUT_MS = 10000;
 
-const twiml = (status) =>
-  new NextResponse(EMPTY_TWIML, { status, headers: { 'Content-Type': 'text/xml' } });
+const twiml = (status, body = EMPTY_TWIML) =>
+  new NextResponse(body, { status, headers: { 'Content-Type': 'text/xml' } });
 
 const first = (value) => (value || '').split(',')[0].trim();
 
@@ -53,6 +53,8 @@ function publicUrl(request) {
 
 export async function POST(request) {
   let accepted = false;
+  // HELP and START are answered by the API as TwiML (carrier rules for the A2P campaign); pass that reply on.
+  let reply = EMPTY_TWIML;
   try {
     const formData = await request.formData();
     const params = {};
@@ -72,6 +74,10 @@ export async function POST(request) {
       signal: AbortSignal.timeout(FORWARD_TIMEOUT_MS),
     });
     accepted = res.ok;
+    if (res.ok && (res.headers.get('content-type') || '').includes('xml')) {
+      const body = await res.text();
+      if (body.includes('<Response')) reply = body;
+    }
     if (!res.ok) {
       console.error('[twilio-callback] the API did not accept the forward', {
         status: res.status,
@@ -82,5 +88,5 @@ export async function POST(request) {
     console.error('[twilio-callback] forward failed:', error);
   }
 
-  return twiml(accepted ? 200 : 502);
+  return accepted ? twiml(200, reply) : twiml(502);
 }

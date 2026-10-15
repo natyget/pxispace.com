@@ -28,13 +28,13 @@ function GateRow({ gate }) {
 export default function DoorCard({ door, loading = false, className = '' }) {
     const live = door?.state === 'LIVE';
     return (
-        <VenueCard title="Through the Door" badge={live ? <LiveBadge /> : null} className={className} data-venue-card="door">
+        <VenueCard title="Through the door" badge={live ? <LiveBadge /> : null} className={className} data-venue-card="door">
             {loading ? <CardSkeleton className="h-40" /> : (
                 <>
                     {door ? <p className="-mt-2 truncate text-[11px] text-white/45">{doorCaption(door)}</p> : null}
                     <div className="mt-1 flex items-end justify-between gap-3">
                         <div className="min-w-0 pb-1">
-                            <p className="text-[13px] font-semibold text-white/75">Tickets Sold</p>
+                            <p className="text-[13px] font-semibold text-white/75">Tickets sold</p>
                             <p className="mt-0.5 text-[28px] font-bold leading-none text-white tabular-nums">{formatInteger(door?.ticketsSold)}</p>
                             {door?.capacity ? (
                                 <p className="mt-1 text-[10px] text-white/40 tabular-nums">Capacity {formatInteger(door.capacity)}</p>

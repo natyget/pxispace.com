@@ -37,7 +37,7 @@ function ForbiddenContent() {
     return (
       <Shell
         title="This part of the dashboard is for organizers"
-        body="Upgrade your account to host events, sell tickets and see who came. Creating a free event does not need an upgrade."
+        body="Hosting needs a passport. Verify with Stripe to sell tickets, get paid and see who came."
       >
         <Action href="/dashboard/vendor-upgrade">Become an organizer</Action>
         <Secondary href="/dashboard">Back to dashboard</Secondary>

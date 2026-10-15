@@ -165,7 +165,7 @@ html, body {
 }
 /* A piece of the real dashboard on a marketing page (DashboardMock). The rules above pin the earlier palette, glass
    cards and Inter for the whole page, so inside the mock the app's own values go back on: its purple, flat #1c1c1c
-   cards and grey pills, and Cabin for text (headings stay the dashboard's Inter caps via .dashboard-page-surface). */
+   cards and grey pills, and Cabin for text (headings take their classes from the views). */
 .landing-v2 .dashboard-mock {
   --color-pxi-purple: #a523ef;
   --color-newpurple-base: #a523ef;
@@ -323,6 +323,14 @@ html, body {
     font-weight: 900;
   }
 
+  /* The brand display face is for page titles. Card and section titles read in Inter, sentence case. */
+  .dashboard-page-surface :is(h2, h3, h4, h5, h6) {
+    font-family: var(--font-inter);
+    letter-spacing: normal;
+    text-transform: none;
+    font-weight: 600;
+  }
+
   section[id] {
     scroll-margin-top: 100px;
   }
@@ -347,13 +355,12 @@ html, body {
     color: var(--dashboard-text-primary);
   }
 
-  /* App look: titles in heavy caps */
-  .dashboard-page-surface :is(h1, h2, h3, h4, h5, h6) {
-    font-family: var(--font-inter);
-    font-weight: 900;
-    letter-spacing: -0.01em;
-    text-transform: uppercase;
+  /* Page titles stay bold; every other heading takes its weight and case from its own classes. */
+  .dashboard-page-surface h1 {
+    font-weight: 700;
+    text-transform: none;
   }
+
 
   .surface-b,
   .dashboard-surface-b,

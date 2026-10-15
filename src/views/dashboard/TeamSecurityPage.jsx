@@ -151,7 +151,7 @@ export default function TeamSecurityPage() {
         return (
             <div className="mx-auto max-w-6xl space-y-8">
                 <div className="h-48 animate-pulse rounded-[1.25rem] bg-pxi-field" />
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
                     <div className="h-72 animate-pulse rounded-[1.25rem] bg-pxi-field" />
                     <div className="h-72 animate-pulse rounded-[1.25rem] bg-pxi-field" />
                 </div>
@@ -221,7 +221,7 @@ export default function TeamSecurityPage() {
                     <p className="px-4 py-2 text-sm text-zinc-400">Create your first roster above, then add door staff, hosts, and media crew.</p>
                 </SectionCard>
             ) : (
-                <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
+                <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
                     <div className="space-y-6">
                         <SectionCard title="Add member" className="!rounded-[1.25rem]">
                             <div className="space-y-4 px-4 py-2">

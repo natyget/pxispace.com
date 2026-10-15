@@ -5,6 +5,8 @@ import dynamic from 'next/dynamic';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Modal from '@/components/ui/Modal';
+import TierLock from '@/components/dashboard/shell/TierLock';
+import { canHostEvents } from '@/lib/accountTier';
 
 const CreateEventPage = dynamic(() => import('@/views/dashboard/CreateEventPage'), {
     ssr: false,
@@ -20,7 +22,7 @@ const CreateEventPage = dynamic(() => import('@/views/dashboard/CreateEventPage'
 export default function CreateEventSlideOver({ open, onClose }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { isAuthenticated, authReady } = useAuth();
+    const { user, isAuthenticated, authReady } = useAuth();
     const needsSignIn = open && authReady && !isAuthenticated;
 
     // A signed-out visitor never sees the sheet: sign-in comes first, then back to this page.
@@ -40,7 +42,13 @@ export default function CreateEventSlideOver({ open, onClose }) {
             maxWidth="max-w-4xl"
             className="max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden"
         >
-            <CreateEventPage embedded onCancel={onClose} onCreated={onClose} />
+            {canHostEvents(user) ? (
+                <CreateEventPage embedded onCancel={onClose} onCreated={onClose} />
+            ) : (
+                <div className="flex justify-center py-4">
+                    <TierLock requirement="passport" compact />
+                </div>
+            )}
         </Modal>
     );
 }

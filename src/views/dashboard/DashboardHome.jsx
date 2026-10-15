@@ -7,15 +7,14 @@ import { FloorPlanIcon, Image01Icon, PlusSignIcon, UserGroupIcon } from '@hugeic
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { eventsService } from '../../services/events';
-import { StatRow } from '@/components/dashboard/MetricCard';
 import { RechartsChart, ChartSkeleton } from '@/components/dashboard/ChartFrame';
 import { DASHBOARD_BRAND_COLOR, DASHBOARD_MUTED_COLOR, DASHBOARD_TOOLTIP_PROPS } from '@/components/dashboard/chartStyles';
-import SurfaceHeader from '@/components/dashboard/SurfaceHeader';
+import { usePageAction } from '@/components/dashboard/shell/usePageAction';
+import EventCard from '@/components/dashboard/hub/EventCard';
+import { coverImageUrl } from '@/components/dashboard/hub/eventCards';
 import MemberCommandCenter from './MemberCommandCenter';
 import { isVendorUser } from '@/lib/accountTier';
 import { useNotifications } from '@/lib/dashboardStore';
-import { buildCommandCenterReminders } from '@/services/commandCenter';
-import { helpRequestsService } from '@/services/helpRequests';
 import { organizerAnalyticsService } from '@/services/organizerAnalytics';
 import { listFloorPlans } from '@/services/floorPlans';
 import { floorPlanAccess } from '@/lib/floorPlanAccess';
@@ -45,6 +44,12 @@ function formatMoney(cents = 0) {
     return `$${(Math.max(0, cents) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
 
+/** Signed variant for the ledger, where net profit can be negative. */
+function formatCents(cents = 0) {
+    const dollars = Math.round(Math.abs(cents) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 });
+    return `${cents < 0 ? '-' : ''}$${dollars}`;
+}
+
 function formatEventDate(value) {
     if (!value) return 'Date pending';
     return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -59,13 +64,6 @@ function eventState(event, now = DASHBOARD_RENDER_NOW) {
     if (statusRaw === 'LIVE' || statusRaw === 'ACTIVE' || (startMs && startMs <= now && (!endMs || endMs >= now))) return 'Live';
     if (startMs > now) return 'Upcoming';
     return 'Draft';
-}
-
-/** Color-coded status dot: orange live, purple upcoming, zinc otherwise. */
-function stateDotClass(status) {
-    if (status === 'Live') return 'bg-pxi-orange';
-    if (status === 'Upcoming') return 'bg-pxi-purple';
-    return 'bg-zinc-500';
 }
 
 /**
@@ -99,11 +97,20 @@ function VendorCommandCenter() {
     const [vendorLoading, setVendorLoading] = useState(false);
     const [events, setEvents] = useState([]);
     const [eventsLoading, setEventsLoading] = useState(false);
-    const [helpRequests, setHelpRequests] = useState([]);
     const [overview, setOverview] = useState(null);
     const [overviewLoading, setOverviewLoading] = useState(false);
     const [announcements, setAnnouncements] = useState([]);
     const { unreadCount: notificationCount } = useNotifications(50);
+    const createAction = useMemo(
+        () => (
+            <Link href="/dashboard/events/new" className="pill-ghost inline-flex min-h-[42px] items-center gap-2 px-5 text-sm font-bold">
+                <HugeiconsIcon icon={PlusSignIcon} size={15} />
+                Create event
+            </Link>
+        ),
+        []
+    );
+    usePageAction(createAction);
 
     useEffect(() => {
         const frame = requestAnimationFrame(() => setMounted(true));
@@ -153,14 +160,6 @@ function VendorCommandCenter() {
             clearTimeout(timer);
         };
     }, [user?.isVendor]);
-
-    useEffect(() => {
-        if (!mounted) return;
-        helpRequestsService
-            .listOrganizerHelpRequests({ events })
-            .then(setHelpRequests)
-            .catch(() => setHelpRequests([]));
-    }, [events, mounted]);
 
     useEffect(() => {
         if (!mounted) return;
@@ -244,6 +243,8 @@ function VendorCommandCenter() {
                 return {
                     id: e.id,
                     name: e.name || 'Untitled event',
+                    cover: coverImageUrl(e.coverImage),
+                    venue: e.location || e.venue || '',
                     dateLabel: formatEventDate(e.startDate),
                     status,
                     ticketsSold,
@@ -291,28 +292,67 @@ function VendorCommandCenter() {
     const hasRevenueTrend = revenueTrend.some((point) => point.value > 0);
     const hasTicketsTrend = ticketsTrend.some((point) => point.value > 0);
 
-    const reminders = useMemo(
-        () => buildCommandCenterReminders({ events, unreadCount: notificationCount, vendorDashboard: vendorData }),
-        [events, notificationCount, vendorData]
-    );
     const upcomingAndLiveEvents = useMemo(
         () => eventRows.filter((event) => event.status === 'Live' || event.status === 'Upcoming').slice(0, 4),
         [eventRows]
     );
-    const urgentQueue = useMemo(() => {
-        return helpRequests
-            .filter((request) => request.status !== 'resolved')
-            .slice(0, 3)
-            .map((request) => ({
-                id: request.id,
-                title: request.subject || 'Customer ticket',
-                event: request.eventName || 'Hosted event',
-                severity: request.type === 'safety-security' || request.type === 'access-issue' ? 'high' : 'medium',
-                detail: request.message || 'Attendee needs organizer follow-up.',
-                action: request.status === 'reviewing' ? 'Continue review' : 'Review ticket',
-                href: request.eventId ? `/dashboard/events/${request.eventId}/members` : '/dashboard/events',
-            }));
-    }, [helpRequests]);
+    // Key metrics ledger: the same vendor dashboard figures Earnings uses, no new fetches.
+    const ledgerRows = useMemo(() => {
+        const aggregates = vendorData?.aggregates ?? {};
+        const costs = vendorData?.costs?.totalCents ?? 0;
+        const marketing = vendorData?.marketing?.cashCents ?? 0;
+        const netPayout = aggregates.netPayout ?? 0;
+        return [
+            { label: 'Gross revenue', note: 'Ticket face value sold', value: formatCents(aggregates.grossRevenue ?? 0) },
+            { label: 'Platform fee', note: '$0.99 per ticket', value: formatCents(aggregates.vendorFlatFeeTotal ?? 0) },
+            { label: 'Net payout', note: 'Transferred to you by Stripe', value: formatCents(netPayout) },
+            { label: 'Event costs', note: 'Expenses you logged per event', value: formatCents(costs) },
+            { label: 'Marketing spend', note: 'Cash spent on ads and campaigns', value: formatCents(marketing) },
+            { label: 'Net profit', note: 'Payout minus costs and cash marketing', value: formatCents(netPayout - costs - marketing) },
+        ];
+    }, [vendorData]);
+    // Notices are only real problems on live data. Nothing is invented to fill the card.
+    const notices = useMemo(() => {
+        const now = DASHBOARD_RENDER_NOW;
+        const upcoming = events.filter((event) => ['Live', 'Upcoming'].includes(eventState(event, now)));
+        const items = [];
+        const unclearedPayouts = (vendorData?.payouts ?? []).filter((payout) => String(payout?.status || '').toLowerCase() !== 'paid').length;
+        if (unclearedPayouts > 0) {
+            items.push({
+                id: 'payouts',
+                title: 'Payouts did not clear',
+                detail: `${unclearedPayouts} payout${unclearedPayouts === 1 ? '' : 's'} to review`,
+                href: '/dashboard/earnings',
+            });
+        }
+        if (notificationCount > 0) {
+            items.push({
+                id: 'unread',
+                title: 'Unread notifications',
+                detail: `${notificationCount} waiting in your inbox`,
+                href: '/dashboard/notifications',
+            });
+        }
+        const noCover = upcoming.filter((event) => !coverImageUrl(event.coverImage));
+        if (noCover.length) {
+            items.push({
+                id: 'cover',
+                title: 'Missing cover image',
+                detail: `${noCover.length} upcoming event${noCover.length === 1 ? '' : 's'} without a poster`,
+                href: noCover[0].id ? `/dashboard/events/${noCover[0].id}` : '/dashboard/events',
+            });
+        }
+        const noTickets = upcoming.filter((event) => event.ticketPrice == null && !event.ticketTiersJson);
+        if (noTickets.length) {
+            items.push({
+                id: 'tickets',
+                title: 'No tickets set up',
+                detail: `${noTickets.length} upcoming event${noTickets.length === 1 ? '' : 's'} cannot sell yet`,
+                href: noTickets[0].id ? `/dashboard/events/${noTickets[0].id}` : '/dashboard/events',
+            });
+        }
+        return items;
+    }, [events, vendorData, notificationCount]);
     const metricsLoading = vendorLoading || eventsLoading || overviewLoading;
     // Tier 1 — "am I making money". This strip is the comparison an organizer is
     // actually running against Eventbrite/Posh, so it leads and stays money-first.
@@ -323,7 +363,7 @@ function VendorCommandCenter() {
         { label: 'Tickets sold', value: metricsLoading ? '-' : summary.sales.toLocaleString() },
         {
             label: 'Turnout',
-            value: metricsLoading ? '-' : summary.turnout == null ? '—' : `${summary.turnout}%`,
+            value: metricsLoading ? '-' : summary.turnout == null ? '-' : `${summary.turnout}%`,
         },
         { label: 'Live now', value: metricsLoading ? '-' : summary.activeCount },
     ];
@@ -334,118 +374,99 @@ function VendorCommandCenter() {
 
     return (
         <div className="mx-auto max-w-7xl space-y-5 md:space-y-6">
-            <section className="px-1">
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,480px)] xl:items-end">
-                    <div className="min-w-0">
-                        <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">Command center</p>
-                        <h1 className="mt-1.5 text-2xl font-black uppercase tracking-[-0.01em] text-white md:text-[30px]">Run the room</h1>
-                        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-[#9a9a9a]">
-                            Live work, the next events, and the money — one read, no repeats.
-                        </p>
-                        <div className="mt-4 flex flex-wrap items-center gap-2.5">
-                            <Link href="/dashboard/events/new" className="pill-solid inline-flex items-center gap-2 px-5 py-2.5 text-[12px]">
-                                <HugeiconsIcon icon={PlusSignIcon} size={15} />
-                                Create event
-                            </Link>
-                            <Link href="/dashboard/analytics" className="pill-ghost inline-flex items-center px-5 py-2.5 text-[12px] font-black uppercase tracking-[0.08em]">
-                                See what moved the room
-                            </Link>
+            <section className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                <h1 className="text-2xl font-semibold text-white md:text-[28px]">Command Center</h1>
+                <div className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl bg-white/[0.08] sm:grid-cols-4 xl:w-[560px]">
+                    {commandMetrics.map((metric) => (
+                        <div key={metric.label} className="min-w-0 bg-pxi-surface px-4 py-3.5">
+                            <p className="text-xs text-zinc-500">{metric.label}</p>
+                            <p className="mt-1.5 truncate text-[22px] font-semibold leading-none tracking-tight text-white">{metric.value}</p>
                         </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl bg-white/[0.08] sm:grid-cols-4">
-                        {commandMetrics.map((metric) => (
-                            <div key={metric.label} className="bg-pxi-surface px-4 py-3.5">
-                                <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-pxi-purple">{metric.label}</p>
-                                <p className="mt-1.5 truncate text-[22px] font-black leading-none tracking-tight text-white">{metric.value}</p>
-                            </div>
-                        ))}
-                    </div>
+                    ))}
                 </div>
             </section>
 
-            <div className="grid gap-5 lg:grid-cols-2">
-                <TrendChartCard
-                    title="Revenue"
-                    subtitle="Ticket sales per day, last 30 days"
-                    data={revenueTrend}
-                    hasData={hasRevenueTrend}
-                    loading={metricsLoading}
-                    color={DASHBOARD_BRAND_COLOR}
-                    valueFormatter={formatRevenueTick}
-                    gradientId="commandRevenueGradient"
-                />
-                <TrendChartCard
-                    title="Tickets"
-                    subtitle="Sold per day, last 30 days"
-                    data={ticketsTrend}
-                    hasData={hasTicketsTrend}
-                    loading={metricsLoading}
-                    color={DASHBOARD_MUTED_COLOR}
-                    valueFormatter={(value) => Number(value || 0).toLocaleString('en-US')}
-                    gradientId="commandTicketsGradient"
-                />
-            </div>
-
-            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
-                <section className="dashboard-surface rounded-3xl p-5 md:p-6">
-                    <SurfaceHeader
-                        eyebrow="Now / next"
-                        title="Upcoming + live"
-                        action={<Link href="/dashboard/events" className="text-[12px] font-bold tracking-wide text-white/55 transition hover:text-white">View all</Link>}
-                    />
-                    <div className="mt-5 space-y-3">
-                        {metricsLoading ? (
-                            <div className="grid gap-3 md:grid-cols-2">
-                                {[0, 1, 2, 3].map((item) => (
-                                    <div key={item} className="h-[104px] animate-pulse rounded-3xl bg-pxi-field" />
-                                ))}
-                            </div>
-                        ) : upcomingAndLiveEvents.length === 0 ? (
-                            <EmptyPanel
-                                title="No live or upcoming events yet."
-                                body="Create or schedule an event to start filling this queue."
-                                href="/dashboard/events"
-                                action="Open events"
-                            />
-                        ) : (
-                            <div className="grid gap-3">
-                                {upcomingAndLiveEvents.map((event) => (
-                                    <EventPriorityRow key={event.id} event={event} />
-                                ))}
-                            </div>
-                        )}
+            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <div className="min-w-0 space-y-5">
+                    <div className="grid gap-5 md:grid-cols-2">
+                        <TrendChartCard
+                            title="Revenue"
+                            subtitle="Ticket sales per day, last 30 days"
+                            emptyLine="Earnings show here after your first sale."
+                            data={revenueTrend}
+                            hasData={hasRevenueTrend}
+                            loading={metricsLoading}
+                            color={DASHBOARD_BRAND_COLOR}
+                            valueFormatter={formatRevenueTick}
+                            gradientId="commandRevenueGradient"
+                        />
+                        <TrendChartCard
+                            title="Tickets sold"
+                            subtitle="Sold per day, last 30 days"
+                            emptyLine="Ticket sales show here after your first sale."
+                            data={ticketsTrend}
+                            hasData={hasTicketsTrend}
+                            loading={metricsLoading}
+                            color={DASHBOARD_MUTED_COLOR}
+                            valueFormatter={(value) => Number(value || 0).toLocaleString('en-US')}
+                            gradientId="commandTicketsGradient"
+                        />
                     </div>
-                </section>
 
-                <aside className="space-y-5">
-                    <section className="dashboard-surface rounded-3xl p-5">
-                        <SurfaceHeader eyebrow="Attention" title="Urgent notices" />
-                        <div className="mt-4 space-y-3">
-                            {urgentQueue.length ? (
-                                urgentQueue.map((notice) => <NoticeLink key={notice.id} notice={notice} />)
+                    <section className="dashboard-surface min-w-0 rounded-3xl p-5 md:p-6">
+                        <CardHeader
+                            title="Live and upcoming"
+                            action={<Link href="/dashboard/events" className="text-xs font-bold text-white/55 transition hover:text-white">View all</Link>}
+                        />
+                        <div className="mt-5">
+                            {metricsLoading ? (
+                                <div className="grid gap-3 md:grid-cols-2">
+                                    {[0, 1].map((item) => (
+                                        <div key={item} className="h-[240px] animate-pulse rounded-[1.25rem] bg-pxi-field" />
+                                    ))}
+                                </div>
+                            ) : upcomingAndLiveEvents.length === 0 ? (
+                                <EmptyPanel
+                                    title="No live or upcoming events"
+                                    body="Create an event to see it here."
+                                    href="/dashboard/events/new"
+                                    action="Create event"
+                                />
                             ) : (
-                                <div className="rounded-3xl bg-pxi-field px-4 py-5">
-                                    <p className="text-sm font-semibold text-white">No urgent notices.</p>
-                                    <p className="mt-1 text-xs leading-5 text-[#9a9a9a]">Customer requests and event issues will surface here when they need review.</p>
+                                <div className="flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-visible xl:grid-cols-3">
+                                    {upcomingAndLiveEvents.map((event) => (
+                                        <EventCard key={event.id} event={event} />
+                                    ))}
                                 </div>
                             )}
                         </div>
                     </section>
 
-                    {reminders.length ? (
-                        <section className="dashboard-surface rounded-3xl p-5">
-                            <SurfaceHeader eyebrow="Follow-ups" title="Reminders" />
-                            <div className="mt-4 space-y-3">
-                                {reminders.map((update) => (
-                                    <UpdateLink key={update.id} update={update} />
-                                ))}
-                            </div>
-                        </section>
-                    ) : null}
+                    <MoatBand summary={summary} loading={metricsLoading} />
+                </div>
+
+                <aside className="min-w-0 space-y-5">
+                    <section className="dashboard-surface rounded-3xl p-5 md:p-6">
+                        <CardHeader title="Key metrics" />
+                        <div className="mt-4 divide-y divide-white/[0.08]">
+                            {ledgerRows.map((row) => (
+                                <LedgerRow key={row.label} label={row.label} note={row.note} value={row.value} loading={metricsLoading} />
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="dashboard-surface rounded-3xl p-5 md:p-6">
+                        <CardHeader title="Notices" />
+                        <div className="mt-4 space-y-3">
+                            {notices.length ? (
+                                notices.map((notice) => <NoticeRow key={notice.id} notice={notice} />)
+                            ) : (
+                                <p className="text-sm text-zinc-500">Nothing needs you right now.</p>
+                            )}
+                        </div>
+                    </section>
                 </aside>
             </div>
-
-            <MoatBand summary={summary} loading={metricsLoading} />
 
             {announcements.length ? (
                 <section className="space-y-3" aria-label="Announcements">
@@ -484,8 +505,8 @@ function MoatBand({ summary, loading }) {
             title: 'Where the room was alive',
             stat: loading ? '-' : summary.turnout == null ? 'Awaiting first scan' : `${summary.turnout}% turnout verified`,
             body: venuesOffered
-                ? 'Photo capture points across the night, projected onto your floor plan. No other ticketing platform can draw this.'
-                : 'Photo capture points across the night, drawn on a map of the venue. No other ticketing platform can draw this.',
+                ? 'Where photos were taken, on your floor plan.'
+                : 'Where photos were taken, on a map of the venue.',
             href: venuesOffered ? '/dashboard/floor-plans' : '/dashboard/analytics',
             action: venuesOffered ? 'Open venues' : 'See the heat map',
         },
@@ -493,7 +514,7 @@ function MoatBand({ summary, loading }) {
             icon: Image01Icon,
             title: 'Your crowd shot your marketing',
             stat: loading ? '-' : `${summary.mediaCount.toLocaleString()} moments captured`,
-            body: 'Every album photo ranked by reaction. Pull a marketing kit instead of booking a photographer.',
+            body: 'Album photos ranked by reaction, ready to post.',
             href: '/dashboard/analytics',
             action: 'See top moments',
         },
@@ -501,7 +522,7 @@ function MoatBand({ summary, loading }) {
             icon: UserGroupIcon,
             title: 'Guests you can prove came',
             stat: loading ? '-' : `${summary.attendees.toLocaleString()} verified attendees`,
-            body: 'Scanned at the door, not self-reported. Segment by city, taste, and attendance history, then send.',
+            body: 'Scanned at the door, ready to segment and invite back.',
             href: '/dashboard/audience',
             action: 'Open CRM',
         },
@@ -509,10 +530,7 @@ function MoatBand({ summary, loading }) {
 
     return (
         <section className="dashboard-surface rounded-3xl p-5 md:p-6">
-            <SurfaceHeader
-                eyebrow="Only on PXI"
-                title="What you get here and nowhere else"
-            />
+            <CardHeader title="Only on PXI" />
             <div className="mt-5 grid gap-3 lg:grid-cols-3">
                 {items.map((item) => (
                     <Link
@@ -527,7 +545,7 @@ function MoatBand({ summary, loading }) {
                         <p className="mt-1.5 text-[13px] font-bold tabular-nums text-white">{item.stat}</p>
                         <p className="mt-1.5 flex-1 text-xs leading-5 text-[#9a9a9a]">{item.body}</p>
                         <p className="mt-3 text-[11px] font-bold tracking-[0.02em] text-white/45 transition group-hover:text-white/75">
-                            {item.action} →
+                            {item.action}
                         </p>
                     </Link>
                 ))}
@@ -565,16 +583,29 @@ function AnnouncementBanner({ announcement }) {
     );
 }
 
-function TrendChartCard({ title, subtitle, data, hasData, loading, color, valueFormatter, gradientId }) {
+function CardHeader({ title, subtitle, action }) {
     return (
-        <section className="dashboard-surface rounded-3xl p-5 md:p-6">
-            <SurfaceHeader eyebrow={subtitle} title={title} />
+        <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+                <h2 className="text-base font-semibold text-white">{title}</h2>
+                {subtitle ? <p className="mt-1 text-xs text-zinc-500">{subtitle}</p> : null}
+            </div>
+            {action}
+        </div>
+    );
+}
+
+function TrendChartCard({ title, subtitle, emptyLine, data, hasData, loading, color, valueFormatter, gradientId }) {
+    return (
+        <section className="dashboard-surface min-w-0 rounded-3xl p-5 md:p-6">
+            <CardHeader title={title} subtitle={subtitle} />
             <div className="mt-4 h-[200px] md:h-[230px]">
                 {loading ? (
                     <ChartSkeleton />
                 ) : !hasData ? (
-                    <div className="flex h-full items-center justify-center rounded-2xl bg-pxi-field">
-                        <p className="text-xs font-bold tracking-[0.02em] text-white/30">No data yet</p>
+                    <div className="flex h-full flex-col items-center justify-center rounded-2xl bg-pxi-field px-4 text-center">
+                        <p className="text-sm font-semibold text-white">No sales yet</p>
+                        <p className="mt-1 text-xs text-zinc-500">{emptyLine}</p>
                     </div>
                 ) : (
                     <RechartsChart>
@@ -630,31 +661,21 @@ function TrendChartCard({ title, subtitle, data, hasData, loading, color, valueF
     );
 }
 
-function EventPriorityRow({ event }) {
+function LedgerRow({ label, note, value, loading }) {
     return (
-        <Link href={event.href} className="grid gap-4 rounded-3xl bg-pxi-field p-4 transition hover:bg-[#3a3a3a] md:grid-cols-[minmax(0,1fr)_220px] md:items-center">
+        <div className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
             <div className="min-w-0">
-                <div className="flex min-w-0 items-center gap-2.5">
-                    <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${stateDotClass(event.status)}`} aria-hidden="true" />
-                    <h3 className="max-w-full truncate text-base font-bold text-white">{event.name}</h3>
-                    <span className="sr-only">{event.status}</span>
-                </div>
-                <p className="mt-1 text-xs font-semibold tracking-[0.02em] text-white/35">{event.dateLabel}</p>
+                <p className="text-sm font-semibold text-white">{label}</p>
+                <p className="mt-0.5 text-xs text-zinc-500">{note}</p>
             </div>
-            <StatRow
-                className="!rounded-[1rem] !p-3"
-                items={[
-                    { label: 'Revenue', value: event.revenueLabel },
-                    { label: 'Tickets', value: event.ticketsSold.toLocaleString() },
-                ]}
-            />
-        </Link>
+            <p className="shrink-0 text-sm font-semibold tabular-nums text-white">{loading ? '-' : value}</p>
+        </div>
     );
 }
 
 function EmptyPanel({ title, body, href, action }) {
     return (
-        <div className="rounded-3xl bg-pxi-field px-4 py-7 text-center">
+        <div className="rounded-[1rem] bg-pxi-field px-4 py-7 text-center">
             <p className="text-sm font-semibold text-white">{title}</p>
             <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-[#9a9a9a]">{body}</p>
             <Link href={href} className="pill-ghost mt-4 px-4 py-2 text-xs font-bold tracking-[0.02em] whitespace-nowrap">
@@ -664,41 +685,11 @@ function EmptyPanel({ title, body, href, action }) {
     );
 }
 
-function NoticeLink({ notice }) {
+function NoticeRow({ notice }) {
     return (
-        <Link href={notice.href} className="block rounded-3xl bg-pxi-field p-4 transition hover:bg-[#3a3a3a]">
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-white">{notice.title}</p>
-                    <p className="mt-1 text-[11px] font-bold tracking-[0.02em] text-white/35">{notice.event}</p>
-                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-white/50">{notice.detail}</p>
-                </div>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.02em] ${
-                    notice.severity === 'high' ? 'bg-[#ff3b30]/15 text-[#ff3b30]' : 'bg-[#3a3a3a] text-white/55'
-                }`}>
-                    {notice.severity}
-                </span>
-            </div>
-            <p className="mt-3 text-[11px] font-medium tracking-[0.02em] text-white/55">{notice.action}</p>
-        </Link>
-    );
-}
-
-function UpdateLink({ update }) {
-    return (
-        <Link
-            href={update.href}
-            className="block rounded-3xl bg-pxi-field p-4 transition hover:bg-[#3a3a3a]"
-        >
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-white">{update.title}</p>
-                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#9a9a9a]">{update.detail}</p>
-                </div>
-                <span className="shrink-0 text-[11px] font-medium tracking-[0.02em] text-white/45 whitespace-nowrap">
-                    {update.action}
-                </span>
-            </div>
+        <Link href={notice.href} className="block rounded-[1rem] bg-pxi-field p-3.5 transition hover:bg-[#3a3a3a]">
+            <p className="text-sm font-semibold text-white">{notice.title}</p>
+            <p className="mt-0.5 text-xs text-zinc-500">{notice.detail}</p>
         </Link>
     );
 }

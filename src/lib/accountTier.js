@@ -88,6 +88,15 @@ export function isVendorUser(user) {
     return user?.isVendor === true;
 }
 
+/**
+ * Hosting needs a passport: Partial (web-only) accounts cannot create events, Citizens host free events,
+ * Diplomats also sell tickets. Unknown users (still loading) are not allowed yet.
+ */
+export function canHostEvents(user) {
+    const tier = accessTierOf(user);
+    return tier === 'CITIZEN' || tier === 'DIPLOMAT';
+}
+
 /** Alias that reads in product vocabulary at call sites about selling. */
 export const isDiplomatUser = isVendorUser;
 

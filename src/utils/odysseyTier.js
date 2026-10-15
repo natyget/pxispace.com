@@ -96,3 +96,28 @@ export function getPassportLevelDisplay(user) {
     const t = getOdysseyTierFromXp(user?.odysseyXp ?? 0);
     return { levelText: t.label, badgeLetter: t.badgeLetter };
 }
+
+const ODYSSEY_TIER_ORDER = ['WANDERER', 'SEEKER', 'VOYAGER', 'PATHFINDER', 'LUMINARY', 'ODYSSEY'];
+
+/** Highest lifetime XP still inside each level's band (Odyssey has no ceiling). Matches getOdysseyTierFromXp. */
+const ODYSSEY_TIER_CEILING_XP = {
+    WANDERER: 750,
+    SEEKER: 4000,
+    VOYAGER: 18000,
+    PATHFINDER: 70000,
+    LUMINARY: 250000,
+    ODYSSEY: null,
+};
+
+/**
+ * The level after the current one, and the XP ceiling of the current band (for "300 / 750").
+ * `next` is null at Odyssey, where there is nothing above to reach.
+ * @returns {{ current: { id: string, label: string, badgeLetter: string }, next: { id: string, label: string, badgeLetter: string } | null, ceilingXp: number | null }}
+ */
+export function getNextOdysseyTier(odysseyXp) {
+    const current = getOdysseyTierFromXp(odysseyXp);
+    const index = ODYSSEY_TIER_ORDER.indexOf(current.id);
+    const nextId = ODYSSEY_TIER_ORDER[index + 1];
+    const next = nextId ? getOdysseyTierFromXp(ODYSSEY_TIER_CEILING_XP[current.id] + 1) : null;
+    return { current, next, ceilingXp: ODYSSEY_TIER_CEILING_XP[current.id] ?? null };
+}
