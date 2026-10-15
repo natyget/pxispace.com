@@ -32,15 +32,21 @@ export const eventsService = {
   /**
    * Public discover for web — same event set as mobile Discovery (GET /api/events?discover=1)
    * @param {string} sort 'vendor' | 'date' | 'tickets' | 'distance' | 'match'
-   * @param {{ lat?: number, lng?: number, radiusKm?: number, includeMatch?: boolean }} opts
+   * @param {{ lat?: number, lng?: number, radiusKm?: number, includeMatch?: boolean, window?: string, night?: string, tz?: string }} opts
    */
   getDiscoverEvents: (limit = 48, offset = 0, sort = 'vendor', opts = {}) => {
     const q = new URLSearchParams({ discover: '1', limit, offset, sort });
-    const { lat, lng, radiusKm, includeMatch } = opts;
+    const { lat, lng, radiusKm, includeMatch, window: when, night, tz } = opts;
     if (lat != null) q.set('lat', lat);
     if (lng != null) q.set('lng', lng);
     if (radiusKm != null) q.set('radiusKm', radiusKm);
     if (includeMatch) q.set('includeMatch', '1');
+    // Time window (src/lib/when.js whenParams): tonight | tomorrow | weekend | week | night(+night, tz).
+    if (when) q.set('window', when);
+    if (when === 'night' && night) {
+      q.set('night', night);
+      if (tz) q.set('tz', tz);
+    }
     return api.get(`/api/events?${q}`);
   },
 

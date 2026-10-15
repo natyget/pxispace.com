@@ -158,6 +158,60 @@ export function parseScrapbooks(rows) {
   return out;
 }
 
+// ————— Scenes a person hosts —————
+
+const THREADS = new Set([
+  'pxi-purple', 'midnight', 'black', 'white', 'cream', 'gold', 'orange', 'red', 'pink', 'teal', 'sky', 'green',
+]);
+const SHAPES = new Set(['circle', 'shield', 'bar', 'hexagon', 'star']);
+const FONTS = new Set(['varsity', 'script', 'block']);
+
+/** A scene's patch (data, drawn by ScenePatch). Anything off is dropped, so a patch is only ever drawn from known parts. */
+export function parsePatch(raw) {
+  if (!isRecord(raw)) return null;
+  if (!SHAPES.has(raw.shape) || !THREADS.has(raw.twill) || !THREADS.has(raw.border) || !THREADS.has(raw.emblemColor)) return null;
+  if (!THREADS.has(raw.textColor) || !FONTS.has(raw.font) || typeof raw.emblem !== 'string') return null;
+  const line = (v) => (typeof v === 'string' ? v.slice(0, 18) : '');
+  return {
+    shape: raw.shape,
+    twill: raw.twill,
+    border: raw.border,
+    emblem: raw.emblem,
+    emblemColor: raw.emblemColor,
+    textColor: raw.textColor,
+    font: raw.font,
+    textTop: line(raw.textTop),
+    textBottom: line(raw.textBottom),
+  };
+}
+
+/** One scene of GET /api/scenes?host=: it needs an id and a name. `patch` is null when it is missing or malformed. */
+export function parseScene(raw) {
+  if (!isRecord(raw)) return null;
+  const id = text(raw.id);
+  const name = text(raw.name);
+  if (!id || !name) return null;
+  return { id, slug: text(raw.slug), name, patch: parsePatch(raw.patch), joined: raw.joined === true };
+}
+
+/**
+ * The scenes a person hosts. Only an answer that echoes `host` counts: a backend that has not shipped the filter
+ * ignores the param and answers with every scene and no `host`, which must read as "none", never as theirs.
+ */
+export function parseHostScenes(data, hostId) {
+  if (!isRecord(data) || !Array.isArray(data.scenes)) return [];
+  if (!hostId || String(data.host ?? '').toLowerCase() !== String(hostId).toLowerCase()) return [];
+  const seen = new Set();
+  const out = [];
+  for (const row of data.scenes) {
+    const scene = parseScene(row);
+    if (!scene || seen.has(scene.id)) continue;
+    seen.add(scene.id);
+    out.push(scene);
+  }
+  return out;
+}
+
 // ————— Numbers and words —————
 
 /** At most one decimal and never a trailing ".0": 1 is "1", 1.2 is "1.2". */

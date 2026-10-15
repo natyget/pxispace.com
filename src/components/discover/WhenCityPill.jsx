@@ -2,6 +2,8 @@
 
 import './discover.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { whenLabel, whenMatchesRow, whenOptions } from '@/lib/when';
+import WhenCalendar from './WhenCalendar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ArrowDown01Icon,
@@ -12,9 +14,9 @@ import {
 } from '@hugeicons/core-free-icons';
 
 /**
- * "at Time ⌄  in City ⌄ | sort  search" — the discovery filter pill from the app. Time picks
- * only a time window and City only a place; how the list is ordered lives behind the sort button.
- * Purely presentational: the page owns the filter state and passes it in.
+ * "at When ⌄  in City ⌄ | sort  search" — the discovery pill, the same When model and options as
+ * the app (src/lib/when.js). When picks only the night(s) and City only a place; how the list is
+ * ordered lives behind the sort button. Purely presentational: the page owns the state.
  */
 
 function useDismiss(ref, active, onClose) {
@@ -47,9 +49,9 @@ const CITY_SHORT = {
 };
 const shortCity = (name) => CITY_SHORT[String(name).trim().toLowerCase()] || name;
 
-function Menu({ id, label, children, className = '' }) {
+function Menu({ id, label, children, className = '', role = 'listbox' }) {
   return (
-    <div id={id} role="listbox" aria-label={label} className={`dsc-menu ${className}`}>
+    <div id={id} role={role} aria-label={label} className={`dsc-menu ${className}`}>
       {children}
     </div>
   );
@@ -66,9 +68,9 @@ function Option({ selected, onClick, children }) {
 
 /**
  * @param {object} props
- * @param {{id:string,label:string}[]} props.timeOptions
- * @param {string} props.timeFilter
- * @param {(id:string)=>void} props.onTime
+ * @param {object|null} props.when  a When from src/lib/when.js, or null for no time filter
+ * @param {(when:object|null)=>void} props.onWhen
+ * @param {string} props.tonight  'YYYY-MM-DD' of tonight in the city's zone
  * @param {string[]} props.cityOptions
  * @param {string} props.cityFilter
  * @param {(city:string)=>void} props.onCity
@@ -81,10 +83,10 @@ function Option({ selected, onClick, children }) {
  * @param {string} props.sortKey
  * @param {(id:string)=>void} props.onSort
  */
-export default function FilterPill({
-  timeOptions,
-  timeFilter,
-  onTime,
+export default function WhenCityPill({
+  when,
+  onWhen,
+  tonight,
   cityOptions,
   cityFilter,
   onCity,
@@ -99,7 +101,7 @@ export default function FilterPill({
 }) {
   const rootRef = useRef(null);
   const searchRef = useRef(null);
-  const [menu, setMenu] = useState(null); // 'time' | 'city' | 'sort' | null
+  const [menu, setMenu] = useState(null); // 'when' | 'calendar' | 'city' | 'sort' | null
   const [searchOpen, setSearchOpen] = useState(false);
   const searching = searchOpen || Boolean(searchQuery);
 
@@ -116,7 +118,8 @@ export default function FilterPill({
     return undefined;
   }, [searchQuery, searchOpen]);
 
-  const timeLabel = timeOptions.find((o) => o.id === timeFilter)?.label ?? 'All';
+  const whenRows = whenOptions(tonight);
+  const timeLabel = when ? whenLabel(when, tonight) : 'When';
   const cityLabel = cityFilter || 'All';
   const sortLabel = sortOptions.find((o) => o.id === sortKey)?.label ?? sortOptions[0]?.label ?? '';
   const sortDefault = !sortOptions.length || sortKey === sortOptions[0].id;
@@ -166,27 +169,46 @@ export default function FilterPill({
           type="button"
           className="dsc-pill-sel dsc-pill-sel-time"
           aria-haspopup="listbox"
-          aria-expanded={menu === 'time'}
-          aria-label={`Time: ${timeLabel}`}
-          onClick={() => setMenu((m) => (m === 'time' ? null : 'time'))}
+          aria-expanded={menu === 'when' || menu === 'calendar'}
+          aria-label={`When: ${timeLabel}`}
+          onClick={() => setMenu((m) => (m === 'when' || m === 'calendar' ? null : 'when'))}
         >
-          <span className="dsc-pill-val">{timeLabel === 'All' ? 'Time' : timeLabel}</span>
+          <span className="dsc-pill-val">{timeLabel}</span>
           <HugeiconsIcon icon={ArrowDown01Icon} size={14} strokeWidth={2.6} />
         </button>
-        {menu === 'time' ? (
-          <Menu label="Time">
-            {timeOptions.map((o) => (
-              <Option
-                key={o.id}
-                selected={timeFilter === o.id}
-                onClick={() => {
-                  onTime(o.id);
-                  close();
-                }}
-              >
-                {o.label}
-              </Option>
-            ))}
+        {menu === 'when' ? (
+          <Menu label="When">
+            {whenRows.map((row) =>
+              row.id === 'pick' ? (
+                <Option key={row.id} selected={false} onClick={() => setMenu('calendar')}>
+                  {row.label}
+                </Option>
+              ) : (
+                <Option
+                  key={row.id}
+                  selected={whenMatchesRow(when, row, tonight)}
+                  onClick={() => {
+                    // Choosing the row that is already chosen clears the filter.
+                    onWhen(whenMatchesRow(when, row, tonight) ? null : row.when);
+                    close();
+                  }}
+                >
+                  {row.label}
+                </Option>
+              ),
+            )}
+          </Menu>
+        ) : null}
+        {menu === 'calendar' ? (
+          <Menu label="Pick a date" className="dsc-menu-cal" role="dialog">
+            <WhenCalendar
+              tonight={tonight}
+              selected={when?.kind === 'night' ? when.night : null}
+              onPick={(night) => {
+                onWhen({ kind: 'night', night });
+                close();
+              }}
+            />
           </Menu>
         ) : null}
       </div>
