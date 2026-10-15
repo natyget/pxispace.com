@@ -1,15 +1,25 @@
 'use client';
 
 import React from 'react';
+import DashboardTabs from '@/components/dashboard/shell/DashboardTabs';
+import { buildMemberTabs, dashboardNavConfig } from '@/lib/dashboardNavConfig';
 
 /**
- * A piece of the real dashboard on a marketing page. The page pins its own palette (.landing-v2), so the mockup's
+ * A piece of the real dashboard on a marketing page (the shell's tab row on top, then the page's own panels). The page pins its own palette (.landing-v2), so the mockup's
  * wrapper puts the app's values back (.dashboard-mock in globals.css) and sits on the dashboard's own black
  * (.dashboard-page-surface). It is an illustration: out of the tab order and the accessibility tree, and out of
  * search snippets, like the platform page's stages. In a single column it stops at 640px, so a wide window does not
  * blow a floor plan up to the size of the page.
  */
-export default function DashboardMock({ children, className = '' }) {
+const TABS = buildMemberTabs({ mounted: true, user: { isVendor: true }, hasLiveOpsAccess: true, isLiveEvent: true });
+
+/**
+ * `section` is the nav key of the page the picture shows ('analytics', 'earnings', 'operations', ...). The tab row and the
+ * bold sub-tabs above it are the dashboard's own DashboardTabs, pointed at that page, so they cannot drift from the app.
+ */
+export default function DashboardMock({ children, section, className = '' }) {
+  const item = section ? dashboardNavConfig.find((entry) => entry.key === section) : null;
+  const [path, query] = item ? item.path.split('?') : [null, null];
   return (
     <div
       className={['dashboard-mock dashboard-page-surface w-full max-w-[640px] xl:max-w-none', className].filter(Boolean).join(' ')}
@@ -17,6 +27,11 @@ export default function DashboardMock({ children, className = '' }) {
       inert
       data-nosnippet
     >
+      {item ? (
+        <div className={className.includes('space-y') ? undefined : 'mb-4'}>
+          <DashboardTabs tabs={TABS} rolesReady pathname={path} searchParams={new URLSearchParams(query || '')} />
+        </div>
+      ) : null}
       {children}
     </div>
   );

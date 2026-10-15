@@ -6,7 +6,7 @@
         "appID": "ZRZM6BR3Y5.com.pxistudio.PXIStudio",
         "paths": [
           "NOT /assets/*", "NOT /dashboard/*", "NOT /api/*", "NOT /go/*/out",
-          "/album/*", "/join/*", "/events/*", "/event/*", "/go/*",
+          "/album/*", "/join/*", "/events/*", "/event/*", "/go/*", "/e/*",
           "/ticket/*", "/p/*", "/u/*", "/messages*", "/notifications"
         ]
       }

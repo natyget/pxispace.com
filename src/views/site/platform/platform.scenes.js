@@ -38,6 +38,9 @@ export default async function initPlatform(PXR, L) {
   const HUGE_X = {
     RefreshIcon: '<path d="M20.0092 2V5.13219C20.0092 5.42605 19.6418 5.55908 19.4537 5.33333C17.6226 3.2875 14.9617 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>',
     Sorting01Icon: '<path d="M11.0001 8L19.0001 8.00006" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M11.0001 12H16.0001" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M11.0001 16H14.0001" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M11.0001 4H21.0001" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M5.5 21V3M5.5 21C4.79977 21 3.49153 19.0057 3 18.5M5.5 21C6.20023 21 7.50847 19.0057 8 18.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>',
+    Home01Icon: `<path d="M3 11.9896V14.5C3 17.7998 3 19.4497 4.02513 20.4749C5.05025 21.5 6.70017 21.5 10 21.5H14C17.2998 21.5 18.9497 21.5 19.9749 20.4749C21 19.4497 21 17.7998 21 14.5V11.9896C21 10.3083 21 9.46773 20.6441 8.74005C20.2882 8.01237 19.6247 7.49628 18.2976 6.46411L16.2976 4.90855C14.2331 3.30285 13.2009 2.5 12 2.5C10.7991 2.5 9.76689 3.30285 7.70242 4.90855L5.70241 6.46411C4.37533 7.49628 3.71179 8.01237 3.3559 8.74005C3 9.46773 3 10.3083 3 11.9896Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M15.0002 17C14.2007 17.6224 13.1504 18 12.0002 18C10.8499 18 9.79971 17.6224 9.00018 17" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>`,
+    Layers01Icon: `<path d="M8.64298 3.14559L6.93816 3.93362C4.31272 5.14719 3 5.75397 3 6.75C3 7.74603 4.31272 8.35281 6.93817 9.56638L8.64298 10.3544C10.2952 11.1181 11.1214 11.5 12 11.5C12.8786 11.5 13.7048 11.1181 15.357 10.3544L17.0618 9.56638C19.6873 8.35281 21 7.74603 21 6.75C21 5.75397 19.6873 5.14719 17.0618 3.93362L15.357 3.14559C13.7048 2.38186 12.8786 2 12 2C11.1214 2 10.2952 2.38186 8.64298 3.14559Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M20.788 11.0972C20.9293 11.2959 21 11.5031 21 11.7309C21 12.7127 19.6873 13.3109 17.0618 14.5072L15.357 15.284C13.7048 16.0368 12.8786 16.4133 12 16.4133C11.1214 16.4133 10.2952 16.0368 8.64298 15.284L6.93817 14.5072C4.31272 13.3109 3 12.7127 3 11.7309C3 11.5031 3.07067 11.2959 3.212 11.0972" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M20.3767 16.2661C20.7922 16.5971 21 16.927 21 17.3176C21 18.2995 19.6873 18.8976 17.0618 20.0939L15.357 20.8707C13.7048 21.6236 12.8786 22 12 22C11.1214 22 10.2952 21.6236 8.64298 20.8707L6.93817 20.0939C4.31272 18.8976 3 18.2995 3 17.3176C3 16.927 3.20778 16.5971 3.62334 16.2661" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>`,
+    UserMultiple02Icon: `<path d="M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7Z" stroke="currentColor" stroke-width="1.5"/><path d="M15 11C17.2091 11 19 9.20914 19 7C19 4.79086 17.2091 3 15 3" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M11 14H7C4.23858 14 2 16.2386 2 19C2 20.1046 2.89543 21 4 21H14C15.1046 21 16 20.1046 16 19C16 16.2386 13.7614 14 11 14Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/><path d="M17 14C19.7614 14 22 16.2386 22 19C22 20.1046 21.1046 21 20 21H18.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>`,
     Home05Icon: `<path d="M3 11.9896V14.5C3 17.7998 3 19.4497 4.02513 20.4749C5.05025 21.5 6.70017 21.5 10 21.5H14C17.2998 21.5 18.9497 21.5 19.9749 20.4749C21 19.4497 21 17.7998 21 14.5V11.9896C21 10.3083 21 9.46773 20.6441 8.74005C20.2882 8.01237 19.6247 7.49628 18.2976 6.46411L16.2976 4.90855C14.2331 3.30285 13.2009 2.5 12 2.5C10.7991 2.5 9.76689 3.30285 7.70242 4.90855L5.70241 6.46411C4.37533 7.49628 3.71179 8.01237 3.3559 8.74005C3 9.46773 3 10.3083 3 11.9896Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M14 15C14 13.8954 13.1046 13 12 13C10.8954 13 10 13.8954 10 15C10 16.1046 10.8954 17 12 17C13.1046 17 14 16.1046 14 15Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/>`,
     DashboardSquare03Icon: `<path d="M9.75 3H5.75C5.05222 3 4.70333 3 4.41943 3.08612C3.78023 3.28002 3.28002 3.78023 3.08612 4.41943C3 4.70333 3 5.05222 3 5.75C3 6.44778 3 6.79667 3.08612 7.08057C3.28002 7.71977 3.78023 8.21998 4.41943 8.41388C4.70333 8.5 5.05222 8.5 5.75 8.5H9.75C10.4478 8.5 10.7967 8.5 11.0806 8.41388C11.7198 8.21998 12.22 7.71977 12.4139 7.08057C12.5 6.79667 12.5 6.44778 12.5 5.75C12.5 5.05222 12.5 4.70333 12.4139 4.41943C12.22 3.78023 11.7198 3.28002 11.0806 3.08612C10.7967 3 10.4478 3 9.75 3Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/><path d="M21 9.75V5.75C21 5.05222 21 4.70333 20.9139 4.41943C20.72 3.78023 20.2198 3.28002 19.5806 3.08612C19.2967 3 18.9478 3 18.25 3C17.5522 3 17.2033 3 16.9194 3.08612C16.2802 3.28002 15.78 3.78023 15.5861 4.41943C15.5 4.70333 15.5 5.05222 15.5 5.75V9.75C15.5 10.4478 15.5 10.7967 15.5861 11.0806C15.78 11.7198 16.2802 12.22 16.9194 12.4139C17.2033 12.5 17.5522 12.5 18.25 12.5C18.9478 12.5 19.2967 12.5 19.5806 12.4139C20.2198 12.22 20.72 11.7198 20.9139 11.0806C21 10.7967 21 10.4478 21 9.75Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/><path d="M16.9194 20.9139C17.2033 21 17.5522 21 18.25 21C18.9478 21 19.2967 21 19.5806 20.9139C20.2198 20.72 20.72 20.2198 20.9139 19.5806C21 19.2967 21 18.9478 21 18.25C21 17.5522 21 17.2033 20.9139 16.9194C20.72 16.2802 20.2198 15.78 19.5806 15.5861C19.2967 15.5 18.9478 15.5 18.25 15.5C17.5522 15.5 17.2033 15.5 16.9194 15.5861C16.2802 15.78 15.78 16.2802 15.5861 16.9194C15.5 17.2033 15.5 17.5522 15.5 18.25C15.5 18.9478 15.5 19.2967 15.5861 19.5806C15.78 20.2198 16.2802 20.72 16.9194 20.9139Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/><path d="M8.5 11.5H7C5.11438 11.5 4.17157 11.5 3.58579 12.0858C3 12.6716 3 13.6144 3 15.5V17C3 18.8856 3 19.8284 3.58579 20.4142C4.17157 21 5.11438 21 7 21H8.5C10.3856 21 11.3284 21 11.9142 20.4142C12.5 19.8284 12.5 18.8856 12.5 17V15.5C12.5 13.6144 12.5 12.6716 11.9142 12.0858C11.3284 11.5 10.3856 11.5 8.5 11.5Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/>`,
     Passport01Icon: `<path d="M12.9503 22C15.595 22 16.9173 22 17.8667 21.2437C18.8161 20.4874 19.1189 19.1927 19.7247 16.6033L21.642 8.40697C21.9773 6.97363 22.145 6.25696 21.8406 5.7379C21.2878 4.79529 19.8789 5.00001 18.9593 5.00001" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M2 9C2 5.70017 2 4.05025 3.02513 3.02513C4.05025 2 5.70017 2 9 2H12C15.2998 2 16.9497 2 17.9749 3.02513C19 4.05025 19 5.70017 19 9V15C19 18.2998 19 19.9497 17.9749 20.9749C16.9497 22 15.2998 22 12 22H9C5.70017 22 4.05025 22 3.02513 20.9749C2 19.9497 2 18.2998 2 15V9Z" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 6C12.7091 6 14.5 7.79086 14.5 10C14.5 12.2091 12.7091 14 10.5 14M10.5 6C8.29086 6 6.5 7.79086 6.5 10C6.5 12.2091 8.29086 14 10.5 14M10.5 6C9.67157 6 9 7.79086 9 10C9 12.2091 9.67157 14 10.5 14M10.5 6C11.3284 6 12 7.79086 12 10C12 12.2091 11.3284 14 10.5 14" stroke="currentColor" stroke-width="1.5"/><path d="M7 17L14 17" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/>`,
@@ -280,52 +283,77 @@ export default async function initPlatform(PXR, L) {
   // last 30 days (Sep 2 → Oct 1): Late Checkout from Sep 8, Sunday Session from Sep 15
   const LC_DAILY = [22, 19, 14, 5, 3, 4, 2, 3, 2, 3, 9, 14, 11, 7, 5, 6, 10, 18, 12, 9, 2];
   const SS_DAILY = [6, 5, 3, 2, 4, 3, 2, 6, 5, 4, 3, 5, 6, 7, 4, 5, 4];
-  const T30 = Array.from({ length: 30 }, (_, d) => ([3, 2, 4, 1, 2, 3][d] || 0) + (LC_DAILY[d - 6] || 0) + (SS_DAILY[d - 13] || 0));
-  const R30 = Array.from({ length: 30 }, (_, d) => ([3, 2, 4, 1, 2, 3][d] || 0) * 29 + (LC_DAILY[d - 6] || 0) * (d - 6 < 4 ? 24 : 40) + (SS_DAILY[d - 13] || 0) * 24);
-  const X30 = [[0, 'Sep 2'], [14, 'Sep 16'], [29, 'Oct 1']];
-  const METRICS = [['Net revenue', 'Money01Icon', 38406, 'money'], ['Tickets sold', 'Ticket01Icon', 1126, ''], ['Turnout', 'CheckmarkCircle02Icon', 91, 'pct'], ['Live now', 'Activity01Icon', 1, '']];
+  const T30RAW = Array.from({ length: 30 }, (_, d) => ([3, 2, 4, 1, 2, 3][d] || 0) + (LC_DAILY[d - 6] || 0) + (SS_DAILY[d - 13] || 0));
+  const R30RAW = Array.from({ length: 30 }, (_, d) => ([3, 2, 4, 1, 2, 3][d] || 0) * 29 + (LC_DAILY[d - 6] || 0) * (d - 6 < 4 ? 24 : 40) + (SS_DAILY[d - 13] || 0) * 24);
+  // the member dashboard's own chrome (MemberShell): top bar, the passport band (or its slim collapsed bar), the Hub /
+  // Insights / Operations / Engagement tabs and the bold sub-tabs with the page's one action at the right
+  const TABS = [['Home01Icon', 'Hub'], ['ChartLineData01Icon', 'Insights'], ['Layers01Icon', 'Operations'], ['UserMultiple02Icon', 'Engagement']];
+  const SUBS = { Hub: ['Command Center', 'Events'], Insights: ['Analytics', 'Earnings'], Operations: ['Live Operations', 'Teams'], Engagement: ['Audience', 'Campaigns', 'Ads'] };
+  const dTopBar = () => `<div class="ds-top"><img src="/site/img/pxi-mark-small.svg?v=grit5" alt=""><span class="ds-tools"><i class="ds-round">${hi('Notification03Icon', 18)}<em>6</em></i><i class="ds-round">${hi('Settings01Icon', 18)}</i><img class="ds-av" src="/site/img/av/A13.jpg" alt=""></span></div>`;
+  const dPassport = (open) => open
+    ? `<div class="ds-pass"><div class="ds-pc"><p class="ds-ph"><span>PXI Passport</span><small>No. <b>P896C5CCXI</b></small></p>
+        <div class="ds-pb"><img src="/site/img/av/A13.jpg" alt=""><dl><div><dt>Full name</dt><dd>Alex Rivera</dd></div><div><dt>Username</dt><dd>@dashqa_diplomat</dd></div><div><dt>City</dt><dd>New York</dd></div><div><dt>Insta</dt><dd>@alexrivera.nights</dd></div></dl></div>
+        <p class="ds-tier"><span>D</span>iplomat</p></div>
+      <div class="ds-map"><img src="/passport-map.svg" alt=""></div>
+      <div class="ds-lvl"><svg viewBox="0 0 56 56" width="56" height="56"><circle cx="28" cy="28" r="25" fill="none" stroke="#3a1858" stroke-width="3.5"/><circle cx="28" cy="28" r="25" fill="none" stroke="#A523EF" stroke-width="3.5" stroke-dasharray="63 157" stroke-linecap="round" transform="rotate(-90 28 28)"/><path d="M28 15 39 21.5v13L28 41 17 34.5v-13z" fill="#2a1240" stroke="#A523EF" stroke-width="1.6"/><text x="28" y="32.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" style="font-family:var(--f-ui)">W</text></svg>
+        <p>Wanderer</p><i><u></u></i><span><small>Next: Seeker</small><small>300 / 750</small></span></div></div>`
+    : `<div class="ds-pass slim"><b>Passport</b><i class="ds-round sm">${hi('Add01Icon', 15)}</i></div>`;
+  const dTabs = (tab) => `<div class="ds-tabs">${TABS.map(([ic, l]) => `<span class="${l === tab ? 'on' : ''}">${hi(ic, 16)}${l}</span>`).join('')}</div>`;
+  const dSubs = (tab, sub, action = '') => `<div class="ds-subs"><div>${SUBS[tab].map((l) => `<span class="${l === sub ? 'on' : ''}">${l}</span>`).join('')}</div>${action}</div>`;
+  const dBar = (tab, sub, action) => `<div class="ds-bar">${dTabs(tab)}${dSubs(tab, sub, action)}</div>`;
+  // desktop stages: the dashboard's tab row and bold sub-tabs on top, the page's cards in .ds-body below them
+  function dFrame(stage, tab, sub, { left = 0, action = '' } = {}) {
+    const body = document.createElement('div');
+    body.className = 'ds-body';
+    while (stage.firstChild) body.appendChild(stage.firstChild);
+    stage.append(body);
+    stage.insertAdjacentHTML('afterbegin', `<div class="ds-head" style="left:${left}px">${dBar(tab, sub, action)}</div>`);
+  }
+  const dCreate = `<span class="ds-act">${hi('Add01Icon', 16)}Create event</span>`;
+
+  // the demo organizer (Alex Rivera): last 30 days to Oct 12, rescaled so the days add up to the Key metrics
+  const fit30 = (arr, total) => { const k = total / arr.reduce((a, v) => a + v, 0); return arr.map((v) => v * k); };
+  const calm = (arr, k = 0.65) => { const m = arr.reduce((a, v) => a + v, 0) / arr.length; return arr.map((v) => k * v + (1 - k) * m); };
+  const R30 = fit30(calm(R30RAW), 18905), T30 = fit30(calm(T30RAW), 634);
+  const niceMax = (peak, ticks = 4) => { const st = [5, 10, 12, 25, 50, 100, 125, 250, 500, 1000, 2000].find((x) => x * ticks >= peak) || 2000; return st * ticks; };
+  const X30 = [0, 7, 14, 21, 29].map((i, k) => [i, ['Sep 14', 'Sep 21', 'Sep 28', 'Oct 5', 'Oct 12'][k]]);
+  const tickSet = (mx) => [0, 1, 2, 3, 4].map((k) => (mx / 4) * k);
+  const METRICS = [['Net revenue', 'Money01Icon', 18372, 'money'], ['Tickets sold', 'Ticket01Icon', 634, ''], ['Turnout', 'CheckmarkCircle02Icon', 57, 'pct'], ['Live now', 'Activity01Icon', 1, '']];
+  const KEYM = [['Gross revenue', 'Ticket face value sold', '$18,905'], ['Platform fee', '$0.99 per ticket', '$533'], ['Net payout', 'Transferred to you by Stripe', '$18,372'], ['Event costs', 'Expenses you logged per event', '$11,540'], ['Marketing spend', 'Cash spent on ads and campaigns', '$35'], ['Net profit', 'Payout minus costs and cash marketing', '$6,797']];
+  const NIGHTS = [['Late Checkout', 'Live, Oct 13', '/site/img/posters/late-checkout.jpg'], ['Afro Fest Nights', 'Upcoming, Oct 16', '/site/img/lib/w02.jpg'], ['Rooftop Sessions', 'Upcoming, Oct 22', '/site/img/lib/h04.jpg']];
+  const HALL = 'Harbor Hall, 120 Harbor Road, Brooklyn, NY';
+  const flatChart = (o) => areaChart({ fill: [1, 1], fillOp: 0.14, lineW: 2, ...o });
   function buildCC(el) {
-    const nav = [['Hub'], ['DashboardSquare01Icon', 'Command Center', 'on'], ['Calendar01Icon', 'My Events'], ['Business'], ['Wallet01Icon', 'Earnings'], ['Shield01Icon', 'Teams & Security'],
-      ['People'], ['UserGroupIcon', 'CRM'], ['Megaphone01Icon', 'Ads Manager'], ['Mail01Icon', 'Email Campaigns'], ['Intelligence'], ['Activity01Icon', 'Analytics'], ['QrCodeIcon', 'Live Operations', 'cc-ops'], ['FloorPlanIcon', 'Venues']];
-    const rev = areaChart({ w: 237, h: 134, series: [{ values: R30, color: BRAND }], max: 800, ticks: [0, 200, 400, 600, 800], xl: X30, padL: 44, fs: 13, yfmt: (v) => '$' + v });
-    const tix = areaChart({ w: 237, h: 134, series: [{ values: T30, color: MUTED }], max: 24, ticks: [0, 6, 12, 18, 24], xl: X30, padL: 30, fs: 13 });
-    const nx = (n, sub, chip, cls, dot) => `<div class="nx"><i class="dot ${dot}"></i><div><b>${n}</b><small>${sub}</small></div></div>`;
-    el.innerHTML = `
-      <aside class="cc-side">
-        <div class="cc-logo"><img src="/site/img/pxi-mark-small.svg?v=grit5" alt=""><span>${lu(LU.panel, 18, 1.8)}</span></div>
-        <div class="cc-nav">${nav.map((x) => x.length === 1 ? `<p class="cc-sec">${x[0]}</p>` : `<div class="cc-item ${x[2] || ''}">${hi(x[0], 18)}${x[1]}</div>`).join('')}</div>
-        <div class="cc-acct"><img src="/site/img/lib/w06.jpg" alt=""><div><b>Late Checkout Co.</b><small>@latecheckout</small></div>${hi('Settings01Icon', 16)}</div>
-      </aside>
-      <div class="cc-main">
-        <div class="cc-head">
-          <div><p class="eb">Command center</p><h3>Run the room</h3><p class="desc">Live work, the next events and the money, in one read.</p>
-            <div class="acts"><span class="d-pill solid">${hi('Add01Icon', 16)}Create event</span><span class="d-pill ghost">See what moved the room</span></div></div>
-          <div class="d-strip s2">${METRICS.map(([l, , v, f]) => `<div><small>${l}</small><b data-to="${v}" data-f="${f}">0</b></div>`).join('')}</div>
+    const rm = niceMax(Math.max(...R30)), tm = niceMax(Math.max(...T30));
+    const rev = flatChart({ w: 330, h: 190, series: [{ values: R30, color: BRAND }], max: rm, ticks: tickSet(rm), xl: X30, padL: 46, fs: 11.5, yfmt: (v) => '$' + Math.round(v).toLocaleString('en-US') });
+    const tix = flatChart({ w: 330, h: 190, series: [{ values: T30, color: MUTED }], max: tm, ticks: tickSet(tm), xl: X30, padL: 30, fs: 11.5 });
+    el.innerHTML = `${dTopBar()}<div class="cc-scroll"><div class="cc-pad">
+      ${dPassport(true)}${dBar('Hub', 'Command Center', dCreate)}
+      <div class="cc-head"><h3>Command Center</h3><div class="d-strip s4">${METRICS.map(([l, , v, f]) => `<div><small>${l}</small><b data-to="${v}" data-f="${f}">0</b></div>`).join('')}</div></div>
+      <div class="cc-cols"><div class="cc-left">
+        <div class="cc-pair">
+          <div class="dcard cc-chart"><p class="d-h">Revenue</p><p class="d-sub">Ticket sales per day, last 30 days</p>${rev.svg}</div>
+          <div class="dcard cc-chart"><p class="d-h">Tickets sold</p><p class="d-sub">Sold per day, last 30 days</p>${tix.svg}</div>
         </div>
-        <div class="cc-row">
-          <div class="dcard cc-chart"><p class="d-eb">Ticket sales per day, 30 days</p><p class="d-h">Revenue</p>${rev.svg}</div>
-          <div class="dcard cc-chart"><p class="d-eb">Sold per day, 30 days</p><p class="d-h">Tickets</p>${tix.svg}</div>
-          <div class="dcard cc-next">
-            <div class="d-headrow"><div><p class="d-eb">Now / next</p><p class="d-h">Upcoming + live</p></div><span class="va">View all</span></div>
-            <div class="nx-list">${nx('Late Checkout', 'Fri Oct 2, 180 tickets', 'Live', 'ok', 'live')}${nx('Sunday Session', 'Sun Oct 11', 'Upcoming', 'warn', 'up')}</div>
-          </div>
-        </div>
-        <div class="dcard cc-band">
-          <p class="d-eb">Only on PXI</p><p class="d-h">What you get here and nowhere else</p>
+        <div class="dcard cc-next"><div class="d-headrow"><p class="d-h">Live and upcoming</p><span class="va">View all</span></div>
+          <div class="nx-row">${NIGHTS.map(([n, w, img]) => `<div class="nx"><img src="${img}" alt=""><div><b>${n}</b><small>${HALL}</small><small>${w}</small></div></div>`).join('')}</div></div>
+        <div class="dcard cc-band"><p class="d-h">Only on PXI</p>
           <div class="trio">
-            <div class="cc-tile"><span class="ico">${hi('FloorPlanIcon', 17)}</span><h5>Where the room was alive</h5><p class="stat"><b>91%</b>turnout verified</p><p>Photo capture points, on your floor plan.</p></div>
-            <div class="cc-tile"><span class="ico">${hi('Image01Icon', 17)}</span><h5>Your crowd shot your marketing</h5><p class="stat"><b>214</b>moments captured</p><p>Every album photo, ranked by reaction.</p></div>
-            <div class="cc-tile"><span class="ico">${hi('UserGroupIcon', 17)}</span><h5>Guests you can prove came</h5><p class="stat"><b>164</b>verified attendees</p><p>Scanned at the door, then segmented.</p></div>
-          </div>
-        </div>
-      </div>`;
+            <div class="cc-tile"><span class="ico">${hi('FloorPlanIcon', 17)}</span><h5>Where the room was alive</h5><p class="stat">57% turnout verified</p><p>Where photos were taken, on a map of the venue.</p><p class="lk">See the heat map</p></div>
+            <div class="cc-tile"><span class="ico">${hi('Image01Icon', 17)}</span><h5>Your crowd shot your marketing</h5><p class="stat">412 moments captured</p><p>Album photos ranked by reaction, ready to post.</p><p class="lk">See top moments</p></div>
+            <div class="cc-tile"><span class="ico">${hi('UserGroupIcon', 17)}</span><h5>Guests you can prove came</h5><p class="stat">361 verified attendees</p><p>Scanned at the door, ready to segment and invite back.</p><p class="lk">Open CRM</p></div>
+          </div></div>
+      </div><div class="cc-right">
+        <div class="dcard cc-key"><p class="d-h">Key metrics</p>${KEYM.map(([t, sub, v]) => `<div class="kr"><div><b>${t}</b><small>${sub}</small></div><span>${v}</span></div>`).join('')}</div>
+        <div class="dcard cc-notice"><p class="d-h">Notices</p><div class="nt"><b>Unread notifications</b><small>6 waiting in your inbox</small></div></div>
+      </div></div></div></div>`;
   }
   function buildMCC(el, W) {
-    const rev = areaChart({ w: W - 32, h: Math.round(clamp(window.innerHeight - 670, 100, 150)), series: [{ values: R30, color: BRAND }], max: 800, ticks: [0, 200, 400, 600, 800], xl: X30, padL: 36, fs: 11, yfmt: (v) => '$' + v });
-    el.innerHTML = `<div class="mcc-grid">${METRICS.map(([l, i, v, f]) => `<div class="mc"><div class="top"><small>${l}</small><span class="ic">${hi(i, 14)}</span></div><b data-to="${v}" data-f="${f}">0</b></div>`).join('')}</div>
-      <div class="dcard mcc-chart"><p class="d-eb">Ticket sales per day, last 30 days</p><p class="d-h">Revenue</p>${rev.svg}</div>
-      <div class="dcard mcc-only"><p class="d-eb">Only on PXI</p><p class="d-h">What you get here and nowhere else</p>
-        <div class="mo3"><div><b>91%</b><small>turnout verified</small></div><div><b>214</b><small>moments captured</small></div><div><b>164</b><small>verified attendees</small></div></div></div>`;
+    const rm = niceMax(Math.max(...R30));
+    const rev = flatChart({ w: W - 32, h: Math.round(clamp(window.innerHeight - 690, 96, 150)), series: [{ values: R30, color: BRAND }], max: rm, ticks: tickSet(rm), xl: [X30[0], X30[2], X30[4]], padL: 40, fs: 11, yfmt: (v) => '$' + Math.round(v).toLocaleString('en-US') });
+    el.innerHTML = `${dPassport(false)}${dBar('Hub', 'Command Center')}
+      <div class="mcc-grid">${METRICS.map(([l, , v, f]) => `<div class="mc"><div class="top"><small>${l}</small></div><b data-to="${v}" data-f="${f}">0</b></div>`).join('')}</div>
+      <div class="dcard mcc-chart"><p class="d-h">Revenue</p><p class="d-sub">Ticket sales per day, last 30 days</p>${rev.svg}</div>`;
   }
   function initHero(mode, rm, first) {
     const sec = $('#hero'), copy = $('.p-hero-copy', sec), h1 = $('h1', sec), more = $('.hero-more', sec);
@@ -341,14 +369,15 @@ export default async function initPlatform(PXR, L) {
       const fit = () => { const W = window.innerWidth, H = window.innerHeight; return { W, H, s: Math.min((W - 96) / 1200, (H - 130) / 740, 1.04) }; };
       if (rm) { const f = fit(); ccBox.style.height = Math.round(740 * f.s) + 'px'; gsap.set(st, { xPercent: -50, yPercent: 0, y: 0, scale: f.s, transformOrigin: '50% 0' }); return; }
       ccBox.style.height = '';
-      $$('.cc .chart .clip').forEach((r, i) => gsap.fromTo(r, { attr: { width: 0 } }, { attr: { width: 237 }, duration: 1.8, ease: 'power2.inOut', delay: 1 + i * 0.15 }));
+      $$('.cc .chart .clip').forEach((r, i) => gsap.fromTo(r, { attr: { width: 0 } }, { attr: { width: 330 }, duration: 1.8, ease: 'power2.inOut', delay: 1 + i * 0.15 }));
       if (first) gsap.from('.cc-tilt', { y: 160, opacity: 0, duration: 1.6, ease: 'expo.out', delay: 0.45 });
-      const tl = gsap.timeline({ scrollTrigger: { trigger: sec, start: 'top top', end: () => '+=' + window.innerHeight * 1.25, pin: true, scrub: 0.7, anticipatePin: 1, invalidateOnRefresh: true } });
+      const tl = gsap.timeline({ scrollTrigger: { trigger: sec, start: 'top top', end: () => '+=' + window.innerHeight * 2.1, pin: true, scrub: 0.7, anticipatePin: 1, invalidateOnRefresh: true } });
       tl.fromTo(st,
         { xPercent: -50, yPercent: -50, transformPerspective: 1900, rotationX: 34, scale: () => fit().s * 0.8, y: () => { const f = fit(); return f.H * 0.27 + 370 * f.s * 0.62; } },
         { rotationX: 0, scale: () => fit().s, y: () => { const f = fit(); return 96 + 370 * f.s - f.H / 2; }, ease: 'power2.inOut', duration: 1 }, 0)
         .to(copy, { y: -90, opacity: 0, ease: 'power1.out', duration: 0.34 }, 0)
-        .to({}, { duration: 0.35 });
+        .to($('.cc-scroll'), { y: () => -Math.max(0, $('.cc-scroll').offsetHeight - (740 - 56)), ease: 'none', duration: 1.1 }, 0.9)
+        .to({}, { duration: 0.3 });
     } else {
       const box = $('.mcc-box', sec), el = $('#mcc');
       buildMCC(el, box.clientWidth);
@@ -501,7 +530,7 @@ export default async function initPlatform(PXR, L) {
     const sec = $('#sell'), stage = prep(sec, mode), M = mode === 'm', q = (s) => $(s, stage);
     const L = M ? mLayout(sec, rm) : null;
     const card = `<div class="dcard sell-card">
-        <p class="d-eb q">Before doors</p><p class="d-h">Sell the room</p><p class="d-sub pace"></p>
+        <p class="d-h">Ticket sales</p><p class="d-sub pace"></p>
         <div class="sell-value"><b class="n-gross">$0</b><span>ticket sales</span><span class="d-chip change"><span class="n-sold">0</span>&nbsp;sold</span></div>
         <div class="sell-chart"></div>
         <div class="sell-cum"><span class="cum-l">Cumulative</span><span class="cum-n">0 / 180</span><div class="cum-chart"></div></div>
@@ -510,8 +539,9 @@ export default async function initPlatform(PXR, L) {
     const sold = `<div class="soldout"><span>Sold out</span><small>${M ? '180 / 180 sold' : '180 / 180, 4 days early'}</small></div>`;
     if (!M) {
       stage.innerHTML = card + `<div class="ins-panel"><p class="ins-eb">What we noticed at this event</p><p class="ins-empty">Insights appear here as sales come in.</p><div class="ins-list">${INS.map((x) => insHTML(x)).join('')}</div></div>
-        <div class="dcard mkt"><div class="d-headrow"><div><p class="d-eb q">Marketing</p><p class="d-h">Spend → tickets, attributed</p></div><div class="mkt-r"><span class="d-chip brand">7-day attribution</span><span class="d-chip">Campaigns</span><span class="d-chip">Ads</span></div></div>
+        <div class="dcard mkt"><div class="d-headrow"><div><p class="d-eb q">Marketing</p><p class="d-h">Spend on this event</p></div></div>
           <div class="d-strip s4">${MK.map(([l, v, c]) => `<div><small>${l}</small><b class="${c}">${v}</b></div>`).join('')}</div></div>` + sold;
+      dFrame(stage, 'Insights', 'Analytics');
     } else {
       stage.innerHTML = INS.slice(0, 2).map((x) => insHTML(x, 'toast')).join('') + card +
         `<div class="mkt-m">${MK.map(([l, v, c]) => `<div class="mtile"><small>${l}</small><b class="${c}">${v}</b></div>`).join('')}</div>` + sold;
@@ -608,12 +638,13 @@ export default async function initPlatform(PXR, L) {
     const gates = `<div class="gates"><div class="gate g1"><i class="gdot"></i><div><b>Main door</b><small class="gm">0 issues flagged</small></div><span class="n o-g1">0</span></div><div class="gate g2"><i class="gdot"></i><div><b>Door 2</b><small class="gm">0 issues flagged</small></div><span class="n o-g2">0</span></div></div>`;
     if (!M) {
       stage.innerHTML = `<div class="dcard ops">
-        <div class="ops-head"><p class="d-eb q">Live Operations</p><h4>Live control room</h4><p>Gate flow, entry pace and incidents, updated from every scan.</p></div>
+        <div class="ops-head"><p class="d-eb q">Live Operations</p><h4>Live control room</h4><p>Gate flow, entry velocity, and incident response, live from real scans.</p></div>
         <div class="ops-tiles"><div><small>Mode</small><b>Live</b></div><div><small>Gates</small><b>2</b></div><div class="t-flags"><small>Flags</small><b class="o-flags">0</b></div><div><small>Staff</small><b>6</b></div></div>
         <div class="ops-2">${capBox}${velBox(60)}</div>
         ${gates}
         <div class="scans-h"><p class="t">Recent scans</p><small>Newest first</small></div>
         <div class="scans"></div></div>`;
+      dFrame(stage, 'Operations', 'Live Operations', { left: 302 });
     } else {
       stage.innerHTML = `<div class="d-strip s4 door-strip"><div><small>Inside</small><b class="o-in">0</b></div><div><small>Full</small><b><span class="o-pct">0</span>%</b></div><div><small>Per 5 min</small><b class="o-vel">0</b></div><div class="t-flags"><small>Flags</small><b class="o-flags">0</b></div></div>
         <div class="dcard cap-card">${capBox}${velBox(40)}${gates}</div>`;
@@ -744,23 +775,24 @@ export default async function initPlatform(PXR, L) {
     if (!M) {
       const ch = areaChart({ w: 832, h: 124, series: [{ values: H_CHAT, color: BRAND }, { values: H_RX, color: ORANGE }, { values: H_CAP, color: TEAL }], max: 380, ticks: [0, 95, 190, 285, 380], xl: HOURS.map((h, i) => [i, h]), padL: 38, fs: 13, stacked: true, fill: [0.18, 0.02] });
       stage.innerHTML = `<div class="dcard heat">
-          <p class="d-eb">Spatial intelligence</p>
+          <p class="d-h">Spatial intelligence</p>
           <div class="heat-row"><span class="pn">Seaport Loft</span><span class="d-chip">Auto-mapped from photo GPS</span><span class="d-btn">Recalibrate</span></div>
           <div class="heat-map">${heatSVG(plan, cl)}<span class="heat-time">9:30 PM</span><span class="heat-peak">Peak 11:42 PM, Main room</span></div>
           <div class="play"><span class="pb">${hi('PlayIcon', 15)}</span><span class="lbl">Play the night back</span><div class="hist">${'<i></i>'.repeat(48)}</div><span class="pfoot"><b class="h-geo">0</b> geotagged photos, <b class="h-sc">0</b> scans</span></div>
         </div>
         <div class="dcard hype">
-          <div class="d-headrow"><div><p class="d-eb q">Run the night</p><p class="d-h">Hype through the night</p></div><div class="seg"><span class="on">All activity</span><span>Chat</span><span>Reactions</span><span>Captures</span></div></div>
+          <div class="d-headrow"><div><p class="d-h">Hype through the night</p></div><div class="seg"><span class="on">All activity</span><span>Chat</span><span>Reactions</span><span>Captures</span></div></div>
           <div class="hype-chart">${ch.svg}</div>
           <div class="d-strip s4 hype-strip"><div class="hs-score"><small>Hype score</small><b><span class="h-score">0</span><span class="tier" data-t="Quiet">Quiet</span></b></div><div><small>Chat</small><b class="h-chat">0</b></div><div><small>Reactions</small><b class="h-rx">0</b></div><div><small>Captures</small><b class="h-cap">0</b></div></div>
         </div>`;
+      dFrame(stage, 'Insights', 'Analytics');
       const hsvg = $('.hype-chart svg', stage);
       hsvg.insertAdjacentHTML('beforeend', `<line class="hc" y1="6" y2="${ch.base}" stroke="rgba(255,255,255,.14)"/><circle class="spike" cx="${ch.X(3)}" cy="${ch.Y(H_CAP[3] + H_CHAT[3] + H_RX[3])}" r="5" fill="${BRAND}" stroke="#0e0e13" stroke-width="2" opacity="0"/>`);
       stage._ch = ch;
     } else {
       const sp = areaChart({ w: L.W - 32, h: 44, series: [{ values: rib, color: BRAND }], max: Math.max(...rib) * 1.05, noAxis: true, fill: [0.3, 0.02] });
       stage.innerHTML = `<div class="dcard heat">
-          <div class="d-headrow"><div><p class="d-eb">Spatial intelligence</p><p class="d-h">Seaport Loft</p></div><span class="d-chip">From photo GPS</span></div>
+          <div class="d-headrow"><div><p class="d-eb q">Spatial intelligence</p><p class="d-h">Seaport Loft</p></div><span class="d-chip">From photo GPS</span></div>
           <div class="heat-map" style="height:${Math.round((L.W - 32) * 0.8)}px">${heatSVG(plan, cl)}<span class="heat-time">9:30 PM</span></div>
           <div class="heat-foot"><span><b class="h-geo">0</b> geotagged photos</span><span><b class="h-sc">0</b> scans</span></div>
         </div>
@@ -843,6 +875,7 @@ export default async function initPlatform(PXR, L) {
         <div class="kit-cap"><small>Caption</small><p>Late Checkout, Oct 2. 214 photos from 38 phones. Thank you, Boston. Vol. II soon.</p></div>
         <div class="kit-actions"><span class="d-pill solid">Download 8 photos</span><span class="d-pill ghost">Copy caption</span></div>
       </div>`;
+    if (!M) dFrame(stage, 'Insights', 'Analytics');
     const tiles = $$('.tile16', stage);
     rank.forEach((ti, k) => { $('.rk', tiles[ti]).textContent = k + 1; });
     if (M) {
@@ -887,7 +920,7 @@ export default async function initPlatform(PXR, L) {
     const edge = [...F.map((_, i) => [50 - halves[i], i * BH]), [50 - halves[F.length - 1], HH]];
     const outline = [...edge, ...edge.map(([x, y]) => [100 - x, y]).reverse()].map(([x, y]) => `${+x.toFixed(2)},${y}`).join(' ');
     const rid = 'fun' + (++gid);
-    const funnel = `<div class="dcard funnel${M ? ' crowd-b' : ''}"><p class="d-eb q">Audience</p><p class="d-h">Attendance path</p>
+    const funnel = `<div class="dcard funnel${M ? ' crowd-b' : ''}"><p class="d-h">Attendance path</p>
       <div class="fun" style="--fun-h:${BH}px">
         <div class="fun-rail">${F.map(([n, v, c]) => `<div><b><i style="background:${c}"></i>${n}</b><span class="fun-n"><em class="fv" data-v="${v}">0</em><small>${Math.round((v / F[0][1]) * 100)}% of sold</small></span></div>`).join('')}</div>
         <div class="fun-shape" style="height:${HH}px"><svg viewBox="0 0 100 ${HH}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${rid}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${F[0][2]}"/><stop offset="1" stop-color="${F[F.length - 1][2]}"/></linearGradient><clipPath id="${rid}c"><rect class="fun-clip" x="0" y="0" width="100" height="0"/></clipPath></defs>
@@ -897,15 +930,16 @@ export default async function initPlatform(PXR, L) {
     const strip = `<div class="d-strip s4"><div><small>Attendees</small><b class="cv" data-v="164">0</b></div><div><small>Passports</small><b class="cv" data-v="131">0</b></div><div><small>Emailable</small><b class="cv" data-v="118">0</b></div><div><small>Repeat</small><b class="cv" data-v="31" data-f="pct">0%</b></div></div>`;
     const filters = '<div class="filters"><span class="flt">Email opt-in</span><span class="flt">City, Boston</span><span class="flt">Passport holder</span></div>';
     const saved = '<span class="seg-saved">Boston regulars <em>86</em><span>Send →</span></span>';
-    const crm = M ? `<div class="dcard crm crowd-b"><div class="d-headrow"><div><p class="d-eb q">CRM</p><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 12)}Scanned</span></div>${strip}${filters}
+    const crm = M ? `<div class="dcard crm crowd-b"><div class="d-headrow"><div><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 12)}Scanned</span></div>${strip}${filters}
         <div class="match-m"><span class="match-l"><b class="match">164</b>attendees match</span></div>
         <div class="seg-act"><span class="d-pill ghost seg-save">Save as segment</span>${saved}</div></div>`
-      : `<div class="dcard crm"><div class="d-headrow"><div><p class="d-eb q">CRM</p><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 14)}Scanned, not self-reported</span></div>${strip}${filters}
+      : `<div class="dcard crm"><div class="d-headrow"><div><p class="d-h">Know your crowd</p></div><span class="d-chip ok">${hi('CheckmarkCircle02Icon', 14)}Scanned, not self-reported</span></div>${strip}${filters}
         <div class="seg-row"><span class="match-l"><b class="match">164</b>attendees match</span><span class="seg-act" style="position:relative;display:inline-grid"><span class="d-pill ghost sm seg-save" style="grid-area:1/1">Save as segment</span><span style="grid-area:1/1;justify-self:end">${saved}</span></span></div></div>`;
-    const send = `<div class="dcard send${M ? ' crowd-b' : ''}"><div class="d-headrow"><div><p class="d-eb q">Campaigns</p><p class="d-h">Compose send</p></div><div class="seg"><span class="on">Email</span><span>SMS</span></div></div>
+    const send = `<div class="dcard send${M ? ' crowd-b' : ''}"><div class="d-headrow"><div><p class="d-h">Compose send</p></div><div class="seg"><span class="on">Email</span><span>SMS</span></div></div>
       <div class="send-body"><div class="composer"><div class="snd-f"><small>To</small>Boston regulars (86)</div><div class="snd-f"><small>Subject</small><span class="subj"></span></div></div>
         <div class="quote"><div class="q2"><div><small>Consent</small><b>Enforced</b></div><div><small>Unsubscribe</small><b>Automatic</b></div></div><span class="d-pill solid sendbtn">Send campaign</span></div></div></div>`;
     stage.innerHTML = funnel + crm + send;
+    if (!M) dFrame(stage, 'Engagement', 'Audience');
     if (M) {
       const lay = (l) => {
         const cards = $$('.crowd-b', stage);

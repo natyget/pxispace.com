@@ -33,9 +33,9 @@ const httpsOnly = (value) => (/^https:\/\//i.test(text(value)) ? text(value) : n
  * Server-rendered: everything here is read from the listing, and the Directions link is chosen from the visitor's
  * own agent (Apple Maps or Google Maps), so there is no flash and no script for it.
  *
- * @param {{ listing: object, id: string, userAgent: string, platform: 'ios' | 'android' | 'desktop' }} props
+ * @param {{ listing: object, id: string, userAgent: string, platform: 'ios' | 'android' | 'desktop', aside?: import('react').ReactNode }} props
  */
-export default function GoListingView({ listing, id, userAgent, platform }) {
+export default function GoListingView({ listing, id, userAgent, platform, aside = null }) {
   const title = text(listing.title);
   const night = formatNightLine(listing);
   const time = formatTimeLine(listing.startsAt, listing.endsAt, listing.timeZone);
@@ -138,7 +138,7 @@ export default function GoListingView({ listing, id, userAgent, platform }) {
         </div>
       </article>
 
-      <GoAlbumBlock storeHref={appStoreHref(id)} openHref={openInPxiHref(id)} platform={platform} caption={title} />
+      <GoAlbumBlock storeHref={appStoreHref(id)} openHref={openInPxiHref(id)} platform={platform} caption={title} aside={aside} />
     </div>
   );
 }

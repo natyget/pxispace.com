@@ -15,7 +15,6 @@ import { musicService } from '@/services/music';
 import { useSongPreview } from '@/lib/songPreview';
 import { readTopSong, toCapsLine, toPlace, toWhen } from './eventFormat';
 import EventWaitlistForm from './EventWaitlistForm';
-
 /*
  * The app's event view (pxi-mobile-app/src/components/event), on the web: a flat #1C1C1C sheet with
  * 28px top corners; EVENT DETAILS + X; the name and the place in heavy purple display type; a tall

@@ -1,19 +1,28 @@
+/* eslint-disable react-refresh/only-export-components -- a Next page exports its metadata next to the page, like every page here */
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { JsonLd } from '@/components/seo/JsonLd';
 import CityEventsView from '@/views/discover/CityEventsView';
 import { getCity, allCitySlugs } from '@/lib/seo/cities';
 import { getPublicEventsSnapshot, eventsInCity, eventGenres, eventUrl } from '@/lib/publicEvents';
-import { allGenres, eventMatchesGenre } from '@/lib/seo/genres';
+import { allGenres, eventMatchesGenre, getGenre } from '@/lib/seo/genres';
+import { fetchCityDemand } from '@/lib/seo/demand';
+import DemandVote from '@/views/discover/DemandVote';
 import {
   SITE_URL,
   buildBreadcrumbJsonLd,
   buildCollectionJsonLd,
   buildCityPlaceJsonLd,
 } from '@/lib/seo/schemas';
+import { fetchCityListings, listingPath } from '@/lib/seo/listings';
+import GoMoreNights from '@/views/go/GoMoreNights';
+import '@/views/go/event.css';
 
 // Events change constantly; regenerate hourly rather than baking the list at build time.
 export const revalidate = 3600;
+
+// Outside nights listed on a hub page (the rest are one click away on the /e/ pages).
+const OUTSIDE_LIMIT = 60;
 
 export function generateStaticParams() {
   return allCitySlugs().map((city) => ({ city }));
@@ -59,10 +68,16 @@ export default async function CityPage({ params }) {
     seeded = false;
   }
 
+  // Outside nights count the same as PXI events: a genre with either one gets a hub link.
+  const outside = city.cityCode ? await fetchCityListings({ cityCode: city.cityCode, limit: 300 }) : [];
+  const outsideNights = outside.slice(0, OUTSIDE_LIMIT);
+  // The demand votes: no block at all when the API does not answer.
+  const demand = city.cityCode ? await fetchCityDemand(city.cityCode) : null;
+
   // Only link genre sub-hubs that actually have events in this city — an empty
   // /discover/<city>/<genre> is a thin page and a crawl trap.
   const genreLinks = allGenres()
-    .filter((genre) => cityEvents.some((e) => eventMatchesGenre(eventGenres(e), genre)))
+    .filter((genre) => cityEvents.some((e) => eventMatchesGenre(eventGenres(e), genre)) || outside.some((l) => l.genre === genre.slug))
     .map((genre) => ({ href: `/discover/${slug}/${genre.slug}`, label: `${genre.name} in ${city.name}` }));
 
   const breadcrumbs = [
@@ -74,6 +89,17 @@ export default async function CityPage({ params }) {
   return (
     <>
       <CityEventsView city={city} initialEvents={seeded ? cityEvents : null} />
+
+      {outsideNights.length ? <GoMoreNights city={city} nights={outsideNights} hub={false} /> : null}
+
+      {demand ? (
+        <DemandVote
+          cityCode={city.cityCode}
+          areas={demand.areas}
+          genres={demand.genres.map((slug) => ({ slug, name: getGenre(slug)?.name ?? slug }))}
+          top={demand.top}
+        />
+      ) : null}
 
       {genreLinks.length ? (
         <nav aria-label={`${city.name} genres`} className="bg-black">
@@ -99,7 +125,10 @@ export default async function CityPage({ params }) {
       <JsonLd
         data={buildCollectionJsonLd(
           { name: `Events in ${city.name}`, path: `/discover/${slug}`, description: city.blurb },
-          cityEvents.map((e) => ({ name: e.name || 'Event', url: eventUrl(e) })),
+          [
+            ...cityEvents.map((e) => ({ name: e.name || 'Event', url: eventUrl(e) })),
+            ...outsideNights.map((l) => ({ name: l.title, url: listingPath(l) })),
+          ],
         )}
       />
       <JsonLd data={buildCityPlaceJsonLd(city)} />

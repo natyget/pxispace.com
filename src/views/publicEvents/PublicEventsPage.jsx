@@ -11,11 +11,12 @@ import { getAnonId, queueAdImpression, trackAdClick, useAdImpression } from '@/l
 import EventCard from '@/views/events/EventCard';
 import CreateEventEmptyState from '@/components/discover/CreateEventEmptyState';
 import DiscoverStage, { StageSkeleton } from '@/components/discover/DiscoverStage';
-import FilterPill from '@/components/discover/FilterPill';
+import WhenCityPill from '@/components/discover/WhenCityPill';
 import '@/components/discover/discover.css';
 import { loadFavoriteEventIds, toggleFavoriteEventId } from '@/lib/eventFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 import { resolveEventCity } from '@/lib/seo/cities';
+import { WHEN_WEEK, eventInWhen, tonightIn, whenKey, whenLabel, whenParams } from '@/lib/when';
 import { trackSearchDebounced, trackSelectItem, trackViewItemList, trackViewSearchResults } from '@/lib/analytics';
 const DEFAULT_IMG =
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070';
@@ -53,6 +54,7 @@ function normalizeApiEvent(e) {
     venue: e.location || 'Location TBA',
     createdAt: e.createdAt ? new Date(e.createdAt) : null,
     startDate: e.startDate ? new Date(e.startDate) : null,
+    endDate: e.endDate ? new Date(e.endDate) : null,
     price,
     attendees: e._count?.tickets ?? 0,
     ticketType: e.ticketType || null,
@@ -216,12 +218,8 @@ const SORT_OPTIONS = [
   { id: 'largest', label: 'Most going' },
 ];
 const SORT_MATCH = { id: 'match', label: 'Music match' };
-const TIME_OPTIONS = [
-  { id: 'all', label: 'All' },
-  { id: 'today', label: 'Today' },
-  { id: 'this_week', label: 'This week' },
-  { id: 'this_month', label: 'This month' },
-];
+// PXI runs in New York and Boston, both on Eastern time, so a "night" (5 am to 5 am) is cut there.
+const NIGHT_TZ = 'America/New_York';
 // PXI operates in New York and Boston only. Offering city filters we do not serve
 // produces empty result sets and advertises coverage that does not exist.
 // Keep this in step with src/lib/seo/cities.js — that registry drives /discover/[city].
@@ -312,34 +310,32 @@ function eventInCity(ev, city) {
   return locationMatchesCity(ev.cityText, city);
 }
 
-const TIME_PHRASES = { today: 'today', this_week: 'this week', this_month: 'this month' };
-
 /**
  * Copy for an empty list. It names what emptied the list, so "no events in Boston today" is
  * never read as "PXI has nothing on". `more` means the banner above still has events, so an
  * empty grid under it is the end of the list rather than an empty site.
  */
-function emptyResultsCopy({ city = 'All', time = 'all', query = '', more = false }) {
+function emptyResultsCopy({ city = 'All', when = '', query = '', more = false }) {
   const inCity = city !== 'All' ? ` in ${city}` : '';
-  const when = TIME_PHRASES[time] ? ` ${TIME_PHRASES[time]}` : '';
+  const whenText = when ? ` ${/^(tonight|tomorrow|this )/i.test(when) ? when.toLowerCase() : `on ${when}`}` : '';
   const people = city !== 'All' ? `people in ${city}` : 'people';
   if (query) {
     const shown = query.length > 40 ? `${query.slice(0, 40)}…` : query;
     return {
-      title: `Nothing matches “${shown}”${inCity}${when}.`,
+      title: `Nothing matches “${shown}”${inCity}${whenText}.`,
       blurb: `Try another search, or put your own night on PXI and ${people} will find it here.`,
     };
   }
-  if (inCity && !when) {
+  if (inCity && !whenText) {
     // Same words as the empty /discover/[city] hub: both are the same fetch filtered by city.
     return {
       title: `No live events${inCity} yet.`,
       blurb: `Be the first. Put your night on PXI and ${people} will find it here.`,
     };
   }
-  if (inCity || when) {
+  if (inCity || whenText) {
     return {
-      title: `No events${inCity}${when}.`,
+      title: `No events${inCity}${whenText}.`,
       blurb: `Hosting something? Put it on PXI and ${people} will find it here.`,
     };
   }
@@ -419,7 +415,14 @@ export default function PublicEventsPage() {
   const [heroIndex, setHeroIndex] = useState(0);
 
   const [trending, setTrending] = useState(TRENDING_OPTIONS[0].id); // All | Nearest | Largest
-  const [timeFilter, setTimeFilter] = useState(TIME_OPTIONS[0].id); // All | Today | This week | This month
+  // Opens on This week, as the app's Discover does, so the two pills read the same. null = no time filter (the
+  // reader clears it by tapping the chosen row again); otherwise a When from src/lib/when.js.
+  const [when, setWhen] = useState(WHEN_WEEK);
+  const [tonight, setTonight] = useState(() => tonightIn(NIGHT_TZ));
+  useEffect(() => {
+    const t = setInterval(() => setTonight(tonightIn(NIGHT_TZ)), 60_000);
+    return () => clearInterval(t);
+  }, []);
   const [cityFilter, setCityFilter] = useState(CITY_PRESETS[0]);
   const [cityQuery, setCityQuery] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -453,7 +456,7 @@ export default function PublicEventsPage() {
 
   // One request per (sort, signed-in, sample) combination. `loading` is derived from which key
   // last finished, so switching sort never flashes the skeleton over events already on screen.
-  const fetchKey = `${musicSortEffective ? 'match' : 'vendor'}|${isLoggedIn ? 'in' : 'out'}|${sampleMode ? 'sample' : 'live'}`;
+  const fetchKey = `${musicSortEffective ? 'match' : 'vendor'}|${isLoggedIn ? 'in' : 'out'}|${sampleMode ? 'sample' : 'live'}|${whenKey(when)}@${when ? tonight : ''}`;
   const loading = loadedKey !== fetchKey;
 
   useEffect(() => {
@@ -468,14 +471,23 @@ export default function PublicEventsPage() {
     } else {
       // Signed-in readers always get match scores (the stage prints TASTE MATCH for the event in
       // front of them); the ORDER is only by match when the sort is switched on.
+      // The window rides along as `window` (+ `night`/`tz`). A backend that has not shipped it ignores
+      // the params (no `windowEcho`) or answers 400; either way the list is filtered by night below,
+      // so the reader never sees an error, only the empty state when nothing falls in the window.
+      const sort = musicSortEffective ? 'match' : 'vendor';
+      const base = isLoggedIn ? { includeMatch: true } : {};
+      const withWindow = when ? { ...base, ...whenParams(when, NIGHT_TZ) } : base;
       eventsService
-        .getDiscoverEvents(48, 0, musicSortEffective ? 'match' : 'vendor', isLoggedIn ? { includeMatch: true } : {})
+        .getDiscoverEvents(48, 0, sort, withWindow)
+        .catch((err) => (when ? eventsService.getDiscoverEvents(48, 0, sort, base) : Promise.reject(err)))
         .then((res) => finish((res.events || []).map(normalizeApiEvent)))
         .catch(() => finish([]));
     }
     return () => {
       alive = false;
     };
+    // `when` and `tonight` are folded into fetchKey
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchKey, musicSortEffective, isLoggedIn]);
 
   const loadFavorites = useCallback(() => {
@@ -515,35 +527,8 @@ export default function PublicEventsPage() {
       });
     }
 
-    const now = new Date();
-    const startOfToday = new Date(now);
-    startOfToday.setHours(0, 0, 0, 0);
-    const endOfToday = new Date(startOfToday);
-    endOfToday.setDate(endOfToday.getDate() + 1);
-    const startOfWeek = new Date(startOfToday);
-    const day = startOfWeek.getDay(); // 0=Sun
-    const diffToMon = (day + 6) % 7;
-    startOfWeek.setDate(startOfWeek.getDate() - diffToMon);
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(endOfWeek.getDate() + 7);
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
-    if (timeFilter === 'today') {
-      list = list.filter((e) => {
-        const t = e.startDate?.getTime?.();
-        return typeof t === 'number' && t >= startOfToday.getTime() && t < endOfToday.getTime();
-      });
-    } else if (timeFilter === 'this_week') {
-      list = list.filter((e) => {
-        const t = e.startDate?.getTime?.();
-        return typeof t === 'number' && t >= startOfWeek.getTime() && t < endOfWeek.getTime();
-      });
-    } else if (timeFilter === 'this_month') {
-      list = list.filter((e) => {
-        const t = e.startDate?.getTime?.();
-        return typeof t === 'number' && t >= startOfMonth.getTime() && t < endOfMonth.getTime();
-      });
+    if (when) {
+      list = list.filter((e) => eventInWhen(e, when, tonight, NIGHT_TZ));
     }
 
     // Music-preference sort takes priority over the (currently static) trending modes —
@@ -569,7 +554,7 @@ export default function PublicEventsPage() {
     }
 
     return list;
-  }, [events, trending, timeFilter, cityFilter, searchQuery, favoritesOnly, favoriteIds, musicSortEffective]);
+  }, [events, trending, when, tonight, cityFilter, searchQuery, favoritesOnly, favoriteIds, musicSortEffective]);
 
   // Paid featured slots pin first (labeled Sponsored); organic newest-first fills
   // the remaining stage slots, deduped by event id. A chosen city applies to both, so a
@@ -581,10 +566,11 @@ export default function PublicEventsPage() {
     const paidIds = new Set(paid.map((e) => String(e.id)));
     const organic = events
       .filter(inCity)
+      .filter((e) => eventInWhen(e, when, tonight, NIGHT_TZ))
       .sort((a, b) => (b.createdAt?.getTime?.() ?? 0) - (a.createdAt?.getTime?.() ?? 0))
       .filter((e) => !paidIds.has(String(e.id)));
     return [...paid, ...organic].slice(0, 8);
-  }, [events, featuredAds, cityFilter]);
+  }, [events, featuredAds, cityFilter, when, tonight]);
 
   // A new city is a new set of slides, so the stage starts again from the first.
   const chooseCity = (city) => {
@@ -609,7 +595,7 @@ export default function PublicEventsPage() {
   }
 
   const isFiltered =
-    searchQuery || timeFilter !== 'all' || cityFilter !== 'All' || favoritesOnly || trending !== 'all' || musicSortEffective;
+    searchQuery || when || cityFilter !== 'All' || favoritesOnly || trending !== 'all' || musicSortEffective;
 
   const rest = useMemo(() => {
     if (!isFiltered) {
@@ -627,12 +613,12 @@ export default function PublicEventsPage() {
   // ── Empty states ──────────────────────────────────────────────────────────
   // WEB-1 on /events: when a filter empties the list, the reader gets the same "create one"
   // CTA as an empty city hub, worded for what emptied it, plus a way back to everything.
-  const narrowing = Boolean(searchQuery.trim()) || timeFilter !== 'all' || cityFilter !== 'All';
+  const narrowing = Boolean(searchQuery.trim()) || Boolean(when) || cityFilter !== 'All';
 
   const resetFilters = () => {
     setTrending(TRENDING_OPTIONS[0].id);
     setMusicSortActive(false);
-    setTimeFilter(TIME_OPTIONS[0].id);
+    setWhen(null);
     chooseCity(CITY_PRESETS[0]);
     setCityQuery('');
     setSearchQuery('');
@@ -651,7 +637,7 @@ export default function PublicEventsPage() {
       <CreateEventEmptyState
         {...emptyResultsCopy({
           city: cityFilter,
-          time: timeFilter,
+          when: when ? whenLabel(when, tonight) : '',
           query: searchQuery.trim(),
           more: heroEvents.length > 0,
         })}
@@ -692,7 +678,7 @@ export default function PublicEventsPage() {
   useEffect(() => {
     if (loading || restWithAds.length === 0) return;
     // One view_item_list per list + filter combination — not per render, not per scroll.
-    const key = [activeList.id, trending, timeFilter, cityFilter, settledSearch].join('|');
+    const key = [activeList.id, trending, whenKey(when), cityFilter, settledSearch].join('|');
     if (listKeyRef.current === key) return;
     listKeyRef.current = key;
     trackViewItemList({
@@ -700,7 +686,7 @@ export default function PublicEventsPage() {
       listName: activeList.name,
       items: restWithAds.slice(0, MAX_LIST_ITEMS),
     });
-  }, [loading, restWithAds, activeList, trending, timeFilter, cityFilter, settledSearch]);
+  }, [loading, restWithAds, activeList, trending, when, cityFilter, settledSearch]);
 
   const featuredKeyRef = useRef(null);
   useEffect(() => {
@@ -762,10 +748,10 @@ export default function PublicEventsPage() {
   };
 
   const pill = (
-    <FilterPill
-      timeOptions={TIME_OPTIONS}
-      timeFilter={timeFilter}
-      onTime={setTimeFilter}
+    <WhenCityPill
+      when={when}
+      onWhen={setWhen}
+      tonight={tonight}
       cityOptions={CITY_PRESETS}
       cityFilter={cityFilter}
       onCity={chooseCity}

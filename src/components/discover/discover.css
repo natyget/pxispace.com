@@ -145,7 +145,7 @@
 .dsc-pill-sel svg { opacity: 0.7; flex: none; }
 /* Time and City are fixed-width so picking a value never moves sort and search. The value
    truncates with an ellipsis; the city button shows the short form (NYC) anyway. */
-.dsc-pill-sel-time { width: 7.8rem; }
+.dsc-pill-sel-time { width: 9.2rem; }
 .dsc-pill-sel-city { width: 6.4rem; }
 /* on a phone the row is tight: both give way together, by the same rule, whatever they show */
 .dsc-pop:has(> .dsc-pill-sel-time),
@@ -238,6 +238,25 @@
 }
 .dsc-opt:hover { background: rgba(255, 255, 255, 0.07); }
 .dsc-opt[aria-selected='true'] { color: var(--dsc-purple); }
+.dsc-menu-cal { min-width: 292px; padding: 12px; }
+.dsc-cal-head { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+.dsc-cal-month { flex: 1; padding-left: 4px; font-family: var(--dsc-display); font-size: 1.02rem; font-weight: 700; }
+.dsc-cal-nav {
+  display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 50%;
+  background: none; color: rgba(255, 255, 255, 0.82); cursor: pointer;
+}
+.dsc-cal-nav:hover:not(:disabled) { background: rgba(255, 255, 255, 0.08); }
+.dsc-cal-nav:disabled { opacity: 0.25; cursor: default; }
+.dsc-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.dsc-cal-dow { padding: 4px 0; font-size: 0.72rem; font-weight: 700; color: rgba(255, 255, 255, 0.4); }
+.dsc-cal-day {
+  aspect-ratio: 1; border: 0; border-radius: 50%; background: none; color: #fff;
+  font-family: var(--dsc-body); font-size: 0.9rem; font-weight: 600; cursor: pointer;
+}
+.dsc-cal-day:hover:not(:disabled) { background: rgba(255, 255, 255, 0.08); }
+.dsc-cal-day:disabled { color: rgba(255, 255, 255, 0.22); cursor: default; }
+.dsc-cal-day.today { font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.dsc-cal-day.on, .dsc-cal-day.on:hover { background: var(--dsc-purple); color: #fff; }
 .dsc-menu-input {
   width: 100%;
   margin-bottom: 6px;

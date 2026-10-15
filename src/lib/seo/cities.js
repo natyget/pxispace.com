@@ -1,8 +1,8 @@
 /**
  * Operational city registry — the single source of truth for /discover/[city].
  *
- * PXI operates in NEW YORK and BOSTON only. Montréal and Toronto were listed here
- * historically; their hubs are retired and 301 to /discover/new-york (next.config.js).
+ * PXI operates in NEW YORK, BOSTON and MONTRÉAL. Toronto was listed here historically; its hub is retired
+ * and 301s to /discover/new-york (next.config.js).
  * Do not re-add a city until it is actually operational — a hub with no events is a thin
  * page, and thin templated pages drag the whole domain's quality signal down.
  *
@@ -57,10 +57,23 @@ export const CITIES = {
     ],
     blurb: 'Afrohouse, amapiano, and community nights across the city and over the river.',
   },
+  montreal: {
+    slug: 'montreal',
+    cityCode: 'YUL',
+    name: 'Montréal',
+    state: 'QC',
+    region: 'Québec',
+    country: 'CA',
+    lat: 45.5017,
+    lng: -73.5673,
+    timezone: 'America/Toronto',
+    match: ['montreal', 'montréal', 'plateau', 'mile end', 'griffintown', 'old montreal'],
+    blurb: 'House, techno, and late rooms across the city.',
+  },
 };
 
 /** Cities we no longer operate in. Kept so redirects and tests can assert against them. */
-export const RETIRED_CITY_SLUGS = ['montreal', 'toronto'];
+export const RETIRED_CITY_SLUGS = ['toronto'];
 
 export function getCity(slug) {
   return CITIES[slug] ?? null;
