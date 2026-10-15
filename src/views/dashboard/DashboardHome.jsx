@@ -19,6 +19,8 @@ import { organizerAnalyticsService } from '@/services/organizerAnalytics';
 import { listFloorPlans } from '@/services/floorPlans';
 import { floorPlanAccess } from '@/lib/floorPlanAccess';
 import { api } from '../../services/api';
+import { getDemandMine } from '../../services/diplomatTools';
+import { getGenre } from '@/lib/seo/genres';
 
 const DASHBOARD_RENDER_NOW = Date.now();
 
@@ -455,6 +457,8 @@ function VendorCommandCenter() {
                         </div>
                     </section>
 
+                    <CityDemandCard />
+
                     <section className="dashboard-surface rounded-3xl p-5 md:p-6">
                         <CardHeader title="Notices" />
                         <div className="mt-4 space-y-3">
@@ -691,5 +695,36 @@ function NoticeRow({ notice }) {
             <p className="text-sm font-semibold text-white">{notice.title}</p>
             <p className="mt-0.5 text-xs text-zinc-500">{notice.detail}</p>
         </Link>
+    );
+}
+
+/** Diplomats: the five nights the city asks for most. Hidden while empty and when the route is not there. */
+function CityDemandCard() {
+    const [top, setTop] = useState([]);
+
+    useEffect(() => {
+        let alive = true;
+        getDemandMine()
+            .then((res) => alive && setTop((res.top || []).slice(0, 5)))
+            .catch(() => alive && setTop([]));
+        return () => {
+            alive = false;
+        };
+    }, []);
+
+    if (!top.length) return null;
+
+    return (
+        <section className="dashboard-surface rounded-3xl p-5 md:p-6">
+            <CardHeader title="What the city wants" />
+            <ul className="mt-4 space-y-2.5">
+                {top.map((line) => (
+                    <li key={`${line.area}-${line.genre}`} className="text-sm text-zinc-300">
+                        <span className="font-semibold tabular-nums text-pxi-purple">{line.count}</span>{' '}
+                        want {getGenre(line.genre)?.name ?? line.genre} in {line.area}
+                    </li>
+                ))}
+            </ul>
+        </section>
     );
 }
