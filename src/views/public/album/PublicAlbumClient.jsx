@@ -20,6 +20,7 @@ import {
   timelineRowKey,
 } from './buildPublicAlbumTimeline';
 import EventDetailsModal from '@/components/events/EventDetailsModal';
+import EventDesktopDetails from '@/components/events/EventDesktopDetails';
 import { buildAlbumEventDetails } from './albumEventDetailsAdapter';
 import PublicAlbumJoinEventButton from './PublicAlbumJoinEventButton';
 import IphonePane from './IphonePane';
@@ -43,7 +44,7 @@ function normalizeMediaList(raw) {
   return raw.filter((m) => Boolean(mediaDisplayUrl(m)));
 }
 
-export default function PublicAlbumClient({ albumId, initialAlbum = null, initialDenied = false }) {
+export default function PublicAlbumClient({ albumId, initialAlbum = null, initialDenied = false, embedded = false }) {
   const [album, setAlbum] = useState(initialAlbum);
   const [galleryMedia, setGalleryMedia] = useState([]);
   const [threadMedia, setThreadMedia] = useState([]);
@@ -325,7 +326,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
   // A plain centered wrapper with navbar padding renders clean on both.
   if (loading) {
     return (
-      <div className="flex h-full min-h-0 flex-1 items-center justify-center px-4 pt-20">
+      <div className={`flex h-full min-h-0 flex-1 items-center justify-center px-4 ${embedded ? '' : 'pt-20'}`}>
         <IphonePane className="items-center justify-center">
           <HugeiconsIcon icon={Loading02Icon} className="size-6 animate-spin text-zinc-400" />
         </IphonePane>
@@ -343,7 +344,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
     const signedIn = authReady && isAuthenticated;
     const loginHref = `/login?redirect=${encodeURIComponent(`/album/${albumId}`)}`;
     return (
-      <div className="flex h-full min-h-0 flex-1 items-center justify-center px-4 pt-20">
+      <div className={`flex h-full min-h-0 flex-1 items-center justify-center px-4 ${embedded ? '' : 'pt-20'}`}>
         <IphonePane className="items-center justify-center px-4 text-center text-white">
           <HugeiconsIcon icon={LockIcon} className="mb-4 size-8 text-zinc-500" />
           {/* `denied` decides the copy — a 403 leaves `album` null, so checking
@@ -390,9 +391,7 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
     !contentLoading &&
     (tab === 'gallery' ? galleryMedia.length === 0 : !threadHasContent);
 
-  return (
-    <div className="public-album-page min-h-0 flex-1 lg:h-dvh lg:max-h-dvh lg:overflow-hidden">
-      {/* Left: thread + gallery — iPhone viewport (centered in the left 50% on desktop) */}
+  const albumSlot = (
       <div className="public-album-left-slot flex flex-col items-center">
         <div
           ref={threadShellRef}
@@ -580,23 +579,10 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
         </div>
 
       </div>
+  );
 
-      {/* Right: album details — desktop only; mobile opens the same sheet from the three-dot
-         button. It is the app's event view (EventDetailsModal), inline in the pane. */}
-      <div className="album-details-pane relative bg-black">
-        <div className="album-details-shell items-center justify-center p-3">
-          <div className="flex h-full w-full flex-col overflow-hidden">
-            <EventDetailsModal
-              open
-              presentation="inline"
-              event={albumDetails.event}
-              primaryAction={albumDetails.primaryAction}
-              secondaryAction={albumDetails.secondaryAction}
-            />
-          </div>
-        </div>
-      </div>
-
+  const overlays = (
+    <>
       <EventDetailsModal
         open={detailsOpen}
         onClose={() => setDetailsOpen(false)}
@@ -637,6 +623,35 @@ export default function PublicAlbumClient({ albumId, initialAlbum = null, initia
           onIndexChange={setThreadFocusIndex}
         />
       ) : null}
+    </>
+  );
+
+  // Embedded in the event page's right column (1024px and up): the album alone, the page owns the details.
+  if (embedded) {
+    return (
+      <div className="flex h-full min-h-0 flex-col">
+        {albumSlot}
+        {overlays}
+      </div>
+    );
+  }
+
+  return (
+    <div className="public-album-page min-h-0 flex-1">
+      {/* Left (desktop only): the event's details, scrolling. Mobile opens the same sheet from the
+         three-dot button. */}
+      <div className="album-details-pane no-scrollbar">
+        <EventDesktopDetails
+          event={albumDetails.event}
+          primaryAction={albumDetails.primaryAction}
+          secondaryAction={albumDetails.secondaryAction}
+          hostStats={album?.hostStats || album?.event?.hostStats}
+        />
+      </div>
+
+      {/* Right on desktop: the album, fixed. Alone on mobile. */}
+      {albumSlot}
+      {overlays}
     </div>
   );
 }

@@ -7,6 +7,9 @@ import { eventsService } from '@/services/events';
 import { PxiSpinner } from '@/components/loading/PxiLoading';
 import AppOpenBanner from '@/components/links/AppOpenBanner';
 import EventDetailsModal from '@/components/events/EventDetailsModal';
+import EventDesktopDetails, { EventTicketPanel } from '@/components/events/EventDesktopDetails';
+import PublicAlbumClient from '@/views/public/album/PublicAlbumClient';
+import { useMinWidth } from '@/hooks/useMinWidth';
 import { buildAlbumEventDetails } from '@/views/public/album/albumEventDetailsAdapter';
 import { parseEventTicketTiers } from '@/lib/ticketTiers';
 import { resolveEventCity } from '@/lib/seo/cities';
@@ -77,6 +80,7 @@ function toAlbumShape(apiEvent, participants) {
 export default function EventDetailClient() {
   const params = useParams();
   const id = params?.id;
+  const isDesktop = useMinWidth(1024);
 
   // What the fetch brought back, keyed by the id it was for — so a new id reads as loading without
   // resetting state inside the effect.
@@ -177,6 +181,30 @@ export default function EventDetailClient() {
         <Link href="/events" className="mt-6 text-sm font-medium text-pxi-purple hover:text-white">
           Browse events
         </Link>
+      </div>
+    );
+  }
+
+  // 1024px and up: the details scroll on the left; the album (or, with no album, the ticket) stays on the right.
+  if (isDesktop) {
+    const hasAlbum = !!albumId;
+    return (
+      <div className="event-split">
+        <div className="event-split__left no-scrollbar">
+          <EventDesktopDetails
+            event={details.event}
+            primaryAction={details.primaryAction}
+            hostStats={apiEvent.hostStats}
+            showActions={hasAlbum}
+          />
+        </div>
+        <div className="event-split__right">
+          {hasAlbum ? (
+            <PublicAlbumClient key={albumId} albumId={String(albumId)} embedded />
+          ) : (
+            <EventTicketPanel event={details.event} primaryAction={details.primaryAction} />
+          )}
+        </div>
       </div>
     );
   }
