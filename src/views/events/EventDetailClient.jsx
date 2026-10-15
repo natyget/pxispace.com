@@ -102,7 +102,7 @@ export default function EventDetailClient() {
     };
   }, [id]);
 
-  // ?ref=<code>: kept for the session per night (the purchase calls send it), and its click counted once.
+  // ?ref=<code>: kept 30 days per night (the purchase calls send it), and its click counted once per code.
   useEffect(() => {
     if (!id) return;
     const code = new URLSearchParams(window.location.search).get('ref');

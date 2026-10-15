@@ -17,7 +17,7 @@ export const listRefLinks = (eventId) => api.get(`/api/events/${eventId}/ref-lin
 /** POST /api/events/:eventId/ref-links (host, Diplomat) → { code, label, url } */
 export const createRefLink = (eventId, label) => api.post(`/api/events/${eventId}/ref-links`, { label });
 
-/** POST /api/public/ref/:eventId/:code/click. Sent once per session; keepalive so it outlives the page. */
+/** POST /api/public/ref/:eventId/:code/click. Sent once per new code; keepalive so it outlives the page. */
 export const recordRefClick = (eventId, code) =>
   api.post(`/api/public/ref/${eventId}/${code}/click`, {}, { keepalive: true }).catch(() => {});
 

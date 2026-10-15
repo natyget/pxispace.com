@@ -115,7 +115,7 @@ export async function getTicketQuote(eventId, albumId, tierId) {
   return api.get(`/api/tickets/quote?${q}`);
 }
 
-/** `ref`: the referral code this session arrived with for the night, sent only when there is one. */
+/** `ref`: the referral code this visitor arrived with for the night (kept 30 days), sent only when there is one. */
 function refField(eventId) {
   const ref = readEventRef(eventId);
   return ref ? { ref } : {};
