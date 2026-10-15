@@ -5,7 +5,9 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import CityEventsView from '@/views/discover/CityEventsView';
 import { getCity, allCitySlugs } from '@/lib/seo/cities';
 import { getPublicEventsSnapshot, eventsInCity, eventGenres, eventUrl } from '@/lib/publicEvents';
-import { allGenres, eventMatchesGenre } from '@/lib/seo/genres';
+import { allGenres, eventMatchesGenre, getGenre } from '@/lib/seo/genres';
+import { fetchCityDemand } from '@/lib/seo/demand';
+import DemandVote from '@/views/discover/DemandVote';
 import {
   SITE_URL,
   buildBreadcrumbJsonLd,
@@ -69,6 +71,8 @@ export default async function CityPage({ params }) {
   // Outside nights count the same as PXI events: a genre with either one gets a hub link.
   const outside = city.cityCode ? await fetchCityListings({ cityCode: city.cityCode, limit: 300 }) : [];
   const outsideNights = outside.slice(0, OUTSIDE_LIMIT);
+  // The demand votes: no block at all when the API does not answer.
+  const demand = city.cityCode ? await fetchCityDemand(city.cityCode) : null;
 
   // Only link genre sub-hubs that actually have events in this city — an empty
   // /discover/<city>/<genre> is a thin page and a crawl trap.
@@ -87,6 +91,15 @@ export default async function CityPage({ params }) {
       <CityEventsView city={city} initialEvents={seeded ? cityEvents : null} />
 
       {outsideNights.length ? <GoMoreNights city={city} nights={outsideNights} hub={false} /> : null}
+
+      {demand ? (
+        <DemandVote
+          cityCode={city.cityCode}
+          areas={demand.areas}
+          genres={demand.genres.map((slug) => ({ slug, name: getGenre(slug)?.name ?? slug }))}
+          top={demand.top}
+        />
+      ) : null}
 
       {genreLinks.length ? (
         <nav aria-label={`${city.name} genres`} className="bg-black">

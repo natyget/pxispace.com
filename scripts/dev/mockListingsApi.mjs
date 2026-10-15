@@ -159,23 +159,99 @@ function detailFor(night, card) {
   };
 }
 
+// ————— Demand votes (contract: "Demand votes") —————
+
+const DEMAND_AREAS = {
+  NYC: ['Manhattan', 'Brooklyn', 'Queens', 'Bronx'],
+  BOS: ['Boston', 'Cambridge', 'Somerville'],
+  YUL: ['Plateau', 'Mile End', 'Downtown', 'Griffintown'],
+};
+const DEMAND_GENRES = ['house', 'techno', 'pop', 'indie-dance', 'disco', 'afrobeats', 'amapiano', 'afrohouse', 'hip-hop', 'rnb', 'dancehall', 'latin', 'kompa', 'jazz'];
+// Seeded counts, so the top list is not empty in dev. Votes add to them.
+const demandCounts = new Map([
+  ['NYC|Brooklyn|house', 87], ['NYC|Brooklyn|techno', 64], ['NYC|Manhattan|house', 41], ['NYC|Queens|pop', 22],
+  ['NYC|Bronx|latin', 9], ['NYC|Manhattan|disco', 7], ['NYC|Brooklyn|afrohouse', 4],
+  ['BOS|Cambridge|indie-dance', 33], ['BOS|Boston|afrohouse', 18], ['YUL|Plateau|techno', 26], ['YUL|Mile End|house', 12],
+]);
+// One vote per email per city, area and genre.
+const emailVotes = new Set();
+
+function demandTop(cityCode) {
+  return [...demandCounts.entries()]
+    .map(([key, count]) => {
+      const [code, area, genre] = key.split('|');
+      return { code, area, genre, count };
+    })
+    .filter((row) => row.code === cityCode && row.count >= 5)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10)
+    .map(({ area, genre, count }) => ({ area, genre, count }));
+}
+
+function sendDemandVote(res, body) {
+  const cityCode = body?.cityCode;
+  const area = body?.area;
+  const genre = body?.genre;
+  const email = String(body?.email || '').trim().toLowerCase();
+  if (!CITIES[cityCode] || !(DEMAND_AREAS[cityCode] || []).includes(area) || !DEMAND_GENRES.includes(genre)
+    || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return send(res, 400, { error: 'invalid vote' });
+  }
+  const key = `${cityCode}|${area}|${genre}`;
+  if (!emailVotes.has(`${email}|${key}`)) {
+    emailVotes.add(`${email}|${key}`);
+    demandCounts.set(key, (demandCounts.get(key) || 0) + 1);
+  }
+  return send(res, 200, { ok: true, count: demandCounts.get(key) });
+}
+
 // ————— HTTP —————
 
 const CACHE = 'public, max-age=300, s-maxage=900';
 
 function send(res, status, body, headers = {}) {
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', ...headers });
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', ...headers });
   res.end(JSON.stringify(body));
 }
 
-const server = http.createServer((req, res) => {
-  if (req.method !== 'GET') return send(res, 405, { error: 'method not allowed' });
+const server = http.createServer(async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    });
+    return res.end();
+  }
   const url = new URL(req.url, `http://${HOST}`);
+  if (req.method === 'POST' && url.pathname === '/api/public/demand') {
+    let raw = '';
+    for await (const chunk of req) raw += chunk;
+    let body = null;
+    try {
+      body = JSON.parse(raw || '{}');
+    } catch {
+      return send(res, 400, { error: 'json' });
+    }
+    return sendDemandVote(res, body);
+  }
+  if (req.method !== 'GET') return send(res, 405, { error: 'method not allowed' });
   const now = Date.now();
   const built = buildNights(now);
   const upcoming = built.filter(({ card }) => card._endMs > now).sort((a, b) => a.card._startMs - b.card._startMs);
 
   if (url.pathname === '/api/events') return send(res, 200, []);
+
+  if (url.pathname === '/api/public/demand') {
+    const city = url.searchParams.get('city');
+    if (!city || !CITIES[city]) return send(res, 400, { error: 'unknown city' });
+    return send(res, 200, {
+      city,
+      areas: DEMAND_AREAS[city],
+      genres: DEMAND_GENRES,
+      top: demandTop(city),
+    }, { 'Cache-Control': 'public, max-age=60' });
+  }
 
   if (url.pathname === '/api/public/listings') {
     const city = url.searchParams.get('city');
