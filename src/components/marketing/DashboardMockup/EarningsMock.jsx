@@ -12,7 +12,7 @@ import { EARNINGS_SAMPLE } from './sampleData';
  */
 export default function EarningsMock() {
   return (
-    <DashboardMock className="space-y-4">
+    <DashboardMock section="earnings" className="space-y-4">
       <SectionCard title="Key Metrics">
         <div className="px-5 py-2">
           {EARNINGS_SAMPLE.keyMetrics.map((row) => (

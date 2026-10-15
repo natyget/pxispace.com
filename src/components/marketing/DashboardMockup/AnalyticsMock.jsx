@@ -19,7 +19,7 @@ const subscribe = (notify) => {
 export default function AnalyticsMock() {
   const isMobile = useSyncExternalStore(subscribe, () => window.matchMedia(PHONE).matches, () => false);
   return (
-    <DashboardMock>
+    <DashboardMock section="analytics">
       <HypePanel {...HYPE_SAMPLE} isMobile={isMobile} chartClassName="h-[220px]" statsClassName="grid-cols-3" />
     </DashboardMock>
   );

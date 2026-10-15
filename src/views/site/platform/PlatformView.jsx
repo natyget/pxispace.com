@@ -105,7 +105,7 @@ export default function PlatformView() {
               </div>
             </div>
             <div className="stage-box" aria-hidden="true" data-nosnippet>
-              <div className="stage" data-w="820" data-h="660" data-max="1.2"></div>
+              <div className="stage" data-w="820" data-h="768" data-max="1.2"></div>
             </div>
           </div>
         </section>
@@ -123,7 +123,7 @@ export default function PlatformView() {
               </div>
             </div>
             <div className="stage-box" aria-hidden="true" data-nosnippet>
-              <div className="stage" data-w="880" data-h="690" data-max="1.2"></div>
+              <div className="stage" data-w="880" data-h="798" data-max="1.2"></div>
             </div>
           </div>
         </section>
@@ -141,7 +141,7 @@ export default function PlatformView() {
               </div>
             </div>
             <div className="stage-box" aria-hidden="true" data-nosnippet>
-              <div className="stage" data-w="880" data-h="708" data-max="1.2"></div>
+              <div className="stage" data-w="880" data-h="816" data-max="1.2"></div>
             </div>
           </div>
         </section>
@@ -159,7 +159,7 @@ export default function PlatformView() {
               </div>
             </div>
             <div className="stage-box" aria-hidden="true" data-nosnippet>
-              <div className="stage" data-w="600" data-h="670" data-max="1.2"></div>
+              <div className="stage" data-w="600" data-h="778" data-max="1.2"></div>
             </div>
           </div>
         </section>
@@ -177,7 +177,7 @@ export default function PlatformView() {
               </div>
             </div>
             <div className="stage-box" aria-hidden="true" data-nosnippet>
-              <div className="stage" data-w="880" data-h="556" data-max="1.2"></div>
+              <div className="stage" data-w="880" data-h="664" data-max="1.2"></div>
             </div>
           </div>
         </section>
