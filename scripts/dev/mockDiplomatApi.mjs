@@ -140,7 +140,8 @@ async function handle(req, res) {
     const [, eventId, code] = hit;
     const link = (refLinks.get(eventId) || []).find((l) => l.code === code);
     if (link) link.clicks += 1;
-    console.log(`[mock] ref click ${eventId} ${code} (${link ? 'known' : 'unknown code'})`);
+    const auth = req.headers.authorization ? 'signed in' : 'signed out';
+    console.log(`[mock] ref click ${eventId} ${code} (${link ? 'known' : 'unknown code'}, ${auth})`);
     res.writeHead(204);
     return res.end();
   }
