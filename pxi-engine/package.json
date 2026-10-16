@@ -12,7 +12,7 @@
     "@react-three/fiber": "9.3.0",
     "@react-three/postprocessing": "3.0.4",
     "@remotion/cli": "4.0.531",
-    "@remotion/google-fonts": "4.0.531",
+    "@remotion/fonts": "4.0.531",
     "@remotion/noise": "4.0.531",
     "@remotion/three": "4.0.531",
     "react": "19.1.1",

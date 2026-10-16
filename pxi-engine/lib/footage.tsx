@@ -2,10 +2,12 @@
 // This file turns `footageUrl` into that texture, or into procedural film frames
 // when there is no footage at all.
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { random, staticFile, useDelayRender } from 'remotion';
-import { useOffthreadVideoTexture, useVideoTexture } from '@remotion/three';
+import React, { createContext, useContext, useMemo } from 'react';
+import { random, Sequence, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
+import { NoReactInternals } from 'remotion/no-react';
+import { useVideoTexture } from '@remotion/three';
 import * as THREE from 'three';
+import { loadImageTexture, useAsyncTexture } from './asyncTexture';
 
 export type FootageKind = 'video' | 'image' | 'none';
 
@@ -20,6 +22,7 @@ export const resolveFootage = (url: string) =>
   /^(https?:|data:|blob:)/.test(url) ? url : staticFile(`footage/${url.replace(/^\/?footage\//, '')}`);
 
 const FootageContext = createContext<THREE.Texture | null>(null);
+const FootageConfigContext = createContext<{ url: string; isRendering: boolean }>({ url: '', isRendering: false });
 
 /** The shared footage texture, or null when the engine runs footage-free. */
 export const useFootageTexture = () => useContext(FootageContext);
@@ -32,32 +35,28 @@ const Provide: React.FC<{ texture: THREE.Texture | null; children: React.ReactNo
   return <FootageContext.Provider value={texture}>{children}</FootageContext.Provider>;
 };
 
-const OffthreadVideoSource: React.FC<{ src: string; children: React.ReactNode }> = ({ src, children }) => (
-  <Provide texture={useOffthreadVideoTexture({ src })}>{children}</Provide>
-);
+// Frame-exact video at render time: ask Remotion's offthread extractor for the
+// frame at this (sequence-relative) time and load it as an image texture.
+const OffthreadVideoSource: React.FC<{ src: string; children: React.ReactNode }> = ({ src, children }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const frameSrc = NoReactInternals.getOffthreadVideoSource({
+    src,
+    currentTime: frame / fps,
+    transparent: false,
+    toneMapped: true,
+  });
+  return <Provide texture={useAsyncTexture(frameSrc, loadImageTexture)}>{children}</Provide>;
+};
 
 const PreviewVideoSource: React.FC<{
   videoRef: React.RefObject<HTMLVideoElement | null>;
   children: React.ReactNode;
 }> = ({ videoRef, children }) => <Provide texture={useVideoTexture(videoRef)}>{children}</Provide>;
 
-const ImageSource: React.FC<{ src: string; children: React.ReactNode }> = ({ src, children }) => {
-  const { delayRender, continueRender, cancelRender } = useDelayRender();
-  const [texture, setTexture] = useState<THREE.Texture | null>(null);
-  useEffect(() => {
-    const handle = delayRender(`footage image ${src}`);
-    new THREE.TextureLoader().load(
-      src,
-      (t) => {
-        setTexture(t);
-        continueRender(handle);
-      },
-      undefined,
-      (err) => cancelRender(err),
-    );
-  }, [src, delayRender, continueRender, cancelRender]);
-  return <Provide texture={texture}>{children}</Provide>;
-};
+const ImageSource: React.FC<{ src: string; children: React.ReactNode }> = ({ src, children }) => (
+  <Provide texture={useAsyncTexture(src, loadImageTexture)}>{children}</Provide>
+);
 
 /** Mount inside <ThreeCanvas>. Stage does this for you. */
 export const FootageProvider: React.FC<{
@@ -67,15 +66,38 @@ export const FootageProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ url, isRendering, videoRef, children }) => {
   const kind = footageKind(url);
+  const config = useMemo(() => ({ url, isRendering }), [url, isRendering]);
+  let inner: React.ReactNode;
   if (kind === 'video') {
-    return isRendering ? (
+    inner = isRendering ? (
       <OffthreadVideoSource src={resolveFootage(url)}>{children}</OffthreadVideoSource>
     ) : (
       <PreviewVideoSource videoRef={videoRef}>{children}</PreviewVideoSource>
     );
+  } else if (kind === 'image') {
+    inner = <ImageSource src={resolveFootage(url)}>{children}</ImageSource>;
+  } else {
+    inner = <Provide texture={null}>{children}</Provide>;
   }
-  if (kind === 'image') return <ImageSource src={resolveFootage(url)}>{children}</ImageSource>;
-  return <Provide texture={null}>{children}</Provide>;
+  return <FootageConfigContext.Provider value={config}>{inner}</FootageConfigContext.Provider>;
+};
+
+/**
+ * Re-provides the footage `offsetFrames` later in the clip, so one clip can
+ * fill a wall with different moments instead of twelve copies of one frame.
+ * Video only, and only at render time (Studio shows the shared frame).
+ */
+export const FootageSlice: React.FC<{ offsetFrames: number; children: React.ReactNode }> = ({
+  offsetFrames,
+  children,
+}) => {
+  const { url, isRendering } = useContext(FootageConfigContext);
+  if (offsetFrames === 0 || !isRendering || footageKind(url) !== 'video') return <>{children}</>;
+  return (
+    <Sequence from={-offsetFrames} layout="none">
+      <OffthreadVideoSource src={resolveFootage(url)}>{children}</OffthreadVideoSource>
+    </Sequence>
+  );
 };
 
 /**

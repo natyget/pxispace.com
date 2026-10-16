@@ -4,11 +4,11 @@ The best 3D app ads on Instagram (Raycast, Arc, Linear, Superwhisper) share a sh
 
 | Time | Frames (30fps) | Beat | What happens | Sound |
 |---|---|---|---|---|
-| 0.0–0.8s | 0–24 | **HOOK** | Violent motion at the camera. The hero object (ticket or disposable) comes out of the void at the lens and stops just short. | **pop** on impact (frame ~12) |
+| 0.0–0.8s | 0–24 | **HOOK** | Violent motion at the camera, from the hook bank (`pxi-engine/hooks/`). Frame 0 is the loop flash decaying onto the hero object already in flight, a face from the night on it; it rushes the lens and stops just short. | **pop** on impact (frame ~12) |
 | 0.8–2.5s | 24–75 | **PROBLEM** | Chaos of camera rolls. Prints burst, pour or rain everywhere, flashes keep firing, the handheld shake doubles and the orange date stamp is on. This is "send me the pics" made physical. | shutter on every flash |
-| 2.5–5.5s | 75–165 | **MAGIC** | Spring physics snap everything into order: tension 280, friction 22, mass 1, overshoot allowed. Items are staggered centre-out over about half a second, and each print develops as it lands. | capture click on the first snap, success chime as the last lands |
+| 2.5–5.5s | 75–165 | **MAGIC** | Spring physics snap everything into order: tension 280, friction 22, mass 1, overshoot allowed. Items are staggered centre-out over about half a second, each print develops as it lands, and a mono counter reads `photos of you 0 → photoCount` (default 37). | capture click on the first snap, a queue-tick per count, success chime as the last lands |
 | 5.5–7.5s | 165–225 | **PAYOFF** | A slow dolly across the "morning after" grid. The shake drops and the light leak finds the print you're in. | room tone |
-| 7.5–8.5s | 225–255 | **CTA** | The PXI mark and three words ("buy the ticket."), the scene darkens, and the last 8 frames fall to the same black void frame 0 starts in. | none, so the pop at frame 12 lands hard on the loop |
+| 7.5–8.5s | 225–255 | **CTA** | The PXI mark and three words ("buy the ticket."), the scene darkens, then the disposable fires: the last 4 frames ramp to pure white on frame 254, the flash frame 0 decays from. | shutter on the loop flash |
 
 ## The spring
 
@@ -28,4 +28,4 @@ The damping ratio is 22 / (2·√280) ≈ 0.66, so a print passes its slot by ab
 
 - Motion starts on frame 0 and the first headline is up by frame 4. There is no fade up from black.
 - Nothing holds still: if an object has landed, the camera is moving.
-- Frame 254 and frame 0 are both the void, so the Reel autoplays as a loop.
+- Loop flash to flash: frame 254 is pure white and frame 0 is the same flash one step into its decay, so the seam reads as one flash.

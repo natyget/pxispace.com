@@ -110,9 +110,10 @@ export const Stage: React.FC<StageProps> = ({
         </EffectComposer>
       </ThreeCanvas>
 
-      <FlashFrame flash={flash} />
       <FilmGrain />
       {overlay}
+      {/* Above grain, vignette and type, so a full pop is pure white edge to edge (the loop seam). */}
+      <FlashFrame flash={flash} />
     </AbsoluteFill>
   );
 };

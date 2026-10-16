@@ -9,9 +9,9 @@ import { VIDEO } from './lib/tokens';
 // One composition per template; all share the 1080×1920 / 30fps / 8.5s master
 // and the same three props.
 const templates = [
-  { id: 'ticket-flip', component: TicketFlip },
-  { id: 'avalanche', component: Avalanche },
-  { id: 'morning-table', component: MorningTable },
+  { id: 'pxi-ticket-flip', component: TicketFlip },
+  { id: 'pxi-avalanche', component: Avalanche },
+  { id: 'pxi-morning-table', component: MorningTable },
 ] as const;
 
 export const Root: React.FC = () => (

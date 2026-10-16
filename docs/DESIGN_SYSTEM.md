@@ -7,7 +7,7 @@ Every frame the engine renders lives in one world. Code values live in `pxi-engi
 - **An infinite black void** (`#000000`). There is no floor, no horizon and no environment map. Objects exist only where light hits them.
 - **Film grain** on every frame: the PXI app's own luma grain tile (`pxi-mobile-app/assets/filters/grain_luma_512.png`), overlay blend at 22%, jumped to a new offset every frame.
 - **Vignette**: an elliptical falloff to 75% black at the corners.
-- Frame 0 and the last frame are both pure void, so every Reel loops without a seam.
+- Every Reel loops **flash to flash**: the last frame is pure white and frame 0 is that flash decaying onto the hero object, with a face from the footage on it. Frame 0 is the cover in the profile grid, so it must never be black.
 
 ## Lighting
 
@@ -60,3 +60,5 @@ The site and the earlier films (The Record, Tonight's on the Map) used a differe
 | 2D polaroid frames with ±6° tilt | Real 3D prints with curl, develop and light leaks |
 
 What carries over: no phone frames, no tilting mockups, no glow orbs, never open on the splash, the hook in frame one, and the loop back into frame 0.
+
+Type is self-hosted from `pxi-engine/public/brand/fonts/` (both SIL OFL), so renders never depend on reaching Google Fonts.

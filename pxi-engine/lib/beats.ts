@@ -34,11 +34,22 @@ export const snap = (frame: number, delay = 0) =>
   });
 
 /**
- * Loop closure: 1 for most of the film, falls to 0 over the last frames so the
- * final frame is the same black void the first frame starts in.
+ * Fades type out over the last frames, before the loop flash takes the frame.
  */
 export const loopFade = (frame: number) =>
   interpolate(frame, [VIDEO.durationInFrames - 8, VIDEO.durationInFrames - 1], [1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
+
+/**
+ * Loop closure, flash to flash: the disposable fires over the last 4 frames and
+ * frame 254 is pure white. Frame 0 is that same flash one step into its decay,
+ * so the seam reads as a single flash. Returns 0..1, a flash level.
+ */
+export const LOOP_FLASH_FRAMES = 4;
+export const loopFlash = (frame: number) =>
+  interpolate(frame, [VIDEO.durationInFrames - LOOP_FLASH_FRAMES, VIDEO.durationInFrames - 1], [0.3, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  }) * (frame >= VIDEO.durationInFrames - LOOP_FLASH_FRAMES ? 1 : 0);

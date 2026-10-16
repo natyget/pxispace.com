@@ -12,10 +12,10 @@ export const KEY_COLOR = new THREE.Color(COLOR.tungsten);
 
 /**
  * Flash intensity at `frame` for pops at `at` frames: instant attack, ~3 frame
- * decay, like a disposable's xenon tube. Returns 0..1.
+ * decay, like a disposable's xenon tube. `amp` scales the peak. Returns 0..1.
  */
-export const flashEnvelope = (frame: number, at: readonly number[], decayFrames = 3) =>
-  at.reduce((max, f) => (frame < f ? max : Math.max(max, Math.exp(-(frame - f) / decayFrames))), 0);
+export const flashEnvelope = (frame: number, at: readonly number[], decayFrames = 3, amp = 1) =>
+  at.reduce((max, f) => (frame < f ? max : Math.max(max, amp * Math.exp(-(frame - f) / decayFrames))), 0);
 
 export const FlashLight: React.FC<{
   /** 0..1, usually from flashEnvelope(). */
@@ -49,7 +49,8 @@ export const FlashFrame: React.FC<{ flash: number }> = ({ flash }) =>
     <AbsoluteFill
       style={{
         backgroundColor: COLOR.flash,
-        opacity: Math.min(1, flash * flash) * 0.85,
+        // Squared so small pops barely tint the frame and a full pop (1) is pure white.
+        opacity: Math.min(1, flash * flash),
         mixBlendMode: 'screen',
         pointerEvents: 'none',
       }}

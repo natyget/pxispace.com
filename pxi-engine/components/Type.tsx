@@ -88,3 +88,57 @@ export const DateStamp: React.FC<{ eventDate: string; from: number; to: number; 
     </AbsoluteFill>
   );
 };
+
+const counterEase = Easing.out(Easing.cubic);
+
+/** The count shown at `frame`: fast at first, slowing into the final number. */
+const countAt = (frame: number, count: number, from: number, to: number) =>
+  Math.round(count * counterEase(interpolate(frame, [from, to], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })));
+
+/** One queue-tick per increment, thinned so ticks never land closer than `minGap` frames. */
+export const counterCues = (count: number, from: number, to: number, minGap = 2) => {
+  const cues: { at: number; sound: 'queue-tick'; volume: number }[] = [];
+  let shown = 0;
+  let last = -Infinity;
+  for (let f = from; f <= to; f++) {
+    const n = countAt(f, count, from, to);
+    if (n > shown && f - last >= minGap) {
+      cues.push({ at: f, sound: 'queue-tick', volume: 0.5 });
+      last = f;
+    }
+    shown = n;
+  }
+  return cues;
+};
+
+/** "photos of you 0 → N" in the date-stamp corner, same LED treatment. */
+export const PhotoCounter: React.FC<{ count: number; from: number; to: number; until: number }> = ({
+  count,
+  from,
+  to,
+  until,
+}) => {
+  const frame = useCurrentFrame();
+  if (frame < from || frame >= until) return null;
+  const n = countAt(frame, count, from, to);
+  return (
+    <AbsoluteFill
+      style={{ justifyContent: 'flex-start', alignItems: 'flex-end', padding: `${SAFE.top}px ${SAFE.side}px`, pointerEvents: 'none' }}
+    >
+      <div
+        style={{
+          fontFamily: mono,
+          fontSize: 34,
+          color: COLOR.tungsten,
+          opacity: 0.9,
+          letterSpacing: '0.04em',
+          textShadow: `0 0 12px ${COLOR.tungsten}`,
+          fontVariantNumeric: 'tabular-nums',
+          whiteSpace: 'pre',
+        }}
+      >
+        {`photos of you  ${String(n).padStart(String(count).length, ' ')}`}
+      </div>
+    </AbsoluteFill>
+  );
+};

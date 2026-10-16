@@ -47,7 +47,7 @@ export const Avalanche: React.FC<TemplateProps> = ({ footageUrl, headlines, even
   const cell = { w: POLAROID_SIZE.w * PRINT_SCALE, h: POLAROID_SIZE.h * PRINT_SCALE };
   const grid = useMemo(() => gridSlots(COLS, ROWS, cell, 0.05, [0, 0.1, 0]), [cell.w, cell.h]);
 
-  const flash = flashEnvelope(frame, FLASHES, 4);
+  const flash = flashEnvelope(frame, FLASHES, 4, 0.75);
   const fade = loopFade(frame);
   const keyLevel = interpolate(frame, [BEATS.cta.from, BEATS.cta.from + 10], [1, 0.16], clamp) * fade;
 

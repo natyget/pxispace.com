@@ -18,34 +18,44 @@ export const EndCard: React.FC<{ words?: string }> = ({ words = CTA_WORDS }) => 
   const fade = loopFade(frame);
 
   return (
-    <AbsoluteFill
-      style={{
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 36,
-        opacity: inT * fade,
-        pointerEvents: 'none',
-      }}
-    >
-      <Img
-        src={staticFile('brand/pxi-mark.png')}
-        style={{ width: 132, height: 132, transform: `scale(${0.92 + 0.08 * inT})` }}
-      />
-      <div
+    <>
+      {/* Pushes the scene back so the three words own the frame. */}
+      <AbsoluteFill
         style={{
-          fontFamily: serif,
-          fontSize: 104,
-          color: COLOR.type,
-          letterSpacing: '-0.02em',
-          textTransform: 'lowercase',
-          transform: `translateY(${(1 - inT) * 24}px)`,
+          background: 'radial-gradient(ellipse 80% 45% at 50% 50%, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.55) 100%)',
+          opacity: inT * fade,
+          pointerEvents: 'none',
+        }}
+      />
+      <AbsoluteFill
+        style={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 36,
+          opacity: inT * fade,
+          pointerEvents: 'none',
         }}
       >
-        {words}
-      </div>
-      <div style={{ fontFamily: mono, fontSize: 30, color: COLOR.typeMuted, letterSpacing: '0.06em' }}>
-        {CTA_URL}
-      </div>
-    </AbsoluteFill>
+        <Img
+          src={staticFile('brand/pxi-mark.png')}
+          style={{ width: 132, height: 132, transform: `scale(${0.92 + 0.08 * inT})` }}
+        />
+        <div
+          style={{
+            fontFamily: serif,
+            fontSize: 104,
+            color: COLOR.type,
+            letterSpacing: '-0.02em',
+            textTransform: 'lowercase',
+            transform: `translateY(${(1 - inT) * 24}px)`,
+          }}
+        >
+          {words}
+        </div>
+        <div style={{ fontFamily: mono, fontSize: 30, color: COLOR.typeMuted, letterSpacing: '0.06em' }}>
+          {CTA_URL}
+        </div>
+      </AbsoluteFill>
+    </>
   );
 };

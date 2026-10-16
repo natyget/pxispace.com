@@ -9,6 +9,10 @@ pxi-engine/
   index.ts              registerRoot
   Root.tsx              one <Composition> per template, shared size/fps/length and props schema
   remotion.config.ts    h264, yuv420p, CRF 16, ANGLE GL, concurrency 2
+  hooks/
+    types.ts            the Hook interface: hero pose, flash, shake, focus for frames 0–24, plus handoff and cues
+    ticket-at-lens.ts   frame 0 = loop flash decaying onto a ticket in flight, face on its back; near-miss, pop
+    index.ts            registry and getHook(); the planned bank is listed here
   templates/
     ticket-flip.tsx     hero: the ticket. Flies at the lens, flips, prints burst out, snap to a 3×4 roll
     avalanche.tsx       hero: the disposable. Flash in your face, 35 prints pour down, snap to a 5×7 wall
@@ -27,13 +31,14 @@ pxi-engine/
     tokens.ts           colors, camera, spring, safe zone, CTA (mirrors DESIGN_SYSTEM.md)
     beats.ts            HOOK/PROBLEM/MAGIC/PAYOFF/CTA frame ranges, snap(), loopFade()
     motion.ts           seeded throws, grid slots, pose mixing, snap stagger
-    footage.tsx         footageUrl → texture (video, image or procedural fallback)
+    footage.tsx         footageUrl → texture (video, image or procedural fallback); FootageSlice for per-print moments
+    asyncTexture.ts     holds the render until R3F has drawn with a texture that loaded late
     paperShader.ts      shared GLSL: paper noise, derivative normals, matte lighting
-    fonts.ts            Instrument Serif + DM Mono (stand-in for ABC Diatype Mono)
-    props.ts            zod schema for { footageUrl, headlines[3], eventDate }
+    fonts.ts            Instrument Serif + DM Mono (stand-in for ABC Diatype Mono), self-hosted
+    props.ts            zod schema for { footageUrl, headlines[3], eventDate, photoCount?, hook? }
   public/
-    brand/              grain.png and pxi-mark.png from the app
-    sfx/                pop, shutter, success, capture-chk from the app
+    brand/              grain.png and pxi-mark.png from the app; fonts/ (OFL woff2 + licences)
+    sfx/                pop, shutter, success, capture-chk, queue-tick from the app
     footage → ../footage
   footage/              drop event clips and stills here (git-ignored)
 ```
@@ -43,7 +48,7 @@ pxi-engine/
 1. **Props** come in as `{ footageUrl, headlines: [a, b, c], eventDate }`, validated by `lib/props.ts` and editable live in Remotion Studio.
 2. **Timing**: the template reads `BEATS` from `lib/beats.ts`. Each object's pose is a pure function of the frame number and a seed, so any frame renders on its own, in any order, on any worker.
 3. **Chaos to order**: `makeThrows()` gives every print a seeded flight (velocity, spin, drag, gravity), `gridSlots()` gives it a slot, and `mixPose(chaos, slot, snap(frame, delay))` blends them with the 280/22/1 spring. The spring's overshoot past 1 is what makes prints pass their slot and settle.
-4. **Footage**: `Stage` mounts `FootageProvider` inside the canvas. A video URL goes through `useOffthreadVideoTexture` at render time (frame-exact) and a hidden `<video>` + `useVideoTexture` in Studio. An image goes through a `TextureLoader` held by `delayRender`. An empty string gives `null`, and each object then draws its own seeded procedural "flash photo of a dark room". Each print shows a different `crop` of the same clip, so one clip can fill a wall.
+4. **Footage**: `Stage` mounts `FootageProvider` inside the canvas. A video URL is read frame-exact at render time through Remotion's offthread extractor and a hidden `<video>` + `useVideoTexture` in Studio. Every late-arriving texture goes through `useAsyncTexture`, which keeps the frame from being captured until R3F has drawn with it (`<ThreeCanvas>` only redraws on frame change). `FootageSlice` re-reads the clip at an offset, so each print shows a different moment. An image goes through a `TextureLoader` held by `delayRender`. An empty string gives `null`, and each object then draws its own seeded procedural "flash photo of a dark room". Each print shows a different `crop` of the same clip, so one clip can fill a wall.
 5. **Light and lens**: `Stage` sets a 35mm camera, adds two-layer noise shake (0.2° × the beat's multiplier), the tungsten key and the lens flash, and runs depth of field focused on `pose.focus`.
 6. **Overlays**: grain, vignette, flash frame, headlines, date stamp and end card are DOM layers above the canvas, so type stays pixel-sharp.
 7. **Sound**: `Sfx` places the app's own pop, shutter and success sounds on frame cues.
@@ -54,14 +59,15 @@ Every template:
 
 - is a `React.FC<TemplateProps>` registered in `Root.tsx` at 1080×1920, 30fps, 255 frames;
 - tells **ticket → camera → morning after** across the five beats;
-- starts and ends on the black void (or the loop seam from idea 1 below);
+- takes its opener from the hook bank (`getHook(props.hook)`) and continues the hero from `hook.handoff`;
+- loops flash to flash (`loopFlash()`): frame 254 is pure white, frame 0 is its decay;
 - works with `footageUrl: ''`.
 
 To add a template: copy the closest one, keep the `BEATS` structure, change the hero object, the throw shape and the slot layout, then register it in `Root.tsx`.
 
 ## Status
 
-Phase 1 is scaffolded, typechecked (`npm run typecheck`) and webpack-bundled. **No frame has been rendered yet**, by design. Expect to tune light intensities, DOF strength and the procedural frames on the first render pass.
+The first test render is `pxi-ticket-flip` with the Sanaa Groove test clip and the `ticket-at-lens` hook. Ideas 1 and 2 below are built and wired into `pxi-ticket-flip`. Idea 3's hook interface and registry are built with one hook; `pxi-avalanche` and `pxi-morning-table` still use their own openers and void loop until their hooks join the bank. No variant matrix runner yet.
 
 ---
 

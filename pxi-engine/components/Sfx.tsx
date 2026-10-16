@@ -4,7 +4,7 @@
 import React from 'react';
 import { Html5Audio, Sequence, staticFile } from 'remotion';
 
-export type SfxName = 'pop' | 'shutter' | 'success' | 'capture-chk';
+export type SfxName = 'pop' | 'shutter' | 'success' | 'capture-chk' | 'queue-tick';
 export type Cue = { at: number; sound: SfxName; volume?: number };
 
 export const Sfx: React.FC<{ cues: readonly Cue[] }> = ({ cues }) => (

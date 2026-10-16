@@ -3,9 +3,10 @@
 // footage). Back is the footage full bleed, printed onto the same paper, so a
 // flip reads as "the ticket was the night all along".
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { random, useDelayRender } from 'remotion';
+import React, { useMemo } from 'react';
+import { random } from 'remotion';
 import * as THREE from 'three';
+import { useAsyncTexture } from '../lib/asyncTexture';
 import { useFootageTexture, useProceduralFrame } from '../lib/footage';
 import { fontsReady, mono, serif } from '../lib/fonts';
 import { PAPER_COMMON, PAPER_FRAGMENT_TAIL, PAPER_VERTEX_HEAD } from '../lib/paperShader';
@@ -84,58 +85,50 @@ void main() {
 }
 `;
 
-/** Draws the ticket's type into a transparent canvas once fonts are ready. */
-const usePrintTexture = (eventDate: string, seed: string) => {
-  const { delayRender, continueRender, cancelRender } = useDelayRender();
-  const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
+/** Draws the ticket's type into a transparent canvas. */
+const drawPrint = (eventDate: string, seed: string) => {
+  const W = 1900;
+  const H = 720;
+  const c = document.createElement('canvas');
+  c.width = W;
+  c.height = H;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#000';
+  ctx.textBaseline = 'alphabetic';
 
-  useEffect(() => {
-    const handle = delayRender('ticket print');
-    fontsReady
-      .then(() => {
-        const W = 1900;
-        const H = 720;
-        const c = document.createElement('canvas');
-        c.width = W;
-        c.height = H;
-        const ctx = c.getContext('2d')!;
-        ctx.fillStyle = '#000';
-        ctx.textBaseline = 'alphabetic';
+  const left = W * 0.33;
+  const serial = String(Math.floor(random(`serial-${seed}`) * 9000) + 1000).padStart(6, '0');
 
-        const left = W * 0.33;
-        const serial = String(Math.floor(random(`serial-${seed}`) * 9000) + 1000).padStart(6, '0');
+  ctx.font = `30px "${mono}"`;
+  ctx.fillText('admit one · keep this', left, 110);
+  ctx.font = `200px "${serif}"`;
+  ctx.fillText('the night', left - 8, 360);
+  ctx.font = `44px "${mono}"`;
+  ctx.fillText(eventDate.toLowerCase(), left, 470);
+  ctx.font = `30px "${mono}"`;
+  ctx.fillText(`no. ${serial}`, left, 620);
+  ctx.fillText('doors 22:00', W * 0.56, 620);
 
-        ctx.font = `30px "${mono}"`;
-        ctx.fillText('admit one · keep this', left, 110);
-        ctx.font = `200px "${serif}"`;
-        ctx.fillText('the night', left - 8, 360);
-        ctx.font = `44px "${mono}"`;
-        ctx.fillText(eventDate.toLowerCase(), left, 470);
-        ctx.font = `30px "${mono}"`;
-        ctx.fillText(`no. ${serial}`, left, 620);
-        ctx.fillText('doors 22:00', W * 0.56, 620);
+  // Stub, rotated.
+  ctx.save();
+  ctx.translate(W * 0.88, H / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.font = `64px "${serif}"`;
+  ctx.fillText('pxi', 0, -40);
+  ctx.font = `26px "${mono}"`;
+  ctx.fillText(eventDate.toLowerCase(), 0, 20);
+  ctx.fillText(`no. ${serial}`, 0, 64);
+  ctx.restore();
 
-        // Stub, rotated.
-        ctx.save();
-        ctx.translate(W * 0.88, H / 2);
-        ctx.rotate(-Math.PI / 2);
-        ctx.textAlign = 'center';
-        ctx.font = `64px "${serif}"`;
-        ctx.fillText('pxi', 0, -40);
-        ctx.font = `26px "${mono}"`;
-        ctx.fillText(eventDate.toLowerCase(), 0, 20);
-        ctx.fillText(`no. ${serial}`, 0, 64);
-        ctx.restore();
+  const t = new THREE.CanvasTexture(c);
+  t.anisotropy = 8;
+  return t;
+};
 
-        const t = new THREE.CanvasTexture(c);
-        t.anisotropy = 8;
-        setTexture(t);
-        continueRender(handle);
-      })
-      .catch((err) => cancelRender(err));
-  }, [eventDate, seed, delayRender, continueRender, cancelRender]);
-
-  return texture;
+const loadPrint = (key: string) => {
+  const [eventDate, seed] = JSON.parse(key) as [string, string];
+  return fontsReady.then(() => drawPrint(eventDate, seed));
 };
 
 export type TicketProps = {
@@ -167,7 +160,7 @@ export const Ticket: React.FC<TicketProps> = ({
   const shared = useFootageTexture();
   const procedural = useProceduralFrame(`${seed}-photo`);
   const map = texture ?? shared ?? procedural;
-  const print = usePrintTexture(eventDate, seed);
+  const print = useAsyncTexture(JSON.stringify([eventDate, seed]), loadPrint);
 
   const material = useMemo(
     () =>
@@ -200,7 +193,8 @@ export const Ticket: React.FC<TicketProps> = ({
   u.uMap.value = map;
   u.uPrint.value = print;
   u.uCropWindow.value = coverCrop(map, windowAspect, { x: 0.5, y: 0.5, zoom: 1.1 });
-  u.uCropBack.value = coverCrop(map, TICKET_SIZE.w / TICKET_SIZE.h, { x: 0.5, y: 0.5, zoom: 1 });
+  // Biased up so a face in the middle third of a vertical clip lands in the band.
+  u.uCropBack.value = coverCrop(map, TICKET_SIZE.w / TICKET_SIZE.h, { x: 0.5, y: 0.62, zoom: 1 });
   u.uBend.value = bend;
   u.uOpacity.value = opacity;
   u.uFlash.value = flash;
