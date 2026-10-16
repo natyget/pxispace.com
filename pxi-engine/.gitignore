@@ -1,0 +1,5 @@
+node_modules/
+out/
+# Event footage stays out of git (size, and the people in it). Drop files here locally.
+footage/*
+!footage/README.md
