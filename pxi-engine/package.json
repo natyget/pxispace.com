@@ -1,0 +1,29 @@
+{
+  "name": "pxi-engine",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-three/drei": "10.7.6",
+    "@react-three/fiber": "9.3.0",
+    "@react-three/postprocessing": "3.0.4",
+    "@remotion/cli": "4.0.531",
+    "@remotion/fonts": "4.0.531",
+    "@remotion/noise": "4.0.531",
+    "@remotion/three": "4.0.531",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "remotion": "4.0.531",
+    "three": "0.180.0",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.12",
+    "@types/three": "0.180.0",
+    "typescript": "5.9.2"
+  }
+}

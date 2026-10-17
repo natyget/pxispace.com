@@ -1,0 +1,254 @@
+{
+  "note": "Event photos the storyboard engine picks from, tagged by event type. Files live in footage/ (git-ignored); src is where each came from in the project shared folder.",
+  "footage": [
+    {
+      "file": "brunch-ticket-handoff.jpg",
+      "src": "content-engine/films/src/media/gallery-03.jpg",
+      "tags": [
+        "brunch",
+        "day",
+        "indoor",
+        "faces"
+      ],
+      "faces": true
+    },
+    {
+      "file": "brunch-smile-window.jpg",
+      "src": "content-engine/films/src/media/gallery-04.jpg",
+      "tags": [
+        "brunch",
+        "day",
+        "indoor",
+        "faces",
+        "portrait"
+      ],
+      "faces": true
+    },
+    {
+      "file": "brunch-three-friends.jpg",
+      "src": "content-engine/films/src/media/gallery-06.jpg",
+      "tags": [
+        "brunch",
+        "day",
+        "indoor",
+        "faces",
+        "group"
+      ],
+      "faces": true
+    },
+    {
+      "file": "brunch-cake-table.jpg",
+      "src": "content-engine/films/src/media/media__1782961344349.jpg",
+      "tags": [
+        "brunch",
+        "day",
+        "food"
+      ],
+      "faces": false
+    },
+    {
+      "file": "brunch-green-cap.jpg",
+      "src": "content-engine/films/src/media/gallery-10.jpg",
+      "tags": [
+        "brunch",
+        "rooftop",
+        "day",
+        "faces",
+        "portrait"
+      ],
+      "faces": true
+    },
+    {
+      "file": "brunch-lounge.jpg",
+      "src": "content-engine/films/src/media/gallery-07.jpg",
+      "tags": [
+        "brunch",
+        "day",
+        "indoor",
+        "group"
+      ],
+      "faces": false
+    },
+    {
+      "file": "brunch-signing.jpg",
+      "src": "content-engine/films/src/media/gallery-01.jpg",
+      "tags": [
+        "brunch",
+        "gallery",
+        "indoor",
+        "faces"
+      ],
+      "faces": true
+    },
+    {
+      "file": "gallery-mural-guitar.jpg",
+      "src": "content-engine/films/src/media/gallery-05.jpg",
+      "tags": [
+        "gallery",
+        "brunch",
+        "day",
+        "art",
+        "faces"
+      ],
+      "faces": true
+    },
+    {
+      "file": "gallery-portrait-white.jpg",
+      "src": "content-engine/films/src/media/solo.jpg",
+      "tags": [
+        "gallery",
+        "portrait",
+        "faces",
+        "art"
+      ],
+      "faces": true
+    },
+    {
+      "file": "gallery-portrait-suit.jpg",
+      "src": "content-engine/app-capture/media/dj.jpg",
+      "tags": [
+        "gallery",
+        "portrait",
+        "faces",
+        "art"
+      ],
+      "faces": true
+    },
+    {
+      "file": "gallery-mural-group.jpg",
+      "src": "content-engine/films/src/media/media__1782963950342.jpg",
+      "tags": [
+        "gallery",
+        "rooftop",
+        "day",
+        "art",
+        "faces",
+        "group"
+      ],
+      "faces": true
+    },
+    {
+      "file": "gallery-sign-pair.jpg",
+      "src": "content-engine/films/src/media/ig-3.jpg",
+      "tags": [
+        "gallery",
+        "art",
+        "faces",
+        "night"
+      ],
+      "faces": true
+    },
+    {
+      "file": "gallery-bw-room.jpg",
+      "src": "content-engine/films/src/media/gallery-11.jpg",
+      "tags": [
+        "gallery",
+        "group",
+        "art"
+      ],
+      "faces": false
+    },
+    {
+      "file": "gallery-sunglasses.jpg",
+      "src": "content-engine/app-capture/media/dj_afrobeats.jpg",
+      "tags": [
+        "gallery",
+        "portrait",
+        "faces"
+      ],
+      "faces": true
+    },
+    {
+      "file": "gallery-booth.jpg",
+      "src": "content-engine/films/src/media/gallery-02.jpeg",
+      "tags": [
+        "gallery",
+        "faces"
+      ],
+      "faces": true
+    },
+    {
+      "file": "rooftop-van-sunset.jpg",
+      "src": "content-engine/films/src/media/media__1782963978686.jpg",
+      "tags": [
+        "rooftop",
+        "day",
+        "outdoor",
+        "golden"
+      ],
+      "faces": false
+    },
+    {
+      "file": "rooftop-hillside.jpg",
+      "src": "content-engine/films/src/media/media__1782968823505.jpg",
+      "tags": [
+        "rooftop",
+        "day",
+        "outdoor"
+      ],
+      "faces": false
+    },
+    {
+      "file": "rooftop-grill.jpg",
+      "src": "content-engine/films/src/media/gallery-12.jpg",
+      "tags": [
+        "rooftop",
+        "brunch",
+        "day",
+        "outdoor",
+        "faces",
+        "food"
+      ],
+      "faces": true
+    },
+    {
+      "file": "rooftop-patio-lights.jpg",
+      "src": "content-engine/films/src/media/crowd.jpg",
+      "tags": [
+        "rooftop",
+        "outdoor",
+        "group",
+        "dusk"
+      ],
+      "faces": false
+    },
+    {
+      "file": "rooftop-string-lights.jpg",
+      "src": "content-engine/app-capture/media/rooftop-party.jpg",
+      "tags": [
+        "rooftop",
+        "outdoor",
+        "group",
+        "dusk"
+      ],
+      "faces": false
+    }
+  ],
+  "avatars": [
+    {
+      "name": "maya",
+      "file": "avatars/maya.jpg",
+      "src": "content-engine/app-capture/media/av-maya.jpg"
+    },
+    {
+      "name": "kevin",
+      "file": "avatars/kevin.jpg",
+      "src": "content-engine/app-capture/media/av-kevin.jpg"
+    },
+    {
+      "name": "trina",
+      "file": "avatars/trina.jpg",
+      "src": "content-engine/app-capture/media/av-trina.jpg"
+    },
+    {
+      "name": "gift",
+      "file": "avatars/gift.jpg",
+      "src": "content-engine/app-capture/media/av-gift.jpg"
+    },
+    {
+      "name": "baba",
+      "file": "avatars/baba.jpg",
+      "src": "content-engine/app-capture/media/av-baba.jpg"
+    }
+  ]
+}
