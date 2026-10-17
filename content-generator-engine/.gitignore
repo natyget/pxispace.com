@@ -1,0 +1,6 @@
+node_modules/
+out/
+# Event photos and clips stay out of git (size, and the people in them).
+footage/*
+!footage/library.json
+!footage/README.md

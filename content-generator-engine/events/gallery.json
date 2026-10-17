@@ -1,0 +1,12 @@
+{
+  "eventType": "gallery",
+  "footageUrl": "",
+  "eventName": "open walls",
+  "eventDate": "THU JUN 12",
+  "city": "boston",
+  "ticketPrice": "free",
+  "organizerName": "smoot studio",
+  "pastAlbumCount": 4,
+  "attendeeNames": ["trina", "baba", "maya", "kevin", "gift"],
+  "attendeeCount": 41
+}

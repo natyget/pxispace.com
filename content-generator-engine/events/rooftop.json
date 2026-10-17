@@ -1,0 +1,12 @@
+{
+  "eventType": "rooftop",
+  "footageUrl": "",
+  "eventName": "golden hour",
+  "eventDate": "SAT JUL 19",
+  "city": "boston",
+  "ticketPrice": "$20",
+  "organizerName": "afrodisiac",
+  "pastAlbumCount": 8,
+  "attendeeNames": ["kevin", "gift", "maya", "trina", "baba"],
+  "attendeeCount": 88
+}

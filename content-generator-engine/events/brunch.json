@@ -1,0 +1,12 @@
+{
+  "eventType": "brunch",
+  "footageUrl": "",
+  "eventName": "sunday table",
+  "eventDate": "SUN MAY 4",
+  "city": "boston",
+  "ticketPrice": "$35",
+  "organizerName": "sanaa groove",
+  "pastAlbumCount": 6,
+  "attendeeNames": ["maya", "kevin", "trina", "gift", "baba"],
+  "attendeeCount": 13
+}
