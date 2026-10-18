@@ -6,6 +6,16 @@
 
 import { useEffect } from 'react';
 import { loadScript } from '@/views/site/runtime/loadScript';
+import { trackHostLead } from '@/lib/analytics';
+import { setEnhancedConversionData } from '@/lib/enhancedConversions';
+
+// What the demo scripts may report through the app: the booking page's request is the lead (as on the old /book page:
+// hash the email for enhanced conversions first, then send the lead; the Zoho tab is already open, so nothing waits).
+const BRIDGE = {
+  hostLead: (email) => {
+    void setEnhancedConversionData({ email }).then(() => trackHostLead({ source: 'book_meeting' }));
+  },
+};
 
 const started = new Set();
 
@@ -18,6 +28,7 @@ export default function V12Runtime({ scripts }) {
       return undefined;
     }
     root.classList.add('v12-doc');
+    window.__pxi = BRIDGE;
     if (!started.has(location.pathname)) {   // once per document (StrictMode runs effects twice)
       started.add(location.pathname);
       (async () => {

@@ -224,7 +224,7 @@
         c.dataset.res = 'wait'; $('[data-why]', c).textContent = 'Scanning';
         restart(c, 'scan');
       });
-      await wait(reduce ? 0 : 1000);
+      await wait(reduce ? 0 : 520);
       cards.forEach((c) => {
         const [res, t, why] = s[c.dataset.card];
         c.dataset.res = res; $('[data-res]', c).textContent = t; $('[data-why]', c).textContent = why;
@@ -232,7 +232,7 @@
       });
     };
     show(0);
-    ticker(o, () => { i = (i + 1) % STEPS.length; show(i); }, 4200, 0.5);
+    ticker(o, () => { i = (i + 1) % STEPS.length; show(i); }, 2600, 0.5);
   });
 
   // the patch maker (the app's steps: shape, emblem, thread, letters)

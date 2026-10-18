@@ -208,7 +208,8 @@
 .v12 .px-prog i { position: absolute; left: 0; top: 0; bottom: 0; width: var(--pw-i, 30%); border-radius: 2px; background: var(--smoke); transform: translateX(var(--x, 0%)); transition: transform .3s var(--ease), width .3s var(--ease); }
 /* the notes */
 .v12 .px-side { position: relative; height: var(--ph); }
-.v12 .px-h { position: absolute; top: 3%; color: var(--mute-2); font-size: 12.5px; line-height: 1.3; white-space: nowrap; }
+.v12 .px .px-h { position: absolute; top: 3%; font: 700 clamp(16px, 1.3vw, 19px)/1.2 var(--f-display); letter-spacing: -.01em; color: var(--smoke); white-space: nowrap; }   /* read first: white and bold, the choices under it grey */
+.v12 .px-h .s { display: none; }
 .v12 .px-l .px-h { right: 0; padding-right: clamp(34px, 4.6vw, 70px); }
 .v12 .px-r .px-h { left: 0; padding-left: clamp(34px, 4.6vw, 70px); }
 .v12 .px-n { position: absolute; top: var(--y); color: var(--mute); font-size: clamp(15px, 1.2vw, 17px); line-height: 1.2; text-align: left; transform: translateY(-.6em); transition: color .25s; -webkit-tap-highlight-color: transparent; }
@@ -228,7 +229,9 @@
   .v12 .px { --ph: clamp(220px, calc(var(--screen) - 372px), 430px); grid-template-columns: 1fr; justify-items: center; gap: 8px; }
   .v12 .px[data-f="carousel"] { --pw: min(calc(var(--ph) * 1.62), calc(100vw - 2 * var(--gut))); }
   .v12 .px-side { height: auto; display: flex; justify-content: center; align-items: center; gap: 22px; }
-  .v12 .px-h { display: none; }
+  .v12 .px .px-h { position: static; padding: 0 !important; font-size: 15px; }
+  .v12 .px-h .l { display: none; } .v12 .px-h .s { display: inline; }
+  .v12 .px-side { gap: 16px; }
   .v12 .px-n { position: static; transform: none; padding: 0 !important; font-size: 15px; }
   .v12 .px-n::after, .v12 .px-n em { display: none; }
   .v12 .px-foot { height: 28px; } .v12 .px-foot button { width: 28px; height: 28px; }
