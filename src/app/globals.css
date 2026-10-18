@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* The v12 pages carry their own styles; their generated markup and scripts hold no Tailwind classes. */
+@source not "../views/v12";
+@source not "../../public/v12";
 @import "@geoapify/geocoder-autocomplete/styles/minimal-dark.css";
 
 html, body {

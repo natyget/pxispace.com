@@ -1,0 +1,317 @@
+{
+ "the-loft": {
+  "id": "the-loft",
+  "w": 639,
+  "h": 735
+ },
+ "the-loft-sewn": {
+  "id": "the-loft-sewn",
+  "w": 639,
+  "h": 735
+ },
+ "night-shift": {
+  "id": "night-shift",
+  "w": 639,
+  "h": 575
+ },
+ "night-shift-sewn": {
+  "id": "night-shift-sewn",
+  "w": 639,
+  "h": 575
+ },
+ "gala-noir": {
+  "id": "gala-noir",
+  "w": 639,
+  "h": 735
+ },
+ "gala-noir-sewn": {
+  "id": "gala-noir-sewn",
+  "w": 639,
+  "h": 735
+ },
+ "velvet-hour": {
+  "id": "velvet-hour",
+  "w": 639,
+  "h": 639
+ },
+ "velvet-hour-sewn": {
+  "id": "velvet-hour-sewn",
+  "w": 639,
+  "h": 639
+ },
+ "afterglow": {
+  "id": "afterglow",
+  "w": 639,
+  "h": 303
+ },
+ "afterglow-sewn": {
+  "id": "afterglow-sewn",
+  "w": 639,
+  "h": 303
+ },
+ "run-club": {
+  "id": "run-club",
+  "w": 639,
+  "h": 639
+ },
+ "run-club-sewn": {
+  "id": "run-club-sewn",
+  "w": 639,
+  "h": 639
+ },
+ "night-owls": {
+  "id": "night-owls",
+  "w": 639,
+  "h": 575
+ },
+ "night-owls-sewn": {
+  "id": "night-owls-sewn",
+  "w": 639,
+  "h": 575
+ },
+ "soft-disco": {
+  "id": "soft-disco",
+  "w": 639,
+  "h": 639
+ },
+ "soft-disco-sewn": {
+  "id": "soft-disco-sewn",
+  "w": 639,
+  "h": 639
+ },
+ "brunch-club": {
+  "id": "brunch-club",
+  "w": 639,
+  "h": 303
+ },
+ "brunch-club-sewn": {
+  "id": "brunch-club-sewn",
+  "w": 639,
+  "h": 303
+ },
+ "mk-circle-moon-plum": {
+  "id": "mk-circle-moon-plum",
+  "w": 548,
+  "h": 548
+ },
+ "mk-circle-moon-wine": {
+  "id": "mk-circle-moon-wine",
+  "w": 548,
+  "h": 548
+ },
+ "mk-circle-moon-gold": {
+  "id": "mk-circle-moon-gold",
+  "w": 548,
+  "h": 548
+ },
+ "mk-circle-flame-plum": {
+  "id": "mk-circle-flame-plum",
+  "w": 548,
+  "h": 548
+ },
+ "mk-circle-flame-wine": {
+  "id": "mk-circle-flame-wine",
+  "w": 548,
+  "h": 548
+ },
+ "mk-circle-flame-gold": {
+  "id": "mk-circle-flame-gold",
+  "w": 548,
+  "h": 548
+ },
+ "mk-circle-bolt-plum": {
+  "id": "mk-circle-bolt-plum",
+  "w": 548,
+  "h": 548
+ },
+ "mk-circle-bolt-wine": {
+  "id": "mk-circle-bolt-wine",
+  "w": 548,
+  "h": 548
+ },
+ "mk-circle-bolt-gold": {
+  "id": "mk-circle-bolt-gold",
+  "w": 548,
+  "h": 548
+ },
+ "mk-shield-moon-plum": {
+  "id": "mk-shield-moon-plum",
+  "w": 548,
+  "h": 630
+ },
+ "mk-shield-moon-wine": {
+  "id": "mk-shield-moon-wine",
+  "w": 548,
+  "h": 630
+ },
+ "mk-shield-moon-gold": {
+  "id": "mk-shield-moon-gold",
+  "w": 548,
+  "h": 630
+ },
+ "mk-shield-flame-plum": {
+  "id": "mk-shield-flame-plum",
+  "w": 548,
+  "h": 630
+ },
+ "mk-shield-flame-wine": {
+  "id": "mk-shield-flame-wine",
+  "w": 548,
+  "h": 630
+ },
+ "mk-shield-flame-gold": {
+  "id": "mk-shield-flame-gold",
+  "w": 548,
+  "h": 630
+ },
+ "mk-shield-bolt-plum": {
+  "id": "mk-shield-bolt-plum",
+  "w": 548,
+  "h": 630
+ },
+ "mk-shield-bolt-wine": {
+  "id": "mk-shield-bolt-wine",
+  "w": 548,
+  "h": 630
+ },
+ "mk-shield-bolt-gold": {
+  "id": "mk-shield-bolt-gold",
+  "w": 548,
+  "h": 630
+ },
+ "mk-bar-moon-plum": {
+  "id": "mk-bar-moon-plum",
+  "w": 548,
+  "h": 260
+ },
+ "mk-bar-moon-wine": {
+  "id": "mk-bar-moon-wine",
+  "w": 548,
+  "h": 260
+ },
+ "mk-bar-moon-gold": {
+  "id": "mk-bar-moon-gold",
+  "w": 548,
+  "h": 260
+ },
+ "mk-bar-flame-plum": {
+  "id": "mk-bar-flame-plum",
+  "w": 548,
+  "h": 260
+ },
+ "mk-bar-flame-wine": {
+  "id": "mk-bar-flame-wine",
+  "w": 548,
+  "h": 260
+ },
+ "mk-bar-flame-gold": {
+  "id": "mk-bar-flame-gold",
+  "w": 548,
+  "h": 260
+ },
+ "mk-bar-bolt-plum": {
+  "id": "mk-bar-bolt-plum",
+  "w": 548,
+  "h": 260
+ },
+ "mk-bar-bolt-wine": {
+  "id": "mk-bar-bolt-wine",
+  "w": 548,
+  "h": 260
+ },
+ "mk-bar-bolt-gold": {
+  "id": "mk-bar-bolt-gold",
+  "w": 548,
+  "h": 260
+ },
+ "mk-hexagon-moon-plum": {
+  "id": "mk-hexagon-moon-plum",
+  "w": 548,
+  "h": 493
+ },
+ "mk-hexagon-moon-wine": {
+  "id": "mk-hexagon-moon-wine",
+  "w": 548,
+  "h": 493
+ },
+ "mk-hexagon-moon-gold": {
+  "id": "mk-hexagon-moon-gold",
+  "w": 548,
+  "h": 493
+ },
+ "mk-hexagon-flame-plum": {
+  "id": "mk-hexagon-flame-plum",
+  "w": 548,
+  "h": 493
+ },
+ "mk-hexagon-flame-wine": {
+  "id": "mk-hexagon-flame-wine",
+  "w": 548,
+  "h": 493
+ },
+ "mk-hexagon-flame-gold": {
+  "id": "mk-hexagon-flame-gold",
+  "w": 548,
+  "h": 493
+ },
+ "mk-hexagon-bolt-plum": {
+  "id": "mk-hexagon-bolt-plum",
+  "w": 548,
+  "h": 493
+ },
+ "mk-hexagon-bolt-wine": {
+  "id": "mk-hexagon-bolt-wine",
+  "w": 548,
+  "h": 493
+ },
+ "mk-hexagon-bolt-gold": {
+  "id": "mk-hexagon-bolt-gold",
+  "w": 548,
+  "h": 493
+ },
+ "mk-star-moon-plum": {
+  "id": "mk-star-moon-plum",
+  "w": 548,
+  "h": 529
+ },
+ "mk-star-moon-wine": {
+  "id": "mk-star-moon-wine",
+  "w": 548,
+  "h": 529
+ },
+ "mk-star-moon-gold": {
+  "id": "mk-star-moon-gold",
+  "w": 548,
+  "h": 529
+ },
+ "mk-star-flame-plum": {
+  "id": "mk-star-flame-plum",
+  "w": 548,
+  "h": 529
+ },
+ "mk-star-flame-wine": {
+  "id": "mk-star-flame-wine",
+  "w": 548,
+  "h": 529
+ },
+ "mk-star-flame-gold": {
+  "id": "mk-star-flame-gold",
+  "w": 548,
+  "h": 529
+ },
+ "mk-star-bolt-plum": {
+  "id": "mk-star-bolt-plum",
+  "w": 548,
+  "h": 529
+ },
+ "mk-star-bolt-wine": {
+  "id": "mk-star-bolt-wine",
+  "w": 548,
+  "h": 529
+ },
+ "mk-star-bolt-gold": {
+  "id": "mk-star-bolt-gold",
+  "w": 548,
+  "h": 529
+ }
+}

@@ -40,6 +40,12 @@ async function allEntries() {
     { url: `${base}/features/shared-event-photo-gallery`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/features/digital-event-passport`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/features/instagram-event-sharing`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/features/event-discovery`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/features/music-matchmaking`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/features/morning-after-scrapbook`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/features/audience-campaigns`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/features/event-recap`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${base}/features/scenes`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/competitors/partiful-luma-alternative`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${base}/editorial`, changeFrequency: 'weekly', priority: 0.6 },
     // Standalone guide (not in EDITORIAL_STORIES). Bump lastModified with each nightly recap
